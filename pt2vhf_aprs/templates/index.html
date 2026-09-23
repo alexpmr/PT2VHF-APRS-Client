@@ -55,6 +55,7 @@
       </div>
       <div class="message-header-controls">
         <button id="myMessagesButton" type="button" class="btn secondary" aria-pressed="false">Minhas mensagens</button>
+        <button id="clearMessagesButton" type="button" class="btn danger">Limpar mensagens</button>
         <label class="field compact">
           <span>Filtro por origem</span>
           <input id="messageFilter" type="text" placeholder="Ex.: PT2">
@@ -112,8 +113,9 @@
       </label>
 
       <label class="field message-field">
-        <span>Mensagem</span>
-        <input id="messageText" maxlength="63" placeholder="Digite a mensagem APRS">
+        <span>Mensagem <small>Enter = nova linha · Ctrl+Enter = enviar</small></span>
+        <textarea id="messageText" maxlength="63" rows="6" placeholder="Digite a mensagem APRS"></textarea>
+        <small id="messageCharCounter" class="message-char-counter">0 / 63</small>
       </label>
       <button id="sendMessageButton" class="btn primary send-btn" title="Enviar mensagem">Enviar</button>
     </div>
@@ -125,10 +127,13 @@
         <h2>Estações</h2>
         <p>Últimos dados conhecidos de cada estação recebida.</p>
       </div>
-      <label class="field compact">
-        <span>Filtro</span>
-        <input id="stationFilter" type="text" placeholder="Indicativo, nome ou informação">
-      </label>
+      <div class="station-header-controls">
+        <button id="clearStationsButton" type="button" class="btn danger">Limpar estações</button>
+        <label class="field compact">
+          <span>Filtro</span>
+          <input id="stationFilter" type="text" placeholder="Indicativo, nome ou informação">
+        </label>
+      </div>
     </div>
     <div class="table-wrap stations-table-wrap">
       <table id="stationsTable" class="data-table">
