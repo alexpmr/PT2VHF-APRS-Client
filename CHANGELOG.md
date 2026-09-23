@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.2.2 — 2026-09-23
+
+Build Windows de teste enquanto o projeto aguarda aprovação do SignPath Foundation.
+
+- Código autoral formalizado sob licença MIT.
+- Política de assinatura de código publicada.
+- Política de privacidade e política de segurança adicionadas.
+- Avisos e licenças de componentes de terceiros documentados.
+- `CODEOWNERS` configurado para o mantenedor do projeto.
+- Instalador passa a exibir a licença MIT e o aviso de privacidade.
+- Geração automática de SBOM CycloneDX no build Windows.
+- Inventário automático das licenças das dependências.
+- SBOM e inventário de licenças incluídos nos artefatos do GitHub Actions.
+- Página de Release passa a informar explicitamente o status de assinatura.
+- Documentação de onboarding e candidatura ao SignPath Foundation adicionada.
+- Esta versão permanece **não assinada** enquanto a aprovação do SignPath estiver pendente.
+
+
 ## v0.2.1 — 2026-09-23
 
 - Correção dos tiles do mapa exibidos fora de posição/“embaralhados”.
