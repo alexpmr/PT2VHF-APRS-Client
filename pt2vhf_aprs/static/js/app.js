@@ -20,6 +20,11 @@
     connected: false,
     symbolTable: '/',
     configLoaded: false,
+    myMessagesOnly: false,
+    ownCallsign: '',
+    messageAlertBaselineReady: false,
+    lastAlertedMessageId: 0,
+    currentAlertMessage: null,
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -416,7 +421,8 @@
   async function loadMessages() {
     try {
       const filter = $('#messageFilter').value.trim();
-      state.messages = await api(`/api/messages?from=${encodeURIComponent(filter)}`);
+      const mine = state.myMessagesOnly ? '&mine=1' : '';
+      state.messages = await api(`/api/messages?from=${encodeURIComponent(filter)}${mine}`);
       renderMessages();
       updateUnread();
     } catch (err) { console.warn(err); }
@@ -445,6 +451,25 @@
 
   const loadMessagesDebounced = debounce(loadMessages, 250);
   $('#messageFilter').addEventListener('input', loadMessagesDebounced);
+
+  function updateMyMessagesButton() {
+    const btn = $('#myMessagesButton');
+    const filter = $('#messageFilter');
+    if (!btn) return;
+    btn.classList.toggle('active-filter', state.myMessagesOnly);
+    btn.setAttribute('aria-pressed', state.myMessagesOnly ? 'true' : 'false');
+    btn.textContent = state.myMessagesOnly ? '✓ Minhas mensagens' : 'Minhas mensagens';
+    if (filter) {
+      filter.disabled = state.myMessagesOnly;
+      if (state.myMessagesOnly) filter.value = '';
+    }
+  }
+
+  $('#myMessagesButton')?.addEventListener('click', async () => {
+    state.myMessagesOnly = !state.myMessagesOnly;
+    updateMyMessagesButton();
+    await loadMessages();
+  });
 
   $('#messageTo').addEventListener('input', debounce(async (ev) => {
     try {
@@ -496,6 +521,60 @@
   $('#sendMessageButton').addEventListener('click', sendMessage);
   $('#messageText').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
   updateMessageComposerMode();
+
+  function closeIncomingMessageAlert() {
+    $('#incomingMessageModal')?.classList.add('hidden');
+    state.currentAlertMessage = null;
+  }
+
+  function showIncomingMessageAlert(message) {
+    state.currentAlertMessage = message;
+    $('#incomingMessageFrom').textContent = message.from_call || '';
+    $('#incomingMessageTime').textContent = fmtDate(message.timestamp);
+    $('#incomingMessageText').textContent = message.message || '';
+    $('#incomingMessageModal')?.classList.remove('hidden');
+  }
+
+  async function checkIncomingPersonalMessages() {
+    try {
+      if (!state.ownCallsign) return;
+      const messages = await api('/api/messages?mine=1');
+      const incoming = messages
+        .filter(m => m.direction === 'in' && m.message_type === 'message' && String(m.to_call || '').toUpperCase() === state.ownCallsign)
+        .sort((a, b) => Number(a.id) - Number(b.id));
+
+      const latest = incoming.reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
+      if (!state.messageAlertBaselineReady) {
+        state.lastAlertedMessageId = latest;
+        state.messageAlertBaselineReady = true;
+        return;
+      }
+
+      if (!$('#incomingMessageModal')?.classList.contains('hidden')) return;
+      const next = incoming.find(m => Number(m.id) > state.lastAlertedMessageId);
+      if (next) {
+        state.lastAlertedMessageId = Number(next.id) || state.lastAlertedMessageId;
+        showIncomingMessageAlert(next);
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  }
+
+  $('#incomingMessageClose')?.addEventListener('click', closeIncomingMessageAlert);
+  $('#incomingMessageModal')?.addEventListener('click', e => {
+    if (e.target.id === 'incomingMessageModal') closeIncomingMessageAlert();
+  });
+  $('#incomingMessageReply')?.addEventListener('click', () => {
+    const message = state.currentAlertMessage;
+    if (!message) return;
+    closeIncomingMessageAlert();
+    $('.tab[data-tab="messages"]')?.click();
+    $('#messageType').value = 'message';
+    updateMessageComposerMode();
+    $('#messageTo').value = String(message.from_call || '').toUpperCase();
+    $('#messageText').focus();
+  });
 
   function updateUnread() {
     const incoming = state.messages.filter(m => m.direction === 'in');
@@ -682,6 +761,9 @@
         else input.value = value ?? '';
       }
       updateSelectedSymbol();
+      const baseCall = String(cfg.callsign || '').toUpperCase().trim();
+      const ssid = Number(cfg.ssid || 0);
+      state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       applyMapPreferences(cfg);
       syncMapPreferenceControls();
@@ -800,10 +882,14 @@
   tabSetup();
 
   async function boot() {
-    await Promise.all([initMap(), loadMessages(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
+    await Promise.all([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
+    updateMyMessagesButton();
+    await loadMessages();
+    await checkIncomingPersonalMessages();
     setInterval(refreshStatus, 2000);
     setInterval(loadMapData, 5000);
     setInterval(loadMessages, 3000);
+    setInterval(checkIncomingPersonalMessages, 3000);
     setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
     setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
   }
