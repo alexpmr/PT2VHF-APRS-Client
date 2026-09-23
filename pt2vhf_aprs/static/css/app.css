@@ -536,3 +536,16 @@ main { height: calc(100vh - 121px); }
 @media (max-width: 760px) {
   .version-status { display: none; }
 }
+
+.station-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.station-popup-actions .station-message-button {
+  min-height: 34px;
+  padding: 7px 11px;
+  font-size: 12px;
+}
