@@ -1,4 +1,4 @@
-# PT2VHF APRS Client — v0.2.2
+# PT2VHF APRS Client — v0.2.3
 
 Cliente APRS-IS para Windows, desenvolvido em Python, com interface web local, banco SQLite, mapa, mensagens e histórico de estações.
 
