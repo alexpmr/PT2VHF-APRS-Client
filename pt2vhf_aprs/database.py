@@ -452,6 +452,16 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     return result
 
 
+def clear_stations() -> dict[str, int]:
+    with connection() as conn:
+        tracks_cur = conn.execute("DELETE FROM tracks")
+        stations_cur = conn.execute("DELETE FROM stations")
+        return {
+            "stations": max(0, int(stations_cur.rowcount or 0)),
+            "tracks": max(0, int(tracks_cur.rowcount or 0)),
+        }
+
+
 def map_data() -> dict[str, Any]:
     with connection() as conn:
         stations = [dict(r) for r in conn.execute(
@@ -513,6 +523,12 @@ def list_messages(from_filter: str = "", station_filter: str = "", limit: int = 
                 (q, int(limit)),
             ).fetchall()
     return [dict(r) for r in rows]
+
+
+def clear_messages() -> int:
+    with connection() as conn:
+        cur = conn.execute("DELETE FROM messages")
+        return max(0, int(cur.rowcount or 0))
 
 
 def callsign_suggestions(prefix: str = "", limit: int = 30) -> list[str]:
