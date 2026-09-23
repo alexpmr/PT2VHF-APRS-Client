@@ -57,13 +57,12 @@ jobs:
         shell: pwsh
         run: choco install innosetup --no-progress -y
 
-      - name: Build installer and portable packages
+      - name: Build installer and portable EXE
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist-installer | Out-Null
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
           Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe dist-installer\PT2VHF_APRS_Client_Portable_x64.exe -Force
-          Compress-Archive -Path dist\PT2VHF_APRS_Client\* -DestinationPath dist-installer\PT2VHF_APRS_Client_Portable_x64.zip -Force
 
       - name: Upload build artifacts
         id: upload-unsigned-artifact
@@ -73,7 +72,6 @@ jobs:
           path: |
             dist-installer\PT2VHF_APRS_Client_Setup_x64.exe
             dist-installer\PT2VHF_APRS_Client_Portable_x64.exe
-            dist-installer\PT2VHF_APRS_Client_Portable_x64.zip
             dist\PT2VHF_APRS_Client\SBOM.cdx.json
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
 
@@ -91,25 +89,24 @@ jobs:
           }
 
           @"
-          ## Code signing policy
+          ## Política de assinatura de código
 
-          **Current signing status:** this release is unsigned unless its Windows files show a valid Authenticode signature from SignPath Foundation.
+          **Status da assinatura:** esta versão permanece sem assinatura Authenticode enquanto o projeto aguarda a ativação da assinatura pelo SignPath Foundation.
 
-          The project is prepared for the SignPath Foundation Open Source Code Signing program. Once approval and signing are active, signed releases will carry the attribution:
+          O projeto está preparado para o programa de assinatura Open Source do SignPath Foundation. Quando a assinatura estiver ativa, as versões assinadas usarão a atribuição exigida pelo programa:
 
           > **Free code signing provided by SignPath.io, certificate by SignPath Foundation**
 
-          - [Code signing policy](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/CODE_SIGNING_POLICY.md)
-          - [Privacy policy](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/PRIVACY.md)
-          - [Third-party notices](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/THIRD_PARTY_NOTICES.md)
+          - [Política de assinatura de código](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/CODE_SIGNING_POLICY.md)
+          - [Política de privacidade](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/PRIVACY.md)
+          - [Avisos e licenças de terceiros](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/THIRD_PARTY_NOTICES.md)
 
-          ## Downloads
+          ## Arquivos para download
 
-          - **PT2VHF_APRS_Client_Setup_x64.exe** — Windows installer
-          - **PT2VHF_APRS_Client_Portable_x64.exe** — single-file portable executable
-          - **PT2VHF_APRS_Client_Portable_x64.zip** — portable onedir build
-          - **SBOM.cdx.json** — CycloneDX software bill of materials
-          - **THIRD_PARTY_LICENSES.txt** — generated dependency license inventory
+          - **PT2VHF_APRS_Client_Setup_x64.exe** — instalador para Windows. **Opção recomendada para a maioria dos usuários.**
+          - **PT2VHF_APRS_Client_Portable_x64.exe** — versão portátil em um único arquivo EXE. **Não precisa ser instalada.**
+          - **SBOM.cdx.json** — inventário técnico dos componentes de software utilizados na versão.
+          - **THIRD_PARTY_LICENSES.txt** — relação das dependências de terceiros e respectivas licenças.
           "@ | Set-Content -Encoding UTF8 release-notes.md
 
           gh release view $tag 2>$null
@@ -122,7 +119,6 @@ jobs:
           gh release upload $tag `
             dist-installer\PT2VHF_APRS_Client_Setup_x64.exe `
             dist-installer\PT2VHF_APRS_Client_Portable_x64.exe `
-            dist-installer\PT2VHF_APRS_Client_Portable_x64.zip `
             dist\PT2VHF_APRS_Client\SBOM.cdx.json `
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
             --clobber
