@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.1 — em desenvolvimento
+
+- Correção dos tiles do mapa exibidos fora de posição/“embaralhados”.
+- CSS do Leaflet empacotado localmente com a aplicação para evitar falhas do CDN.
+- Proteção CSS adicional para o posicionamento absoluto dos tiles.
+- Botão **Minha localização** no mapa, usando a geolocalização do navegador.
+- Exibição de marcador e raio de precisão da localização do navegador.
+- Versão exibida no título da aplicação e na aba do navegador.
+
 ## v0.2.0 — 2026-09-23
 
 Versão Windows-first.
