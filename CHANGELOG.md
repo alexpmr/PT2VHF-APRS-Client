@@ -2,6 +2,11 @@
 
 ## v0.2.7 — em desenvolvimento
 
+- Ajustada a aba **Mensagens** para caber integralmente na altura disponível da janela.
+- A lista de mensagens passa a usar automaticamente o espaço restante e possui **barra de rolagem própria**.
+- A área de composição fica presa ao rodapé da aba e se adapta à altura disponível.
+- O botão **Enviar** foi reposicionado para permanecer sempre visível em telas largas.
+- Em janelas de menor altura, o compositor reduz automaticamente sua altura sem empurrar controles para fora da tela.
 - O arquivo **Portable ZIP** deixa de ser gerado e publicado.
 - As próximas versões passam a oferecer apenas **Instalador EXE** e **Portable EXE** como opções para usuários Windows.
 - A página de cada Release passa a apresentar em **português** a descrição dos arquivos disponíveis.
