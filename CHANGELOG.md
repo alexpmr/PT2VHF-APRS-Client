@@ -2,6 +2,7 @@
 
 ## v0.2.5 — em desenvolvimento
 
+- Botão **Enviar mensagem** no popup das estações do mapa; abre a aba Mensagens com o indicativo de destino já preenchido e o cursor no campo de texto.
 - Indicador de versão no cabeçalho da aplicação.
 - Mostra **Última versão** quando a instalação corresponde à release mais recente publicada.
 - Mostra **Nova versão vX.Y.Z** quando houver uma release mais nova no GitHub.
