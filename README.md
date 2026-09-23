@@ -127,7 +127,7 @@ Abra `http://127.0.0.1:8080`.
 - A interface escuta apenas em localhost por padrão.
 - Não exponha a porta 8080 diretamente à Internet.
 - O JSON exportado pode conter o passcode APRS-IS; trate-o como arquivo sensível.
-- O instalador atual não possui assinatura Authenticode. Portanto, o Windows SmartScreen pode exibir aviso de **editor desconhecido**.
+- O instalador atual não possui assinatura Authenticode. Portanto, o Windows pode exibir aviso de **editor desconhecido** ou aplicar políticas de Application Control. Consulte [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
 
 ## Banco local
 
@@ -149,3 +149,24 @@ Tabelas principais:
 - OpenStreetMap: https://www.openstreetmap.org/
 - PyInstaller: https://pyinstaller.org/
 - Inno Setup: https://jrsoftware.org/isinfo.php
+
+
+## Licença
+
+O código-fonte autoral do **PT2VHF APRS Client** é distribuído sob a [MIT License](LICENSE).
+
+Os componentes de terceiros mantêm suas próprias licenças. Em particular, o build atual utiliza `aprslib` sob GNU GPL v2. Consulte [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) antes de redistribuir binários.
+
+## Code signing policy
+
+A política de assinatura está documentada em [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
+
+**Status atual:** as releases Windows ainda são não assinadas enquanto o projeto conclui o processo de onboarding para assinatura Open Source. A integração planejada é SignPath.io / SignPath Foundation; ela só será ativada depois da aprovação externa e da configuração dos identificadores/segredos necessários.
+
+Consulte também o [plano de integração com SignPath](docs/SIGNPATH_SETUP.md).
+
+## Privacidade e segurança
+
+- [Política de privacidade](PRIVACY.md)
+- [Política de segurança](SECURITY.md)
+- [Avisos e licenças de terceiros](THIRD_PARTY_NOTICES.md)
