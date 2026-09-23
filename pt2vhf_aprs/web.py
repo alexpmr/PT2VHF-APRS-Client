@@ -7,7 +7,7 @@ from flask import Flask, jsonify, render_template, request, send_file
 
 from . import __version__
 from . import database as db
-from .aprs_service import service
+from .aprs_service import full_callsign, service
 
 
 def create_app() -> Flask:
@@ -107,7 +107,12 @@ def create_app() -> Flask:
 
     @app.get("/api/messages")
     def api_messages():
-        return jsonify(db.list_messages(request.args.get("from", "")))
+        mine = str(request.args.get("mine", "")).lower() in {"1", "true", "yes"}
+        station = full_callsign(db.get_config()) if mine else ""
+        return jsonify(db.list_messages(
+            request.args.get("from", ""),
+            station_filter=station,
+        ))
 
     @app.post("/api/messages/send")
     def api_send_message():
