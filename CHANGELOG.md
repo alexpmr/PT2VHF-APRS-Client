@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.6 — 2026-09-23
+
+- Botão **Limpar mensagens** na aba Mensagens, com confirmação antes de apagar todo o histórico local de mensagens e boletins.
+- Botão **Limpar estações** na aba Estações, removendo estações e tracklogs locais com confirmação.
+- A limpeza de mensagens não afeta estações; a limpeza de estações não afeta mensagens, configurações ou Log APRS-IS.
+- O mapa remove imediatamente marcadores e tracklogs apagados, sem exigir reinício.
+- Área de composição de mensagem aumentada para aproximadamente três vezes a altura anterior.
+- Campo de mensagem alterado para editor multilinha com contador de caracteres.
+- **Enter** cria nova linha durante a edição e **Ctrl+Enter** envia a mensagem.
+- Mantidos todos os recursos da v0.2.5, incluindo Ajuda integrada, Portable EXE, brilho do mapa, aviso sonoro, atualização automática de versão e envio de mensagens a partir do mapa.
+- Telemetria/estatísticas anônimas **não fazem parte desta versão** e permanecem para desenvolvimento posterior.
+- Esta release permanece **não assinada** enquanto o projeto aguarda aprovação do SignPath Foundation.
+
 ## v0.2.5 — 2026-09-23
 
 - Nova aba **Ajuda** com guia de primeiros passos, configuração da estação, APRS-IS, mapa, mensagens, boletins, estações, Log, atualizações, banco/backup e diagnóstico rápido.
