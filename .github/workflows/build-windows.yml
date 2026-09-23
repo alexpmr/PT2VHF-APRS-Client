@@ -39,6 +39,14 @@ jobs:
         shell: pwsh
         run: pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
 
+      - name: Generate SBOM and license inventory
+        shell: pwsh
+        run: |
+          cyclonedx-py environment --spec-version 1.6 --output-format JSON --output-file dist\PT2VHF_APRS_Client\SBOM.cdx.json
+          pip-licenses --format=plain-vertical --with-license-file --no-license-path --output-file=dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
+          Copy-Item THIRD_PARTY_NOTICES.md dist\PT2VHF_APRS_Client\THIRD_PARTY_NOTICES.md
+          Copy-Item LICENSE dist\PT2VHF_APRS_Client\LICENSE
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --no-progress -y
@@ -58,6 +66,8 @@ jobs:
           path: |
             dist-installer\PT2VHF_APRS_Client_Setup_x64.exe
             dist-installer\PT2VHF_APRS_Client_Portable_x64.zip
+            dist\PT2VHF_APRS_Client\SBOM.cdx.json
+            dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
 
       - name: Publish GitHub Release assets
         if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) }}
@@ -78,4 +88,6 @@ jobs:
           gh release upload $tag `
             dist-installer\PT2VHF_APRS_Client_Setup_x64.exe `
             dist-installer\PT2VHF_APRS_Client_Portable_x64.zip `
+            dist\PT2VHF_APRS_Client\SBOM.cdx.json `
+            dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
             --clobber
