@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.7 — em desenvolvimento
+
+- O arquivo **Portable ZIP** deixa de ser gerado e publicado.
+- As próximas versões passam a oferecer apenas **Instalador EXE** e **Portable EXE** como opções para usuários Windows.
+- A página de cada Release passa a apresentar em **português** a descrição dos arquivos disponíveis.
+- O instalador é identificado como a opção recomendada para a maioria dos usuários.
+- O Portable EXE é descrito como versão em arquivo único, sem necessidade de instalação.
+- SBOM e inventário de licenças continuam disponíveis como arquivos técnicos da Release.
+
 ## v0.2.6 — 2026-09-23
 
 - Botão **Limpar mensagens** na aba Mensagens, com confirmação antes de apagar todo o histórico local de mensagens e boletins.
