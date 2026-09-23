@@ -141,7 +141,7 @@ def test_aprs_passcode():
 
 
 def test_version_tuple():
-    assert version_tuple("v0.2.6") == (0, 2, 6)
+    assert version_tuple("v0.2.7") == (0, 2, 7)
     assert version_tuple("0.2.10") > version_tuple("0.2.9")
     assert version_tuple("v1.0.0") > version_tuple("0.9.99")
 
