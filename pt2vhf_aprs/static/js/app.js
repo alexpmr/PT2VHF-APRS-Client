@@ -10,6 +10,7 @@
     userLocationAccuracy: null,
     messages: [],
     stations: [],
+    logs: [],
     sort: {
       messages: { key: 'timestamp', dir: 'desc', type: 'text' },
       stations: { key: 'last_heard', dir: 'desc', type: 'text' }
@@ -108,6 +109,9 @@
         loadMessages();
       }
       if (tab === 'stations') loadStations();
+      if (tab === 'log') {
+        loadLog(true);
+      }
       if (tab === 'config') loadConfig();
     }));
   }
@@ -435,6 +439,68 @@
     $('#messageBadge').classList.add('hidden');
   }
 
+  async function loadLog(forceScroll = false) {
+    try {
+      const filter = $('#logFilter')?.value.trim() || '';
+      const direction = $('#logDirection')?.value || 'ALL';
+      const limit = $('#logLimit')?.value || '1000';
+      state.logs = await api(`/api/log?filter=${encodeURIComponent(filter)}&direction=${encodeURIComponent(direction)}&limit=${encodeURIComponent(limit)}`);
+      renderLog(forceScroll);
+    } catch (err) {
+      console.warn(err);
+    }
+  }
+
+  function renderLog(forceScroll = false) {
+    const tbody = $('#logTable tbody');
+    const viewport = $('#logViewport');
+    if (!tbody || !viewport) return;
+
+    const auto = $('#logAutoScroll')?.checked ?? true;
+    const wasNearBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 60;
+
+    if (!state.logs.length) {
+      tbody.innerHTML = '<tr class="log-empty"><td colspan="3">Nenhum tráfego APRS-IS registrado para este filtro.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = state.logs.map(row => {
+      const direction = row.direction === 'TX' ? 'TX' : 'RX';
+      return `<tr class="log-${direction.toLowerCase()}">
+        <td>${escapeHtml(fmtDate(row.timestamp))}</td>
+        <td class="log-direction">${direction}</td>
+        <td class="log-raw">${escapeHtml(row.raw || '')}</td>
+      </tr>`;
+    }).join('');
+
+    if (auto && (forceScroll || wasNearBottom)) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }
+
+  const loadLogDebounced = debounce(() => loadLog(true), 220);
+  $('#logFilter')?.addEventListener('input', loadLogDebounced);
+  $('#logDirection')?.addEventListener('change', () => loadLog(true));
+  $('#logLimit')?.addEventListener('change', () => loadLog(true));
+  $('#logAutoScroll')?.addEventListener('change', () => {
+    if ($('#logAutoScroll').checked) {
+      const viewport = $('#logViewport');
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  });
+
+  $('#clearLogButton')?.addEventListener('click', async () => {
+    if (!window.confirm('Limpar todo o histórico do Log APRS-IS?')) return;
+    try {
+      await api('/api/log/clear', { method: 'POST' });
+      state.logs = [];
+      renderLog(true);
+      toast('Log APRS-IS limpo.', 'ok');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
+
   async function loadStations() {
     try {
       const filter = $('#stationFilter').value.trim();
@@ -555,11 +621,12 @@
   tabSetup();
 
   async function boot() {
-    await Promise.all([initMap(), loadMessages(), loadStations(), loadConfig(), refreshStatus()]);
+    await Promise.all([initMap(), loadMessages(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
     setInterval(refreshStatus, 2000);
     setInterval(loadMapData, 5000);
     setInterval(loadMessages, 3000);
     setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
+    setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
   }
 
   boot();
