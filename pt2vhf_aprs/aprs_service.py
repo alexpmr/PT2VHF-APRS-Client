@@ -202,11 +202,18 @@ class APRSService:
             return
 
         message_text, msg_id = split_message_id(text)
-        db.add_message("in", from_call, to_call, message_text, msg_id=msg_id, status="Recebida", raw=raw)
+        message_type = classify_message_type(to_call)
+        db.add_message(
+            "in", from_call, to_call, message_text,
+            msg_id=msg_id,
+            status="Recebida" if message_type == "message" else "Boletim recebido",
+            raw=raw,
+            message_type=message_type,
+        )
 
-        # ACK automático para mensagem endereçada exatamente a esta estação.
+        # ACK automático somente para mensagem individual endereçada exatamente a esta estação.
         cfg = db.get_config()
-        if msg_id and to_call == full_callsign(cfg).upper() and self.status()["verified"]:
+        if message_type == "message" and msg_id and to_call == full_callsign(cfg).upper() and self.status()["verified"]:
             try:
                 self.send_ack(from_call, msg_id)
             except Exception:
@@ -244,6 +251,33 @@ class APRSService:
         packet = f"{source}>APRS,TCPIP*::{destination:<9}:{clean}{{{msg_id}"
         self._send_raw(packet)
         return db.add_message("out", source, destination, clean, msg_id=msg_id, status="Enviada", raw=packet)
+
+    def send_bulletin(self, text: str, bulletin_id: str = "0", group: str = "") -> int:
+        status = self.status()
+        if not status["connected"]:
+            raise ConnectionError("Cliente APRS-IS desconectado.")
+        if not status["verified"]:
+            raise PermissionError("Conexão APRS-IS não verificada; informe um passcode válido para transmitir.")
+
+        cfg = db.get_config()
+        source = full_callsign(cfg)
+        packet, addressee, message_type, clean = build_bulletin_packet(
+            source=source,
+            text=text,
+            bulletin_id=bulletin_id,
+            group=group,
+        )
+        self._send_raw(packet)
+        return db.add_message(
+            "out",
+            source,
+            addressee,
+            clean,
+            msg_id=None,
+            status="Boletim enviado",
+            raw=packet,
+            message_type=message_type,
+        )
 
     def send_ack(self, destination: str, msg_id: str) -> None:
         cfg = db.get_config()
@@ -292,6 +326,36 @@ def mask_sensitive_log_line(line: str) -> str:
     if str(line).lower().startswith("user "):
         return re.sub(r"(\spass\s+)\S+", r"\1******", str(line), flags=re.IGNORECASE)
     return str(line)
+
+
+def classify_message_type(addressee: str) -> str:
+    value = str(addressee or "").upper().strip()
+    if re.fullmatch(r"BLN[0-9]", value):
+        return "bulletin"
+    if re.fullmatch(r"BLN[0-9][A-Z0-9]{1,5}", value):
+        return "group_bulletin"
+    return "message"
+
+
+def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group: str = "") -> tuple[str, str, str, str]:
+    source = str(source or "").upper().strip()
+    bulletin_id = str(bulletin_id or "").strip()
+    group = str(group or "").upper().strip()
+
+    if not re.fullmatch(r"[0-9]", bulletin_id):
+        raise ValueError("O identificador do boletim deve ser um dígito de 0 a 9.")
+    if group and not re.fullmatch(r"[A-Z0-9]{1,5}", group):
+        raise ValueError("O grupo do boletim deve ter de 1 a 5 caracteres alfanuméricos.")
+
+    clean = " ".join(str(text).replace("\r", " ").replace("\n", " ").split())
+    if not clean:
+        raise ValueError("Boletim vazio.")
+    clean = clean[:67]
+
+    message_type = "group_bulletin" if group else "bulletin"
+    addressee = f"BLN{bulletin_id}{group:<5}" if group else f"BLN{bulletin_id}{'':<5}"
+    packet = f"{source}>APRS,TCPIP*::{addressee}:{clean}"
+    return packet, addressee.rstrip(), message_type, clean
 
 
 def full_callsign(cfg: dict[str, Any]) -> str:
