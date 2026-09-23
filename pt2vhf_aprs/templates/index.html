@@ -57,6 +57,7 @@
         <thead><tr>
           <th data-key="from_call">De <span class="sort-indicator"></span></th>
           <th data-key="to_call">Para <span class="sort-indicator"></span></th>
+          <th data-key="message_type">Tipo <span class="sort-indicator"></span></th>
           <th data-key="message">Mensagem <span class="sort-indicator"></span></th>
           <th data-key="timestamp">Hora <span class="sort-indicator"></span></th>
           <th data-key="status">Status <span class="sort-indicator"></span></th>
@@ -65,11 +66,42 @@
       </table>
     </div>
     <div class="message-composer">
-      <label class="field destination-field">
+      <label class="field message-type-field">
+        <span>Tipo</span>
+        <select id="messageType">
+          <option value="message">Mensagem</option>
+          <option value="bulletin">Boletim geral</option>
+          <option value="group_bulletin">Boletim de grupo</option>
+        </select>
+      </label>
+
+      <label id="messageDestinationField" class="field destination-field">
         <span>Destino</span>
         <input id="messageTo" list="destinationList" maxlength="9" autocomplete="off" placeholder="Indicativo/SSID">
         <datalist id="destinationList"></datalist>
       </label>
+
+      <label id="bulletinIdField" class="field bulletin-id-field hidden">
+        <span>Linha</span>
+        <select id="bulletinId">
+          <option value="0">BLN0</option>
+          <option value="1">BLN1</option>
+          <option value="2">BLN2</option>
+          <option value="3">BLN3</option>
+          <option value="4">BLN4</option>
+          <option value="5">BLN5</option>
+          <option value="6">BLN6</option>
+          <option value="7">BLN7</option>
+          <option value="8">BLN8</option>
+          <option value="9">BLN9</option>
+        </select>
+      </label>
+
+      <label id="bulletinGroupField" class="field bulletin-group-field hidden">
+        <span>Grupo</span>
+        <input id="bulletinGroup" maxlength="5" autocomplete="off" placeholder="Ex.: DF, WX">
+      </label>
+
       <label class="field message-field">
         <span>Mensagem</span>
         <input id="messageText" maxlength="63" placeholder="Digite a mensagem APRS">
