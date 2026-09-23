@@ -1,0 +1,71 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows-x64:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-windows.txt
+
+      - name: Run tests
+        shell: pwsh
+        run: python -m pytest -q
+
+      - name: Build application
+        shell: pwsh
+        run: pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer and portable ZIP
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist-installer | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
+          Compress-Archive -Path dist\PT2VHF_APRS_Client\* -DestinationPath dist-installer\PT2VHF_APRS_Client_Portable_x64.zip -Force
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Windows-x64
+          path: |
+            dist-installer\PT2VHF_APRS_Client_Setup_x64.exe
+            dist-installer\PT2VHF_APRS_Client_Portable_x64.zip
+
+      - name: Publish GitHub Release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view $env:GITHUB_REF_NAME 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:GITHUB_REF_NAME --title "PT2VHF APRS Client $env:GITHUB_REF_NAME" --generate-notes
+          }
+          gh release upload $env:GITHUB_REF_NAME `
+            dist-installer\PT2VHF_APRS_Client_Setup_x64.exe `
+            dist-installer\PT2VHF_APRS_Client_Portable_x64.zip `
+            --clobber
