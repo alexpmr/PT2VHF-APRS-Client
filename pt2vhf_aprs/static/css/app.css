@@ -250,3 +250,55 @@ main { height: calc(100vh - 121px); }
 .message-type-badge.message { color: #b7d9ff; background: rgba(59,166,255,.08); border-color: rgba(59,166,255,.28); }
 .message-type-badge.bulletin { color: #ffd891; background: rgba(244,189,80,.08); border-color: rgba(244,189,80,.32); }
 .message-type-badge.group-bulletin { color: #c5efcf; background: rgba(56,199,118,.08); border-color: rgba(56,199,118,.30); }
+
+.station-last-heard {
+  white-space: nowrap;
+  min-width: 170px;
+}
+#stationsTable th[data-key="last_heard"] {
+  white-space: nowrap;
+  min-width: 170px;
+}
+#stationsTable th[data-key="callsign"],
+#stationsTable td:first-child {
+  white-space: nowrap;
+  min-width: 145px;
+}
+.map-config-grid {
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(240px, 1fr);
+  align-items: end;
+}
+.color-field-row,
+.range-field-row {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color-field-row input[type="color"] {
+  width: 52px;
+  min-width: 52px;
+  height: 38px;
+  padding: 3px;
+  cursor: pointer;
+}
+.color-field-row input[type="text"] {
+  flex: 1;
+}
+.range-field-row input[type="range"] {
+  flex: 1;
+  min-width: 130px;
+}
+.range-field-row output {
+  min-width: 44px;
+  text-align: right;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 12px;
+}
+.map-provider-hint {
+  margin-top: 12px;
+}
+@media (max-width: 900px) {
+  .map-config-grid { grid-template-columns: 1fr; }
+}
