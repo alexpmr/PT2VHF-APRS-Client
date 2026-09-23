@@ -2,6 +2,9 @@
 
 ## v0.2.5 — em desenvolvimento
 
+- Controle de **Brilho do mapa** em Configuração → Mapa, de 30% a 150%, com pré-visualização imediata.
+- Opção de **sinal sonoro** ao receber nova mensagem individual destinada ao `CALL-SSID` configurado.
+- O sinal sonoro é gerado localmente pelo navegador e acompanha o popup de nova mensagem.
 - Botão **Enviar mensagem** no popup das estações do mapa; abre a aba Mensagens com o indicativo de destino já preenchido e o cursor no campo de texto.
 - Indicador de versão no cabeçalho da aplicação.
 - Mostra **Última versão** quando a instalação corresponde à release mais recente publicada.
