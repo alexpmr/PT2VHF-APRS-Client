@@ -69,6 +69,13 @@ O aplicativo oferece:
 - Filtro parcial e ordenação por colunas.
 - Clique na estação para centralizá-la no mapa.
 
+### Ajuda
+
+- Guia rápido de configuração da estação e APRS-IS.
+- Explicação de mapa, mensagens, boletins, estações, Log, atualizações e backup.
+- Diagnóstico rápido para problemas comuns.
+- Contatos de suporte e sugestões diretamente na aplicação.
+
 ### Log APRS-IS
 
 - Monitor bruto do tráfego TNC2 recebido e transmitido.
