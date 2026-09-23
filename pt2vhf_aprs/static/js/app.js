@@ -26,7 +26,6 @@
     lastAlertedMessageId: 0,
     currentAlertMessage: null,
     soundOnPersonalMessage: true,
-    audioContext: null,
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -620,50 +619,6 @@
   $('#messageText').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
   updateMessageComposerMode();
 
-  function ensureAudioContext() {
-    if (!state.audioContext) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) state.audioContext = new AudioCtx();
-    }
-    if (state.audioContext?.state === 'suspended') {
-      state.audioContext.resume().catch(() => {});
-    }
-  }
-
-  function playPersonalMessageSound() {
-    if (!state.soundOnPersonalMessage) return;
-    try {
-      ensureAudioContext();
-      const ctx = state.audioContext;
-      if (!ctx || ctx.state !== 'running') return;
-
-      const now = ctx.currentTime;
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.20, now + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
-      gain.connect(ctx.destination);
-
-      const osc1 = ctx.createOscillator();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(880, now);
-      osc1.connect(gain);
-      osc1.start(now);
-      osc1.stop(now + 0.18);
-
-      const osc2 = ctx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1174, now + 0.19);
-      osc2.connect(gain);
-      osc2.start(now + 0.19);
-      osc2.stop(now + 0.38);
-    } catch (_) {}
-  }
-
-  ['pointerdown', 'keydown'].forEach(eventName => {
-    document.addEventListener(eventName, ensureAudioContext, { once: true, passive: true });
-  });
-
   function closeIncomingMessageAlert() {
     $('#incomingMessageModal')?.classList.add('hidden');
     state.currentAlertMessage = null;
@@ -696,7 +651,6 @@
       const next = incoming.find(m => Number(m.id) > state.lastAlertedMessageId);
       if (next) {
         state.lastAlertedMessageId = Number(next.id) || state.lastAlertedMessageId;
-        playPersonalMessageSound();
         showIncomingMessageAlert(next);
       }
     } catch (err) {
