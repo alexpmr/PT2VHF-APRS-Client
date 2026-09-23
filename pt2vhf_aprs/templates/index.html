@@ -47,10 +47,13 @@
         <h2>Mensagens APRS</h2>
         <p>Filtre pelo indicativo de origem. O filtro aceita trechos, como <code>PT2</code> ou <code>PY2A</code>.</p>
       </div>
-      <label class="field compact">
-        <span>Filtro</span>
-        <input id="messageFilter" type="text" placeholder="Ex.: PT2">
-      </label>
+      <div class="message-header-controls">
+        <button id="myMessagesButton" type="button" class="btn secondary" aria-pressed="false">Minhas mensagens</button>
+        <label class="field compact">
+          <span>Filtro por origem</span>
+          <input id="messageFilter" type="text" placeholder="Ex.: PT2">
+        </label>
+      </div>
     </div>
     <div class="table-wrap messages-table-wrap">
       <table id="messagesTable" class="data-table">
