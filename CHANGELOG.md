@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.4 — 2026-09-23
+
+- Nova seção **Aparência** em Configuração.
+- Ajuste independente da **família da fonte** da aba Mensagens.
+- Ajuste independente do **tamanho da fonte** da aba Mensagens, de 10 a 20 px.
+- Ajuste independente da **família da fonte** da aba Estações.
+- Ajuste independente do **tamanho da fonte** da aba Estações, de 10 a 20 px.
+- Fontes disponíveis: Sistema, Segoe UI, Arial, Verdana, Tahoma e Consolas.
+- Alterações de aparência são visualizadas imediatamente e persistidas no SQLite após salvar.
+- Configuração incluída na exportação/importação JSON.
+- Mantidas todas as melhorias da v0.2.3, incluindo boletins APRS, Minhas mensagens, popup de mensagens, mapas alternativos, tracklogs configuráveis, passcode automático e nova identidade visual.
+- Esta release permanece **não assinada** enquanto o projeto aguarda aprovação do SignPath Foundation.
+
+
 ## v0.2.3 — 2026-09-23
 
 - Suporte nativo a **boletim APRS geral** (`BLN0`–`BLN9`) sem ACK.
@@ -11,7 +25,6 @@
 - Clique em uma estação abre a aba MAPA, centraliza a posição e abre o popup correspondente.
 - **Última recepção** permanece em uma única linha com data e hora.
 - **Distância** mantém valor e `km` na mesma linha.
-- Configuração independente de fonte e tamanho para as telas **Mensagens** e **Estações**, com aplicação imediata e persistência no SQLite.
 - Nova seção **Mapa** nas configurações.
 - Seleção de mapa: OpenStreetMap, OpenTopoMap e Esri World Imagery.
 - Configuração de cor e espessura dos tracklogs, persistida no SQLite.
