@@ -141,6 +141,51 @@ def test_aprs_passcode():
 
 
 def test_version_tuple():
-    assert version_tuple("v0.2.5") == (0, 2, 5)
+    assert version_tuple("v0.2.6") == (0, 2, 6)
     assert version_tuple("0.2.10") > version_tuple("0.2.9")
     assert version_tuple("v1.0.0") > version_tuple("0.9.99")
+
+
+def test_clear_messages_and_stations_are_scoped():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({"callsign": "PT2VHF", "latitude": -15.8, "longitude": -47.9})
+
+            db.add_message("in", "PY2ABC", "PT2VHF", "Teste", msg_id="001", status="Recebida")
+            db.upsert_station({
+                "from": "PY2ABC-9",
+                "format": "uncompressed",
+                "latitude": -15.81,
+                "longitude": -47.91,
+                "speed": 10.0,
+                "course": 90,
+                "altitude": 1000,
+                "symbol_table": "/",
+                "symbol": ">",
+                "comment": "Movel",
+                "path": ["WIDE1-1"],
+                "raw": "x",
+            })
+
+            assert len(db.list_messages()) == 1
+            assert len(db.list_stations()) == 1
+            assert len(db.map_data()["tracks"]) >= 1
+
+            deleted_messages = db.clear_messages()
+            assert deleted_messages == 1
+            assert db.list_messages() == []
+            assert len(db.list_stations()) == 1
+
+            db.add_message("in", "PY2ABC", "PT2VHF", "Mantida", msg_id="002", status="Recebida")
+            deleted = db.clear_stations()
+            assert deleted["stations"] == 1
+            assert deleted["tracks"] >= 1
+            assert db.list_stations() == []
+            assert db.map_data()["tracks"] == []
+            assert len(db.list_messages()) == 1
+            assert db.get_config()["callsign"] == "PT2VHF"
+    finally:
+        db.DB_PATH = original
