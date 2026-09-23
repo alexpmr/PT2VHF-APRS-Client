@@ -56,6 +56,57 @@
     return data;
   }
 
+  async function refreshVersionStatus(force = false) {
+    const el = $('#versionStatus');
+    const textEl = $('#versionStatusText');
+    if (!el || !textEl) return;
+
+    el.classList.remove('latest', 'update', 'error', 'ahead');
+    el.classList.add('checking');
+    textEl.textContent = 'Verificando versão…';
+    el.removeAttribute('href');
+
+    try {
+      const data = await api(`/api/update-status${force ? '?force=1' : ''}`);
+      el.classList.remove('checking');
+
+      const current = data.current_version ? `v${data.current_version}` : 'versão atual';
+      const latest = data.latest_version ? `v${data.latest_version}` : '';
+
+      if (data.status === 'update_available') {
+        el.classList.add('update');
+        textEl.textContent = `Nova versão ${latest}`;
+        el.title = `Instalada ${current}. Clique para abrir a nova release.`;
+        if (data.release_url) el.href = data.release_url;
+      } else if (data.status === 'latest') {
+        el.classList.add('latest');
+        textEl.textContent = 'Última versão';
+        el.title = `${current} é a versão mais recente publicada.`;
+      } else if (data.status === 'ahead') {
+        el.classList.add('ahead');
+        textEl.textContent = `Build ${current}`;
+        el.title = latest ? `Este build é mais novo que a release publicada ${latest}.` : 'Build de desenvolvimento.';
+      } else {
+        el.classList.add('error');
+        textEl.textContent = 'Versão não verificada';
+        el.title = 'Não foi possível consultar a release mais recente no GitHub.';
+      }
+    } catch (_) {
+      el.classList.remove('checking');
+      el.classList.add('error');
+      textEl.textContent = 'Versão não verificada';
+      el.title = 'Não foi possível consultar a release mais recente no GitHub.';
+    }
+  }
+
+  $('#versionStatus')?.addEventListener('click', e => {
+    const el = e.currentTarget;
+    if (!el.getAttribute('href')) {
+      e.preventDefault();
+      refreshVersionStatus(true);
+    }
+  });
+
   let toastTimer = null;
   function toast(message, type = '') {
     const el = $('#toast');
@@ -939,10 +990,12 @@
     updateMyMessagesButton();
     await loadMessages();
     await checkIncomingPersonalMessages();
+    await refreshVersionStatus();
     setInterval(refreshStatus, 2000);
     setInterval(loadMapData, 5000);
     setInterval(loadMessages, 3000);
     setInterval(checkIncomingPersonalMessages, 3000);
+    setInterval(refreshVersionStatus, 30 * 60 * 1000);
     setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
     setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
   }
