@@ -2,12 +2,91 @@ from __future__ import annotations
 
 import io
 import json
+import re
+import threading
+import time
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 from flask import Flask, jsonify, render_template, request, send_file
 
 from . import __version__
 from . import database as db
 from .aprs_service import full_callsign, service
+
+
+GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
+UPDATE_CACHE_SECONDS = 15 * 60
+_update_cache: dict[str, object] = {"timestamp": 0.0, "payload": None}
+_update_cache_lock = threading.Lock()
+
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    text = str(value or "").strip().lower()
+    if text.startswith("v"):
+        text = text[1:]
+    parts: list[int] = []
+    for part in text.split("."):
+        match = re.match(r"(\d+)", part)
+        if not match:
+            break
+        parts.append(int(match.group(1)))
+    return tuple(parts or [0])
+
+
+def get_update_status(force: bool = False) -> dict:
+    now = time.monotonic()
+    with _update_cache_lock:
+        cached = _update_cache.get("payload")
+        cached_at = float(_update_cache.get("timestamp") or 0.0)
+        if not force and cached and now - cached_at < UPDATE_CACHE_SECONDS:
+            return dict(cached)
+
+    payload = {
+        "current_version": __version__,
+        "latest_version": None,
+        "update_available": False,
+        "release_url": None,
+        "status": "unknown",
+        "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "error": None,
+    }
+
+    try:
+        req = urllib.request.Request(
+            GITHUB_LATEST_RELEASE_API,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "User-Agent": f"PT2VHF-APRS-Client/{__version__}",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=5) as response:
+            release = json.loads(response.read().decode("utf-8"))
+
+        latest = str(release.get("tag_name") or "").strip().lstrip("vV")
+        release_url = str(release.get("html_url") or "").strip() or None
+        current_v = version_tuple(__version__)
+        latest_v = version_tuple(latest)
+
+        payload["latest_version"] = latest or None
+        payload["release_url"] = release_url
+        payload["update_available"] = latest_v > current_v
+        if latest_v > current_v:
+            payload["status"] = "update_available"
+        elif latest_v == current_v:
+            payload["status"] = "latest"
+        else:
+            payload["status"] = "ahead"
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+        payload["status"] = "error"
+        payload["error"] = str(exc)
+
+    with _update_cache_lock:
+        _update_cache["timestamp"] = now
+        _update_cache["payload"] = dict(payload)
+    return payload
 
 
 def create_app() -> Flask:
@@ -22,6 +101,11 @@ def create_app() -> Flask:
     @app.get("/api/status")
     def api_status():
         return jsonify(service.status())
+
+    @app.get("/api/update-status")
+    def api_update_status():
+        force = str(request.args.get("force", "")).lower() in {"1", "true", "yes"}
+        return jsonify(get_update_status(force=force))
 
     @app.post("/api/connect")
     def api_connect():
