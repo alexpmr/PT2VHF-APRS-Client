@@ -124,7 +124,6 @@
     <div class="table-wrap stations-table-wrap">
       <table id="stationsTable" class="data-table">
         <thead><tr>
-          <th data-key="name">Nome <span class="sort-indicator"></span></th>
           <th data-key="callsign">Indicativo <span class="sort-indicator"></span></th>
           <th data-key="last_heard">Última recepção <span class="sort-indicator"></span></th>
           <th data-key="distance_km" data-type="number">Distância <span class="sort-indicator"></span></th>
@@ -146,7 +145,7 @@
       </div>
       <div class="log-controls">
         <label class="field log-filter-field">
-          <span>Filtro</span>
+          <span>Pesquisar no Log</span>
           <input id="logFilter" type="text" placeholder="Ex.: PT2VHF, APRS, logresp">
         </label>
         <label class="field">
@@ -227,6 +226,37 @@
         <div class="config-actions">
           <button type="submit" class="btn primary">Salvar configuração</button>
           <button id="sendBeaconButton" type="button" class="btn secondary">Enviar beacon agora</button>
+        </div>
+      </div>
+
+      <div class="config-card full-card">
+        <h3>Mapa</h3>
+        <div class="form-grid map-config-grid">
+          <label class="field">
+            <span>Tipo de mapa</span>
+            <select name="map_type">
+              <option value="osm">OpenStreetMap</option>
+              <option value="topo">OpenTopoMap</option>
+              <option value="satellite">Satélite — Esri World Imagery</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Cor dos tracklogs</span>
+            <div class="color-field-row">
+              <input name="track_color" type="color" value="#3ba6ff" aria-label="Cor dos tracklogs">
+              <input id="trackColorText" type="text" value="#3ba6ff" maxlength="7" placeholder="#3ba6ff">
+            </div>
+          </label>
+          <label class="field">
+            <span>Espessura dos tracklogs</span>
+            <div class="range-field-row">
+              <input name="track_width" id="trackWidth" type="range" min="1" max="10" step="1" value="2">
+              <output id="trackWidthValue" for="trackWidth">2 px</output>
+            </div>
+          </label>
+        </div>
+        <div class="hint map-provider-hint">
+          OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. A alteração é aplicada ao salvar.
         </div>
       </div>
 
