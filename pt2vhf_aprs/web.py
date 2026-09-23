@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from flask import Flask, jsonify, render_template, request, send_file
 
+from . import __version__
 from . import database as db
 from .aprs_service import service
 
@@ -16,7 +17,7 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index():
-        return render_template("index.html")
+        return render_template("index.html", app_version=__version__)
 
     @app.get("/api/status")
     def api_status():
