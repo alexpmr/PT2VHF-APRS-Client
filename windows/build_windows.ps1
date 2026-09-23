@@ -11,6 +11,7 @@ if (!(Test-Path ".venv-build")) {
 Remove-Item -Recurse -Force build, dist, dist-installer -ErrorAction SilentlyContinue
 & .\.venv-build\Scripts\python.exe windows\make_icon.py
 & .\.venv-build\Scripts\pyinstaller.exe --noconfirm --clean windows\PT2VHF_APRS_Client.spec
+& .\.venv-build\Scripts\pyinstaller.exe --noconfirm windows\PT2VHF_APRS_Client_Portable.spec
 
 & .\.venv-build\Scripts\cyclonedx-py.exe environment --spec-version 1.6 --output-format JSON --output-file dist\PT2VHF_APRS_Client\SBOM.cdx.json
 & .\.venv-build\Scripts\pip-licenses.exe --format=plain-vertical --with-license-file --no-license-path --output-file=dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
@@ -27,6 +28,7 @@ if (-not $iscc) {
 }
 
 & $iscc windows\installer.iss
+Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe dist-installer\PT2VHF_APRS_Client_Portable_x64.exe -Force
 Compress-Archive -Path dist\PT2VHF_APRS_Client\* -DestinationPath dist-installer\PT2VHF_APRS_Client_Portable_x64.zip -Force
 
 Write-Host ""
