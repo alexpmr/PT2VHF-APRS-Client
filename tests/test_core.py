@@ -114,6 +114,8 @@ def test_map_preferences_persist():
                 "map_type": "satellite",
                 "track_color": "#ff6600",
                 "track_width": 5,
+                "map_brightness": 80,
+                "sound_on_personal_message": False,
                 "messages_font_family": "consolas",
                 "messages_font_size": 14,
                 "stations_font_family": "verdana",
@@ -122,6 +124,8 @@ def test_map_preferences_persist():
             assert cfg["map_type"] == "satellite"
             assert cfg["track_color"] == "#ff6600"
             assert cfg["track_width"] == 5
+            assert cfg["map_brightness"] == 80
+            assert cfg["sound_on_personal_message"] == 0
             assert cfg["messages_font_family"] == "consolas"
             assert cfg["messages_font_size"] == 14
             assert cfg["stations_font_family"] == "verdana"
