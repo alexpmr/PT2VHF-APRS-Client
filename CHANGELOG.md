@@ -2,11 +2,13 @@
 
 ## v0.2.5 — em desenvolvimento
 
+- Novo artefato `PT2VHF_APRS_Client_Portable_x64.exe`: versão portátil em executável único, sem necessidade de descompactar o ZIP.
+- O Portable EXE continua usando o banco SQLite em `%LOCALAPPDATA%\PT2VHF APRS Client\data`, compartilhando configurações e histórico com a instalação normal.
 - O instalador agora encerra automaticamente a versão anterior do PT2VHF APRS Client antes de substituir os arquivos, evitando falhas de atualização por arquivos em uso.
 - O instalador também tenta interromper um eventual serviço Windows `PT2VHF_APRS_Client`, preparando o mecanismo para uma futura execução como serviço.
 - Controle de **Brilho do mapa** em Configuração → Mapa, de 30% a 150%, com pré-visualização imediata.
 - Opção de **sinal sonoro** ao receber nova mensagem individual destinada ao `CALL-SSID` configurado.
-- O sinal sonoro é gerado localmente pelo navegador e acompanha o popup de nova mensagem.
+- O sinal sonoro é gerado nativamente pelo Windows quando chega uma mensagem individual para a estação configurada, funcionando mesmo com a interface no navegador minimizada.
 - Botão **Enviar mensagem** no popup das estações do mapa; abre a aba Mensagens com o indicativo de destino já preenchido e o cursor no campo de texto.
 - Indicador de versão no cabeçalho da aplicação.
 - Mostra **Última versão** quando a instalação corresponde à release mais recente publicada.
