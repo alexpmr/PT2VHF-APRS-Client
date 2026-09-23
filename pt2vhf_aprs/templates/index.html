@@ -4,13 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PT2VHF APRS Client v{{ app_version }}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/app_logo.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
 <body>
 <header class="app-header">
   <div class="brand">
-    <div class="brand-mark">APRS</div>
+    <img class="brand-logo" src="{{ url_for('static', filename='img/app_logo.png') }}" alt="PT2VHF APRS Client">
     <div>
       <h1>PT2VHF APRS Client <span class="app-version">v{{ app_version }}</span></h1>
       <div class="subtitle">Cliente APRS-IS com banco local SQLite</div>
@@ -199,7 +200,7 @@
         <div class="form-grid two-cols">
           <label class="field">
             <span>Indicativo</span>
-            <input name="callsign" id="callsignInput" required maxlength="9" placeholder="PT2VHF">
+            <input name="callsign" id="callsignInput" required maxlength="6" placeholder="PT2VHF">
           </label>
           <label class="field">
             <span>Passcode APRS-IS</span>
