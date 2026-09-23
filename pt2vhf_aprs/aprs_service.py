@@ -153,6 +153,7 @@ class APRSService:
     def _handle_line(self, line: str) -> None:
         if not line:
             return
+        db.add_aprs_log("RX", line)
         if line.startswith("#"):
             verified = "verified" in line.lower() and "unverified" not in line.lower()
             if "logresp" in line.lower():
@@ -219,6 +220,7 @@ class APRSService:
             if not self._socket:
                 raise ConnectionError("Não conectado ao APRS-IS.")
             self._socket.sendall(data)
+        db.add_aprs_log("TX", mask_sensitive_log_line(line))
 
     def send_message(self, destination: str, text: str) -> int:
         status = self.status()
@@ -283,6 +285,13 @@ class APRSService:
 
 
 service = APRSService()
+
+
+def mask_sensitive_log_line(line: str) -> str:
+    """Mascara credenciais antes de persistir/exibir o tráfego TX."""
+    if str(line).lower().startswith("user "):
+        return re.sub(r"(\spass\s+)\S+", r"\1******", str(line), flags=re.IGNORECASE)
+    return str(line)
 
 
 def full_callsign(cfg: dict[str, Any]) -> str:
