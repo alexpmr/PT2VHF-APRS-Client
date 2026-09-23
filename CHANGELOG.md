@@ -11,6 +11,7 @@
 - Clique em uma estação abre a aba MAPA, centraliza a posição e abre o popup correspondente.
 - **Última recepção** permanece em uma única linha com data e hora.
 - **Distância** mantém valor e `km` na mesma linha.
+- Configuração independente de fonte e tamanho para as telas **Mensagens** e **Estações**, com aplicação imediata e persistência no SQLite.
 - Nova seção **Mapa** nas configurações.
 - Seleção de mapa: OpenStreetMap, OpenTopoMap e Esri World Imagery.
 - Configuração de cor e espessura dos tracklogs, persistida no SQLite.
