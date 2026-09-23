@@ -379,6 +379,12 @@
     } catch (err) { console.warn(err); }
   }
 
+  function messageTypeLabel(type) {
+    if (type === 'bulletin') return '<span class="message-type-badge bulletin">Boletim</span>';
+    if (type === 'group_bulletin') return '<span class="message-type-badge group-bulletin">Grupo</span>';
+    return '<span class="message-type-badge message">Mensagem</span>';
+  }
+
   function renderMessages() {
     const spec = state.sort.messages;
     const rows = sortedData(state.messages, spec);
@@ -386,6 +392,7 @@
       <tr>
         <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${escapeHtml(m.from_call)}</td>
         <td>${escapeHtml(m.to_call)}</td>
+        <td>${messageTypeLabel(m.message_type)}</td>
         <td>${escapeHtml(m.message)}</td>
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
         <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(m.status || '')}</td>
@@ -403,22 +410,49 @@
     } catch (_) {}
   }, 180));
 
+  function updateMessageComposerMode() {
+    const type = $('#messageType').value;
+    const isMessage = type === 'message';
+    const isGroup = type === 'group_bulletin';
+
+    $('#messageDestinationField').classList.toggle('hidden', !isMessage);
+    $('#bulletinIdField').classList.toggle('hidden', isMessage);
+    $('#bulletinGroupField').classList.toggle('hidden', !isGroup);
+
+    const messageInput = $('#messageText');
+    messageInput.maxLength = isMessage ? 63 : 67;
+    messageInput.placeholder = isMessage ? 'Digite a mensagem APRS' : 'Digite o texto do boletim APRS';
+    $('#sendMessageButton').textContent = isMessage ? 'Enviar' : 'Enviar boletim';
+  }
+
   async function sendMessage() {
+    const type = $('#messageType').value;
     const to = $('#messageTo').value.trim().toUpperCase();
     const message = $('#messageText').value.trim();
-    if (!to || !message) return toast('Informe destino e mensagem.', 'error');
+    const bulletinId = $('#bulletinId').value;
+    const group = $('#bulletinGroup').value.trim().toUpperCase();
+
+    if (!message) return toast('Informe a mensagem.', 'error');
+    if (type === 'message' && !to) return toast('Informe o indicativo de destino.', 'error');
+    if (type === 'group_bulletin' && !group) return toast('Informe o grupo do boletim.', 'error');
+
+    const payload = { type, to, message, bulletin_id: bulletinId, group };
+
     try {
-      await api('/api/messages/send', {
-        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({to, message})
+      const result = await api('/api/messages/send', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
       });
       $('#messageText').value = '';
-      toast('Mensagem enviada ao APRS-IS.', 'ok');
+      toast(result.type === 'message' ? 'Mensagem enviada ao APRS-IS.' : 'Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
       await loadMessages();
     } catch (err) { toast(err.message, 'error'); }
   }
 
+  $('#messageType').addEventListener('change', updateMessageComposerMode);
+  $('#bulletinGroup').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); });
   $('#sendMessageButton').addEventListener('click', sendMessage);
   $('#messageText').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+  updateMessageComposerMode();
 
   function updateUnread() {
     const incoming = state.messages.filter(m => m.direction === 'in');
