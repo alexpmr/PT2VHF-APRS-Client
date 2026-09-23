@@ -156,6 +156,14 @@
       `</span>`;
   }
 
+  document.addEventListener('click', e => {
+    const shortcut = e.target.closest('[data-help-tab]');
+    if (!shortcut) return;
+    const target = shortcut.dataset.helpTab;
+    const tab = $('.tab[data-tab="' + target + '"]');
+    if (tab) tab.click();
+  });
+
   function tabSetup() {
     $$('.tab').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
