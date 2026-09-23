@@ -23,6 +23,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 SetupLogging=yes
 LicenseFile=..\LICENSE
 InfoBeforeFile=PRIVACY_INSTALL.txt
+SetupIconFile=app_icon.ico
 CloseApplications=yes
 RestartApplications=no
 
