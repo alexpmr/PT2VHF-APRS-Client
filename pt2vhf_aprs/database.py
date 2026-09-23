@@ -451,13 +451,25 @@ def mark_message_status(msg_id: str, status: str, peer: str | None = None) -> No
             )
 
 
-def list_messages(from_filter: str = "", limit: int = 5000) -> list[dict[str, Any]]:
-    q = "%" + from_filter.upper().strip() + "%"
+def list_messages(from_filter: str = "", station_filter: str = "", limit: int = 5000) -> list[dict[str, Any]]:
+    station = str(station_filter or "").upper().strip()
+    q = "%" + str(from_filter or "").upper().strip() + "%"
     with connection() as conn:
-        rows = conn.execute(
-            """SELECT * FROM messages WHERE UPPER(from_call) LIKE ? ORDER BY timestamp DESC LIMIT ?""",
-            (q, int(limit)),
-        ).fetchall()
+        if station:
+            rows = conn.execute(
+                """
+                SELECT * FROM messages
+                WHERE message_type='message'
+                  AND (UPPER(from_call)=? OR UPPER(to_call)=?)
+                ORDER BY timestamp DESC LIMIT ?
+                """,
+                (station, station, int(limit)),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT * FROM messages WHERE UPPER(from_call) LIKE ? ORDER BY timestamp DESC LIMIT ?""",
+                (q, int(limit)),
+            ).fetchall()
     return [dict(r) for r in rows]
 
 
