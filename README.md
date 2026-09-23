@@ -1,4 +1,4 @@
-# PT2VHF APRS Client — v0.2.5
+# PT2VHF APRS Client — v0.2.6
 
 Cliente APRS-IS para Windows, desenvolvido em Python, com interface web local, banco SQLite, mapa, mensagens e histórico de estações.
 
@@ -59,6 +59,9 @@ O aplicativo oferece:
 - Boletins APRS gerais e de grupo.
 - Botão **Minhas mensagens** para mostrar apenas mensagens de/para a estação configurada.
 - Popup de alerta para novas mensagens individuais destinadas à estação configurada.
+- Botão **Limpar mensagens** para apagar todo o histórico local de mensagens e boletins, com confirmação.
+- Compositor de mensagem ampliado, com campo multilinha e contador de caracteres.
+- `Ctrl+Enter` envia a mensagem; `Enter` cria nova linha durante a edição.
 
 ### Estações
 
@@ -68,6 +71,7 @@ O aplicativo oferece:
 - Velocidade, curso, altitude e informação.
 - Filtro parcial e ordenação por colunas.
 - Clique na estação para centralizá-la no mapa.
+- Botão **Limpar estações** para apagar todas as estações e tracklogs locais, com confirmação.
 
 ### Ajuda
 
