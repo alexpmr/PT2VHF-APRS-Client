@@ -358,6 +358,20 @@ def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group:
     return packet, addressee.rstrip(), message_type, clean
 
 
+def calculate_aprs_passcode(callsign: str) -> int:
+    """Calcula o passcode APRS-IS clássico a partir do indicativo-base."""
+    base = str(callsign or "").upper().strip().split("-", 1)[0]
+    if not re.fullmatch(r"[A-Z0-9]{1,6}", base):
+        raise ValueError("Indicativo inválido para cálculo do passcode APRS-IS.")
+
+    value = 0x73E2
+    for i in range(0, len(base), 2):
+        value ^= ord(base[i]) << 8
+        if i + 1 < len(base):
+            value ^= ord(base[i + 1])
+    return value & 0x7FFF
+
+
 def full_callsign(cfg: dict[str, Any]) -> str:
     call = str(cfg.get("callsign") or "").upper().strip()
     ssid = int(cfg.get("ssid") or 0)
