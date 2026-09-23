@@ -33,6 +33,8 @@
   <section id="tab-map" class="tab-panel active">
     <div class="map-toolbar">
       <div><strong>Estações recebidas:</strong> <span id="mapStationCount">0</span></div>
+      <div><strong>Pacotes APRS-IS:</strong> <span id="packetCount">0</span></div>
+      <div><strong>Filtro ativo:</strong> <span id="activeFilter">—</span></div>
       <div><strong>Última atualização:</strong> <span id="mapLastUpdate">—</span></div>
     </div>
     <div id="map"></div>
@@ -140,7 +142,7 @@
           <label class="field full"><span>Servidor</span><input name="server" value="brazil.aprs2.net" required></label>
           <label class="field"><span>Porta</span><input name="port" type="number" value="14580" min="1" max="65535" required></label>
           <label class="field"><span>Senha / Passcode APRS-IS</span><input name="passcode" type="password" autocomplete="new-password"></label>
-          <label class="field full"><span>Filtro APRS-IS</span><input name="aprs_filter" placeholder="Ex.: r/500 ou r/-15.8/-47.9/500"><small><code>r/500</code> usa sua latitude/longitude configuradas como centro.</small></label>
+          <label class="field full"><span>Filtro APRS-IS</span><input name="aprs_filter" placeholder="Ex.: r/500 ou r/-15.8/-47.9/500"><small><code>r/500</code> usa sua latitude/longitude configuradas como centro. Na porta 14580, deixar este campo vazio significa receber quase nenhum tráfego geral.</small></label>
           <label class="field"><span>Beacon (minutos)</span><input name="beacon_minutes" type="number" min="1" value="10"></label>
           <label class="check-field"><input name="connect_on_start" type="checkbox"><span>Conectar ao iniciar</span></label>
         </div>
