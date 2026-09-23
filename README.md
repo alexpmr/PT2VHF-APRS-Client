@@ -48,19 +48,23 @@ O aplicativo oferece:
 
 ### Mensagens
 
-- De, Para, Mensagem, Hora e Status.
+- De, Para, Tipo, Mensagem, Hora e Status.
 - Ordenação pelas colunas.
 - Filtro parcial por indicativo de origem.
 - Autocomplete do destino usando indicativos conhecidos, sem impedir indicativos novos.
 - IDs de mensagem APRS, ACK/REJ e ACK automático.
+- Boletins APRS gerais e de grupo.
+- Botão **Minhas mensagens** para mostrar apenas mensagens de/para a estação configurada.
+- Popup de alerta para novas mensagens individuais destinadas à estação configurada.
 
 ### Estações
 
-- Nome/indicativo.
+- Indicativo como identificação principal.
 - Última recepção.
 - Distância da estação local.
 - Velocidade, curso, altitude e informação.
 - Filtro parcial e ordenação por colunas.
+- Clique na estação para centralizá-la no mapa.
 
 ### Log APRS-IS
 
@@ -85,6 +89,9 @@ O aplicativo oferece:
 - Filtro APRS-IS.
 - `r/500` é expandido usando a posição configurada.
 - Conectar ao iniciar.
+- Tipo de mapa, cor e espessura dos tracklogs.
+- Fonte e tamanho independentes para Mensagens e Estações.
+- Passcode APRS-IS visível junto ao indicativo, com cálculo automático.
 - Importação/exportação JSON.
 
 ## Build automático no GitHub
