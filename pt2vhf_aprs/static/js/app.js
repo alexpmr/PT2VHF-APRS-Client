@@ -538,6 +538,12 @@
     return '<span class="message-type-badge message">Mensagem</span>';
   }
 
+  function messageStatusLabel(status) {
+    if (status === 'ACK') return 'Lido';
+    if (status === 'REJ') return 'Rejeitada';
+    return status || '';
+  }
+
   function renderMessages() {
     const spec = state.sort.messages;
     const rows = sortedData(state.messages, spec);
@@ -548,7 +554,7 @@
         <td>${messageTypeLabel(m.message_type)}</td>
         <td>${escapeHtml(m.message)}</td>
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
-        <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(m.status || '')}</td>
+        <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(messageStatusLabel(m.status))}</td>
       </tr>`).join('');
     updateSortIndicators('messagesTable', spec);
   }
