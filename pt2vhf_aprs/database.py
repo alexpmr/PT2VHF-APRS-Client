@@ -43,6 +43,10 @@ DEFAULT_CONFIG = {
     "map_type": "osm",
     "track_color": "#3ba6ff",
     "track_width": 2,
+    "messages_font_family": "system",
+    "messages_font_size": 12,
+    "stations_font_family": "system",
+    "stations_font_size": 12,
 }
 
 
@@ -88,6 +92,10 @@ def init_db() -> None:
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
                 track_width INTEGER NOT NULL DEFAULT 2,
+                messages_font_family TEXT NOT NULL DEFAULT 'system',
+                messages_font_size INTEGER NOT NULL DEFAULT 12,
+                stations_font_family TEXT NOT NULL DEFAULT 'system',
+                stations_font_size INTEGER NOT NULL DEFAULT 12,
                 updated_at TEXT NOT NULL
             );
 
@@ -171,6 +179,14 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN track_color TEXT NOT NULL DEFAULT '#3ba6ff'")
         if "track_width" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN track_width INTEGER NOT NULL DEFAULT 2")
+        if "messages_font_family" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN messages_font_family TEXT NOT NULL DEFAULT 'system'")
+        if "messages_font_size" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN messages_font_size INTEGER NOT NULL DEFAULT 12")
+        if "stations_font_family" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN stations_font_family TEXT NOT NULL DEFAULT 'system'")
+        if "stations_font_size" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN stations_font_size INTEGER NOT NULL DEFAULT 12")
 
         message_columns = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()}
         if "message_type" not in message_columns:
@@ -212,6 +228,10 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
     merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()
     merged["track_width"] = int(merged["track_width"] or 2)
+    merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
+    merged["messages_font_size"] = int(merged["messages_font_size"] or 12)
+    merged["stations_font_family"] = str(merged["stations_font_family"] or "system").lower().strip()
+    merged["stations_font_size"] = int(merged["stations_font_size"] or 12)
     merged["symbol_table"] = (str(merged["symbol_table"] or "/")[:1])
     merged["symbol"] = (str(merged["symbol"] or ">")[:1])
     for field in ("latitude", "longitude", "altitude"):
@@ -236,6 +256,16 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Cor do tracklog inválida.")
     if not (1 <= merged["track_width"] <= 10):
         raise ValueError("Espessura do tracklog deve estar entre 1 e 10.")
+
+    allowed_fonts = {"system", "segoe", "arial", "verdana", "tahoma", "consolas"}
+    if merged["messages_font_family"] not in allowed_fonts:
+        raise ValueError("Fonte da tela de mensagens inválida.")
+    if merged["stations_font_family"] not in allowed_fonts:
+        raise ValueError("Fonte da tela de estações inválida.")
+    if not (10 <= merged["messages_font_size"] <= 20):
+        raise ValueError("Tamanho da fonte de mensagens deve estar entre 10 e 20 px.")
+    if not (10 <= merged["stations_font_size"] <= 20):
+        raise ValueError("Tamanho da fonte de estações deve estar entre 10 e 20 px.")
 
     sets = ", ".join(f"{key}=?" for key in sorted(allowed))
     values = [merged[key] for key in sorted(allowed)]
