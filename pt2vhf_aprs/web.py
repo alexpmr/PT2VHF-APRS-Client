@@ -189,6 +189,11 @@ def create_app() -> Flask:
     def api_stations():
         return jsonify(db.list_stations(request.args.get("filter", "")))
 
+    @app.post("/api/stations/clear")
+    def api_clear_stations():
+        deleted = db.clear_stations()
+        return jsonify({"ok": True, "deleted": deleted})
+
     @app.get("/api/messages")
     def api_messages():
         mine = str(request.args.get("mine", "")).lower() in {"1", "true", "yes"}
@@ -197,6 +202,11 @@ def create_app() -> Flask:
             request.args.get("from", ""),
             station_filter=station,
         ))
+
+    @app.post("/api/messages/clear")
+    def api_clear_messages():
+        deleted = db.clear_messages()
+        return jsonify({"ok": True, "deleted": deleted})
 
     @app.post("/api/messages/send")
     def api_send_message():
