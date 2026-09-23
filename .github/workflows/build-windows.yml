@@ -58,16 +58,22 @@ jobs:
             dist-installer\PT2VHF_APRS_Client_Portable_x64.zip
 
       - name: Publish GitHub Release assets
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view $env:GITHUB_REF_NAME 2>$null
-          if ($LASTEXITCODE -ne 0) {
-            gh release create $env:GITHUB_REF_NAME --title "PT2VHF APRS Client $env:GITHUB_REF_NAME" --generate-notes
+          if ($env:GITHUB_REF -like "refs/tags/*") {
+            $tag = $env:GITHUB_REF_NAME
+          } else {
+            $version = (Get-Content VERSION -Raw).Trim()
+            $tag = "v$version"
           }
-          gh release upload $env:GITHUB_REF_NAME `
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --target $env:GITHUB_SHA --title "PT2VHF APRS Client $tag" --generate-notes
+          }
+          gh release upload $tag `
             dist-installer\PT2VHF_APRS_Client_Setup_x64.exe `
             dist-installer\PT2VHF_APRS_Client_Portable_x64.zip `
             --clobber
