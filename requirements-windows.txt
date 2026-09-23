@@ -1,0 +1,6 @@
+-r requirements.txt
+waitress>=3.0,<4.0
+pystray>=0.19,<1.0
+Pillow>=11.0,<13.0
+pyinstaller>=6.0,<7.0
+pytest>=8.0,<9.0
