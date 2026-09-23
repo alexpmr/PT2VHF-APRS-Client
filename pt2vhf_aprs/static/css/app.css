@@ -549,3 +549,9 @@ main { height: calc(100vh - 121px); }
   padding: 7px 11px;
   font-size: 12px;
 }
+
+.message-sound-check {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
