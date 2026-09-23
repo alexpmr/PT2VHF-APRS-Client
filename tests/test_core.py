@@ -2,7 +2,7 @@ from pathlib import Path
 import tempfile
 
 from pt2vhf_aprs import database as db
-from pt2vhf_aprs.aprs_service import build_beacon_packet, build_bulletin_packet, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id
+from pt2vhf_aprs.aprs_service import build_beacon_packet, build_bulletin_packet, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id
 
 
 def test_beacon_packet():
@@ -119,3 +119,9 @@ def test_map_preferences_persist():
             assert cfg["track_width"] == 5
     finally:
         db.DB_PATH = original
+
+
+def test_aprs_passcode():
+    assert calculate_aprs_passcode("PT2VHF") == 22950
+    assert calculate_aprs_passcode("PT2VHF-9") == 22950
+    assert calculate_aprs_passcode("PT2VHF-15") == 22950
