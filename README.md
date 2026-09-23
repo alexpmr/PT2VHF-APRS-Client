@@ -161,7 +161,18 @@ Os componentes de terceiros mantêm suas próprias licenças. Em particular, o b
 
 A política de assinatura está documentada em [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
 
-**Status atual:** as releases Windows ainda são não assinadas enquanto o projeto conclui o processo de onboarding para assinatura Open Source. A integração planejada é SignPath.io / SignPath Foundation; ela só será ativada depois da aprovação externa e da configuração dos identificadores/segredos necessários.
+**Status atual:** as releases Windows ainda são não assinadas enquanto o projeto conclui o processo de onboarding para assinatura Open Source.
+
+Após a aprovação e ativação do projeto, as releases assinadas usarão a atribuição exigida pelo programa:
+
+> **Free code signing provided by SignPath.io, certificate by SignPath Foundation**
+
+Papéis atuais do projeto:
+
+- **Committer / reviewer:** [Alex Rodrigues (@alexpmr)](https://github.com/alexpmr)
+- **Approver:** [Alex Rodrigues (@alexpmr)](https://github.com/alexpmr)
+
+Política de privacidade: [PRIVACY.md](PRIVACY.md)
 
 Consulte também o [plano de integração com SignPath](docs/SIGNPATH_SETUP.md).
 
