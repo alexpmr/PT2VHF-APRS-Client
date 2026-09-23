@@ -396,6 +396,14 @@
       $('#mapStationCount').textContent = data.stations.length;
       $('#mapLastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
 
+      const activeStations = new Set(data.stations.map(s => s.callsign));
+      for (const [call, marker] of state.markers) {
+        if (!activeStations.has(call)) {
+          state.map.removeLayer(marker);
+          state.markers.delete(call);
+        }
+      }
+
       for (const s of data.stations) {
         const latlng = [Number(s.latitude), Number(s.longitude)];
         if (!Number.isFinite(latlng[0]) || !Number.isFinite(latlng[1])) continue;
@@ -414,6 +422,13 @@
         if (!grouped.has(t.callsign)) grouped.set(t.callsign, []);
         grouped.get(t.callsign).push([Number(t.latitude), Number(t.longitude)]);
       }
+      for (const [call, line] of state.trackLines) {
+        if (!grouped.has(call)) {
+          state.map.removeLayer(line);
+          state.trackLines.delete(call);
+        }
+      }
+
       for (const [call, points] of grouped) {
         if (points.length < 2) continue;
         let line = state.trackLines.get(call);
@@ -560,6 +575,22 @@
     await loadMessages();
   });
 
+  $('#clearMessagesButton')?.addEventListener('click', async () => {
+    if (!window.confirm('Apagar TODO o histórico de mensagens e boletins armazenado neste computador? Esta ação não pode ser desfeita.')) return;
+    try {
+      const result = await api('/api/messages/clear', { method: 'POST' });
+      state.messages = [];
+      renderMessages();
+      localStorage.removeItem('pt2vhf_last_seen_msg');
+      state.messageAlertBaselineReady = false;
+      state.lastAlertedMessageId = 0;
+      $('#messageBadge')?.classList.add('hidden');
+      toast(`Histórico de mensagens limpo (${Number(result.deleted || 0)} registro(s)).`, 'ok');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
+
   $('#messageTo').addEventListener('input', debounce(async (ev) => {
     try {
       const list = await api(`/api/callsigns?prefix=${encodeURIComponent(ev.target.value)}`);
@@ -583,6 +614,14 @@
     openMessageComposer(button.dataset.callsign || '');
   });
 
+  function updateMessageCharCounter() {
+    const input = $('#messageText');
+    const counter = $('#messageCharCounter');
+    if (!input || !counter) return;
+    counter.textContent = `${input.value.length} / ${input.maxLength}`;
+    counter.classList.toggle('near-limit', input.value.length >= input.maxLength - 8);
+  }
+
   function updateMessageComposerMode() {
     const type = $('#messageType').value;
     const isMessage = type === 'message';
@@ -596,6 +635,7 @@
     messageInput.maxLength = isMessage ? 63 : 67;
     messageInput.placeholder = isMessage ? 'Digite a mensagem APRS' : 'Digite o texto do boletim APRS';
     $('#sendMessageButton').textContent = isMessage ? 'Enviar' : 'Enviar boletim';
+    updateMessageCharCounter();
   }
 
   async function sendMessage() {
@@ -616,6 +656,7 @@
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
       });
       $('#messageText').value = '';
+      updateMessageCharCounter();
       toast(result.type === 'message' ? 'Mensagem enviada ao APRS-IS.' : 'Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
       await loadMessages();
     } catch (err) { toast(err.message, 'error'); }
@@ -624,8 +665,15 @@
   $('#messageType').addEventListener('change', updateMessageComposerMode);
   $('#bulletinGroup').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); });
   $('#sendMessageButton').addEventListener('click', sendMessage);
-  $('#messageText').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+  $('#messageText').addEventListener('input', updateMessageCharCounter);
+  $('#messageText').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
   updateMessageComposerMode();
+  updateMessageCharCounter();
 
   function closeIncomingMessageAlert() {
     $('#incomingMessageModal')?.classList.add('hidden');
@@ -820,6 +868,29 @@
     }
     marker?.openPopup();
   }
+
+  $('#clearStationsButton')?.addEventListener('click', async () => {
+    if (!window.confirm('Apagar TODAS as estações e todos os tracklogs armazenados neste computador? Novas estações voltarão a aparecer quando forem recebidas.')) return;
+    try {
+      const result = await api('/api/stations/clear', { method: 'POST' });
+      state.stations = [];
+      renderStations();
+
+      for (const marker of state.markers.values()) state.map?.removeLayer(marker);
+      for (const line of state.trackLines.values()) state.map?.removeLayer(line);
+      state.markers.clear();
+      state.trackLines.clear();
+
+      $('#mapStationCount').textContent = '0';
+      await loadMapData();
+
+      const deletedStations = Number(result.deleted?.stations || 0);
+      const deletedTracks = Number(result.deleted?.tracks || 0);
+      toast(`Estações limpas (${deletedStations} estação(ões), ${deletedTracks} ponto(s) de tracklog).`, 'ok');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
 
   $('#stationFilter').addEventListener('input', debounce(loadStations, 250));
 
