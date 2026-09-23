@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.5 — em desenvolvimento
+
+- Indicador de versão no cabeçalho da aplicação.
+- Mostra **Última versão** quando a instalação corresponde à release mais recente publicada.
+- Mostra **Nova versão vX.Y.Z** quando houver uma release mais nova no GitHub.
+- O aviso de nova versão abre diretamente a página da Release.
+- Builds de desenvolvimento mais novos que a última release são identificados como **Build vX.Y.Z**.
+- Falhas de consulta não afetam o APRS e são mostradas como **Versão não verificada**.
+- Consulta feita pelo backend local com cache de 15 minutos; a interface revalida periodicamente.
+
 ## v0.2.4 — 2026-09-23
 
 - Nova seção **Aparência** em Configuração.
