@@ -129,6 +129,7 @@ def init_db() -> None:
                 from_call TEXT NOT NULL,
                 to_call TEXT NOT NULL,
                 message TEXT NOT NULL,
+                message_type TEXT NOT NULL DEFAULT 'message',
                 msg_id TEXT,
                 status TEXT NOT NULL DEFAULT '',
                 timestamp TEXT NOT NULL,
@@ -156,6 +157,10 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_aprs_log_direction ON aprs_log(direction, id DESC);
             """
         )
+        message_columns = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()}
+        if "message_type" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN message_type TEXT NOT NULL DEFAULT 'message'")
+
         row = conn.execute("SELECT id FROM config WHERE id=1").fetchone()
         if not row:
             now = utc_now_iso()
@@ -395,12 +400,15 @@ def map_data() -> dict[str, Any]:
 
 
 def add_message(direction: str, from_call: str, to_call: str, message: str, msg_id: str | None = None,
-                status: str = "", raw: str | None = None) -> int:
+                status: str = "", raw: str | None = None, message_type: str = "message") -> int:
+    message_type = str(message_type or "message").strip().lower()
+    if message_type not in {"message", "bulletin", "group_bulletin"}:
+        message_type = "message"
     with connection() as conn:
         cur = conn.execute(
-            """INSERT INTO messages(direction,from_call,to_call,message,msg_id,status,timestamp,raw)
-               VALUES(?,?,?,?,?,?,?,?)""",
-            (direction, from_call.upper(), to_call.upper(), message, msg_id, status, utc_now_iso(), raw),
+            """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,timestamp,raw)
+               VALUES(?,?,?,?,?,?,?,?,?)""",
+            (direction, from_call.upper(), to_call.upper(), message, message_type, msg_id, status, utc_now_iso(), raw),
         )
         return int(cur.lastrowid)
 
