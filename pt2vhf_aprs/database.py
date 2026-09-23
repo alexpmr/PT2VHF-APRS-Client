@@ -145,6 +145,15 @@ def init_db() -> None:
                 raw TEXT NOT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_packets_time ON packets(timestamp DESC);
+
+            CREATE TABLE IF NOT EXISTS aprs_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                direction TEXT NOT NULL CHECK(direction IN ('RX','TX')),
+                raw TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_aprs_log_time ON aprs_log(id DESC);
+            CREATE INDEX IF NOT EXISTS idx_aprs_log_direction ON aprs_log(direction, id DESC);
             """
         )
         row = conn.execute("SELECT id FROM config WHERE id=1").fetchone()
@@ -436,3 +445,48 @@ def callsign_suggestions(prefix: str = "", limit: int = 30) -> list[str]:
             (p, int(limit)),
         ).fetchall()
     return [r[0] for r in rows if r[0]]
+
+
+def add_aprs_log(direction: str, raw: str) -> int:
+    direction = str(direction or "").upper().strip()
+    if direction not in {"RX", "TX"}:
+        raise ValueError("Direção do log APRS-IS deve ser RX ou TX.")
+    with connection() as conn:
+        cur = conn.execute(
+            "INSERT INTO aprs_log(timestamp, direction, raw) VALUES (?, ?, ?)",
+            (utc_now_iso(), direction, str(raw)),
+        )
+        # Retém os 100 mil registros mais recentes.
+        conn.execute(
+            "DELETE FROM aprs_log WHERE id NOT IN (SELECT id FROM aprs_log ORDER BY id DESC LIMIT 100000)"
+        )
+        return int(cur.lastrowid)
+
+
+def list_aprs_log(filter_text: str = "", direction: str = "ALL", limit: int = 1000) -> list[dict[str, Any]]:
+    direction = str(direction or "ALL").upper().strip()
+    if direction not in {"ALL", "RX", "TX"}:
+        direction = "ALL"
+    q = "%" + str(filter_text or "").upper().strip() + "%"
+    limit = max(1, min(int(limit or 1000), 10000))
+    with connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM (
+                SELECT id, timestamp, direction, raw
+                FROM aprs_log
+                WHERE (? = 'ALL' OR direction = ?)
+                  AND UPPER(raw) LIKE ?
+                ORDER BY id DESC
+                LIMIT ?
+            )
+            ORDER BY id ASC
+            """,
+            (direction, direction, q, limit),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def clear_aprs_log() -> None:
+    with connection() as conn:
+        conn.execute("DELETE FROM aprs_log")
