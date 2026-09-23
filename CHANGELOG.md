@@ -18,6 +18,7 @@
 - Cálculo automático do passcode APRS-IS enquanto o indicativo é digitado.
 - Nova identidade visual quadrada do PT2VHF APRS Client no cabeçalho, favicon, bandeja, executável e instalador.
 - Geração automática do ícone Windows durante o build.
+- Logo validada novamente no pipeline após correção do ativo PNG usado para gerar o ícone Windows.
 - Mantidos SBOM CycloneDX, inventário de licenças e preparação para futura assinatura SignPath.
 - Esta release ainda é **não assinada** enquanto o projeto aguarda aprovação do SignPath Foundation.
 
