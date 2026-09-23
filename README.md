@@ -1,4 +1,4 @@
-# PT2VHF APRS Client — v0.2.6
+# PT2VHF APRS Client — v0.2.7
 
 Cliente APRS-IS para Windows, desenvolvido em Python, com interface web local, banco SQLite, mapa, mensagens e histórico de estações.
 
@@ -10,7 +10,6 @@ Os artefatos previstos para cada versão são:
 
 - `PT2VHF_APRS_Client_Setup_x64.exe` — instalador recomendado.
 - `PT2VHF_APRS_Client_Portable_x64.exe` — versão portátil em executável único.
-- `PT2VHF_APRS_Client_Portable_x64.zip` — versão portátil em diretório compactado.
 
 O instalador utiliza **PyInstaller + Inno Setup**. A aplicação executa sem janela de console, inicia um servidor HTTP apenas em `127.0.0.1`, abre o navegador e permanece disponível pela bandeja do Windows.
 
@@ -113,12 +112,11 @@ O aplicativo oferece:
 O workflow `.github/workflows/build-windows.yml` executa:
 
 1. testes automatizados;
-2. empacotamento PyInstaller `onedir`;
+2. empacotamento PyInstaller `onedir` para gerar o instalador;
 3. empacotamento PyInstaller `onefile` para o Portable EXE;
 4. criação do instalador Inno Setup;
-5. criação do ZIP portátil;
-6. upload dos artefatos Windows;
-7. publicação automática dos arquivos em uma Release quando o build é disparado por uma tag `v*`.
+5. upload dos artefatos Windows;
+6. publicação automática dos arquivos em uma Release quando o build é disparado por uma tag `v*`.
 
 ## Build manual no Windows
 
