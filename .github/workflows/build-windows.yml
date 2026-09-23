@@ -41,7 +41,9 @@ jobs:
 
       - name: Build application
         shell: pwsh
-        run: pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
+        run: |
+          pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
+          pyinstaller --noconfirm windows\PT2VHF_APRS_Client_Portable.spec
 
       - name: Generate SBOM and license inventory
         shell: pwsh
@@ -55,11 +57,12 @@ jobs:
         shell: pwsh
         run: choco install innosetup --no-progress -y
 
-      - name: Build installer and portable ZIP
+      - name: Build installer and portable packages
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist-installer | Out-Null
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
+          Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe dist-installer\PT2VHF_APRS_Client_Portable_x64.exe -Force
           Compress-Archive -Path dist\PT2VHF_APRS_Client\* -DestinationPath dist-installer\PT2VHF_APRS_Client_Portable_x64.zip -Force
 
       - name: Upload build artifacts
@@ -69,6 +72,7 @@ jobs:
           name: PT2VHF-APRS-Client-Windows-x64
           path: |
             dist-installer\PT2VHF_APRS_Client_Setup_x64.exe
+            dist-installer\PT2VHF_APRS_Client_Portable_x64.exe
             dist-installer\PT2VHF_APRS_Client_Portable_x64.zip
             dist\PT2VHF_APRS_Client\SBOM.cdx.json
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
@@ -102,7 +106,8 @@ jobs:
           ## Downloads
 
           - **PT2VHF_APRS_Client_Setup_x64.exe** — Windows installer
-          - **PT2VHF_APRS_Client_Portable_x64.zip** — portable build
+          - **PT2VHF_APRS_Client_Portable_x64.exe** — single-file portable executable
+          - **PT2VHF_APRS_Client_Portable_x64.zip** — portable onedir build
           - **SBOM.cdx.json** — CycloneDX software bill of materials
           - **THIRD_PARTY_LICENSES.txt** — generated dependency license inventory
           "@ | Set-Content -Encoding UTF8 release-notes.md
@@ -116,6 +121,7 @@ jobs:
 
           gh release upload $tag `
             dist-installer\PT2VHF_APRS_Client_Setup_x64.exe `
+            dist-installer\PT2VHF_APRS_Client_Portable_x64.exe `
             dist-installer\PT2VHF_APRS_Client_Portable_x64.zip `
             dist\PT2VHF_APRS_Client\SBOM.cdx.json `
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
