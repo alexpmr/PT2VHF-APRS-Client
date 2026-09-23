@@ -1,0 +1,32 @@
+PT2VHF APRS Client - Privacy Notice
+
+PT2VHF APRS Client is a local Windows application. The project does not operate
+a telemetry, analytics, advertising, or user-tracking service.
+
+The application does communicate with external services when you use features
+that require them:
+
+- APRS-IS: connects to the APRS-IS server configured by the user and may
+  transmit the configured callsign, filter, messages, acknowledgements and
+  beacons. APRS-IS credentials are used to authenticate the connection.
+- OpenStreetMap: map tile requests are sent to OpenStreetMap tile servers.
+- Browser geolocation: used only after the user requests "My location" and the
+  browser grants permission. It does not automatically replace the configured
+  APRS station position or transmit an APRS beacon.
+- Third-party web resources used by the current interface may receive normal
+  HTTP request metadata.
+
+Persistent application data is stored locally under:
+
+%LOCALAPPDATA%\PT2VHF APRS Client\data\pt2vhf_aprs.db
+
+The database can contain configuration, callsigns, received positions,
+tracklogs, messages, raw APRS packets and APRS-IS RX/TX logs.
+
+The configuration export may contain the APRS-IS passcode in readable form.
+Treat exported JSON configuration files as sensitive.
+
+Full privacy policy:
+https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/PRIVACY.md
+
+By continuing the installation, you acknowledge that you have read this notice.
