@@ -2,6 +2,8 @@
 
 ## v0.2.5 — em desenvolvimento
 
+- O instalador agora encerra automaticamente a versão anterior do PT2VHF APRS Client antes de substituir os arquivos, evitando falhas de atualização por arquivos em uso.
+- O instalador também tenta interromper um eventual serviço Windows `PT2VHF_APRS_Client`, preparando o mecanismo para uma futura execução como serviço.
 - Controle de **Brilho do mapa** em Configuração → Mapa, de 30% a 150%, com pré-visualização imediata.
 - Opção de **sinal sonoro** ao receber nova mensagem individual destinada ao `CALL-SSID` configurado.
 - O sinal sonoro é gerado localmente pelo navegador e acompanha o popup de nova mensagem.
