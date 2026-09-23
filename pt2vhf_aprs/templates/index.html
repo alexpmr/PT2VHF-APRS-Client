@@ -3,10 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PT2VHF APRS Client</title>
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIINfQ3ynuhW0WLPwA5aBiEHvtWvKsAMNQ=" crossorigin="">
+  <title>PT2VHF APRS Client v{{ app_version }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
 <body>
@@ -14,7 +12,7 @@
   <div class="brand">
     <div class="brand-mark">APRS</div>
     <div>
-      <h1>PT2VHF APRS Client</h1>
+      <h1>PT2VHF APRS Client <span class="app-version">v{{ app_version }}</span></h1>
       <div class="subtitle">Cliente APRS-IS com banco local SQLite</div>
     </div>
   </div>
