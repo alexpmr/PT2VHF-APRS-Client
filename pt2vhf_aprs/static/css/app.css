@@ -38,6 +38,8 @@ h1 { margin: 0; font-size: 20px; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #06131e; font-weight: 700; }
 .btn.primary:hover { background: #62b8ff; }
 .btn.secondary { background: #202a34; }
+.btn.danger { background: rgba(240,92,99,.10); border-color: rgba(240,92,99,.42); color: #ffb2b6; }
+.btn.danger:hover { background: rgba(240,92,99,.18); border-color: var(--danger); color: #ffd5d7; }
 .tabs { height: 49px; display: flex; padding: 0 18px; gap: 4px; background: #111820; border-bottom: 1px solid var(--line); }
 .tab { position: relative; border: 0; background: transparent; color: var(--muted); padding: 0 17px; cursor: pointer; font-weight: 700; }
 .tab.active { color: var(--text); }
@@ -69,7 +71,7 @@ main { height: calc(100vh - 121px); }
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,166,255,.14); }
 .field.compact { min-width: 280px; }
 .table-wrap { overflow: auto; background: var(--bg); }
-.messages-table-wrap { height: calc(100% - 78px - 82px); }
+.messages-table-wrap { height: calc(100% - 78px - 246px); }
 .stations-table-wrap { height: calc(100% - 78px); }
 .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
 .data-table th { position: sticky; top: 0; z-index: 2; text-align: left; background: #19222b; color: #c9d5de; border-bottom: 1px solid var(--line); padding: 10px 11px; cursor: pointer; white-space: nowrap; user-select: none; }
@@ -77,9 +79,65 @@ main { height: calc(100vh - 121px); }
 .data-table td { padding: 9px 11px; border-bottom: 1px solid #202b35; color: #dbe5ec; vertical-align: top; }
 .data-table tbody tr:hover { background: rgba(59,166,255,.06); }
 .sort-indicator { color: var(--accent); margin-left: 3px; }
-.message-composer { min-height: 82px; display: grid; grid-template-columns: minmax(140px,180px) minmax(160px,220px) minmax(86px,100px) minmax(120px,160px) minmax(280px,1fr) 118px; gap: 10px; align-items: end; padding: 12px 20px; border-top: 1px solid var(--line); background: #111820; }
-.message-type-field { grid-column: auto; }
-.send-btn { height: 38px; }
+.message-composer {
+  height: 246px;
+  min-height: 246px;
+  display: grid;
+  grid-template-columns: minmax(140px,180px) minmax(160px,220px) minmax(86px,100px) minmax(120px,160px) minmax(160px,1fr) 118px;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  align-items: end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  background: #111820;
+}
+.message-type-field,
+.destination-field,
+.bulletin-id-field,
+.bulletin-group-field { grid-row: 1; }
+.message-field {
+  grid-column: 1 / 6;
+  grid-row: 2;
+  align-self: stretch;
+}
+.message-field > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.message-field > span small {
+  color: var(--muted);
+  font-weight: 500;
+}
+#messageText {
+  width: 100%;
+  min-height: 128px;
+  height: 100%;
+  resize: none;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px 12px;
+  background: #0f151b;
+  color: var(--text);
+  outline: none;
+  line-height: 1.45;
+}
+#messageText:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59,166,255,.14);
+}
+.message-char-counter {
+  align-self: flex-end;
+  color: var(--muted);
+  font-size: 10px;
+}
+.send-btn {
+  grid-column: 6;
+  grid-row: 2;
+  height: 44px;
+  align-self: end;
+}
 .direction-in { color: #b7d9ff; }
 .direction-out { color: #aee7c6; }
 .status-ack { color: var(--ok); font-weight: 700; }
@@ -121,10 +179,16 @@ main { height: calc(100vh - 121px); }
   .field.compact { min-width: 0; }
   .messages-table-wrap { height: calc(100% - 132px - 132px); }
   .stations-table-wrap { height: calc(100% - 132px); }
-  .message-composer { min-height: 190px; grid-template-columns: 1fr 1fr; }
-  .message-type-field, .destination-field, .bulletin-id-field, .bulletin-group-field { grid-column: auto; }
-  .message-field { grid-column: 1 / -1; }
-  .send-btn { grid-column: 1 / -1; }
+  .message-composer {
+    height: auto;
+    min-height: 320px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr auto;
+  }
+  .message-type-field, .destination-field, .bulletin-id-field, .bulletin-group-field { grid-column: auto; grid-row: auto; }
+  .message-field { grid-column: 1 / -1; grid-row: auto; min-height: 150px; }
+  .send-btn { grid-column: 1 / -1; grid-row: auto; width: 100%; }
+  .messages-table-wrap { height: calc(100% - 78px - 320px); }
 }
 
 
@@ -439,6 +503,7 @@ main { height: calc(100vh - 121px); }
 #tab-messages .data-table,
 #tab-messages .message-composer,
 #tab-messages .message-composer input,
+#tab-messages .message-composer textarea,
 #tab-messages .message-composer select,
 #tab-messages .message-composer button,
 #tab-messages .message-header-controls {
@@ -448,6 +513,7 @@ main { height: calc(100vh - 121px); }
   font-size: var(--messages-font-size);
 }
 #tab-messages .message-composer input,
+#tab-messages .message-composer textarea,
 #tab-messages .message-composer select,
 #tab-messages .message-composer button {
   font-size: var(--messages-font-size);
@@ -689,5 +755,17 @@ main { height: calc(100vh - 121px); }
   }
   .help-contact-actions {
     justify-content: flex-start;
+  }
+}
+
+.station-header-controls {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+@media (max-width: 900px) {
+  .station-header-controls {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
