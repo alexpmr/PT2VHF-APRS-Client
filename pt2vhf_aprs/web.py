@@ -45,8 +45,21 @@ def create_app() -> Flask:
     @app.post("/api/config")
     def api_save_config():
         try:
+            before = db.get_config()
             saved = db.save_config(request.get_json(force=True) or {})
-            return jsonify({"ok": True, "config": saved})
+
+            connection_keys = {
+                "callsign", "ssid", "server", "port", "passcode",
+                "aprs_filter", "latitude", "longitude",
+            }
+            changed = any(before.get(key) != saved.get(key) for key in connection_keys)
+            status = service.status()
+            reconnected = False
+            if changed and status.get("wanted"):
+                service.reconnect()
+                reconnected = True
+
+            return jsonify({"ok": True, "config": saved, "reconnected": reconnected})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
