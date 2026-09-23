@@ -43,6 +43,8 @@ DEFAULT_CONFIG = {
     "map_type": "osm",
     "track_color": "#3ba6ff",
     "track_width": 2,
+    "map_brightness": 100,
+    "sound_on_personal_message": 1,
     "messages_font_family": "system",
     "messages_font_size": 12,
     "stations_font_family": "system",
@@ -92,6 +94,8 @@ def init_db() -> None:
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
                 track_width INTEGER NOT NULL DEFAULT 2,
+                map_brightness INTEGER NOT NULL DEFAULT 100,
+                sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
                 messages_font_family TEXT NOT NULL DEFAULT 'system',
                 messages_font_size INTEGER NOT NULL DEFAULT 12,
                 stations_font_family TEXT NOT NULL DEFAULT 'system',
@@ -179,6 +183,10 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN track_color TEXT NOT NULL DEFAULT '#3ba6ff'")
         if "track_width" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN track_width INTEGER NOT NULL DEFAULT 2")
+        if "map_brightness" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN map_brightness INTEGER NOT NULL DEFAULT 100")
+        if "sound_on_personal_message" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
         if "messages_font_family" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN messages_font_family TEXT NOT NULL DEFAULT 'system'")
         if "messages_font_size" not in config_columns:
@@ -228,6 +236,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
     merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()
     merged["track_width"] = int(merged["track_width"] or 2)
+    merged["map_brightness"] = int(merged["map_brightness"] or 100)
+    merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
     merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
     merged["messages_font_size"] = int(merged["messages_font_size"] or 12)
     merged["stations_font_family"] = str(merged["stations_font_family"] or "system").lower().strip()
@@ -256,6 +266,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Cor do tracklog inválida.")
     if not (1 <= merged["track_width"] <= 10):
         raise ValueError("Espessura do tracklog deve estar entre 1 e 10.")
+    if not (30 <= merged["map_brightness"] <= 150):
+        raise ValueError("Brilho do mapa deve estar entre 30% e 150%.")
 
     allowed_fonts = {"system", "segoe", "arial", "verdana", "tahoma", "consolas"}
     if merged["messages_font_family"] not in allowed_fonts:
