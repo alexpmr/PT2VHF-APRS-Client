@@ -41,6 +41,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     version=str(ROOT / 'windows' / 'version_info.txt'),
+    icon=str(ROOT / 'windows' / 'app_icon.ico'),
 )
 
 coll = COLLECT(
