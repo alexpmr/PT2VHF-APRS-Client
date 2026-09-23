@@ -1,4 +1,4 @@
-# PT2VHF APRS Client — v0.2.0
+# PT2VHF APRS Client — v0.2.1
 
 Cliente APRS-IS para Windows, desenvolvido em Python, com interface web local, banco SQLite, mapa, mensagens e histórico de estações.
 
@@ -43,6 +43,8 @@ O aplicativo oferece:
 - Tracklog automático de estações móveis.
 - Popup com indicativo, posição, velocidade, curso, altitude, comentário/informação e path.
 - Centro e zoom persistidos no SQLite.
+- Botão para centralizar o mapa na localização indicada pelo navegador.
+- CSS do Leaflet empacotado localmente para maior estabilidade dos tiles.
 
 ### Mensagens
 
@@ -59,6 +61,16 @@ O aplicativo oferece:
 - Distância da estação local.
 - Velocidade, curso, altitude e informação.
 - Filtro parcial e ordenação por colunas.
+
+### Log APRS-IS
+
+- Monitor bruto do tráfego TNC2 recebido e transmitido.
+- Direções **RX** e **TX** identificadas visualmente.
+- Filtro de texto e filtro por direção.
+- Auto-rolagem para acompanhar o tráfego em tempo real.
+- Seleção de quantidade de linhas exibidas.
+- Histórico persistido no SQLite com retenção dos 100.000 registros mais recentes.
+- Passcode APRS-IS mascarado na linha de login antes de ser salvo/exibido.
 
 ### Configuração
 
@@ -127,6 +139,7 @@ Tabelas principais:
 - `tracks`
 - `messages`
 - `packets`
+- `aprs_log`
 
 ## Créditos técnicos
 
