@@ -4,6 +4,8 @@
   const state = {
     activeTab: 'map',
     map: null,
+    baseLayer: null,
+    mapConfig: { map_type: 'osm', track_color: '#3ba6ff', track_width: 2 },
     markers: new Map(),
     trackLines: new Map(),
     userLocationMarker: null,
@@ -116,18 +118,56 @@
     }));
   }
 
+  const MAP_PROVIDERS = {
+    osm: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
+    },
+    topo: {
+      url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+      options: { maxZoom: 17, attribution: 'Map data &copy; OpenStreetMap contributors | Map style &copy; OpenTopoMap (CC-BY-SA)' }
+    },
+    satellite: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      options: { maxZoom: 19, attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }
+    }
+  };
+
+  function applyMapPreferences(cfg = {}) {
+    state.mapConfig = {
+      map_type: cfg.map_type || state.mapConfig.map_type || 'osm',
+      track_color: cfg.track_color || state.mapConfig.track_color || '#3ba6ff',
+      track_width: Number(cfg.track_width || state.mapConfig.track_width || 2)
+    };
+
+    if (state.map) {
+      const provider = MAP_PROVIDERS[state.mapConfig.map_type] || MAP_PROVIDERS.osm;
+      if (state.baseLayer) state.map.removeLayer(state.baseLayer);
+      state.baseLayer = L.tileLayer(provider.url, provider.options).addTo(state.map);
+      state.baseLayer.bringToBack();
+
+      for (const line of state.trackLines.values()) {
+        line.setStyle({
+          color: state.mapConfig.track_color,
+          weight: state.mapConfig.track_width,
+          opacity: .78
+        });
+      }
+    }
+  }
+
   async function initMap() {
     if (typeof L === 'undefined') {
       $('#map').innerHTML = '<div style="padding:30px">Não foi possível carregar o Leaflet.</div>';
       return;
     }
     let saved = { latitude: -14.2350, longitude: -51.9253, zoom: 4 };
-    try { saved = await api('/api/map-state'); } catch (_) {}
+    let cfg = {};
+    try {
+      [saved, cfg] = await Promise.all([api('/api/map-state'), api('/api/config')]);
+    } catch (_) {}
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(state.map);
+    applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
@@ -255,12 +295,6 @@
     </div>`;
   }
 
-  function trackColor(callsign) {
-    let h = 0;
-    for (const ch of callsign) h = (h * 31 + ch.charCodeAt(0)) % 360;
-    return `hsl(${h} 78% 56%)`;
-  }
-
   async function loadMapData() {
     if (!state.map) return;
     try {
@@ -290,10 +324,19 @@
         if (points.length < 2) continue;
         let line = state.trackLines.get(call);
         if (!line) {
-          line = L.polyline(points, { color: trackColor(call), weight: 2, opacity: .72 }).addTo(state.map);
+          line = L.polyline(points, {
+            color: state.mapConfig.track_color,
+            weight: state.mapConfig.track_width,
+            opacity: .78
+          }).addTo(state.map);
           state.trackLines.set(call, line);
         } else {
           line.setLatLngs(points);
+          line.setStyle({
+            color: state.mapConfig.track_color,
+            weight: state.mapConfig.track_width,
+            opacity: .78
+          });
         }
       }
     } catch (err) {
@@ -548,9 +591,8 @@
     const rows = sortedData(state.stations, spec);
     $('#stationsTable tbody').innerHTML = rows.map(s => `
       <tr>
-        <td>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.name || s.callsign)}</td>
-        <td>${escapeHtml(s.callsign)}</td>
-        <td>${escapeHtml(fmtDate(s.last_heard))}</td>
+        <td>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.callsign)}</td>
+        <td class="station-last-heard">${escapeHtml(fmtDate(s.last_heard))}</td>
         <td>${fmtNum(s.distance_km, 1, ' km')}</td>
         <td>${fmtNum(s.speed, 1, ' km/h')}</td>
         <td>${fmtNum(s.course, 0, '°')}</td>
@@ -573,6 +615,8 @@
         else input.value = value ?? '';
       }
       updateSelectedSymbol();
+      applyMapPreferences(cfg);
+      syncMapPreferenceControls();
       state.configLoaded = true;
     } catch (err) { toast(err.message, 'error'); }
   }
@@ -587,6 +631,7 @@
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
       });
       toast(result.reconnected ? 'Configuração salva. APRS-IS reconectando com os novos parâmetros.' : 'Configuração salva no banco local.', 'ok');
+      applyMapPreferences(result.config || data);
       await loadConfig();
       await loadStations();
     } catch (err) { toast(err.message, 'error'); }
@@ -603,6 +648,38 @@
       await loadConfig();
     } catch (err) { toast(err.message, 'error'); }
     e.target.value = '';
+  });
+
+  function syncMapPreferenceControls() {
+    const form = $('#configForm');
+    if (!form) return;
+
+    const colorInput = form.elements.namedItem('track_color');
+    const colorText = $('#trackColorText');
+    const widthInput = form.elements.namedItem('track_width');
+    const widthValue = $('#trackWidthValue');
+
+    if (colorInput && colorText) colorText.value = colorInput.value || '#3ba6ff';
+    if (widthInput && widthValue) widthValue.textContent = `${widthInput.value || 2} px`;
+  }
+
+  $('#configForm')?.elements.namedItem('track_color')?.addEventListener('input', e => {
+    const colorText = $('#trackColorText');
+    if (colorText) colorText.value = e.target.value;
+  });
+
+  $('#trackColorText')?.addEventListener('input', e => {
+    let value = e.target.value.trim();
+    if (!value.startsWith('#')) value = '#' + value;
+    if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+      const colorInput = $('#configForm')?.elements.namedItem('track_color');
+      if (colorInput) colorInput.value = value;
+    }
+  });
+
+  $('#trackWidth')?.addEventListener('input', e => {
+    const out = $('#trackWidthValue');
+    if (out) out.textContent = `${e.target.value} px`;
   });
 
   $('#sendBeaconButton').addEventListener('click', async () => {
