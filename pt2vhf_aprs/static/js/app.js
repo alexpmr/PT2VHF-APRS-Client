@@ -643,6 +643,34 @@
 
   $('#stationFilter').addEventListener('input', debounce(loadStations, 250));
 
+  function calculateAprsPasscode(callsign) {
+    const base = String(callsign || '').trim().toUpperCase().split('-')[0];
+    if (!/^[A-Z0-9]{1,6}$/.test(base)) return '';
+
+    let hash = 0x73e2;
+    for (let i = 0; i < base.length; i += 2) {
+      hash ^= base.charCodeAt(i) << 8;
+      if (i + 1 < base.length) hash ^= base.charCodeAt(i + 1);
+    }
+    return String(hash & 0x7fff);
+  }
+
+  function updateCalculatedPasscode(force = false) {
+    const form = $('#configForm');
+    if (!form) return;
+    const callsign = form.elements.namedItem('callsign');
+    const passcode = form.elements.namedItem('passcode');
+    if (!callsign || !passcode) return;
+
+    const calculated = calculateAprsPasscode(callsign.value);
+    if (calculated && (force || document.activeElement === callsign || !passcode.value.trim())) {
+      passcode.value = calculated;
+    }
+  }
+
+  $('#callsignInput')?.addEventListener('input', () => updateCalculatedPasscode(true));
+  $('#callsignInput')?.addEventListener('change', () => updateCalculatedPasscode(true));
+
   async function loadConfig() {
     try {
       const cfg = await api('/api/config');
@@ -654,6 +682,7 @@
         else input.value = value ?? '';
       }
       updateSelectedSymbol();
+      if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       applyMapPreferences(cfg);
       syncMapPreferenceControls();
       state.configLoaded = true;
