@@ -26,6 +26,7 @@
   <button class="tab active" data-tab="map">MAPA</button>
   <button class="tab" data-tab="messages">Mensagens <span id="messageBadge" class="badge hidden">0</span></button>
   <button class="tab" data-tab="stations">Estações</button>
+  <button class="tab" data-tab="log">Log</button>
   <button class="tab" data-tab="config">Configuração</button>
 </nav>
 
@@ -99,6 +100,51 @@
           <th data-key="course" data-type="number">Curso <span class="sort-indicator"></span></th>
           <th data-key="altitude" data-type="number">Altitude <span class="sort-indicator"></span></th>
           <th data-key="info">Informação <span class="sort-indicator"></span></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="tab-log" class="tab-panel">
+    <div class="panel-header log-header">
+      <div>
+        <h2>Log APRS-IS</h2>
+        <p>Tráfego bruto TNC2 recebido e transmitido. O passcode da autenticação é mascarado.</p>
+      </div>
+      <div class="log-controls">
+        <label class="field log-filter-field">
+          <span>Filtro</span>
+          <input id="logFilter" type="text" placeholder="Ex.: PT2VHF, APRS, logresp">
+        </label>
+        <label class="field">
+          <span>Direção</span>
+          <select id="logDirection">
+            <option value="ALL">Todos</option>
+            <option value="RX">RX</option>
+            <option value="TX">TX</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Linhas</span>
+          <select id="logLimit">
+            <option value="500">500</option>
+            <option value="1000" selected>1.000</option>
+            <option value="2000">2.000</option>
+            <option value="5000">5.000</option>
+            <option value="10000">10.000</option>
+          </select>
+        </label>
+        <label class="check-field log-check"><input id="logAutoScroll" type="checkbox" checked><span>Auto-rolagem</span></label>
+        <button id="clearLogButton" type="button" class="btn secondary">Limpar log</button>
+      </div>
+    </div>
+    <div id="logViewport" class="log-viewport">
+      <table id="logTable" class="log-table">
+        <thead><tr>
+          <th>Hora</th>
+          <th>Dir.</th>
+          <th>Tráfego APRS-IS</th>
         </tr></thead>
         <tbody></tbody>
       </table>
