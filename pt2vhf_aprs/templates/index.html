@@ -293,6 +293,25 @@
   </div>
 </div>
 
+<div id="incomingMessageModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="incomingMessageTitle">
+  <div class="message-alert-card">
+    <div class="message-alert-icon">✉</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Nova mensagem APRS</div>
+      <h3 id="incomingMessageTitle">Mensagem para esta estação</h3>
+      <div class="message-alert-meta">
+        <span><strong>De:</strong> <span id="incomingMessageFrom"></span></span>
+        <span><strong>Hora:</strong> <span id="incomingMessageTime"></span></span>
+      </div>
+      <div id="incomingMessageText" class="message-alert-text"></div>
+      <div class="message-alert-actions">
+        <button id="incomingMessageReply" type="button" class="btn primary">Responder</button>
+        <button id="incomingMessageClose" type="button" class="btn secondary">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast hidden"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
