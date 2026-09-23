@@ -6,6 +6,8 @@
     map: null,
     markers: new Map(),
     trackLines: new Map(),
+    userLocationMarker: null,
+    userLocationAccuracy: null,
     messages: [],
     stations: [],
     sort: {
@@ -122,8 +124,94 @@
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(state.map);
+    addBrowserLocationControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
+  }
+
+  function addBrowserLocationControl(map) {
+    const LocationControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd() {
+        const wrapper = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+        const button = L.DomUtil.create('button', 'location-control', wrapper);
+        button.type = 'button';
+        button.title = 'Centralizar na minha localização';
+        button.setAttribute('aria-label', 'Centralizar na minha localização');
+        button.textContent = '◎';
+
+        L.DomEvent.disableClickPropagation(wrapper);
+        L.DomEvent.on(button, 'click', (event) => {
+          L.DomEvent.stop(event);
+          locateBrowser(button);
+        });
+        return wrapper;
+      }
+    });
+    new LocationControl().addTo(map);
+  }
+
+  function locateBrowser(button) {
+    if (!navigator.geolocation) {
+      toast('Este navegador não oferece geolocalização.', 'error');
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = '…';
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const accuracy = Number(position.coords.accuracy) || 0;
+        const point = [lat, lon];
+
+        state.map.setView(point, Math.max(state.map.getZoom(), 15), { animate: true });
+
+        if (state.userLocationMarker) state.userLocationMarker.setLatLng(point);
+        else {
+          state.userLocationMarker = L.marker(point, {
+            icon: L.divIcon({
+              className: '',
+              html: '<div class="user-location-dot"></div>',
+              iconSize: [18, 18],
+              iconAnchor: [9, 9]
+            }),
+            title: 'Minha localização',
+            zIndexOffset: 1000
+          }).addTo(state.map).bindPopup('Minha localização');
+        }
+
+        if (accuracy > 0) {
+          if (state.userLocationAccuracy) {
+            state.userLocationAccuracy.setLatLng(point).setRadius(accuracy);
+          } else {
+            state.userLocationAccuracy = L.circle(point, {
+              radius: accuracy,
+              weight: 1,
+              opacity: .75,
+              fillOpacity: .08
+            }).addTo(state.map);
+          }
+        }
+
+        button.disabled = false;
+        button.textContent = '◎';
+        toast(accuracy > 0 ? `Localização obtida (precisão aproximada: ${Math.round(accuracy)} m).` : 'Localização obtida.', 'ok');
+      },
+      (error) => {
+        const messages = {
+          1: 'Permissão de localização negada pelo navegador.',
+          2: 'Não foi possível determinar sua localização.',
+          3: 'A localização demorou demais para responder.'
+        };
+        button.disabled = false;
+        button.textContent = '◎';
+        toast(messages[error.code] || 'Falha ao obter a localização do navegador.', 'error');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
   }
 
   async function saveMapState() {
