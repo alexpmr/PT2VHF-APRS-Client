@@ -113,8 +113,21 @@ def create_app() -> Flask:
     def api_send_message():
         try:
             data = request.get_json(force=True) or {}
-            message_id = service.send_message(data.get("to", ""), data.get("message", ""))
-            return jsonify({"ok": True, "id": message_id})
+            message_type = str(data.get("type") or "message").lower()
+
+            if message_type == "message":
+                row_id = service.send_message(data.get("to", ""), data.get("message", ""))
+            elif message_type in {"bulletin", "group_bulletin"}:
+                group = data.get("group", "") if message_type == "group_bulletin" else ""
+                row_id = service.send_bulletin(
+                    data.get("message", ""),
+                    bulletin_id=data.get("bulletin_id", "0"),
+                    group=group,
+                )
+            else:
+                raise ValueError("Tipo de mensagem APRS inválido.")
+
+            return jsonify({"ok": True, "id": row_id, "type": message_type})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
