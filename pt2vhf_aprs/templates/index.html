@@ -33,6 +33,7 @@
   <button class="tab" data-tab="stations">Estações</button>
   <button class="tab" data-tab="log">Log</button>
   <button class="tab" data-tab="config">Configuração</button>
+  <button class="tab" data-tab="help">Ajuda</button>
 </nav>
 
 <main>
@@ -345,6 +346,116 @@
         </div>
       </div>
     </form>
+  </section>
+  <section id="tab-help" class="tab-panel help-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Ajuda</h2>
+        <p>Guia rápido para configurar, usar e diagnosticar o PT2VHF APRS Client.</p>
+      </div>
+    </div>
+
+    <div class="help-content">
+      <div class="help-hero">
+        <div>
+          <div class="help-kicker">Primeiros passos</div>
+          <h3>Configure sua estação antes de conectar ao APRS-IS</h3>
+          <p>Na aba <strong>Configuração</strong>, informe seu indicativo, SSID, posição e parâmetros APRS-IS. O passcode é calculado automaticamente a partir do indicativo-base.</p>
+        </div>
+        <button type="button" class="btn primary help-goto" data-help-tab="config">Abrir Configuração</button>
+      </div>
+
+      <div class="help-grid">
+        <article class="help-card">
+          <h3>1. Estação</h3>
+          <p><strong>Indicativo:</strong> informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo <code>-9</code> para móvel.</p>
+          <p><strong>Passcode APRS-IS:</strong> é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.</p>
+          <p><strong>Latitude/Longitude:</strong> são usadas no beacon, no cálculo das distâncias e no atalho de filtro <code>r/500</code>.</p>
+          <p><strong>Ícone APRS:</strong> escolha o símbolo adequado à sua estação ou veículo.</p>
+        </article>
+
+        <article class="help-card">
+          <h3>2. APRS-IS</h3>
+          <p>O servidor padrão é <code>brazil.aprs2.net</code>, porta <code>14580</code>.</p>
+          <p><strong>Filtro de recepção:</strong> para um uso regional simples, use <code>r/500</code>. O programa transforma esse atalho em um filtro radial usando a posição configurada.</p>
+          <p>Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
+          <p>Marque <strong>Conectar ao iniciar</strong> se quiser que o cliente tente conectar automaticamente.</p>
+        </article>
+
+        <article class="help-card">
+          <h3>3. Mapa</h3>
+          <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
+          <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>.</p>
+          <p>Clique em uma estação para abrir os detalhes. O botão <strong>Enviar mensagem</strong> leva diretamente à tela de mensagens com o destino preenchido.</p>
+          <p>A posição e o zoom do mapa ficam salvos localmente.</p>
+        </article>
+
+        <article class="help-card">
+          <h3>4. Mensagens e boletins</h3>
+          <p><strong>Mensagem:</strong> comunicação APRS direcionada a um indicativo, com suporte a ACK/REJ.</p>
+          <p><strong>Boletim geral:</strong> usa <code>BLN0</code> a <code>BLN9</code> e não solicita ACK.</p>
+          <p><strong>Boletim de grupo:</strong> permite informar um grupo de até cinco caracteres.</p>
+          <p>O botão <strong>Minhas mensagens</strong> mostra apenas mensagens individuais de ou para o seu <code>CALL-SSID</code>.</p>
+          <p>Quando chega uma nova mensagem para sua estação, o programa exibe um popup. O aviso sonoro pode ser ligado ou desligado em Configuração.</p>
+        </article>
+
+        <article class="help-card">
+          <h3>5. Estações</h3>
+          <p>A lista mostra indicativo, última recepção, distância, velocidade, curso, altitude e informações conhecidas.</p>
+          <p>Clique em uma linha para abrir o <strong>Mapa</strong>, centralizar a estação e mostrar o popup correspondente.</p>
+          <p>Os títulos das colunas podem ser clicados para alterar a ordenação.</p>
+          <p>Fonte e tamanho da tabela podem ser ajustados em <strong>Configuração → Aparência</strong>.</p>
+        </article>
+
+        <article class="help-card">
+          <h3>6. Log APRS-IS</h3>
+          <p>Use o Log para diagnosticar conexão, autenticação, filtro e tráfego recebido/transmitido.</p>
+          <p><strong>RX</strong> indica dados recebidos e <strong>TX</strong> indica dados enviados.</p>
+          <p><code># logresp ... verified</code> confirma autenticação APRS-IS. Linhas iniciadas por <code>#</code> são mensagens de controle do servidor, não estações APRS.</p>
+          <p>O passcode é mascarado no Log.</p>
+        </article>
+
+        <article class="help-card">
+          <h3>7. Atualizações</h3>
+          <p>O cabeçalho informa se você está usando a <strong>última versão</strong> ou se existe uma <strong>nova versão</strong> publicada.</p>
+          <p>Quando houver atualização, clique no aviso para abrir a Release no GitHub.</p>
+          <p>O instalador encerra automaticamente a versão anterior antes de substituir os arquivos.</p>
+        </article>
+
+        <article class="help-card">
+          <h3>8. Banco e backup</h3>
+          <p>O banco SQLite fica em:</p>
+          <code class="help-path">%LOCALAPPDATA%\PT2VHF APRS Client\data\pt2vhf_aprs.db</code>
+          <p>Instalador, Portable EXE e Portable ZIP usam esse mesmo banco local.</p>
+          <p>Em <strong>Configuração → Backup da configuração</strong> você pode salvar ou recuperar as preferências em JSON.</p>
+          <p class="help-warning">O JSON exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.</p>
+        </article>
+
+        <article class="help-card help-wide">
+          <h3>Diagnóstico rápido</h3>
+          <div class="help-troubleshoot">
+            <div><strong>Conecta, mas não aparecem estações</strong><span>Confira o filtro APRS-IS e procure erros de filtro no Log.</span></div>
+            <div><strong>Não transmite</strong><span>Confira se a conexão está como verificada e se indicativo/passcode estão corretos.</span></div>
+            <div><strong>Mapa não carrega</strong><span>Confira a conexão com a Internet; os tiles dos mapas são carregados de provedores externos.</span></div>
+            <div><strong>Distâncias incorretas</strong><span>Confira latitude e longitude da sua estação em Configuração.</span></div>
+            <div><strong>Sem aviso sonoro</strong><span>Confira a opção de som em Configuração → Aparência e o volume do Windows.</span></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="help-contact">
+        <div>
+          <div class="help-kicker">Dúvidas, dificuldades ou sugestões?</div>
+          <h3>Fale comigo</h3>
+          <p>Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.</p>
+          <div class="help-contact-name">Alex</div>
+        </div>
+        <div class="help-contact-actions">
+          <a class="btn primary" href="https://wa.me/5561984023634" target="_blank" rel="noopener">WhatsApp: 61 98402-3634</a>
+          <a class="btn secondary" href="mailto:alexpmr@gmail.com">alexpmr@gmail.com</a>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 
