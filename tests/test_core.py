@@ -1,0 +1,50 @@
+from pathlib import Path
+import tempfile
+
+from pt2vhf_aprs import database as db
+from pt2vhf_aprs.aprs_service import build_beacon_packet, expand_filter, parse_message_line, split_message_id
+
+
+def test_beacon_packet():
+    cfg = {
+        "callsign": "PT2VHF", "ssid": 15, "latitude": -15.8, "longitude": -47.9,
+        "altitude": 1000, "symbol_table": "/", "symbol": ">", "comment": "Teste"
+    }
+    packet = build_beacon_packet(cfg)
+    assert packet.startswith("PT2VHF-15>APRS,TCPIP*:=1548.00S/04754.00W>")
+    assert "/A=003281" in packet
+
+
+def test_filter_shortcut():
+    cfg = {"latitude": -15.8, "longitude": -47.9}
+    assert expand_filter("r/500", cfg) == "r/-15.80000/-47.90000/500"
+    assert expand_filter("m/50", cfg) == "m/50"
+
+
+def test_message_parser_with_id():
+    raw = "PY2ABC>APRS,TCPIP*::PT2VHF   :Teste de mensagem{123"
+    msg = parse_message_line(raw, {})
+    assert msg == {"from": "PY2ABC", "to": "PT2VHF", "text": "Teste de mensagem{123"}
+    text, mid = split_message_id(msg["text"])
+    assert text == "Teste de mensagem"
+    assert mid == "123"
+
+
+def test_database_config_and_station():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            cfg = db.save_config({"callsign": "PT2VHF", "ssid": 0, "latitude": -15.8, "longitude": -47.9})
+            assert cfg["callsign"] == "PT2VHF"
+            db.upsert_station({
+                "from": "PY2ABC-9", "format": "uncompressed", "latitude": -15.81, "longitude": -47.91,
+                "speed": 42.0, "course": 90, "altitude": 1100, "symbol_table": "/", "symbol": ">",
+                "comment": "Movel", "path": ["WIDE1-1"], "raw": "x"
+            })
+            rows = db.list_stations()
+            assert len(rows) == 1
+            assert rows[0]["distance_km"] is not None
+    finally:
+        db.DB_PATH = original
