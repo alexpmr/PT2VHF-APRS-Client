@@ -16,6 +16,28 @@ from . import __version__
 from . import database as db
 
 VERSION = __version__
+
+
+def _play_windows_message_sound() -> None:
+    """Toca um aviso curto no Windows sem bloquear a thread de recepção APRS."""
+    try:
+        import winsound
+    except ImportError:
+        return
+
+    def _sound() -> None:
+        try:
+            winsound.Beep(880, 120)
+            winsound.Beep(1175, 180)
+        except Exception:
+            try:
+                winsound.MessageBeep(winsound.MB_ICONASTERISK)
+            except Exception:
+                pass
+
+    threading.Thread(target=_sound, name="pt2vhf-message-sound", daemon=True).start()
+
+
 MESSAGE_RE = re.compile(r"^(?P<from>[^>]+)>[^:]+::(?P<to>.{9}):(?P<text>.*)$")
 
 
@@ -211,9 +233,14 @@ class APRSService:
             message_type=message_type,
         )
 
-        # ACK automático somente para mensagem individual endereçada exatamente a esta estação.
+        # Alerta e ACK somente para mensagem individual endereçada exatamente a esta estação.
         cfg = db.get_config()
-        if message_type == "message" and msg_id and to_call == full_callsign(cfg).upper() and self.status()["verified"]:
+        is_personal_message = message_type == "message" and to_call == full_callsign(cfg).upper()
+
+        if is_personal_message and bool(cfg.get("sound_on_personal_message", 1)):
+            _play_windows_message_sound()
+
+        if is_personal_message and msg_id and self.status()["verified"]:
             try:
                 self.send_ack(from_call, msg_id)
             except Exception:
