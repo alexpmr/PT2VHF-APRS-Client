@@ -138,6 +138,28 @@
     }
   };
 
+  const FONT_FAMILIES = {
+    system: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+    segoe: '"Segoe UI", Arial, sans-serif',
+    arial: 'Arial, sans-serif',
+    verdana: 'Verdana, sans-serif',
+    tahoma: 'Tahoma, sans-serif',
+    consolas: 'Consolas, "Courier New", monospace'
+  };
+
+  function applyAppearancePreferences(cfg = {}) {
+    const root = document.documentElement;
+    const messagesFamily = FONT_FAMILIES[cfg.messages_font_family] || FONT_FAMILIES.system;
+    const stationsFamily = FONT_FAMILIES[cfg.stations_font_family] || FONT_FAMILIES.system;
+    const messagesSize = Math.min(20, Math.max(10, Number(cfg.messages_font_size || 12)));
+    const stationsSize = Math.min(20, Math.max(10, Number(cfg.stations_font_size || 12)));
+
+    root.style.setProperty('--messages-font-family', messagesFamily);
+    root.style.setProperty('--messages-font-size', `${messagesSize}px`);
+    root.style.setProperty('--stations-font-family', stationsFamily);
+    root.style.setProperty('--stations-font-size', `${stationsSize}px`);
+  }
+
   function applyMapPreferences(cfg = {}) {
     state.mapConfig = {
       map_type: cfg.map_type || state.mapConfig.map_type || 'osm',
@@ -766,7 +788,9 @@
       state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       applyMapPreferences(cfg);
+      applyAppearancePreferences(cfg);
       syncMapPreferenceControls();
+      syncAppearanceControls();
       state.configLoaded = true;
     } catch (err) { toast(err.message, 'error'); }
   }
@@ -782,6 +806,7 @@
       });
       toast(result.reconnected ? 'Configuração salva. APRS-IS reconectando com os novos parâmetros.' : 'Configuração salva no banco local.', 'ok');
       applyMapPreferences(result.config || data);
+      applyAppearancePreferences(result.config || data);
       await loadConfig();
       await loadStations();
     } catch (err) { toast(err.message, 'error'); }
@@ -831,6 +856,34 @@
     const out = $('#trackWidthValue');
     if (out) out.textContent = `${e.target.value} px`;
   });
+
+  function syncAppearanceControls() {
+    const form = $('#configForm');
+    if (!form) return;
+    const msgSize = form.elements.namedItem('messages_font_size');
+    const stnSize = form.elements.namedItem('stations_font_size');
+    const msgOut = $('#messagesFontSizeValue');
+    const stnOut = $('#stationsFontSizeValue');
+    if (msgSize && msgOut) msgOut.textContent = `${msgSize.value || 12} px`;
+    if (stnSize && stnOut) stnOut.textContent = `${stnSize.value || 12} px`;
+  }
+
+  function previewAppearanceFromForm() {
+    const form = $('#configForm');
+    if (!form) return;
+    applyAppearancePreferences({
+      messages_font_family: form.elements.namedItem('messages_font_family')?.value || 'system',
+      messages_font_size: form.elements.namedItem('messages_font_size')?.value || 12,
+      stations_font_family: form.elements.namedItem('stations_font_family')?.value || 'system',
+      stations_font_size: form.elements.namedItem('stations_font_size')?.value || 12
+    });
+    syncAppearanceControls();
+  }
+
+  for (const name of ['messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
+    $('#configForm')?.elements.namedItem(name)?.addEventListener('input', previewAppearanceFromForm);
+    $('#configForm')?.elements.namedItem(name)?.addEventListener('change', previewAppearanceFromForm);
+  }
 
   $('#sendBeaconButton').addEventListener('click', async () => {
     try {
