@@ -2,7 +2,7 @@ from pathlib import Path
 import tempfile
 
 from pt2vhf_aprs import database as db
-from pt2vhf_aprs.aprs_service import build_beacon_packet, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id
+from pt2vhf_aprs.aprs_service import build_beacon_packet, build_bulletin_packet, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id
 
 
 def test_beacon_packet():
@@ -73,5 +73,49 @@ def test_aprs_log_rx_tx():
             assert len(tx) == 1
             db.clear_aprs_log()
             assert db.list_aprs_log(limit=10) == []
+    finally:
+        db.DB_PATH = original
+
+
+def test_bulletin_packets():
+    packet, addressee, message_type, text = build_bulletin_packet(
+        source="PT2VHF-9",
+        text="Boletim geral de teste",
+        bulletin_id="1",
+    )
+    assert packet == "PT2VHF-9>APRS,TCPIP*::BLN1     :Boletim geral de teste"
+    assert addressee == "BLN1"
+    assert message_type == "bulletin"
+    assert "{" not in packet
+
+    group_packet, group_to, group_type, _ = build_bulletin_packet(
+        source="PT2VHF-9",
+        text="Boletim do grupo DF",
+        bulletin_id="2",
+        group="DF",
+    )
+    assert group_packet == "PT2VHF-9>APRS,TCPIP*::BLN2DF   :Boletim do grupo DF"
+    assert group_to == "BLN2DF"
+    assert group_type == "group_bulletin"
+    assert classify_message_type("BLN2DF") == "group_bulletin"
+    assert classify_message_type("BLN1") == "bulletin"
+    assert classify_message_type("PY2ABC-9") == "message"
+
+
+def test_map_preferences_persist():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            cfg = db.save_config({
+                "callsign": "PT2VHF",
+                "map_type": "satellite",
+                "track_color": "#ff6600",
+                "track_width": 5,
+            })
+            assert cfg["map_type"] == "satellite"
+            assert cfg["track_color"] == "#ff6600"
+            assert cfg["track_width"] == 5
     finally:
         db.DB_PATH = original
