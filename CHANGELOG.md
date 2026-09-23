@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.0 — 2026-09-23
+
+Versão Windows-first.
+
+- Aplicativo Windows sem console, com servidor local Waitress.
+- Ícone na bandeja com abrir, conectar, desconectar, abrir pasta de dados e sair.
+- Banco SQLite movido para `%LOCALAPPDATA%\PT2VHF APRS Client\data` no Windows.
+- Empacotamento PyInstaller em modo onedir.
+- Instalador Inno Setup x64 e ZIP portátil.
+- Workflow GitHub Actions para gerar artefatos e anexá-los automaticamente às Releases criadas por tags `v*`.
+- Dados locais preservados durante atualização/desinstalação.
+
 ## v0.1.0 — 2026-09-23
 
 Primeira versão funcional do PT2VHF APRS Client.
