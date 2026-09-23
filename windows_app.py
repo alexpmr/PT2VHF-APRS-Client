@@ -9,7 +9,7 @@ import time
 import webbrowser
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 import pystray
 from pystray import MenuItem as Item
 from waitress import serve
@@ -69,16 +69,17 @@ def _disconnect(*_args) -> None:
         pass
 
 
+def _resource_path(*parts: str) -> Path:
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    return base.joinpath(*parts)
+
+
 def _make_tray_image() -> Image.Image:
-    image = Image.new("RGBA", (64, 64), (15, 23, 30, 255))
-    draw = ImageDraw.Draw(image)
-    draw.rounded_rectangle((5, 5, 59, 59), radius=11, fill=(59, 166, 255, 255))
-    draw.ellipse((18, 18, 46, 46), outline=(6, 19, 30, 255), width=5)
-    draw.line((32, 10, 32, 22), fill=(6, 19, 30, 255), width=5)
-    draw.line((32, 42, 32, 54), fill=(6, 19, 30, 255), width=5)
-    draw.line((10, 32, 22, 32), fill=(6, 19, 30, 255), width=5)
-    draw.line((42, 32, 54, 32), fill=(6, 19, 30, 255), width=5)
-    return image
+    logo = _resource_path("pt2vhf_aprs", "static", "img", "app_logo.png")
+    try:
+        return Image.open(logo).convert("RGBA").resize((64, 64), Image.Resampling.LANCZOS)
+    except Exception:
+        return Image.new("RGBA", (64, 64), (15, 23, 30, 255))
 
 
 def _exit_app(icon: pystray.Icon, *_args) -> None:
