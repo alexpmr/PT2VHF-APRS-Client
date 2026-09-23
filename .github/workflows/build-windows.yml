@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   windows-x64:
@@ -50,6 +51,7 @@ jobs:
           Compress-Archive -Path dist\PT2VHF_APRS_Client\* -DestinationPath dist-installer\PT2VHF_APRS_Client_Portable_x64.zip -Force
 
       - name: Upload build artifacts
+        id: upload-unsigned-artifact
         uses: actions/upload-artifact@v4
         with:
           name: PT2VHF-APRS-Client-Windows-x64
