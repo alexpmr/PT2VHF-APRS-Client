@@ -35,6 +35,10 @@ jobs:
         shell: pwsh
         run: python -m pytest -q
 
+      - name: Generate Windows icon
+        shell: pwsh
+        run: python windows\make_icon.py
+
       - name: Build application
         shell: pwsh
         run: pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
