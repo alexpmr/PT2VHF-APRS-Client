@@ -2,13 +2,26 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-DB_PATH = Path(__file__).resolve().parent.parent / "data" / "pt2vhf_aprs.db"
+def _default_data_dir() -> Path:
+    override = os.getenv("PT2VHF_DATA_DIR")
+    if override:
+        return Path(override).expanduser().resolve()
+    if os.name == "nt":
+        base = os.getenv("LOCALAPPDATA")
+        if base:
+            return Path(base) / "PT2VHF APRS Client" / "data"
+        return Path.home() / "AppData" / "Local" / "PT2VHF APRS Client" / "data"
+    return Path(__file__).resolve().parent.parent / "data"
+
+
+DB_PATH = _default_data_dir() / "pt2vhf_aprs.db"
 
 DEFAULT_CONFIG = {
     "callsign": "PT2VHF",
