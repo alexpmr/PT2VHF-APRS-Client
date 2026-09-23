@@ -370,6 +370,9 @@
         <strong>Informação</strong><span>${escapeHtml(s.info || '')}</span>
         <strong>Via</strong><span>${escapeHtml(path)}</span>
       </div>
+      <div class="station-popup-actions">
+        <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}">Enviar mensagem</button>
+      </div>
     </div>`;
   }
 
@@ -551,6 +554,22 @@
     } catch (_) {}
   }, 180));
 
+  function openMessageComposer(destination = '') {
+    $('.tab[data-tab="messages"]')?.click();
+    $('#messageType').value = 'message';
+    updateMessageComposerMode();
+    $('#messageTo').value = String(destination || '').toUpperCase().trim();
+    $('#messageText').focus();
+  }
+
+  document.addEventListener('click', e => {
+    const button = e.target.closest('.station-message-button');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openMessageComposer(button.dataset.callsign || '');
+  });
+
   function updateMessageComposerMode() {
     const type = $('#messageType').value;
     const isMessage = type === 'message';
@@ -642,11 +661,7 @@
     const message = state.currentAlertMessage;
     if (!message) return;
     closeIncomingMessageAlert();
-    $('.tab[data-tab="messages"]')?.click();
-    $('#messageType').value = 'message';
-    updateMessageComposerMode();
-    $('#messageTo').value = String(message.from_call || '').toUpperCase();
-    $('#messageText').focus();
+    openMessageComposer(message.from_call || '');
   });
 
   function updateUnread() {
