@@ -113,10 +113,18 @@ def test_map_preferences_persist():
                 "map_type": "satellite",
                 "track_color": "#ff6600",
                 "track_width": 5,
+                "messages_font_family": "consolas",
+                "messages_font_size": 14,
+                "stations_font_family": "verdana",
+                "stations_font_size": 13,
             })
             assert cfg["map_type"] == "satellite"
             assert cfg["track_color"] == "#ff6600"
             assert cfg["track_width"] == 5
+            assert cfg["messages_font_family"] == "consolas"
+            assert cfg["messages_font_size"] == 14
+            assert cfg["stations_font_family"] == "verdana"
+            assert cfg["stations_font_size"] == 13
     finally:
         db.DB_PATH = original
 
