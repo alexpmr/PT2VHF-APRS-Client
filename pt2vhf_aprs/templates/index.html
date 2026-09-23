@@ -269,6 +269,13 @@
               <output id="trackWidthValue" for="trackWidth">2 px</output>
             </div>
           </label>
+          <label class="field">
+            <span>Brilho do mapa</span>
+            <div class="range-field-row">
+              <input name="map_brightness" id="mapBrightness" type="range" min="30" max="150" step="5" value="100">
+              <output id="mapBrightnessValue" for="mapBrightness">100%</output>
+            </div>
+          </label>
         </div>
         <div class="hint map-provider-hint">
           OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. A alteração é aplicada ao salvar.
@@ -297,6 +304,10 @@
                 <input name="messages_font_size" id="messagesFontSize" type="range" min="10" max="20" step="1" value="12">
                 <output id="messagesFontSizeValue" for="messagesFontSize">12 px</output>
               </div>
+            </label>
+            <label class="check-field message-sound-check">
+              <input name="sound_on_personal_message" type="checkbox" checked>
+              <span>Tocar sinal sonoro ao receber mensagem para minha estação</span>
             </label>
           </div>
 
