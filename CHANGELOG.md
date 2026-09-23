@@ -2,6 +2,7 @@
 
 ## v0.2.7 — em desenvolvimento
 
+- Na aba **Mensagens**, o status `ACK` passa a ser exibido como **Lido** em verde, mantendo `ACK` apenas internamente no protocolo APRS.
 - Ajustada a aba **Mensagens** para caber integralmente na altura disponível da janela.
 - A lista de mensagens passa a usar automaticamente o espaço restante e possui **barra de rolagem própria**.
 - A área de composição fica presa ao rodapé da aba e se adapta à altura disponível.
