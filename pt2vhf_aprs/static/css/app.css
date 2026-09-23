@@ -49,6 +49,15 @@ h1 { margin: 0; font-size: 20px; }
 main { height: calc(100vh - 121px); }
 .tab-panel { display: none; height: 100%; }
 .tab-panel.active { display: block; }
+#tab-messages.active {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+#tab-messages > .panel-header {
+  flex: 0 0 auto;
+}
 #tab-map { position: relative; }
 .map-toolbar { position: absolute; z-index: 600; top: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 18px; padding: 8px 13px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: rgba(17,24,32,.92); backdrop-filter: blur(6px); font-size: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.25); }
 #map { height: 100%; width: 100%; background: #0e1318; }
@@ -71,7 +80,13 @@ main { height: calc(100vh - 121px); }
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,166,255,.14); }
 .field.compact { min-width: 280px; }
 .table-wrap { overflow: auto; background: var(--bg); }
-.messages-table-wrap { height: calc(100% - 78px - 246px); }
+.messages-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow-y: auto;
+  overflow-x: auto;
+}
 .stations-table-wrap { height: calc(100% - 78px); }
 .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
 .data-table th { position: sticky; top: 0; z-index: 2; text-align: left; background: #19222b; color: #c9d5de; border-bottom: 1px solid var(--line); padding: 10px 11px; cursor: pointer; white-space: nowrap; user-select: none; }
@@ -80,16 +95,19 @@ main { height: calc(100vh - 121px); }
 .data-table tbody tr:hover { background: rgba(59,166,255,.06); }
 .sort-indicator { color: var(--accent); margin-left: 3px; }
 .message-composer {
-  height: 246px;
-  min-height: 246px;
+  flex: 0 0 clamp(190px, 30vh, 225px);
+  min-height: 0;
+  max-height: 42%;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(140px,180px) minmax(160px,220px) minmax(86px,100px) minmax(120px,160px) minmax(160px,1fr) 118px;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0,1fr);
   gap: 10px;
   align-items: end;
   padding: 12px 20px;
   border-top: 1px solid var(--line);
   background: #111820;
+  overflow: hidden;
 }
 .message-type-field,
 .destination-field,
@@ -112,7 +130,7 @@ main { height: calc(100vh - 121px); }
 }
 #messageText {
   width: 100%;
-  min-height: 128px;
+  min-height: 78px;
   height: 100%;
   resize: none;
   border: 1px solid var(--line);
@@ -134,8 +152,8 @@ main { height: calc(100vh - 121px); }
 }
 .send-btn {
   grid-column: 6;
-  grid-row: 2;
-  height: 44px;
+  grid-row: 1;
+  height: 38px;
   align-self: end;
 }
 .direction-in { color: #b7d9ff; }
@@ -177,18 +195,17 @@ main { height: calc(100vh - 121px); }
   .full-card { grid-column: auto; }
   .panel-header { align-items: stretch; flex-direction: column; }
   .field.compact { min-width: 0; }
-  .messages-table-wrap { height: calc(100% - 132px - 132px); }
   .stations-table-wrap { height: calc(100% - 132px); }
   .message-composer {
-    height: auto;
-    min-height: 320px;
+    flex: 0 0 clamp(210px, 38vh, 280px);
+    max-height: 48%;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto auto minmax(0,1fr) auto;
+    overflow-y: auto;
   }
   .message-type-field, .destination-field, .bulletin-id-field, .bulletin-group-field { grid-column: auto; grid-row: auto; }
-  .message-field { grid-column: 1 / -1; grid-row: auto; min-height: 150px; }
-  .send-btn { grid-column: 1 / -1; grid-row: auto; width: 100%; }
-  .messages-table-wrap { height: calc(100% - 78px - 320px); }
+  .message-field { grid-column: 1 / -1; grid-row: 3; min-height: 0; }
+  .send-btn { grid-column: 1 / -1; grid-row: 4; width: 100%; }
 }
 
 
@@ -767,5 +784,30 @@ main { height: calc(100vh - 121px); }
   .station-header-controls {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 901px) {
+  .message-composer {
+    flex-basis: 185px;
+    max-height: 38%;
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+  #messageText {
+    min-height: 64px;
+  }
+  .messages-table-wrap {
+    min-height: 70px;
+  }
+}
+
+@media (max-height: 560px) and (min-width: 901px) {
+  .message-composer {
+    flex-basis: 160px;
+    max-height: 42%;
+  }
+  #messageText {
+    min-height: 50px;
   }
 }
