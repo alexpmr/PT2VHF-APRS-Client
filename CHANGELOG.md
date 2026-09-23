@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.1 — em desenvolvimento
+## v0.2.1 — 2026-09-23
 
 - Correção dos tiles do mapa exibidos fora de posição/“embaralhados”.
 - CSS do Leaflet empacotado localmente com a aplicação para evitar falhas do CDN.
@@ -8,6 +8,12 @@
 - Botão **Minha localização** no mapa, usando a geolocalização do navegador.
 - Exibição de marcador e raio de precisão da localização do navegador.
 - Versão exibida no título da aplicação e na aba do navegador.
+- Aba **Log** com todo o tráfego APRS-IS bruto em RX/TX.
+- Filtro textual, filtro por direção, quantidade de linhas e auto-rolagem no Log.
+- Histórico do Log persistido no SQLite, com retenção dos 100.000 registros mais recentes.
+- Passcode APRS-IS mascarado antes de registrar a linha de login no Log.
+- Reconexão automática ao alterar parâmetros de conexão/filtro enquanto conectado.
+- Contadores de pacotes recebidos e filtro APRS-IS ativo exibidos no mapa para diagnóstico.
 
 ## v0.2.0 — 2026-09-23
 
