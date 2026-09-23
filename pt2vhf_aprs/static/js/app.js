@@ -25,6 +25,8 @@
     messageAlertBaselineReady: false,
     lastAlertedMessageId: 0,
     currentAlertMessage: null,
+    soundOnPersonalMessage: true,
+    audioContext: null,
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -215,7 +217,8 @@
     state.mapConfig = {
       map_type: cfg.map_type || state.mapConfig.map_type || 'osm',
       track_color: cfg.track_color || state.mapConfig.track_color || '#3ba6ff',
-      track_width: Number(cfg.track_width || state.mapConfig.track_width || 2)
+      track_width: Number(cfg.track_width || state.mapConfig.track_width || 2),
+      map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100)
     };
 
     if (state.map) {
@@ -223,6 +226,9 @@
       if (state.baseLayer) state.map.removeLayer(state.baseLayer);
       state.baseLayer = L.tileLayer(provider.url, provider.options).addTo(state.map);
       state.baseLayer.bringToBack();
+
+      const tilePane = state.map.getPane('tilePane');
+      if (tilePane) tilePane.style.filter = `brightness(${state.mapConfig.map_brightness}%)`;
 
       for (const line of state.trackLines.values()) {
         line.setStyle({
@@ -614,6 +620,50 @@
   $('#messageText').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
   updateMessageComposerMode();
 
+  function ensureAudioContext() {
+    if (!state.audioContext) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) state.audioContext = new AudioCtx();
+    }
+    if (state.audioContext?.state === 'suspended') {
+      state.audioContext.resume().catch(() => {});
+    }
+  }
+
+  function playPersonalMessageSound() {
+    if (!state.soundOnPersonalMessage) return;
+    try {
+      ensureAudioContext();
+      const ctx = state.audioContext;
+      if (!ctx || ctx.state !== 'running') return;
+
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.20, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+      gain.connect(ctx.destination);
+
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(880, now);
+      osc1.connect(gain);
+      osc1.start(now);
+      osc1.stop(now + 0.18);
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1174, now + 0.19);
+      osc2.connect(gain);
+      osc2.start(now + 0.19);
+      osc2.stop(now + 0.38);
+    } catch (_) {}
+  }
+
+  ['pointerdown', 'keydown'].forEach(eventName => {
+    document.addEventListener(eventName, ensureAudioContext, { once: true, passive: true });
+  });
+
   function closeIncomingMessageAlert() {
     $('#incomingMessageModal')?.classList.add('hidden');
     state.currentAlertMessage = null;
@@ -646,6 +696,7 @@
       const next = incoming.find(m => Number(m.id) > state.lastAlertedMessageId);
       if (next) {
         state.lastAlertedMessageId = Number(next.id) || state.lastAlertedMessageId;
+        playPersonalMessageSound();
         showIncomingMessageAlert(next);
       }
     } catch (err) {
@@ -852,6 +903,7 @@
       const baseCall = String(cfg.callsign || '').toUpperCase().trim();
       const ssid = Number(cfg.ssid || 0);
       state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
+      state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       applyMapPreferences(cfg);
       applyAppearancePreferences(cfg);
@@ -866,6 +918,7 @@
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
     data.connect_on_start = form.elements.connect_on_start.checked;
+    data.sound_on_personal_message = form.elements.sound_on_personal_message.checked;
     try {
       const result = await api('/api/config', {
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
@@ -899,9 +952,12 @@
     const colorText = $('#trackColorText');
     const widthInput = form.elements.namedItem('track_width');
     const widthValue = $('#trackWidthValue');
+    const brightnessInput = form.elements.namedItem('map_brightness');
+    const brightnessValue = $('#mapBrightnessValue');
 
     if (colorInput && colorText) colorText.value = colorInput.value || '#3ba6ff';
     if (widthInput && widthValue) widthValue.textContent = `${widthInput.value || 2} px`;
+    if (brightnessInput && brightnessValue) brightnessValue.textContent = `${brightnessInput.value || 100}%`;
   }
 
   $('#configForm')?.elements.namedItem('track_color')?.addEventListener('input', e => {
@@ -921,6 +977,13 @@
   $('#trackWidth')?.addEventListener('input', e => {
     const out = $('#trackWidthValue');
     if (out) out.textContent = `${e.target.value} px`;
+  });
+
+  $('#mapBrightness')?.addEventListener('input', e => {
+    const out = $('#mapBrightnessValue');
+    if (out) out.textContent = `${e.target.value}%`;
+    const tilePane = state.map?.getPane('tilePane');
+    if (tilePane) tilePane.style.filter = `brightness(${e.target.value}%)`;
   });
 
   function syncAppearanceControls() {
