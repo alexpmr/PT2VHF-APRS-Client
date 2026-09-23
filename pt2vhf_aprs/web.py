@@ -118,6 +118,19 @@ def create_app() -> Flask:
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
+    @app.get("/api/log")
+    def api_log():
+        return jsonify(db.list_aprs_log(
+            request.args.get("filter", ""),
+            request.args.get("direction", "ALL"),
+            request.args.get("limit", 1000),
+        ))
+
+    @app.post("/api/log/clear")
+    def api_clear_log():
+        db.clear_aprs_log()
+        return jsonify({"ok": True})
+
     @app.get("/api/callsigns")
     def api_callsigns():
         return jsonify(db.callsign_suggestions(request.args.get("prefix", "")))
