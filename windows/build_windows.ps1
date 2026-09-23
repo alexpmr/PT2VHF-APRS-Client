@@ -11,6 +11,11 @@ if (!(Test-Path ".venv-build")) {
 Remove-Item -Recurse -Force build, dist, dist-installer -ErrorAction SilentlyContinue
 & .\.venv-build\Scripts\pyinstaller.exe --noconfirm --clean windows\PT2VHF_APRS_Client.spec
 
+& .\.venv-build\Scripts\cyclonedx-py.exe environment --spec-version 1.6 --output-format JSON --output-file dist\PT2VHF_APRS_Client\SBOM.cdx.json
+& .\.venv-build\Scripts\pip-licenses.exe --format=plain-vertical --with-license-file --no-license-path --output-file=dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
+Copy-Item THIRD_PARTY_NOTICES.md dist\PT2VHF_APRS_Client\THIRD_PARTY_NOTICES.md
+Copy-Item LICENSE dist\PT2VHF_APRS_Client\LICENSE
+
 $innoCandidates = @(
     "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe",
     "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
