@@ -72,7 +72,8 @@ main { height: calc(100vh - 121px); }
 .data-table td { padding: 9px 11px; border-bottom: 1px solid #202b35; color: #dbe5ec; vertical-align: top; }
 .data-table tbody tr:hover { background: rgba(59,166,255,.06); }
 .sort-indicator { color: var(--accent); margin-left: 3px; }
-.message-composer { height: 82px; display: grid; grid-template-columns: minmax(160px,220px) minmax(280px,1fr) 100px; gap: 10px; align-items: end; padding: 12px 20px; border-top: 1px solid var(--line); background: #111820; }
+.message-composer { min-height: 82px; display: grid; grid-template-columns: minmax(140px,180px) minmax(160px,220px) minmax(86px,100px) minmax(120px,160px) minmax(280px,1fr) 118px; gap: 10px; align-items: end; padding: 12px 20px; border-top: 1px solid var(--line); background: #111820; }
+.message-type-field { grid-column: auto; }
 .send-btn { height: 38px; }
 .direction-in { color: #b7d9ff; }
 .direction-out { color: #aee7c6; }
@@ -115,9 +116,10 @@ main { height: calc(100vh - 121px); }
   .field.compact { min-width: 0; }
   .messages-table-wrap { height: calc(100% - 132px - 132px); }
   .stations-table-wrap { height: calc(100% - 132px); }
-  .message-composer { height: 132px; grid-template-columns: 1fr 1fr; }
-  .message-field { grid-column: 1 / -1; grid-row: 2; }
-  .send-btn { grid-column: 2; grid-row: 1; }
+  .message-composer { min-height: 190px; grid-template-columns: 1fr 1fr; }
+  .message-type-field, .destination-field, .bulletin-id-field, .bulletin-group-field { grid-column: auto; }
+  .message-field { grid-column: 1 / -1; }
+  .send-btn { grid-column: 1 / -1; }
 }
 
 
@@ -232,3 +234,19 @@ main { height: calc(100vh - 121px); }
   .log-filter-field { min-width: 0; flex: 1 1 100%; }
   .log-viewport { height: calc(100% - 190px); }
 }
+
+.message-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.message-type-badge.message { color: #b7d9ff; background: rgba(59,166,255,.08); border-color: rgba(59,166,255,.28); }
+.message-type-badge.bulletin { color: #ffd891; background: rgba(244,189,80,.08); border-color: rgba(244,189,80,.32); }
+.message-type-badge.group-bulletin { color: #c5efcf; background: rgba(56,199,118,.08); border-color: rgba(56,199,118,.30); }
