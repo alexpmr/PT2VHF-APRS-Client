@@ -9,6 +9,7 @@ if (!(Test-Path ".venv-build")) {
 & .\.venv-build\Scripts\python.exe -m pip install -r requirements-windows.txt
 
 Remove-Item -Recurse -Force build, dist, dist-installer -ErrorAction SilentlyContinue
+& .\.venv-build\Scripts\python.exe windows\make_icon.py
 & .\.venv-build\Scripts\pyinstaller.exe --noconfirm --clean windows\PT2VHF_APRS_Client.spec
 
 & .\.venv-build\Scripts\cyclonedx-py.exe environment --spec-version 1.6 --output-format JSON --output-file dist\PT2VHF_APRS_Client\SBOM.cdx.json
