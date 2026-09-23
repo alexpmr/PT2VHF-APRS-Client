@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -39,6 +40,9 @@ DEFAULT_CONFIG = {
     "passcode": "",
     "aprs_filter": "",
     "connect_on_start": 0,
+    "map_type": "osm",
+    "track_color": "#3ba6ff",
+    "track_width": 2,
 }
 
 
@@ -81,6 +85,9 @@ def init_db() -> None:
                 passcode TEXT NOT NULL DEFAULT '',
                 aprs_filter TEXT NOT NULL DEFAULT '',
                 connect_on_start INTEGER NOT NULL DEFAULT 0,
+                map_type TEXT NOT NULL DEFAULT 'osm',
+                track_color TEXT NOT NULL DEFAULT '#3ba6ff',
+                track_width INTEGER NOT NULL DEFAULT 2,
                 updated_at TEXT NOT NULL
             );
 
@@ -157,6 +164,14 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_aprs_log_direction ON aprs_log(direction, id DESC);
             """
         )
+        config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
+        if "map_type" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN map_type TEXT NOT NULL DEFAULT 'osm'")
+        if "track_color" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN track_color TEXT NOT NULL DEFAULT '#3ba6ff'")
+        if "track_width" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN track_width INTEGER NOT NULL DEFAULT 2")
+
         message_columns = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()}
         if "message_type" not in message_columns:
             conn.execute("ALTER TABLE messages ADD COLUMN message_type TEXT NOT NULL DEFAULT 'message'")
@@ -194,6 +209,9 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["port"] = int(merged["port"] or 14580)
     merged["beacon_minutes"] = max(1, int(merged["beacon_minutes"] or 10))
     merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
+    merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
+    merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()
+    merged["track_width"] = int(merged["track_width"] or 2)
     merged["symbol_table"] = (str(merged["symbol_table"] or "/")[:1])
     merged["symbol"] = (str(merged["symbol"] or ">")[:1])
     for field in ("latitude", "longitude", "altitude"):
@@ -212,6 +230,12 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Longitude inválida.")
     if not (1 <= merged["port"] <= 65535):
         raise ValueError("Porta inválida.")
+    if merged["map_type"] not in {"osm", "topo", "satellite"}:
+        raise ValueError("Tipo de mapa inválido.")
+    if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["track_color"]):
+        raise ValueError("Cor do tracklog inválida.")
+    if not (1 <= merged["track_width"] <= 10):
+        raise ValueError("Espessura do tracklog deve estar entre 1 e 10.")
 
     sets = ", ".join(f"{key}=?" for key in sorted(allowed))
     values = [merged[key] for key in sorted(allowed)]
