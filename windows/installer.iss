@@ -25,6 +25,7 @@ LicenseFile=..\LICENSE
 InfoBeforeFile=PRIVACY_INSTALL.txt
 SetupIconFile=app_icon.ico
 CloseApplications=yes
+CloseApplicationsFilter={#MyAppExeName}
 RestartApplications=no
 
 [Languages]
@@ -48,3 +49,38 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Executar PT2VHF APRS Client"; F
 
 [UninstallDelete]
 ; Os dados do usuário em %LOCALAPPDATA% são preservados intencionalmente durante a desinstalação.
+
+
+[Code]
+procedure StopPreviousVersion();
+var
+  ResultCode: Integer;
+begin
+  { Encerra a instância anterior do aplicativo de bandeja. }
+  Exec(
+    ExpandConstant('{sys}\taskkill.exe'),
+    '/F /T /IM "{#MyAppExeName}"',
+    '',
+    SW_HIDE,
+    ewWaitUntilTerminated,
+    ResultCode
+  );
+
+  { Preparação para uma futura instalação como serviço Windows. }
+  Exec(
+    ExpandConstant('{sys}\sc.exe'),
+    'stop "PT2VHF_APRS_Client"',
+    '',
+    SW_HIDE,
+    ewWaitUntilTerminated,
+    ResultCode
+  );
+
+  Sleep(700);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  StopPreviousVersion();
+  Result := '';
+end;
