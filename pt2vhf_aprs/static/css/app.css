@@ -302,3 +302,9 @@ main { height: calc(100vh - 121px); }
 @media (max-width: 900px) {
   .map-config-grid { grid-template-columns: 1fr; }
 }
+
+#stationsTable th[data-key="distance_km"],
+#stationsTable td:nth-child(3) {
+  white-space: nowrap;
+  min-width: 105px;
+}
