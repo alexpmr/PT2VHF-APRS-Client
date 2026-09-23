@@ -2,7 +2,7 @@ from pathlib import Path
 import tempfile
 
 from pt2vhf_aprs import database as db
-from pt2vhf_aprs.aprs_service import build_beacon_packet, expand_filter, parse_message_line, split_message_id
+from pt2vhf_aprs.aprs_service import build_beacon_packet, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id
 
 
 def test_beacon_packet():
@@ -46,5 +46,32 @@ def test_database_config_and_station():
             rows = db.list_stations()
             assert len(rows) == 1
             assert rows[0]["distance_km"] is not None
+    finally:
+        db.DB_PATH = original
+
+
+def test_mask_sensitive_log_line():
+    line = "user PT2VHF pass 12345 vers PT2VHFAPRSClient 0.2.1 filter r/-15.8/-47.9/500"
+    masked = mask_sensitive_log_line(line)
+    assert "12345" not in masked
+    assert "pass ******" in masked
+    assert masked.startswith("user PT2VHF ")
+
+
+def test_aprs_log_rx_tx():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.add_aprs_log("RX", "PY2ABC>APRS:teste")
+            db.add_aprs_log("TX", "PT2VHF>APRS:teste")
+            rows = db.list_aprs_log(limit=10)
+            assert [row["direction"] for row in rows] == ["RX", "TX"]
+            assert rows[0]["raw"].startswith("PY2ABC")
+            tx = db.list_aprs_log(direction="TX", limit=10)
+            assert len(tx) == 1
+            db.clear_aprs_log()
+            assert db.list_aprs_log(limit=10) == []
     finally:
         db.DB_PATH = original
