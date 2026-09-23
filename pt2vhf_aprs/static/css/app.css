@@ -21,6 +21,7 @@ code { color: #a9d6ff; }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9px; background: var(--accent); color: #06131e; font-size: 11px; font-weight: 900; letter-spacing: .08em; }
 h1 { margin: 0; font-size: 20px; }
+.app-version { color: var(--muted); font-size: 13px; font-weight: 700; margin-left: 6px; }
 .subtitle { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .connection-box { display: flex; align-items: center; gap: 12px; }
 .status { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
@@ -117,4 +118,48 @@ main { height: calc(100vh - 121px); }
   .message-composer { height: 132px; grid-template-columns: 1fr 1fr; }
   .message-field { grid-column: 1 / -1; grid-row: 2; }
   .send-btn { grid-column: 2; grid-row: 1; }
+}
+
+
+/* Proteção adicional: mantém o posicionamento dos tiles mesmo se estilos externos forem interferidos. */
+#map .leaflet-pane,
+#map .leaflet-tile,
+#map .leaflet-marker-icon,
+#map .leaflet-marker-shadow,
+#map .leaflet-tile-container,
+#map .leaflet-pane > svg,
+#map .leaflet-pane > canvas,
+#map .leaflet-zoom-box,
+#map .leaflet-image-layer,
+#map .leaflet-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+#map.leaflet-container { overflow: hidden; }
+#map .leaflet-tile { max-width: none !important; max-height: none !important; }
+#map .leaflet-tile-container { pointer-events: none; }
+.location-control {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: #fff;
+  color: #1b242d;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0,0,0,.35);
+}
+.location-control:hover { background: #f4f4f4; }
+.location-control:disabled { cursor: wait; opacity: .65; }
+.user-location-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(59,166,255,.35);
 }
