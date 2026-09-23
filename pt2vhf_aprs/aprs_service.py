@@ -12,9 +12,10 @@ try:
 except ImportError:  # Permite importar o módulo durante validações sem dependências instaladas.
     aprslib = None
 
+from . import __version__
 from . import database as db
 
-VERSION = "0.1.0"
+VERSION = __version__
 MESSAGE_RE = re.compile(r"^(?P<from>[^>]+)>[^:]+::(?P<to>.{9}):(?P<text>.*)$")
 
 
@@ -27,6 +28,9 @@ class ConnectionStatus:
     server_message: str = ""
     last_error: str = ""
     connected_since: str = ""
+    active_filter: str = ""
+    packets_received: int = 0
+    last_packet_at: str = ""
 
 
 class APRSService:
@@ -67,6 +71,14 @@ class APRSService:
             self._beacon_worker = threading.Thread(target=self._beacon_loop, name="aprs-beacon", daemon=True)
             self._beacon_worker.start()
 
+    def reconnect(self) -> None:
+        """Força uma nova sessão APRS-IS usando a configuração atual."""
+        if not self.status()["wanted"]:
+            self.connect()
+            return
+        self._set_status(state="Reconectando com a nova configuração...", connected=False, verified=False)
+        self._close_socket()
+
     def disconnect(self) -> None:
         self._set_status(wanted=False, state="Desconectando...")
         self._stop_event.set()
@@ -105,6 +117,11 @@ class APRSService:
                 aprs_filter = expand_filter(str(cfg.get("aprs_filter") or "").strip(), cfg)
                 if aprs_filter:
                     login += f" filter {aprs_filter}"
+                self._set_status(
+                    active_filter=aprs_filter,
+                    packets_received=0,
+                    last_packet_at="",
+                )
                 self._send_raw(login)
                 self._set_status(connected=True, state="Conectado; autenticando...", connected_since=db.utc_now_iso())
                 retry = 3
@@ -147,6 +164,11 @@ class APRSService:
             else:
                 self._set_status(server_message=line)
             return
+
+        with self._status_lock:
+            current = int(self._status.packets_received or 0)
+            self._status.packets_received = current + 1
+            self._status.last_packet_at = db.utc_now_iso()
 
         parsed: dict[str, Any] = {}
         try:
