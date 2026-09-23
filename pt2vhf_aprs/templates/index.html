@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PT2VHF APRS Client</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIINfQ3ynuhW0WLPwA5aBiEHvtWvKsAMNQ=" crossorigin="">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-mark">APRS</div>
+    <div>
+      <h1>PT2VHF APRS Client</h1>
+      <div class="subtitle">Cliente APRS-IS com banco local SQLite</div>
+    </div>
+  </div>
+  <div class="connection-box">
+    <div id="connectionStatus" class="status disconnected"><span class="dot"></span><span>Desconectado</span></div>
+    <button id="connectButton" class="btn primary">Conectar</button>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Navegação principal">
+  <button class="tab active" data-tab="map">MAPA</button>
+  <button class="tab" data-tab="messages">Mensagens <span id="messageBadge" class="badge hidden">0</span></button>
+  <button class="tab" data-tab="stations">Estações</button>
+  <button class="tab" data-tab="config">Configuração</button>
+</nav>
+
+<main>
+  <section id="tab-map" class="tab-panel active">
+    <div class="map-toolbar">
+      <div><strong>Estações recebidas:</strong> <span id="mapStationCount">0</span></div>
+      <div><strong>Última atualização:</strong> <span id="mapLastUpdate">—</span></div>
+    </div>
+    <div id="map"></div>
+  </section>
+
+  <section id="tab-messages" class="tab-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Mensagens APRS</h2>
+        <p>Filtre pelo indicativo de origem. O filtro aceita trechos, como <code>PT2</code> ou <code>PY2A</code>.</p>
+      </div>
+      <label class="field compact">
+        <span>Filtro</span>
+        <input id="messageFilter" type="text" placeholder="Ex.: PT2">
+      </label>
+    </div>
+    <div class="table-wrap messages-table-wrap">
+      <table id="messagesTable" class="data-table">
+        <thead><tr>
+          <th data-key="from_call">De <span class="sort-indicator"></span></th>
+          <th data-key="to_call">Para <span class="sort-indicator"></span></th>
+          <th data-key="message">Mensagem <span class="sort-indicator"></span></th>
+          <th data-key="timestamp">Hora <span class="sort-indicator"></span></th>
+          <th data-key="status">Status <span class="sort-indicator"></span></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="message-composer">
+      <label class="field destination-field">
+        <span>Destino</span>
+        <input id="messageTo" list="destinationList" maxlength="9" autocomplete="off" placeholder="Indicativo/SSID">
+        <datalist id="destinationList"></datalist>
+      </label>
+      <label class="field message-field">
+        <span>Mensagem</span>
+        <input id="messageText" maxlength="63" placeholder="Digite a mensagem APRS">
+      </label>
+      <button id="sendMessageButton" class="btn primary send-btn" title="Enviar mensagem">Enviar</button>
+    </div>
+  </section>
+
+  <section id="tab-stations" class="tab-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Estações</h2>
+        <p>Últimos dados conhecidos de cada estação recebida.</p>
+      </div>
+      <label class="field compact">
+        <span>Filtro</span>
+        <input id="stationFilter" type="text" placeholder="Indicativo, nome ou informação">
+      </label>
+    </div>
+    <div class="table-wrap stations-table-wrap">
+      <table id="stationsTable" class="data-table">
+        <thead><tr>
+          <th data-key="name">Nome <span class="sort-indicator"></span></th>
+          <th data-key="callsign">Indicativo <span class="sort-indicator"></span></th>
+          <th data-key="last_heard">Última recepção <span class="sort-indicator"></span></th>
+          <th data-key="distance_km" data-type="number">Distância <span class="sort-indicator"></span></th>
+          <th data-key="speed" data-type="number">Velocidade <span class="sort-indicator"></span></th>
+          <th data-key="course" data-type="number">Curso <span class="sort-indicator"></span></th>
+          <th data-key="altitude" data-type="number">Altitude <span class="sort-indicator"></span></th>
+          <th data-key="info">Informação <span class="sort-indicator"></span></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="tab-config" class="tab-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Configuração</h2>
+        <p>Os dados ficam persistidos no SQLite local. Para transmitir ao APRS-IS, a conexão precisa estar verificada.</p>
+      </div>
+    </div>
+
+    <form id="configForm" class="config-grid">
+      <div class="config-card">
+        <h3>Estação</h3>
+        <div class="form-grid two-cols">
+          <label class="field"><span>Indicativo</span><input name="callsign" required maxlength="6" placeholder="PT2VHF"></label>
+          <label class="field"><span>SSID</span><input name="ssid" type="number" min="0" max="15" value="0"></label>
+          <label class="field full"><span>Comentário</span><input name="comment" maxlength="40" placeholder="PT2VHF APRS Client"></label>
+          <label class="field"><span>Latitude</span><input name="latitude" type="number" step="0.000001" placeholder="-15.000000"></label>
+          <label class="field"><span>Longitude</span><input name="longitude" type="number" step="0.000001" placeholder="-47.000000"></label>
+          <label class="field"><span>Altitude (m)</span><input name="altitude" type="number" step="0.1"></label>
+          <label class="field"><span>E-mail</span><input name="email" type="email" placeholder="opcional"></label>
+        </div>
+        <div class="symbol-row">
+          <div>
+            <div class="label-text">Ícone APRS</div>
+            <div id="selectedSymbolPreview" class="selected-symbol"></div>
+            <input type="hidden" name="symbol_table" value="/">
+            <input type="hidden" name="symbol" value=">">
+          </div>
+          <button id="chooseSymbolButton" type="button" class="btn secondary">Escolher ícone</button>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <h3>APRS-IS</h3>
+        <div class="form-grid two-cols">
+          <label class="field full"><span>Servidor</span><input name="server" value="brazil.aprs2.net" required></label>
+          <label class="field"><span>Porta</span><input name="port" type="number" value="14580" min="1" max="65535" required></label>
+          <label class="field"><span>Senha / Passcode APRS-IS</span><input name="passcode" type="password" autocomplete="new-password"></label>
+          <label class="field full"><span>Filtro APRS-IS</span><input name="aprs_filter" placeholder="Ex.: r/500 ou r/-15.8/-47.9/500"><small><code>r/500</code> usa sua latitude/longitude configuradas como centro.</small></label>
+          <label class="field"><span>Beacon (minutos)</span><input name="beacon_minutes" type="number" min="1" value="10"></label>
+          <label class="check-field"><input name="connect_on_start" type="checkbox"><span>Conectar ao iniciar</span></label>
+        </div>
+        <div class="config-actions">
+          <button type="submit" class="btn primary">Salvar configuração</button>
+          <button id="sendBeaconButton" type="button" class="btn secondary">Enviar beacon agora</button>
+        </div>
+      </div>
+
+      <div class="config-card full-card">
+        <h3>Backup da configuração</h3>
+        <div class="backup-row">
+          <a class="btn secondary" href="/api/config/export" download>Salvar em arquivo</a>
+          <label class="btn secondary file-button">Recuperar de arquivo<input id="configImportFile" type="file" accept="application/json,.json"></label>
+          <span class="hint">O arquivo exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.</span>
+        </div>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div id="symbolModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="symbolModalTitle">
+  <div class="modal-card symbol-modal-card">
+    <div class="modal-header">
+      <div><h3 id="symbolModalTitle">Escolher ícone APRS</h3><p>Tabela primária (/) e secundária (\).</p></div>
+      <button id="closeSymbolModal" class="icon-button" type="button">×</button>
+    </div>
+    <div class="symbol-tabs">
+      <button type="button" class="symbol-tab active" data-symbol-table="/">Primária /</button>
+      <button type="button" class="symbol-tab" data-symbol-table="\">Secundária \</button>
+    </div>
+    <div id="symbolGrid" class="symbol-grid"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
