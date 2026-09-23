@@ -590,7 +590,7 @@
     const spec = state.sort.stations;
     const rows = sortedData(state.stations, spec);
     $('#stationsTable tbody').innerHTML = rows.map(s => `
-      <tr>
+      <tr class="station-row" data-callsign="${escapeHtml(s.callsign)}" tabindex="0" title="Abrir esta estação no mapa">
         <td>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.callsign)}</td>
         <td class="station-last-heard">${escapeHtml(fmtDate(s.last_heard))}</td>
         <td>${fmtNum(s.distance_km, 1, ' km')}</td>
@@ -599,7 +599,46 @@
         <td>${fmtNum(s.altitude, 1, ' m')}</td>
         <td>${escapeHtml(s.info || '')}</td>
       </tr>`).join('');
+
+    $('#stationsTable tbody .station-row').forEach(row => {
+      const open = () => focusStationOnMap(row.dataset.callsign);
+      row.addEventListener('click', open);
+      row.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      });
+    });
+
     updateSortIndicators('stationsTable', spec);
+  }
+
+  async function focusStationOnMap(callsign) {
+    const station = state.stations.find(s => s.callsign === callsign);
+    if (!station) return;
+
+    const lat = Number(station.latitude);
+    const lon = Number(station.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      toast(`${callsign} ainda não informou uma posição válida.`, 'error');
+      return;
+    }
+
+    const mapTab = $('.tab[data-tab="map"]');
+    if (mapTab) mapTab.click();
+
+    await new Promise(resolve => setTimeout(resolve, 70));
+    state.map?.invalidateSize();
+    const zoom = Math.max(state.map?.getZoom() || 4, 13);
+    state.map?.setView([lat, lon], zoom, { animate: true });
+
+    let marker = state.markers.get(callsign);
+    if (!marker) {
+      await loadMapData();
+      marker = state.markers.get(callsign);
+    }
+    marker?.openPopup();
   }
 
   $('#stationFilter').addEventListener('input', debounce(loadStations, 250));
