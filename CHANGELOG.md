@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.2.3 — 2026-09-23
+
+- Suporte nativo a **boletim APRS geral** (`BLN0`–`BLN9`) sem ACK.
+- Suporte a **boletim APRS de grupo**, com identificador e grupo de até 5 caracteres.
+- Histórico de mensagens distingue mensagem individual, boletim e boletim de grupo.
+- Botão **Minhas mensagens** mostra apenas mensagens individuais de ou para o `CALL-SSID` configurado.
+- Popup para nova mensagem individual destinada à estação configurada, com remetente, horário, texto e botão **Responder**.
+- Aba **Estações** sem a coluna Nome; Indicativo passa a ser a identificação principal.
+- Clique em uma estação abre a aba MAPA, centraliza a posição e abre o popup correspondente.
+- **Última recepção** permanece em uma única linha com data e hora.
+- **Distância** mantém valor e `km` na mesma linha.
+- Nova seção **Mapa** nas configurações.
+- Seleção de mapa: OpenStreetMap, OpenTopoMap e Esri World Imagery.
+- Configuração de cor e espessura dos tracklogs, persistida no SQLite.
+- Passcode APRS-IS movido para junto do Indicativo e exibido em texto normal.
+- Cálculo automático do passcode APRS-IS enquanto o indicativo é digitado.
+- Nova identidade visual quadrada do PT2VHF APRS Client no cabeçalho, favicon, bandeja, executável e instalador.
+- Geração automática do ícone Windows durante o build.
+- Mantidos SBOM CycloneDX, inventário de licenças e preparação para futura assinatura SignPath.
+- Esta release ainda é **não assinada** enquanto o projeto aguarda aprovação do SignPath Foundation.
+
+
 ## v0.2.2 — 2026-09-23
 
 Build Windows de teste enquanto o projeto aguarda aprovação do SignPath Foundation.
