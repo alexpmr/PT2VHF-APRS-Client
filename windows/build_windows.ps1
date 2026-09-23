@@ -29,7 +29,6 @@ if (-not $iscc) {
 
 & $iscc windows\installer.iss
 Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe dist-installer\PT2VHF_APRS_Client_Portable_x64.exe -Force
-Compress-Archive -Path dist\PT2VHF_APRS_Client\* -DestinationPath dist-installer\PT2VHF_APRS_Client_Portable_x64.zip -Force
 
 Write-Host ""
 Write-Host "Artefatos gerados em dist-installer:" -ForegroundColor Green
