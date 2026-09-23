@@ -309,6 +309,13 @@
       el.querySelector('span:last-child').textContent = s.state || (s.connected ? 'Conectado' : 'Desconectado');
       el.title = s.last_error || s.server_message || '';
       $('#connectButton').textContent = s.connected || s.wanted ? 'Desconectar' : 'Conectar';
+      const packetCount = $('#packetCount');
+      const activeFilter = $('#activeFilter');
+      if (packetCount) packetCount.textContent = Number(s.packets_received || 0).toLocaleString('pt-BR');
+      if (activeFilter) {
+        activeFilter.textContent = s.active_filter || 'sem filtro';
+        activeFilter.classList.toggle('warning-text', !s.active_filter);
+      }
     } catch (_) {}
   }
 
@@ -476,10 +483,10 @@
     const data = Object.fromEntries(new FormData(form).entries());
     data.connect_on_start = form.elements.connect_on_start.checked;
     try {
-      await api('/api/config', {
+      const result = await api('/api/config', {
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
       });
-      toast('Configuração salva no banco local.', 'ok');
+      toast(result.reconnected ? 'Configuração salva. APRS-IS reconectando com os novos parâmetros.' : 'Configuração salva no banco local.', 'ok');
       await loadConfig();
       await loadStations();
     } catch (err) { toast(err.message, 'error'); }
