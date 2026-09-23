@@ -1,7 +1,13 @@
 .venv/
+.venv-build/
 __pycache__/
 *.pyc
+.pytest_cache/
 data/*.db
 data/*.db-shm
 data/*.db-wal
 *.log
+build/
+dist/
+dist-installer/
+*.spec.bak
