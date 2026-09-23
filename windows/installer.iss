@@ -21,6 +21,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 UninstallDisplayIcon={app}\{#MyAppExeName}
 SetupLogging=yes
+LicenseFile=..\LICENSE
+InfoBeforeFile=PRIVACY_INSTALL.txt
 CloseApplications=yes
 RestartApplications=no
 
