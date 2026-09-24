@@ -2,6 +2,10 @@
 
 ## v0.2.9 — em desenvolvimento
 
+- Na aba **Mensagens**, adicionada a opção **Ocultar telemetria**, ligada por padrão.
+- O filtro reconhece mensagens APRS de telemetria nos formatos `PARM.`, `UNIT.`, `EQNS.`, `BITS.` e relatórios `T#nnn`.
+- A telemetria continua armazenada no histórico; o controle apenas esconde ou mostra esses registros.
+- A preferência é mantida localmente para as próximas aberturas do aplicativo.
 - No **Mapa**, os ícones APRS das estações passam a ser exibidos sem o quadrado de fundo: fundo, borda e sombra dos marcadores ficam transparentes, deixando visível apenas o símbolo APRS.
 - Na tela **Mapa**, adicionados os botões **Apagar tracklogs** e **Apagar estações**.
 - **Apagar tracklogs** remove somente os pontos de trilha armazenados e mantém as estações no mapa.
