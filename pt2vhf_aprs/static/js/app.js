@@ -1940,7 +1940,8 @@
     form.elements.namedItem('topology_igate_color').value = '#b06cff';
     form.elements.namedItem('topology_width').value = '2';
     previewTopologyStyleFromForm();
-    toast('Visual da topologia restaurado ao padrão. Clique em Salvar configuração para persistir.', 'ok');
+    markConfigDirty();
+    toast(ui('Visual da topologia restaurado ao padrão. Clique em Salvar configuração para persistir.', 'Topology appearance restored to defaults. Click Save to persist.'), 'ok');
   });
 
   function syncAppearanceControls() {
@@ -2003,6 +2004,7 @@
       form.elements.symbol_table.value = table;
       form.elements.symbol.value = btn.dataset.symbol;
       updateSelectedSymbol();
+      markConfigDirty();
       $('#symbolModal').classList.add('hidden');
     }));
   }
@@ -2026,6 +2028,7 @@
       if (el) el.value = String(value);
     }
     previewAppearanceFromForm();
+    markConfigDirty();
     toast(ui('Formatação restaurada ao padrão. Clique em Salvar para persistir.', 'Formatting restored to defaults. Click Save to persist.'), 'ok');
   }
   $('#resetMessagesTypography')?.addEventListener('click', () => resetTypography('messages', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.35}));
@@ -2309,7 +2312,55 @@
     'Escolher ícone APRS':'Choose APRS icon',
     'Tabela primária (/) e secundária (\\).':'Primary (/) and secondary (\\) table.',
     'Primária /':'Primary /',
-    'Secundária \\':'Secondary \\'
+    'Secundária \\':'Secondary \\',
+    'Página única de configuração':'Single settings page',
+    'As opções estão organizadas por seções. Role a página para acessar Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.':'Settings are organized into sections. Scroll to access APRS Station, APRS-IS, Map and Topology, Messages/Appearance, Application, Updates and Backup/Data.',
+    'Somente estações brasileiras (padrão)':'Brazilian stations only (default)',
+    'Raio (km)':'Radius (km)',
+    'Centro radial — Latitude':'Radial center — Latitude',
+    'Centro radial — Longitude':'Radial center — Longitude',
+    'Sem centro informado, usa a posição configurada da estação.':'If no center is provided, the configured station position is used.',
+    'Área geográfica opcional':'Optional geographic area',
+    'Norte':'North',
+    'Oeste':'West',
+    'Sul':'South',
+    'Leste':'East',
+    'Copiar filtro':'Copy filter',
+    'Restaurar filtro Brasil':'Restore Brazil filter',
+    'Retry de mensagem após (segundos)':'Retry message after (seconds)',
+    'Máximo de retries por parte':'Maximum retries per part',
+    'Análise da topologia observada':'Observed topology analysis',
+    'Rankings de digipeaters/IGates e enlaces que deixaram de aparecer no período.':'Digipeater/IGate rankings and links no longer seen in the period.',
+    'Atualizar análise':'Refresh analysis',
+    'Animar período':'Animate period',
+    'Atualizações':'Updates',
+    'Verificar atualizações automaticamente':'Check for updates automatically',
+    'Baixar atualização automaticamente':'Download updates automatically',
+    'Instalar atualização automaticamente ao fechar':'Install updates automatically on exit',
+    'Nenhuma atualização pendente.':'No pending update.',
+    'Verificar atualização agora':'Check for updates now',
+    'Baixar atualização':'Download update',
+    'Restaurar versão anterior':'Restore previous version',
+    'Restaurar configuração padrão':'Restore default settings',
+    'Restaura preferências e dados da estação; mensagens, estações, logs e tracklogs não são apagados.':'Restores preferences and station settings; messages, stations, logs and tracklogs are not deleted.',
+    'Alterações não salvas':'Unsaved changes',
+    'Salvar alterações da Configuração?':'Save Settings changes?',
+    'Há alterações que ainda não foram salvas.':'There are changes that have not been saved yet.',
+    'Salvar e sair':'Save and leave',
+    'Descartar alterações':'Discard changes',
+    'Cancelar':'Cancel',
+    'Atualização do aplicativo':'Application update',
+    'Nova versão disponível':'New version available',
+    'Baixar agora':'Download now',
+    'Ver Release':'View Release',
+    'Depois':'Later',
+    'Alternar tema':'Toggle theme',
+    'A configuração oferece sugestões regionais e continua aceitando servidor manual.':'Settings provide regional suggestions and still accept a custom server.',
+    'O padrão de novas instalações recebe indicativos brasileiros. O campo continua totalmente editável para filtros APRS-IS manuais.':'New installations default to Brazilian callsigns. The field remains fully editable for manual APRS-IS filters.',
+    'Conectar ao iniciar vem habilitado em novas instalações e pode ser desligado nesta seção.':'Connect at startup is enabled on new installations and can be disabled in this section.',
+    'Quando houver atualização, clique no aviso para abrir o painel integrado, consultar as novidades e baixar o pacote compatível.':'When an update is available, click the notice to open the integrated panel, review changes and download the compatible package.',
+    'É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.':'Updates can be checked and downloaded automatically and, on supported platforms, installed on exit. Windows Portable keeps a rollback backup.',
+    'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.'
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
   function translateConnectionState(value) {
@@ -2609,6 +2660,7 @@
       syncDmsFromDecimal();
       updateAltitudeSourceStatus(altitudeSource, altitudeValue);
       refreshRequiredFieldHighlights();
+      if (state.activeTab === 'config' && state.configLoaded && !state.configLoading) markConfigDirty();
     }
 
     const status = $('#currentLocationStatus');
