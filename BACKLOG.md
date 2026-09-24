@@ -79,3 +79,16 @@ A partir desta versão, novas demandas serão adicionadas novamente neste arquiv
 - A aba **Análise** deve usar os mesmos dados já registrados no banco, sem alterar ou perder o histórico existente.
 - Preservar a integração com o mapa: ações como **Animar período** podem abrir/focar a aba Mapa quando necessário.
 - Preparar a estrutura da aba para receber futuramente novos indicadores e gráficos de saúde/desempenho da rede.
+
+## Botão “Mostrar log” no popup da estação
+
+**Objetivo:** facilitar o diagnóstico de uma estação diretamente a partir do mapa.
+
+- No popup exibido ao clicar em uma estação no mapa, adicionar o botão **Mostrar log** ao lado de **Enviar mensagem**.
+- Ao clicar em **Mostrar log**, abrir automaticamente a aba **Log**.
+- Preencher/aplicar o filtro do Log com o indicativo completo da estação selecionada, incluindo SSID quando houver.
+- Atualizar imediatamente a lista do Log para exibir somente registros relacionados à estação filtrada.
+- Preservar os demais filtros ativos do Log quando isso não impedir a filtragem pelo indicativo.
+- Dar foco visual ao campo de filtro do Log para deixar claro qual estação está sendo analisada.
+- O botão deve funcionar para qualquer estação exibida no mapa, independentemente de ter sido recebida diretamente por RF ou via APRS-IS.
+- Não alterar permanentemente outras preferências da aba Log; a ação deve apenas navegar e aplicar o filtro correspondente.
