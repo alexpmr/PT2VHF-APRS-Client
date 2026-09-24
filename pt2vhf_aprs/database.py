@@ -311,7 +311,8 @@ def init_db() -> None:
 
 def validate_required_station_config(config: dict[str, Any]) -> None:
     missing: list[str] = []
-    if not str(config.get("callsign") or "").strip():
+    callsign = str(config.get("callsign") or "").strip().upper()
+    if not callsign:
         missing.append("Indicativo")
     if config.get("latitude") in ("", None):
         missing.append("Latitude")
@@ -324,6 +325,8 @@ def validate_required_station_config(config: dict[str, Any]) -> None:
         raise ValueError(
             "Preencha os campos obrigatórios antes de continuar: " + ", ".join(missing) + "."
         )
+    if not re.fullmatch(r"[A-Z0-9]{1,6}", callsign):
+        raise ValueError("Indicativo inválido. Use de 1 a 6 letras ou números, sem SSID.")
 
 
 def get_config() -> dict[str, Any]:
