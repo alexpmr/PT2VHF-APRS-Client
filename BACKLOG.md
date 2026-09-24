@@ -58,3 +58,24 @@ A partir desta versão, novas demandas serão adicionadas novamente neste arquiv
 - Se existir uma palavra individual maior do que o tamanho máximo permitido por uma única mensagem APRS, fazer a divisão técnica dessa palavra apenas como último recurso.
 - O controle interno de partes, ACK/REJ, retries e status agregado deve continuar funcionando por metadados internos, **sem depender de numeração escrita no corpo da mensagem**.
 - O destinatário deve receber as partes em sequência com o texto original preservado, sem os marcadores artificiais de fragmentação.
+
+## Nova aba “Análise” para análise da rede
+
+**Objetivo:** separar as ferramentas de análise da rede das preferências de Configuração e dar a elas uma área própria na navegação principal.
+
+- Criar uma nova aba superior chamada **Análise**.
+- Mover para essa nova aba toda a seção atual de **Análise da topologia observada / análise da rede** que hoje fica em **Configuração → Mapa e Topologia**.
+- A nova aba deve concentrar os recursos analíticos, incluindo:
+  - ranking de digipeaters;
+  - ranking de IGates;
+  - enlaces que deixaram de aparecer;
+  - comparação com o período anterior;
+  - métricas agregadas da topologia;
+  - controles de período;
+  - ação **Atualizar análise**;
+  - ação **Animar período** e demais recursos analíticos relacionados.
+- Manter em **Configuração → Mapa e Topologia** apenas preferências de apresentação e comportamento do mapa/topologia, como cores, espessura, provedor do mapa e opções visuais.
+- Não duplicar a análise nas duas telas; após a mudança, a área analítica deve existir somente na aba **Análise**.
+- A aba **Análise** deve usar os mesmos dados já registrados no banco, sem alterar ou perder o histórico existente.
+- Preservar a integração com o mapa: ações como **Animar período** podem abrir/focar a aba Mapa quando necessário.
+- Preparar a estrutura da aba para receber futuramente novos indicadores e gráficos de saúde/desempenho da rede.
