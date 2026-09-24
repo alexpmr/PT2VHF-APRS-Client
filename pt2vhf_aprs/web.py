@@ -100,7 +100,9 @@ def create_app() -> Flask:
 
     @app.get("/api/status")
     def api_status():
-        return jsonify(service.status())
+        payload = service.status()
+        payload.update(db.summary_counts())
+        return jsonify(payload)
 
     @app.get("/api/update-status")
     def api_update_status():
@@ -185,6 +187,14 @@ def create_app() -> Flask:
     def api_map_data():
         return jsonify(db.map_data())
 
+    @app.get("/api/topology")
+    def api_topology():
+        try:
+            hours = int(request.args.get("hours", 24))
+        except (TypeError, ValueError):
+            hours = 24
+        return jsonify(db.list_topology_edges(hours))
+
     @app.get("/api/stations")
     def api_stations():
         return jsonify(db.list_stations(request.args.get("filter", "")))
@@ -220,7 +230,7 @@ def create_app() -> Flask:
             message_type = str(data.get("type") or "message").lower()
 
             if message_type == "message":
-                row_id = service.send_message(data.get("to", ""), data.get("message", ""))
+                result = service.send_message_parts(data.get("to", ""), data.get("message", ""))
             elif message_type in {"bulletin", "group_bulletin"}:
                 group = data.get("group", "") if message_type == "group_bulletin" else ""
                 row_id = service.send_bulletin(
@@ -231,6 +241,14 @@ def create_app() -> Flask:
             else:
                 raise ValueError("Tipo de mensagem APRS inválido.")
 
+            if message_type == "message":
+                return jsonify({
+                    "ok": True,
+                    "ids": result["row_ids"],
+                    "message_ids": result["message_ids"],
+                    "part_count": result["part_count"],
+                    "type": message_type,
+                })
             return jsonify({"ok": True, "id": row_id, "type": message_type})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
