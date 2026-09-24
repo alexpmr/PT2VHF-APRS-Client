@@ -138,9 +138,8 @@ def _show_native_window(*_args) -> None:
     threading.Thread(target=_focus, name="pt2vhf-focus-window", daemon=True).start()
 
 
-def _exit_app(icon: pystray.Icon | None = None, *_args) -> None:
-    global _quitting
-    _quitting = True
+def _shutdown_components(icon: pystray.Icon | None = None) -> None:
+    """Encerra os componentes de fundo antes de finalizar o processo."""
     try:
         service.disconnect()
     except Exception:
@@ -153,6 +152,14 @@ def _exit_app(icon: pystray.Icon | None = None, *_args) -> None:
     except Exception:
         pass
 
+
+def _exit_app(icon: pystray.Icon | None = None, *_args) -> None:
+    global _quitting
+    if _quitting:
+        return
+    _quitting = True
+    _shutdown_components(icon)
+
     if _window is not None:
         try:
             _window.destroy()
@@ -160,19 +167,39 @@ def _exit_app(icon: pystray.Icon | None = None, *_args) -> None:
         except Exception:
             pass
 
+    # No modo --browser não há janela WebView para encerrar o loop principal.
     os._exit(0)
 
 
-def _on_window_closing() -> bool:
-    """Fechar no X esconde na bandeja; Sair na bandeja encerra de fato."""
-    if _quitting:
+def _confirm_exit() -> bool:
+    if os.name != "nt":
         return True
     try:
-        if _window is not None:
-            _window.hide()
+        # MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2
+        flags = 0x00000004 | 0x00000020 | 0x00000100
+        result = ctypes.windll.user32.MessageBoxW(
+            None,
+            "Deseja realmente sair do PT2VHF APRS Client?",
+            APP_NAME,
+            flags,
+        )
+        return result == 6  # IDYES
     except Exception:
-        pass
-    return False
+        return True
+
+
+def _on_window_closing() -> bool:
+    """O X pede confirmação e, se aprovado, encerra toda a aplicação."""
+    global _quitting
+    if _quitting:
+        return True
+
+    if not _confirm_exit():
+        return False
+
+    _quitting = True
+    _shutdown_components()
+    return True
 
 
 def _create_tray_icon() -> pystray.Icon:
@@ -242,6 +269,7 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
     try:
         # EdgeChromium usa o Microsoft Edge WebView2 Runtime do Windows.
         webview.start(gui="edgechromium", debug=False, private_mode=False)
+        _shutdown_components()
         return 0
     except Exception as exc:
         # Fallback de diagnóstico: mantém a aplicação utilizável mesmo se o
