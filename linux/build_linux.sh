@@ -28,7 +28,7 @@ cp LICENSE dist-linux/package/LICENSE
 cp THIRD_PARTY_NOTICES.md dist-linux/package/THIRD_PARTY_NOTICES.md
 cp dist-linux/SBOM-Linux.cdx.json dist-linux/package/SBOM-Linux.cdx.json
 cp dist-linux/THIRD_PARTY_LICENSES_Linux.txt dist-linux/package/THIRD_PARTY_LICENSES_Linux.txt
-tar -C dist-linux/package -czf "dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v${version}.tar.gz" .
+tar -czf "dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v${version}.tar.gz" -C dist-linux/package .
 
 if command -v dpkg-deb >/dev/null 2>&1; then
   root="dist-linux/deb-root"
