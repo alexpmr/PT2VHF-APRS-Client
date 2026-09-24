@@ -255,3 +255,41 @@ def test_invalid_theme_is_rejected():
                 })
     finally:
         db.DB_PATH = original
+
+
+def test_clear_tracklogs_keeps_stations():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({
+                "callsign": "PT2VHF",
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": 1000,
+            })
+            db.upsert_station({
+                "from": "PY2ABC-9",
+                "format": "uncompressed",
+                "latitude": -15.81,
+                "longitude": -47.91,
+                "speed": 10.0,
+                "course": 90,
+                "altitude": 1000,
+                "symbol_table": "/",
+                "symbol": ">",
+                "comment": "Movel",
+                "path": ["WIDE1-1"],
+                "raw": "x",
+            })
+
+            assert len(db.list_stations()) == 1
+            assert len(db.map_data()["tracks"]) >= 1
+
+            deleted = db.clear_tracklogs()
+            assert deleted >= 1
+            assert len(db.list_stations()) == 1
+            assert db.map_data()["tracks"] == []
+    finally:
+        db.DB_PATH = original
