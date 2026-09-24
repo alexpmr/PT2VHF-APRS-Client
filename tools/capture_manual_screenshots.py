@@ -35,7 +35,7 @@ def seed(data_dir: Path) -> None:
     db.save_config({
         "callsign": "PT2VHF", "ssid": 15, "latitude": -15.7939, "longitude": -47.8828,
         "altitude": 1100, "comment": "PT2VHF APRS Client - demonstração do manual",
-        "aprs_filter": "r/2000", "app_theme": "dark",
+        "aprs_filter": db.BRAZIL_FILTER, "app_theme": "dark", "connect_on_start": False,
     })
     for idx, (call, lat, lon, info) in enumerate([
         ("PY2ABC-9", -15.81, -47.91, "Móvel em Brasília"),
@@ -82,13 +82,14 @@ def capture(output_dir: Path) -> None:
                     page.screenshot(path=str(output_dir / filename))
                 page.evaluate("""() => document.querySelector('.tab[data-tab="config"]').click()""")
                 page.wait_for_timeout(700)
-                # APRS / Estação é a subseção padrão; não depende de visibilidade do botão.
+                # A v1.6 usa uma única página de Configuração, compartimentalizada por seções.
                 page.screenshot(path=str(output_dir / "config-aprs.png"))
+                page.locator("#toggleFilterBuilderButton").scroll_into_view_if_needed()
                 page.evaluate("() => document.querySelector('#toggleFilterBuilderButton').click()")
                 page.wait_for_timeout(350)
                 page.screenshot(path=str(output_dir / "filter-editor.png"))
-                page.evaluate("""() => document.querySelector('.config-section-tab[data-config-section="app"]').click()""")
-                page.wait_for_timeout(500)
+                page.locator("#appTheme").scroll_into_view_if_needed()
+                page.wait_for_timeout(350)
                 page.screenshot(path=str(output_dir / "config-app.png"))
                 browser.close()
         finally:
