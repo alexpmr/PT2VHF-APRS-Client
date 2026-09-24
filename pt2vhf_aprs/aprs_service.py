@@ -212,6 +212,7 @@ class APRSService:
         fmt = str(parsed.get("format") or "")
         from_call = str(parsed.get("from") or extract_source(line) or "")
         db.record_packet(line, from_call, fmt)
+        db.record_topology_from_raw(line)
 
         msg = parse_message_line(line, parsed)
         if msg:
@@ -267,6 +268,10 @@ class APRSService:
         db.add_aprs_log("TX", mask_sensitive_log_line(line))
 
     def send_message(self, destination: str, text: str) -> int:
+        result = self.send_message_parts(destination, text)
+        return int(result["row_ids"][0])
+
+    def send_message_parts(self, destination: str, text: str) -> dict[str, Any]:
         status = self.status()
         if not status["connected"]:
             raise ConnectionError("Cliente APRS-IS desconectado.")
@@ -278,16 +283,32 @@ class APRSService:
         destination = destination.upper().strip()
         if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", destination):
             raise ValueError("Indicativo de destino inválido.")
-        clean = " ".join(str(text).replace("\r", " ").replace("\n", " ").split())
-        if not clean:
-            raise ValueError("Mensagem vazia.")
-        self._msg_counter = (self._msg_counter + 1) % 1000
-        msg_id = f"{self._msg_counter:03d}"
-        # APRS clássico trabalha com payload curto; limita para manter compatibilidade ampla.
-        clean = clean[:63]
-        packet = f"{source}>APRS,TCPIP*::{destination:<9}:{clean}{{{msg_id}"
-        self._send_raw(packet)
-        return db.add_message("out", source, destination, clean, msg_id=msg_id, status="Enviada", raw=packet)
+
+        parts = split_aprs_message_parts(text)
+        row_ids: list[int] = []
+        message_ids: list[str] = []
+
+        for index, part in enumerate(parts):
+            self._msg_counter = (self._msg_counter + 1) % 1000
+            msg_id = f"{self._msg_counter:03d}"
+            packet = f"{source}>APRS,TCPIP*::{destination:<9}:{part}{{{msg_id}"
+            self._send_raw(packet)
+            row_ids.append(
+                db.add_message(
+                    "out", source, destination, part,
+                    msg_id=msg_id, status="Enviada", raw=packet,
+                )
+            )
+            message_ids.append(msg_id)
+            if index + 1 < len(parts):
+                time.sleep(0.25)
+
+        return {
+            "row_ids": row_ids,
+            "message_ids": message_ids,
+            "parts": parts,
+            "part_count": len(parts),
+        }
 
     def send_bulletin(self, text: str, bulletin_id: str = "0", group: str = "") -> int:
         status = self.status()
@@ -393,6 +414,49 @@ def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group:
     addressee = f"BLN{bulletin_id}{group:<5}" if group else f"BLN{bulletin_id}{'':<5}"
     packet = f"{source}>APRS,TCPIP*::{addressee}:{clean}"
     return packet, addressee.rstrip(), message_type, clean
+
+
+def split_aprs_message_parts(text: str, single_limit: int = 63) -> list[str]:
+    """Divide texto longo em mensagens APRS normais, numeradas e compatíveis."""
+    clean = " ".join(str(text or "").replace("\r", " ").replace("\n", " ").split())
+    if not clean:
+        raise ValueError("Mensagem vazia.")
+    if len(clean) <= single_limit:
+        return [clean]
+
+    # Reserva 8 caracteres para marcadores até [99/99] + espaço.
+    content_limit = single_limit - 8
+    words = clean.split(" ")
+    chunks: list[str] = []
+    current = ""
+
+    for word in words:
+        if len(word) > content_limit:
+            if current:
+                chunks.append(current)
+                current = ""
+            while len(word) > content_limit:
+                chunks.append(word[:content_limit])
+                word = word[content_limit:]
+            if word:
+                current = word
+            continue
+
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) <= content_limit:
+            current = candidate
+        else:
+            chunks.append(current)
+            current = word
+
+    if current:
+        chunks.append(current)
+
+    total = len(chunks)
+    if total > 99:
+        raise ValueError("Mensagem muito longa; limite de 99 partes APRS.")
+
+    return [f"[{i}/{total}] {chunk}" for i, chunk in enumerate(chunks, start=1)]
 
 
 def calculate_aprs_passcode(callsign: str) -> int:
