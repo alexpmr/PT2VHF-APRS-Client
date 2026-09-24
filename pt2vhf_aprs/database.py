@@ -6,7 +6,7 @@ import os
 import re
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -176,6 +176,18 @@ def init_db() -> None:
             );
             CREATE INDEX IF NOT EXISTS idx_aprs_log_time ON aprs_log(id DESC);
             CREATE INDEX IF NOT EXISTS idx_aprs_log_direction ON aprs_log(direction, id DESC);
+
+            CREATE TABLE IF NOT EXISTS topology_edges (
+                source TEXT NOT NULL,
+                target TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                packet_count INTEGER NOT NULL DEFAULT 1,
+                first_seen TEXT NOT NULL,
+                last_seen TEXT NOT NULL,
+                igate TEXT,
+                PRIMARY KEY(source, target, kind)
+            );
+            CREATE INDEX IF NOT EXISTS idx_topology_last_seen ON topology_edges(last_seen DESC);
             """
         )
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
@@ -476,6 +488,101 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     return result
 
 
+def _is_topology_callsign(value: str) -> bool:
+    value = str(value or "").upper().strip().rstrip("*")
+    if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", value):
+        return False
+    blocked = ("WIDE", "TRACE", "RELAY", "TCPIP", "TCPXX", "NOGATE", "RFONLY")
+    return not value.startswith(blocked)
+
+
+def record_topology_from_raw(raw: str) -> None:
+    """Registra somente relações observáveis no path APRS/TNC2."""
+    line = str(raw or "").strip()
+    if ">" not in line or ":" not in line:
+        return
+    source = line.split(">", 1)[0].upper().strip()
+    if not _is_topology_callsign(source):
+        return
+
+    header = line.split(":", 1)[0]
+    route = header.split(">", 1)[1].split(",")
+    if len(route) < 2:
+        return
+
+    path = [part.strip().upper() for part in route[1:] if part.strip()]
+    now = utc_now_iso()
+    edges: list[tuple[str, str, str, str | None]] = []
+    previous = source
+
+    for token in path:
+        if token.lower().startswith("q"):
+            break
+        if not token.endswith("*"):
+            continue
+        node = token.rstrip("*")
+        if _is_topology_callsign(node) and node != previous:
+            edges.append((previous, node, "rf", None))
+            previous = node
+
+    igate = None
+    for i, token in enumerate(path):
+        if token in {"QAR", "QAO"} and i + 1 < len(path):
+            candidate = path[i + 1].rstrip("*")
+            if _is_topology_callsign(candidate):
+                igate = candidate
+                if igate != previous:
+                    edges.append((previous, igate, "igate", igate))
+            break
+
+    if not edges:
+        return
+
+    with connection() as conn:
+        for edge_source, target, kind, edge_igate in edges:
+            conn.execute(
+                """
+                INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
+                VALUES(?,?,?,1,?,?,?)
+                ON CONFLICT(source,target,kind) DO UPDATE SET
+                    packet_count=topology_edges.packet_count+1,
+                    last_seen=excluded.last_seen,
+                    igate=COALESCE(excluded.igate, topology_edges.igate)
+                """,
+                (edge_source, target, kind, now, now, edge_igate),
+            )
+
+
+def list_topology_edges(hours: int = 24) -> list[dict[str, Any]]:
+    hours = max(1, min(int(hours or 24), 24 * 30))
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+    with connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT e.source,e.target,e.kind,e.packet_count,e.first_seen,e.last_seen,e.igate,
+                   s1.latitude AS source_lat,s1.longitude AS source_lon,
+                   s2.latitude AS target_lat,s2.longitude AS target_lon
+            FROM topology_edges e
+            JOIN stations s1 ON UPPER(s1.callsign)=UPPER(e.source)
+            JOIN stations s2 ON UPPER(s2.callsign)=UPPER(e.target)
+            WHERE e.last_seen >= ?
+              AND s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
+              AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
+            ORDER BY e.packet_count DESC, e.last_seen DESC
+            LIMIT 1500
+            """,
+            (cutoff,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def summary_counts() -> dict[str, int]:
+    with connection() as conn:
+        stations = int(conn.execute("SELECT COUNT(*) FROM stations").fetchone()[0])
+        messages = int(conn.execute("SELECT COUNT(*) FROM messages").fetchone()[0])
+    return {"stations": stations, "messages": messages}
+
+
 def clear_tracklogs() -> int:
     with connection() as conn:
         cur = conn.execute("DELETE FROM tracks")
@@ -485,10 +592,12 @@ def clear_tracklogs() -> int:
 def clear_stations() -> dict[str, int]:
     with connection() as conn:
         tracks_cur = conn.execute("DELETE FROM tracks")
+        topology_cur = conn.execute("DELETE FROM topology_edges")
         stations_cur = conn.execute("DELETE FROM stations")
         return {
             "stations": max(0, int(stations_cur.rowcount or 0)),
             "tracks": max(0, int(tracks_cur.rowcount or 0)),
+            "topology": max(0, int(topology_cur.rowcount or 0)),
         }
 
 
