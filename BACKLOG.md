@@ -31,3 +31,27 @@ Este arquivo registra funcionalidades planejadas que ainda **não fazem parte da
 
 A função deverá ser apresentada como **Topologia observada**, evitando sugerir que o APRS-IS fornece uma medição RF física completa da rede. As linhas representarão relações inferidas diretamente dos paths e metadados APRS recebidos.
 
+
+
+## Mensagens longas com envio automático em partes
+
+**Objetivo:** permitir que o usuário escreva uma mensagem maior no campo de composição, sem precisar dividir manualmente o texto para respeitar o limite de cada mensagem APRS.
+
+### Escopo planejado
+
+- Remover do campo de edição o limite visual atual de 63/67 caracteres.
+- Permitir a digitação de mensagens longas em uma única caixa de texto.
+- No momento do envio, dividir automaticamente o conteúdo em várias mensagens APRS compatíveis com o limite de payload do protocolo.
+- Preferir a quebra entre palavras, evitando cortar palavras ao meio sempre que possível.
+- Identificar as partes de forma clara, por exemplo `[1/3]`, `[2/3]`, `[3/3]`, contabilizando esse marcador dentro do limite de cada pacote.
+- Manter a ordem correta de transmissão das partes.
+- Para mensagens individuais, gerar um ID APRS próprio para cada parte e acompanhar ACK/REJ separadamente.
+- Exibir no histórico uma indicação de que as linhas pertencem à mesma mensagem longa, preservando a ordem das partes.
+- Informar antes do envio em quantas partes o texto será transmitido.
+- Evitar envio simultâneo excessivo: transmitir as partes de forma sequencial, com pequeno intervalo e respeitando confirmação/retry quando aplicável.
+- Caso uma parte falhe, indicar exatamente qual parte não foi confirmada e permitir novo envio.
+- Manter compatibilidade com clientes APRS comuns: o destinatário receberá as partes como mensagens APRS individuais numeradas, sem depender de um protocolo proprietário de remontagem.
+
+### Observação
+
+O limite efetivo de texto por parte depende do formato da mensagem APRS e dos caracteres usados para identificação da parte e do ID da mensagem. O cliente deverá calcular dinamicamente o tamanho disponível, em vez de assumir um valor fixo para todos os casos.
