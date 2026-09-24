@@ -61,8 +61,16 @@ DEFAULT_CONFIG = {
     "app_theme": "dark",
     "messages_font_family": "system",
     "messages_font_size": 12,
+    "messages_font_weight": "normal",
+    "messages_line_height": 1.35,
     "stations_font_family": "system",
     "stations_font_size": 12,
+    "stations_font_weight": "normal",
+    "stations_line_height": 1.25,
+    "logs_font_family": "consolas",
+    "logs_font_size": 12,
+    "logs_font_weight": "normal",
+    "logs_line_height": 1.30,
 }
 
 
@@ -119,8 +127,16 @@ def init_db() -> None:
                 app_theme TEXT NOT NULL DEFAULT 'dark',
                 messages_font_family TEXT NOT NULL DEFAULT 'system',
                 messages_font_size INTEGER NOT NULL DEFAULT 12,
+                messages_font_weight TEXT NOT NULL DEFAULT 'normal',
+                messages_line_height REAL NOT NULL DEFAULT 1.35,
                 stations_font_family TEXT NOT NULL DEFAULT 'system',
                 stations_font_size INTEGER NOT NULL DEFAULT 12,
+                stations_font_weight TEXT NOT NULL DEFAULT 'normal',
+                stations_line_height REAL NOT NULL DEFAULT 1.25,
+                logs_font_family TEXT NOT NULL DEFAULT 'consolas',
+                logs_font_size INTEGER NOT NULL DEFAULT 12,
+                logs_font_weight TEXT NOT NULL DEFAULT 'normal',
+                logs_line_height REAL NOT NULL DEFAULT 1.30,
                 updated_at TEXT NOT NULL
             );
 
@@ -242,6 +258,22 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN stations_font_family TEXT NOT NULL DEFAULT 'system'")
         if "stations_font_size" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN stations_font_size INTEGER NOT NULL DEFAULT 12")
+        if "messages_font_weight" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN messages_font_weight TEXT NOT NULL DEFAULT 'normal'")
+        if "messages_line_height" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN messages_line_height REAL NOT NULL DEFAULT 1.35")
+        if "stations_font_weight" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN stations_font_weight TEXT NOT NULL DEFAULT 'normal'")
+        if "stations_line_height" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN stations_line_height REAL NOT NULL DEFAULT 1.25")
+        if "logs_font_family" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN logs_font_family TEXT NOT NULL DEFAULT 'consolas'")
+        if "logs_font_size" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN logs_font_size INTEGER NOT NULL DEFAULT 12")
+        if "logs_font_weight" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN logs_font_weight TEXT NOT NULL DEFAULT 'normal'")
+        if "logs_line_height" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN logs_line_height REAL NOT NULL DEFAULT 1.30")
 
         message_columns = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()}
         if "message_type" not in message_columns:
@@ -312,8 +344,16 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["app_theme"] = str(merged["app_theme"] or "dark").lower().strip()
     merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
     merged["messages_font_size"] = int(merged["messages_font_size"] or 12)
+    merged["messages_font_weight"] = str(merged["messages_font_weight"] or "normal").lower().strip()
+    merged["messages_line_height"] = float(merged["messages_line_height"] or 1.35)
     merged["stations_font_family"] = str(merged["stations_font_family"] or "system").lower().strip()
     merged["stations_font_size"] = int(merged["stations_font_size"] or 12)
+    merged["stations_font_weight"] = str(merged["stations_font_weight"] or "normal").lower().strip()
+    merged["stations_line_height"] = float(merged["stations_line_height"] or 1.25)
+    merged["logs_font_family"] = str(merged["logs_font_family"] or "consolas").lower().strip()
+    merged["logs_font_size"] = int(merged["logs_font_size"] or 12)
+    merged["logs_font_weight"] = str(merged["logs_font_weight"] or "normal").lower().strip()
+    merged["logs_line_height"] = float(merged["logs_line_height"] or 1.30)
     merged["symbol_table"] = (str(merged["symbol_table"] or "/")[:1])
     merged["symbol"] = (str(merged["symbol"] or ">")[:1])
     for field in ("latitude", "longitude", "altitude"):
@@ -359,10 +399,27 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Fonte da tela de mensagens inválida.")
     if merged["stations_font_family"] not in allowed_fonts:
         raise ValueError("Fonte da tela de estações inválida.")
+    if merged["logs_font_family"] not in allowed_fonts:
+        raise ValueError("Fonte da tela de logs inválida.")
+    if merged["messages_font_weight"] not in {"normal", "bold"}:
+        raise ValueError("Peso da fonte de mensagens inválido.")
+    if merged["stations_font_weight"] not in {"normal", "bold"}:
+        raise ValueError("Peso da fonte de estações inválido.")
+    if merged["logs_font_weight"] not in {"normal", "bold"}:
+        raise ValueError("Peso da fonte de logs inválido.")
     if not (10 <= merged["messages_font_size"] <= 20):
         raise ValueError("Tamanho da fonte de mensagens deve estar entre 10 e 20 px.")
     if not (10 <= merged["stations_font_size"] <= 20):
         raise ValueError("Tamanho da fonte de estações deve estar entre 10 e 20 px.")
+    if not (10 <= merged["logs_font_size"] <= 20):
+        raise ValueError("Tamanho da fonte de logs deve estar entre 10 e 20 px.")
+    for key, label in (
+        ("messages_line_height", "mensagens"),
+        ("stations_line_height", "estações"),
+        ("logs_line_height", "logs"),
+    ):
+        if not (1.0 <= float(merged[key]) <= 2.0):
+            raise ValueError(f"Espaçamento de linha de {label} deve estar entre 1,0 e 2,0.")
 
     sets = ", ".join(f"{key}=?" for key in sorted(allowed))
     values = [merged[key] for key in sorted(allowed)]
