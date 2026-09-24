@@ -121,6 +121,10 @@ Consulte `docs/INSTALL_LINUX.md` para o fluxo portátil completo.
 
 O workflow executa smoke tests no Ubuntu 22.04 e 24.04. Em desktops Linux com `notify-send`, mensagens pessoais podem gerar notificação nativa. No macOS, o cliente usa a notificação do sistema quando disponível.
 
+## Política de versionamento
+
+Após a **v1.6**, correções e melhorias incrementais seguem a série **v1.6.1, v1.6.2, v1.6.3, ...**. A passagem para **v1.7** somente ocorrerá mediante orientação explícita do mantenedor. Consulte `VERSIONING.md`.
+
 ## Segurança e assinatura
 
 - A interface HTTP local escuta em `127.0.0.1`.
