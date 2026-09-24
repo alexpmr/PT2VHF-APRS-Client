@@ -1891,3 +1891,31 @@ html[data-theme="light"] #logTimeHeader:hover {
   .filter-area,
   .topology-stats-content { grid-template-columns: 1fr; }
 }
+
+/* v1.6 - coordenadas em linhas independentes e foco de mensagem */
+.coordinate-decimal-grid,
+.coordinate-dms-grid {
+  grid-template-columns: 1fr;
+}
+.coordinate-dms-group {
+  grid-template-columns: 92px minmax(76px, 1fr) minmax(76px, 1fr) minmax(96px, 1fr) 70px;
+  max-width: 760px;
+}
+#altitudeField {
+  grid-column: 1 / -1;
+  max-width: 760px;
+}
+.message-focus-row {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: rgba(59,166,255,.13) !important;
+}
+@media (max-width: 760px) {
+  .coordinate-dms-group {
+    grid-template-columns: 1fr 1fr;
+    max-width: none;
+  }
+  .coordinate-dms-group .label-text {
+    grid-column: 1 / -1;
+  }
+}
