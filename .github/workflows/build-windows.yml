@@ -209,6 +209,7 @@ jobs:
           name: PT2VHF-APRS-Client-Linux-x86_64
           path: |
             dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v*.tar.gz
+            dist-linux/PT2VHF_APRS_Client_x86_64_v*.AppImage
             dist-linux/pt2vhf-aprs-client_*_amd64.deb
             dist-linux/SBOM-Linux.cdx.json
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt
@@ -228,10 +229,36 @@ jobs:
 
           gh release upload "$tag" \
             "dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v$version.tar.gz" \
+            "dist-linux/PT2VHF_APRS_Client_x86_64_v$version.AppImage" \
             "dist-linux/pt2vhf-aprs-client_${version}_amd64.deb" \
             dist-linux/SBOM-Linux.cdx.json \
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt \
             --clobber
+
+  linux-smoke:
+    name: linux-smoke (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Core smoke tests
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m compileall -q pt2vhf_aprs linux_app.py tools
+          python -m pytest -q
 
   macos:
     needs: windows-x64
