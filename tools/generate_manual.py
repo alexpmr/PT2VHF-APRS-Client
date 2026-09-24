@@ -12,6 +12,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import (
     Flowable,
+    Image,
     KeepTogether,
     ListFlowable,
     ListItem,
@@ -53,7 +54,7 @@ def current_changelog(version: str) -> list[str]:
         return ["CHANGELOG.md não encontrado no build."]
     text = path.read_text(encoding="utf-8")
     pattern = re.compile(
-        rf"^## v{re.escape(version)}\\b[^\\n]*\\n(?P<body>.*?)(?=^## v|\\Z)",
+        rf"^## v{re.escape(version)}\b[^\n]*\n(?P<body>.*?)(?=^## v|\Z)",
         re.MULTILINE | re.DOTALL,
     )
     match = pattern.search(text)
@@ -70,8 +71,8 @@ def current_changelog(version: str) -> list[str]:
 def safe_markup(text: str) -> str:
     text = normalize(text)
     escaped = html.escape(text)
-    escaped = re.sub(r"\\*\\*(.+?)\\*\\*", r"<b>\\1</b>", escaped)
-    escaped = re.sub(r"`(.+?)`", r"<font name='Courier'>\\1</font>", escaped)
+    escaped = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escaped)
+    escaped = re.sub(r"`(.+?)`", r"<font name='Courier'>\1</font>", escaped)
     return escaped
 
 
@@ -197,7 +198,33 @@ def add_footer(canvas, doc, version):
     canvas.restoreState()
 
 
-def build_manual(output: Path) -> None:
+def add_screenshot(story, st, screenshots_dir: Path | None, filename: str, caption: str) -> None:
+    if not screenshots_dir:
+        return
+    path = screenshots_dir / filename
+    if not path.exists():
+        return
+    story.append(Spacer(1, 6))
+    img = Image(str(path), width=16.3*cm, height=9.17*cm)
+    img.hAlign = "CENTER"
+    story.append(img)
+    story.append(Paragraph(caption, st["small"]))
+    story.append(Spacer(1, 8))
+
+
+def cover_background(canvas, doc, version: str) -> None:
+    canvas.saveState()
+    width, height = A4
+    canvas.setFillColor(DARK_BLUE)
+    canvas.rect(0, 0, width, height, fill=1, stroke=0)
+    canvas.setFillColor(BLUE)
+    canvas.circle(width*0.88, height*0.88, 5.2*cm, fill=1, stroke=0)
+    canvas.setFillColor(colors.Color(1, 1, 1, alpha=.05))
+    canvas.circle(width*0.15, height*0.14, 4.2*cm, fill=1, stroke=0)
+    canvas.restoreState()
+
+
+def build_manual(output: Path, screenshots_dir: Path | None = None) -> None:
     version = current_version()
     changes = current_changelog(version)
     st = styles()
@@ -212,18 +239,41 @@ def build_manual(output: Path) -> None:
     )
     story = []
 
-    story.append(Spacer(1, 0.7*cm))
-    story.append(BrandLogo())
-    story.append(Spacer(1, 0.45*cm))
-    story.append(Paragraph(f"PT2VHF APRS Client v{version}", st["title"]))
-    story.append(Paragraph("Manual completo de instalação, configuração e operação", st["subtitle"]))
-    story.append(Spacer(1, 0.28*cm))
-    story.append(Paragraph("Por Alex, PT2VHF", st["subtitle"]))
+    logo_path = ROOT / "docs" / "assets" / "manual_logo.jpg"
+    story.append(Spacer(1, 0.9*cm))
+    if logo_path.exists():
+        logo = Image(str(logo_path), width=16.0*cm, height=12.0*cm)
+        logo.hAlign = "CENTER"
+        story.append(logo)
+    else:
+        story.append(BrandLogo())
+    story.append(Spacer(1, 0.32*cm))
+    cover_title = ParagraphStyle("cover_title", parent=st["title"], textColor=colors.white, fontSize=26, leading=31)
+    cover_sub = ParagraphStyle("cover_sub", parent=st["subtitle"], textColor=colors.HexColor("#DDEEFF"), fontSize=12)
+    story.append(Paragraph(f"PT2VHF APRS Client v{version}", cover_title))
+    story.append(Paragraph("Manual do Usuário", cover_sub))
+    story.append(Spacer(1, 0.10*cm))
+    story.append(Paragraph("Instalação, configuração e operação", cover_sub))
+    story.append(Spacer(1, 0.25*cm))
+    story.append(Paragraph("Por Alex, PT2VHF", cover_sub))
     story.append(Spacer(1, 0.7*cm))
     story.append(Paragraph(
         "Este manual é gerado automaticamente pelo processo de release usando o número da versão e o CHANGELOG do próprio projeto. "
         "Assim, a documentação acompanha a versão publicada.", st["callout"]
     ))
+    story.append(PageBreak())
+
+    section(story, st, "Sumário", bullets=[
+        "1. Visão geral e novidades da versão",
+        "2. Download e requisitos",
+        "3. Instalação em Windows, Linux e macOS",
+        "4. Primeira configuração e coordenadas",
+        "5. APRS-IS e editor gráfico de filtros",
+        "6. Mapa e topologia observada",
+        "7. Mensagens, estações e Log",
+        "8. Aparência, backup e atualização",
+        "9. Diagnóstico, segurança e changelog",
+    ])
     story.append(PageBreak())
 
     section(story, st, "1. Visão geral", [
@@ -356,6 +406,7 @@ def build_manual(output: Path) -> None:
         st["callout"]
     ))
 
+    add_screenshot(story, st, screenshots_dir, "map.png", "Tela principal: mapa e estações APRS.")
     section(story, st, "10. Mapa e topologia observada", [
         "O mapa mostra estações com posição conhecida e mantém tracklogs das estações móveis. Centro e zoom são persistidos localmente."
     ], [
@@ -366,6 +417,8 @@ def build_manual(output: Path) -> None:
         "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px."
     ])
 
+    add_screenshot(story, st, screenshots_dir, "config-aprs.png", "Configuração APRS/Estação com coordenadas e parâmetros APRS-IS.")
+    add_screenshot(story, st, screenshots_dir, "filter-editor.png", "Editor gráfico de filtro APRS-IS, mantendo a string manual editável.")
     section(story, st, "11. Mensagens", [
         "A aba Mensagens apresenta o histórico em fluxo de chat, com mensagens antigas acima e novas abaixo. Também pode agrupar conversas por remetente."
     ], [
@@ -377,6 +430,7 @@ def build_manual(output: Path) -> None:
         "Na aba Mensagens, novas mensagens usam um aviso compacto, não bloqueante, com fechamento manual e temporizador configurável."
     ])
 
+    add_screenshot(story, st, screenshots_dir, "messages.png", "Aba Mensagens em fluxo de chat.")
     section(story, st, "12. Estações e Log", [
         "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa.",
         "O Log APRS-IS mostra tráfego TNC2 RX/TX e é a principal ferramenta para diagnosticar conexão, autenticação e filtro."
@@ -387,12 +441,15 @@ def build_manual(output: Path) -> None:
         "O histórico de log é limitado aos registros mais recentes para evitar crescimento sem controle."
     ])
 
+    add_screenshot(story, st, screenshots_dir, "stations.png", "Aba Estações com os últimos dados conhecidos.")
+    add_screenshot(story, st, screenshots_dir, "log.png", "Log APRS-IS para diagnóstico de RX/TX.")
     section(story, st, "13. Aparência, idioma e preferências", [
         "Em Configuração > Aplicativo, escolha tema Escuro ou Claro, idioma Português ou English, fontes e tamanhos das telas.",
         "O Português é o idioma padrão. A troca para English é aplicada à interface e fica persistida após salvar.",
         "Também é possível habilitar a abertura simultânea no navegador ao iniciar."
     ])
 
+    add_screenshot(story, st, screenshots_dir, "config-app.png", "Configuração do aplicativo, incluindo tema e formatação por tela.")
     section(story, st, "14. Backup, atualização e banco local", [
         "A exportação JSON salva a configuração. O arquivo pode conter o passcode APRS-IS em texto legível; armazene-o em local seguro.",
         "As atualizações preservam o banco local. Antes de mudanças importantes, é recomendável fazer backup do arquivo SQLite."
@@ -438,7 +495,7 @@ def build_manual(output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     doc.build(
         story,
-        onFirstPage=lambda canvas, d: add_footer(canvas, d, version),
+        onFirstPage=lambda canvas, d: cover_background(canvas, d, version),
         onLaterPages=lambda canvas, d: add_footer(canvas, d, version),
     )
 
@@ -446,8 +503,9 @@ def build_manual(output: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True)
+    parser.add_argument("--screenshots-dir")
     args = parser.parse_args()
-    build_manual(Path(args.output))
+    build_manual(Path(args.output), Path(args.screenshots_dir) if args.screenshots_dir else None)
     return 0
 
 
