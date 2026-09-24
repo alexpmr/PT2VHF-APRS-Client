@@ -27,6 +27,15 @@ A v0.3.1 implementa a topologia observada básica, persistência dos enlaces e f
 
 **Objetivo:** fazer o fechamento da janela principal encerrar de fato o PT2VHF APRS Client, sem manter serviços ou ícone na bandeja do Windows.
 
+### Confirmar saída ao clicar no X
+
+- Ao clicar no **X**, exibir uma confirmação antes de encerrar.
+- Mensagem sugerida: **“Deseja realmente sair do PT2VHF APRS Client?”**
+- Oferecer as opções **Sim** e **Não**.
+- **Não** cancela o fechamento e mantém o aplicativo funcionando normalmente.
+- **Sim** inicia o encerramento completo da aplicação.
+- Evitar múltiplas caixas de confirmação se o usuário clicar novamente enquanto o encerramento já estiver em andamento.
+
 - Ao clicar no **X** da janela principal, encerrar completamente a aplicação.
 - Desconectar do **APRS-IS** antes de finalizar.
 - Encerrar o servidor local Flask/Waitress.
