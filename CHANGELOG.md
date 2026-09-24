@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.3.2 — em desenvolvimento
+## v0.3.2 — 2026-09-24
 
 - Ao clicar no **X** da janela principal, o PT2VHF APRS Client passa a solicitar confirmação antes de sair.
 - A confirmação usa a mensagem **“Deseja realmente sair do PT2VHF APRS Client?”**, com **Não** como opção padrão.
