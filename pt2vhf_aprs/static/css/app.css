@@ -1679,3 +1679,63 @@ html[data-theme="light"] .config-section-tab.active {
   font-size: var(--logs-font-size);
   font-weight: var(--logs-font-weight);
 }
+
+/* v1.3 - orientação de conexão e altitude automática */
+.required-fields-dialog {
+  grid-template-columns: 58px minmax(0, 1fr);
+}
+.required-fields-message {
+  margin: 0 0 10px;
+  color: var(--text);
+  line-height: 1.45;
+}
+.required-fields-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 8px 0 16px;
+}
+.required-fields-list span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid rgba(244,189,80,.45);
+  border-radius: 999px;
+  background: rgba(244,189,80,.09);
+  color: #f6d99c;
+  font-size: 11px;
+  font-weight: 800;
+}
+.required-field-missing {
+  border-radius: 9px;
+  outline: 2px solid rgba(240,92,99,.78);
+  outline-offset: 3px;
+  background: rgba(240,92,99,.055);
+}
+.required-field-missing input,
+.required-field-missing select {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 2px rgba(240,92,99,.12);
+}
+.field-status-error {
+  color: var(--danger) !important;
+  font-weight: 700;
+}
+.altitude-fallback-zero {
+  border-radius: 9px;
+  outline: 1px solid rgba(244,189,80,.58);
+  outline-offset: 3px;
+  background: rgba(244,189,80,.045);
+}
+.altitude-fallback-zero #altitudeSourceStatus {
+  color: #f6cf82;
+  font-weight: 700;
+}
+html[data-theme="light"] .required-fields-list span {
+  color: #76500a;
+  background: rgba(167,106,0,.08);
+}
+html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
+  color: #8a5b00;
+}
