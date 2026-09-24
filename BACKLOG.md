@@ -257,3 +257,15 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Manter o botão **Usar minha localização atual** para permitir atualização manual posterior das coordenadas e do centro do mapa.
 - Se a permissão de localização for negada ou indisponível, não bloquear o aplicativo; mostrar instrução clara para preencher as coordenadas manualmente.
 - Tratar separadamente a localização usada para centralizar o mapa e as coordenadas salvas da estação, evitando sobrescrever dados já confirmados sem aviso.
+
+## Altitude padrão quando indisponível
+
+**Objetivo:** evitar que a ausência de altitude impeça a conexão ao APRS-IS, sem esconder do usuário que o dado está incompleto.
+
+- Quando a localização automática fornecer Latitude/Longitude, mas **não fornecer Altitude confiável**, preencher a altitude automaticamente com **0 m**.
+- O valor **0 m** deve ser aceito como valor válido para fins de conexão, para que a ausência de altitude não bloqueie o APRS-IS.
+- Exibir um aviso claro junto ao campo, por exemplo: **Altitude não disponível automaticamente. Foi usado 0 m. Recomendamos informar a altitude real da estação.**
+- Manter o campo de Altitude editável para correção manual pelo usuário.
+- Diferenciar visualmente altitude **estimada/obtida pelo sistema** de altitude **assumida como 0 m por ausência de dado**.
+- Não sobrescrever uma altitude já informada manualmente pelo usuário com 0 m em execuções futuras.
+- Se o usuário tentar transmitir beacon ainda com altitude igual a 0 m, permitir a transmissão, mas exibir uma recomendação não bloqueante para revisar o valor.
