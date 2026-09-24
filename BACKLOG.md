@@ -386,3 +386,17 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Manter cabeçalhos e conteúdo alinhados entre si em cada coluna.
 - Preservar ordenação, rolagem horizontal quando necessária e responsividade da tabela.
 - Garantir que alterações de fonte, tamanho, peso e espaçamento configuradas para **Logs** não façam a coluna Hora voltar a quebrar em duas linhas.
+
+## Ordenação da coluna Hora na aba Logs
+
+**Objetivo:** permitir ordenar os registros de Log cronologicamente nos dois sentidos diretamente pelo cabeçalho da coluna.
+
+- Tornar o cabeçalho **Hora** da aba **Logs** clicável.
+- Ao clicar em **Hora**, alternar a ordenação entre:
+  - **mais antigos → mais recentes**;
+  - **mais recentes → mais antigos**.
+- Exibir um indicador visual no cabeçalho mostrando o sentido atual da ordenação, como **▲ / ▼** ou equivalente.
+- A ordenação deve considerar o valor completo de **data e hora**, e não apenas o texto formatado.
+- Manter a formatação de data/hora em uma única linha, conforme item já registrado no backlog.
+- Preservar a ordenação escolhida enquanto o usuário permanecer na aba e, se conveniente, entre execuções.
+- Garantir que novas linhas recebidas respeitem a ordenação atualmente selecionada sem quebrar a posição esperada da tabela.
