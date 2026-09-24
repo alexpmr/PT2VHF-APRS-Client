@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.2 — em desenvolvimento
+
+- Ao clicar no **X** da janela principal, o PT2VHF APRS Client passa a solicitar confirmação antes de sair.
+- A confirmação usa a mensagem **“Deseja realmente sair do PT2VHF APRS Client?”**, com **Não** como opção padrão.
+- Escolher **Não** cancela o fechamento e mantém o cliente funcionando.
+- Escolher **Sim** desconecta do APRS-IS, encerra a janela WebView2, remove o ícone da bandeja e finaliza o processo.
+- O cliente deixa de permanecer em segundo plano junto ao relógio após o fechamento confirmado da janela.
+- A opção **Sair** na bandeja continua encerrando diretamente a aplicação.
+- Banco SQLite e dados existentes permanecem compatíveis com a v0.3.1.
+- Esta versão continua sem assinatura Authenticode enquanto o projeto aguarda a ativação do SignPath Foundation.
+
 ## v0.3.1 — 2026-09-24
 
 - Removida completamente a barra flutuante superior do **Mapa**.
