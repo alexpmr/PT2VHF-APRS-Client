@@ -875,6 +875,34 @@
     return status || '';
   }
 
+  function messageGroupSummary(message) {
+    const groupId = String(message?.message_group_id || '');
+    const total = Number(message?.part_count || 0);
+    if (!groupId || total <= 1) return '';
+    const latestByPart = new Map();
+    for (const row of state.messages) {
+      if (String(row.message_group_id || '') !== groupId || row.direction !== 'out') continue;
+      const part = Number(row.part_index || 0);
+      if (!part) continue;
+      const current = latestByPart.get(part);
+      if (!current || Number(row.id || 0) > Number(current.id || 0)) latestByPart.set(part, row);
+    }
+    const rows = [...latestByPart.values()];
+    const ack = rows.filter(row => row.status === 'ACK').length;
+    const rej = rows.filter(row => row.status === 'REJ').length;
+    if (ack >= total) return ui('Todas confirmadas', 'All confirmed');
+    if (rej) return ui(`${ack}/${total} confirmadas · ${rej} rejeitada(s)`, `${ack}/${total} confirmed · ${rej} rejected`);
+    return ui(`${ack}/${total} confirmadas`, `${ack}/${total} confirmed`);
+  }
+
+  function retryButtonHtml(message) {
+    if (message?.direction !== 'out' || message?.message_type !== 'message') return '';
+    if (['ACK', 'Substituída por retry'].includes(String(message.status || ''))) return '';
+    const max = Number(state.currentConfig?.message_retry_attempts || 0);
+    const used = Number(message.retry_count || 0);
+    if (max <= 0 || used >= max) return '';
+    return `<button type="button" class="btn secondary message-retry-button" data-retry-row-id="${Number(message.id)}" title="${escapeHtml(ui('Reenviar esta parte', 'Retry this part'))}">↻ ${escapeHtml(ui('Retry', 'Retry'))}</button>`;
+  }
   function isTelemetryMessage(message) {
     const text = String(message?.message || '').trim().toUpperCase();
     if (!text) return false;
