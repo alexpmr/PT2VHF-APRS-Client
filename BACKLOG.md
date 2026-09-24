@@ -279,3 +279,17 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Remover a opção da localização atual em que ela aparece hoje, evitando duplicidade.
 - Manter o comportamento e a persistência existentes da configuração `connect_on_start`.
 - Não alterar o valor já salvo pelo usuário durante a migração da interface.
+
+## Idiomas Português e English com bandeiras
+
+**Objetivo:** oferecer seleção clara de idioma na interface, mantendo **Português** como padrão.
+
+- Implementar suporte de interface para **Português** e **English**.
+- Definir **Português** como idioma padrão para novas instalações e para situações em que não houver preferência salva.
+- Na seleção de idioma, exibir uma bandeira antes de cada opção:
+  - 🇧🇷 Português
+  - 🇺🇸 English
+- Aplicar a troca de idioma à interface principal, abas, botões, configurações, mensagens de validação, pop-ups, avisos, ajuda e textos de diagnóstico.
+- Manter a preferência de idioma persistida entre execuções.
+- A alteração de idioma deve ser aplicada imediatamente, sem necessidade de reiniciar o aplicativo.
+- Garantir que novos recursos adicionados futuramente incluam os textos nos dois idiomas.
