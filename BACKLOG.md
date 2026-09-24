@@ -35,26 +35,40 @@ A função deverá ser apresentada como **Topologia observada**, evitando sugeri
 
 ## Mensagens longas com envio automático em partes
 
-**Objetivo:** permitir que o usuário escreva uma mensagem maior no campo de composição, sem precisar dividir manualmente o texto para respeitar o limite de cada mensagem APRS.
+**Objetivo:** permitir que o usuário escreva uma mensagem maior no campo de composição, sem precisar dividi-la manualmente para respeitar o limite de cada mensagem APRS.
 
-### Escopo planejado
+### Comportamento do campo de mensagem
 
 - Remover do campo de edição o limite visual atual de 63/67 caracteres.
 - Permitir a digitação de mensagens longas em uma única caixa de texto.
-- No momento do envio, dividir automaticamente o conteúdo em várias mensagens APRS compatíveis com o limite de payload do protocolo.
-- Preferir a quebra entre palavras, evitando cortar palavras ao meio sempre que possível.
-- Identificar as partes de forma clara, por exemplo `[1/3]`, `[2/3]`, `[3/3]`, contabilizando esse marcador dentro do limite de cada pacote.
-- Manter a ordem correta de transmissão das partes.
-- Para mensagens individuais, gerar um ID APRS próprio para cada parte e acompanhar ACK/REJ separadamente.
-- Exibir no histórico uma indicação de que as linhas pertencem à mesma mensagem longa, preservando a ordem das partes.
-- Informar antes do envio em quantas partes o texto será transmitido.
-- Evitar envio simultâneo excessivo: transmitir as partes de forma sequencial, com pequeno intervalo e respeitando confirmação/retry quando aplicável.
-- Caso uma parte falhe, indicar exatamente qual parte não foi confirmada e permitir novo envio.
-- Manter compatibilidade com clientes APRS comuns: o destinatário receberá as partes como mensagens APRS individuais numeradas, sem depender de um protocolo proprietário de remontagem.
+- **Enter** passa a enviar a mensagem.
+- **Shift+Enter** insere uma nova linha sem enviar.
+- Antes do envio, informar quantas partes APRS serão necessárias quando o texto ultrapassar o limite de uma única mensagem.
+
+### Fragmentação e transmissão APRS
+
+- No momento do envio, dividir automaticamente o conteúdo em várias mensagens APRS compatíveis com o limite efetivo do protocolo.
+- Calcular dinamicamente o tamanho útil de cada parte, considerando destino, identificador da mensagem, numeração da parte e demais caracteres de controle.
+- Preferir quebra entre palavras, evitando cortar palavras ao meio sempre que possível.
+- Identificar as partes de forma clara, por exemplo `[1/3]`, `[2/3]`, `[3/3]`, contabilizando esse marcador dentro do limite do pacote.
+- Manter a ordem correta de transmissão.
+- Para mensagens individuais, gerar um ID APRS próprio para cada parte.
+- Transmitir as partes de forma sequencial, com intervalo apropriado e controle de ACK/REJ individual.
+- Não depender de um protocolo proprietário para remontagem: o destinatário recebe mensagens APRS normais, numeradas e compatíveis com outros clientes.
+
+### ACK e indicação visual
+
+- Cada parte enviada deve aparecer separadamente no histórico enquanto aguarda confirmação.
+- Ao receber o **ACK** correspondente a uma parte, essa linha passa para **verde** e o status exibido será **Lido**.
+- Partes ainda sem ACK permanecem com aparência de pendentes/enviadas.
+- Em caso de `REJ`, destacar a parte como rejeitada.
+- Se apenas algumas partes forem confirmadas, mostrar exatamente quais já receberam ACK e quais ainda aguardam confirmação.
+- Permitir reenviar somente a parte que falhou ou não foi confirmada, sem retransmitir obrigatoriamente toda a mensagem longa.
+- Opcionalmente, apresentar também um status agregado da mensagem longa, por exemplo `2/3 confirmadas` ou `Todas confirmadas`.
 
 ### Observação
 
-O limite efetivo de texto por parte depende do formato da mensagem APRS e dos caracteres usados para identificação da parte e do ID da mensagem. O cliente deverá calcular dinamicamente o tamanho disponível, em vez de assumir um valor fixo para todos os casos.
+No APRS, o **ACK confirma o recebimento da mensagem pelo cliente remoto**, mas não comprova necessariamente que uma pessoa leu o conteúdo. A interface poderá continuar usando o rótulo amigável **Lido** em verde, mas a lógica interna deverá tratar isso tecnicamente como confirmação APRS de recebimento.
 
 
 ## Reorganização dos contadores e ações fora do mapa
