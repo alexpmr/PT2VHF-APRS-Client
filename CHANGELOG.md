@@ -2,6 +2,8 @@
 
 ## v0.2.9 — em desenvolvimento
 
+- Na aba **Mensagens**, por padrão as mensagens mais novas aparecem no topo; as mais antigas ficam abaixo e são consultadas rolando a lista para baixo.
+- Ao abrir a aba Mensagens, a visualização começa no topo. Durante atualizações automáticas, se o usuário estiver consultando mensagens antigas, a posição da rolagem é preservada.
 - Em novas instalações, o campo **Indicativo** passa a iniciar vazio; nenhum indicativo pessoal é preenchido automaticamente.
 - **Indicativo, latitude, longitude e altitude** passam a ser campos obrigatórios na configuração da estação.
 - A interface destaca visualmente os campos obrigatórios e impede salvar enquanto estiverem vazios.
