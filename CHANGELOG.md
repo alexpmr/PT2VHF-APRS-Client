@@ -19,6 +19,7 @@
 - O Linux tenta uma janela WebView compatível e utiliza o navegador local como fallback quando o backend gráfico não está disponível.
 - Workflow unificado gera Windows e Linux, com testes, SBOM, inventário de licenças e publicação na mesma Release.
 - Banco SQLite existente é migrado automaticamente com as novas preferências, preservando os dados anteriores.
+- Build de release validado no GitHub Actions para Windows x64 e Linux x86_64/amd64.
 
 ## v0.3.2 — 2026-09-24
 
