@@ -55,3 +55,29 @@ A função deverá ser apresentada como **Topologia observada**, evitando sugeri
 ### Observação
 
 O limite efetivo de texto por parte depende do formato da mensagem APRS e dos caracteres usados para identificação da parte e do ID da mensagem. O cliente deverá calcular dinamicamente o tamanho disponível, em vez de assumir um valor fixo para todos os casos.
+
+
+## Reorganização dos contadores e ações fora do mapa
+
+**Objetivo:** deixar a tela do Mapa mais limpa, removendo a barra flutuante superior e levando contadores e ações para as abas correspondentes.
+
+### Escopo planejado
+
+- Remover completamente a barra superior atualmente exibida sobre o **Mapa**.
+- Retirar do mapa:
+  - contador de estações recebidas;
+  - contador de pacotes APRS-IS;
+  - filtro APRS-IS ativo;
+  - última atualização;
+  - botão **Apagar tracklogs**;
+  - botão **Apagar estações**.
+- Na aba **Estações**:
+  - mostrar a quantidade total de estações recebidas;
+  - manter a ação **Limpar estações** nessa própria aba;
+  - concentrar também a limpeza de tracklogs junto aos controles de estações, evitando ações de manutenção sobre o mapa.
+- Na aba **Mensagens**:
+  - mostrar a quantidade total de mensagens armazenadas/exibidas;
+  - manter a ação **Limpar mensagens** nessa própria aba.
+- O mapa deverá ficar dedicado apenas à visualização geográfica das estações, símbolos, tracklogs e demais camadas.
+- Informações técnicas como quantidade de pacotes APRS-IS, filtro ativo e última atualização poderão ser mantidas em uma área de status/diagnóstico fora do mapa, caso ainda sejam úteis, sem recriar a barra flutuante.
+
