@@ -2794,8 +2794,59 @@
         '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
         list(data.igates || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
         '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
-        list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>';
+        list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>' +
+        '<div class="topology-stat-group"><h4>' + ui('Comparação com período anterior', 'Comparison with previous period') + '</h4>' +
+        '<div class="hint">' +
+        ui(
+          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
+          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
+        ) + '</div></div>';
     } catch (err) { box.textContent = err.message; }
+  });
+
+  $('#animateTopologyButton')?.addEventListener('click', async () => {
+    if (state.configDirty) {
+      toast(ui('Salve ou descarte as alterações da Configuração antes de abrir a animação.', 'Save or discard Settings changes before opening the animation.'), 'error');
+      return;
+    }
+    if (!state.map) return;
+    try {
+      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(state.topologyHours || 24)}&limit=2500`);
+      if (!events.length) {
+        toast(ui('Não há eventos de topologia com posição para animar.', 'There are no positioned topology events to animate.'), 'error');
+        return;
+      }
+      activateTab('map');
+      clearTopologyLines();
+      state.topologyEnabled = true;
+      localStorage.setItem('pt2vhf_topology_enabled', '1');
+      const step = Math.max(1, Math.ceil(events.length / 180));
+      let index = 0;
+      const timer = setInterval(() => {
+        const slice = events.slice(index, index + step);
+        for (const edge of slice) {
+          const points = [
+            [Number(edge.source_lat), Number(edge.source_lon)],
+            [Number(edge.target_lat), Number(edge.target_lon)]
+          ];
+          if (!points.flat().every(Number.isFinite)) continue;
+          const key = `timeline:${index}:${edge.source}>${edge.target}`;
+          const line = L.polyline(points, {
+            color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+            weight: state.mapConfig.topology_width,
+            opacity: .64,
+            dashArray: edge.kind === 'igate' ? '7 5' : null
+          }).addTo(state.map);
+          line.bindPopup(`${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}<br>${escapeHtml(fmtDate(edge.timestamp))}`);
+          state.topologyLines.set(key, line);
+        }
+        index += step;
+        if (index >= events.length) {
+          clearInterval(timer);
+          setTimeout(() => loadTopology(), 700);
+        }
+      }, 80);
+    } catch (err) { toast(err.message, 'error'); }
   });
 
   $('#resetConfigButton')?.addEventListener('click', async () => {
