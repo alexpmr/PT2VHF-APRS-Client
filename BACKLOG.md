@@ -110,3 +110,24 @@ No APRS, o **ACK confirma o recebimento da mensagem pelo cliente remoto**, mas n
 - Atualizar os dois valores automaticamente conforme o cliente recebe novas estações/pacotes, sem exigir recarregar a interface.
 - Preservar informações técnicas sobre APRS-IS e SQLite apenas na documentação/Ajuda, e não no título principal da aplicação.
 
+
+
+## Remoção da barra flutuante do mapa
+
+**Objetivo:** eliminar completamente a barra horizontal flutuante exibida sobre o mapa.
+
+- Remover do mapa a barra que atualmente mostra:
+  - **Estações recebidas**;
+  - **Pacotes APRS-IS**;
+  - filtro ativo;
+  - última atualização;
+  - botão **Apagar tracklogs**;
+  - botão **Apagar estações**.
+- O mapa deve ficar visualmente limpo, dedicado apenas às estações, símbolos, tracklogs e demais camadas.
+- Os contadores principais deverão ser reposicionados no cabeçalho/título da aplicação no formato:
+  - **Estações recebidas: XX - Pacotes APRS-IS: XX**
+- As ações de limpeza deverão permanecer nas abas correspondentes:
+  - **Mensagens** → limpar mensagens;
+  - **Estações** → limpar estações e tracklogs.
+- Informações secundárias, como filtro ativo e última atualização, deverão ficar fora do mapa, em área de diagnóstico/status quando necessário.
+
