@@ -176,7 +176,7 @@
         markMessagesSeen();
         loadMessages({ scrollToNewest: true });
       }
-      if (tab === 'stations') loadStations();
+      if (tab === 'stations') loadStations({ scrollToNewest: true });
       if (tab === 'log') {
         loadLog(true);
       }
@@ -794,23 +794,25 @@
 
   async function loadLog(forceScroll = false) {
     try {
+      const viewport = $('#logViewport');
+      const previousScrollTop = viewport?.scrollTop || 0;
+      const wasNearTop = previousScrollTop <= 12;
       const filter = $('#logFilter')?.value.trim() || '';
       const direction = $('#logDirection')?.value || 'ALL';
       const limit = $('#logLimit')?.value || '1000';
       state.logs = await api(`/api/log?filter=${encodeURIComponent(filter)}&direction=${encodeURIComponent(direction)}&limit=${encodeURIComponent(limit)}`);
-      renderLog(forceScroll);
+      renderLog(forceScroll, previousScrollTop, wasNearTop);
     } catch (err) {
       console.warn(err);
     }
   }
 
-  function renderLog(forceScroll = false) {
+  function renderLog(forceScroll = false, previousScrollTop = 0, wasNearTop = true) {
     const tbody = $('#logTable tbody');
     const viewport = $('#logViewport');
     if (!tbody || !viewport) return;
 
     const auto = $('#logAutoScroll')?.checked ?? true;
-    const wasNearBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 60;
 
     if (!state.logs.length) {
       tbody.innerHTML = '<tr class="log-empty"><td colspan="3">Nenhum tráfego APRS-IS registrado para este filtro.</td></tr>';
@@ -826,8 +828,10 @@
       </tr>`;
     }).join('');
 
-    if (auto && (forceScroll || wasNearBottom)) {
-      viewport.scrollTop = viewport.scrollHeight;
+    if (auto && (forceScroll || wasNearTop)) {
+      viewport.scrollTop = 0;
+    } else {
+      viewport.scrollTop = previousScrollTop;
     }
   }
 
@@ -838,7 +842,7 @@
   $('#logAutoScroll')?.addEventListener('change', () => {
     if ($('#logAutoScroll').checked) {
       const viewport = $('#logViewport');
-      viewport.scrollTop = viewport.scrollHeight;
+      viewport.scrollTop = 0;
     }
   });
 
@@ -854,11 +858,19 @@
     }
   });
 
-  async function loadStations() {
+  async function loadStations(options = {}) {
     try {
+      const viewport = $('.stations-table-wrap');
+      const previousScrollTop = viewport?.scrollTop || 0;
+      const atNewest = previousScrollTop <= 12;
       const filter = $('#stationFilter').value.trim();
       state.stations = await api(`/api/stations?filter=${encodeURIComponent(filter)}`);
       renderStations();
+
+      if (viewport && state.sort.stations.key === 'last_heard' && state.sort.stations.dir === 'desc') {
+        if (options.scrollToNewest || atNewest) viewport.scrollTop = 0;
+        else viewport.scrollTop = previousScrollTop;
+      }
     } catch (err) { console.warn(err); }
   }
 
@@ -957,7 +969,7 @@
   $('#clearMapStationsButton')?.addEventListener('click', clearAllStations);
   $('#clearMapTracksButton')?.addEventListener('click', clearMapTracklogs);
 
-  $('#stationFilter').addEventListener('input', debounce(loadStations, 250));
+  $('#stationFilter').addEventListener('input', debounce(() => loadStations({ scrollToNewest: true }), 250));
 
   function calculateAprsPasscode(callsign) {
     const base = String(callsign || '').trim().toUpperCase().split('-')[0];
