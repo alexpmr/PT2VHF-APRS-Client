@@ -2,6 +2,10 @@
 
 ## v0.2.9 — em desenvolvimento
 
+- Na tela **Mapa**, adicionados os botões **Apagar tracklogs** e **Apagar estações**.
+- **Apagar tracklogs** remove somente os pontos de trilha armazenados e mantém as estações no mapa.
+- **Apagar estações** remove as estações e seus tracklogs, reutilizando a mesma limpeza disponível na aba Estações.
+- As duas ações exigem confirmação antes da exclusão.
 - Em **Configuração → Aparência**, adicionada seleção entre **Tema escuro** e **Tema claro**.
 - O tema escuro continua sendo o padrão para novas instalações.
 - O novo **tema claro** adapta cabeçalho, abas, formulários, tabelas, mensagens, Ajuda, Log, modais e controles do mapa.
