@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   windows-x64:
+    if: ${{ !contains(github.event.head_commit.message, '[portable-only]') }}
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -114,6 +115,74 @@ jobs:
             dist\PT2VHF_APRS_Client\SBOM.cdx.json `
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
             --clobber
+
+  windows-portable-only:
+    if: ${{ contains(github.event.head_commit.message, '[portable-only]') }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-windows.txt
+
+      - name: Validate Python and JavaScript syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py tools
+          node --check pt2vhf_aprs\static\js\app.js
+
+      - name: Run tests
+        shell: pwsh
+        run: python -m pytest -q
+
+      - name: Generate Windows icon
+        shell: pwsh
+        run: python windows\make_icon.py
+
+      - name: Build portable EXE
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client_Portable.spec
+          $version = (Get-Content VERSION -Raw).Trim()
+          New-Item -ItemType Directory -Force dist-portable | Out-Null
+          Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-portable\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
+
+      - name: Upload portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Windows-Portable-x64
+          path: dist-portable\PT2VHF_APRS_Client_Portable_x64_v*.exe
+
+      - name: Publish portable-only release
+        if: ${{ github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:') }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $tag = "v$version"
+          $portableName = "PT2VHF_APRS_Client_Portable_x64_v$version.exe"
+
+          python tools\release_notes.py --output release-notes.md
+
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --target $env:GITHUB_SHA --title "PT2VHF APRS Client $tag - Portable de teste" --notes-file release-notes.md
+          } else {
+            gh release edit $tag --title "PT2VHF APRS Client $tag - Portable de teste" --notes-file release-notes.md
+          }
+
+          gh release upload $tag "dist-portable\$portableName" --clobber
 
   linux-x64:
     needs: windows-x64
