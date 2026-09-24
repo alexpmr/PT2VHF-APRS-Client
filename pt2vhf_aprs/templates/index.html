@@ -37,6 +37,7 @@
   <button class="tab" data-tab="messages">Mensagens <span id="messageBadge" class="badge hidden">0</span></button>
   <button class="tab" data-tab="stations">Estações</button>
   <button class="tab" data-tab="log">Log</button>
+  <button class="tab" data-tab="analysis">Análise</button>
   <button class="tab" data-tab="config">Configuração</button>
   <button class="tab" data-tab="help">Ajuda</button>
 </nav>
@@ -221,6 +222,37 @@
     </div>
   </section>
 
+  <section id="tab-analysis" class="tab-panel">
+    <div class="panel-header analysis-header">
+      <div>
+        <h2>Análise da rede</h2>
+        <p>Indicadores da topologia observada no APRS-IS, com comparação histórica e replay no mapa.</p>
+      </div>
+      <div class="analysis-controls">
+        <label class="field compact">
+          <span>Período</span>
+          <select id="analysisPeriod">
+            <option value="1">1 hora</option>
+            <option value="6">6 horas</option>
+            <option value="24" selected>24 horas</option>
+            <option value="168">7 dias</option>
+          </select>
+        </label>
+        <button id="refreshTopologyStatsButton" type="button" class="btn secondary">Atualizar análise</button>
+        <button id="animateTopologyButton" type="button" class="btn primary">Animar período</button>
+      </div>
+    </div>
+    <div class="analysis-content">
+      <div class="analysis-summary">
+        <div class="analysis-metric"><span>Período</span><strong id="analysisMetricPeriod">24 h</strong></div>
+        <div class="analysis-metric"><span>Enlaces ativos</span><strong id="analysisMetricEdges">0</strong></div>
+        <div class="analysis-metric"><span>Pacotes observados</span><strong id="analysisMetricPackets">0</strong></div>
+        <div class="analysis-metric"><span>Eventos do período</span><strong id="analysisMetricEvents">0</strong></div>
+      </div>
+      <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Atualizar análise.</div>
+    </div>
+  </section>
+
   <section id="tab-config" class="tab-panel">
     <div class="panel-header">
       <div>
@@ -230,11 +262,6 @@
     </div>
 
     <form id="configForm" class="config-grid">
-      <div class="config-page-intro full-card">
-        <strong>Página única de configuração</strong>
-        <span>As opções estão organizadas por seções. Role a página para acessar Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.</span>
-      </div>
-
       <div class="config-card config-section config-section-aprs">
         <h3>Estação</h3>
         <div class="required-fields-note">Campos marcados como <strong>Obrigatório</strong> precisam ser preenchidos antes de conectar ao APRS-IS.</div>
@@ -455,16 +482,6 @@
         <div class="hint map-provider-hint">
           OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.
         </div>
-        <div class="topology-stats-box">
-          <div class="filter-builder-header">
-            <div><strong>Análise da topologia observada</strong><span class="hint">Rankings de digipeaters/IGates e enlaces que deixaram de aparecer no período.</span></div>
-            <div class="config-actions">
-              <button id="refreshTopologyStatsButton" type="button" class="btn secondary">Atualizar análise</button>
-              <button id="animateTopologyButton" type="button" class="btn secondary">Animar período</button>
-            </div>
-          </div>
-          <div id="topologyStatsContent" class="topology-stats-content">Clique em Atualizar análise.</div>
-        </div>
       </div>
 
       <div class="config-card full-card config-section config-section-app">
@@ -576,8 +593,8 @@
         <h3>Atualizações</h3>
         <div class="form-grid two-cols">
           <label class="check-field"><input name="check_updates_on_start" type="checkbox" checked><span>Verificar atualizações automaticamente</span></label>
-          <label class="check-field"><input name="auto_download_updates" type="checkbox"><span>Baixar atualização automaticamente</span></label>
-          <label class="check-field"><input name="install_updates_on_exit" type="checkbox"><span>Instalar atualização automaticamente ao fechar</span></label>
+          <label class="check-field"><input name="auto_download_updates" type="checkbox" checked><span>Baixar atualização automaticamente</span></label>
+          <label class="check-field"><input name="install_updates_on_exit" type="checkbox" checked><span>Instalar atualização automaticamente ao fechar</span></label>
           <div class="field">
             <span>Status</span>
             <small id="updateSettingsStatus">Nenhuma atualização pendente.</small>
