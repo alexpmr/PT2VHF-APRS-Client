@@ -120,6 +120,7 @@ def test_map_preferences_persist():
                 "track_width": 5,
                 "map_brightness": 80,
                 "sound_on_personal_message": False,
+                "app_theme": "light",
                 "messages_font_family": "consolas",
                 "messages_font_size": 14,
                 "stations_font_family": "verdana",
@@ -130,6 +131,7 @@ def test_map_preferences_persist():
             assert cfg["track_width"] == 5
             assert cfg["map_brightness"] == 80
             assert cfg["sound_on_personal_message"] == 0
+            assert cfg["app_theme"] == "light"
             assert cfg["messages_font_family"] == "consolas"
             assert cfg["messages_font_size"] == 14
             assert cfg["stations_font_family"] == "verdana"
@@ -207,6 +209,7 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["longitude"] is None
             assert cfg["altitude"] is None
             assert cfg["aprs_filter"] == "r/2000"
+            assert cfg["app_theme"] == "dark"
 
             with pytest.raises(ValueError, match="Indicativo"):
                 db.save_config({
@@ -232,5 +235,23 @@ def test_new_install_defaults_and_required_station_fields():
             })
             assert saved["callsign"] == "PY2ABC"
             assert saved["aprs_filter"] == "r/2000"
+    finally:
+        db.DB_PATH = original
+
+
+def test_invalid_theme_is_rejected():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            with pytest.raises(ValueError, match="Tema da aplicação inválido"):
+                db.save_config({
+                    "callsign": "PY2ABC",
+                    "latitude": -15.8,
+                    "longitude": -47.9,
+                    "altitude": 1000,
+                    "app_theme": "neon",
+                })
     finally:
         db.DB_PATH = original
