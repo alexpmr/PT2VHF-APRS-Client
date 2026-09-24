@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.6.1 - 2026-09-24
+
+- As três opções de atualização OTA passam a vir **ativadas por padrão em novas instalações**: verificar, baixar e instalar ao fechar. Preferências já salvas continuam preservadas em instalações existentes.
+- Mensagens APRS longas deixam de receber marcadores visíveis como `[1/2]` e `[2/2]`; a divisão passa a respeitar limites de palavra sempre que possível e só corta uma palavra quando ela, sozinha, excede o limite técnico da parte.
+- Criada a nova aba superior **Análise**, que recebe a análise da topologia antes localizada em Configuração.
+- A aba Análise inclui seleção de período, métricas agregadas, ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer, comparação histórica, **Atualizar análise** e **Animar período**.
+- Em **Configuração → Mapa**, permanecem apenas as preferências visuais e de comportamento do mapa/topologia.
+- O popup das estações no mapa passa a oferecer **Mostrar log** ao lado de **Enviar mensagem**; a ação abre a aba Log com o indicativo completo da estação aplicado ao filtro.
+- Removido o bloco introdutório **Página única de configuração**, fazendo a tela começar diretamente pela primeira seção.
+- Mantidas as correções da v1.6 para popup **Ler mensagem**, layout vertical de Latitude/Longitude/Altitude, filtros brasileiros, mensagens agrupadas, retry, Log ordenável e atualizador integrado.
+- README, manual e guia Linux atualizados para a série v1.6.1.
+
 ## v1.6 - 2026-09-24
 
 - Consolidado o backlog funcional acumulado até 24/09/2026 e retomada a geração completa para Windows, Linux, macOS e manual PDF.
