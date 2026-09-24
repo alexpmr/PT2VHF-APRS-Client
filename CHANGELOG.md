@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.3.0 — em desenvolvimento
+
+- A interface principal passa a abrir dentro de uma **janela própria do PT2VHF APRS Client**, sem depender de uma aba do navegador durante o uso normal.
+- A janela integrada usa **Microsoft Edge WebView2** por meio do pywebview, preservando a interface HTML/CSS/JavaScript existente.
+- O backend Flask/Waitress continua restrito a `127.0.0.1`, mantendo compatibilidade com o banco SQLite e as APIs locais já existentes.
+- Janela inicial configurada para aproximadamente **1400 × 850**, com tamanho mínimo **1100 × 700**.
+- Fechar a janela pelo **X** passa a ocultá-la na bandeja do Windows; a opção **Sair** na bandeja encerra efetivamente o aplicativo.
+- Ao iniciar uma segunda instância, o cliente tenta restaurar e trazer a janela existente para frente em vez de abrir outra interface.
+- Links externos, como GitHub, WhatsApp e e-mail, são encaminhados para o navegador padrão do Windows.
+- Adicionado o modo de diagnóstico `--browser`, que força a interface a abrir no navegador.
+- Se o WebView2 Runtime estiver indisponível ou falhar, o aplicativo informa o problema e utiliza o navegador como fallback.
+- Instalador e Portable EXE passam a incluir as dependências necessárias do pywebview/WebView2.
+- Banco local, configurações, mensagens, estações, tracklogs e Log APRS-IS permanecem compatíveis com a v0.2.9.
+- Esta versão continua sem assinatura Authenticode enquanto o projeto aguarda a ativação do SignPath Foundation.
+
 ## v0.2.9 — 2026-09-24
 
 - **Log, Mensagens e Estações** passam a seguir o mesmo padrão de navegação: registros mais recentes no topo e históricos mais antigos abaixo.
