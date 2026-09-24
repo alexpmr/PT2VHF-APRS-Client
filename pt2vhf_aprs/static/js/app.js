@@ -8,6 +8,9 @@
     mapConfig: { map_type: 'osm', track_color: '#3ba6ff', track_width: 2 },
     markers: new Map(),
     trackLines: new Map(),
+    topologyLines: new Map(),
+    topologyEnabled: false,
+    topologyHours: 24,
     userLocationMarker: null,
     userLocationAccuracy: null,
     messages: [],
@@ -290,6 +293,7 @@
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
+    addTopologyControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
   }
@@ -314,6 +318,105 @@
       }
     });
     new LocationControl().addTo(map);
+  }
+
+  function addTopologyControl(map) {
+    const savedEnabled = localStorage.getItem('pt2vhf_topology_enabled');
+    const savedHours = Number(localStorage.getItem('pt2vhf_topology_hours') || 24);
+    state.topologyEnabled = savedEnabled === '1';
+    state.topologyHours = [1, 6, 24, 168].includes(savedHours) ? savedHours : 24;
+
+    const TopologyControl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd() {
+        const wrapper = L.DomUtil.create('div', 'leaflet-control topology-control');
+        wrapper.innerHTML = `
+          <label><input id="topologyToggle" type="checkbox" ${state.topologyEnabled ? 'checked' : ''}> Topologia observada</label>
+          <select id="topologyHours" title="Período da topologia">
+            <option value="1">1 h</option>
+            <option value="6">6 h</option>
+            <option value="24">24 h</option>
+            <option value="168">7 dias</option>
+          </select>`;
+        L.DomEvent.disableClickPropagation(wrapper);
+        L.DomEvent.disableScrollPropagation(wrapper);
+
+        setTimeout(() => {
+          const toggle = wrapper.querySelector('#topologyToggle');
+          const select = wrapper.querySelector('#topologyHours');
+          select.value = String(state.topologyHours);
+          toggle.addEventListener('change', async () => {
+            state.topologyEnabled = toggle.checked;
+            localStorage.setItem('pt2vhf_topology_enabled', state.topologyEnabled ? '1' : '0');
+            if (state.topologyEnabled) await loadTopology();
+            else clearTopologyLines();
+          });
+          select.addEventListener('change', async () => {
+            state.topologyHours = Number(select.value) || 24;
+            localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
+            if (state.topologyEnabled) await loadTopology();
+          });
+        }, 0);
+        return wrapper;
+      }
+    });
+    new TopologyControl().addTo(map);
+  }
+
+  function clearTopologyLines() {
+    for (const line of state.topologyLines.values()) state.map?.removeLayer(line);
+    state.topologyLines.clear();
+  }
+
+  async function loadTopology() {
+    if (!state.map || !state.topologyEnabled) return;
+    try {
+      const edges = await api(`/api/topology?hours=${encodeURIComponent(state.topologyHours)}`);
+      const active = new Set();
+
+      for (const edge of edges) {
+        const key = `${edge.source}>${edge.target}:${edge.kind}`;
+        active.add(key);
+        const points = [
+          [Number(edge.source_lat), Number(edge.source_lon)],
+          [Number(edge.target_lat), Number(edge.target_lon)]
+        ];
+        if (!points.flat().every(Number.isFinite)) continue;
+
+        let line = state.topologyLines.get(key);
+        const style = {
+          color: edge.kind === 'igate' ? '#b06cff' : '#35a7ff',
+          weight: Math.min(6, 2 + Math.log10(Math.max(1, Number(edge.packet_count || 1)))),
+          opacity: .72,
+          dashArray: edge.kind === 'igate' ? '7 5' : null
+        };
+        if (!line) {
+          line = L.polyline(points, style).addTo(state.map);
+          state.topologyLines.set(key, line);
+        } else {
+          line.setLatLngs(points).setStyle(style);
+        }
+
+        line.bindPopup(`
+          <div class="topology-popup">
+            <h3>Topologia observada</h3>
+            <div><strong>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</strong></div>
+            <div>Tipo: ${edge.kind === 'igate' ? 'Entrada no IGate' : 'Enlace RF observado'}</div>
+            <div>Pacotes observados: ${Number(edge.packet_count || 0).toLocaleString('pt-BR')}</div>
+            <div>Primeiro: ${escapeHtml(fmtDate(edge.first_seen))}</div>
+            <div>Último: ${escapeHtml(fmtDate(edge.last_seen))}</div>
+          </div>`);
+      }
+
+      for (const [key, line] of state.topologyLines) {
+        if (!active.has(key)) {
+          state.map.removeLayer(line);
+          state.topologyLines.delete(key);
+        }
+      }
+    } catch (err) {
+      console.warn(err);
+    }
   }
 
   function locateBrowser(button) {
@@ -423,9 +526,6 @@
     if (!state.map) return;
     try {
       const data = await api('/api/map-data');
-      $('#mapStationCount').textContent = data.stations.length;
-      $('#mapLastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
-
       const activeStations = new Set(data.stations.map(s => s.callsign));
       for (const [call, marker] of state.markers) {
         if (!activeStations.has(call)) {
@@ -478,6 +578,7 @@
           });
         }
       }
+      if (state.topologyEnabled) await loadTopology();
     } catch (err) {
       console.warn(err);
     }
@@ -495,13 +596,13 @@
       el.querySelector('span:last-child').textContent = s.state || (s.connected ? 'Conectado' : 'Desconectado');
       el.title = s.last_error || s.server_message || '';
       $('#connectButton').textContent = s.connected || s.wanted ? 'Desconectar' : 'Conectar';
-      const packetCount = $('#packetCount');
-      const activeFilter = $('#activeFilter');
-      if (packetCount) packetCount.textContent = Number(s.packets_received || 0).toLocaleString('pt-BR');
-      if (activeFilter) {
-        activeFilter.textContent = s.active_filter || 'sem filtro';
-        activeFilter.classList.toggle('warning-text', !s.active_filter);
-      }
+      const stationCount = Number(s.stations || 0);
+      const messageCount = Number(s.messages || 0);
+      const packetCount = Number(s.packets_received || 0);
+      if ($('#headerStationCount')) $('#headerStationCount').textContent = stationCount.toLocaleString('pt-BR');
+      if ($('#headerPacketCount')) $('#headerPacketCount').textContent = packetCount.toLocaleString('pt-BR');
+      if ($('#stationTotalCount')) $('#stationTotalCount').textContent = stationCount.toLocaleString('pt-BR');
+      if ($('#messageTotalCount')) $('#messageTotalCount').textContent = messageCount.toLocaleString('pt-BR');
     } catch (_) {}
   }
 
@@ -599,7 +700,7 @@
     const spec = state.sort.messages;
     const rows = sortedData(visibleMessages(), spec);
     $('#messagesTable tbody').innerHTML = rows.map(m => `
-      <tr>
+      <tr class="${m.status === 'ACK' ? 'message-row-ack' : m.status === 'REJ' ? 'message-row-rej' : ''}">
         <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${escapeHtml(m.from_call)}</td>
         <td>${escapeHtml(m.to_call)}</td>
         <td>${messageTypeLabel(m.message_type)}</td>
@@ -689,12 +790,42 @@
     openMessageComposer(button.dataset.callsign || '');
   });
 
+  function estimateMessageParts(text) {
+    const clean = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!clean) return 0;
+    if (clean.length <= 63) return 1;
+    const limit = 55;
+    let parts = 0;
+    let current = '';
+    for (let word of clean.split(' ')) {
+      if (word.length > limit) {
+        if (current) { parts++; current = ''; }
+        parts += Math.floor(word.length / limit);
+        word = word.slice(Math.floor(word.length / limit) * limit);
+        if (word) current = word;
+        continue;
+      }
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length <= limit) current = candidate;
+      else { parts++; current = word; }
+    }
+    if (current) parts++;
+    return Math.max(1, parts);
+  }
+
   function updateMessageCharCounter() {
     const input = $('#messageText');
     const counter = $('#messageCharCounter');
     if (!input || !counter) return;
-    counter.textContent = `${input.value.length} / ${input.maxLength}`;
-    counter.classList.toggle('near-limit', input.value.length >= input.maxLength - 8);
+    const type = $('#messageType')?.value || 'message';
+    if (type === 'message') {
+      const parts = estimateMessageParts(input.value);
+      counter.textContent = `${input.value.length} caracteres${parts > 1 ? ` · ${parts} partes APRS` : ''}`;
+      counter.classList.remove('near-limit');
+    } else {
+      counter.textContent = `${input.value.length} / 67`;
+      counter.classList.toggle('near-limit', input.value.length >= 59);
+    }
   }
 
   function updateMessageComposerMode() {
@@ -707,8 +838,9 @@
     $('#bulletinGroupField').classList.toggle('hidden', !isGroup);
 
     const messageInput = $('#messageText');
-    messageInput.maxLength = isMessage ? 63 : 67;
-    messageInput.placeholder = isMessage ? 'Digite a mensagem APRS' : 'Digite o texto do boletim APRS';
+    if (isMessage) messageInput.removeAttribute('maxlength');
+    else messageInput.maxLength = 67;
+    messageInput.placeholder = isMessage ? 'Digite a mensagem APRS; textos longos serão enviados em partes' : 'Digite o texto do boletim APRS';
     $('#sendMessageButton').textContent = isMessage ? 'Enviar' : 'Enviar boletim';
     updateMessageCharCounter();
   }
@@ -732,7 +864,12 @@
       });
       $('#messageText').value = '';
       updateMessageCharCounter();
-      toast(result.type === 'message' ? 'Mensagem enviada ao APRS-IS.' : 'Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
+      if (result.type === 'message') {
+        const count = Number(result.part_count || 1);
+        toast(count > 1 ? `Mensagem enviada em ${count} partes APRS.` : 'Mensagem enviada ao APRS-IS.', 'ok');
+      } else {
+        toast('Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
+      }
       await loadMessages();
     } catch (err) { toast(err.message, 'error'); }
   }
@@ -742,7 +879,7 @@
   $('#sendMessageButton').addEventListener('click', sendMessage);
   $('#messageText').addEventListener('input', updateMessageCharCounter);
   $('#messageText').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.ctrlKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -968,8 +1105,9 @@
       state.markers.clear();
       state.trackLines.clear();
 
-      $('#mapStationCount').textContent = '0';
+      clearTopologyLines();
       await loadMapData();
+      await refreshStatus();
 
       const deletedStations = Number(result.deleted?.stations || 0);
       const deletedTracks = Number(result.deleted?.tracks || 0);
@@ -986,6 +1124,7 @@
       for (const line of state.trackLines.values()) state.map?.removeLayer(line);
       state.trackLines.clear();
       await loadMapData();
+      await refreshStatus();
       toast(`Tracklogs apagados (${Number(result.deleted || 0)} ponto(s)).`, 'ok');
     } catch (err) {
       toast(err.message, 'error');
@@ -993,8 +1132,7 @@
   }
 
   $('#clearStationsButton')?.addEventListener('click', clearAllStations);
-  $('#clearMapStationsButton')?.addEventListener('click', clearAllStations);
-  $('#clearMapTracksButton')?.addEventListener('click', clearMapTracklogs);
+  $('#clearTracklogsButton')?.addEventListener('click', clearMapTracklogs);
 
   $('#stationFilter').addEventListener('input', debounce(() => loadStations({ scrollToNewest: true }), 250));
 
