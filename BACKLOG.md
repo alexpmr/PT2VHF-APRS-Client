@@ -363,3 +363,14 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Se o usuário selecionar a própria estação em algum contexto, evitar preencher o próprio indicativo como destino quando houver outro participante claramente identificável na conversa.
 - Não enviar a mensagem automaticamente; apenas preparar o destinatário para que o usuário escreva e confirme o envio.
 - Manter esse comportamento compatível com a seleção direta de indicativos já existente em mensagens e estações.
+
+## Peso da fonte nas colunas De, Para e Tipo em Mensagens
+
+**Objetivo:** fazer a configuração de peso da fonte da aba **Mensagens** ser aplicada de forma consistente a todas as colunas da tabela.
+
+- Corrigir a aba **Mensagens** para que o ajuste de **peso da fonte** também seja aplicado às colunas **De**, **Para** e **Tipo**.
+- Garantir que essas colunas respeitem os mesmos valores configurados para **Mensagens** em **Configuração → Aparência**.
+- Aplicar corretamente os modos **normal** e **negrito** aos indicativos e ao texto/badge exibido na coluna Tipo.
+- Preservar cores, badges, links clicáveis, alinhamento, ordenação e demais estilos funcionais dessas colunas.
+- Verificar também se tamanho, família da fonte e espaçamento permanecem coerentes com o restante da tabela após a correção.
+- Incluir teste/regressão visual ou de CSS para evitar que estilos específicos dessas colunas voltem a sobrescrever o peso configurado.
