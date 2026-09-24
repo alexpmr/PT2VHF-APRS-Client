@@ -153,3 +153,16 @@ As instruções deverão cobrir:
 - Preservar filtros existentes, incluindo **Minhas mensagens** e **Ocultar telemetria**, de forma compatível com a visualização agrupada.
 - Persistir a preferência de visualização entre **Lista cronológica** e **Agrupar por remetente**.
 
+
+
+## Clique no indicativo para responder
+
+**Objetivo:** agilizar o envio de mensagens a partir do histórico.
+
+- Na aba **Mensagens**, tornar clicáveis os indicativos exibidos nas colunas **De** e **Para**.
+- Ao clicar em um indicativo, preencher automaticamente esse indicativo como **destinatário** no compositor de mensagem.
+- Levar o foco para o campo de texto da mensagem, deixando-o pronto para digitação.
+- Se o indicativo clicado for o próprio indicativo configurado do usuário, evitar selecionar a própria estação como destino; nesse caso, usar o outro participante da conversa quando for possível determiná-lo.
+- O comportamento deverá funcionar tanto na visualização cronológica quanto na futura visualização **Agrupar por remetente**.
+- Não alterar filtros ou perder a posição atual da conversa ao selecionar o destinatário.
+
