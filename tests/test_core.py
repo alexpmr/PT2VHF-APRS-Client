@@ -274,9 +274,13 @@ def test_new_install_defaults_and_required_station_fields():
                 "callsign": "PY2ABC",
                 "latitude": -15.8,
                 "longitude": -47.9,
-                "altitude": 1000,
+                "altitude": 0,
+                "altitude_source": "fallback_zero",
             })
+            db.validate_required_station_config(saved)
             assert saved["callsign"] == "PY2ABC"
+            assert saved["altitude"] == 0
+            assert saved["altitude_source"] == "fallback_zero"
             assert saved["aprs_filter"] == "r/2000"
     finally:
         db.DB_PATH = original
