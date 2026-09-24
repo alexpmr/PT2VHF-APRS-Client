@@ -302,3 +302,16 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Manter a opção disponível em **Configuração → APRS / Estação → APRS-IS** para o usuário poder desativá-la.
 - Preservar a preferência já salva em instalações existentes; não reativar automaticamente se o usuário já tiver desabilitado essa opção.
 - Se a configuração obrigatória da estação estiver incompleta, não iniciar tentativas repetidas de conexão; mostrar a orientação de campos obrigatórios e aguardar correção do usuário.
+
+## Filtro padrão para estações brasileiras
+
+**Objetivo:** reduzir o tráfego inicial do APRS-IS e apresentar, por padrão, apenas estações brasileiras.
+
+- Em novas instalações, configurar o filtro APRS-IS padrão para aceitar **apenas indicativos brasileiros**.
+- Considerar os prefixos brasileiros reconhecidos para radioamadorismo, incluindo famílias como **PP, PQ, PR, PS, PT, PU, PV, PW, PX e PY**, além de prefixos especiais brasileiros quando aplicável.
+- Implementar o filtro usando a sintaxe nativa do APRS-IS, sem fazer filtragem apenas na interface depois de receber todo o tráfego.
+- O filtro deve considerar o **indicativo de origem da estação** e não excluir indevidamente pacotes válidos de estações brasileiras por causa de SSID.
+- Manter o usuário livre para editar, ampliar ou remover esse filtro em **Configuração → APRS-IS**.
+- No editor gráfico, oferecer uma opção clara como **Somente estações brasileiras (padrão)**.
+- Se o usuário escolher outro filtro manual ou gráfico, respeitar integralmente a escolha e não restaurar automaticamente o filtro brasileiro.
+- Preservar filtros personalizados já existentes durante atualizações; aplicar o novo padrão apenas quando não houver configuração anterior ou em nova instalação.
