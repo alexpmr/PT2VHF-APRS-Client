@@ -2,6 +2,7 @@
 
 ## v0.2.9 — em desenvolvimento
 
+- No **Mapa**, os ícones APRS das estações passam a ser exibidos sem o quadrado de fundo: fundo, borda e sombra dos marcadores ficam transparentes, deixando visível apenas o símbolo APRS.
 - Na tela **Mapa**, adicionados os botões **Apagar tracklogs** e **Apagar estações**.
 - **Apagar tracklogs** remove somente os pontos de trilha armazenados e mantém as estações no mapa.
 - **Apagar estações** remove as estações e seus tracklogs, reutilizando a mesma limpeza disponível na aba Estações.
