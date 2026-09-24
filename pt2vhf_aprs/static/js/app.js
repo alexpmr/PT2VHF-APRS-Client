@@ -1035,6 +1035,8 @@
           <div class="chat-bubble-meta">
             <span>${escapeHtml(fmtDate(message.timestamp))}</span>
             ${status ? `<span class="${message.status === 'ACK' ? 'status-ack' : message.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(status)}</span>` : ''}
+            ${messageGroupSummary(message) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(message))}</span>` : ''}
+            ${retryButtonHtml(message)}
           </div>
         </div>
       </div>`;
@@ -1061,7 +1063,11 @@
         <td>${messageTypeLabel(m.message_type)}</td>
         <td>${escapeHtml(m.message)}</td>
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
-        <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(messageStatusLabel(m.status))}</td>
+        <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">
+          ${escapeHtml(messageStatusLabel(m.status))}
+          ${messageGroupSummary(m) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(m))}</span>` : ''}
+          ${retryButtonHtml(m)}
+        </td>
       </tr>`).join('');
     updateSortIndicators('messagesTable', spec);
   }
