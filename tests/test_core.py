@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 import tempfile
 
@@ -18,7 +19,7 @@ def test_beacon_packet():
 
 def test_filter_shortcut():
     cfg = {"latitude": -15.8, "longitude": -47.9}
-    assert expand_filter("r/500", cfg) == "r/-15.80000/-47.90000/500"
+    assert expand_filter("r/2000", cfg) == "r/-15.80000/-47.90000/2000"
     assert expand_filter("m/50", cfg) == "m/50"
 
 
@@ -37,7 +38,7 @@ def test_database_config_and_station():
         with tempfile.TemporaryDirectory() as td:
             db.DB_PATH = Path(td) / "test.db"
             db.init_db()
-            cfg = db.save_config({"callsign": "PT2VHF", "ssid": 0, "latitude": -15.8, "longitude": -47.9})
+            cfg = db.save_config({"callsign": "PT2VHF", "ssid": 0, "latitude": -15.8, "longitude": -47.9, "altitude": 1000})
             assert cfg["callsign"] == "PT2VHF"
             db.upsert_station({
                 "from": "PY2ABC-9", "format": "uncompressed", "latitude": -15.81, "longitude": -47.91,
@@ -111,6 +112,9 @@ def test_map_preferences_persist():
             db.init_db()
             cfg = db.save_config({
                 "callsign": "PT2VHF",
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": 1000,
                 "map_type": "satellite",
                 "track_color": "#ff6600",
                 "track_width": 5,
@@ -141,7 +145,7 @@ def test_aprs_passcode():
 
 
 def test_version_tuple():
-    assert version_tuple("v0.2.8") == (0, 2, 8)
+    assert version_tuple("v0.2.9") == (0, 2, 9)
     assert version_tuple("0.2.10") > version_tuple("0.2.9")
     assert version_tuple("v1.0.0") > version_tuple("0.9.99")
 
@@ -152,7 +156,7 @@ def test_clear_messages_and_stations_are_scoped():
         with tempfile.TemporaryDirectory() as td:
             db.DB_PATH = Path(td) / "test.db"
             db.init_db()
-            db.save_config({"callsign": "PT2VHF", "latitude": -15.8, "longitude": -47.9})
+            db.save_config({"callsign": "PT2VHF", "latitude": -15.8, "longitude": -47.9, "altitude": 1000})
 
             db.add_message("in", "PY2ABC", "PT2VHF", "Teste", msg_id="001", status="Recebida")
             db.upsert_station({
@@ -187,5 +191,46 @@ def test_clear_messages_and_stations_are_scoped():
             assert db.map_data()["tracks"] == []
             assert len(db.list_messages()) == 1
             assert db.get_config()["callsign"] == "PT2VHF"
+    finally:
+        db.DB_PATH = original
+
+
+def test_new_install_defaults_and_required_station_fields():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            cfg = db.get_config()
+            assert cfg["callsign"] == ""
+            assert cfg["latitude"] is None
+            assert cfg["longitude"] is None
+            assert cfg["altitude"] is None
+            assert cfg["aprs_filter"] == "r/2000"
+
+            with pytest.raises(ValueError, match="Indicativo"):
+                db.save_config({
+                    "callsign": "",
+                    "latitude": -15.8,
+                    "longitude": -47.9,
+                    "altitude": 1000,
+                })
+
+            with pytest.raises(ValueError, match="Altitude"):
+                db.save_config({
+                    "callsign": "PY2ABC",
+                    "latitude": -15.8,
+                    "longitude": -47.9,
+                    "altitude": "",
+                })
+
+            saved = db.save_config({
+                "callsign": "PY2ABC",
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": 1000,
+            })
+            assert saved["callsign"] == "PY2ABC"
+            assert saved["aprs_filter"] == "r/2000"
     finally:
         db.DB_PATH = original
