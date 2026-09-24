@@ -1,5 +1,5 @@
 #define MyAppName "PT2VHF APRS Client"
-#define MyAppVersion "0.3.2"
+#define MyAppVersion "1.0"
 #define MyAppPublisher "Alex, PT2VHF"
 #define MyAppExeName "PT2VHF_APRS_Client.exe"
 
