@@ -21,6 +21,7 @@
     symbolTable: '/',
     configLoaded: false,
     myMessagesOnly: false,
+    hideTelemetryMessages: true,
     ownCallsign: '',
     messageAlertBaselineReady: false,
     lastAlertedMessageId: 0,
@@ -554,9 +555,22 @@
     return status || '';
   }
 
+  function isTelemetryMessage(message) {
+    const text = String(message?.message || '').trim().toUpperCase();
+    if (!text) return false;
+    return /^(?:PARM|UNIT|EQNS|BITS)\./.test(text)
+      || /^T#\d{3}(?:,|$)/.test(text);
+  }
+
+  function visibleMessages() {
+    return state.hideTelemetryMessages
+      ? state.messages.filter(message => !isTelemetryMessage(message))
+      : state.messages;
+  }
+
   function renderMessages() {
     const spec = state.sort.messages;
-    const rows = sortedData(state.messages, spec);
+    const rows = sortedData(visibleMessages(), spec);
     $('#messagesTable tbody').innerHTML = rows.map(m => `
       <tr>
         <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${escapeHtml(m.from_call)}</td>
@@ -571,6 +585,24 @@
 
   const loadMessagesDebounced = debounce(loadMessages, 250);
   $('#messageFilter').addEventListener('input', loadMessagesDebounced);
+
+  const telemetryPreference = localStorage.getItem('pt2vhf_hide_telemetry');
+  state.hideTelemetryMessages = telemetryPreference === null ? true : telemetryPreference !== '0';
+  const telemetryToggle = $('#hideTelemetryMessages');
+  if (telemetryToggle) telemetryToggle.checked = state.hideTelemetryMessages;
+  telemetryToggle?.addEventListener('change', () => {
+    state.hideTelemetryMessages = telemetryToggle.checked;
+    localStorage.setItem('pt2vhf_hide_telemetry', state.hideTelemetryMessages ? '1' : '0');
+    renderMessages();
+    updateUnread();
+    const hiddenCount = state.messages.filter(isTelemetryMessage).length;
+    toast(
+      state.hideTelemetryMessages
+        ? `Telemetria oculta (${hiddenCount} registro(s) nesta lista).`
+        : 'Telemetria visível.',
+      'ok'
+    );
+  });
 
   function updateMyMessagesButton() {
     const btn = $('#myMessagesButton');
@@ -742,7 +774,7 @@
   });
 
   function updateUnread() {
-    const incoming = state.messages.filter(m => m.direction === 'in');
+    const incoming = visibleMessages().filter(m => m.direction === 'in');
     const latest = incoming.reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
     const seen = Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0);
     const unread = incoming.filter(m => Number(m.id) > seen).length;
