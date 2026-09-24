@@ -1739,3 +1739,155 @@ html[data-theme="light"] .required-fields-list span {
 html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
   color: #8a5b00;
 }
+
+
+/* v1.6 - backlog consolidado */
+.theme-quick-toggle {
+  min-width: 42px;
+  padding: 7px 9px;
+  font-size: 15px;
+}
+.config-page-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(59,166,255,.045);
+}
+.config-page-intro span { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.config-section-tabs { display: none !important; }
+
+.conversation-sort-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.conversation-sort-button:hover { color: var(--text); background: rgba(59,166,255,.05); }
+
+#messagesTable .callsign-link,
+#messagesTable .message-type-badge,
+#messagesTable td:nth-child(1),
+#messagesTable td:nth-child(2),
+#messagesTable td:nth-child(3) {
+  font-family: var(--messages-font-family);
+  font-size: var(--messages-font-size);
+  font-weight: var(--messages-font-weight) !important;
+  line-height: var(--messages-line-height);
+}
+#messagesTable .callsign-link { font-weight: var(--messages-font-weight) !important; }
+
+#logTable th:first-child,
+#logTable td:first-child {
+  width: 195px;
+  min-width: 195px;
+  white-space: nowrap;
+  text-align: center;
+}
+#logTable th:nth-child(2),
+#logTable td:nth-child(2) {
+  text-align: center;
+}
+#logTable th:nth-child(3),
+#logTable td:nth-child(3) {
+  text-align: left;
+}
+#logTimeHeader { cursor: pointer; user-select: none; }
+#logTimeHeader:hover { background: #202c36; }
+
+.filter-brazil-only {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+.filter-area {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.filter-area legend {
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.topology-stats-box {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(59,166,255,.025);
+}
+.topology-stats-content {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+}
+.topology-stat-group {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.topology-stat-group h4 { margin: 0 0 8px; font-size: 12px; }
+.topology-stat-group ol,
+.topology-stat-group ul { margin: 0; padding-left: 20px; }
+.topology-stat-group li { margin: 4px 0; color: var(--muted); font-size: 11px; }
+
+.message-retry-button {
+  margin-left: 6px;
+  padding: 2px 6px;
+  min-height: 24px;
+  font-size: 10px;
+}
+.message-group-status {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.update-dialog { width: min(760px, 94vw); }
+.update-release-notes {
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--muted);
+  font: 11px/1.45 var(--logs-font-family);
+}
+.reset-config-actions {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+html[data-theme="light"] .config-page-intro,
+html[data-theme="light"] .topology-stats-box {
+  background: rgba(22,120,200,.035);
+}
+html[data-theme="light"] #logTimeHeader:hover {
+  background: #dce6ed;
+}
+
+@media (max-width: 900px) {
+  .filter-area,
+  .topology-stats-content { grid-template-columns: 1fr; }
+}
