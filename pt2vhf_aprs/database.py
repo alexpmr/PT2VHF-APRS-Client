@@ -5,6 +5,7 @@ import math
 import os
 import re
 import sqlite3
+import sys
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -19,6 +20,9 @@ def _default_data_dir() -> Path:
         if base:
             return Path(base) / "PT2VHF APRS Client" / "data"
         return Path.home() / "AppData" / "Local" / "PT2VHF APRS Client" / "data"
+
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "PT2VHF APRS Client" / "data"
 
     xdg_data_home = os.getenv("XDG_DATA_HOME")
     linux_base = Path(xdg_data_home).expanduser() if xdg_data_home else Path.home() / ".local" / "share"
@@ -44,6 +48,7 @@ DEFAULT_CONFIG = {
     "aprs_filter": "r/2000",
     "connect_on_start": 0,
     "open_browser_on_start": 0,
+    "language": "pt-BR",
     "map_type": "osm",
     "track_color": "#3ba6ff",
     "track_width": 2,
@@ -101,6 +106,7 @@ def init_db() -> None:
                 aprs_filter TEXT NOT NULL DEFAULT 'r/2000',
                 connect_on_start INTEGER NOT NULL DEFAULT 0,
                 open_browser_on_start INTEGER NOT NULL DEFAULT 0,
+                language TEXT NOT NULL DEFAULT 'pt-BR',
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
                 track_width INTEGER NOT NULL DEFAULT 2,
@@ -206,6 +212,8 @@ def init_db() -> None:
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
         if "open_browser_on_start" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN open_browser_on_start INTEGER NOT NULL DEFAULT 0")
+        if "language" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN language TEXT NOT NULL DEFAULT 'pt-BR'")
         if "map_type" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN map_type TEXT NOT NULL DEFAULT 'osm'")
         if "track_color" not in config_columns:
@@ -290,6 +298,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["beacon_minutes"] = max(1, int(merged["beacon_minutes"] or 10))
     merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
     merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
+    merged["language"] = str(merged["language"] or "pt-BR").strip()
+    merged["aprs_filter"] = str(merged["aprs_filter"] or "").strip()
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
     merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()
     merged["track_width"] = int(merged["track_width"] or 2)
@@ -312,7 +322,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         else:
             merged[field] = float(merged[field])
 
-    validate_required_station_config(merged)
+    # Salvar preferências não exige uma estação completa. A validação dos
+    # campos obrigatórios acontece no momento da conexão ao APRS-IS.
     if not (0 <= merged["ssid"] <= 15):
         raise ValueError("SSID deve estar entre 0 e 15.")
     if merged["latitude"] is not None and not (-90 <= merged["latitude"] <= 90):
@@ -340,6 +351,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
 
     if merged["app_theme"] not in {"dark", "light"}:
         raise ValueError("Tema da aplicação inválido.")
+    if merged["language"] not in {"pt-BR", "en"}:
+        raise ValueError("Idioma da aplicação inválido.")
 
     allowed_fonts = {"system", "segoe", "arial", "verdana", "tahoma", "consolas"}
     if merged["messages_font_family"] not in allowed_fonts:
