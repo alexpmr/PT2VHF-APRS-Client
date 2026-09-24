@@ -68,6 +68,9 @@ jobs:
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
           New-Item -ItemType Directory -Force dist-installer | Out-Null
+          $installerScript = Get-Content windows\installer.iss -Raw
+          $installerScript = $installerScript -replace '#define MyAppVersion "[^"]+"', "#define MyAppVersion `"$version`""
+          Set-Content windows\installer.iss -Value $installerScript -Encoding UTF8
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
           Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-installer\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
 
