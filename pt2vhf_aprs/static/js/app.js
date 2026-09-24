@@ -209,6 +209,8 @@
 
   function applyAppearancePreferences(cfg = {}) {
     const root = document.documentElement;
+    const theme = cfg.app_theme === 'light' ? 'light' : 'dark';
+    root.dataset.theme = theme;
     const messagesFamily = FONT_FAMILIES[cfg.messages_font_family] || FONT_FAMILIES.system;
     const stationsFamily = FONT_FAMILIES[cfg.stations_font_family] || FONT_FAMILIES.system;
     const messagesSize = Math.min(20, Math.max(10, Number(cfg.messages_font_size || 12)));
@@ -1048,6 +1050,7 @@
     const form = $('#configForm');
     if (!form) return;
     applyAppearancePreferences({
+      app_theme: form.elements.namedItem('app_theme')?.value || 'dark',
       messages_font_family: form.elements.namedItem('messages_font_family')?.value || 'system',
       messages_font_size: form.elements.namedItem('messages_font_size')?.value || 12,
       stations_font_family: form.elements.namedItem('stations_font_family')?.value || 'system',
@@ -1056,7 +1059,7 @@
     syncAppearanceControls();
   }
 
-  for (const name of ['messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
+  for (const name of ['app_theme', 'messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
     $('#configForm')?.elements.namedItem(name)?.addEventListener('input', previewAppearanceFromForm);
     $('#configForm')?.elements.namedItem(name)?.addEventListener('change', previewAppearanceFromForm);
   }
