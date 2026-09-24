@@ -20,3 +20,22 @@ A v0.3.1 implementa a topologia observada básica, persistência dos enlaces e f
 - histórico comparativo por período;
 - métricas agregadas por nó/enlace;
 - eventual animação temporal do tráfego observado.
+
+
+## Opção para abrir também no navegador
+
+**Objetivo:** manter a janela integrada como comportamento padrão e permitir que o navegador seja aberto apenas quando o usuário desejar.
+
+- Corrigir o comportamento atual em que o navegador também é aberto junto com a janela principal.
+- Por padrão, ao iniciar o PT2VHF APRS Client, abrir **somente a janela integrada WebView2**.
+- Adicionar em **Configuração** a opção **“Abrir também no navegador ao iniciar”**.
+- A opção deverá vir **desligada por padrão** em novas instalações.
+- Quando desligada, não abrir Chrome, Edge ou outro navegador durante a inicialização normal.
+- Quando ligada, iniciar a janela integrada normalmente e, adicionalmente, abrir a interface local no navegador padrão.
+- Persistir essa preferência no banco SQLite/configuração exportável.
+- Manter o parâmetro de diagnóstico `--browser` como forma explícita de abrir pelo navegador, independentemente da preferência salva.
+- Atualizar Ajuda e README para documentar a diferença entre:
+  - janela integrada;
+  - opção de abrir também no navegador;
+  - modo de diagnóstico `--browser`.
+
