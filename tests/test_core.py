@@ -128,8 +128,16 @@ def test_map_preferences_persist():
                 "app_theme": "light",
                 "messages_font_family": "consolas",
                 "messages_font_size": 14,
+                "messages_font_weight": "bold",
+                "messages_line_height": 1.55,
                 "stations_font_family": "verdana",
                 "stations_font_size": 13,
+                "stations_font_weight": "bold",
+                "stations_line_height": 1.40,
+                "logs_font_family": "tahoma",
+                "logs_font_size": 15,
+                "logs_font_weight": "bold",
+                "logs_line_height": 1.45,
             })
             assert cfg["map_type"] == "satellite"
             assert cfg["track_color"] == "#ff6600"
@@ -146,6 +154,14 @@ def test_map_preferences_persist():
             assert cfg["messages_font_size"] == 14
             assert cfg["stations_font_family"] == "verdana"
             assert cfg["stations_font_size"] == 13
+            assert cfg["messages_font_weight"] == "bold"
+            assert cfg["messages_line_height"] == 1.55
+            assert cfg["stations_font_weight"] == "bold"
+            assert cfg["stations_line_height"] == 1.40
+            assert cfg["logs_font_family"] == "tahoma"
+            assert cfg["logs_font_size"] == 15
+            assert cfg["logs_font_weight"] == "bold"
+            assert cfg["logs_line_height"] == 1.45
     finally:
         db.DB_PATH = original
 
@@ -225,6 +241,10 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["topology_width"] == 2
             assert cfg["message_popup_seconds"] == 5
             assert cfg["open_browser_on_start"] == 0
+            assert cfg["messages_font_weight"] == "normal"
+            assert cfg["stations_font_weight"] == "normal"
+            assert cfg["logs_font_family"] == "consolas"
+            assert cfg["logs_font_size"] == 12
 
             # A v1.1 permite salvar preferências e a configuração APRS
             # mesmo enquanto a estação ainda está incompleta. Os campos
