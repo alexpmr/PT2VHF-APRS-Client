@@ -247,8 +247,8 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["connect_on_start"] == 1
             assert cfg["open_browser_on_start"] == 0
             assert cfg["check_updates_on_start"] == 1
-            assert cfg["auto_download_updates"] == 0
-            assert cfg["install_updates_on_exit"] == 0
+            assert cfg["auto_download_updates"] == 1
+            assert cfg["install_updates_on_exit"] == 1
             assert cfg["message_retry_seconds"] == 60
             assert cfg["message_retry_attempts"] == 2
             assert cfg["messages_font_weight"] == "normal"
@@ -366,8 +366,20 @@ def test_long_aprs_message_segmentation():
     parts = split_aprs_message_parts(long_text)
     assert len(parts) > 1
     assert all(len(part) <= 63 for part in parts)
-    assert parts[0].startswith("[1/")
-    assert parts[-1].startswith(f"[{len(parts)}/{len(parts)}]")
+    assert all(not part.startswith("[") for part in parts)
+    assert " ".join(parts) == long_text
+    assert all(not (part and part[-1].isalnum() and i + 1 < len(parts) and parts[i + 1][0].isalnum() and part[-1:] + parts[i + 1][:1] in {"me"}) for i, part in enumerate(parts))
+
+    # Quando uma palavra cabe inteira na próxima parte, ela não deve ser cortada.
+    text = ("A " * 30) + "PALAVRAINTEIRA final"
+    parts = split_aprs_message_parts(text)
+    assert any("PALAVRAINTEIRA" in part for part in parts)
+    assert all("PALAVR" not in part or "PALAVRAINTEIRA" in part for part in parts)
+
+    # Uma palavra maior que o limite só é cortada como último recurso.
+    giant = "X" * 80
+    giant_parts = split_aprs_message_parts(giant)
+    assert giant_parts == ["X" * 63, "X" * 17]
 
 
 def test_observed_topology_from_aprs_path():
