@@ -45,6 +45,7 @@
     configSection: 'aprs',
     currentConfig: null,
     autoLocationInProgress: false,
+    lastConnectionErrorShown: '',
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -645,6 +646,11 @@
       el.querySelector('span:last-child').textContent = translateConnectionState(s.state || (s.connected ? 'Conectado' : 'Desconectado'));
       el.title = s.last_error || s.server_message || '';
       $('#connectButton').textContent = s.connected || s.wanted ? ui('Desconectar', 'Disconnect') : ui('Conectar', 'Connect');
+      if (!s.connected && !s.wanted && s.last_error && s.last_error !== state.lastConnectionErrorShown) {
+        state.lastConnectionErrorShown = s.last_error;
+        toast(ui('Falha na conexão APRS-IS: ', 'APRS-IS connection failed: ') + s.last_error, 'error');
+      }
+      if (s.connected) state.lastConnectionErrorShown = '';
       const stationCount = Number(s.stations || 0);
       const messageCount = Number(s.messages || 0);
       const packetCount = Number(s.packets_received || 0);
