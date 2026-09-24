@@ -14,6 +14,7 @@ a = Analysis(
         (str(ROOT / 'pt2vhf_aprs' / 'templates'), 'pt2vhf_aprs/templates'),
         (str(ROOT / 'pt2vhf_aprs' / 'static'), 'pt2vhf_aprs/static'),
         (str(ROOT / 'VERSION'), '.'),
+        (str(ROOT / 'windows' / 'app_icon.ico'), 'windows'),
         *webview_datas,
     ],
     hiddenimports=hiddenimports,
