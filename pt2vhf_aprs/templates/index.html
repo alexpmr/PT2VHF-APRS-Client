@@ -39,10 +39,16 @@
 <main>
   <section id="tab-map" class="tab-panel active">
     <div class="map-toolbar">
-      <div><strong>Estações recebidas:</strong> <span id="mapStationCount">0</span></div>
-      <div><strong>Pacotes APRS-IS:</strong> <span id="packetCount">0</span></div>
-      <div><strong>Filtro ativo:</strong> <span id="activeFilter">—</span></div>
-      <div><strong>Última atualização:</strong> <span id="mapLastUpdate">—</span></div>
+      <div class="map-toolbar-stats">
+        <div><strong>Estações recebidas:</strong> <span id="mapStationCount">0</span></div>
+        <div><strong>Pacotes APRS-IS:</strong> <span id="packetCount">0</span></div>
+        <div><strong>Filtro ativo:</strong> <span id="activeFilter">—</span></div>
+        <div><strong>Última atualização:</strong> <span id="mapLastUpdate">—</span></div>
+      </div>
+      <div class="map-toolbar-actions">
+        <button id="clearMapTracksButton" type="button" class="btn danger map-action-btn">Apagar tracklogs</button>
+        <button id="clearMapStationsButton" type="button" class="btn danger map-action-btn">Apagar estações</button>
+      </div>
     </div>
     <div id="map"></div>
   </section>
