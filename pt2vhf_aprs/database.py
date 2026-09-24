@@ -38,11 +38,12 @@ DEFAULT_CONFIG = {
     "latitude": None,
     "longitude": None,
     "altitude": None,
+    "altitude_source": "manual",
     "symbol_table": "/",
     "symbol": ">",
     "beacon_minutes": 10,
     "email": "",
-    "server": "brazil.aprs2.net",
+    "server": "soam.aprs2.net",
     "port": 14580,
     "passcode": "",
     "aprs_filter": "r/2000",
@@ -104,11 +105,12 @@ def init_db() -> None:
                 latitude REAL,
                 longitude REAL,
                 altitude REAL,
+                altitude_source TEXT NOT NULL DEFAULT 'manual',
                 symbol_table TEXT NOT NULL DEFAULT '/',
                 symbol TEXT NOT NULL DEFAULT '>',
                 beacon_minutes INTEGER NOT NULL DEFAULT 10,
                 email TEXT NOT NULL DEFAULT '',
-                server TEXT NOT NULL DEFAULT 'brazil.aprs2.net',
+                server TEXT NOT NULL DEFAULT 'soam.aprs2.net',
                 port INTEGER NOT NULL DEFAULT 14580,
                 passcode TEXT NOT NULL DEFAULT '',
                 aprs_filter TEXT NOT NULL DEFAULT 'r/2000',
@@ -274,6 +276,17 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN logs_font_weight TEXT NOT NULL DEFAULT 'normal'")
         if "logs_line_height" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN logs_line_height REAL NOT NULL DEFAULT 1.30")
+        if "altitude_source" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN altitude_source TEXT NOT NULL DEFAULT 'manual'")
+
+        # Corrige o antigo padrão v1.2, que combinava brazil.aprs2.net com 14580.
+        # Mantém configurações personalizadas intactas.
+        legacy = conn.execute("SELECT server, port FROM config WHERE id=1").fetchone()
+        if legacy and str(legacy["server"] or "").lower() == "brazil.aprs2.net" and int(legacy["port"] or 0) == 14580:
+            conn.execute(
+                "UPDATE config SET server='soam.aprs2.net', updated_at=? WHERE id=1",
+                (utc_now_iso(),),
+            )
 
         message_columns = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()}
         if "message_type" not in message_columns:
@@ -326,7 +339,9 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
 
     merged["callsign"] = str(merged["callsign"] or "").upper().strip()
     merged["ssid"] = int(merged["ssid"] or 0)
+    merged["server"] = str(merged["server"] or "soam.aprs2.net").strip()
     merged["port"] = int(merged["port"] or 14580)
+    merged["altitude_source"] = str(merged["altitude_source"] or "manual").lower().strip()
     merged["beacon_minutes"] = max(1, int(merged["beacon_minutes"] or 10))
     merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
     merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
@@ -370,8 +385,12 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Latitude inválida.")
     if merged["longitude"] is not None and not (-180 <= merged["longitude"] <= 180):
         raise ValueError("Longitude inválida.")
+    if not merged["server"]:
+        raise ValueError("Servidor APRS-IS não pode ficar vazio.")
     if not (1 <= merged["port"] <= 65535):
         raise ValueError("Porta inválida.")
+    if merged["altitude_source"] not in {"manual", "geolocation", "fallback_zero"}:
+        merged["altitude_source"] = "manual"
     if merged["map_type"] not in {"osm", "topo", "satellite"}:
         raise ValueError("Tipo de mapa inválido.")
     if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["track_color"]):
