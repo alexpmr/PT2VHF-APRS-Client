@@ -56,6 +56,7 @@
           <input id="hideTelemetryMessages" type="checkbox" checked>
           <span>Ocultar telemetria</span>
         </label>
+        <button id="groupMessagesButton" type="button" class="btn secondary" aria-pressed="false">Agrupar por remetente</button>
         <button id="myMessagesButton" type="button" class="btn secondary" aria-pressed="false">Minhas mensagens</button>
         <button id="clearMessagesButton" type="button" class="btn danger">Limpar mensagens</button>
         <label class="field compact">
@@ -77,6 +78,26 @@
         <tbody></tbody>
       </table>
     </div>
+
+    <div id="groupedMessagesView" class="grouped-messages-view hidden">
+      <aside class="conversation-list-panel">
+        <div class="conversation-list-title">Conversas</div>
+        <div id="conversationList" class="conversation-list"></div>
+      </aside>
+      <section class="conversation-thread-panel">
+        <div id="conversationThreadEmpty" class="conversation-thread-empty">
+          Selecione uma conversa para abrir o histórico.
+        </div>
+        <div id="conversationThreadContent" class="conversation-thread-content hidden">
+          <div class="conversation-thread-header">
+            <span>Conversa com</span>
+            <button id="conversationRecipientButton" type="button" class="callsign-link"></button>
+          </div>
+          <div id="conversationMessages" class="conversation-messages"></div>
+        </div>
+      </section>
+    </div>
+
     <div class="message-composer">
       <label class="field message-type-field">
         <span>Tipo</span>
@@ -247,6 +268,7 @@
           <label class="field full"><span>Filtro APRS-IS</span><input name="aprs_filter" value="r/2000" placeholder="Ex.: r/2000 ou r/-15.8/-47.9/2000"><small><code>r/2000</code> usa sua latitude/longitude configuradas como centro e recebe estações em um raio de 2.000 km. Esse é o filtro padrão para novas instalações.</small></label>
           <label class="field"><span>Beacon (minutos)</span><input name="beacon_minutes" type="number" min="1" value="10"></label>
           <label class="check-field"><input name="connect_on_start" type="checkbox"><span>Conectar ao iniciar</span></label>
+          <label class="check-field full"><input name="open_browser_on_start" type="checkbox"><span>Abrir também no navegador ao iniciar</span></label>
         </div>
         <div class="config-actions">
           <button type="submit" class="btn primary">Salvar configuração</button>
@@ -286,9 +308,34 @@
               <output id="mapBrightnessValue" for="mapBrightness">100%</output>
             </div>
           </label>
+          <label class="field">
+            <span>Cor da topologia RF</span>
+            <div class="color-field-row">
+              <input name="topology_rf_color" type="color" value="#35a7ff" aria-label="Cor dos enlaces RF">
+              <input id="topologyRfColorText" type="text" value="#35a7ff" maxlength="7" placeholder="#35a7ff">
+            </div>
+          </label>
+          <label class="field">
+            <span>Cor da topologia via IGate</span>
+            <div class="color-field-row">
+              <input name="topology_igate_color" type="color" value="#b06cff" aria-label="Cor dos enlaces IGate">
+              <input id="topologyIgateColorText" type="text" value="#b06cff" maxlength="7" placeholder="#b06cff">
+            </div>
+          </label>
+          <label class="field">
+            <span>Espessura da topologia</span>
+            <div class="range-field-row">
+              <input name="topology_width" id="topologyWidth" type="range" min="1" max="10" step="1" value="2">
+              <output id="topologyWidthValue" for="topologyWidth">2 px</output>
+            </div>
+          </label>
+        </div>
+        <div class="config-actions map-config-actions">
+          <button id="resetTopologyStyleButton" type="button" class="btn secondary">Restaurar topologia padrão</button>
+          <span class="hint">Padrão: RF #35a7ff, IGate #b06cff, 2 px.</span>
         </div>
         <div class="hint map-provider-hint">
-          OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. A alteração é aplicada ao salvar.
+          OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.
         </div>
       </div>
 
@@ -328,6 +375,11 @@
             <label class="check-field message-sound-check">
               <input name="sound_on_personal_message" type="checkbox" checked>
               <span>Tocar sinal sonoro ao receber mensagem para minha estação</span>
+            </label>
+            <label class="field">
+              <span>Duração do aviso na aba Mensagens</span>
+              <input name="message_popup_seconds" type="number" min="1" max="60" step="1" value="5">
+              <small>Tempo, em segundos, antes do pequeno aviso fechar automaticamente. Ele também pode ser fechado manualmente.</small>
             </label>
           </div>
 
@@ -399,12 +451,13 @@
           <p><strong>Filtro de recepção:</strong> como configuração inicial, use <code>r/2000</code>. O programa transforma esse atalho em um filtro radial usando a posição configurada.</p>
           <p>Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
           <p>Marque <strong>Conectar ao iniciar</strong> se quiser que o cliente tente conectar automaticamente.</p>
+          <p><strong>Abrir também no navegador ao iniciar</strong> mantém a janela integrada e abre uma segunda visualização no navegador padrão. A opção vem desligada por padrão.</p>
         </article>
 
         <article class="help-card">
           <h3>3. Mapa</h3>
           <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
-          <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>.</p>
+          <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
           <p>Clique em uma estação para abrir os detalhes. O botão <strong>Enviar mensagem</strong> leva diretamente à tela de mensagens com o destino preenchido.</p>
           <p>A posição e o zoom do mapa ficam salvos localmente.</p>
         </article>
@@ -415,9 +468,11 @@
           <p><strong>Boletim geral:</strong> usa <code>BLN0</code> a <code>BLN9</code> e não solicita ACK.</p>
           <p><strong>Boletim de grupo:</strong> permite informar um grupo de até cinco caracteres.</p>
           <p>O botão <strong>Minhas mensagens</strong> mostra apenas mensagens individuais de ou para o seu <code>CALL-SSID</code>.</p>
+          <p>As mensagens seguem fluxo de chat, com as mais novas embaixo. A opção <strong>Agrupar por remetente</strong> organiza o histórico em conversas por contato.</p>
+          <p>Clique em qualquer indicativo nas colunas <strong>De</strong> ou <strong>Para</strong> para selecioná-lo como destinatário e responder. Se clicar no próprio indicativo, o programa tenta selecionar o outro participante.</p>
           <p>O compositor aceita mensagens longas. Use <strong>Enter</strong> para enviar e <strong>Shift+Enter</strong> para nova linha. Mensagens maiores são divididas automaticamente em partes APRS numeradas, cada uma com confirmação própria.</p>
           <p>O botão <strong>Limpar mensagens</strong> apaga todo o histórico local de mensagens e boletins após confirmação.</p>
-          <p>Quando chega uma nova mensagem para sua estação, o programa exibe um popup. O aviso sonoro pode ser ligado ou desligado em Configuração.</p>
+          <p>Quando chega uma nova mensagem para sua estação e a aba Mensagens já está aberta, o programa usa um aviso pequeno e não bloqueante, que fecha automaticamente pelo tempo definido em Configuração. Fora da aba Mensagens, permanece o aviso completo com opção de responder.</p>
         </article>
 
         <article class="help-card">
@@ -493,6 +548,14 @@
     </div>
     <div id="symbolGrid" class="symbol-grid"></div>
   </div>
+</div>
+
+<div id="incomingMessageCompact" class="message-compact-alert hidden" role="status" aria-live="polite">
+  <button id="incomingMessageCompactClose" class="message-compact-close" type="button" aria-label="Fechar aviso">×</button>
+  <div class="message-alert-eyebrow">Nova mensagem APRS</div>
+  <div class="message-compact-meta"><strong id="incomingMessageCompactFrom"></strong><span id="incomingMessageCompactTime"></span></div>
+  <div id="incomingMessageCompactText" class="message-compact-text"></div>
+  <button id="incomingMessageCompactReply" type="button" class="btn primary message-compact-reply">Responder</button>
 </div>
 
 <div id="incomingMessageModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="incomingMessageTitle">
