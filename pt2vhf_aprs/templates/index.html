@@ -14,7 +14,11 @@
     <img class="brand-logo" src="{{ url_for('static', filename='img/app_logo.png') }}" alt="PT2VHF APRS Client">
     <div>
       <h1>PT2VHF APRS Client <span class="app-version">v{{ app_version }}</span></h1>
-      <div class="subtitle">Cliente APRS-IS com banco local SQLite</div>
+      <div class="header-counters">
+        <strong>Estações recebidas:</strong> <span id="headerStationCount">0</span>
+        <span class="counter-separator">—</span>
+        <strong>Pacotes APRS-IS:</strong> <span id="headerPacketCount">0</span>
+      </div>
     </div>
   </div>
   <div class="connection-box">
@@ -38,25 +42,13 @@
 
 <main>
   <section id="tab-map" class="tab-panel active">
-    <div class="map-toolbar">
-      <div class="map-toolbar-stats">
-        <div><strong>Estações recebidas:</strong> <span id="mapStationCount">0</span></div>
-        <div><strong>Pacotes APRS-IS:</strong> <span id="packetCount">0</span></div>
-        <div><strong>Filtro ativo:</strong> <span id="activeFilter">—</span></div>
-        <div><strong>Última atualização:</strong> <span id="mapLastUpdate">—</span></div>
-      </div>
-      <div class="map-toolbar-actions">
-        <button id="clearMapTracksButton" type="button" class="btn danger map-action-btn">Apagar tracklogs</button>
-        <button id="clearMapStationsButton" type="button" class="btn danger map-action-btn">Apagar estações</button>
-      </div>
-    </div>
     <div id="map"></div>
   </section>
 
   <section id="tab-messages" class="tab-panel">
     <div class="panel-header">
       <div>
-        <h2>Mensagens APRS</h2>
+        <h2>Mensagens APRS <span class="panel-count" id="messageTotalCount">0</span></h2>
         <p>Filtre pelo indicativo de origem. O filtro aceita trechos, como <code>PT2</code> ou <code>PY2A</code>.</p>
       </div>
       <div class="message-header-controls">
@@ -123,9 +115,9 @@
       </label>
 
       <label class="field message-field">
-        <span>Mensagem <small>Enter = nova linha · Ctrl+Enter = enviar</small></span>
-        <textarea id="messageText" maxlength="63" rows="6" placeholder="Digite a mensagem APRS"></textarea>
-        <small id="messageCharCounter" class="message-char-counter">0 / 63</small>
+        <span>Mensagem <small>Enter = enviar · Shift+Enter = nova linha</small></span>
+        <textarea id="messageText" rows="6" placeholder="Digite a mensagem APRS"></textarea>
+        <small id="messageCharCounter" class="message-char-counter">0 caracteres</small>
       </label>
       <button id="sendMessageButton" class="btn primary send-btn" title="Enviar mensagem">Enviar</button>
     </div>
@@ -134,10 +126,11 @@
   <section id="tab-stations" class="tab-panel">
     <div class="panel-header">
       <div>
-        <h2>Estações</h2>
+        <h2>Estações <span class="panel-count" id="stationTotalCount">0</span></h2>
         <p>Últimos dados conhecidos de cada estação recebida.</p>
       </div>
       <div class="station-header-controls">
+        <button id="clearTracklogsButton" type="button" class="btn secondary">Limpar tracklogs</button>
         <button id="clearStationsButton" type="button" class="btn danger">Limpar estações</button>
         <label class="field compact">
           <span>Filtro</span>
