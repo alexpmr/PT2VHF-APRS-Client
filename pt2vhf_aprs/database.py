@@ -604,15 +604,12 @@ def list_aprs_log(filter_text: str = "", direction: str = "ALL", limit: int = 10
     with connection() as conn:
         rows = conn.execute(
             """
-            SELECT * FROM (
-                SELECT id, timestamp, direction, raw
-                FROM aprs_log
-                WHERE (? = 'ALL' OR direction = ?)
-                  AND UPPER(raw) LIKE ?
-                ORDER BY id DESC
-                LIMIT ?
-            )
-            ORDER BY id ASC
+            SELECT id, timestamp, direction, raw
+            FROM aprs_log
+            WHERE (? = 'ALL' OR direction = ?)
+              AND UPPER(raw) LIKE ?
+            ORDER BY id DESC
+            LIMIT ?
             """,
             (direction, direction, q, limit),
         ).fetchall()
