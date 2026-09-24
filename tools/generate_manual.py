@@ -409,7 +409,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
 
     add_screenshot(story, st, screenshots_dir, "map.png", "Tela principal: mapa e estações APRS.")
     section(story, st, "10. Mapa e topologia observada", [
-        "O mapa mostra estações com posição conhecida e mantém tracklogs das estações móveis. Na primeira execução, quando a localização é autorizada, ele abre centralizado na posição atual do usuário. Depois disso, centro e zoom escolhidos manualmente são persistidos localmente."
+        "O mapa mostra estações com posição conhecida e mantém tracklogs das estações móveis. Na primeira execução, quando a localização é autorizada, ele abre centralizado na posição atual do usuário. O carregamento do Leaflet é independente do restante da interface: se o provedor do mapa estiver lento ou indisponível, as outras abas continuam funcionando."
     ], [
         "Tipos de mapa: OpenStreetMap, OpenTopoMap e Satélite.",
         "Tracklogs: cor e espessura configuráveis.",
@@ -434,7 +434,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     add_screenshot(story, st, screenshots_dir, "messages.png", "Aba Mensagens em fluxo de chat.")
     section(story, st, "12. Estações e Log", [
         "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa.",
-        "O Log APRS-IS mostra tráfego TNC2 RX/TX e é a principal ferramenta para diagnosticar conexão, autenticação e filtro."
+        "O Log APRS-IS mostra tráfego TNC2 RX/TX e é a principal ferramenta para diagnosticar conexão, autenticação e filtro. Na conexão inicial, a v1.4 encerra as tentativas após três ciclos sem sucesso e mostra o erro final ao usuário."
     ], [
         "verified no logresp confirma autenticação APRS-IS.",
         "Linhas iniciadas por # são mensagens de controle do servidor.",
