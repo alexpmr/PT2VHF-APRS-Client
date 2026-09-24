@@ -226,21 +226,26 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["message_popup_seconds"] == 5
             assert cfg["open_browser_on_start"] == 0
 
+            # A v1.1 permite salvar preferências e a configuração APRS
+            # mesmo enquanto a estação ainda está incompleta. Os campos
+            # obrigatórios são validados ao iniciar a conexão APRS-IS.
+            partial = db.save_config({
+                "callsign": "",
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": 1000,
+            })
             with pytest.raises(ValueError, match="Indicativo"):
-                db.save_config({
-                    "callsign": "",
-                    "latitude": -15.8,
-                    "longitude": -47.9,
-                    "altitude": 1000,
-                })
+                db.validate_required_station_config(partial)
 
+            partial = db.save_config({
+                "callsign": "PY2ABC",
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": "",
+            })
             with pytest.raises(ValueError, match="Altitude"):
-                db.save_config({
-                    "callsign": "PY2ABC",
-                    "latitude": -15.8,
-                    "longitude": -47.9,
-                    "altitude": "",
-                })
+                db.validate_required_station_config(partial)
 
             saved = db.save_config({
                 "callsign": "PY2ABC",
