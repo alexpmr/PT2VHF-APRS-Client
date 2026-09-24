@@ -8,6 +8,7 @@ import threading
 import time
 import webbrowser
 from pathlib import Path
+from urllib.parse import urlparse
 
 from PIL import Image
 import pystray
@@ -23,6 +24,15 @@ HOST = "127.0.0.1"
 PORT = int(os.getenv("PT2VHF_PORT", "8080"))
 URL = f"http://{HOST}:{PORT}"
 MUTEX_NAME = "Global\\PT2VHF_APRS_Client_SingleInstance"
+WINDOW_WIDTH = 1400
+WINDOW_HEIGHT = 850
+WINDOW_MIN_WIDTH = 1100
+WINDOW_MIN_HEIGHT = 700
+
+_window = None
+_tray_icon: pystray.Icon | None = None
+_browser_mode = False
+_quitting = False
 
 
 def _already_running() -> bool:
@@ -31,6 +41,22 @@ def _already_running() -> bool:
     kernel32 = ctypes.windll.kernel32
     kernel32.CreateMutexW(None, False, MUTEX_NAME)
     return kernel32.GetLastError() == 183  # ERROR_ALREADY_EXISTS
+
+
+def _focus_existing_window() -> bool:
+    if os.name != "nt":
+        return False
+    try:
+        user32 = ctypes.windll.user32
+        hwnd = user32.FindWindowW(None, APP_NAME)
+        if not hwnd:
+            return False
+        SW_RESTORE = 9
+        user32.ShowWindow(hwnd, SW_RESTORE)
+        user32.SetForegroundWindow(hwnd)
+        return True
+    except Exception:
+        return False
 
 
 def _wait_for_server(timeout: float = 12.0) -> bool:
@@ -46,6 +72,17 @@ def _wait_for_server(timeout: float = 12.0) -> bool:
 
 def _open_browser(*_args) -> None:
     webbrowser.open(URL, new=2)
+
+
+def _open_external_url(url: str) -> bool:
+    try:
+        parsed = urlparse(str(url or "").strip())
+        if parsed.scheme not in {"http", "https", "mailto"}:
+            return False
+        webbrowser.open(url, new=2)
+        return True
+    except Exception:
+        return False
 
 
 def _open_data_folder(*_args) -> None:
@@ -82,17 +119,159 @@ def _make_tray_image() -> Image.Image:
         return Image.new("RGBA", (64, 64), (15, 23, 30, 255))
 
 
-def _exit_app(icon: pystray.Icon, *_args) -> None:
+def _show_native_window(*_args) -> None:
+    global _window
+    if _browser_mode or _window is None:
+        _open_browser()
+        return
+
+    try:
+        _window.show()
+    except Exception:
+        pass
+
+    # O WebView2 pode estar minimizado; força restore/foco pela janela nativa.
+    def _focus() -> None:
+        time.sleep(0.08)
+        _focus_existing_window()
+
+    threading.Thread(target=_focus, name="pt2vhf-focus-window", daemon=True).start()
+
+
+def _exit_app(icon: pystray.Icon | None = None, *_args) -> None:
+    global _quitting
+    _quitting = True
     try:
         service.disconnect()
-    finally:
-        icon.stop()
-        os._exit(0)
+    except Exception:
+        pass
+
+    tray = icon or _tray_icon
+    try:
+        if tray:
+            tray.stop()
+    except Exception:
+        pass
+
+    if _window is not None:
+        try:
+            _window.destroy()
+            return
+        except Exception:
+            pass
+
+    os._exit(0)
+
+
+def _on_window_closing() -> bool:
+    """Fechar no X esconde na bandeja; Sair na bandeja encerra de fato."""
+    if _quitting:
+        return True
+    try:
+        if _window is not None:
+            _window.hide()
+    except Exception:
+        pass
+    return False
+
+
+def _create_tray_icon() -> pystray.Icon:
+    return pystray.Icon(
+        "pt2vhf_aprs_client",
+        _make_tray_image(),
+        APP_NAME,
+        menu=pystray.Menu(
+            Item("Abrir PT2VHF APRS Client", _show_native_window, default=True),
+            Item("Conectar ao APRS-IS", _connect),
+            Item("Desconectar do APRS-IS", _disconnect),
+            pystray.Menu.SEPARATOR,
+            Item("Abrir pasta de dados", _open_data_folder),
+            pystray.Menu.SEPARATOR,
+            Item("Sair", _exit_app),
+        ),
+    )
+
+
+class NativeApi:
+    """Ponte mínima entre a interface WebView e ações nativas seguras."""
+
+    def open_external(self, url: str) -> bool:
+        return _open_external_url(url)
+
+    def open_data_folder(self) -> bool:
+        try:
+            _open_data_folder()
+            return True
+        except Exception:
+            return False
+
+
+def _run_browser_mode(icon: pystray.Icon) -> int:
+    _open_browser()
+    icon.run()
+    return 0
+
+
+def _run_embedded_window(icon: pystray.Icon) -> int:
+    global _window
+
+    try:
+        import webview
+    except Exception:
+        return _run_browser_mode(icon)
+
+    _window = webview.create_window(
+        APP_NAME,
+        URL,
+        js_api=NativeApi(),
+        width=WINDOW_WIDTH,
+        height=WINDOW_HEIGHT,
+        min_size=(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT),
+        resizable=True,
+        text_select=True,
+    )
+    _window.events.closing += _on_window_closing
+
+    tray_thread = threading.Thread(
+        target=icon.run,
+        name="pt2vhf-tray",
+        daemon=True,
+    )
+    tray_thread.start()
+
+    try:
+        # EdgeChromium usa o Microsoft Edge WebView2 Runtime do Windows.
+        webview.start(gui="edgechromium", debug=False, private_mode=False)
+        return 0
+    except Exception as exc:
+        # Fallback de diagnóstico: mantém a aplicação utilizável mesmo se o
+        # WebView2 Runtime estiver ausente ou danificado.
+        try:
+            if os.name == "nt":
+                ctypes.windll.user32.MessageBoxW(
+                    None,
+                    "Não foi possível iniciar a janela integrada do PT2VHF APRS Client.\n\n"
+                    "A interface será aberta no navegador padrão.\n\n"
+                    f"Detalhes: {exc}",
+                    APP_NAME,
+                    0x30,
+                )
+        except Exception:
+            pass
+        _open_browser()
+        tray_thread.join()
+        return 0
 
 
 def main() -> int:
+    global _browser_mode, _tray_icon
+    _browser_mode = "--browser" in sys.argv[1:]
+
     if _already_running():
-        _open_browser()
+        if _browser_mode:
+            _open_browser()
+        else:
+            _focus_existing_window()
         return 0
 
     db.init_db()
@@ -106,25 +285,25 @@ def main() -> int:
     )
     server_thread.start()
 
-    if _wait_for_server():
-        _open_browser()
+    if not _wait_for_server():
+        if os.name == "nt":
+            try:
+                ctypes.windll.user32.MessageBoxW(
+                    None,
+                    "O servidor local do PT2VHF APRS Client não iniciou na porta configurada.",
+                    APP_NAME,
+                    0x10,
+                )
+            except Exception:
+                pass
+        return 2
 
-    icon = pystray.Icon(
-        "pt2vhf_aprs_client",
-        _make_tray_image(),
-        APP_NAME,
-        menu=pystray.Menu(
-            Item("Abrir PT2VHF APRS Client", _open_browser, default=True),
-            Item("Conectar ao APRS-IS", _connect),
-            Item("Desconectar do APRS-IS", _disconnect),
-            pystray.Menu.SEPARATOR,
-            Item("Abrir pasta de dados", _open_data_folder),
-            pystray.Menu.SEPARATOR,
-            Item("Sair", _exit_app),
-        ),
-    )
-    icon.run()
-    return 0
+    _tray_icon = _create_tray_icon()
+
+    if _browser_mode:
+        return _run_browser_mode(_tray_icon)
+
+    return _run_embedded_window(_tray_icon)
 
 
 if __name__ == "__main__":
