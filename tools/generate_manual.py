@@ -370,7 +370,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     story.append(PageBreak())
 
     section(story, st, "7. Primeira configuração", [
-        "A v1.6 usa uma única página de Configuração, organizada em cartões/seções para Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.",
+        "A Configuração é organizada em cartões/seções para Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados, começando diretamente pela primeira seção.",
         "Antes de conectar ao APRS-IS, preencha Indicativo, Latitude, Longitude e Altitude. Caso tente conectar sem esses dados, o programa leva o usuário à Configuração e destaca os campos pendentes.",
         "Conectar ao iniciar vem habilitado por padrão em novas instalações e fica na seção APRS-IS.",
         "Latitude, Longitude e Altitude são apresentadas em linhas independentes para manter a leitura e a edição dentro do cartão mesmo em DMS, janelas menores ou fontes ampliadas.",
@@ -426,7 +426,8 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Tracklogs: cor e espessura configuráveis.",
         "Topologia observada: pode ser ligada/desligada e filtrada por 1 h, 6 h, 24 h ou 7 dias.",
         "Enlaces RF e via IGate possuem cores independentes e espessura configurável.",
-        "A análise da topologia mostra ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
+        "A análise da rede fica na aba superior Análise, separada das preferências visuais de Configuração.",
+        "A aba Análise oferece período, métricas agregadas, ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
         "Os eventos observados são mantidos em histórico limitado e podem ser reproduzidos no mapa com a função Animar período.",
         "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px."
     ])
@@ -440,7 +441,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "No modo Agrupar por remetente, clique em Conversas para alternar A-Z/Z-A; ao escolher uma conversa, o campo Destino é preenchido automaticamente com o contato selecionado.",
         "O pop-up de nova mensagem oferece Ler mensagem, Responder e OK. Ler mensagem abre a aba Mensagens e foca a conversa do remetente quando o agrupamento estiver ativo; na lista normal, posiciona a visualização na mensagem recebida.",
         "Enter envia; Shift+Enter cria nova linha.",
-        "Mensagens longas são divididas em partes APRS, cada uma com seu próprio ID e ACK, e exibem status agregado como 2/3 confirmadas ou Todas confirmadas.",
+        "Mensagens longas são divididas em partes APRS sem marcadores visíveis como 1/2 ou 2/2. O cliente prefere quebrar entre palavras e só corta uma palavra se ela exceder sozinha o limite técnico. Cada parte mantém seu próprio ID/ACK e o status agregado continua disponível.",
         "Partes sem ACK/REJ podem ser reenviadas com Retry; timeout e número máximo de tentativas são configuráveis, com novo ID APRS a cada tentativa.",
         "ACK é mostrado como Lido; REJ indica rejeição.",
         "Boletins gerais e de grupo são suportados.",
@@ -449,7 +450,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
 
     add_screenshot(story, st, screenshots_dir, "messages.png", "Aba Mensagens em fluxo de chat.")
     section(story, st, "12. Estações e Log", [
-        "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa.",
+        "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa. No popup da estação, Mostrar log abre a aba Log com o indicativo/SSID aplicado ao filtro.",
         "O Log APRS-IS mostra tráfego TNC2 RX/TX e é a principal ferramenta para diagnosticar conexão, autenticação e filtro. Na conexão inicial, a v1.4 encerra as tentativas após três ciclos sem sucesso e mostra o erro final ao usuário."
     ], [
         "verified no logresp confirma autenticação APRS-IS.",
@@ -475,7 +476,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "A exportação JSON salva a configuração. O arquivo pode conter o passcode APRS-IS em texto legível; armazene-o em local seguro.",
         "O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.",
         "O atualizador consulta a Release oficial, escolhe o pacote da plataforma, baixa para a pasta local de atualizações e calcula SHA-256; quando a Release fornece digest SHA-256, ele é conferido antes da instalação.",
-        "As opções Verificar atualizações automaticamente, Baixar atualização automaticamente e Instalar atualização automaticamente ao fechar são independentes; somente a verificação vem habilitada por padrão.",
+        "As opções Verificar atualizações automaticamente, Baixar atualização automaticamente e Instalar atualização automaticamente ao fechar são independentes e vêm habilitadas por padrão em novas instalações. Preferências já salvas são preservadas em atualizações.",
         "No Windows Portable, a atualização pode ser aplicada ao fechar e uma cópia anterior é mantida para rollback. No Windows instalado, o Setup pode ser iniciado silenciosamente. No macOS, o DMG baixado é aberto ao fechar; no Linux AppImage, o novo AppImage pode ser iniciado. Pacotes .deb e .tar.gz continuam exigindo instalação manual pelo sistema.",
         "As atualizações preservam o banco local. Antes de mudanças importantes, é recomendável fazer backup do arquivo SQLite."
     ])
