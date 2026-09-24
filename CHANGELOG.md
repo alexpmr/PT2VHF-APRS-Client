@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.5 - 2026-09-24
+
+- Hotfix focado exclusivamente na versão **Windows portátil** para validação antes de gerar os demais instaladores.
+- Corrigida a falha de JavaScript que interrompia a inicialização da interface antes de registrar os eventos das abas e dos botões do pop-up de configuração.
+- A causa era o uso do seletor de elemento único `$()` em trechos que chamavam `.forEach()`; esses pontos foram corrigidos para o seletor de coleção `$()`.
+- Corrigidos também os mesmos usos incorretos em linhas de estações, seções de configuração e tipos de filtro.
+- Adicionado teste de regressão que falha caso o frontend volte a usar `$().forEach()`.
+- Mantidas as correções da v1.4 para carregamento não bloqueante do mapa e conexão APRS-IS com diagnóstico melhorado.
+- Esta release é publicada inicialmente apenas como **Portable x64**, conforme solicitado, para teste funcional antes da geração dos demais pacotes.
+
 ## v1.4 - 2026-09-24
 
 - Hotfix para a regressão da v1.3 em que a interface podia ficar aparentemente travada quando o carregamento remoto do Leaflet demorava ou falhava.
