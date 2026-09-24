@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.9 — em desenvolvimento
+
+- Em novas instalações, o campo **Indicativo** passa a iniciar vazio; nenhum indicativo pessoal é preenchido automaticamente.
+- **Indicativo, latitude, longitude e altitude** passam a ser campos obrigatórios na configuração da estação.
+- A interface destaca visualmente os campos obrigatórios e impede salvar enquanto estiverem vazios.
+- O backend também valida os campos obrigatórios, evitando conexão APRS-IS com configuração incompleta.
+- Se **Conectar ao iniciar** estiver habilitado e a configuração estiver incompleta, o aplicativo abre normalmente e permanece desconectado, informando o motivo.
+- O filtro APRS-IS padrão para novas instalações passa a ser **`r/2000`**, usando a latitude/longitude configuradas como centro.
+- Configurações já existentes são preservadas durante a atualização; a aplicação não substitui automaticamente indicativo, posição ou filtro previamente salvos.
+
 ## v0.2.8 — 2026-09-23
 
 - Release de manutenção baseada na v0.2.7, sem alterações no formato do banco local.
