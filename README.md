@@ -1,4 +1,4 @@
-# PT2VHF APRS Client — v0.2.8
+# PT2VHF APRS Client — v0.2.9
 
 Cliente APRS-IS para Windows, desenvolvido em Python, com interface web local, banco SQLite, mapa, mensagens e histórico de estações.
 
@@ -91,6 +91,8 @@ O aplicativo oferece:
 
 ### Configuração
 
+- Indicativo, latitude, longitude e altitude são obrigatórios para concluir a configuração inicial.
+- O campo Indicativo fica vazio em uma instalação nova; nenhum indicativo pessoal é preenchido automaticamente.
 - Indicativo e SSID.
 - Comentário, latitude, longitude e altitude.
 - E-mail.
@@ -100,7 +102,7 @@ O aplicativo oferece:
 - Porta padrão `14580`.
 - Passcode APRS-IS.
 - Filtro APRS-IS.
-- `r/500` é expandido usando a posição configurada.
+- `r/2000` é o filtro padrão para novas instalações e é expandido usando a posição configurada.
 - Conectar ao iniciar.
 - Tipo de mapa, cor e espessura dos tracklogs.
 - Fonte e tamanho independentes para Mensagens e Estações.
