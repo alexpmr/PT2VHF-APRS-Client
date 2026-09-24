@@ -39,3 +39,57 @@ A v0.3.1 implementa a topologia observada básica, persistência dos enlaces e f
   - opção de abrir também no navegador;
   - modo de diagnóstico `--browser`.
 
+
+
+## Versão para Linux
+
+**Objetivo:** disponibilizar uma versão oficial do PT2VHF APRS Client para Linux, mantendo o máximo possível de compatibilidade com a versão Windows.
+
+### Escopo planejado
+
+- Criar build oficial para **Linux x86_64**.
+- Avaliar distribuição em formato simples para usuário final, priorizando:
+  - **AppImage** como opção portátil;
+  - pacote **.deb** para Debian/Ubuntu e derivados, se viável;
+  - arquivo compactado `.tar.gz` como alternativa genérica.
+- Manter a mesma interface integrada sempre que o mecanismo WebView disponível no Linux permitir.
+- Caso a janela integrada não esteja disponível no ambiente, permitir uso pelo navegador local como fallback.
+- Preservar recursos principais:
+  - APRS-IS;
+  - SQLite;
+  - Mapa;
+  - Mensagens;
+  - Estações;
+  - Log;
+  - Topologia observada;
+  - Configuração e Ajuda.
+- Definir diretório de dados conforme convenções Linux, preferencialmente em `~/.local/share/PT2VHF-APRS-Client/` ou equivalente via XDG.
+- Garantir que atualização/remoção do aplicativo não apague automaticamente o banco e as configurações do usuário.
+- Criar workflow no GitHub Actions para gerar e anexar os artefatos Linux às Releases.
+- Incluir número da versão no nome dos arquivos Linux publicados.
+
+### Instruções de instalação
+
+A Release deverá incluir documentação em português com instruções completas para cada formato disponibilizado.
+
+As instruções deverão cobrir:
+
+- requisitos mínimos e distribuições testadas;
+- como instalar dependências necessárias;
+- como instalar e executar o AppImage;
+- como instalar o pacote `.deb`, se houver;
+- como executar a versão `.tar.gz`, se houver;
+- como conceder permissão de execução com `chmod +x`;
+- localização do banco SQLite e arquivos de configuração;
+- como atualizar para uma nova versão preservando os dados;
+- como desinstalar o aplicativo;
+- como iniciar o cliente automaticamente com a sessão, se desejado;
+- procedimento de diagnóstico pelo navegador/local host quando necessário.
+
+### Documentação
+
+- Adicionar uma seção **Linux** no README.
+- Incluir arquivo de instalação específico, por exemplo `docs/INSTALL_LINUX.md`.
+- Nas notas de cada Release, identificar claramente quais arquivos são para Windows e quais são para Linux.
+- Fornecer comandos prontos para copiar e colar, evitando exigir conhecimento avançado de Linux.
+
