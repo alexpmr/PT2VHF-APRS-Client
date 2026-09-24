@@ -476,6 +476,12 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     return result
 
 
+def clear_tracklogs() -> int:
+    with connection() as conn:
+        cur = conn.execute("DELETE FROM tracks")
+        return max(0, int(cur.rowcount or 0))
+
+
 def clear_stations() -> dict[str, int]:
     with connection() as conn:
         tracks_cur = conn.execute("DELETE FROM tracks")
