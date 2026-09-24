@@ -31,6 +31,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-windows.txt
 
+      - name: Validate Python and JavaScript syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py linux_app.py macos_app.py tools
+          node --check pt2vhf_aprs\static\js\app.js
+
       - name: Run tests
         shell: pwsh
         run: python -m pytest -q
