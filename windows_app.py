@@ -328,6 +328,13 @@ def main() -> int:
                 pass
         return 2
 
+    if not _browser_mode:
+        try:
+            if bool(db.get_config().get("open_browser_on_start")):
+                _open_browser()
+        except Exception:
+            pass
+
     _tray_icon = _create_tray_icon()
 
     if _browser_mode:
