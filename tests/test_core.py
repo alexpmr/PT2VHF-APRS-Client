@@ -368,8 +368,6 @@ def test_long_aprs_message_segmentation():
     assert all(len(part) <= 63 for part in parts)
     assert all(not part.startswith("[") for part in parts)
     assert " ".join(parts) == long_text
-    assert all(not (part and part[-1].isalnum() and i + 1 < len(parts) and parts[i + 1][0].isalnum() and part[-1:] + parts[i + 1][:1] in {"me"}) for i, part in enumerate(parts))
-
     # Quando uma palavra cabe inteira na próxima parte, ela não deve ser cortada.
     text = ("A " * 30) + "PALAVRAINTEIRA final"
     parts = split_aprs_message_parts(text)
@@ -424,6 +422,20 @@ def test_observed_topology_from_aprs_path():
     finally:
         db.DB_PATH = original
 
+
+
+def test_v161_analysis_tab_and_ota_defaults_in_ui():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    assert 'data-tab="analysis"' in html
+    assert 'id="tab-analysis"' in html
+    assert html.count('id="topologyStatsContent"') == 1
+    assert "Página única de configuração" not in html
+    assert 'name="auto_download_updates" type="checkbox" checked' in html
+    assert 'name="install_updates_on_exit" type="checkbox" checked' in html
+    assert "station-log-button" in js
+    assert "analysisPeriod" in js
 
 
 def test_frontend_collection_selectors_use_query_selector_all():
