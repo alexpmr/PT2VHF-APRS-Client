@@ -234,6 +234,9 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["latitude"] is None
             assert cfg["longitude"] is None
             assert cfg["altitude"] is None
+            assert cfg["altitude_source"] == "manual"
+            assert cfg["server"] == "soam.aprs2.net"
+            assert cfg["port"] == 14580
             assert cfg["aprs_filter"] == "r/2000"
             assert cfg["app_theme"] == "dark"
             assert cfg["topology_rf_color"] == "#35a7ff"
