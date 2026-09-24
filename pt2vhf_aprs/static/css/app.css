@@ -104,7 +104,16 @@ main { height: calc(100vh - 121px); }
 .station-popup .popup-grid strong { color: var(--muted); }
 .aprs-marker-wrap { background: transparent; border: 0; }
 .aprs-symbol { display: inline-block; overflow: hidden; background-repeat: no-repeat; image-rendering: auto; vertical-align: middle; }
-.aprs-marker { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 7px; background: rgba(12,18,23,.83); border: 1px solid rgba(255,255,255,.25); box-shadow: 0 2px 8px rgba(0,0,0,.45); }
+.aprs-marker {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 .aprs-fallback { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 4px; background: #edf2f6; color: #111; font: 700 11px/1 monospace; }
 .panel-header { min-height: 78px; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: #10171d; }
 .panel-header h2 { margin: 0 0 4px; font-size: 18px; }
@@ -1014,8 +1023,9 @@ html[data-theme="light"] .leaflet-popup-tip {
   color: #18232d;
 }
 html[data-theme="light"] .aprs-marker {
-  background: rgba(255,255,255,.90);
-  border-color: rgba(30,48,61,.28);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 html[data-theme="light"] .version-status {
   background: rgba(0,0,0,.02);
