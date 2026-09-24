@@ -108,7 +108,8 @@ jobs:
 
           A partir da v0.3.0, o PT2VHF APRS Client abre a interface em uma janela própria baseada no **Microsoft Edge WebView2**, sem depender de uma aba do navegador durante o uso normal.
 
-          - Fechar a janela pelo **X** mantém o cliente ativo na bandeja.
+          - A partir da v0.3.2, fechar a janela pelo **X** pede confirmação.
+          - Confirmando a saída, o cliente desconecta do APRS-IS, remove o ícone da bandeja e encerra o processo em segundo plano.
           - Links externos continuam abrindo no navegador padrão.
           - O parâmetro `--browser` força o modo de diagnóstico pelo navegador.
           - Se o WebView2 Runtime estiver indisponível, o cliente informa o problema e utiliza o navegador como fallback.
