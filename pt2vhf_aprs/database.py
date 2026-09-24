@@ -52,8 +52,8 @@ DEFAULT_CONFIG = {
     "connect_on_start": 1,
     "open_browser_on_start": 0,
     "check_updates_on_start": 1,
-    "auto_download_updates": 0,
-    "install_updates_on_exit": 0,
+    "auto_download_updates": 1,
+    "install_updates_on_exit": 1,
     "message_retry_seconds": 60,
     "message_retry_attempts": 2,
     "language": "pt-BR",
@@ -124,8 +124,8 @@ def init_db() -> None:
                 connect_on_start INTEGER NOT NULL DEFAULT 1,
                 open_browser_on_start INTEGER NOT NULL DEFAULT 0,
                 check_updates_on_start INTEGER NOT NULL DEFAULT 1,
-                auto_download_updates INTEGER NOT NULL DEFAULT 0,
-                install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
+                auto_download_updates INTEGER NOT NULL DEFAULT 1,
+                install_updates_on_exit INTEGER NOT NULL DEFAULT 1,
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
                 message_retry_attempts INTEGER NOT NULL DEFAULT 2,
                 language TEXT NOT NULL DEFAULT 'pt-BR',
@@ -306,9 +306,9 @@ def init_db() -> None:
         if "check_updates_on_start" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN check_updates_on_start INTEGER NOT NULL DEFAULT 1")
         if "auto_download_updates" not in config_columns:
-            conn.execute("ALTER TABLE config ADD COLUMN auto_download_updates INTEGER NOT NULL DEFAULT 0")
+            conn.execute("ALTER TABLE config ADD COLUMN auto_download_updates INTEGER NOT NULL DEFAULT 1")
         if "install_updates_on_exit" not in config_columns:
-            conn.execute("ALTER TABLE config ADD COLUMN install_updates_on_exit INTEGER NOT NULL DEFAULT 0")
+            conn.execute("ALTER TABLE config ADD COLUMN install_updates_on_exit INTEGER NOT NULL DEFAULT 1")
         if "message_retry_seconds" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN message_retry_seconds INTEGER NOT NULL DEFAULT 60")
         if "message_retry_attempts" not in config_columns:
