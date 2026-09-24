@@ -2092,6 +2092,13 @@
 
   $('#useCurrentLocationButton')?.addEventListener('click', () => {
     const status = $('#currentLocationStatus');
+    syncDecimalFromDmsIfNeeded();
+    const currentLat = String($('#latitudeDecimal')?.value || '').trim();
+    const currentLon = String($('#longitudeDecimal')?.value || '').trim();
+    if ((currentLat || currentLon) && !window.confirm(ui(
+      'Já existem coordenadas preenchidas. Deseja substituí-las pela sua localização atual?',
+      'Coordinates are already filled in. Replace them with your current location?'
+    ))) return;
     if (!navigator.geolocation) {
       if (status) status.textContent = ui('Localização não disponível neste ambiente.', 'Location is not available in this environment.');
       toast(ui('Este ambiente não oferece geolocalização.', 'This environment does not provide geolocation.'), 'error');
