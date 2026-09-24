@@ -10,6 +10,7 @@ import webbrowser
 from waitress import serve
 
 from pt2vhf_aprs import database as db
+from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.web import create_app
 
@@ -41,6 +42,10 @@ def _open_browser() -> None:
 def _shutdown() -> None:
     try:
         service.disconnect()
+    except Exception:
+        pass
+    try:
+        updater.launch_pending_update()
     except Exception:
         pass
 
