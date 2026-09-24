@@ -44,3 +44,17 @@ A partir desta versão, novas demandas serão adicionadas novamente neste arquiv
 - Quando uma nova versão compatível for detectada, o cliente deverá verificar, baixar e preparar a instalação automaticamente conforme essas preferências.
 - Manter a validação de origem e SHA-256 antes de considerar o pacote pronto para instalação.
 - Para plataformas que exigem intervenção do sistema ou privilégios adicionais, manter o comportamento seguro já definido para cada tipo de pacote.
+
+## Divisão de mensagens longas sem numeração visível
+
+**Objetivo:** dividir mensagens APRS longas em partes de forma transparente, sem inserir marcadores como `1/2`, `2/2` no texto enviado.
+
+- Ao dividir uma mensagem longa em múltiplos pacotes APRS, **não adicionar prefixos ou sufixos visíveis de numeração**, como `1/2`, `2/2`, `[1/2]` etc.
+- A mensagem deve ser fragmentada respeitando o limite de caracteres do protocolo, mas preservando ao máximo a leitura natural.
+- **Nunca cortar uma palavra ao meio** quando houver espaço para mover essa palavra inteira para a parte seguinte.
+- Se o limite cair no meio de uma palavra, encerrar a parte anterior no último separador apropriado antes do limite e iniciar a próxima parte com a palavra completa.
+- Considerar como pontos naturais de quebra, nesta ordem de preferência: espaço, quebra de linha e outros separadores seguros, sem remover conteúdo da mensagem.
+- Remover apenas o separador excedente da borda quando necessário para não criar espaço duplicado entre partes; não alterar o conteúdo textual.
+- Se existir uma palavra individual maior do que o tamanho máximo permitido por uma única mensagem APRS, fazer a divisão técnica dessa palavra apenas como último recurso.
+- O controle interno de partes, ACK/REJ, retries e status agregado deve continuar funcionando por metadados internos, **sem depender de numeração escrita no corpo da mensagem**.
+- O destinatário deve receber as partes em sequência com o texto original preservado, sem os marcadores artificiais de fragmentação.
