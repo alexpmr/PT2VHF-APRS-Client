@@ -131,3 +131,18 @@ No APRS, o **ACK confirma o recebimento da mensagem pelo cliente remoto**, mas n
   - **Estações** → limpar estações e tracklogs.
 - Informações secundárias, como filtro ativo e última atualização, deverão ficar fora do mapa, em área de diagnóstico/status quando necessário.
 
+
+
+## Nome dos arquivos incluindo a versão
+
+**Objetivo:** facilitar a identificação de cada build baixado e evitar arquivos com nomes idênticos entre versões.
+
+- Incluir o número da versão diretamente no nome dos executáveis publicados.
+- O **Portable EXE** deve deixar de usar sempre o mesmo nome.
+- Adotar nomes no formato:
+  - `PT2VHF_APRS_Client_Portable_x64_v0.3.1.exe`
+  - `PT2VHF_APRS_Client_Setup_x64_v0.3.1.exe`
+- Aplicar o mesmo padrão automaticamente a cada nova release.
+- Atualizar o workflow do GitHub Actions, o build local e as notas da Release para usar os nomes versionados.
+- Garantir que os links de download da Release apontem para os arquivos com o número correto da versão.
+
