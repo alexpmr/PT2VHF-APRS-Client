@@ -26,7 +26,8 @@
     logs: [],
     sort: {
       messages: { key: 'timestamp', dir: 'asc', type: 'text' },
-      stations: { key: 'last_heard', dir: 'desc', type: 'text' }
+      stations: { key: 'last_heard', dir: 'desc', type: 'text' },
+      logs: { key: 'timestamp', dir: 'desc', type: 'text' }
     },
     connected: false,
     symbolTable: '/',
@@ -46,7 +47,17 @@
     currentConfig: null,
     autoLocationInProgress: false,
     lastConnectionErrorShown: '',
+    conversationSort: localStorage.getItem('pt2vhf_conversation_sort') === 'desc' ? 'desc' : 'asc',
+    configDirty: false,
+    configLoading: false,
+    configBaseline: '',
+    pendingTab: '',
+    updateInfo: null,
+    updateDownloading: false,
   };
+
+  const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
+  const BRAZIL_FILTER = 'p/' + BRAZIL_PREFIXES.join('/');
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -89,51 +100,137 @@
     const el = $('#versionStatus');
     const textEl = $('#versionStatusText');
     if (!el || !textEl) return;
+    if (!force && state.configLoaded && !state.currentConfig?.check_updates_on_start) {
+      el.classList.remove('checking', 'latest', 'update', 'error', 'ahead');
+      textEl.textContent = ui('Verificação manual', 'Manual check');
+      el.title = ui('Clique para verificar atualizações.', 'Click to check for updates.');
+      return;
+    }
 
     el.classList.remove('latest', 'update', 'error', 'ahead');
     el.classList.add('checking');
-    textEl.textContent = 'Verificando versão…';
-    el.removeAttribute('href');
+    textEl.textContent = ui('Verificando versão…', 'Checking version…');
 
     try {
       const data = await api(`/api/update-status${force ? '?force=1' : ''}`);
+      state.updateInfo = data;
       el.classList.remove('checking');
 
-      const current = data.current_version ? `v${data.current_version}` : 'versão atual';
+      const current = data.current_version ? `v${data.current_version}` : ui('versão atual', 'current version');
       const latest = data.latest_version ? `v${data.latest_version}` : '';
 
       if (data.status === 'update_available') {
         el.classList.add('update');
-        textEl.textContent = `Nova versão ${latest}`;
-        el.title = `Instalada ${current}. Clique para abrir a nova release.`;
-        if (data.release_url) el.href = data.release_url;
+        textEl.textContent = ui(`Nova versão ${latest}`, `New version ${latest}`);
+        el.title = ui(`Instalada ${current}. Clique para atualizar.`, `Installed ${current}. Click to update.`);
+        if (state.currentConfig?.auto_download_updates && !data.downloaded && !state.updateDownloading) {
+          downloadAvailableUpdate(true);
+        }
       } else if (data.status === 'latest') {
         el.classList.add('latest');
-        textEl.textContent = 'Última versão';
-        el.title = `${current} é a versão mais recente publicada.`;
+        textEl.textContent = ui('Última versão', 'Latest version');
+        el.title = ui(`${current} é a versão mais recente publicada.`, `${current} is the latest published version.`);
       } else if (data.status === 'ahead') {
         el.classList.add('ahead');
         textEl.textContent = `Build ${current}`;
-        el.title = latest ? `Este build é mais novo que a release publicada ${latest}.` : 'Build de desenvolvimento.';
+        el.title = latest ? `Build > ${latest}` : ui('Build de desenvolvimento.', 'Development build.');
       } else {
         el.classList.add('error');
-        textEl.textContent = 'Versão não verificada';
-        el.title = 'Não foi possível consultar a release mais recente no GitHub.';
+        textEl.textContent = ui('Versão não verificada', 'Version not verified');
+        el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
       }
+      updateUpdateSettingsUi();
     } catch (_) {
       el.classList.remove('checking');
       el.classList.add('error');
-      textEl.textContent = 'Versão não verificada';
-      el.title = 'Não foi possível consultar a release mais recente no GitHub.';
+      textEl.textContent = ui('Versão não verificada', 'Version not verified');
+      el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
     }
   }
 
-  $('#versionStatus')?.addEventListener('click', e => {
-    const el = e.currentTarget;
-    if (!el.getAttribute('href')) {
-      e.preventDefault();
-      refreshVersionStatus(true);
+  function showUpdateModal() {
+    const data = state.updateInfo;
+    if (!data || data.status !== 'update_available') return;
+    $('#updateModalTitle').textContent = ui(`Nova versão v${data.latest_version} disponível`, `New version v${data.latest_version} available`);
+    $('#updateModalSummary').textContent = data.asset_name
+      ? ui(`Pacote compatível: ${data.asset_name}`, `Compatible package: ${data.asset_name}`)
+      : ui('Não há pacote automático compatível para esta plataforma.', 'No automatic package is available for this platform.');
+    $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
+    $('#updateDownloadNow').classList.toggle('hidden', !data.asset_url || !!data.downloaded);
+    $('#updateDownloadProgress').textContent = data.downloaded
+      ? ui('Atualização já baixada. Ela será aplicada ao fechar se essa opção estiver habilitada.', 'Update already downloaded. It will be applied on exit if enabled.')
+      : '';
+    $('#updateModal').classList.remove('hidden');
+  }
+
+  async function downloadAvailableUpdate(silent = false) {
+    if (state.updateDownloading) return;
+    if (!state.updateInfo?.asset_url) {
+      if (!silent) toast(ui('Não há pacote automático compatível.', 'No compatible automatic package.'), 'error');
+      return;
     }
+    state.updateDownloading = true;
+    const progress = $('#updateDownloadProgress');
+    if (progress) progress.textContent = ui('Baixando e verificando SHA-256…', 'Downloading and verifying SHA-256…');
+    try {
+      const result = await api('/api/update/download', { method: 'POST' });
+      if (progress) progress.textContent = ui(`Atualização baixada: ${result.update.asset_name}`, `Update downloaded: ${result.update.asset_name}`);
+      if (!silent) toast(ui('Atualização baixada e verificada.', 'Update downloaded and verified.'), 'ok');
+      await refreshVersionStatus(true);
+      await refreshPendingUpdateStatus();
+    } catch (err) {
+      if (progress) progress.textContent = err.message;
+      if (!silent) toast(err.message, 'error');
+    } finally {
+      state.updateDownloading = false;
+    }
+  }
+
+  async function refreshPendingUpdateStatus() {
+    try {
+      const data = await api('/api/update/pending');
+      const status = $('#updateSettingsStatus');
+      if (status) {
+        status.textContent = data.pending
+          ? ui(`Baixada v${data.pending.version}: ${data.pending.asset_name}`, `Downloaded v${data.pending.version}: ${data.pending.asset_name}`)
+          : ui('Nenhuma atualização pendente.', 'No pending update.');
+      }
+      $('#rollbackUpdateButton')?.classList.toggle('hidden', !data.rollback);
+      $('#downloadUpdateButton')?.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && !data.pending));
+    } catch (_) {}
+  }
+
+  function updateUpdateSettingsUi() {
+    const btn = $('#downloadUpdateButton');
+    if (btn) btn.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && state.updateInfo?.asset_url && !state.updateInfo?.downloaded));
+  }
+
+  $('#versionStatus')?.addEventListener('click', e => {
+    e.preventDefault();
+    if (state.updateInfo?.status === 'update_available') showUpdateModal();
+    else refreshVersionStatus(true);
+  });
+  $('#updateModalClose')?.addEventListener('click', () => $('#updateModal')?.classList.add('hidden'));
+  $('#updateDownloadNow')?.addEventListener('click', () => downloadAvailableUpdate(false));
+  $('#downloadUpdateButton')?.addEventListener('click', () => downloadAvailableUpdate(false));
+  $('#checkUpdatesNowButton')?.addEventListener('click', async () => {
+    await refreshVersionStatus(true);
+    if (state.updateInfo?.status === 'update_available') showUpdateModal();
+    else toast(ui('Verificação concluída.', 'Update check completed.'), 'ok');
+  });
+  $('#updateOpenRelease')?.addEventListener('click', () => {
+    const url = state.updateInfo?.release_url;
+    if (!url) return;
+    const nativeApi = window.pywebview?.api;
+    if (nativeApi?.open_external) nativeApi.open_external(url);
+    else window.open(url, '_blank', 'noopener');
+  });
+  $('#rollbackUpdateButton')?.addEventListener('click', async () => {
+    if (!window.confirm(ui('Preparar rollback para a versão anterior ao fechar o aplicativo?', 'Prepare rollback to the previous version when the app closes?'))) return;
+    try {
+      const result = await api('/api/update/rollback', { method:'POST' });
+      toast(result.message || ui('Rollback preparado.', 'Rollback prepared.'), 'ok');
+    } catch (err) { toast(err.message, 'error'); }
   });
 
   let toastTimer = null;
@@ -219,22 +316,29 @@
     });
   }
 
+  function activateTab(tab) {
+    state.activeTab = tab;
+    $('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    $('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+    if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
+    if (tab === 'messages') {
+      markMessagesSeen();
+      loadMessages({ scrollToNewest: true });
+    }
+    if (tab === 'stations') loadStations({ scrollToNewest: true });
+    if (tab === 'log') loadLog(true);
+    if (tab === 'config') loadConfig();
+  }
+
   function tabSetup() {
-    $$('.tab').forEach(btn => btn.addEventListener('click', () => {
+    $('.tab').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
-      state.activeTab = tab;
-      $$('.tab').forEach(b => b.classList.toggle('active', b === btn));
-      $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
-      if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
-      if (tab === 'messages') {
-        markMessagesSeen();
-        loadMessages({ scrollToNewest: true });
+      if (state.activeTab === 'config' && tab !== 'config' && state.configDirty) {
+        state.pendingTab = tab;
+        $('#unsavedConfigModal')?.classList.remove('hidden');
+        return;
       }
-      if (tab === 'stations') loadStations({ scrollToNewest: true });
-      if (tab === 'log') {
-        loadLog(true);
-      }
-      if (tab === 'config') loadConfig();
+      activateTab(tab);
     }));
   }
 
@@ -843,6 +947,7 @@
       if (message.direction === 'in' && Number(message.id || 0) > seen) item.unread += 1;
     }
 
+    const factor = state.conversationSort === 'asc' ? 1 : -1;
     return [...conversations.values()]
       .map(item => ({
         ...item,
@@ -851,7 +956,7 @@
           return time || (Number(a.id || 0) - Number(b.id || 0));
         })
       }))
-      .sort((a, b) => Number(b.last?.id || 0) - Number(a.last?.id || 0));
+      .sort((a, b) => a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor);
   }
 
   function renderGroupedMessages() {
@@ -976,10 +1081,24 @@
     const item = event.target.closest('[data-conversation-contact]');
     if (!item) return;
     state.selectedConversation = normalizedCall(item.dataset.conversationContact);
+    if (state.selectedConversation) {
+      $('#messageType').value = 'message';
+      updateMessageComposerMode();
+      $('#messageTo').value = state.selectedConversation;
+    }
     renderGroupedMessages();
     const thread = $('#conversationMessages');
     if (thread) thread.scrollTop = thread.scrollHeight;
   });
+
+  $('#conversationSortButton')?.addEventListener('click', () => {
+    state.conversationSort = state.conversationSort === 'asc' ? 'desc' : 'asc';
+    localStorage.setItem('pt2vhf_conversation_sort', state.conversationSort);
+    const indicator = $('#conversationSortIndicator');
+    if (indicator) indicator.textContent = state.conversationSort === 'asc' ? '▲' : '▼';
+    renderGroupedMessages();
+  });
+  if ($('#conversationSortIndicator')) $('#conversationSortIndicator').textContent = state.conversationSort === 'asc' ? '▲' : '▼';
 
   $('#conversationRecipientButton')?.addEventListener('click', event => {
     selectMessageRecipient(event.currentTarget.dataset.callsign || '');
@@ -1279,7 +1398,8 @@
       return;
     }
 
-    tbody.innerHTML = state.logs.map(row => {
+    const rows = sortedData(state.logs, state.sort.logs);
+    tbody.innerHTML = rows.map(row => {
       const direction = row.direction === 'TX' ? 'TX' : 'RX';
       return `<tr class="log-${direction.toLowerCase()}">
         <td>${escapeHtml(fmtDate(row.timestamp))}</td>
@@ -1287,6 +1407,8 @@
         <td class="log-raw">${escapeHtml(row.raw || '')}</td>
       </tr>`;
     }).join('');
+    const indicator = $('#logTimeHeader .sort-indicator');
+    if (indicator) indicator.textContent = state.sort.logs.dir === 'asc' ? '▲' : '▼';
 
     if (auto && (forceScroll || wasNearTop)) {
       viewport.scrollTop = 0;
@@ -1294,6 +1416,11 @@
       viewport.scrollTop = previousScrollTop;
     }
   }
+
+  $('#logTimeHeader')?.addEventListener('click', () => {
+    state.sort.logs.dir = state.sort.logs.dir === 'asc' ? 'desc' : 'asc';
+    renderLog(false, $('#logViewport')?.scrollTop || 0, false);
+  });
 
   const loadLogDebounced = debounce(() => loadLog(true), 220);
   $('#logFilter')?.addEventListener('input', loadLogDebounced);
@@ -1489,7 +1616,24 @@
     refreshRequiredFieldHighlights();
   });
 
+  function configFormSnapshot() {
+    const form = $('#configForm');
+    if (!form) return '';
+    const data = {};
+    for (const el of [...form.elements]) {
+      if (!el.name || el.type === 'file' || el.type === 'submit' || el.type === 'button') continue;
+      data[el.name] = el.type === 'checkbox' ? !!el.checked : String(el.value ?? '');
+    }
+    return JSON.stringify(Object.keys(data).sort().reduce((acc, key) => { acc[key] = data[key]; return acc; }, {}));
+  }
+
+  function markConfigDirty() {
+    if (!state.configLoaded || state.configLoading) return;
+    state.configDirty = configFormSnapshot() !== state.configBaseline;
+  }
+
   async function loadConfig() {
+    state.configLoading = true;
     try {
       const cfg = await api('/api/config');
       state.currentConfig = cfg;
@@ -1518,19 +1662,25 @@
       applyCoordinateMode(localStorage.getItem('pt2vhf_coordinate_mode') || 'decimal');
       applyLanguage(state.language);
       state.configLoaded = true;
+      state.configBaseline = configFormSnapshot();
+      state.configDirty = false;
+      await refreshPendingUpdateStatus();
     } catch (err) { toast(err.message, 'error'); }
+    finally { state.configLoading = false; }
   }
 
-  $('#configForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const form = e.currentTarget;
+  async function saveConfigForm() {
+    const form = $('#configForm');
     syncDecimalFromDmsIfNeeded();
     const data = Object.fromEntries(new FormData(form).entries());
-    data.connect_on_start = form.elements.connect_on_start.checked;
-    data.open_browser_on_start = form.elements.open_browser_on_start.checked;
-    data.sound_on_personal_message = form.elements.sound_on_personal_message.checked;
+    data.connect_on_start = !!form.elements.connect_on_start?.checked;
+    data.open_browser_on_start = !!form.elements.open_browser_on_start?.checked;
+    data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
+    data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
+    data.auto_download_updates = !!form.elements.auto_download_updates?.checked;
+    data.install_updates_on_exit = !!form.elements.install_updates_on_exit?.checked;
 
-    if (state.configSection === 'aprs' && !String(data.aprs_filter || '').trim()) {
+    if (!String(data.aprs_filter || '').trim()) {
       const proceed = window.confirm(ui(
         'O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?',
         'The APRS-IS filter is empty. Depending on the server and port in use, the client may receive a much larger traffic stream, including all traffic made available on that connection.\n\nDo you want to continue without a filter?'
@@ -1538,7 +1688,7 @@
       if (!proceed) {
         showConfigSection('aprs');
         $('#aprsFilterInput')?.focus();
-        return;
+        return false;
       }
     }
 
@@ -1556,7 +1706,39 @@
       applyAppearancePreferences(result.config || data);
       await loadConfig();
       await loadStations();
-    } catch (err) { toast(err.message, 'error'); }
+      state.configDirty = false;
+      return true;
+    } catch (err) {
+      toast(err.message, 'error');
+      return false;
+    }
+  }
+
+  $('#configForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    await saveConfigForm();
+  });
+  $('#configForm').addEventListener('input', markConfigDirty);
+  $('#configForm').addEventListener('change', markConfigDirty);
+
+  $('#unsavedSaveButton')?.addEventListener('click', async () => {
+    const target = state.pendingTab;
+    if (await saveConfigForm()) {
+      $('#unsavedConfigModal')?.classList.add('hidden');
+      state.pendingTab = '';
+      if (target) activateTab(target);
+    }
+  });
+  $('#unsavedDiscardButton')?.addEventListener('click', async () => {
+    const target = state.pendingTab;
+    await loadConfig();
+    $('#unsavedConfigModal')?.classList.add('hidden');
+    state.pendingTab = '';
+    if (target) activateTab(target);
+  });
+  $('#unsavedCancelButton')?.addEventListener('click', () => {
+    $('#unsavedConfigModal')?.classList.add('hidden');
+    state.pendingTab = '';
   });
 
   $('#configImportFile').addEventListener('change', async e => {
@@ -2098,20 +2280,11 @@
   });
   languageObserver.observe(document.body, { childList: true, subtree: true });
 
-  function showConfigSection(section) {
-    state.configSection = section === 'app' ? 'app' : 'aprs';
-    localStorage.setItem('pt2vhf_config_section', state.configSection);
-    $$('.config-section-tab').forEach(btn => {
-      const active = btn.dataset.configSection === state.configSection;
-      btn.classList.toggle('active', active);
-      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    $$('.config-section-aprs').forEach(el => el.classList.toggle('hidden', state.configSection !== 'aprs'));
-    $$('.config-section-app').forEach(el => el.classList.toggle('hidden', state.configSection !== 'app'));
+  function showConfigSection(_section) {
+    state.configSection = 'all';
+    $('.config-section').forEach(el => el.classList.remove('hidden'));
   }
-
-  $$('.config-section-tab').forEach(btn => btn.addEventListener('click', () => showConfigSection(btn.dataset.configSection)));
-  showConfigSection(localStorage.getItem('pt2vhf_config_section') || 'aprs');
+  showConfigSection('all');
 
   function requiredStationDefinitions() {
     syncDecimalFromDmsIfNeeded();
@@ -2493,23 +2666,89 @@
       }
     }
 
+    const brazilOnly = !!$('#filterBrazilOnly')?.checked;
     const prefixes = splitFilterValues($('#filterPrefixes')?.value);
-    if (prefixes.length) parts.push('p/' + prefixes.join('/'));
+    if (brazilOnly) parts.push(BRAZIL_FILTER);
+    else if (prefixes.length) parts.push('p/' + prefixes.join('/'));
+
     const buddies = splitFilterValues($('#filterBuddies')?.value);
     if (buddies.length) parts.push('b/' + buddies.join('/'));
+
+    const north = Number($('#filterAreaNorth')?.value);
+    const west = Number($('#filterAreaWest')?.value);
+    const south = Number($('#filterAreaSouth')?.value);
+    const east = Number($('#filterAreaEast')?.value);
+    const areaValues = [north, west, south, east];
+    const anyArea = areaValues.some(Number.isFinite);
+    if (anyArea) {
+      if (!areaValues.every(Number.isFinite)) {
+        toast(ui('Preencha os quatro limites da área geográfica.', 'Fill all four geographic area limits.'), 'error');
+        return;
+      }
+      parts.push(`a/${north}/${west}/${south}/${east}`);
+    }
+
     const types = $('.filter-type:checked').map(input => input.value).join('');
     if (types) parts.push('t/' + types);
     $('#aprsFilterInput').value = parts.join(' ');
+    markConfigDirty();
     toast(ui('Filtro APRS-IS gerado. Revise a string antes de salvar.', 'APRS-IS filter generated. Review the string before saving.'), 'ok');
   });
 
   $('#restoreDefaultFilterButton')?.addEventListener('click', () => {
-    $('#aprsFilterInput').value = 'r/2000';
-    $('#filterRadiusKm').value = '2000';
+    $('#aprsFilterInput').value = BRAZIL_FILTER;
+    if ($('#filterBrazilOnly')) $('#filterBrazilOnly').checked = true;
+    $('#filterRadiusKm').value = '';
     $('#filterPrefixes').value = '';
     $('#filterBuddies').value = '';
-    $$('.filter-type').forEach(input => { input.checked = false; });
-    toast(ui('Filtro padrão r/2000 restaurado.', 'Default r/2000 filter restored.'), 'ok');
+    for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
+    $('.filter-type').forEach(input => { input.checked = false; });
+    markConfigDirty();
+    toast(ui('Filtro padrão para estações brasileiras restaurado.', 'Default Brazil-only filter restored.'), 'ok');
+  });
+
+  $('#themeQuickToggle')?.addEventListener('click', async () => {
+    const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    const formTheme = $('#configForm')?.elements.namedItem('app_theme');
+    if (formTheme) formTheme.value = next;
+    applyAppearancePreferences({ ...(state.currentConfig || {}), app_theme: next });
+    if (state.activeTab === 'config') {
+      markConfigDirty();
+      return;
+    }
+    try {
+      const payload = { ...(state.currentConfig || {}), app_theme: next };
+      const saved = await api('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+      state.currentConfig = saved.config || payload;
+    } catch (err) { toast(err.message, 'error'); }
+  });
+
+  $('#refreshTopologyStatsButton')?.addEventListener('click', async () => {
+    const box = $('#topologyStatsContent');
+    if (!box) return;
+    box.textContent = ui('Carregando análise…', 'Loading analysis…');
+    try {
+      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(state.topologyHours || 24)}`);
+      const list = (items, formatter) => items.length ? '<ol>' + items.map(formatter).join('') + '</ol>' : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
+      box.innerHTML =
+        '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
+        list(data.digipeaters || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+        '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
+        list(data.igates || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+        '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
+        list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>';
+    } catch (err) { box.textContent = err.message; }
+  });
+
+  $('#resetConfigButton')?.addEventListener('click', async () => {
+    if (!window.confirm(ui('Restaurar TODA a configuração para os padrões atuais? Mensagens, estações, logs e tracklogs serão preservados.', 'Restore ALL settings to current defaults? Messages, stations, logs and tracklogs will be preserved.'))) return;
+    try {
+      await api('/api/config/reset', { method:'POST' });
+      localStorage.removeItem('pt2vhf_coordinate_mode');
+      await loadConfig();
+      toast(ui('Configuração padrão restaurada.', 'Default configuration restored.'), 'ok');
+    } catch (err) { toast(err.message, 'error'); }
   });
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
@@ -2522,7 +2761,10 @@
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
     updateMyMessagesButton();
-    await Promise.allSettled([loadMessages(), checkIncomingPersonalMessages(), refreshVersionStatus()]);
+    await Promise.allSettled([loadMessages(), checkIncomingPersonalMessages()]);
+    if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
+    else updateUpdateSettingsUi();
+    await refreshPendingUpdateStatus();
 
     // Não bloqueia a inicialização da interface aguardando permissão/localização.
     setTimeout(() => { initializeAutomaticLocation().catch(err => console.warn(err)); }, 1200);
@@ -2531,7 +2773,7 @@
     setInterval(loadMapData, 5000);
     setInterval(loadMessages, 3000);
     setInterval(checkIncomingPersonalMessages, 3000);
-    setInterval(refreshVersionStatus, 30 * 60 * 1000);
+    setInterval(() => { if (state.currentConfig?.check_updates_on_start) refreshVersionStatus(false); }, 30 * 60 * 1000);
     setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
     setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
   }
