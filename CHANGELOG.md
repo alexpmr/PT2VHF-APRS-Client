@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.0 — 2026-09-24
+
+- Nova política de versionamento: a linha oficial passa de `0.3.x` para **v1.0**, seguindo depois v1.1, v1.2, v1.3 etc.
+- Aba **Mensagens** passa ao fluxo de chat por padrão: mensagens antigas em cima e as mais novas na parte inferior.
+- A atualização automática acompanha o fim da conversa somente quando o usuário já está próximo das mensagens mais recentes.
+- Nova opção **Agrupar por remetente**, persistida localmente, com lista de conversas, última mensagem, horário e contagem de mensagens não lidas.
+- Boletins e telemetria não são misturados nas conversas individuais agrupadas; permanecem acessíveis na lista cronológica conforme os filtros.
+- Indicativos nas colunas **De** e **Para** passam a ser clicáveis e preenchem o destinatário para resposta.
+- Ao clicar no próprio indicativo, o cliente tenta selecionar automaticamente o outro participante da mensagem.
+- Quando uma mensagem chega com a aba **Mensagens** aberta, o alerta passa a ser compacto e não bloqueante.
+- O alerta compacto pode ser fechado manualmente e fecha automaticamente após o período configurado, de 1 a 60 segundos.
+- Em **Configuração → Mapa**, passam a ser configuráveis a cor dos enlaces RF, a cor dos enlaces via IGate e a espessura da topologia observada.
+- Adicionado botão **Restaurar topologia padrão**.
+- Nova opção **Abrir também no navegador ao iniciar**, desligada por padrão; a janela integrada continua sendo o comportamento principal no Windows.
+- Primeira distribuição oficial **Linux x86_64/amd64**, com pacote portátil `.tar.gz` e pacote `.deb`.
+- No Linux, o banco passa a seguir XDG e fica por padrão em `~/.local/share/PT2VHF-APRS-Client/data/pt2vhf_aprs.db`.
+- O Linux tenta uma janela WebView compatível e utiliza o navegador local como fallback quando o backend gráfico não está disponível.
+- Workflow unificado gera Windows e Linux, com testes, SBOM, inventário de licenças e publicação na mesma Release.
+- Banco SQLite existente é migrado automaticamente com as novas preferências, preservando os dados anteriores.
+
 ## v0.3.2 — 2026-09-24
 
 - Ao clicar no **X** da janela principal, o PT2VHF APRS Client passa a solicitar confirmação antes de sair.
