@@ -2420,7 +2420,19 @@
     'Conectar ao iniciar vem habilitado em novas instalações e pode ser desligado nesta seção.':'Connect at startup is enabled on new installations and can be disabled in this section.',
     'Quando houver atualização, clique no aviso para abrir o painel integrado, consultar as novidades e baixar o pacote compatível.':'When an update is available, click the notice to open the integrated panel, review changes and download the compatible package.',
     'É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.':'Updates can be checked and downloaded automatically and, on supported platforms, installed on exit. Windows Portable keeps a rollback backup.',
-    'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.'
+    'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.',
+    'Análise':'Analysis',
+    'Análise da rede':'Network analysis',
+    'Indicadores da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators with historical comparison and map replay.',
+    'Período':'Period',
+    '1 hora':'1 hour',
+    '6 horas':'6 hours',
+    '24 horas':'24 hours',
+    '7 dias':'7 days',
+    'Enlaces ativos':'Active links',
+    'Pacotes observados':'Observed packets',
+    'Eventos do período':'Period events',
+    'Mostrar log':'Show log'
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
   function translateConnectionState(value) {
