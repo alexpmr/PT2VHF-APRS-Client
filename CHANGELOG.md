@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.3.1 — 2026-09-24
+
+- Removida completamente a barra flutuante superior do **Mapa**.
+- O cabeçalho principal deixa de exibir “Cliente APRS-IS com banco local SQLite”.
+- O cabeçalho passa a mostrar dinamicamente **Estações recebidas** e **Pacotes APRS-IS**.
+- As abas **Mensagens** e **Estações** passam a exibir seus respectivos totais.
+- **Limpar mensagens** permanece concentrado na aba Mensagens.
+- **Limpar estações** e **Limpar tracklogs** ficam concentrados na aba Estações.
+- Adicionada **Topologia observada APRS** no mapa, ativável por controle próprio.
+- A topologia registra relações observadas entre estação, digipeater e IGate quando há evidência no path APRS e posição conhecida para os dois nós.
+- São reconhecidos digipeaters efetivamente usados (marcados com `*`) e entradas de IGate observadas via `qAR`/`qAO`.
+- Filtros de período da topologia: **1 h, 6 h, 24 h e 7 dias**.
+- Clicar em um enlace mostra origem, destino, tipo, quantidade de pacotes, primeira e última observação.
+- O campo de mensagem individual deixa de ter o limite curto de 63 caracteres.
+- **Enter envia** a mensagem; **Shift+Enter** insere nova linha.
+- Mensagens longas são divididas automaticamente em partes APRS numeradas, respeitando o limite de cada pacote.
+- Cada parte enviada recebe ID APRS próprio e acompanha ACK/REJ individualmente.
+- Quando uma parte recebe **ACK**, sua linha inteira fica verde na tela de Mensagens e o status aparece como **Lido**.
+- O contador do campo informa o tamanho do texto e, quando necessário, a quantidade estimada de partes APRS.
+- Instalador e Portable EXE passam a incluir a versão no próprio nome, por exemplo:
+  - `PT2VHF_APRS_Client_Setup_x64_v0.3.1.exe`
+  - `PT2VHF_APRS_Client_Portable_x64_v0.3.1.exe`
+- Banco SQLite e dados existentes permanecem compatíveis com a v0.3.0.
+- Esta versão continua sem assinatura Authenticode enquanto o projeto aguarda a ativação do SignPath Foundation.
+
 ## v0.3.0 — 2026-09-24
 
 - A interface principal passa a abrir dentro de uma **janela própria do PT2VHF APRS Client**, sem depender de uma aba do navegador durante o uso normal.
