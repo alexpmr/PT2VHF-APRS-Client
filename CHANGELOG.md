@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.8 — 2026-09-23
+
+- Release de manutenção baseada na v0.2.7, sem alterações no formato do banco local.
+- Mantidos os ajustes da tela de Mensagens, incluindo **Lido** em verde, lista com rolagem própria e área de envio adaptada à altura da janela.
+- Distribuição mantida apenas em **Instalador EXE** e **Portable EXE**.
+- As descrições dos downloads permanecem em português na página da Release.
+- Esta versão continua **sem assinatura Authenticode** enquanto o projeto aguarda a ativação do SignPath Foundation; portanto, o Smart App Control do Windows ainda pode bloquear os executáveis.
+
 ## v0.2.7 — 2026-09-23
 
 - Política de privacidade atualizada para documentar a consulta automática ao GitHub usada pelo verificador de novas versões; nenhum indicativo, posição, mensagem ou passcode é enviado nessa consulta.
