@@ -1737,6 +1737,16 @@
     data.auto_download_updates = !!form.elements.auto_download_updates?.checked;
     data.install_updates_on_exit = !!form.elements.install_updates_on_exit?.checked;
 
+    const filterValidation = validateAprsFilterSyntax(data.aprs_filter || '');
+    if (!filterValidation.valid) {
+      toast(ui(
+        `Filtro APRS-IS inválido: ${filterValidation.invalid.join(', ')}`,
+        `Invalid APRS-IS filter: ${filterValidation.invalid.join(', ')}`
+      ), 'error');
+      $('#aprsFilterInput')?.focus();
+      return false;
+    }
+
     if (!String(data.aprs_filter || '').trim()) {
       const proceed = window.confirm(ui(
         'O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?',
@@ -1796,6 +1806,21 @@
   $('#unsavedCancelButton')?.addEventListener('click', () => {
     $('#unsavedConfigModal')?.classList.add('hidden');
     state.pendingTab = '';
+  });
+
+  $('#sendBeaconButton')?.addEventListener('click', async () => {
+    const altitude = Number($('#altitudeInput')?.value);
+    const source = String($('#altitudeSourceInput')?.value || '');
+    if (altitude === 0 && source === 'fallback_zero') {
+      toast(ui(
+        'A altitude ainda está em 0 m porque não foi obtida automaticamente. O beacon será enviado, mas recomendamos informar a altitude real.',
+        'Altitude is still 0 m because it was not obtained automatically. The beacon will be sent, but entering the real altitude is recommended.'
+      ), 'error');
+    }
+    try {
+      await api('/api/beacon', { method:'POST' });
+      toast(ui('Beacon enviado ao APRS-IS.', 'Beacon sent to APRS-IS.'), 'ok');
+    } catch (err) { toast(err.message, 'error'); }
   });
 
   $('#configImportFile').addEventListener('change', async e => {
