@@ -1458,7 +1458,7 @@
     data.open_browser_on_start = form.elements.open_browser_on_start.checked;
     data.sound_on_personal_message = form.elements.sound_on_personal_message.checked;
 
-    if (!String(data.aprs_filter || '').trim()) {
+    if (state.configSection === 'aprs' && !String(data.aprs_filter || '').trim()) {
       const proceed = window.confirm(ui(
         'O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?',
         'The APRS-IS filter is empty. Depending on the server and port in use, the client may receive a much larger traffic stream, including all traffic made available on that connection.\n\nDo you want to continue without a filter?'
