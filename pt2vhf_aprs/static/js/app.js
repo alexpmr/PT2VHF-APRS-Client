@@ -342,6 +342,7 @@
     }
     if (tab === 'stations') loadStations({ scrollToNewest: true });
     if (tab === 'log') loadLog(true);
+    if (tab === 'analysis') refreshTopologyAnalysis();
     if (tab === 'config') loadConfig();
   }
 
@@ -524,6 +525,7 @@
           select.addEventListener('change', async () => {
             state.topologyHours = Number(select.value) || 24;
             localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
+            if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.topologyHours);
             if (state.topologyEnabled) await loadTopology();
           });
         }, 0);
@@ -687,6 +689,7 @@
         <strong>Via</strong><span>${escapeHtml(path)}</span>
       </div>
       <div class="station-popup-actions">
+        <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Mostrar log</button>
         <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}">Enviar mensagem</button>
       </div>
     </div>`;
@@ -1244,26 +1247,40 @@
     openMessageComposer(button.dataset.callsign || '');
   });
 
-  function estimateMessageParts(text) {
-    const clean = String(text || '').replace(/\s+/g, ' ').trim();
-    if (!clean) return 0;
-    if (clean.length <= 63) return 1;
-    const limit = 55;
-    let parts = 0;
-    let current = '';
-    for (let word of clean.split(' ')) {
-      if (word.length > limit) {
-        if (current) { parts++; current = ''; }
-        parts += Math.floor(word.length / limit);
-        word = word.slice(Math.floor(word.length / limit) * limit);
-        if (word) current = word;
-        continue;
-      }
-      const candidate = current ? `${current} ${word}` : word;
-      if (candidate.length <= limit) current = candidate;
-      else { parts++; current = word; }
+  document.addEventListener('click', async e => {
+    const button = e.target.closest('.station-log-button');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const callsign = normalizedCall(button.dataset.callsign || '');
+    if (!callsign) return;
+    activateTab('log');
+    const filter = $('#logFilter');
+    if (filter) {
+      filter.value = callsign;
+      filter.classList.add('log-filter-focus');
+      setTimeout(() => filter.classList.remove('log-filter-focus'), 2200);
+      filter.focus();
     }
-    if (current) parts++;
+    await loadLog(true);
+  });
+
+  function estimateMessageParts(text) {
+    let remaining = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!remaining) return 0;
+    const limit = 63;
+    let parts = 0;
+    while (remaining) {
+      if (remaining.length <= limit) {
+        parts++;
+        break;
+      }
+      const windowText = remaining.slice(0, limit + 1);
+      let cut = windowText.lastIndexOf(' ', limit);
+      if (cut <= 0) cut = limit;
+      parts++;
+      remaining = remaining.slice(cut).trimStart();
+    }
     return Math.max(1, parts);
   }
 
@@ -3009,13 +3026,17 @@
     } catch (err) { toast(err.message, 'error'); }
   });
 
-  $('#refreshTopologyStatsButton')?.addEventListener('click', async () => {
+  async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
     if (!box) return;
+    const periodSelect = $('#analysisPeriod');
+    if (periodSelect) periodSelect.value = String(state.topologyHours || 24);
     box.textContent = ui('Carregando análise…', 'Loading analysis…');
     try {
       const data = await api(`/api/topology/stats?hours=${encodeURIComponent(state.topologyHours || 24)}`);
-      const list = (items, formatter) => items.length ? '<ol>' + items.map(formatter).join('') + '</ol>' : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
+      const list = (items, formatter) => items.length
+        ? '<ol>' + items.map(formatter).join('') + '</ol>'
+        : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
       box.innerHTML =
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
         list(data.digipeaters || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
@@ -3029,14 +3050,27 @@
           `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
           `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
         ) + '</div></div>';
-    } catch (err) { box.textContent = err.message; }
+
+      if ($('#analysisMetricPeriod')) $('#analysisMetricPeriod').textContent = state.topologyHours === 168 ? '7 dias' : `${state.topologyHours} h`;
+      if ($('#analysisMetricEdges')) $('#analysisMetricEdges').textContent = Number(data.edges || 0).toLocaleString(currentLocale());
+      if ($('#analysisMetricPackets')) $('#analysisMetricPackets').textContent = Number(data.packets || 0).toLocaleString(currentLocale());
+      if ($('#analysisMetricEvents')) $('#analysisMetricEvents').textContent = Number(data.comparison?.current_events || 0).toLocaleString(currentLocale());
+    } catch (err) {
+      box.textContent = err.message;
+    }
+  }
+
+  $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
+  $('#analysisPeriod')?.addEventListener('change', async event => {
+    state.topologyHours = Number(event.target.value) || 24;
+    localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
+    const mapPeriod = $('#topologyHours');
+    if (mapPeriod) mapPeriod.value = String(state.topologyHours);
+    if (state.topologyEnabled) await loadTopology();
+    await refreshTopologyAnalysis();
   });
 
   $('#animateTopologyButton')?.addEventListener('click', async () => {
-    if (state.configDirty) {
-      toast(ui('Salve ou descarte as alterações da Configuração antes de abrir a animação.', 'Save or discard Settings changes before opening the animation.'), 'error');
-      return;
-    }
     if (!state.map) return;
     try {
       const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(state.topologyHours || 24)}&limit=2500`);
