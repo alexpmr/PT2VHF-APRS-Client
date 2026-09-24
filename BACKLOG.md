@@ -214,3 +214,17 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Garantir boa resolução e legibilidade das imagens no PDF.
 - Sempre que a interface mudar em uma nova versão, atualizar ou regenerar os screenshots afetados antes de publicar o manual.
 - Manter o manual sincronizado com VERSION e CHANGELOG e validar conteúdo mínimo antes de anexá-lo à Release.
+
+## Conexão com campos obrigatórios ausentes
+
+**Objetivo:** melhorar a experiência quando o usuário tenta conectar ao APRS-IS sem ter preenchido os dados obrigatórios da estação.
+
+- Ao clicar em **Conectar**, verificar antes se **Latitude, Longitude e Altitude** estão preenchidas.
+- Se algum desses campos obrigatórios estiver ausente, **não tentar a conexão** naquele momento.
+- Exibir um **pop-up claro e não técnico** informando exatamente quais campos estão faltando.
+- O pop-up deve ter um botão **Ir para Configuração**.
+- Ao clicar nesse botão, abrir automaticamente a aba **Configuração → APRS / Estação**.
+- Realçar visualmente todos os campos obrigatórios ausentes.
+- Colocar o foco no primeiro campo ausente para facilitar o preenchimento.
+- Após o usuário corrigir os campos, remover o destaque visual correspondente.
+- Manter também a mensagem de erro acessível no status/log para diagnóstico.
