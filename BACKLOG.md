@@ -44,3 +44,8 @@ A partir desta versão, novas demandas serão adicionadas novamente neste arquiv
 - Se a visualização não estiver agrupada, posicionar a lista na mensagem recém-recebida.
 - Marcar a mensagem como vista ao abrir a conversa pelo botão **Ler mensagem**.
 - O botão **OK** deve continuar apenas fechando o pop-up, sem mudar de aba.
+
+## Pendente após v1.6
+
+- Popup de nova mensagem: além de **OK**, incluir **Ler mensagem**; ao clicar, abrir a aba **Mensagens** mostrando a mensagem recebida e, se o modo estiver agrupado por remetente, selecionar/focar automaticamente a conversa do remetente.
+- Configuração > Estação APRS: reorganizar **coordenadas e altitude verticalmente, uma informação abaixo da outra**, evitando que Latitude/Longitude/Altitude extrapolem os limites do bloco em janelas menores ou com fonte ampliada.
