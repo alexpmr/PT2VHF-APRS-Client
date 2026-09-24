@@ -30,3 +30,17 @@ A partir desta versão, novas demandas serão adicionadas novamente neste arquiv
 - Log com data/hora em uma linha, alinhamento consistente e ordenação nos dois sentidos;
 - manual PDF profissional com screenshots e validação automática;
 - atualização integrada com verificação, download, SHA-256, instalação assistida e rollback onde suportado.
+
+
+## Pop-up de nova mensagem — botão “Ler mensagem”
+
+**Objetivo:** permitir abrir imediatamente a conversa correspondente à mensagem recebida.
+
+- No pop-up de nova mensagem, manter o botão **OK** e adicionar o botão **Ler mensagem**.
+- Ao clicar em **Ler mensagem**, abrir a aba **Mensagens**.
+- A mensagem recém-recebida deve ficar visível/focada na tela.
+- Se **Agrupar por remetente** estiver ativo, selecionar automaticamente o grupo/conversa do remetente da mensagem recebida.
+- Nesse modo agrupado, preencher também o campo **Destino** com o indicativo completo do remetente, incluindo SSID quando houver.
+- Se a visualização não estiver agrupada, posicionar a lista na mensagem recém-recebida.
+- Marcar a mensagem como vista ao abrir a conversa pelo botão **Ler mensagem**.
+- O botão **OK** deve continuar apenas fechando o pop-up, sem mudar de aba.
