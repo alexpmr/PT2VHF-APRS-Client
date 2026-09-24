@@ -318,8 +318,8 @@
 
   function activateTab(tab) {
     state.activeTab = tab;
-    $('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-    $('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+    $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
     if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
     if (tab === 'messages') {
       markMessagesSeen();
@@ -331,7 +331,7 @@
   }
 
   function tabSetup() {
-    $('.tab').forEach(btn => btn.addEventListener('click', () => {
+    $$('.tab').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
       if (state.activeTab === 'config' && tab !== 'config' && state.configDirty) {
         state.pendingTab = tab;
@@ -2282,7 +2282,7 @@
 
   function showConfigSection(_section) {
     state.configSection = 'all';
-    $('.config-section').forEach(el => el.classList.remove('hidden'));
+    $$('.config-section').forEach(el => el.classList.remove('hidden'));
   }
   showConfigSection('all');
 
@@ -2688,7 +2688,7 @@
       parts.push(`a/${north}/${west}/${south}/${east}`);
     }
 
-    const types = $('.filter-type:checked').map(input => input.value).join('');
+    const types = $$('.filter-type:checked').map(input => input.value).join('');
     if (types) parts.push('t/' + types);
     $('#aprsFilterInput').value = parts.join(' ');
     markConfigDirty();
@@ -2702,7 +2702,7 @@
     $('#filterPrefixes').value = '';
     $('#filterBuddies').value = '';
     for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
-    $('.filter-type').forEach(input => { input.checked = false; });
+    $$('.filter-type').forEach(input => { input.checked = false; });
     markConfigDirty();
     toast(ui('Filtro padrão para estações brasileiras restaurado.', 'Default Brazil-only filter restored.'), 'ok');
   });
