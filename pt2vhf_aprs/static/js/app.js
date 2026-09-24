@@ -658,7 +658,9 @@
           return;
         }
         if (!validateCallsignField()) {
-          showRequiredFieldsModal(missingRequiredStationFields());
+          const invalidCall = requiredStationDefinitions().find(item => item.key === 'callsign');
+          showRequiredFieldsModal(invalidCall ? [invalidCall] : []);
+          $('#callsignInput')?.reportValidity();
           return;
         }
         await api('/api/connect', { method: 'POST' });
@@ -2228,8 +2230,14 @@
 
   $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
   for (const id of ['latDeg','latMin','latSec','latHem','lonDeg','lonMin','lonSec','lonHem']) {
-    $('#' + id)?.addEventListener('input', syncDecimalFromDmsIfNeeded);
-    $('#' + id)?.addEventListener('change', syncDecimalFromDmsIfNeeded);
+    $('#' + id)?.addEventListener('input', () => {
+      syncDecimalFromDmsIfNeeded();
+      refreshRequiredFieldHighlights();
+    });
+    $('#' + id)?.addEventListener('change', () => {
+      syncDecimalFromDmsIfNeeded();
+      refreshRequiredFieldHighlights();
+    });
   }
   $('#latitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
   $('#longitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
