@@ -374,3 +374,15 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Preservar cores, badges, links clicáveis, alinhamento, ordenação e demais estilos funcionais dessas colunas.
 - Verificar também se tamanho, família da fonte e espaçamento permanecem coerentes com o restante da tabela após a correção.
 - Incluir teste/regressão visual ou de CSS para evitar que estilos específicos dessas colunas voltem a sobrescrever o peso configurado.
+
+## Formatação da coluna Hora e alinhamento das colunas no Log
+
+**Objetivo:** melhorar a legibilidade da aba **Log**, evitando quebra indesejada de data/hora e padronizando o alinhamento visual das colunas.
+
+- Na aba **Log**, manter o conteúdo da coluna **Hora** em **uma única linha**, exibindo **data e hora lado a lado**.
+- Impedir quebra de linha dentro da célula de data/hora, inclusive quando a fonte estiver maior.
+- Ajustar uma largura mínima adequada para a coluna **Hora**, preservando a leitura completa do timestamp.
+- Revisar o alinhamento das colunas da tabela de Log para que fiquem **justificadas/alinhadas de forma consistente**.
+- Manter cabeçalhos e conteúdo alinhados entre si em cada coluna.
+- Preservar ordenação, rolagem horizontal quando necessária e responsividade da tabela.
+- Garantir que alterações de fonte, tamanho, peso e espaçamento configuradas para **Logs** não façam a coluna Hora voltar a quebrar em duas linhas.
