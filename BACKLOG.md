@@ -102,6 +102,11 @@ No APRS, o **ACK confirma o recebimento da mensagem pelo cliente remoto**, mas n
 **Objetivo:** deixar o cabeçalho principal mais limpo e direto.
 
 - Remover a frase **“Cliente APRS-IS com banco local SQLite”** do título/cabeçalho exibido na interface.
-- Manter como identificação principal apenas **PT2VHF APRS Client**.
+- Manter como identificação principal **PT2VHF APRS Client**.
+- Exibir no cabeçalho, junto ao título, os contadores dinâmicos:
+  - **Estações recebidas:** `xx`
+  - **Pacotes APRS-IS:** `xx`
+- Apresentação sugerida: **Estações recebidas:** xx — **Pacotes APRS-IS:** xx.
+- Atualizar os dois valores automaticamente conforme o cliente recebe novas estações/pacotes, sem exigir recarregar a interface.
 - Preservar informações técnicas sobre APRS-IS e SQLite apenas na documentação/Ajuda, e não no título principal da aplicação.
 
