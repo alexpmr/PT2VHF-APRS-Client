@@ -1,4 +1,4 @@
-# PT2VHF APRS Client — v0.3.0
+# PT2VHF APRS Client — v0.3.1
 
 Cliente APRS-IS para Windows, desenvolvido em Python, com janela integrada baseada em Microsoft Edge WebView2, banco SQLite, mapa, mensagens e histórico de estações.
 
@@ -49,12 +49,17 @@ O aplicativo oferece:
 
 ## Recursos
 
+- Contadores de estações e pacotes APRS-IS no cabeçalho principal.
+- O mapa não possui mais a barra flutuante de diagnóstico/manutenção.
+
 ### MAPA
 
 - OpenStreetMap/Leaflet.
 - Estações exibidas conforme são recebidas do APRS-IS.
 - Símbolos APRS conforme `symbol_table` + `symbol`.
 - Tracklog automático de estações móveis.
+- **Topologia observada APRS** opcional, com linhas entre estações/digipeaters/IGates quando o path recebido fornece evidência e ambos os nós possuem posição conhecida.
+- Filtros da topologia por 1 h, 6 h, 24 h e 7 dias.
 - Popup com indicativo, posição, velocidade, curso, altitude, comentário/informação e path.
 - Centro e zoom persistidos no SQLite.
 - Botão para centralizar o mapa na localização disponibilizada pelo mecanismo WebView2/navegador.
@@ -71,8 +76,10 @@ O aplicativo oferece:
 - Botão **Minhas mensagens** para mostrar apenas mensagens de/para a estação configurada.
 - Popup de alerta para novas mensagens individuais destinadas à estação configurada.
 - Botão **Limpar mensagens** para apagar todo o histórico local de mensagens e boletins, com confirmação.
-- Compositor de mensagem ampliado, com campo multilinha e contador de caracteres.
-- `Ctrl+Enter` envia a mensagem; `Enter` cria nova linha durante a edição.
+- Compositor de mensagem ampliado, sem o antigo limite curto para mensagens individuais.
+- **Enter envia**; **Shift+Enter** cria nova linha.
+- Mensagens longas são divididas automaticamente em partes APRS numeradas, cada uma com ID e ACK próprios.
+- Ao receber ACK, a linha correspondente fica verde e o status aparece como **Lido**.
 
 ### Estações
 
