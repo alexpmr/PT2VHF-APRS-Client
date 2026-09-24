@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.2
+# PT2VHF APRS Client - v1.3
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2 e banco SQLite local.
 
-A v1.2 amplia a personalização visual de **Mensagens, Estações e Logs** e entrega um manual PDF profissional, com capa azul, logo oficial, screenshots reais da aplicação e validação automática antes da publicação.
+A v1.3 melhora a primeira conexão ao APRS-IS: orienta campos obrigatórios em um pop-up, calcula o passcode automaticamente, tenta preencher a localização da estação, centraliza o mapa na posição do usuário e evita bloquear a conexão quando a altitude não é fornecida pelo sistema.
 
 ## Downloads
 
@@ -51,7 +51,7 @@ Cada Release publica, conforme o build:
 - Passcode mascarado no Log.
 - Formatação independente para Mensagens, Estações e Logs: fonte, tamanho, negrito e espaçamento entre linhas.
 
-## Configuração v1.2
+## Configuração v1.3
 
 A tela é dividida em:
 
@@ -65,9 +65,17 @@ Latitude e longitude podem ser informadas em:
 - decimal;
 - graus/minutos/segundos (DMS).
 
-O botão **Usar minha localização atual** solicita permissão de geolocalização e preenche latitude/longitude quando o ambiente fornece esses dados. A altitude só é preenchida quando a plataforma a disponibiliza; caso contrário, deve ser informada manualmente.
+Na primeira execução, o cliente solicita permissão de geolocalização. Quando autorizada, Latitude e Longitude são pré-preenchidas e o mapa é centralizado na posição atual. O botão **Usar minha localização atual** permanece disponível para atualizar esses dados depois.
 
-Ao tentar conectar sem Indicativo, Latitude, Longitude ou Altitude, o programa direciona o usuário para **Configuração > APRS / Estação** e destaca o primeiro campo ausente.
+Quando o sistema não fornece altitude confiável, o cliente usa **0 m** para não bloquear a conexão e mostra um aviso recomendando informar a altitude real. Uma altitude manual não é substituída por esse valor automático.
+
+Ao tentar conectar sem Indicativo, Latitude, Longitude ou Altitude, o programa mostra um **pop-up com os campos ausentes** e um botão **Ir para Configuração**. Ao abrir **Configuração > APRS / Estação**, todos os campos pendentes ficam destacados.
+
+### APRS-IS
+
+O servidor padrão da v1.3 é `soam.aprs2.net:14580`. O campo de servidor oferece sugestões regionais, continua aceitando valores manuais e o cliente tenta `rotate.aprs2.net` como alternativa quando o servidor sul-americano não pode ser alcançado.
+
+O **Passcode APRS-IS** é calculado automaticamente a partir do indicativo-base; o SSID não altera o código.
 
 ### Filtro APRS-IS
 
