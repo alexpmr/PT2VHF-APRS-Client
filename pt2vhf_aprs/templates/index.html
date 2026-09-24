@@ -240,7 +240,8 @@
         <div class="form-grid two-cols">
           <label class="field">
             <span>Indicativo <em class="required-badge">Obrigatório</em></span>
-            <input name="callsign" id="callsignInput" required maxlength="6" placeholder="Ex.: PY2ABC" autocomplete="off">
+            <input name="callsign" id="callsignInput" required maxlength="6" pattern="[A-Za-z0-9]{1,6}" title="Use de 1 a 6 letras ou números, sem SSID." placeholder="Ex.: PY2ABC" autocomplete="off">
+            <small id="callsignValidationStatus">Obrigatório. O passcode APRS-IS será calculado automaticamente.</small>
           </label>
           <label class="field">
             <span>Passcode APRS-IS</span>
@@ -281,7 +282,11 @@
             </div>
             <small class="hint">Os valores em graus/minutos/segundos são convertidos automaticamente para decimal antes de salvar.</small>
           </div>
-          <label class="field"><span>Altitude (m) <em class="required-badge">Obrigatório</em></span><input name="altitude" id="altitudeInput" type="number" step="0.1" placeholder="Ex.: 1000"></label>
+          <label class="field" id="altitudeField"><span>Altitude (m) <em class="required-badge">Obrigatório</em></span>
+            <input name="altitude" id="altitudeInput" type="number" step="0.1" placeholder="Ex.: 1000">
+            <input name="altitude_source" id="altitudeSourceInput" type="hidden" value="manual">
+            <small id="altitudeSourceStatus">Informe a altitude real da estação sempre que possível.</small>
+          </label>
           <label class="field"><span>E-mail</span><input name="email" type="email" placeholder="opcional"></label>
         </div>
         <div class="symbol-row">
@@ -298,7 +303,18 @@
       <div class="config-card config-section config-section-aprs">
         <h3>APRS-IS</h3>
         <div class="form-grid two-cols">
-          <label class="field full"><span>Servidor</span><input name="server" value="brazil.aprs2.net" required></label>
+          <label class="field full"><span>Servidor</span>
+            <input name="server" value="soam.aprs2.net" list="aprsServerOptions" required autocomplete="off">
+            <datalist id="aprsServerOptions">
+              <option value="soam.aprs2.net">América do Sul</option>
+              <option value="rotate.aprs2.net">Rotação global</option>
+              <option value="noam.aprs2.net">América do Norte</option>
+              <option value="euro.aprs2.net">Europa</option>
+              <option value="asia.aprs2.net">Ásia</option>
+              <option value="aunz.aprs2.net">Austrália / Nova Zelândia</option>
+            </datalist>
+            <small>Recomendado para a América do Sul: <code>soam.aprs2.net</code>. Campo livre para servidores personalizados.</small>
+          </label>
           <label class="field"><span>Porta</span><input name="port" type="number" value="14580" min="1" max="65535" required></label>
           <label class="field full">
             <span>Filtro APRS-IS</span>
@@ -660,6 +676,22 @@
       <button type="button" class="symbol-tab" data-symbol-table="\">Secundária \</button>
     </div>
     <div id="symbolGrid" class="symbol-grid"></div>
+  </div>
+</div>
+
+<div id="requiredFieldsModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="requiredFieldsTitle">
+  <div class="message-alert-card required-fields-dialog">
+    <div class="message-alert-icon">!</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Configuração necessária</div>
+      <h3 id="requiredFieldsTitle">Faltam dados para conectar</h3>
+      <p id="requiredFieldsMessage" class="required-fields-message"></p>
+      <div id="requiredFieldsList" class="required-fields-list"></div>
+      <div class="message-alert-actions">
+        <button id="requiredFieldsGoConfig" type="button" class="btn primary">Ir para Configuração</button>
+        <button id="requiredFieldsClose" type="button" class="btn secondary">Fechar</button>
+      </div>
+    </div>
   </div>
 </div>
 
