@@ -5,7 +5,15 @@
     activeTab: 'map',
     map: null,
     baseLayer: null,
-    mapConfig: { map_type: 'osm', track_color: '#3ba6ff', track_width: 2 },
+    mapConfig: {
+      map_type: 'osm',
+      track_color: '#3ba6ff',
+      track_width: 2,
+      topology_rf_color: '#35a7ff',
+      topology_igate_color: '#b06cff',
+      topology_width: 2,
+      map_brightness: 100
+    },
     markers: new Map(),
     trackLines: new Map(),
     topologyLines: new Map(),
@@ -17,7 +25,7 @@
     stations: [],
     logs: [],
     sort: {
-      messages: { key: 'timestamp', dir: 'desc', type: 'text' },
+      messages: { key: 'timestamp', dir: 'asc', type: 'text' },
       stations: { key: 'last_heard', dir: 'desc', type: 'text' }
     },
     connected: false,
@@ -25,11 +33,14 @@
     configLoaded: false,
     myMessagesOnly: false,
     hideTelemetryMessages: true,
+    groupMessages: false,
+    selectedConversation: '',
     ownCallsign: '',
     messageAlertBaselineReady: false,
     lastAlertedMessageId: 0,
     currentAlertMessage: null,
     soundOnPersonalMessage: true,
+    messagePopupSeconds: 5,
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -258,6 +269,9 @@
       map_type: cfg.map_type || state.mapConfig.map_type || 'osm',
       track_color: cfg.track_color || state.mapConfig.track_color || '#3ba6ff',
       track_width: Number(cfg.track_width || state.mapConfig.track_width || 2),
+      topology_rf_color: cfg.topology_rf_color || state.mapConfig.topology_rf_color || '#35a7ff',
+      topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#b06cff',
+      topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 2),
       map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100)
     };
 
@@ -277,6 +291,8 @@
           opacity: .78
         });
       }
+
+      if (state.topologyEnabled) loadTopology();
     }
   }
 
@@ -385,8 +401,8 @@
 
         let line = state.topologyLines.get(key);
         const style = {
-          color: edge.kind === 'igate' ? '#b06cff' : '#35a7ff',
-          weight: Math.min(6, 2 + Math.log10(Math.max(1, Number(edge.packet_count || 1)))),
+          color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+          weight: state.mapConfig.topology_width,
           opacity: .72,
           dashArray: edge.kind === 'igate' ? '7 5' : null
         };
@@ -657,16 +673,32 @@
     try {
       const viewport = $('.messages-table-wrap');
       const previousScrollTop = viewport?.scrollTop || 0;
-      const atNewest = previousScrollTop <= 12;
+      const distanceFromBottom = viewport
+        ? Math.max(0, viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight)
+        : 0;
+      const atNewest = distanceFromBottom <= 18;
+
+      const thread = $('#conversationMessages');
+      const previousThreadScrollTop = thread?.scrollTop || 0;
+      const threadDistanceFromBottom = thread
+        ? Math.max(0, thread.scrollHeight - thread.scrollTop - thread.clientHeight)
+        : 0;
+      const threadAtNewest = threadDistanceFromBottom <= 18;
+
       const filter = $('#messageFilter').value.trim();
       const mine = state.myMessagesOnly ? '&mine=1' : '';
       state.messages = await api(`/api/messages?from=${encodeURIComponent(filter)}${mine}`);
       renderMessages();
       updateUnread();
 
-      if (viewport && state.sort.messages.key === 'timestamp' && state.sort.messages.dir === 'desc') {
-        if (options.scrollToNewest || atNewest) viewport.scrollTop = 0;
+      if (!state.groupMessages && viewport && state.sort.messages.key === 'timestamp' && state.sort.messages.dir === 'asc') {
+        if (options.scrollToNewest || atNewest) viewport.scrollTop = viewport.scrollHeight;
         else viewport.scrollTop = previousScrollTop;
+      }
+
+      if (state.groupMessages && thread) {
+        if (options.scrollToNewest || threadAtNewest) thread.scrollTop = thread.scrollHeight;
+        else thread.scrollTop = previousThreadScrollTop;
       }
     } catch (err) { console.warn(err); }
   }
@@ -696,13 +728,147 @@
       : state.messages;
   }
 
+  function normalizedCall(value) {
+    return String(value || '').trim().toUpperCase();
+  }
+
+  function callsignButtonHtml(callsign, otherCall = '') {
+    const call = normalizedCall(callsign);
+    if (!call) return '';
+    return `<button type="button" class="callsign-link message-callsign-link" data-callsign="${escapeHtml(call)}" data-other-call="${escapeHtml(normalizedCall(otherCall))}">${escapeHtml(call)}</button>`;
+  }
+
+  function resolveMessageContact(message) {
+    if (!message || message.message_type !== 'message') return '';
+    const from = normalizedCall(message.from_call);
+    const to = normalizedCall(message.to_call);
+    const own = normalizedCall(state.ownCallsign);
+
+    if (own) {
+      if (from === own && to && to !== own) return to;
+      if (to === own && from && from !== own) return from;
+    }
+    return message.direction === 'out' ? (to || from) : (from || to);
+  }
+
+  function selectMessageRecipient(callsign, fallbackCall = '') {
+    const own = normalizedCall(state.ownCallsign);
+    let destination = normalizedCall(callsign);
+    const fallback = normalizedCall(fallbackCall);
+
+    if (destination && own && destination === own && fallback && fallback !== own) {
+      destination = fallback;
+    }
+    if (!destination || (own && destination === own)) {
+      toast('Não foi possível determinar outro indicativo para responder.', 'error');
+      return;
+    }
+
+    $('#messageType').value = 'message';
+    updateMessageComposerMode();
+    $('#messageTo').value = destination;
+    $('#messageText').focus();
+  }
+
+  function conversationItems() {
+    const seen = Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0);
+    const conversations = new Map();
+
+    for (const message of visibleMessages()) {
+      if (message.message_type !== 'message') continue;
+      const contact = resolveMessageContact(message);
+      if (!contact) continue;
+      if (!conversations.has(contact)) {
+        conversations.set(contact, { contact, messages: [], unread: 0, last: null });
+      }
+      const item = conversations.get(contact);
+      item.messages.push(message);
+      if (!item.last || Number(message.id || 0) > Number(item.last.id || 0)) item.last = message;
+      if (message.direction === 'in' && Number(message.id || 0) > seen) item.unread += 1;
+    }
+
+    return [...conversations.values()]
+      .map(item => ({
+        ...item,
+        messages: item.messages.sort((a, b) => {
+          const time = String(a.timestamp || '').localeCompare(String(b.timestamp || ''));
+          return time || (Number(a.id || 0) - Number(b.id || 0));
+        })
+      }))
+      .sort((a, b) => Number(b.last?.id || 0) - Number(a.last?.id || 0));
+  }
+
+  function renderGroupedMessages() {
+    const conversations = conversationItems();
+    const list = $('#conversationList');
+    const empty = $('#conversationThreadEmpty');
+    const content = $('#conversationThreadContent');
+    const recipientButton = $('#conversationRecipientButton');
+    const thread = $('#conversationMessages');
+
+    if (!conversations.length) {
+      list.innerHTML = '<div class="conversation-list-empty">Nenhuma conversa individual para os filtros atuais.</div>';
+      state.selectedConversation = '';
+      empty.classList.remove('hidden');
+      content.classList.add('hidden');
+      return;
+    }
+
+    if (!state.selectedConversation || !conversations.some(item => item.contact === state.selectedConversation)) {
+      state.selectedConversation = conversations[0].contact;
+    }
+
+    list.innerHTML = conversations.map(item => {
+      const selected = item.contact === state.selectedConversation ? ' selected' : '';
+      return `<button type="button" class="conversation-item${selected}" data-conversation-contact="${escapeHtml(item.contact)}">
+        <span class="conversation-item-top">
+          <strong>${escapeHtml(item.contact)}</strong>
+          <span>${escapeHtml(fmtDate(item.last?.timestamp))}</span>
+        </span>
+        <span class="conversation-item-bottom">
+          <span>${escapeHtml(item.last?.message || '')}</span>
+          ${item.unread ? `<span class="conversation-unread">${item.unread}</span>` : ''}
+        </span>
+      </button>`;
+    }).join('');
+
+    const selected = conversations.find(item => item.contact === state.selectedConversation) || conversations[0];
+    empty.classList.add('hidden');
+    content.classList.remove('hidden');
+    recipientButton.textContent = selected.contact;
+    recipientButton.dataset.callsign = selected.contact;
+    thread.innerHTML = selected.messages.map(message => {
+      const direction = message.direction === 'out' ? 'out' : 'in';
+      const status = messageStatusLabel(message.status);
+      return `<div class="chat-bubble-row ${direction}">
+        <div class="chat-bubble">
+          <div class="chat-bubble-text">${escapeHtml(message.message || '')}</div>
+          <div class="chat-bubble-meta">
+            <span>${escapeHtml(fmtDate(message.timestamp))}</span>
+            ${status ? `<span class="${message.status === 'ACK' ? 'status-ack' : message.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(status)}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   function renderMessages() {
+    const tableWrap = $('.messages-table-wrap');
+    const groupedView = $('#groupedMessagesView');
+    tableWrap?.classList.toggle('hidden', state.groupMessages);
+    groupedView?.classList.toggle('hidden', !state.groupMessages);
+
+    if (state.groupMessages) {
+      renderGroupedMessages();
+      return;
+    }
+
     const spec = state.sort.messages;
     const rows = sortedData(visibleMessages(), spec);
     $('#messagesTable tbody').innerHTML = rows.map(m => `
       <tr class="${m.status === 'ACK' ? 'message-row-ack' : m.status === 'REJ' ? 'message-row-rej' : ''}">
-        <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${escapeHtml(m.from_call)}</td>
-        <td>${escapeHtml(m.to_call)}</td>
+        <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${callsignButtonHtml(m.from_call, m.to_call)}</td>
+        <td>${callsignButtonHtml(m.to_call, m.from_call)}</td>
         <td>${messageTypeLabel(m.message_type)}</td>
         <td>${escapeHtml(m.message)}</td>
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
@@ -716,6 +882,7 @@
 
   const telemetryPreference = localStorage.getItem('pt2vhf_hide_telemetry');
   state.hideTelemetryMessages = telemetryPreference === null ? true : telemetryPreference !== '0';
+  state.groupMessages = localStorage.getItem('pt2vhf_group_messages') === '1';
   const telemetryToggle = $('#hideTelemetryMessages');
   if (telemetryToggle) telemetryToggle.checked = state.hideTelemetryMessages;
   telemetryToggle?.addEventListener('change', () => {
@@ -730,6 +897,44 @@
         : 'Telemetria visível.',
       'ok'
     );
+  });
+
+  function updateGroupMessagesButton() {
+    const btn = $('#groupMessagesButton');
+    if (!btn) return;
+    btn.classList.toggle('active-filter', state.groupMessages);
+    btn.setAttribute('aria-pressed', state.groupMessages ? 'true' : 'false');
+    btn.textContent = state.groupMessages ? '✓ Agrupado por remetente' : 'Agrupar por remetente';
+  }
+
+  $('#groupMessagesButton')?.addEventListener('click', () => {
+    state.groupMessages = !state.groupMessages;
+    localStorage.setItem('pt2vhf_group_messages', state.groupMessages ? '1' : '0');
+    updateGroupMessagesButton();
+    renderMessages();
+    const viewport = state.groupMessages ? $('#conversationMessages') : $('.messages-table-wrap');
+    if (viewport) viewport.scrollTop = viewport.scrollHeight;
+  });
+
+  $('#conversationList')?.addEventListener('click', event => {
+    const item = event.target.closest('[data-conversation-contact]');
+    if (!item) return;
+    state.selectedConversation = normalizedCall(item.dataset.conversationContact);
+    renderGroupedMessages();
+    const thread = $('#conversationMessages');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  });
+
+  $('#conversationRecipientButton')?.addEventListener('click', event => {
+    selectMessageRecipient(event.currentTarget.dataset.callsign || '');
+  });
+
+  $('#messagesTable tbody')?.addEventListener('click', event => {
+    const button = event.target.closest('.message-callsign-link');
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectMessageRecipient(button.dataset.callsign || '', button.dataset.otherCall || '');
   });
 
   function updateMyMessagesButton() {
@@ -748,7 +953,8 @@
   $('#myMessagesButton')?.addEventListener('click', async () => {
     state.myMessagesOnly = !state.myMessagesOnly;
     updateMyMessagesButton();
-    await loadMessages();
+    updateGroupMessagesButton();
+    await loadMessages({ scrollToNewest: true });
   });
 
   $('#clearMessagesButton')?.addEventListener('click', async () => {
@@ -778,7 +984,7 @@
     $('.tab[data-tab="messages"]')?.click();
     $('#messageType').value = 'message';
     updateMessageComposerMode();
-    $('#messageTo').value = String(destination || '').toUpperCase().trim();
+    $('#messageTo').value = normalizedCall(destination);
     $('#messageText').focus();
   }
 
@@ -887,13 +1093,36 @@
   updateMessageComposerMode();
   updateMessageCharCounter();
 
+  let compactMessageAlertTimer = null;
+
   function closeIncomingMessageAlert() {
     $('#incomingMessageModal')?.classList.add('hidden');
     state.currentAlertMessage = null;
   }
 
+  function closeCompactIncomingMessageAlert() {
+    clearTimeout(compactMessageAlertTimer);
+    compactMessageAlertTimer = null;
+    $('#incomingMessageCompact')?.classList.add('hidden');
+    state.currentAlertMessage = null;
+  }
+
   function showIncomingMessageAlert(message) {
     state.currentAlertMessage = message;
+
+    if (state.activeTab === 'messages') {
+      $('#incomingMessageCompactFrom').textContent = message.from_call || '';
+      $('#incomingMessageCompactTime').textContent = fmtDate(message.timestamp);
+      $('#incomingMessageCompactText').textContent = message.message || '';
+      $('#incomingMessageCompact')?.classList.remove('hidden');
+      clearTimeout(compactMessageAlertTimer);
+      compactMessageAlertTimer = setTimeout(
+        closeCompactIncomingMessageAlert,
+        Math.max(1, Number(state.messagePopupSeconds || 5)) * 1000
+      );
+      return;
+    }
+
     $('#incomingMessageFrom').textContent = message.from_call || '';
     $('#incomingMessageTime').textContent = fmtDate(message.timestamp);
     $('#incomingMessageText').textContent = message.message || '';
@@ -915,7 +1144,9 @@
         return;
       }
 
-      if (!$('#incomingMessageModal')?.classList.contains('hidden')) return;
+      const modalVisible = !$('#incomingMessageModal')?.classList.contains('hidden');
+      const compactVisible = !$('#incomingMessageCompact')?.classList.contains('hidden');
+      if (modalVisible || compactVisible) return;
       const next = incoming.find(m => Number(m.id) > state.lastAlertedMessageId);
       if (next) {
         state.lastAlertedMessageId = Number(next.id) || state.lastAlertedMessageId;
@@ -925,6 +1156,15 @@
       console.warn(err);
     }
   }
+
+  $('#incomingMessageCompactClose')?.addEventListener('click', closeCompactIncomingMessageAlert);
+  $('#incomingMessageCompactReply')?.addEventListener('click', () => {
+    const message = state.currentAlertMessage;
+    if (!message) return;
+    const sender = message.from_call || '';
+    closeCompactIncomingMessageAlert();
+    selectMessageRecipient(sender);
+  });
 
   $('#incomingMessageClose')?.addEventListener('click', closeIncomingMessageAlert);
   $('#incomingMessageModal')?.addEventListener('click', e => {
@@ -1179,6 +1419,7 @@
       const ssid = Number(cfg.ssid || 0);
       state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
       state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
+      state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       applyMapPreferences(cfg);
       applyAppearancePreferences(cfg);
@@ -1193,6 +1434,7 @@
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
     data.connect_on_start = form.elements.connect_on_start.checked;
+    data.open_browser_on_start = form.elements.open_browser_on_start.checked;
     data.sound_on_personal_message = form.elements.sound_on_personal_message.checked;
     try {
       const result = await api('/api/config', {
@@ -1229,10 +1471,19 @@
     const widthValue = $('#trackWidthValue');
     const brightnessInput = form.elements.namedItem('map_brightness');
     const brightnessValue = $('#mapBrightnessValue');
+    const topologyRfColor = form.elements.namedItem('topology_rf_color');
+    const topologyRfColorText = $('#topologyRfColorText');
+    const topologyIgateColor = form.elements.namedItem('topology_igate_color');
+    const topologyIgateColorText = $('#topologyIgateColorText');
+    const topologyWidth = form.elements.namedItem('topology_width');
+    const topologyWidthValue = $('#topologyWidthValue');
 
     if (colorInput && colorText) colorText.value = colorInput.value || '#3ba6ff';
     if (widthInput && widthValue) widthValue.textContent = `${widthInput.value || 2} px`;
     if (brightnessInput && brightnessValue) brightnessValue.textContent = `${brightnessInput.value || 100}%`;
+    if (topologyRfColor && topologyRfColorText) topologyRfColorText.value = topologyRfColor.value || '#35a7ff';
+    if (topologyIgateColor && topologyIgateColorText) topologyIgateColorText.value = topologyIgateColor.value || '#b06cff';
+    if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 2} px`;
   }
 
   $('#configForm')?.elements.namedItem('track_color')?.addEventListener('input', e => {
@@ -1259,6 +1510,47 @@
     if (out) out.textContent = `${e.target.value}%`;
     const tilePane = state.map?.getPane('tilePane');
     if (tilePane) tilePane.style.filter = `brightness(${e.target.value}%)`;
+  });
+
+  function previewTopologyStyleFromForm() {
+    const form = $('#configForm');
+    if (!form) return;
+    state.mapConfig.topology_rf_color = form.elements.namedItem('topology_rf_color')?.value || '#35a7ff';
+    state.mapConfig.topology_igate_color = form.elements.namedItem('topology_igate_color')?.value || '#b06cff';
+    state.mapConfig.topology_width = Number(form.elements.namedItem('topology_width')?.value || 2);
+    syncMapPreferenceControls();
+    if (state.topologyEnabled) loadTopology();
+  }
+
+  function bindTopologyColor(name, textSelector) {
+    const colorInput = $('#configForm')?.elements.namedItem(name);
+    const textInput = $(textSelector);
+    colorInput?.addEventListener('input', () => {
+      if (textInput) textInput.value = colorInput.value;
+      previewTopologyStyleFromForm();
+    });
+    textInput?.addEventListener('input', () => {
+      let value = textInput.value.trim();
+      if (!value.startsWith('#')) value = '#' + value;
+      if (/^#[0-9a-fA-F]{6}$/.test(value) && colorInput) {
+        colorInput.value = value;
+        previewTopologyStyleFromForm();
+      }
+    });
+  }
+
+  bindTopologyColor('topology_rf_color', '#topologyRfColorText');
+  bindTopologyColor('topology_igate_color', '#topologyIgateColorText');
+  $('#topologyWidth')?.addEventListener('input', previewTopologyStyleFromForm);
+
+  $('#resetTopologyStyleButton')?.addEventListener('click', () => {
+    const form = $('#configForm');
+    if (!form) return;
+    form.elements.namedItem('topology_rf_color').value = '#35a7ff';
+    form.elements.namedItem('topology_igate_color').value = '#b06cff';
+    form.elements.namedItem('topology_width').value = '2';
+    previewTopologyStyleFromForm();
+    toast('Visual da topologia restaurado ao padrão. Clique em Salvar configuração para persistir.', 'ok');
   });
 
   function syncAppearanceControls() {
