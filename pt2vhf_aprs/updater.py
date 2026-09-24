@@ -139,11 +139,16 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
+def _portable_backup_path(executable: Path | None = None) -> Path:
+    exe = (executable or Path(sys.executable)).resolve()
+    return exe.parent / "PT2VHF_APRS_Client_previous.exe"
+
+
 def rollback_available() -> dict[str, Any] | None:
     if sys.platform != "win32":
         return None
     exe = Path(sys.executable).resolve()
-    backup = exe.with_suffix(exe.suffix + ".bak")
+    backup = _portable_backup_path(exe)
     if backup.is_file():
         return {"path": str(backup), "current": str(exe)}
     return None
@@ -164,7 +169,7 @@ def launch_pending_update() -> bool:
         if sys.platform == "win32" and mode == "windows-portable":
             current = Path(sys.executable).resolve()
             destination = current.parent / path.name
-            backup = current.with_suffix(current.suffix + ".bak")
+            backup = _portable_backup_path(current)
             script = UPDATE_DIR / "apply_portable_update.ps1"
             pid = os.getpid()
             script.write_text(
@@ -214,7 +219,7 @@ def restore_windows_portable_backup() -> bool:
     if sys.platform != "win32":
         return False
     exe = Path(sys.executable).resolve()
-    backup = exe.with_suffix(exe.suffix + ".bak")
+    backup = _portable_backup_path(exe)
     if not backup.is_file():
         return False
     rollback = UPDATE_DIR / "rollback_portable.ps1"
