@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 
 from pt2vhf_aprs import database as db
-from pt2vhf_aprs.aprs_service import build_beacon_packet, build_bulletin_packet, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id
+from pt2vhf_aprs.aprs_service import build_beacon_packet, build_bulletin_packet, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id, split_aprs_message_parts
 from pt2vhf_aprs.web import version_tuple
 
 
@@ -147,7 +147,7 @@ def test_aprs_passcode():
 
 
 def test_version_tuple():
-    assert version_tuple("v0.3.0") == (0, 3, 0)
+    assert version_tuple("v0.3.1") == (0, 3, 1)
     assert version_tuple("0.2.10") > version_tuple("0.2.9")
     assert version_tuple("v1.0.0") > version_tuple("0.9.99")
 
@@ -291,5 +291,60 @@ def test_clear_tracklogs_keeps_stations():
             assert deleted >= 1
             assert len(db.list_stations()) == 1
             assert db.map_data()["tracks"] == []
+    finally:
+        db.DB_PATH = original
+
+
+def test_long_aprs_message_segmentation():
+    short = split_aprs_message_parts("Mensagem curta")
+    assert short == ["Mensagem curta"]
+
+    long_text = " ".join(["mensagem"] * 30)
+    parts = split_aprs_message_parts(long_text)
+    assert len(parts) > 1
+    assert all(len(part) <= 63 for part in parts)
+    assert parts[0].startswith("[1/")
+    assert parts[-1].startswith(f"[{len(parts)}/{len(parts)}]")
+
+
+def test_observed_topology_from_aprs_path():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({
+                "callsign": "PT2VHF",
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": 1000,
+            })
+            for call, lat, lon in [
+                ("PY2ABC-9", -15.81, -47.91),
+                ("PT2DIGI", -15.82, -47.92),
+                ("PT2IGT", -15.83, -47.93),
+            ]:
+                db.upsert_station({
+                    "from": call,
+                    "format": "uncompressed",
+                    "latitude": lat,
+                    "longitude": lon,
+                    "speed": 0,
+                    "course": 0,
+                    "altitude": 1000,
+                    "symbol_table": "/",
+                    "symbol": ">",
+                    "comment": "Teste",
+                    "path": [],
+                    "raw": "x",
+                })
+
+            db.record_topology_from_raw(
+                "PY2ABC-9>APRS,PT2DIGI*,WIDE2-1,qAR,PT2IGT:>teste"
+            )
+            edges = db.list_topology_edges(24)
+            keys = {(e["source"], e["target"], e["kind"]) for e in edges}
+            assert ("PY2ABC-9", "PT2DIGI", "rf") in keys
+            assert ("PT2DIGI", "PT2IGT", "igate") in keys
     finally:
         db.DB_PATH = original
