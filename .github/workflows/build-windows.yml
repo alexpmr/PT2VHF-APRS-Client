@@ -60,9 +60,10 @@ jobs:
       - name: Build installer and portable EXE
         shell: pwsh
         run: |
+          $version = (Get-Content VERSION -Raw).Trim()
           New-Item -ItemType Directory -Force dist-installer | Out-Null
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
-          Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe dist-installer\PT2VHF_APRS_Client_Portable_x64.exe -Force
+          Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-installer\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
 
       - name: Upload build artifacts
         id: upload-unsigned-artifact
@@ -70,8 +71,8 @@ jobs:
         with:
           name: PT2VHF-APRS-Client-Windows-x64
           path: |
-            dist-installer\PT2VHF_APRS_Client_Setup_x64.exe
-            dist-installer\PT2VHF_APRS_Client_Portable_x64.exe
+            dist-installer\PT2VHF_APRS_Client_Setup_x64_v*.exe
+            dist-installer\PT2VHF_APRS_Client_Portable_x64_v*.exe
             dist\PT2VHF_APRS_Client\SBOM.cdx.json
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
 
@@ -81,10 +82,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $setupName = "PT2VHF_APRS_Client_Setup_x64_v$version.exe"
+          $portableName = "PT2VHF_APRS_Client_Portable_x64_v$version.exe"
           if ($env:GITHUB_REF -like "refs/tags/*") {
             $tag = $env:GITHUB_REF_NAME
           } else {
-            $version = (Get-Content VERSION -Raw).Trim()
             $tag = "v$version"
           }
 
@@ -112,8 +115,8 @@ jobs:
 
           ## Arquivos para download
 
-          - **PT2VHF_APRS_Client_Setup_x64.exe** — instalador para Windows. **Opção recomendada para a maioria dos usuários.**
-          - **PT2VHF_APRS_Client_Portable_x64.exe** — versão portátil em um único arquivo EXE. **Não precisa ser instalada.**
+          - **$setupName** — instalador para Windows. **Opção recomendada para a maioria dos usuários.**
+          - **$portableName** — versão portátil em um único arquivo EXE. **Não precisa ser instalada.**
           - **SBOM.cdx.json** — inventário técnico dos componentes de software utilizados na versão.
           - **THIRD_PARTY_LICENSES.txt** — relação das dependências de terceiros e respectivas licenças.
           "@ | Set-Content -Encoding UTF8 release-notes.md
@@ -126,8 +129,8 @@ jobs:
           }
 
           gh release upload $tag `
-            dist-installer\PT2VHF_APRS_Client_Setup_x64.exe `
-            dist-installer\PT2VHF_APRS_Client_Portable_x64.exe `
+            "dist-installer\$setupName" `
+            "dist-installer\$portableName" `
             dist\PT2VHF_APRS_Client\SBOM.cdx.json `
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
             --clobber
