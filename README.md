@@ -1,4 +1,4 @@
-# PT2VHF APRS Client — v0.3.1
+# PT2VHF APRS Client — v0.3.2
 
 Cliente APRS-IS para Windows, desenvolvido em Python, com janela integrada baseada em Microsoft Edge WebView2, banco SQLite, mapa, mensagens e histórico de estações.
 
@@ -8,10 +8,10 @@ A partir da v0.2.0, o projeto é **Windows-first**. O usuário final não precis
 
 Os artefatos previstos para cada versão são:
 
-- `PT2VHF_APRS_Client_Setup_x64.exe` — instalador recomendado.
-- `PT2VHF_APRS_Client_Portable_x64.exe` — versão portátil em executável único.
+- `PT2VHF_APRS_Client_Setup_x64_vX.Y.Z.exe` — instalador recomendado.
+- `PT2VHF_APRS_Client_Portable_x64_vX.Y.Z.exe` — versão portátil em executável único.
 
-O instalador utiliza **PyInstaller + Inno Setup**. A aplicação executa sem janela de console, inicia um servidor HTTP apenas em `127.0.0.1` e exibe a interface dentro de uma janela própria usando **Microsoft Edge WebView2**. O navegador padrão não é aberto durante o uso normal. O aplicativo permanece disponível pela bandeja do Windows.
+O instalador utiliza **PyInstaller + Inno Setup**. A aplicação executa sem janela de console, inicia um servidor HTTP apenas em `127.0.0.1` e exibe a interface dentro de uma janela própria usando **Microsoft Edge WebView2**. O navegador padrão não é aberto durante o uso normal. Enquanto estiver em execução, o aplicativo também oferece controles pela bandeja do Windows.
 
 ### Janela integrada
 
@@ -19,8 +19,9 @@ A partir da v0.3.0, a interface deixa de depender de uma aba do navegador e pass
 
 - Janela inicial: aproximadamente **1400 × 850**.
 - Tamanho mínimo: **1100 × 700**.
-- Fechar pelo **X** oculta a janela e mantém o cliente ativo na bandeja.
-- O menu da bandeja restaura a janela, conecta/desconecta do APRS-IS, abre a pasta de dados ou encerra o programa.
+- A partir da **v0.3.2**, clicar no **X** pergunta **“Deseja realmente sair do PT2VHF APRS Client?”**.
+- **Não** cancela o fechamento; **Sim** desconecta do APRS-IS, encerra a janela, remove o ícone da bandeja e finaliza o processo.
+- O menu da bandeja continua permitindo restaurar a janela, conectar/desconectar do APRS-IS, abrir a pasta de dados ou sair.
 - Links externos, como GitHub, WhatsApp e e-mail, são enviados ao navegador padrão do Windows.
 - O modo de diagnóstico `--browser` força a interface a abrir no navegador.
 - Se o Microsoft Edge WebView2 Runtime estiver indisponível, o aplicativo informa o problema e usa o navegador como fallback.
