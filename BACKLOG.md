@@ -21,3 +21,19 @@ A v0.3.1 implementa a topologia observada básica, persistência dos enlaces e f
 - métricas agregadas por nó/enlace;
 - eventual animação temporal do tráfego observado.
 
+
+
+## Encerrar completamente ao fechar a janela
+
+**Objetivo:** fazer o fechamento da janela principal encerrar de fato o PT2VHF APRS Client, sem manter serviços ou ícone na bandeja do Windows.
+
+- Ao clicar no **X** da janela principal, encerrar completamente a aplicação.
+- Desconectar do **APRS-IS** antes de finalizar.
+- Encerrar o servidor local Flask/Waitress.
+- Remover o ícone da bandeja do Windows.
+- Encerrar threads/processos auxiliares, incluindo loops de beacon, monitoramento e atualização.
+- Não manter o aplicativo ativo junto ao relógio/área de notificação após o fechamento da janela.
+- Preservar uma saída limpa, garantindo que o SQLite finalize as operações pendentes antes do encerramento.
+- O menu da bandeja poderá continuar existindo enquanto a janela estiver aberta/minimizada, mas o fechamento pelo **X** passará a significar **Sair**.
+- Se for mantida uma opção de minimizar para a bandeja, ela deverá ser uma ação explícita separada, e não o comportamento padrão do botão **X**.
+
