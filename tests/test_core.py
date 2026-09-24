@@ -404,3 +404,11 @@ def test_observed_topology_from_aprs_path():
             assert ("PT2DGI", "PT2IGT", "igate") in keys
     finally:
         db.DB_PATH = original
+
+
+
+def test_frontend_collection_selectors_use_query_selector_all():
+    import re
+    source = (Path(__file__).resolve().parent.parent / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    bad = re.findall(r"(?<!\$)\$\([^\n;]+\)\.forEach\(", source)
+    assert not bad, f"Use $$() (querySelectorAll) before .forEach(): {bad}"
