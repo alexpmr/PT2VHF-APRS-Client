@@ -1,6 +1,6 @@
-# PT2VHF APRS Client — v0.2.9
+# PT2VHF APRS Client — v0.3.0
 
-Cliente APRS-IS para Windows, desenvolvido em Python, com interface web local, banco SQLite, mapa, mensagens e histórico de estações.
+Cliente APRS-IS para Windows, desenvolvido em Python, com janela integrada baseada em Microsoft Edge WebView2, banco SQLite, mapa, mensagens e histórico de estações.
 
 ## Windows — distribuição principal
 
@@ -11,7 +11,19 @@ Os artefatos previstos para cada versão são:
 - `PT2VHF_APRS_Client_Setup_x64.exe` — instalador recomendado.
 - `PT2VHF_APRS_Client_Portable_x64.exe` — versão portátil em executável único.
 
-O instalador utiliza **PyInstaller + Inno Setup**. A aplicação executa sem janela de console, inicia um servidor HTTP apenas em `127.0.0.1`, abre o navegador e permanece disponível pela bandeja do Windows.
+O instalador utiliza **PyInstaller + Inno Setup**. A aplicação executa sem janela de console, inicia um servidor HTTP apenas em `127.0.0.1` e exibe a interface dentro de uma janela própria usando **Microsoft Edge WebView2**. O navegador padrão não é aberto durante o uso normal. O aplicativo permanece disponível pela bandeja do Windows.
+
+### Janela integrada
+
+A partir da v0.3.0, a interface deixa de depender de uma aba do navegador e passa a rodar dentro da própria janela do PT2VHF APRS Client.
+
+- Janela inicial: aproximadamente **1400 × 850**.
+- Tamanho mínimo: **1100 × 700**.
+- Fechar pelo **X** oculta a janela e mantém o cliente ativo na bandeja.
+- O menu da bandeja restaura a janela, conecta/desconecta do APRS-IS, abre a pasta de dados ou encerra o programa.
+- Links externos, como GitHub, WhatsApp e e-mail, são enviados ao navegador padrão do Windows.
+- O modo de diagnóstico `--browser` força a interface a abrir no navegador.
+- Se o Microsoft Edge WebView2 Runtime estiver indisponível, o aplicativo informa o problema e usa o navegador como fallback.
 
 ### Dados do usuário
 
@@ -45,7 +57,7 @@ O aplicativo oferece:
 - Tracklog automático de estações móveis.
 - Popup com indicativo, posição, velocidade, curso, altitude, comentário/informação e path.
 - Centro e zoom persistidos no SQLite.
-- Botão para centralizar o mapa na localização indicada pelo navegador.
+- Botão para centralizar o mapa na localização disponibilizada pelo mecanismo WebView2/navegador.
 - CSS do Leaflet empacotado localmente para maior estabilidade dos tiles.
 
 ### Mensagens
@@ -134,7 +146,7 @@ Os resultados são gravados em `dist-installer`.
 
 ## Desenvolvimento
 
-Para executar pelo código-fonte:
+Para executar o backend em modo de desenvolvimento no navegador:
 
 ```powershell
 py -3 -m venv .venv
@@ -143,7 +155,14 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Abra `http://127.0.0.1:8080`.
+Para testar a janela integrada no Windows:
+
+```powershell
+pip install -r requirements-windows.txt
+python windows_app.py
+```
+
+O parâmetro `--browser` força o modo de diagnóstico pelo navegador.
 
 ## Segurança
 
@@ -170,6 +189,8 @@ Tabelas principais:
 - aprslib: https://pypi.org/project/aprslib/
 - Leaflet: https://leafletjs.com/
 - OpenStreetMap: https://www.openstreetmap.org/
+- pywebview: https://pywebview.flowrl.com/
+- Microsoft Edge WebView2: https://developer.microsoft.com/microsoft-edge/webview2/
 - PyInstaller: https://pyinstaller.org/
 - Inno Setup: https://jrsoftware.org/isinfo.php
 
