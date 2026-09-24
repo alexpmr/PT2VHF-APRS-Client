@@ -264,7 +264,18 @@ def create_app() -> Flask:
             hours = int(request.args.get("hours", 24))
         except (TypeError, ValueError):
             hours = 24
-        return jsonify(db.topology_stats(hours))
+        payload = db.topology_stats(hours)
+        payload["comparison"] = db.topology_period_comparison(hours)
+        return jsonify(payload)
+
+    @app.get("/api/topology/timeline")
+    def api_topology_timeline():
+        try:
+            hours = int(request.args.get("hours", 24))
+            limit = int(request.args.get("limit", 2500))
+        except (TypeError, ValueError):
+            hours, limit = 24, 2500
+        return jsonify(db.topology_timeline(hours, limit))
 
     @app.get("/api/stations")
     def api_stations():
