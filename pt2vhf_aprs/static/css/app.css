@@ -811,3 +811,35 @@ main { height: calc(100vh - 121px); }
     min-height: 50px;
   }
 }
+
+.required-fields-note {
+  margin: -3px 0 14px;
+  padding: 9px 11px;
+  border: 1px solid rgba(244,189,80,.30);
+  border-radius: 7px;
+  background: rgba(244,189,80,.055);
+  color: #d7c393;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.required-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border: 1px solid rgba(244,189,80,.35);
+  border-radius: 999px;
+  color: #f4bd50;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: .02em;
+  vertical-align: 1px;
+}
+#configForm input:required:invalid {
+  border-color: rgba(244,189,80,.55);
+}
+#configForm input:required:focus:invalid {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 2px rgba(244,189,80,.13);
+}
