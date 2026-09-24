@@ -69,8 +69,8 @@ def test_aprs_log_rx_tx():
             db.add_aprs_log("RX", "PY2ABC>APRS:teste")
             db.add_aprs_log("TX", "PT2VHF>APRS:teste")
             rows = db.list_aprs_log(limit=10)
-            assert [row["direction"] for row in rows] == ["RX", "TX"]
-            assert rows[0]["raw"].startswith("PY2ABC")
+            assert [row["direction"] for row in rows] == ["TX", "RX"]
+            assert rows[0]["raw"].startswith("PT2VHF")
             tx = db.list_aprs_log(direction="TX", limit=10)
             assert len(tx) == 1
             db.clear_aprs_log()
