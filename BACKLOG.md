@@ -92,3 +92,13 @@ A partir desta versão, novas demandas serão adicionadas novamente neste arquiv
 - Dar foco visual ao campo de filtro do Log para deixar claro qual estação está sendo analisada.
 - O botão deve funcionar para qualquer estação exibida no mapa, independentemente de ter sido recebida diretamente por RF ou via APRS-IS.
 - Não alterar permanentemente outras preferências da aba Log; a ação deve apenas navegar e aplicar o filtro correspondente.
+
+## Remover texto introdutório da página Configuração
+
+**Objetivo:** deixar a página de Configuração mais limpa e direta.
+
+- Remover completamente o bloco introdutório exibido no topo da página Configuração com o texto:
+  - **Página única de configuração**
+  - **As opções estão organizadas por seções. Role a página para acessar Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.**
+- Após a remoção, a página deve começar diretamente pela primeira seção de configuração.
+- Não deixar espaço vazio, borda, cartão ou margem residual onde esse bloco existia.
