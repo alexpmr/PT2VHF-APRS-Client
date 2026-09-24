@@ -118,8 +118,13 @@ def test_map_preferences_persist():
                 "map_type": "satellite",
                 "track_color": "#ff6600",
                 "track_width": 5,
+                "topology_rf_color": "#11aa22",
+                "topology_igate_color": "#8844cc",
+                "topology_width": 4,
                 "map_brightness": 80,
                 "sound_on_personal_message": False,
+                "message_popup_seconds": 9,
+                "open_browser_on_start": True,
                 "app_theme": "light",
                 "messages_font_family": "consolas",
                 "messages_font_size": 14,
@@ -129,8 +134,13 @@ def test_map_preferences_persist():
             assert cfg["map_type"] == "satellite"
             assert cfg["track_color"] == "#ff6600"
             assert cfg["track_width"] == 5
+            assert cfg["topology_rf_color"] == "#11aa22"
+            assert cfg["topology_igate_color"] == "#8844cc"
+            assert cfg["topology_width"] == 4
             assert cfg["map_brightness"] == 80
             assert cfg["sound_on_personal_message"] == 0
+            assert cfg["message_popup_seconds"] == 9
+            assert cfg["open_browser_on_start"] == 1
             assert cfg["app_theme"] == "light"
             assert cfg["messages_font_family"] == "consolas"
             assert cfg["messages_font_size"] == 14
@@ -147,7 +157,7 @@ def test_aprs_passcode():
 
 
 def test_version_tuple():
-    assert version_tuple("v0.3.2") == (0, 3, 2)
+    assert version_tuple("v1.0") == (1, 0)
     assert version_tuple("0.2.10") > version_tuple("0.2.9")
     assert version_tuple("v1.0.0") > version_tuple("0.9.99")
 
@@ -210,6 +220,11 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["altitude"] is None
             assert cfg["aprs_filter"] == "r/2000"
             assert cfg["app_theme"] == "dark"
+            assert cfg["topology_rf_color"] == "#35a7ff"
+            assert cfg["topology_igate_color"] == "#b06cff"
+            assert cfg["topology_width"] == 2
+            assert cfg["message_popup_seconds"] == 5
+            assert cfg["open_browser_on_start"] == 0
 
             with pytest.raises(ValueError, match="Indicativo"):
                 db.save_config({
