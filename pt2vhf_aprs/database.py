@@ -25,7 +25,7 @@ def _default_data_dir() -> Path:
 DB_PATH = _default_data_dir() / "pt2vhf_aprs.db"
 
 DEFAULT_CONFIG = {
-    "callsign": "PT2VHF",
+    "callsign": "",
     "ssid": 0,
     "comment": "PT2VHF APRS Client",
     "latitude": None,
@@ -38,7 +38,7 @@ DEFAULT_CONFIG = {
     "server": "brazil.aprs2.net",
     "port": 14580,
     "passcode": "",
-    "aprs_filter": "",
+    "aprs_filter": "r/2000",
     "connect_on_start": 0,
     "map_type": "osm",
     "track_color": "#3ba6ff",
@@ -89,7 +89,7 @@ def init_db() -> None:
                 server TEXT NOT NULL DEFAULT 'brazil.aprs2.net',
                 port INTEGER NOT NULL DEFAULT 14580,
                 passcode TEXT NOT NULL DEFAULT '',
-                aprs_filter TEXT NOT NULL DEFAULT '',
+                aprs_filter TEXT NOT NULL DEFAULT 'r/2000',
                 connect_on_start INTEGER NOT NULL DEFAULT 0,
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
@@ -217,6 +217,23 @@ def init_db() -> None:
             )
 
 
+def validate_required_station_config(config: dict[str, Any]) -> None:
+    missing: list[str] = []
+    if not str(config.get("callsign") or "").strip():
+        missing.append("Indicativo")
+    if config.get("latitude") in ("", None):
+        missing.append("Latitude")
+    if config.get("longitude") in ("", None):
+        missing.append("Longitude")
+    if config.get("altitude") in ("", None):
+        missing.append("Altitude")
+
+    if missing:
+        raise ValueError(
+            "Preencha os campos obrigatórios antes de continuar: " + ", ".join(missing) + "."
+        )
+
+
 def get_config() -> dict[str, Any]:
     with connection() as conn:
         row = conn.execute("SELECT * FROM config WHERE id=1").fetchone()
@@ -250,8 +267,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         else:
             merged[field] = float(merged[field])
 
-    if not merged["callsign"]:
-        raise ValueError("Indicativo é obrigatório.")
+    validate_required_station_config(merged)
     if not (0 <= merged["ssid"] <= 15):
         raise ValueError("SSID deve estar entre 0 e 15.")
     if merged["latitude"] is not None and not (-90 <= merged["latitude"] <= 90):
