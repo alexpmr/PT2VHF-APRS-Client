@@ -36,7 +36,7 @@ cp dist/PT2VHF_APRS_Client_Linux_x86_64 "$appdir/usr/bin/pt2vhf-aprs-client"
 chmod 0755 "$appdir/usr/bin/pt2vhf-aprs-client"
 cp pt2vhf_aprs/static/img/app_logo.svg "$appdir/usr/share/icons/hicolor/scalable/apps/pt2vhf-aprs-client.svg"
 cp pt2vhf_aprs/static/img/app_logo.svg "$appdir/pt2vhf-aprs-client.svg"
-cat > "$appdir/AppRun" <<\'EOF\'
+cat > "$appdir/AppRun" <<'EOF'
 #!/usr/bin/env bash
 HERE="$(dirname "$(readlink -f "$0")")"
 exec "$HERE/usr/bin/pt2vhf-aprs-client" "$@"
@@ -55,10 +55,10 @@ EOF
 cp "$appdir/pt2vhf-aprs-client.desktop" "$appdir/usr/share/applications/pt2vhf-aprs-client.desktop"
 
 if command -v curl >/dev/null 2>&1; then
-  curl -fsSL -o dist-linux/appimagetool.AppImage \\
+  curl -fsSL -o dist-linux/appimagetool.AppImage \
     https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
   chmod +x dist-linux/appimagetool.AppImage
-  ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 dist-linux/appimagetool.AppImage \\
+  ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 dist-linux/appimagetool.AppImage \
     "$appdir" "dist-linux/PT2VHF_APRS_Client_x86_64_v${version}.AppImage"
 fi
 
