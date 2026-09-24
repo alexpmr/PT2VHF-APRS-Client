@@ -175,7 +175,22 @@
     try {
       const result = await api('/api/update/download', { method: 'POST' });
       if (progress) progress.textContent = ui(`Atualização baixada: ${result.update.asset_name}`, `Update downloaded: ${result.update.asset_name}`);
-      if (!silent) toast(ui('Atualização baixada e verificada.', 'Update downloaded and verified.'), 'ok');
+      if (!silent) {
+        toast(ui('Atualização baixada e verificada.', 'Update downloaded and verified.'), 'ok');
+        if (state.updateInfo?.install_supported && !state.currentConfig?.install_updates_on_exit) {
+          const enable = window.confirm(ui(
+            'Deseja instalar automaticamente esta atualização quando fechar o aplicativo?',
+            'Install this update automatically when the application closes?'
+          ));
+          if (enable) {
+            const payload = { ...(state.currentConfig || {}), install_updates_on_exit: true };
+            const saved = await api('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+            state.currentConfig = saved.config || payload;
+            const checkbox = $('#configForm')?.elements.namedItem('install_updates_on_exit');
+            if (checkbox) checkbox.checked = true;
+          }
+        }
+      }
       await refreshVersionStatus(true);
       await refreshPendingUpdateStatus();
     } catch (err) {
