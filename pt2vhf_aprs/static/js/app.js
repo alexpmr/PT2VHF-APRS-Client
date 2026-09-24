@@ -1348,7 +1348,7 @@
         <td>${escapeHtml(s.info || '')}</td>
       </tr>`).join('');
 
-    $('#stationsTable tbody .station-row').forEach(row => {
+    $$('#stationsTable tbody .station-row').forEach(row => {
       const open = () => focusStationOnMap(row.dataset.callsign);
       row.addEventListener('click', open);
       row.addEventListener('keydown', e => {
@@ -2101,16 +2101,16 @@
   function showConfigSection(section) {
     state.configSection = section === 'app' ? 'app' : 'aprs';
     localStorage.setItem('pt2vhf_config_section', state.configSection);
-    $('.config-section-tab').forEach(btn => {
+    $$('.config-section-tab').forEach(btn => {
       const active = btn.dataset.configSection === state.configSection;
       btn.classList.toggle('active', active);
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
-    $('.config-section-aprs').forEach(el => el.classList.toggle('hidden', state.configSection !== 'aprs'));
-    $('.config-section-app').forEach(el => el.classList.toggle('hidden', state.configSection !== 'app'));
+    $$('.config-section-aprs').forEach(el => el.classList.toggle('hidden', state.configSection !== 'aprs'));
+    $$('.config-section-app').forEach(el => el.classList.toggle('hidden', state.configSection !== 'app'));
   }
 
-  $('.config-section-tab').forEach(btn => btn.addEventListener('click', () => showConfigSection(btn.dataset.configSection)));
+  $$('.config-section-tab').forEach(btn => btn.addEventListener('click', () => showConfigSection(btn.dataset.configSection)));
   showConfigSection(localStorage.getItem('pt2vhf_config_section') || 'aprs');
 
   function requiredStationDefinitions() {
@@ -2508,7 +2508,7 @@
     $('#filterRadiusKm').value = '2000';
     $('#filterPrefixes').value = '';
     $('#filterBuddies').value = '';
-    $('.filter-type').forEach(input => { input.checked = false; });
+    $$('.filter-type').forEach(input => { input.checked = false; });
     toast(ui('Filtro padrão r/2000 restaurado.', 'Default r/2000 filter restored.'), 'ok');
   });
 
