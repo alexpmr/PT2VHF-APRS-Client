@@ -199,3 +199,18 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Adicionar botão **Restaurar padrão** para cada grupo e, se conveniente, uma ação para restaurar toda a aparência do aplicativo.
 - Garantir legibilidade tanto no tema Claro quanto no Escuro.
 - Preservar ordenação, alinhamento das colunas, rolagem e responsividade das tabelas ao aumentar a fonte ou ativar negrito.
+
+## Manual PDF profissional com screenshots
+
+**Objetivo:** transformar o manual em uma documentação profissional, visual e realmente útil para novos usuários.
+
+- Criar uma **capa azul profissional**, seguindo a identidade visual oficial PT2VHF / APRS / CLIENT.
+- Usar a **logo oficial do projeto** em destaque na capa.
+- Exibir na capa pelo menos: nome do aplicativo, versão, data e subtítulo **Manual do Usuário**.
+- Estruturar o conteúdo com diagramação profissional, hierarquia visual consistente, cabeçalhos, rodapés, numeração de páginas e índice.
+- Incluir **screenshots reais da aplicação** ao longo do manual, vinculadas às instruções correspondentes.
+- Priorizar screenshots para: tela principal, mapa, mensagens, estações, logs, configuração APRS, configuração do aplicativo, editor de filtro, coordenadas/localização e instalação quando aplicável.
+- Evitar screenshots decorativas: cada imagem deve ajudar a explicar uma função ou procedimento.
+- Garantir boa resolução e legibilidade das imagens no PDF.
+- Sempre que a interface mudar em uma nova versão, atualizar ou regenerar os screenshots afetados antes de publicar o manual.
+- Manter o manual sincronizado com VERSION e CHANGELOG e validar conteúdo mínimo antes de anexá-lo à Release.
