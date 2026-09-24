@@ -84,6 +84,7 @@ class APRSService:
     def connect(self) -> None:
         if aprslib is None:
             raise RuntimeError("Dependência aprslib não instalada. Execute pip install -r requirements.txt")
+        db.validate_required_station_config(db.get_config())
         self._set_status(wanted=True, last_error="")
         self._stop_event.clear()
         if not self._worker or not self._worker.is_alive():
