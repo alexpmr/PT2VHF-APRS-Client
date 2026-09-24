@@ -72,6 +72,23 @@ These services receive normal HTTP request metadata such as the requesting IP ad
 
 Future releases may vendor more of these resources locally.
 
+## Verificação de atualizações no GitHub
+
+O aplicativo consulta periodicamente a API pública de Releases do GitHub para verificar se existe uma versão mais recente do PT2VHF APRS Client.
+
+Essa consulta envia apenas os metadados normais de uma requisição HTTPS, incluindo informações como endereço IP, cabeçalhos HTTP e o identificador do aplicativo/versão no User-Agent.
+
+A verificação de atualização **não envia** ao GitHub:
+
+- indicativo ou SSID configurado;
+- posição da estação;
+- mensagens APRS;
+- passcode APRS-IS;
+- filtro APRS-IS;
+- conteúdo do banco SQLite ou do Log.
+
+A consulta é feita diretamente ao GitHub e não passa por um servidor operado pelo desenvolvedor. O resultado é armazenado temporariamente em cache local para reduzir requisições.
+
 ## Configuration export
 
 The JSON configuration export is intended to allow full backup and restore. It may contain the APRS-IS passcode in readable form.
