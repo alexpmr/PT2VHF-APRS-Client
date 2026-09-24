@@ -183,3 +183,19 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Validar o PDF gerado antes da publicação: quantidade mínima de páginas, seções obrigatórias presentes e tamanho de arquivo coerente.
 - Fazer o workflow falhar se o PDF estiver vazio, muito curto ou sem as seções obrigatórias, impedindo a publicação de um manual incompleto no Latest.
 - Manter a identidade visual oficial PT2VHF / APRS / CLIENT.
+
+## Formatação de texto por tela
+
+**Objetivo:** permitir personalizar a leitura das principais telas diretamente em **Configuração → Aplicativo / Aparência**.
+
+- Criar controles independentes de formatação para **Mensagens**, **Estações** e **Logs**.
+- Para cada tela, permitir configurar pelo menos:
+  - família da fonte;
+  - tamanho da fonte;
+  - negrito/peso da fonte;
+  - opcionalmente espaçamento entre linhas e densidade/altura das linhas quando fizer sentido.
+- Aplicar as alterações imediatamente como pré-visualização, salvando de forma persistente ao confirmar a configuração.
+- Manter configurações independentes entre as três telas; alterar Mensagens não deve alterar Estações ou Logs.
+- Adicionar botão **Restaurar padrão** para cada grupo e, se conveniente, uma ação para restaurar toda a aparência do aplicativo.
+- Garantir legibilidade tanto no tema Claro quanto no Escuro.
+- Preservar ordenação, alinhamento das colunas, rolagem e responsividade das tabelas ao aumentar a fonte ou ativar negrito.
