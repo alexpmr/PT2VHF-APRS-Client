@@ -27,8 +27,9 @@ if (-not $iscc) {
     throw "Inno Setup 6 não encontrado. Instale-o e execute este script novamente."
 }
 
+$version = (Get-Content VERSION -Raw).Trim()
 & $iscc windows\installer.iss
-Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe dist-installer\PT2VHF_APRS_Client_Portable_x64.exe -Force
+Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-installer\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
 
 Write-Host ""
 Write-Host "Artefatos gerados em dist-installer:" -ForegroundColor Green
