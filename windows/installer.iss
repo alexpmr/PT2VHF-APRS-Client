@@ -1,5 +1,5 @@
 #define MyAppName "PT2VHF APRS Client"
-#define MyAppVersion "0.3.0"
+#define MyAppVersion "0.3.1"
 #define MyAppPublisher "Alex, PT2VHF"
 #define MyAppExeName "PT2VHF_APRS_Client.exe"
 
@@ -12,7 +12,7 @@ DefaultDirName={autopf}\PT2VHF APRS Client
 DefaultGroupName=PT2VHF APRS Client
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=PT2VHF_APRS_Client_Setup_x64
+OutputBaseFilename=PT2VHF_APRS_Client_Setup_x64_v{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
