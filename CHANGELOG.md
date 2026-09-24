@@ -2,6 +2,10 @@
 
 ## v0.2.9 — em desenvolvimento
 
+- Em **Configuração → Aparência**, adicionada seleção entre **Tema escuro** e **Tema claro**.
+- O tema escuro continua sendo o padrão para novas instalações.
+- O novo **tema claro** adapta cabeçalho, abas, formulários, tabelas, mensagens, Ajuda, Log, modais e controles do mapa.
+- A troca de tema é visualizada imediatamente e a escolha fica persistida no banco local após salvar a configuração.
 - Na aba **Mensagens**, por padrão as mensagens mais novas aparecem no topo; as mais antigas ficam abaixo e são consultadas rolando a lista para baixo.
 - Ao abrir a aba Mensagens, a visualização começa no topo. Durante atualizações automáticas, se o usuário estiver consultando mensagens antigas, a posição da rolagem é preservada.
 - Em novas instalações, o campo **Indicativo** passa a iniciar vazio; nenhum indicativo pessoal é preenchido automaticamente.
