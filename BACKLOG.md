@@ -121,3 +121,35 @@ As instruções deverão cobrir:
   - `PT2VHF_APRS_Client_Setup_x64_v1.0.exe`
   - `PT2VHF_APRS_Client_Portable_x64_v1.0.exe`
 
+
+
+## Mensagens em fluxo de chat e agrupamento por remetente
+
+**Objetivo:** tornar a aba Mensagens mais natural para conversação, aproximando o comportamento de aplicativos de chat.
+
+### Ordem e rolagem das mensagens
+
+- Alterar o comportamento padrão da aba **Mensagens** para exibir as mensagens em fluxo de chat.
+- As mensagens mais novas deverão aparecer **na parte inferior** da lista.
+- O histórico mais antigo ficará acima; para consultar mensagens anteriores, o usuário deverá **rolar para cima**.
+- Quando chegar uma nova mensagem e o usuário estiver no fim da conversa, a lista deverá acompanhar automaticamente a nova mensagem.
+- Se o usuário estiver consultando mensagens antigas mais acima, a chegada de novas mensagens não deverá forçar a rolagem para baixo.
+- Ao abrir a aba Mensagens, posicionar inicialmente a visualização no ponto mais recente.
+- Essa regra substitui, apenas na aba Mensagens, o comportamento anterior de “mais novas no topo”. As abas Estações e Log podem continuar com os registros mais recentes no topo.
+
+### Agrupamento por remetente
+
+- Adicionar uma opção de visualização **“Agrupar por remetente”**.
+- Quando desligada, manter a lista cronológica completa de mensagens.
+- Quando ligada, apresentar as mensagens organizadas em conversas por indicativo/remetente.
+- Cada conversa deverá mostrar, no mínimo:
+  - indicativo do remetente;
+  - última mensagem;
+  - data/hora da última interação;
+  - quantidade de mensagens não lidas, quando houver.
+- Ao abrir uma conversa, exibir o histórico completo daquele contato em ordem de chat, com mensagens novas embaixo.
+- Considerar mensagens enviadas e recebidas com o mesmo indicativo como parte da mesma conversa.
+- Manter boletins e telemetria separados das conversas individuais, evitando misturá-los indevidamente ao agrupamento por remetente.
+- Preservar filtros existentes, incluindo **Minhas mensagens** e **Ocultar telemetria**, de forma compatível com a visualização agrupada.
+- Persistir a preferência de visualização entre **Lista cronológica** e **Agrupar por remetente**.
+
