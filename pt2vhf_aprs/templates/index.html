@@ -291,6 +291,16 @@
 
       <div class="config-card full-card">
         <h3>Aparência</h3>
+        <div class="theme-selector-row">
+          <label class="field theme-field">
+            <span>Tema da aplicação</span>
+            <select name="app_theme" id="appTheme">
+              <option value="dark">Escuro — padrão</option>
+              <option value="light">Claro</option>
+            </select>
+            <small>A alteração é aplicada imediatamente e fica salva após clicar em Salvar configuração.</small>
+          </label>
+        </div>
         <div class="appearance-grid">
           <div class="appearance-group">
             <h4>Mensagens</h4>
@@ -340,7 +350,7 @@
             </label>
           </div>
         </div>
-        <div class="hint">Os ajustes são aplicados às tabelas e controles principais das abas Mensagens e Estações.</div>
+        <div class="hint">Tema, fontes e tamanhos são aplicados à interface e persistidos no banco local.</div>
       </div>
 
       <div class="config-card full-card">
