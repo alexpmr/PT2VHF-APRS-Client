@@ -1,4 +1,4 @@
-name: Build Windows
+name: Build Windows + Linux
 
 on:
   workflow_dispatch:
@@ -92,6 +92,19 @@ jobs:
           }
 
           @"
+          ## PT2VHF APRS Client v$version
+
+          ### Novidades principais
+
+          - Nova política de versão: a linha oficial passa a iniciar em **v1.0**.
+          - Mensagens em fluxo de chat, com registros mais novos na parte inferior.
+          - Opção **Agrupar por remetente**, com conversas por contato.
+          - Clique em indicativos de origem/destino para responder diretamente.
+          - Na aba Mensagens, novas mensagens usam aviso compacto com fechamento automático configurável e fechamento manual.
+          - Cores e espessura da **topologia observada** passam a ser configuráveis, com restauração dos padrões.
+          - Opção **Abrir também no navegador ao iniciar**, desligada por padrão.
+          - Primeira distribuição oficial **Linux x86_64/amd64**, em pacote portátil `.tar.gz` e pacote `.deb`.
+
           ## Política de assinatura de código
 
           **Status da assinatura:** esta versão permanece sem assinatura Authenticode enquanto o projeto aguarda a ativação da assinatura pelo SignPath Foundation.
@@ -116,10 +129,21 @@ jobs:
 
           ## Arquivos para download
 
+          ### Windows
+
           - **$setupName** — instalador para Windows. **Opção recomendada para a maioria dos usuários.**
           - **$portableName** — versão portátil em um único arquivo EXE. **Não precisa ser instalada.**
-          - **SBOM.cdx.json** — inventário técnico dos componentes de software utilizados na versão.
-          - **THIRD_PARTY_LICENSES.txt** — relação das dependências de terceiros e respectivas licenças.
+          - **SBOM.cdx.json** — inventário técnico dos componentes do build Windows.
+          - **THIRD_PARTY_LICENSES.txt** — dependências e licenças do build Windows.
+
+          ### Linux
+
+          O job Linux da mesma release adiciona:
+          - **PT2VHF_APRS_Client_Linux_x86_64_v$version.tar.gz** — pacote portátil Linux.
+          - **pt2vhf-aprs-client_${version}_amd64.deb** — pacote Debian/Ubuntu.
+          - **SBOM-Linux.cdx.json** e **THIRD_PARTY_LICENSES_Linux.txt** — inventário técnico do build Linux.
+
+          Consulte **docs/INSTALL_LINUX.md** para os comandos de instalação e atualização.
           "@ | Set-Content -Encoding UTF8 release-notes.md
 
           gh release view $tag 2>$null
@@ -134,4 +158,54 @@ jobs:
             "dist-installer\$portableName" `
             dist\PT2VHF_APRS_Client\SBOM.cdx.json `
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
+            --clobber
+
+
+  linux-x64:
+    needs: windows-x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Build Linux packages
+        shell: bash
+        run: |
+          chmod +x linux/build_linux.sh
+          PYTHON_BIN=python3 bash linux/build_linux.sh
+
+      - name: Upload Linux build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Linux-x86_64
+          path: |
+            dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v*.tar.gz
+            dist-linux/pt2vhf-aprs-client_*_amd64.deb
+            dist-linux/SBOM-Linux.cdx.json
+            dist-linux/THIRD_PARTY_LICENSES_Linux.txt
+
+      - name: Publish Linux release assets
+        if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(tr -d '\r\n ' < VERSION)"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="v$version"
+          fi
+
+          gh release upload "$tag" \
+            "dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v$version.tar.gz" \
+            "dist-linux/pt2vhf-aprs-client_${version}_amd64.deb" \
+            dist-linux/SBOM-Linux.cdx.json \
+            dist-linux/THIRD_PARTY_LICENSES_Linux.txt \
             --clobber
