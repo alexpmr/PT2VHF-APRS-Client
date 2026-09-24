@@ -373,6 +373,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "A v1.6 usa uma única página de Configuração, organizada em cartões/seções para Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.",
         "Antes de conectar ao APRS-IS, preencha Indicativo, Latitude, Longitude e Altitude. Caso tente conectar sem esses dados, o programa leva o usuário à Configuração e destaca os campos pendentes.",
         "Conectar ao iniciar vem habilitado por padrão em novas instalações e fica na seção APRS-IS.",
+        "Latitude, Longitude e Altitude são apresentadas em linhas independentes para manter a leitura e a edição dentro do cartão mesmo em DMS, janelas menores ou fontes ampliadas.",
         "Se algum campo for alterado e você tentar mudar de aba antes de salvar, o cliente oferece Salvar e sair, Descartar alterações ou Cancelar."
     ])
     story.append(Paragraph("Campos principais", st["h2"]))
@@ -437,6 +438,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     ], [
         "Clique em um indicativo De ou Para para preencher o destinatário.",
         "No modo Agrupar por remetente, clique em Conversas para alternar A-Z/Z-A; ao escolher uma conversa, o campo Destino é preenchido automaticamente com o contato selecionado.",
+        "O pop-up de nova mensagem oferece Ler mensagem, Responder e OK. Ler mensagem abre a aba Mensagens e foca a conversa do remetente quando o agrupamento estiver ativo; na lista normal, posiciona a visualização na mensagem recebida.",
         "Enter envia; Shift+Enter cria nova linha.",
         "Mensagens longas são divididas em partes APRS, cada uma com seu próprio ID e ACK, e exibem status agregado como 2/3 confirmadas ou Todas confirmadas.",
         "Partes sem ACK/REJ podem ser reenviadas com Retry; timeout e número máximo de tentativas são configuráveis, com novo ID APRS a cada tentativa.",
