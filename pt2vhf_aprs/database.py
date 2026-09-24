@@ -862,6 +862,31 @@ def reset_config() -> dict[str, Any]:
     return get_config()
 
 
+def mark_message_retried(row_id: int) -> None:
+    with connection() as conn:
+        conn.execute("UPDATE messages SET status='Substituída por retry' WHERE id=?", (int(row_id),))
+
+
+def list_retry_candidates(timeout_seconds: int, max_retries: int, limit: int = 20) -> list[dict[str, Any]]:
+    timeout_seconds = max(15, int(timeout_seconds or 60))
+    max_retries = max(0, int(max_retries or 0))
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=timeout_seconds)).isoformat(timespec="seconds")
+    with connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM messages
+            WHERE direction='out'
+              AND message_type='message'
+              AND status IN ('Enviada','Reenviada')
+              AND COALESCE(retry_count,0) < ?
+              AND timestamp <= ?
+            ORDER BY id ASC LIMIT ?
+            """,
+            (max_retries, cutoff, int(limit)),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
 def mark_message_status(msg_id: str, status: str, peer: str | None = None) -> None:
     with connection() as conn:
         if peer:
