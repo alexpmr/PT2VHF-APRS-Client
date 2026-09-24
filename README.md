@@ -105,6 +105,7 @@ O aplicativo oferece:
 - `r/2000` é o filtro padrão para novas instalações e é expandido usando a posição configurada.
 - Conectar ao iniciar.
 - Tipo de mapa, cor e espessura dos tracklogs.
+- Tema escuro como padrão e opção de tema claro.
 - Fonte e tamanho independentes para Mensagens e Estações.
 - Passcode APRS-IS visível junto ao indicativo, com cálculo automático.
 - Importação/exportação JSON.
