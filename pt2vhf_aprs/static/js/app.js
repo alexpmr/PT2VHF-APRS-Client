@@ -165,6 +165,33 @@
     if (tab) tab.click();
   });
 
+  function setupExternalLinksForEmbeddedWindow() {
+    document.addEventListener('click', event => {
+      const link = event.target.closest('a[href]');
+      if (!link) return;
+
+      const href = link.getAttribute('href') || '';
+      if (!href || href.startsWith('#') || href.startsWith('/') || href.startsWith('./') || href.startsWith('../')) return;
+
+      let target;
+      try {
+        target = new URL(href, window.location.href);
+      } catch (_) {
+        return;
+      }
+
+      const isExternal = ['http:', 'https:', 'mailto:'].includes(target.protocol)
+        && (target.protocol === 'mailto:' || target.origin !== window.location.origin);
+      if (!isExternal) return;
+
+      const nativeApi = window.pywebview?.api;
+      if (nativeApi?.open_external) {
+        event.preventDefault();
+        nativeApi.open_external(target.href);
+      }
+    });
+  }
+
   function tabSetup() {
     $$('.tab').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
@@ -1172,6 +1199,7 @@
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
   setupSortableTable('stationsTable', 'stations', renderStations);
+  setupExternalLinksForEmbeddedWindow();
   tabSetup();
 
   async function boot() {
