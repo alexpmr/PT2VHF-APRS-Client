@@ -265,13 +265,26 @@
     root.dataset.theme = theme;
     const messagesFamily = FONT_FAMILIES[cfg.messages_font_family] || FONT_FAMILIES.system;
     const stationsFamily = FONT_FAMILIES[cfg.stations_font_family] || FONT_FAMILIES.system;
+    const logsFamily = FONT_FAMILIES[cfg.logs_font_family] || FONT_FAMILIES.consolas;
     const messagesSize = Math.min(20, Math.max(10, Number(cfg.messages_font_size || 12)));
     const stationsSize = Math.min(20, Math.max(10, Number(cfg.stations_font_size || 12)));
+    const logsSize = Math.min(20, Math.max(10, Number(cfg.logs_font_size || 12)));
+    const messagesLine = Math.min(2, Math.max(1, Number(cfg.messages_line_height || 1.35)));
+    const stationsLine = Math.min(2, Math.max(1, Number(cfg.stations_line_height || 1.25)));
+    const logsLine = Math.min(2, Math.max(1, Number(cfg.logs_line_height || 1.30)));
 
     root.style.setProperty('--messages-font-family', messagesFamily);
     root.style.setProperty('--messages-font-size', `${messagesSize}px`);
+    root.style.setProperty('--messages-font-weight', cfg.messages_font_weight === 'bold' ? '700' : '400');
+    root.style.setProperty('--messages-line-height', String(messagesLine));
     root.style.setProperty('--stations-font-family', stationsFamily);
     root.style.setProperty('--stations-font-size', `${stationsSize}px`);
+    root.style.setProperty('--stations-font-weight', cfg.stations_font_weight === 'bold' ? '700' : '400');
+    root.style.setProperty('--stations-line-height', String(stationsLine));
+    root.style.setProperty('--logs-font-family', logsFamily);
+    root.style.setProperty('--logs-font-size', `${logsSize}px`);
+    root.style.setProperty('--logs-font-weight', cfg.logs_font_weight === 'bold' ? '700' : '400');
+    root.style.setProperty('--logs-line-height', String(logsLine));
   }
 
   function applyMapPreferences(cfg = {}) {
@@ -1595,12 +1608,19 @@
   function syncAppearanceControls() {
     const form = $('#configForm');
     if (!form) return;
-    const msgSize = form.elements.namedItem('messages_font_size');
-    const stnSize = form.elements.namedItem('stations_font_size');
-    const msgOut = $('#messagesFontSizeValue');
-    const stnOut = $('#stationsFontSizeValue');
-    if (msgSize && msgOut) msgOut.textContent = `${msgSize.value || 12} px`;
-    if (stnSize && stnOut) stnOut.textContent = `${stnSize.value || 12} px`;
+    const pairs = [
+      ['messages_font_size', '#messagesFontSizeValue', v => `${v || 12} px`],
+      ['stations_font_size', '#stationsFontSizeValue', v => `${v || 12} px`],
+      ['logs_font_size', '#logsFontSizeValue', v => `${v || 12} px`],
+      ['messages_line_height', '#messagesLineHeightValue', v => `${Number(v || 1.35).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
+      ['stations_line_height', '#stationsLineHeightValue', v => `${Number(v || 1.25).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
+      ['logs_line_height', '#logsLineHeightValue', v => `${Number(v || 1.30).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
+    ];
+    for (const [name, selector, formatter] of pairs) {
+      const input = form.elements.namedItem(name);
+      const output = $(selector);
+      if (input && output) output.textContent = formatter(input.value);
+    }
   }
 
   function previewAppearanceFromForm() {
@@ -1610,26 +1630,22 @@
       app_theme: form.elements.namedItem('app_theme')?.value || 'dark',
       messages_font_family: form.elements.namedItem('messages_font_family')?.value || 'system',
       messages_font_size: form.elements.namedItem('messages_font_size')?.value || 12,
+      messages_font_weight: form.elements.namedItem('messages_font_weight')?.value || 'normal',
+      messages_line_height: form.elements.namedItem('messages_line_height')?.value || 1.35,
       stations_font_family: form.elements.namedItem('stations_font_family')?.value || 'system',
-      stations_font_size: form.elements.namedItem('stations_font_size')?.value || 12
+      stations_font_size: form.elements.namedItem('stations_font_size')?.value || 12,
+      stations_font_weight: form.elements.namedItem('stations_font_weight')?.value || 'normal',
+      stations_line_height: form.elements.namedItem('stations_line_height')?.value || 1.25,
+      logs_font_family: form.elements.namedItem('logs_font_family')?.value || 'consolas',
+      logs_font_size: form.elements.namedItem('logs_font_size')?.value || 12,
+      logs_font_weight: form.elements.namedItem('logs_font_weight')?.value || 'normal',
+      logs_line_height: form.elements.namedItem('logs_line_height')?.value || 1.30
     });
     state.language = form.elements.namedItem('language')?.value === 'en' ? 'en' : 'pt-BR';
     applyLanguage(state.language);
     syncAppearanceControls();
   }
 
-  for (const name of ['app_theme', 'language', 'messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
-    $('#configForm')?.elements.namedItem(name)?.addEventListener('input', previewAppearanceFromForm);
-    $('#configForm')?.elements.namedItem(name)?.addEventListener('change', previewAppearanceFromForm);
-  }
-
-  $('#sendBeaconButton').addEventListener('click', async () => {
-    try {
-      await api('/api/beacon', { method: 'POST' });
-      toast('Beacon transmitido.', 'ok');
-      await loadMapData();
-    } catch (err) { toast(err.message, 'error'); }
-  });
 
   function updateSelectedSymbol() {
     const form = $('#configForm');
@@ -1652,6 +1668,31 @@
       $('#symbolModal').classList.add('hidden');
     }));
   }
+
+  for (const name of [
+    'app_theme','language',
+    'messages_font_family','messages_font_size','messages_font_weight','messages_line_height',
+    'stations_font_family','stations_font_size','stations_font_weight','stations_line_height',
+    'logs_font_family','logs_font_size','logs_font_weight','logs_line_height'
+  ]) {
+    const el = $('#configForm')?.elements.namedItem(name);
+    el?.addEventListener('input', previewAppearanceFromForm);
+    el?.addEventListener('change', previewAppearanceFromForm);
+  }
+
+  function resetTypography(prefix, defaults) {
+    const form = $('#configForm');
+    if (!form) return;
+    for (const [suffix, value] of Object.entries(defaults)) {
+      const el = form.elements.namedItem(`${prefix}_${suffix}`);
+      if (el) el.value = String(value);
+    }
+    previewAppearanceFromForm();
+    toast(ui('Formatação restaurada ao padrão. Clique em Salvar para persistir.', 'Formatting restored to defaults. Click Save to persist.'), 'ok');
+  }
+  $('#resetMessagesTypography')?.addEventListener('click', () => resetTypography('messages', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.35}));
+  $('#resetStationsTypography')?.addEventListener('click', () => resetTypography('stations', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.25}));
+  $('#resetLogsTypography')?.addEventListener('click', () => resetTypography('logs', {font_family:'consolas',font_size:12,font_weight:'normal',line_height:1.30}));
 
   $('#chooseSymbolButton').addEventListener('click', () => {
     const form = $('#configForm');
