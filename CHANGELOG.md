@@ -22,6 +22,8 @@
 - Novas opções: **Verificar atualizações automaticamente** (padrão ligado), **Baixar atualização automaticamente** (padrão desligado) e **Instalar atualização automaticamente ao fechar** (padrão desligado), além do botão **Verificar atualização agora**.
 - Windows Portable pode aplicar a atualização ao fechar e mantém uma cópia anterior para rollback; Windows Setup pode iniciar o instalador; macOS abre o DMG baixado; Linux AppImage pode iniciar o novo AppImage. Pacotes Linux `.deb`/`.tar.gz` continuam com instalação manual quando privilégios do sistema são necessários.
 - O envio manual de beacon com altitude de contingência em **0 m** continua permitido e agora exibe uma recomendação não bloqueante para informar a altitude real.
+- O pop-up de nova mensagem passa a oferecer **Ler mensagem** além de **Responder** e **OK**; a ação abre Mensagens e foca a conversa do remetente quando o agrupamento estiver ativo, ou a linha recebida na visualização normal.
+- O bloco de Estação foi corrigido para manter **Latitude, Longitude e Altitude em linhas independentes**, evitando extrapolação horizontal em DMS e com fontes maiores.
 - Atualizados README, guia Linux, notas de Release, screenshots do manual e gerador do PDF para refletir a v1.6.
 
 ## v1.5 - 2026-09-24
