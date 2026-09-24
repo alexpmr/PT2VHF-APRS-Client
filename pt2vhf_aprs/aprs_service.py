@@ -79,7 +79,16 @@ class APRSService:
     def start_if_configured(self) -> None:
         cfg = db.get_config()
         if cfg.get("connect_on_start"):
-            self.connect()
+            try:
+                self.connect()
+            except Exception as exc:
+                self._set_status(
+                    wanted=False,
+                    connected=False,
+                    verified=False,
+                    state="Configuração incompleta",
+                    last_error=str(exc),
+                )
 
     def connect(self) -> None:
         if aprslib is None:
