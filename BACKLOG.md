@@ -269,3 +269,13 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Diferenciar visualmente altitude **estimada/obtida pelo sistema** de altitude **assumida como 0 m por ausência de dado**.
 - Não sobrescrever uma altitude já informada manualmente pelo usuário com 0 m em execuções futuras.
 - Se o usuário tentar transmitir beacon ainda com altitude igual a 0 m, permitir a transmissão, mas exibir uma recomendação não bloqueante para revisar o valor.
+
+## Mover “Conectar ao iniciar” para a seção APRS-IS
+
+**Objetivo:** organizar melhor as preferências de conexão dentro de **Configuração → APRS / Estação**.
+
+- Mover a opção **Conectar ao iniciar** para a subseção **APRS-IS**.
+- Posicionar essa opção próxima aos campos de **Servidor**, **Porta**, **Passcode** e **Filtro APRS-IS**.
+- Remover a opção da localização atual em que ela aparece hoje, evitando duplicidade.
+- Manter o comportamento e a persistência existentes da configuração `connect_on_start`.
+- Não alterar o valor já salvo pelo usuário durante a migração da interface.
