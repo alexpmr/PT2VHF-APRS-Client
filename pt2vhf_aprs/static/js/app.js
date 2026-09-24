@@ -2698,23 +2698,102 @@
   }
 
 
-  $('#toggleFilterBuilderButton')?.addEventListener('click', () => {
-    const panel = $('#filterBuilderPanel');
-    const hidden = panel.classList.toggle('hidden');
-    $('#toggleFilterBuilderButton').textContent = hidden ? ui('Abrir editor', 'Open editor') : ui('Fechar editor', 'Close editor');
-  });
-
   function splitFilterValues(value) {
     return String(value || '').toUpperCase().split(/[\s,;\/]+/).map(v => v.trim()).filter(Boolean);
   }
 
+  function validateAprsFilterSyntax(value) {
+    const terms = String(value || '').trim().split(/\s+/).filter(Boolean);
+    const invalid = [];
+    const unsupported = [];
+    for (const term of terms) {
+      const lower = term.toLowerCase();
+      let ok = true;
+      if (lower.startsWith('r/')) ok = /^r\/(?:\d+(?:\.\d+)?|-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/\d+(?:\.\d+)?)$/i.test(term);
+      else if (lower.startsWith('p/')) ok = /^p\/[a-z0-9]+(?:\/[a-z0-9]+)*$/i.test(term);
+      else if (lower.startsWith('b/')) ok = /^b\/[a-z0-9-]+(?:\/[a-z0-9-]+)*$/i.test(term);
+      else if (lower.startsWith('t/')) ok = /^t\/[a-z]+$/i.test(term);
+      else if (lower.startsWith('a/')) ok = /^a\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?$/i.test(term);
+      else unsupported.push(term);
+      if (!ok) invalid.push(term);
+    }
+    return { valid: invalid.length === 0, invalid, unsupported };
+  }
+
+  function parseFilterIntoBuilder() {
+    const value = String($('#aprsFilterInput')?.value || '').trim();
+    const terms = value.split(/\s+/).filter(Boolean);
+    if ($('#filterBrazilOnly')) $('#filterBrazilOnly').checked = false;
+    $('#filterRadiusKm').value = '';
+    $('#filterRadiusLat').value = '';
+    $('#filterRadiusLon').value = '';
+    $('#filterPrefixes').value = '';
+    $('#filterBuddies').value = '';
+    for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
+    $('.filter-type').forEach(input => { input.checked = false; });
+    const unsupported = [];
+    for (const term of terms) {
+      const [kind, ...values] = term.split('/');
+      const lower = String(kind || '').toLowerCase();
+      if (lower === 'p' && values.length) {
+        const normalized = values.map(v => v.toUpperCase());
+        const isBrazil = BRAZIL_PREFIXES.every(p => normalized.includes(p)) && normalized.every(p => BRAZIL_PREFIXES.includes(p));
+        if ($('#filterBrazilOnly')) $('#filterBrazilOnly').checked = isBrazil;
+        if (!isBrazil) $('#filterPrefixes').value = normalized.join(', ');
+      } else if (lower === 'b' && values.length) {
+        $('#filterBuddies').value = values.join(', ').toUpperCase();
+      } else if (lower === 'r' && values.length === 1) {
+        $('#filterRadiusKm').value = values[0];
+      } else if (lower === 'r' && values.length >= 3) {
+        $('#filterRadiusLat').value = values[0];
+        $('#filterRadiusLon').value = values[1];
+        $('#filterRadiusKm').value = values[2];
+      } else if (lower === 't' && values.length) {
+        for (const ch of values.join('')) {
+          const input = document.querySelector(`.filter-type[value="${CSS.escape(ch)}"]`);
+          if (input) input.checked = true;
+        }
+      } else if (lower === 'a' && values.length >= 4) {
+        $('#filterAreaNorth').value = values[0];
+        $('#filterAreaWest').value = values[1];
+        $('#filterAreaSouth').value = values[2];
+        $('#filterAreaEast').value = values[3];
+      } else if (term) {
+        unsupported.push(term);
+      }
+    }
+    const validation = validateAprsFilterSyntax(value);
+    const status = $('#filterBuilderParseStatus');
+    if (status) {
+      if (!validation.valid) status.textContent = ui(`Filtro com componente inválido: ${validation.invalid.join(', ')}`, `Filter has invalid component: ${validation.invalid.join(', ')}`);
+      else if (unsupported.length || validation.unsupported.length) status.textContent = ui('A string contém componentes ainda não representados no editor. Eles serão preservados enquanto você não gerar uma nova string.', 'The string contains components not yet represented in the editor. They are preserved until you generate a new string.');
+      else status.textContent = ui('Filtro interpretado pelo editor gráfico.', 'Filter interpreted by the graphical editor.');
+    }
+  }
+
+  $('#toggleFilterBuilderButton')?.addEventListener('click', () => {
+    const panel = $('#filterBuilderPanel');
+    const hidden = panel.classList.toggle('hidden');
+    $('#toggleFilterBuilderButton').textContent = hidden ? ui('Abrir editor', 'Open editor') : ui('Fechar editor', 'Close editor');
+    if (!hidden) parseFilterIntoBuilder();
+  });
+
+  $('#aprsFilterInput')?.addEventListener('change', parseFilterIntoBuilder);
+
   $('#generateFilterButton')?.addEventListener('click', () => {
     syncDecimalFromDmsIfNeeded();
     const parts = [];
-    const radius = Number($('#filterRadiusKm')?.value);
+    const radiusText = String($('#filterRadiusKm')?.value || '').trim();
+    const radius = radiusText ? Number(radiusText) : NaN;
     if (Number.isFinite(radius) && radius > 0) {
-      const lat = Number($('#latitudeDecimal')?.value);
-      const lon = Number($('#longitudeDecimal')?.value);
+      const customLatText = String($('#filterRadiusLat')?.value || '').trim();
+      const customLonText = String($('#filterRadiusLon')?.value || '').trim();
+      if (!!customLatText !== !!customLonText) {
+        toast(ui('Informe latitude e longitude do centro radial, ou deixe ambas vazias.', 'Enter both radial center latitude and longitude, or leave both blank.'), 'error');
+        return;
+      }
+      const lat = customLatText ? Number(customLatText) : Number($('#latitudeDecimal')?.value);
+      const lon = customLonText ? Number(customLonText) : Number($('#longitudeDecimal')?.value);
       if (Number.isFinite(lat) && Number.isFinite(lon)) {
         parts.push(`r/${lat.toFixed(6)}/${lon.toFixed(6)}/${Math.round(radius)}`);
       } else {
@@ -2731,39 +2810,53 @@
     const buddies = splitFilterValues($('#filterBuddies')?.value);
     if (buddies.length) parts.push('b/' + buddies.join('/'));
 
-    const north = Number($('#filterAreaNorth')?.value);
-    const west = Number($('#filterAreaWest')?.value);
-    const south = Number($('#filterAreaSouth')?.value);
-    const east = Number($('#filterAreaEast')?.value);
-    const areaValues = [north, west, south, east];
-    const anyArea = areaValues.some(Number.isFinite);
+    const areaTexts = ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast'].map(id => String($('#' + id)?.value || '').trim());
+    const anyArea = areaTexts.some(Boolean);
     if (anyArea) {
-      if (!areaValues.every(Number.isFinite)) {
+      if (!areaTexts.every(Boolean)) {
         toast(ui('Preencha os quatro limites da área geográfica.', 'Fill all four geographic area limits.'), 'error');
         return;
       }
-      parts.push(`a/${north}/${west}/${south}/${east}`);
+      const areaValues = areaTexts.map(Number);
+      if (!areaValues.every(Number.isFinite)) {
+        toast(ui('Os limites da área geográfica são inválidos.', 'Geographic area limits are invalid.'), 'error');
+        return;
+      }
+      parts.push(`a/${areaValues.join('/')}`);
     }
 
-    const types = $$('.filter-type:checked').map(input => input.value).join('');
+    const types = $('.filter-type:checked').map(input => input.value).join('');
     if (types) parts.push('t/' + types);
     $('#aprsFilterInput').value = parts.join(' ');
+    parseFilterIntoBuilder();
     markConfigDirty();
     toast(ui('Filtro APRS-IS gerado. Revise a string antes de salvar.', 'APRS-IS filter generated. Review the string before saving.'), 'ok');
+  });
+
+  $('#copyFilterButton')?.addEventListener('click', async () => {
+    const value = String($('#aprsFilterInput')?.value || '');
+    try {
+      await navigator.clipboard.writeText(value);
+      toast(ui('Filtro copiado.', 'Filter copied.'), 'ok');
+    } catch (_) {
+      window.prompt(ui('Copie o filtro:', 'Copy the filter:'), value);
+    }
   });
 
   $('#restoreDefaultFilterButton')?.addEventListener('click', () => {
     $('#aprsFilterInput').value = BRAZIL_FILTER;
     if ($('#filterBrazilOnly')) $('#filterBrazilOnly').checked = true;
     $('#filterRadiusKm').value = '';
+    $('#filterRadiusLat').value = '';
+    $('#filterRadiusLon').value = '';
     $('#filterPrefixes').value = '';
     $('#filterBuddies').value = '';
     for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
-    $$('.filter-type').forEach(input => { input.checked = false; });
+    $('.filter-type').forEach(input => { input.checked = false; });
+    parseFilterIntoBuilder();
     markConfigDirty();
     toast(ui('Filtro padrão para estações brasileiras restaurado.', 'Default Brazil-only filter restored.'), 'ok');
   });
-
   $('#themeQuickToggle')?.addEventListener('click', async () => {
     const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
     const next = current === 'light' ? 'dark' : 'light';
