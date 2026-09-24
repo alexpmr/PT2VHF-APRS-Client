@@ -1414,6 +1414,48 @@
     selectMessageRecipient(sender);
   });
 
+  async function readIncomingMessage(message) {
+    if (!message) return;
+    const sender = normalizedCall(message.from_call || '');
+    const messageId = Number(message.id || 0);
+    closeIncomingMessageAlert();
+    closeCompactIncomingMessageAlert();
+    activateTab('messages');
+    await loadMessages({ scrollToNewest:false });
+    if (state.groupMessages && sender) {
+      state.selectedConversation = sender;
+      $('#messageType').value = 'message';
+      updateMessageComposerMode();
+      $('#messageTo').value = sender;
+      renderGroupedMessages();
+      requestAnimationFrame(() => {
+        const selected = document.querySelector('[data-conversation-contact="' + CSS.escape(sender) + '"]');
+        selected?.scrollIntoView({ block:'nearest' });
+        const thread = $('#conversationMessages');
+        if (thread) thread.scrollTop = thread.scrollHeight;
+      });
+    } else {
+      renderMessages();
+      requestAnimationFrame(() => {
+        const rows = $('#messagesTable tbody tr');
+        const visible = visibleMessages();
+        const spec = state.sort.messages;
+        const ordered = sortedData(visible, spec);
+        const index = ordered.findIndex(row => Number(row.id || 0) === messageId);
+        const row = index >= 0 ? rows[index] : null;
+        row?.scrollIntoView({ block:'center' });
+        row?.classList.add('message-focus-row');
+        setTimeout(() => row?.classList.remove('message-focus-row'), 2200);
+      });
+    }
+    if (messageId) {
+      const seen = Math.max(Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0), messageId);
+      localStorage.setItem('pt2vhf_last_seen_msg', String(seen));
+    }
+    updateUnread();
+  }
+
+  $('#incomingMessageRead')?.addEventListener('click', () => readIncomingMessage(state.currentAlertMessage));
   $('#incomingMessageClose')?.addEventListener('click', closeIncomingMessageAlert);
   $('#incomingMessageModal')?.addEventListener('click', e => {
     if (e.target.id === 'incomingMessageModal') closeIncomingMessageAlert();
