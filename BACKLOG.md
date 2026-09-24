@@ -337,3 +337,17 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Após restaurar, atualizar imediatamente a interface com os novos valores padrão.
 - Sempre que possível, oferecer também ação **Cancelar** no pop-up sem alterar qualquer configuração.
 - Documentar claramente quais itens são restaurados e quais dados não são apagados.
+
+## Ordenação das conversas agrupadas por remetente
+
+**Objetivo:** facilitar a localização de conversas na aba **Mensagens** quando o modo **Agrupar por remetente** estiver ativo.
+
+- No modo **Agrupar por remetente**, tornar o título **Conversas** clicável.
+- Ao clicar em **Conversas**, alternar a ordenação da lista de remetentes entre:
+  - **ordem alfabética crescente (A → Z)**;
+  - **ordem alfabética decrescente (Z → A)**.
+- Exibir um indicador visual junto ao título mostrando o sentido atual da ordenação, como **▲ / ▼** ou equivalente.
+- A ordenação deve considerar o indicativo/remetente exibido na lista de conversas.
+- Manter a conversa atualmente selecionada aberta após a troca da ordenação.
+- Não alterar a ordem cronológica das mensagens dentro de cada conversa; a ordenação afeta apenas a lista de conversas/remetentes.
+- Persistir a preferência de ordenação durante a sessão e, se conveniente, entre execuções.
