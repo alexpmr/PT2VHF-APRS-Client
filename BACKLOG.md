@@ -172,3 +172,14 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
   - filtro configurado;
   - filtro vazio;
   - filtro padrão da aplicação.
+
+## Manual PDF - conteúdo incompleto/vazio
+
+**Problema:** o manual PDF gerado automaticamente na Release pode sair praticamente sem conteúdo útil, exibindo apenas a capa/estrutura básica sem as instruções completas esperadas.
+
+- Corrigir o gerador `tools/generate_manual.py` para produzir um manual realmente completo.
+- Incluir conteúdo de uso, instalação, configuração APRS, mapas, mensagens, filtros, topologia, backup/restauração, atualização e solução de problemas.
+- Incorporar automaticamente as novidades da versão a partir de `VERSION` e `CHANGELOG.md`.
+- Validar o PDF gerado antes da publicação: quantidade mínima de páginas, seções obrigatórias presentes e tamanho de arquivo coerente.
+- Fazer o workflow falhar se o PDF estiver vazio, muito curto ou sem as seções obrigatórias, impedindo a publicação de um manual incompleto no Latest.
+- Manter a identidade visual oficial PT2VHF / APRS / CLIENT.
