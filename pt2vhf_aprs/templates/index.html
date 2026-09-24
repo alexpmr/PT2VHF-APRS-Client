@@ -570,13 +570,14 @@
           <h3>1. Estação</h3>
           <p><strong>Indicativo:</strong> informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo <code>-9</code> para móvel.</p>
           <p><strong>Passcode APRS-IS:</strong> é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.</p>
-          <p><strong>Latitude/Longitude:</strong> podem ser informadas em decimal ou graus/minutos/segundos. O botão <strong>Usar minha localização atual</strong> solicita a posição ao navegador/SO e preenche os campos quando autorizado. A altitude também é obrigatória para conectar.</p>
+          <p><strong>Latitude/Longitude:</strong> podem ser informadas em decimal ou graus/minutos/segundos. Na primeira execução, o cliente solicita a localização ao navegador/SO para pré-preencher as coordenadas e centralizar o mapa. O botão <strong>Usar minha localização atual</strong> permite repetir essa operação depois.</p>
+          <p><strong>Altitude:</strong> continua obrigatória para a configuração da estação. Se o sistema não fornecer altitude, o cliente usa <code>0 m</code> para não impedir a conexão e mostra um aviso recomendando informar a altitude real.</p>
           <p><strong>Ícone APRS:</strong> escolha o símbolo adequado à sua estação ou veículo.</p>
         </article>
 
         <article class="help-card">
           <h3>2. APRS-IS</h3>
-          <p>O servidor padrão é <code>brazil.aprs2.net</code>, porta <code>14580</code>.</p>
+          <p>O servidor padrão é <code>soam.aprs2.net</code>, porta <code>14580</code>, com alternativa automática para <code>rotate.aprs2.net</code> quando necessário. A configuração oferece sugestões regionais e continua aceitando servidor manual.</p>
           <p><strong>Filtro de recepção:</strong> como configuração inicial, use <code>r/2000</code>. O editor gráfico pode montar filtros radiais, por prefixo, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.</p><p>Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.</p>
           <p>Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
           <p>Marque <strong>Conectar ao iniciar</strong> se quiser que o cliente tente conectar automaticamente.</p>
@@ -588,7 +589,7 @@
           <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
           <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
           <p>Clique em uma estação para abrir os detalhes. O botão <strong>Enviar mensagem</strong> leva diretamente à tela de mensagens com o destino preenchido.</p>
-          <p>A posição e o zoom do mapa ficam salvos localmente.</p>
+          <p>Na primeira execução, quando a permissão é concedida, o mapa é centralizado na localização atual do usuário. Depois disso, a posição e o zoom escolhidos manualmente ficam salvos localmente e não são recentralizados continuamente.</p>
         </article>
 
         <article class="help-card">
