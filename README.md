@@ -1,10 +1,10 @@
-# PT2VHF APRS Client — v0.3.2
+# PT2VHF APRS Client — v1.0
 
-Cliente APRS-IS para Windows, desenvolvido em Python, com janela integrada baseada em Microsoft Edge WebView2, banco SQLite, mapa, mensagens e histórico de estações.
+Cliente APRS-IS para Windows e Linux, desenvolvido em Python, com banco SQLite, mapa, mensagens, histórico de estações e topologia observada. No Windows, a interface usa Microsoft Edge WebView2; no Linux, tenta uma janela WebView compatível e usa o navegador local como fallback.
 
 ## Windows — distribuição principal
 
-A partir da v0.2.0, o projeto é **Windows-first**. O usuário final não precisa instalar Python.
+A distribuição Windows continua sendo a opção mais integrada. A partir da **v1.0**, o projeto também publica artefatos oficiais para **Linux x86_64/amd64**. O usuário final não precisa instalar Python em nenhum dos dois sistemas.
 
 Os artefatos previstos para cada versão são:
 
@@ -19,7 +19,7 @@ A partir da v0.3.0, a interface deixa de depender de uma aba do navegador e pass
 
 - Janela inicial: aproximadamente **1400 × 850**.
 - Tamanho mínimo: **1100 × 700**.
-- A partir da **v0.3.2**, clicar no **X** pergunta **“Deseja realmente sair do PT2VHF APRS Client?”**.
+- Desde a **v0.3.2**, clicar no **X** pergunta **“Deseja realmente sair do PT2VHF APRS Client?”**.
 - **Não** cancela o fechamento; **Sim** desconecta do APRS-IS, encerra a janela, remove o ícone da bandeja e finaliza o processo.
 - O menu da bandeja continua permitindo restaurar a janela, conectar/desconectar do APRS-IS, abrir a pasta de dados ou sair.
 - Links externos, como GitHub, WhatsApp e e-mail, são enviados ao navegador padrão do Windows.
@@ -61,6 +61,8 @@ O aplicativo oferece:
 - Tracklog automático de estações móveis.
 - **Topologia observada APRS** opcional, com linhas entre estações/digipeaters/IGates quando o path recebido fornece evidência e ambos os nós possuem posição conhecida.
 - Filtros da topologia por 1 h, 6 h, 24 h e 7 dias.
+- Cor dos enlaces RF, cor dos enlaces via IGate e espessura das linhas configuráveis.
+- Botão para restaurar o visual da topologia aos valores padrão.
 - Popup com indicativo, posição, velocidade, curso, altitude, comentário/informação e path.
 - Centro e zoom persistidos no SQLite.
 - Botão para centralizar o mapa na localização disponibilizada pelo mecanismo WebView2/navegador.
@@ -69,13 +71,18 @@ O aplicativo oferece:
 ### Mensagens
 
 - De, Para, Tipo, Mensagem, Hora e Status.
-- Ordenação pelas colunas.
+- Fluxo padrão em estilo chat: mensagens antigas em cima e as mais novas na parte inferior.
+- A rolagem acompanha novas mensagens somente quando o usuário já está no fim da conversa.
+- Opção **Agrupar por remetente**, persistida localmente, com lista de conversas, última mensagem, horário e não lidas.
+- Clique nos indicativos **De** ou **Para** para preencher o destinatário e responder; ao clicar no próprio indicativo, o outro participante é usado quando possível.
+- Ordenação pelas colunas na visualização cronológica.
 - Filtro parcial por indicativo de origem.
 - Autocomplete do destino usando indicativos conhecidos, sem impedir indicativos novos.
 - IDs de mensagem APRS, ACK/REJ e ACK automático.
 - Boletins APRS gerais e de grupo.
 - Botão **Minhas mensagens** para mostrar apenas mensagens de/para a estação configurada.
 - Popup de alerta para novas mensagens individuais destinadas à estação configurada.
+- Quando a aba Mensagens já está aberta, o alerta é compacto, não bloqueante, pode ser fechado manualmente e fecha automaticamente após o número de segundos definido em Configuração.
 - Botão **Limpar mensagens** para apagar todo o histórico local de mensagens e boletins, com confirmação.
 - Compositor de mensagem ampliado, sem o antigo limite curto para mensagens individuais.
 - **Enter envia**; **Shift+Enter** cria nova linha.
@@ -124,22 +131,52 @@ O aplicativo oferece:
 - Filtro APRS-IS.
 - `r/2000` é o filtro padrão para novas instalações e é expandido usando a posição configurada.
 - Conectar ao iniciar.
+- **Abrir também no navegador ao iniciar**, desligado por padrão; a janela integrada continua sendo aberta normalmente.
 - Tipo de mapa, cor e espessura dos tracklogs.
+- Cor RF, cor IGate e espessura da topologia observada, com restauração dos padrões.
+- Tempo de exibição do aviso compacto de nova mensagem na aba Mensagens.
 - Tema escuro como padrão e opção de tema claro.
 - Fonte e tamanho independentes para Mensagens e Estações.
 - Passcode APRS-IS visível junto ao indicativo, com cálculo automático.
 - Importação/exportação JSON.
 
+
+## Linux — v1.0
+
+A v1.0 inicia a distribuição oficial para **Linux x86_64/amd64**.
+
+Arquivos previstos na Release:
+
+- `PT2VHF_APRS_Client_Linux_x86_64_v1.0.tar.gz` — pacote portátil genérico.
+- `pt2vhf-aprs-client_1.0_amd64.deb` — Debian/Ubuntu e derivados.
+
+Os dados do usuário ficam fora da pasta do programa:
+
+```text
+~/.local/share/PT2VHF-APRS-Client/data/pt2vhf_aprs.db
+```
+
+Se `XDG_DATA_HOME` estiver definido, ele será respeitado.
+
+A execução normal tenta uma janela integrada. Se o ambiente Linux não oferecer um backend WebView compatível, a interface é aberta automaticamente no navegador em `http://127.0.0.1:8080`.
+
+Instruções completas, atualização, desinstalação, autostart e diagnóstico:
+
+- [Instalação no Linux](docs/INSTALL_LINUX.md)
+
 ## Build automático no GitHub
 
 O workflow `.github/workflows/build-windows.yml` executa:
 
-1. testes automatizados;
+1. testes automatizados no Windows;
 2. empacotamento PyInstaller `onedir` para gerar o instalador;
 3. empacotamento PyInstaller `onefile` para o Portable EXE;
 4. criação do instalador Inno Setup;
-5. upload dos artefatos Windows;
-6. publicação automática dos arquivos em uma Release quando o build é disparado por uma tag `v*`.
+5. publicação dos artefatos Windows;
+6. após sucesso do Windows, build Linux x86_64;
+7. geração do pacote portátil `.tar.gz` e do pacote `.deb`;
+8. geração de SBOM/inventário de licenças para os dois sistemas;
+9. publicação automática de todos os arquivos na mesma Release.
 
 ## Build manual no Windows
 
