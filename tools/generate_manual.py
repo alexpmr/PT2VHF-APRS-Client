@@ -224,7 +224,7 @@ def cover_background(canvas, doc, version: str) -> None:
     canvas.restoreState()
 
 
-def build_manual(output: Path, screenshots_dir: Path | None = None) -> None:
+def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: Path | None = None) -> None:
     version = current_version()
     changes = current_changelog(version)
     st = styles()
@@ -239,7 +239,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None) -> None:
     )
     story = []
 
-    logo_path = ROOT / "docs" / "assets" / "manual_logo.jpg"
+    logo_path = logo_path or (ROOT / "pt2vhf_aprs" / "static" / "img" / "app_logo.png")
     story.append(Spacer(1, 0.9*cm))
     if logo_path.exists():
         logo = Image(str(logo_path), width=16.0*cm, height=12.0*cm)
@@ -504,8 +504,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True)
     parser.add_argument("--screenshots-dir")
+    parser.add_argument("--logo")
     args = parser.parse_args()
-    build_manual(Path(args.output), Path(args.screenshots_dir) if args.screenshots_dir else None)
+    build_manual(
+        Path(args.output),
+        Path(args.screenshots_dir) if args.screenshots_dir else None,
+        Path(args.logo) if args.logo else None,
+    )
     return 0
 
 
