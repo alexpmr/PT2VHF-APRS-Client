@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.9 — em desenvolvimento
+## v0.2.9 — 2026-09-24
 
 - **Log, Mensagens e Estações** passam a seguir o mesmo padrão de navegação: registros mais recentes no topo e históricos mais antigos abaixo.
 - No **Log**, os pacotes APRS-IS mais recentes agora aparecem no topo; rolar para baixo mostra os anteriores.
