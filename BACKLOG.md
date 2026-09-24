@@ -400,3 +400,20 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Manter a formatação de data/hora em uma única linha, conforme item já registrado no backlog.
 - Preservar a ordenação escolhida enquanto o usuário permanecer na aba e, se conveniente, entre execuções.
 - Garantir que novas linhas recebidas respeitem a ordenação atualmente selecionada sem quebrar a posição esperada da tabela.
+
+## Aviso ao sair da Configuração com alterações não salvas
+
+**Objetivo:** evitar perda acidental de alterações feitas na página de Configuração.
+
+- Detectar quando qualquer campo da página **Configuração** for alterado depois do último carregamento ou salvamento.
+- Se o usuário tentar mudar para outra aba enquanto houver alterações não salvas, exibir um pop-up de confirmação.
+- O pop-up deve oferecer pelo menos:
+  - **Salvar e sair** — salva as alterações e então abre a aba escolhida;
+  - **Descartar alterações** — restaura os últimos valores salvos e abre a aba escolhida;
+  - **Cancelar** — permanece na Configuração sem salvar nem descartar.
+- Não exibir o aviso quando nenhum valor tiver sido alterado.
+- Após salvar com sucesso, limpar o estado de alterações pendentes.
+- Após descartar, restaurar todos os campos e pré-visualizações para os valores persistidos.
+- A lógica deve funcionar também para alterações aplicadas imediatamente como tema, idioma, fontes, cores e controles de mapa.
+- Evitar que carregamentos programáticos da configuração sejam interpretados como alterações feitas pelo usuário.
+- Se o salvamento falhar, permanecer na aba Configuração e mostrar o erro sem perder os valores digitados.
