@@ -41,6 +41,8 @@
     currentAlertMessage: null,
     soundOnPersonalMessage: true,
     messagePopupSeconds: 5,
+    language: 'pt-BR',
+    configSection: 'aprs',
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -50,17 +52,25 @@
     return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
   }
 
+  function ui(pt, en) {
+    return state.language === 'en' ? en : pt;
+  }
+
+  function currentLocale() {
+    return state.language === 'en' ? 'en-US' : 'pt-BR';
+  }
+
   function fmtDate(value) {
     if (!value) return '';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return value;
-    return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    return d.toLocaleString(currentLocale(), { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
   }
 
   function fmtNum(value, digits = 1, suffix = '') {
     if (value === null || value === undefined || value === '') return '';
     const n = Number(value);
-    return Number.isFinite(n) ? `${n.toLocaleString('pt-BR', {maximumFractionDigits: digits})}${suffix}` : '';
+    return Number.isFinite(n) ? `${n.toLocaleString(currentLocale(), {maximumFractionDigits: digits})}${suffix}` : '';
   }
 
   async function api(url, options = {}) {
@@ -609,9 +619,9 @@
       if (s.connected && s.verified) el.classList.add('connected');
       else if (s.connected) el.classList.add('unverified');
       else el.classList.add('disconnected');
-      el.querySelector('span:last-child').textContent = s.state || (s.connected ? 'Conectado' : 'Desconectado');
+      el.querySelector('span:last-child').textContent = translateConnectionState(s.state || (s.connected ? 'Conectado' : 'Desconectado'));
       el.title = s.last_error || s.server_message || '';
-      $('#connectButton').textContent = s.connected || s.wanted ? 'Desconectar' : 'Conectar';
+      $('#connectButton').textContent = s.connected || s.wanted ? ui('Desconectar', 'Disconnect') : ui('Conectar', 'Connect');
       const stationCount = Number(s.stations || 0);
       const messageCount = Number(s.messages || 0);
       const packetCount = Number(s.packets_received || 0);
@@ -624,13 +634,19 @@
 
   $('#connectButton').addEventListener('click', async () => {
     try {
-      if (state.connected || $('#connectButton').textContent === 'Desconectar') {
+      if (state.connected || $('#connectButton').textContent === ui('Desconectar', 'Disconnect')) {
         await api('/api/disconnect', { method: 'POST' });
       } else {
         await api('/api/connect', { method: 'POST' });
       }
       await refreshStatus();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) {
+      if (/Preencha os campos obrigatórios/i.test(String(err.message || ''))) {
+        guideToRequiredStationFields();
+      } else {
+        toast(err.message, 'error');
+      }
+    }
   });
 
   function setupSortableTable(tableId, datasetName, renderFn) {
@@ -658,7 +674,7 @@
       if (aEmpty) return 1;
       if (bEmpty) return -1;
       if (spec.type === 'number') return (Number(av) - Number(bv)) * factor;
-      return String(av).localeCompare(String(bv), 'pt-BR', { numeric: true, sensitivity: 'base' }) * factor;
+      return String(av).localeCompare(String(bv), currentLocale(), { numeric: true, sensitivity: 'base' }) * factor;
     });
   }
 
@@ -1420,11 +1436,15 @@
       state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
       state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
+      state.language = cfg.language === 'en' ? 'en' : 'pt-BR';
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       applyMapPreferences(cfg);
       applyAppearancePreferences(cfg);
       syncMapPreferenceControls();
       syncAppearanceControls();
+      syncDmsFromDecimal();
+      applyCoordinateMode(localStorage.getItem('pt2vhf_coordinate_mode') || 'decimal');
+      applyLanguage(state.language);
       state.configLoaded = true;
     } catch (err) { toast(err.message, 'error'); }
   }
@@ -1432,15 +1452,34 @@
   $('#configForm').addEventListener('submit', async e => {
     e.preventDefault();
     const form = e.currentTarget;
+    syncDecimalFromDmsIfNeeded();
     const data = Object.fromEntries(new FormData(form).entries());
     data.connect_on_start = form.elements.connect_on_start.checked;
     data.open_browser_on_start = form.elements.open_browser_on_start.checked;
     data.sound_on_personal_message = form.elements.sound_on_personal_message.checked;
+
+    if (!String(data.aprs_filter || '').trim()) {
+      const proceed = window.confirm(ui(
+        'O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?',
+        'The APRS-IS filter is empty. Depending on the server and port in use, the client may receive a much larger traffic stream, including all traffic made available on that connection.\n\nDo you want to continue without a filter?'
+      ));
+      if (!proceed) {
+        showConfigSection('aprs');
+        $('#aprsFilterInput')?.focus();
+        return;
+      }
+    }
+
     try {
       const result = await api('/api/config', {
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
       });
-      toast(result.reconnected ? 'Configuração salva. APRS-IS reconectando com os novos parâmetros.' : 'Configuração salva no banco local.', 'ok');
+      toast(
+        result.reconnected
+          ? ui('Configuração salva. APRS-IS reconectando com os novos parâmetros.', 'Configuration saved. APRS-IS is reconnecting with the new parameters.')
+          : ui('Configuração salva no banco local.', 'Configuration saved to the local database.'),
+        'ok'
+      );
       applyMapPreferences(result.config || data);
       applyAppearancePreferences(result.config || data);
       await loadConfig();
@@ -1574,10 +1613,12 @@
       stations_font_family: form.elements.namedItem('stations_font_family')?.value || 'system',
       stations_font_size: form.elements.namedItem('stations_font_size')?.value || 12
     });
+    state.language = form.elements.namedItem('language')?.value === 'en' ? 'en' : 'pt-BR';
+    applyLanguage(state.language);
     syncAppearanceControls();
   }
 
-  for (const name of ['app_theme', 'messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
+  for (const name of ['app_theme', 'language', 'messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
     $('#configForm')?.elements.namedItem(name)?.addEventListener('input', previewAppearanceFromForm);
     $('#configForm')?.elements.namedItem(name)?.addEventListener('change', previewAppearanceFromForm);
   }
@@ -1626,6 +1667,374 @@
     $$('.symbol-tab').forEach(b => b.classList.toggle('active', b === btn));
     renderSymbolGrid(state.symbolTable);
   }));
+
+
+  const EN_TEXT = new Map(Object.entries({
+    'MAPA':'MAP',
+    'Mensagens':'Messages',
+    'Estações':'Stations',
+    'Configuração':'Settings',
+    'Ajuda':'Help',
+    'Estações recebidas:':'Stations received:',
+    'Pacotes APRS-IS:':'APRS-IS packets:',
+    'Conectar':'Connect',
+    'Desconectar':'Disconnect',
+    'Desconectado':'Disconnected',
+    'Verificando versão…':'Checking version…',
+    'Mensagens APRS':'APRS Messages',
+    'Ocultar telemetria':'Hide telemetry',
+    'Agrupar por remetente':'Group by sender',
+    'Minhas mensagens':'My messages',
+    'Limpar mensagens':'Clear messages',
+    'Filtro por origem':'Source filter',
+    'De':'From',
+    'Para':'To',
+    'Tipo':'Type',
+    'Mensagem':'Message',
+    'Hora':'Time',
+    'Status':'Status',
+    'Conversas':'Conversations',
+    'Conversa com':'Conversation with',
+    'Tipo':'Type',
+    'Destino':'Destination',
+    'Boletim geral':'General bulletin',
+    'Boletim de grupo':'Group bulletin',
+    'Linha':'Line',
+    'Grupo':'Group',
+    'Enviar':'Send',
+    'Últimos dados conhecidos de cada estação recebida.':'Latest known data for each received station.',
+    'Limpar tracklogs':'Clear tracklogs',
+    'Limpar estações':'Clear stations',
+    'Filtro':'Filter',
+    'Indicativo':'Callsign',
+    'Última recepção':'Last heard',
+    'Distância':'Distance',
+    'Velocidade':'Speed',
+    'Curso':'Course',
+    'Altitude':'Altitude',
+    'Informação':'Information',
+    'Log APRS-IS':'APRS-IS Log',
+    'Pesquisar no Log':'Search log',
+    'Direção':'Direction',
+    'Linhas':'Lines',
+    'Todos':'All',
+    'Acompanhar mais recentes no topo':'Keep newest at top',
+    'Limpar log':'Clear log',
+    'Os dados ficam persistidos no SQLite local. Para transmitir ao APRS-IS, a conexão precisa estar verificada.':'Data is stored in the local SQLite database. To transmit to APRS-IS, the connection must be verified.',
+    'APRS / Estação':'APRS / Station',
+    'Aplicativo':'Application',
+    'Estação':'Station',
+    'Obrigatório':'Required',
+    'Passcode APRS-IS':'APRS-IS passcode',
+    'SSID':'SSID',
+    'Comentário':'Comment',
+    'Formato das coordenadas':'Coordinate format',
+    'Decimal':'Decimal',
+    'Graus / minutos / segundos':'Degrees / minutes / seconds',
+    'Usar minha localização atual':'Use my current location',
+    'Latitude':'Latitude',
+    'Longitude':'Longitude',
+    'Graus':'Degrees',
+    'Min':'Min',
+    'Seg':'Sec',
+    'Altitude (m)':'Altitude (m)',
+    'E-mail':'Email',
+    'Ícone APRS':'APRS icon',
+    'Escolher ícone':'Choose icon',
+    'Servidor':'Server',
+    'Porta':'Port',
+    'Filtro APRS-IS':'APRS-IS filter',
+    'Beacon (minutos)':'Beacon (minutes)',
+    'Conectar ao iniciar':'Connect at startup',
+    'Editor gráfico de filtro':'Graphical filter editor',
+    'Abrir editor':'Open editor',
+    'Fechar editor':'Close editor',
+    'Raio a partir da posição da estação (km)':'Radius from station position (km)',
+    'Prefixos de indicativo':'Callsign prefixes',
+    'Indicativos exatos':'Exact callsigns',
+    'Tipos de pacote':'Packet types',
+    'Posição':'Position',
+    'Meteorologia':'Weather',
+    'Telemetria':'Telemetry',
+    'Objetos':'Objects',
+    'Itens':'Items',
+    'Gerar filtro':'Generate filter',
+    'Restaurar r/2000':'Restore r/2000',
+    'Salvar configuração APRS':'Save APRS settings',
+    'Enviar beacon agora':'Send beacon now',
+    'Mapa':'Map',
+    'Tipo de mapa':'Map type',
+    'Cor dos tracklogs':'Tracklog color',
+    'Espessura dos tracklogs':'Tracklog width',
+    'Brilho do mapa':'Map brightness',
+    'Cor da topologia RF':'RF topology color',
+    'Cor da topologia via IGate':'IGate topology color',
+    'Espessura da topologia':'Topology width',
+    'Restaurar topologia padrão':'Restore topology defaults',
+    'Aparência e aplicativo':'Appearance and application',
+    'Tema da aplicação':'Application theme',
+    'Escuro - padrão':'Dark - default',
+    'Claro':'Light',
+    'Idioma / Language':'Language / Idioma',
+    'Português - padrão':'Portuguese - default',
+    'English':'English',
+    'Abrir também no navegador ao iniciar':'Also open in browser at startup',
+    'Fonte':'Font',
+    'Tamanho':'Size',
+    'Tocar sinal sonoro ao receber mensagem para minha estação':'Play a sound when a message for my station arrives',
+    'Duração do aviso na aba Mensagens':'Alert duration in Messages tab',
+    'Salvar configurações do aplicativo':'Save application settings',
+    'Backup da configuração':'Configuration backup',
+    'Salvar em arquivo':'Save to file',
+    'Recuperar de arquivo':'Restore from file',
+    'Primeiros passos':'Getting started',
+    'Configure sua estação antes de conectar ao APRS-IS':'Configure your station before connecting to APRS-IS',
+    'Abrir Configuração':'Open Settings',
+    'Dúvidas, dificuldades ou sugestões?':'Questions, problems or suggestions?',
+    'Fale comigo':'Contact me',
+    'Nova mensagem APRS':'New APRS message',
+    'Mensagem para esta estação':'Message for this station',
+    'Responder':'Reply',
+    'Fechar aviso':'Close alert',
+    'OK':'OK',
+    'Topologia observada':'Observed topology'
+  }));
+
+  function translateConnectionState(value) {
+    const map = {
+      'Desconectado':'Disconnected',
+      'Desconectando...':'Disconnecting...',
+      'Conectado; autenticando...':'Connected; authenticating...',
+      'Conectado e verificado':'Connected and verified',
+      'Conectado sem verificação':'Connected without verification',
+      'Conexão perdida':'Connection lost',
+      'Configuração incompleta':'Incomplete configuration',
+      'Reconectando com a nova configuração...':'Reconnecting with new settings...'
+    };
+    return state.language === 'en' ? (map[value] || value) : value;
+  }
+
+  function translateDom(root = document.body) {
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const parent = node.parentElement;
+      if (!parent || ['SCRIPT','STYLE','CODE'].includes(parent.tagName)) continue;
+      if (node._pt2vhfOriginalText === undefined) node._pt2vhfOriginalText = node.nodeValue;
+      const original = node._pt2vhfOriginalText;
+      const trimmed = original.trim();
+      if (!trimmed) continue;
+      const translated = EN_TEXT.get(trimmed);
+      const chosen = state.language === 'en' && translated ? translated : trimmed;
+      const lead = original.match(/^\s*/)?.[0] || '';
+      const trail = original.match(/\s*$/)?.[0] || '';
+      node.nodeValue = lead + chosen + trail;
+    }
+
+    const attrs = ['placeholder', 'title', 'aria-label'];
+    for (const el of root.querySelectorAll?.('*') || []) {
+      for (const attr of attrs) {
+        if (!el.hasAttribute(attr)) continue;
+        const key = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
+        if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
+        const original = el.dataset[key];
+        const translated = EN_TEXT.get(original);
+        el.setAttribute(attr, state.language === 'en' && translated ? translated : original);
+      }
+    }
+  }
+
+  function applyLanguage(language) {
+    state.language = language === 'en' ? 'en' : 'pt-BR';
+    document.documentElement.lang = state.language === 'en' ? 'en' : 'pt-BR';
+    translateDom(document.body);
+    refreshStatus();
+    if (state.messages.length) renderMessages();
+    if (state.stations.length) renderStations();
+  }
+
+  const languageObserver = new MutationObserver(records => {
+    if (state.language !== 'en') return;
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE) translateDom(node);
+      }
+    }
+  });
+  languageObserver.observe(document.body, { childList: true, subtree: true });
+
+  function showConfigSection(section) {
+    state.configSection = section === 'app' ? 'app' : 'aprs';
+    localStorage.setItem('pt2vhf_config_section', state.configSection);
+    $('.config-section-tab').forEach(btn => {
+      const active = btn.dataset.configSection === state.configSection;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    $('.config-section-aprs').forEach(el => el.classList.toggle('hidden', state.configSection !== 'aprs'));
+    $('.config-section-app').forEach(el => el.classList.toggle('hidden', state.configSection !== 'app'));
+  }
+
+  $('.config-section-tab').forEach(btn => btn.addEventListener('click', () => showConfigSection(btn.dataset.configSection)));
+  showConfigSection(localStorage.getItem('pt2vhf_config_section') || 'aprs');
+
+  function guideToRequiredStationFields() {
+    $('.tab[data-tab="config"]')?.click();
+    setTimeout(() => {
+      showConfigSection('aprs');
+      const form = $('#configForm');
+      const fields = [
+        form?.elements.namedItem('callsign'),
+        form?.elements.namedItem('latitude'),
+        form?.elements.namedItem('longitude'),
+        form?.elements.namedItem('altitude')
+      ];
+      const firstMissing = fields.find(input => !String(input?.value || '').trim());
+      firstMissing?.focus();
+      firstMissing?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast(ui(
+        'Preencha os campos obrigatórios em Configuração → APRS / Estação: Indicativo, Latitude, Longitude e Altitude.',
+        'Fill in the required fields under Settings → APRS / Station: Callsign, Latitude, Longitude and Altitude.'
+      ), 'error');
+    }, 80);
+  }
+
+  function decimalToDms(value, lat) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    const abs = Math.abs(number);
+    const deg = Math.floor(abs);
+    const minFloat = (abs - deg) * 60;
+    const min = Math.floor(minFloat);
+    const sec = (minFloat - min) * 60;
+    return { deg, min, sec, hem: lat ? (number < 0 ? 'S' : 'N') : (number < 0 ? 'W' : 'E') };
+  }
+
+  function dmsToDecimal(deg, min, sec, hem) {
+    const d = Number(deg), m = Number(min), s = Number(sec);
+    if (![d,m,s].every(Number.isFinite) || d < 0 || m < 0 || m >= 60 || s < 0 || s >= 60) return null;
+    let value = d + m / 60 + s / 3600;
+    if (hem === 'S' || hem === 'W') value *= -1;
+    return value;
+  }
+
+  function syncDmsFromDecimal() {
+    const lat = decimalToDms($('#latitudeDecimal')?.value, true);
+    const lon = decimalToDms($('#longitudeDecimal')?.value, false);
+    if (lat) {
+      $('#latDeg').value = lat.deg; $('#latMin').value = lat.min; $('#latSec').value = lat.sec.toFixed(4); $('#latHem').value = lat.hem;
+    }
+    if (lon) {
+      $('#lonDeg').value = lon.deg; $('#lonMin').value = lon.min; $('#lonSec').value = lon.sec.toFixed(4); $('#lonHem').value = lon.hem;
+    }
+  }
+
+  function syncDecimalFromDmsIfNeeded() {
+    if ($('#coordinateInputMode')?.value !== 'dms') return true;
+    const lat = dmsToDecimal($('#latDeg')?.value, $('#latMin')?.value, $('#latSec')?.value, $('#latHem')?.value);
+    const lon = dmsToDecimal($('#lonDeg')?.value, $('#lonMin')?.value, $('#lonSec')?.value, $('#lonHem')?.value);
+    if (lat !== null) $('#latitudeDecimal').value = lat.toFixed(6);
+    if (lon !== null) $('#longitudeDecimal').value = lon.toFixed(6);
+    return lat !== null && lon !== null;
+  }
+
+  function applyCoordinateMode(mode) {
+    const selected = mode === 'dms' ? 'dms' : 'decimal';
+    if ($('#coordinateInputMode')) $('#coordinateInputMode').value = selected;
+    $('#coordinateDecimalFields')?.classList.toggle('hidden', selected !== 'decimal');
+    $('#coordinateDmsFields')?.classList.toggle('hidden', selected !== 'dms');
+    localStorage.setItem('pt2vhf_coordinate_mode', selected);
+    if (selected === 'dms') syncDmsFromDecimal();
+  }
+
+  $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
+  for (const id of ['latDeg','latMin','latSec','latHem','lonDeg','lonMin','lonSec','lonHem']) {
+    $('#' + id)?.addEventListener('input', syncDecimalFromDmsIfNeeded);
+    $('#' + id)?.addEventListener('change', syncDecimalFromDmsIfNeeded);
+  }
+  $('#latitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
+  $('#longitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
+
+  $('#useCurrentLocationButton')?.addEventListener('click', () => {
+    const status = $('#currentLocationStatus');
+    if (!navigator.geolocation) {
+      if (status) status.textContent = ui('Localização não disponível neste ambiente.', 'Location is not available in this environment.');
+      toast(ui('Este ambiente não oferece geolocalização.', 'This environment does not provide geolocation.'), 'error');
+      return;
+    }
+    const button = $('#useCurrentLocationButton');
+    button.disabled = true;
+    if (status) status.textContent = ui('Solicitando localização…', 'Requesting location…');
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = Number(position.coords.latitude);
+      const lon = Number(position.coords.longitude);
+      const alt = Number(position.coords.altitude);
+      const accuracy = Number(position.coords.accuracy);
+      if (Number.isFinite(lat)) $('#latitudeDecimal').value = lat.toFixed(6);
+      if (Number.isFinite(lon)) $('#longitudeDecimal').value = lon.toFixed(6);
+      if (Number.isFinite(alt)) $('#altitudeInput').value = alt.toFixed(1);
+      syncDmsFromDecimal();
+      const accuracyText = Number.isFinite(accuracy)
+        ? ui(`Precisão aproximada: ${Math.round(accuracy)} m.`, `Approximate accuracy: ${Math.round(accuracy)} m.`)
+        : ui('Posição obtida.', 'Location obtained.');
+      if (status) status.textContent = Number.isFinite(alt)
+        ? accuracyText + ' ' + ui('Altitude fornecida pelo sistema.', 'Altitude provided by the system.')
+        : accuracyText + ' ' + ui('Informe a altitude manualmente.', 'Enter altitude manually.');
+      button.disabled = false;
+    }, error => {
+      const messagesPt = {1:'Permissão de localização negada.',2:'Não foi possível determinar a localização.',3:'A localização demorou demais para responder.'};
+      const messagesEn = {1:'Location permission was denied.',2:'Unable to determine location.',3:'Location request timed out.'};
+      const message = state.language === 'en' ? messagesEn[error.code] : messagesPt[error.code];
+      if (status) status.textContent = message || ui('Falha ao obter a localização.', 'Unable to obtain location.');
+      button.disabled = false;
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+  });
+
+  $('#toggleFilterBuilderButton')?.addEventListener('click', () => {
+    const panel = $('#filterBuilderPanel');
+    const hidden = panel.classList.toggle('hidden');
+    $('#toggleFilterBuilderButton').textContent = hidden ? ui('Abrir editor', 'Open editor') : ui('Fechar editor', 'Close editor');
+  });
+
+  function splitFilterValues(value) {
+    return String(value || '').toUpperCase().split(/[\s,;\/]+/).map(v => v.trim()).filter(Boolean);
+  }
+
+  $('#generateFilterButton')?.addEventListener('click', () => {
+    syncDecimalFromDmsIfNeeded();
+    const parts = [];
+    const radius = Number($('#filterRadiusKm')?.value);
+    if (Number.isFinite(radius) && radius > 0) {
+      const lat = Number($('#latitudeDecimal')?.value);
+      const lon = Number($('#longitudeDecimal')?.value);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        parts.push(`r/${lat.toFixed(6)}/${lon.toFixed(6)}/${Math.round(radius)}`);
+      } else {
+        toast(ui('Informe Latitude e Longitude para gerar o filtro radial.', 'Enter Latitude and Longitude to generate the radial filter.'), 'error');
+        return;
+      }
+    }
+
+    const prefixes = splitFilterValues($('#filterPrefixes')?.value);
+    if (prefixes.length) parts.push('p/' + prefixes.join('/'));
+    const buddies = splitFilterValues($('#filterBuddies')?.value);
+    if (buddies.length) parts.push('b/' + buddies.join('/'));
+    const types = $('.filter-type:checked').map(input => input.value).join('');
+    if (types) parts.push('t/' + types);
+    $('#aprsFilterInput').value = parts.join(' ');
+    toast(ui('Filtro APRS-IS gerado. Revise a string antes de salvar.', 'APRS-IS filter generated. Review the string before saving.'), 'ok');
+  });
+
+  $('#restoreDefaultFilterButton')?.addEventListener('click', () => {
+    $('#aprsFilterInput').value = 'r/2000';
+    $('#filterRadiusKm').value = '2000';
+    $('#filterPrefixes').value = '';
+    $('#filterBuddies').value = '';
+    $('.filter-type').forEach(input => { input.checked = false; });
+    toast(ui('Filtro padrão r/2000 restaurado.', 'Default r/2000 filter restored.'), 'ok');
+  });
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
   setupSortableTable('stationsTable', 'stations', renderStations);
