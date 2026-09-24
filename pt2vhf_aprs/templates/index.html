@@ -443,30 +443,29 @@
         <div class="appearance-grid">
           <div class="appearance-group">
             <h4>Mensagens</h4>
-            <label class="field">
-              <span>Fonte</span>
+            <label class="field"><span>Fonte</span>
               <select name="messages_font_family">
-                <option value="system">Sistema</option>
-                <option value="segoe">Segoe UI</option>
-                <option value="arial">Arial</option>
-                <option value="verdana">Verdana</option>
-                <option value="tahoma">Tahoma</option>
-                <option value="consolas">Consolas</option>
+                <option value="system">Sistema</option><option value="segoe">Segoe UI</option><option value="arial">Arial</option>
+                <option value="verdana">Verdana</option><option value="tahoma">Tahoma</option><option value="consolas">Consolas</option>
               </select>
             </label>
-            <label class="field">
-              <span>Tamanho</span>
-              <div class="range-field-row">
-                <input name="messages_font_size" id="messagesFontSize" type="range" min="10" max="20" step="1" value="12">
-                <output id="messagesFontSizeValue" for="messagesFontSize">12 px</output>
-              </div>
+            <label class="field"><span>Tamanho</span><div class="range-field-row">
+              <input name="messages_font_size" id="messagesFontSize" type="range" min="10" max="20" step="1" value="12">
+              <output id="messagesFontSizeValue" for="messagesFontSize">12 px</output>
+            </div></label>
+            <label class="field"><span>Peso</span>
+              <select name="messages_font_weight"><option value="normal">Normal</option><option value="bold">Negrito</option></select>
             </label>
+            <label class="field"><span>Espaçamento entre linhas</span><div class="range-field-row">
+              <input name="messages_line_height" id="messagesLineHeight" type="range" min="1" max="2" step="0.05" value="1.35">
+              <output id="messagesLineHeightValue" for="messagesLineHeight">1,35×</output>
+            </div></label>
+            <button id="resetMessagesTypography" type="button" class="btn secondary typography-reset">Restaurar padrão</button>
             <label class="check-field message-sound-check">
               <input name="sound_on_personal_message" type="checkbox" checked>
               <span>Tocar sinal sonoro ao receber mensagem para minha estação</span>
             </label>
-            <label class="field">
-              <span>Duração do aviso na aba Mensagens</span>
+            <label class="field"><span>Duração do aviso na aba Mensagens</span>
               <input name="message_popup_seconds" type="number" min="1" max="60" step="1" value="5">
               <small>Tempo, em segundos, antes do pequeno aviso fechar automaticamente. Ele também pode ser fechado manualmente.</small>
             </label>
@@ -474,27 +473,49 @@
 
           <div class="appearance-group">
             <h4>Estações</h4>
-            <label class="field">
-              <span>Fonte</span>
+            <label class="field"><span>Fonte</span>
               <select name="stations_font_family">
-                <option value="system">Sistema</option>
-                <option value="segoe">Segoe UI</option>
-                <option value="arial">Arial</option>
-                <option value="verdana">Verdana</option>
-                <option value="tahoma">Tahoma</option>
-                <option value="consolas">Consolas</option>
+                <option value="system">Sistema</option><option value="segoe">Segoe UI</option><option value="arial">Arial</option>
+                <option value="verdana">Verdana</option><option value="tahoma">Tahoma</option><option value="consolas">Consolas</option>
               </select>
             </label>
-            <label class="field">
-              <span>Tamanho</span>
-              <div class="range-field-row">
-                <input name="stations_font_size" id="stationsFontSize" type="range" min="10" max="20" step="1" value="12">
-                <output id="stationsFontSizeValue" for="stationsFontSize">12 px</output>
-              </div>
+            <label class="field"><span>Tamanho</span><div class="range-field-row">
+              <input name="stations_font_size" id="stationsFontSize" type="range" min="10" max="20" step="1" value="12">
+              <output id="stationsFontSizeValue" for="stationsFontSize">12 px</output>
+            </div></label>
+            <label class="field"><span>Peso</span>
+              <select name="stations_font_weight"><option value="normal">Normal</option><option value="bold">Negrito</option></select>
             </label>
+            <label class="field"><span>Espaçamento entre linhas</span><div class="range-field-row">
+              <input name="stations_line_height" id="stationsLineHeight" type="range" min="1" max="2" step="0.05" value="1.25">
+              <output id="stationsLineHeightValue" for="stationsLineHeight">1,25×</output>
+            </div></label>
+            <button id="resetStationsTypography" type="button" class="btn secondary typography-reset">Restaurar padrão</button>
+          </div>
+
+          <div class="appearance-group">
+            <h4>Logs</h4>
+            <label class="field"><span>Fonte</span>
+              <select name="logs_font_family">
+                <option value="consolas">Consolas - padrão</option><option value="system">Sistema</option><option value="segoe">Segoe UI</option>
+                <option value="arial">Arial</option><option value="verdana">Verdana</option><option value="tahoma">Tahoma</option>
+              </select>
+            </label>
+            <label class="field"><span>Tamanho</span><div class="range-field-row">
+              <input name="logs_font_size" id="logsFontSize" type="range" min="10" max="20" step="1" value="12">
+              <output id="logsFontSizeValue" for="logsFontSize">12 px</output>
+            </div></label>
+            <label class="field"><span>Peso</span>
+              <select name="logs_font_weight"><option value="normal">Normal</option><option value="bold">Negrito</option></select>
+            </label>
+            <label class="field"><span>Espaçamento entre linhas</span><div class="range-field-row">
+              <input name="logs_line_height" id="logsLineHeight" type="range" min="1" max="2" step="0.05" value="1.30">
+              <output id="logsLineHeightValue" for="logsLineHeight">1,30×</output>
+            </div></label>
+            <button id="resetLogsTypography" type="button" class="btn secondary typography-reset">Restaurar padrão</button>
           </div>
         </div>
-        <div class="hint">Tema, idioma, fontes e tamanhos são aplicados à interface e persistidos no banco local.</div>
+        <div class="hint">Tema, idioma, fonte, tamanho, negrito e espaçamento de Mensagens, Estações e Logs são aplicados imediatamente e persistidos no banco local.</div>
         <div class="config-actions app-save-actions">
           <button type="submit" class="btn primary">Salvar configurações do aplicativo</button>
         </div>

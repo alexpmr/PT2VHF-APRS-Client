@@ -13,8 +13,16 @@
   --radius: 10px;
   --messages-font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   --messages-font-size: 12px;
+  --messages-font-weight: 400;
+  --messages-line-height: 1.35;
   --stations-font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   --stations-font-size: 12px;
+  --stations-font-weight: 400;
+  --stations-line-height: 1.25;
+  --logs-font-family: Consolas, "Courier New", monospace;
+  --logs-font-size: 12px;
+  --logs-font-weight: 400;
+  --logs-line-height: 1.30;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
@@ -318,14 +326,20 @@ main { height: calc(100vh - 143px); }
   height: calc(100% - 92px);
   overflow: auto;
   background: #091015;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: var(--logs-font-family);
+  font-size: var(--logs-font-size);
+  font-weight: var(--logs-font-weight);
+  line-height: var(--logs-line-height);
 }
 .log-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
-  font-size: 12px;
+  font-family: var(--logs-font-family);
+  font-size: var(--logs-font-size);
+  font-weight: var(--logs-font-weight);
+  line-height: var(--logs-line-height);
 }
 .log-table th {
   position: sticky;
@@ -573,6 +587,8 @@ main { height: calc(100vh - 143px); }
 }
 #tab-messages .data-table {
   font-size: var(--messages-font-size);
+  font-weight: var(--messages-font-weight);
+  line-height: var(--messages-line-height);
 }
 #tab-messages .message-composer input,
 #tab-messages .message-composer textarea,
@@ -586,9 +602,12 @@ main { height: calc(100vh - 143px); }
 }
 #stationsTable {
   font-size: var(--stations-font-size);
+  font-weight: var(--stations-font-weight);
+  line-height: var(--stations-line-height);
 }
 #stationFilter {
   font-size: var(--stations-font-size);
+  font-weight: var(--stations-font-weight);
 }
 @media (max-width: 900px) {
   .appearance-grid { grid-template-columns: 1fr; }
@@ -1369,7 +1388,8 @@ html[data-theme="light"] #messagesTable tbody tr.message-row-ack:hover td {
   color: var(--text);
   font-family: var(--messages-font-family);
   font-size: var(--messages-font-size);
-  line-height: 1.42;
+  font-weight: var(--messages-font-weight);
+  line-height: var(--messages-line-height);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -1650,4 +1670,12 @@ html[data-theme="light"] .config-section-tab.active {
   .config-section-tabs { flex-direction: column; }
   .coordinate-dms-group { grid-template-columns: 1fr 1fr; }
   .coordinate-dms-group .label-text { grid-column: 1 / -1; }
+}
+
+/* v1.2 - formatação tipográfica independente */
+.typography-reset { margin-top: 8px; margin-bottom: 10px; }
+#logFilter, #logDirection, #logLines {
+  font-family: var(--logs-font-family);
+  font-size: var(--logs-font-size);
+  font-weight: var(--logs-font-weight);
 }

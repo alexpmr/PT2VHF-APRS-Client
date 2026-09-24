@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.2 - 2026-09-24
+
+- Configuração de texto ampliada para **Mensagens, Estações e Logs**, com fonte, tamanho, peso normal/negrito e espaçamento entre linhas independentes.
+- As alterações tipográficas são pré-visualizadas imediatamente e persistidas no banco local após salvar.
+- Adicionados botões **Restaurar padrão** separados para Mensagens, Estações e Logs.
+- Manual PDF reformulado com **capa azul profissional** e a identidade visual oficial PT2VHF / APRS / CLIENT.
+- A capa do manual passa a usar a logo oficial fornecida para o projeto.
+- Corrigido o processamento de Markdown/changelog que podia gerar sequências inválidas como `\\1\\1\\1` no PDF.
+- O manual passa a incorporar **screenshots reais da aplicação** capturados automaticamente no processo de release.
+- Screenshots documentam mapa, mensagens, estações, log, configuração APRS, editor de filtro e configuração visual.
+- Adicionada validação automática do manual: número mínimo de páginas, tamanho mínimo e presença de seções obrigatórias.
+- O workflow de release falha antes da publicação do PDF se o manual estiver vazio, incompleto ou sem conteúdo legível.
+- Mantidos builds Windows, Linux, macOS Apple Silicon e macOS Intel na mesma Release.
+
 ## v1.1 - 2026-09-24
 
 - Nova identidade visual **PT2VHF / APRS / CLIENT**, com logotipo vetorial mais nítido e maior no cabeçalho da aplicação.
