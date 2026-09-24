@@ -207,10 +207,11 @@
     <form id="configForm" class="config-grid">
       <div class="config-card">
         <h3>Estação</h3>
+        <div class="required-fields-note">Campos marcados como <strong>Obrigatório</strong> precisam ser preenchidos antes de conectar ao APRS-IS.</div>
         <div class="form-grid two-cols">
           <label class="field">
-            <span>Indicativo</span>
-            <input name="callsign" id="callsignInput" required maxlength="6" placeholder="PT2VHF">
+            <span>Indicativo <em class="required-badge">Obrigatório</em></span>
+            <input name="callsign" id="callsignInput" required maxlength="6" placeholder="Ex.: PY2ABC" autocomplete="off">
           </label>
           <label class="field">
             <span>Passcode APRS-IS</span>
@@ -219,9 +220,9 @@
           </label>
           <label class="field"><span>SSID</span><input name="ssid" type="number" min="0" max="15" value="0"></label>
           <label class="field full"><span>Comentário</span><input name="comment" maxlength="40" placeholder="PT2VHF APRS Client"></label>
-          <label class="field"><span>Latitude</span><input name="latitude" type="number" step="0.000001" placeholder="-15.000000"></label>
-          <label class="field"><span>Longitude</span><input name="longitude" type="number" step="0.000001" placeholder="-47.000000"></label>
-          <label class="field"><span>Altitude (m)</span><input name="altitude" type="number" step="0.1"></label>
+          <label class="field"><span>Latitude <em class="required-badge">Obrigatório</em></span><input name="latitude" type="number" step="0.000001" min="-90" max="90" required placeholder="Ex.: -15.800000"></label>
+          <label class="field"><span>Longitude <em class="required-badge">Obrigatório</em></span><input name="longitude" type="number" step="0.000001" min="-180" max="180" required placeholder="Ex.: -47.900000"></label>
+          <label class="field"><span>Altitude (m) <em class="required-badge">Obrigatório</em></span><input name="altitude" type="number" step="0.1" required placeholder="Ex.: 1000"></label>
           <label class="field"><span>E-mail</span><input name="email" type="email" placeholder="opcional"></label>
         </div>
         <div class="symbol-row">
@@ -240,7 +241,7 @@
         <div class="form-grid two-cols">
           <label class="field full"><span>Servidor</span><input name="server" value="brazil.aprs2.net" required></label>
           <label class="field"><span>Porta</span><input name="port" type="number" value="14580" min="1" max="65535" required></label>
-          <label class="field full"><span>Filtro APRS-IS</span><input name="aprs_filter" placeholder="Ex.: r/500 ou r/-15.8/-47.9/500"><small><code>r/500</code> usa sua latitude/longitude configuradas como centro. Na porta 14580, deixar este campo vazio significa receber quase nenhum tráfego geral.</small></label>
+          <label class="field full"><span>Filtro APRS-IS</span><input name="aprs_filter" value="r/2000" placeholder="Ex.: r/2000 ou r/-15.8/-47.9/2000"><small><code>r/2000</code> usa sua latitude/longitude configuradas como centro e recebe estações em um raio de 2.000 km. Esse é o filtro padrão para novas instalações.</small></label>
           <label class="field"><span>Beacon (minutos)</span><input name="beacon_minutes" type="number" min="1" value="10"></label>
           <label class="check-field"><input name="connect_on_start" type="checkbox"><span>Conectar ao iniciar</span></label>
         </div>
@@ -375,14 +376,14 @@
           <h3>1. Estação</h3>
           <p><strong>Indicativo:</strong> informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo <code>-9</code> para móvel.</p>
           <p><strong>Passcode APRS-IS:</strong> é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.</p>
-          <p><strong>Latitude/Longitude:</strong> são usadas no beacon, no cálculo das distâncias e no atalho de filtro <code>r/500</code>.</p>
+          <p><strong>Latitude/Longitude:</strong> são usadas no beacon, no cálculo das distâncias e no atalho de filtro <code>r/2000</code>. A altitude também é obrigatória para concluir a configuração inicial.</p>
           <p><strong>Ícone APRS:</strong> escolha o símbolo adequado à sua estação ou veículo.</p>
         </article>
 
         <article class="help-card">
           <h3>2. APRS-IS</h3>
           <p>O servidor padrão é <code>brazil.aprs2.net</code>, porta <code>14580</code>.</p>
-          <p><strong>Filtro de recepção:</strong> para um uso regional simples, use <code>r/500</code>. O programa transforma esse atalho em um filtro radial usando a posição configurada.</p>
+          <p><strong>Filtro de recepção:</strong> como configuração inicial, use <code>r/2000</code>. O programa transforma esse atalho em um filtro radial usando a posição configurada.</p>
           <p>Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
           <p>Marque <strong>Conectar ao iniciar</strong> se quiser que o cliente tente conectar automaticamente.</p>
         </article>
