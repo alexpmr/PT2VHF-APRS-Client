@@ -315,3 +315,25 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - No editor gráfico, oferecer uma opção clara como **Somente estações brasileiras (padrão)**.
 - Se o usuário escolher outro filtro manual ou gráfico, respeitar integralmente a escolha e não restaurar automaticamente o filtro brasileiro.
 - Preservar filtros personalizados já existentes durante atualizações; aplicar o novo padrão apenas quando não houver configuração anterior ou em nova instalação.
+
+## Restaurar configuração padrão e página única de Configuração
+
+**Objetivo:** simplificar a organização da configuração e oferecer uma forma segura de voltar aos valores padrão do aplicativo.
+
+- Transformar **Configuração** em uma **página única**, sem subabas internas.
+- Organizar essa página em **seções compartimentalizadas e visualmente bem separadas**, mantendo todos os grupos acessíveis por rolagem.
+- Estruturar pelo menos as seguintes seções:
+  - **Estação APRS**;
+  - **APRS-IS**;
+  - **Mapa e Topologia**;
+  - **Mensagens / Aparência**;
+  - **Aplicativo**;
+  - **Backup e Dados**.
+- Cada seção deve ter título claro, descrição curta e agrupamento visual consistente, sem misturar parâmetros de protocolo com preferências visuais.
+- Incluir botão **Restaurar configuração padrão** em local de destaque na página de Configuração.
+- Antes de restaurar, exibir um **pop-up de confirmação** informando que as preferências serão redefinidas.
+- A restauração deve devolver todos os parâmetros configuráveis aos valores padrão da versão atual, incluindo servidor APRS-IS, porta, filtro padrão, tema, idioma, fontes e demais preferências.
+- Preservar dados operacionais/históricos como mensagens, estações recebidas, logs e tracklogs, salvo se houver uma ação separada e explicitamente destrutiva.
+- Após restaurar, atualizar imediatamente a interface com os novos valores padrão.
+- Sempre que possível, oferecer também ação **Cancelar** no pop-up sem alterar qualquer configuração.
+- Documentar claramente quais itens são restaurados e quais dados não são apagados.
