@@ -241,6 +241,15 @@ def init_db() -> None:
                 PRIMARY KEY(source, target, kind)
             );
             CREATE INDEX IF NOT EXISTS idx_topology_last_seen ON topology_edges(last_seen DESC);
+
+            CREATE TABLE IF NOT EXISTS topology_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                source TEXT NOT NULL,
+                target TEXT NOT NULL,
+                kind TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_topology_events_time ON topology_events(timestamp DESC);
             """
         )
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
@@ -718,6 +727,13 @@ def record_topology_from_raw(raw: str) -> None:
                 """,
                 (edge_source, target, kind, now, now, edge_igate),
             )
+            conn.execute(
+                "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
+                (now, edge_source, target, kind),
+            )
+        conn.execute(
+            "DELETE FROM topology_events WHERE id NOT IN (SELECT id FROM topology_events ORDER BY id DESC LIMIT 200000)"
+        )
 
 
 def list_topology_edges(hours: int = 24) -> list[dict[str, Any]]:
@@ -785,6 +801,50 @@ def topology_stats(hours: int = 24) -> dict[str, Any]:
         "igates": igates,
         "recently_disappeared": stale,
     }
+
+
+def topology_timeline(hours: int = 24, limit: int = 2500) -> list[dict[str, Any]]:
+    hours = max(1, min(int(hours or 24), 24 * 30))
+    limit = max(100, min(int(limit or 2500), 10000))
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+    with connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT e.timestamp,e.source,e.target,e.kind,
+                   s1.latitude AS source_lat,s1.longitude AS source_lon,
+                   s2.latitude AS target_lat,s2.longitude AS target_lon
+            FROM topology_events e
+            JOIN stations s1 ON UPPER(s1.callsign)=UPPER(e.source)
+            JOIN stations s2 ON UPPER(s2.callsign)=UPPER(e.target)
+            WHERE e.timestamp >= ?
+              AND s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
+              AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
+            ORDER BY e.timestamp ASC, e.id ASC
+            LIMIT ?
+            """,
+            (cutoff, limit),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def topology_period_comparison(hours: int = 24) -> dict[str, Any]:
+    hours = max(1, min(int(hours or 24), 24 * 30))
+    now = datetime.now(timezone.utc)
+    current_start = (now - timedelta(hours=hours)).isoformat(timespec="seconds")
+    previous_start = (now - timedelta(hours=hours * 2)).isoformat(timespec="seconds")
+    now_iso = now.isoformat(timespec="seconds")
+    with connection() as conn:
+        current = int(conn.execute(
+            "SELECT COUNT(*) FROM topology_events WHERE timestamp >= ? AND timestamp <= ?",
+            (current_start, now_iso),
+        ).fetchone()[0])
+        previous = int(conn.execute(
+            "SELECT COUNT(*) FROM topology_events WHERE timestamp >= ? AND timestamp < ?",
+            (previous_start, current_start),
+        ).fetchone()[0])
+    delta = current - previous
+    pct = None if previous == 0 else round((delta / previous) * 100.0, 1)
+    return {"hours": hours, "current_events": current, "previous_events": previous, "delta": delta, "percent": pct}
 
 
 def summary_counts() -> dict[str, int]:
