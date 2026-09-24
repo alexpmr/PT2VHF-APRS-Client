@@ -1,4 +1,4 @@
-name: Build Windows + Linux
+name: Build Windows + Linux + macOS + Manual
 
 on:
   workflow_dispatch:
@@ -30,6 +30,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-windows.txt
+
+      - name: Validate Python and JavaScript syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py linux_app.py macos_app.py tools
+          node --check pt2vhf_aprs\static\js\app.js
 
       - name: Run tests
         shell: pwsh
@@ -65,8 +71,7 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
           Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-installer\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
 
-      - name: Upload build artifacts
-        id: upload-unsigned-artifact
+      - name: Upload Windows build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: PT2VHF-APRS-Client-Windows-x64
@@ -76,7 +81,7 @@ jobs:
             dist\PT2VHF_APRS_Client\SBOM.cdx.json
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
 
-      - name: Publish GitHub Release assets
+      - name: Publish Windows release assets
         if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) }}
         shell: pwsh
         env:
@@ -91,60 +96,7 @@ jobs:
             $tag = "v$version"
           }
 
-          @"
-          ## PT2VHF APRS Client v$version
-
-          ### Novidades principais
-
-          - Nova política de versão: a linha oficial passa a iniciar em **v1.0**.
-          - Mensagens em fluxo de chat, com registros mais novos na parte inferior.
-          - Opção **Agrupar por remetente**, com conversas por contato.
-          - Clique em indicativos de origem/destino para responder diretamente.
-          - Na aba Mensagens, novas mensagens usam aviso compacto com fechamento automático configurável e fechamento manual.
-          - Cores e espessura da **topologia observada** passam a ser configuráveis, com restauração dos padrões.
-          - Opção **Abrir também no navegador ao iniciar**, desligada por padrão.
-          - Primeira distribuição oficial **Linux x86_64/amd64**, em pacote portátil `.tar.gz` e pacote `.deb`.
-
-          ## Política de assinatura de código
-
-          **Status da assinatura:** esta versão permanece sem assinatura Authenticode enquanto o projeto aguarda a ativação da assinatura pelo SignPath Foundation.
-
-          O projeto está preparado para o programa de assinatura Open Source do SignPath Foundation. Quando a assinatura estiver ativa, as versões assinadas usarão a atribuição exigida pelo programa:
-
-          > **Free code signing provided by SignPath.io, certificate by SignPath Foundation**
-
-          - [Política de assinatura de código](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/CODE_SIGNING_POLICY.md)
-          - [Política de privacidade](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/PRIVACY.md)
-          - [Avisos e licenças de terceiros](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/THIRD_PARTY_NOTICES.md)
-
-          ## Interface integrada no Windows
-
-          A partir da v0.3.0, o PT2VHF APRS Client abre a interface em uma janela própria baseada no **Microsoft Edge WebView2**, sem depender de uma aba do navegador durante o uso normal.
-
-          - A partir da v0.3.2, fechar a janela pelo **X** pede confirmação.
-          - Confirmando a saída, o cliente desconecta do APRS-IS, remove o ícone da bandeja e encerra o processo em segundo plano.
-          - Links externos continuam abrindo no navegador padrão.
-          - O parâmetro `--browser` força o modo de diagnóstico pelo navegador.
-          - Se o WebView2 Runtime estiver indisponível, o cliente informa o problema e utiliza o navegador como fallback.
-
-          ## Arquivos para download
-
-          ### Windows
-
-          - **$setupName** — instalador para Windows. **Opção recomendada para a maioria dos usuários.**
-          - **$portableName** — versão portátil em um único arquivo EXE. **Não precisa ser instalada.**
-          - **SBOM.cdx.json** — inventário técnico dos componentes do build Windows.
-          - **THIRD_PARTY_LICENSES.txt** — dependências e licenças do build Windows.
-
-          ### Linux
-
-          O job Linux da mesma release adiciona:
-          - **PT2VHF_APRS_Client_Linux_x86_64_v$version.tar.gz** — pacote portátil Linux.
-          - **pt2vhf-aprs-client_${version}_amd64.deb** — pacote Debian/Ubuntu.
-          - **SBOM-Linux.cdx.json** e **THIRD_PARTY_LICENSES_Linux.txt** — inventário técnico do build Linux.
-
-          Consulte **docs/INSTALL_LINUX.md** para os comandos de instalação e atualização.
-          "@ | Set-Content -Encoding UTF8 release-notes.md
+          python tools\release_notes.py --output release-notes.md
 
           gh release view $tag 2>$null
           if ($LASTEXITCODE -ne 0) {
@@ -159,7 +111,6 @@ jobs:
             dist\PT2VHF_APRS_Client\SBOM.cdx.json `
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
             --clobber
-
 
   linux-x64:
     needs: windows-x64
@@ -209,3 +160,106 @@ jobs:
             dist-linux/SBOM-Linux.cdx.json \
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt \
             --clobber
+
+  macos:
+    needs: windows-x64
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Build macOS DMG
+        shell: bash
+        run: |
+          chmod +x macos/build_macos.sh
+          PYTHON_BIN=python3 bash macos/build_macos.sh
+
+      - name: Verify runner architecture
+        shell: bash
+        run: |
+          actual="$(uname -m)"
+          echo "Expected: ${{ matrix.arch }} / Actual: $actual"
+          test "$actual" = "${{ matrix.arch }}"
+
+      - name: Upload macOS build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-macOS-${{ matrix.arch }}
+          path: |
+            dist-macos/PT2VHF_APRS_Client_macOS_${{ matrix.arch }}_v*.dmg
+            dist-macos/SBOM-macOS-${{ matrix.arch }}.cdx.json
+            dist-macos/THIRD_PARTY_LICENSES_macOS_${{ matrix.arch }}.txt
+
+      - name: Publish macOS release assets
+        if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(tr -d '\r\n ' < VERSION)"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="v$version"
+          fi
+          gh release upload "$tag" \
+            "dist-macos/PT2VHF_APRS_Client_macOS_${{ matrix.arch }}_v$version.dmg" \
+            "dist-macos/SBOM-macOS-${{ matrix.arch }}.cdx.json" \
+            "dist-macos/THIRD_PARTY_LICENSES_macOS_${{ matrix.arch }}.txt" \
+            --clobber
+
+  manual-pdf:
+    needs: windows-x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate versioned PDF manual
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install "reportlab>=4.0,<5.0"
+          version="$(tr -d '\r\n ' < VERSION)"
+          mkdir -p dist-docs
+          python tools/generate_manual.py --output "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
+          test -s "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
+
+      - name: Upload manual artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Manual
+          path: dist-docs/PT2VHF_APRS_Client_Manual_v*.pdf
+
+      - name: Publish manual in GitHub Release
+        if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(tr -d '\r\n ' < VERSION)"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="v$version"
+          fi
+          gh release upload "$tag" "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf" --clobber

@@ -112,11 +112,16 @@ def _resource_path(*parts: str) -> Path:
 
 
 def _make_tray_image() -> Image.Image:
-    logo = _resource_path("pt2vhf_aprs", "static", "img", "app_logo.png")
-    try:
-        return Image.open(logo).convert("RGBA").resize((64, 64), Image.Resampling.LANCZOS)
-    except Exception:
-        return Image.new("RGBA", (64, 64), (15, 23, 30, 255))
+    candidates = [
+        _resource_path("windows", "app_icon.ico"),
+        _resource_path("pt2vhf_aprs", "static", "img", "app_logo.png"),
+    ]
+    for logo in candidates:
+        try:
+            return Image.open(logo).convert("RGBA").resize((64, 64), Image.Resampling.LANCZOS)
+        except Exception:
+            continue
+    return Image.new("RGBA", (64, 64), (15, 23, 30, 255))
 
 
 def _show_native_window(*_args) -> None:

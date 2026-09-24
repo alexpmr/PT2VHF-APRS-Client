@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" role="img" aria-labelledby="title desc">
+  <title id="title">PT2VHF APRS Client</title>
+  <desc id="desc">Globo azul oval com PT2VHF, APRS e CLIENT em vermelho.</desc>
+  <defs>
+    <radialGradient id="ocean" cx="50%" cy="42%" r="68%">
+      <stop offset="0" stop-color="#168de8"/>
+      <stop offset=".58" stop-color="#075ca9"/>
+      <stop offset="1" stop-color="#062d63"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d67b8"/>
+      <stop offset=".52" stop-color="#052c62"/>
+      <stop offset="1" stop-color="#021936"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff3030"/>
+      <stop offset=".55" stop-color="#e70d18"/>
+      <stop offset="1" stop-color="#a9050c"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#00101f" flood-opacity=".72"/>
+    </filter>
+    <clipPath id="globeClip"><ellipse cx="360" cy="230" rx="302" ry="174"/></clipPath>
+  </defs>
+
+  <ellipse cx="360" cy="230" rx="334" ry="201" fill="url(#rim)"/>
+  <ellipse cx="360" cy="230" rx="320" ry="188" fill="#fff" opacity=".94"/>
+  <ellipse cx="360" cy="230" rx="309" ry="180" fill="url(#ocean)"/>
+
+  <g clip-path="url(#globeClip)" fill="none" stroke="#dff3ff" stroke-width="3" opacity=".58">
+    <path d="M58 230h604"/>
+    <path d="M70 178c97 19 193 28 290 28s193-9 290-28"/>
+    <path d="M70 282c97-19 193-28 290-28s193 9 290 28"/>
+    <path d="M92 128c89 33 178 49 268 49s179-16 268-49"/>
+    <path d="M92 332c89-33 178-49 268-49s179 16 268 49"/>
+    <ellipse cx="360" cy="230" rx="75" ry="174"/>
+    <ellipse cx="360" cy="230" rx="151" ry="174"/>
+    <ellipse cx="360" cy="230" rx="229" ry="174"/>
+    <path d="M360 56v348"/>
+  </g>
+
+  <g clip-path="url(#globeClip)" fill="#f5f8fa" opacity=".98">
+    <path d="M103 141l29-27 42-12 45 9 21 23 30 12 10 23-19 18-18 3-18 25-24 3-9 25-25 7-16-23-4-29-22-14-24-22z"/>
+    <path d="M230 240l38 8 27 29-12 34-23 25-10 36-20 29-17-15 5-31-14-31 4-30 22-24z"/>
+    <path d="M337 136l31-22 34 4 20 16 39-7 35 10 32 19 38-5 30 19 8 31-34 19-31-9-32 20-23-11-31 12-20-14-25 3-20-29-19 2-17-27 5-31z"/>
+    <path d="M383 229l37 7 26 31-8 29-27 16-13 39-25-1-14-33-19-27 12-32 31-29z"/>
+    <path d="M527 313l35-11 30 12 6 23-24 22-33-5-17-19z"/>
+    <path d="M315 109l18-13 20 5 5 18-17 10-21-4z"/>
+  </g>
+
+  <g font-family="Arial Black, Arial, sans-serif" text-anchor="middle" fill="url(#red)" stroke="#fff" stroke-linejoin="round" filter="url(#shadow)">
+    <text x="360" y="119" font-size="64" stroke-width="6">PT2VHF</text>
+    <text x="360" y="282" font-size="172" letter-spacing="-5" stroke-width="10">APRS</text>
+    <text x="360" y="365" font-size="66" letter-spacing="4" stroke-width="6">CLIENT</text>
+  </g>
+  <ellipse cx="360" cy="92" rx="215" ry="34" fill="#fff" opacity=".08"/>
+</svg>

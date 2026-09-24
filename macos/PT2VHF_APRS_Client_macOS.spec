@@ -3,18 +3,18 @@ from pathlib import Path
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 ROOT = Path(SPECPATH).parent
+VERSION = (ROOT / 'VERSION').read_text(encoding='utf-8').strip()
 hiddenimports = collect_submodules('aprslib') + collect_submodules('webview')
 webview_datas = collect_data_files('webview')
 
 a = Analysis(
-    [str(ROOT / 'windows_app.py')],
+    [str(ROOT / 'macos_app.py')],
     pathex=[str(ROOT)],
     binaries=[],
     datas=[
         (str(ROOT / 'pt2vhf_aprs' / 'templates'), 'pt2vhf_aprs/templates'),
         (str(ROOT / 'pt2vhf_aprs' / 'static'), 'pt2vhf_aprs/static'),
         (str(ROOT / 'VERSION'), '.'),
-        (str(ROOT / 'windows' / 'app_icon.ico'), 'windows'),
         *webview_datas,
     ],
     hiddenimports=hiddenimports,
@@ -36,15 +36,13 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version=str(ROOT / 'windows' / 'version_info.txt'),
-    icon=str(ROOT / 'windows' / 'app_icon.ico'),
 )
 
 coll = COLLECT(
@@ -52,7 +50,19 @@ coll = COLLECT(
     a.binaries,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name='PT2VHF_APRS_Client',
+)
+
+app = BUNDLE(
+    coll,
+    name='PT2VHF APRS Client.app',
+    icon=str(ROOT / 'macos' / 'app_icon.icns'),
+    bundle_identifier='br.com.pt2vhf.aprsclient',
+    version=VERSION,
+    info_plist={
+        'NSHighResolutionCapable': True,
+        'NSLocationWhenInUseUsageDescription': 'O PT2VHF APRS Client pode usar sua localização para preencher as coordenadas da estação quando você solicitar.',
+    },
 )

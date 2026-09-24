@@ -41,6 +41,8 @@
     currentAlertMessage: null,
     soundOnPersonalMessage: true,
     messagePopupSeconds: 5,
+    language: 'pt-BR',
+    configSection: 'aprs',
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -50,17 +52,25 @@
     return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
   }
 
+  function ui(pt, en) {
+    return state.language === 'en' ? en : pt;
+  }
+
+  function currentLocale() {
+    return state.language === 'en' ? 'en-US' : 'pt-BR';
+  }
+
   function fmtDate(value) {
     if (!value) return '';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return value;
-    return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    return d.toLocaleString(currentLocale(), { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
   }
 
   function fmtNum(value, digits = 1, suffix = '') {
     if (value === null || value === undefined || value === '') return '';
     const n = Number(value);
-    return Number.isFinite(n) ? `${n.toLocaleString('pt-BR', {maximumFractionDigits: digits})}${suffix}` : '';
+    return Number.isFinite(n) ? `${n.toLocaleString(currentLocale(), {maximumFractionDigits: digits})}${suffix}` : '';
   }
 
   async function api(url, options = {}) {
@@ -609,9 +619,9 @@
       if (s.connected && s.verified) el.classList.add('connected');
       else if (s.connected) el.classList.add('unverified');
       else el.classList.add('disconnected');
-      el.querySelector('span:last-child').textContent = s.state || (s.connected ? 'Conectado' : 'Desconectado');
+      el.querySelector('span:last-child').textContent = translateConnectionState(s.state || (s.connected ? 'Conectado' : 'Desconectado'));
       el.title = s.last_error || s.server_message || '';
-      $('#connectButton').textContent = s.connected || s.wanted ? 'Desconectar' : 'Conectar';
+      $('#connectButton').textContent = s.connected || s.wanted ? ui('Desconectar', 'Disconnect') : ui('Conectar', 'Connect');
       const stationCount = Number(s.stations || 0);
       const messageCount = Number(s.messages || 0);
       const packetCount = Number(s.packets_received || 0);
@@ -624,13 +634,19 @@
 
   $('#connectButton').addEventListener('click', async () => {
     try {
-      if (state.connected || $('#connectButton').textContent === 'Desconectar') {
+      if (state.connected || $('#connectButton').textContent === ui('Desconectar', 'Disconnect')) {
         await api('/api/disconnect', { method: 'POST' });
       } else {
         await api('/api/connect', { method: 'POST' });
       }
       await refreshStatus();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) {
+      if (/Preencha os campos obrigatórios/i.test(String(err.message || ''))) {
+        guideToRequiredStationFields();
+      } else {
+        toast(err.message, 'error');
+      }
+    }
   });
 
   function setupSortableTable(tableId, datasetName, renderFn) {
@@ -658,7 +674,7 @@
       if (aEmpty) return 1;
       if (bEmpty) return -1;
       if (spec.type === 'number') return (Number(av) - Number(bv)) * factor;
-      return String(av).localeCompare(String(bv), 'pt-BR', { numeric: true, sensitivity: 'base' }) * factor;
+      return String(av).localeCompare(String(bv), currentLocale(), { numeric: true, sensitivity: 'base' }) * factor;
     });
   }
 
@@ -1420,11 +1436,15 @@
       state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
       state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
+      state.language = cfg.language === 'en' ? 'en' : 'pt-BR';
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       applyMapPreferences(cfg);
       applyAppearancePreferences(cfg);
       syncMapPreferenceControls();
       syncAppearanceControls();
+      syncDmsFromDecimal();
+      applyCoordinateMode(localStorage.getItem('pt2vhf_coordinate_mode') || 'decimal');
+      applyLanguage(state.language);
       state.configLoaded = true;
     } catch (err) { toast(err.message, 'error'); }
   }
@@ -1432,15 +1452,34 @@
   $('#configForm').addEventListener('submit', async e => {
     e.preventDefault();
     const form = e.currentTarget;
+    syncDecimalFromDmsIfNeeded();
     const data = Object.fromEntries(new FormData(form).entries());
     data.connect_on_start = form.elements.connect_on_start.checked;
     data.open_browser_on_start = form.elements.open_browser_on_start.checked;
     data.sound_on_personal_message = form.elements.sound_on_personal_message.checked;
+
+    if (state.configSection === 'aprs' && !String(data.aprs_filter || '').trim()) {
+      const proceed = window.confirm(ui(
+        'O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?',
+        'The APRS-IS filter is empty. Depending on the server and port in use, the client may receive a much larger traffic stream, including all traffic made available on that connection.\n\nDo you want to continue without a filter?'
+      ));
+      if (!proceed) {
+        showConfigSection('aprs');
+        $('#aprsFilterInput')?.focus();
+        return;
+      }
+    }
+
     try {
       const result = await api('/api/config', {
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
       });
-      toast(result.reconnected ? 'Configuração salva. APRS-IS reconectando com os novos parâmetros.' : 'Configuração salva no banco local.', 'ok');
+      toast(
+        result.reconnected
+          ? ui('Configuração salva. APRS-IS reconectando com os novos parâmetros.', 'Configuration saved. APRS-IS is reconnecting with the new parameters.')
+          : ui('Configuração salva no banco local.', 'Configuration saved to the local database.'),
+        'ok'
+      );
       applyMapPreferences(result.config || data);
       applyAppearancePreferences(result.config || data);
       await loadConfig();
@@ -1574,10 +1613,12 @@
       stations_font_family: form.elements.namedItem('stations_font_family')?.value || 'system',
       stations_font_size: form.elements.namedItem('stations_font_size')?.value || 12
     });
+    state.language = form.elements.namedItem('language')?.value === 'en' ? 'en' : 'pt-BR';
+    applyLanguage(state.language);
     syncAppearanceControls();
   }
 
-  for (const name of ['app_theme', 'messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
+  for (const name of ['app_theme', 'language', 'messages_font_family', 'messages_font_size', 'stations_font_family', 'stations_font_size']) {
     $('#configForm')?.elements.namedItem(name)?.addEventListener('input', previewAppearanceFromForm);
     $('#configForm')?.elements.namedItem(name)?.addEventListener('change', previewAppearanceFromForm);
   }
@@ -1626,6 +1667,514 @@
     $$('.symbol-tab').forEach(b => b.classList.toggle('active', b === btn));
     renderSymbolGrid(state.symbolTable);
   }));
+
+
+  const EN_TEXT = new Map(Object.entries({
+    'MAPA':'MAP',
+    'Mensagens':'Messages',
+    'Estações':'Stations',
+    'Configuração':'Settings',
+    'Ajuda':'Help',
+    'Estações recebidas:':'Stations received:',
+    'Pacotes APRS-IS:':'APRS-IS packets:',
+    'Conectar':'Connect',
+    'Desconectar':'Disconnect',
+    'Desconectado':'Disconnected',
+    'Verificando versão…':'Checking version…',
+    'Mensagens APRS':'APRS Messages',
+    'Ocultar telemetria':'Hide telemetry',
+    'Agrupar por remetente':'Group by sender',
+    'Minhas mensagens':'My messages',
+    'Limpar mensagens':'Clear messages',
+    'Filtro por origem':'Source filter',
+    'De':'From',
+    'Para':'To',
+    'Tipo':'Type',
+    'Mensagem':'Message',
+    'Hora':'Time',
+    'Status':'Status',
+    'Conversas':'Conversations',
+    'Conversa com':'Conversation with',
+    'Tipo':'Type',
+    'Destino':'Destination',
+    'Boletim geral':'General bulletin',
+    'Boletim de grupo':'Group bulletin',
+    'Linha':'Line',
+    'Grupo':'Group',
+    'Enviar':'Send',
+    'Últimos dados conhecidos de cada estação recebida.':'Latest known data for each received station.',
+    'Limpar tracklogs':'Clear tracklogs',
+    'Limpar estações':'Clear stations',
+    'Filtro':'Filter',
+    'Indicativo':'Callsign',
+    'Última recepção':'Last heard',
+    'Distância':'Distance',
+    'Velocidade':'Speed',
+    'Curso':'Course',
+    'Altitude':'Altitude',
+    'Informação':'Information',
+    'Log APRS-IS':'APRS-IS Log',
+    'Pesquisar no Log':'Search log',
+    'Direção':'Direction',
+    'Linhas':'Lines',
+    'Todos':'All',
+    'Acompanhar mais recentes no topo':'Keep newest at top',
+    'Limpar log':'Clear log',
+    'Os dados ficam persistidos no SQLite local. Para transmitir ao APRS-IS, a conexão precisa estar verificada.':'Data is stored in the local SQLite database. To transmit to APRS-IS, the connection must be verified.',
+    'APRS / Estação':'APRS / Station',
+    'Aplicativo':'Application',
+    'Estação':'Station',
+    'Obrigatório':'Required',
+    'Passcode APRS-IS':'APRS-IS passcode',
+    'SSID':'SSID',
+    'Comentário':'Comment',
+    'Formato das coordenadas':'Coordinate format',
+    'Decimal':'Decimal',
+    'Graus / minutos / segundos':'Degrees / minutes / seconds',
+    'Usar minha localização atual':'Use my current location',
+    'Latitude':'Latitude',
+    'Longitude':'Longitude',
+    'Graus':'Degrees',
+    'Min':'Min',
+    'Seg':'Sec',
+    'Altitude (m)':'Altitude (m)',
+    'E-mail':'Email',
+    'Ícone APRS':'APRS icon',
+    'Escolher ícone':'Choose icon',
+    'Servidor':'Server',
+    'Porta':'Port',
+    'Filtro APRS-IS':'APRS-IS filter',
+    'Beacon (minutos)':'Beacon (minutes)',
+    'Conectar ao iniciar':'Connect at startup',
+    'Editor gráfico de filtro':'Graphical filter editor',
+    'Abrir editor':'Open editor',
+    'Fechar editor':'Close editor',
+    'Raio a partir da posição da estação (km)':'Radius from station position (km)',
+    'Prefixos de indicativo':'Callsign prefixes',
+    'Indicativos exatos':'Exact callsigns',
+    'Tipos de pacote':'Packet types',
+    'Posição':'Position',
+    'Meteorologia':'Weather',
+    'Telemetria':'Telemetry',
+    'Objetos':'Objects',
+    'Itens':'Items',
+    'Gerar filtro':'Generate filter',
+    'Restaurar r/2000':'Restore r/2000',
+    'Salvar configuração APRS':'Save APRS settings',
+    'Enviar beacon agora':'Send beacon now',
+    'Mapa':'Map',
+    'Tipo de mapa':'Map type',
+    'Cor dos tracklogs':'Tracklog color',
+    'Espessura dos tracklogs':'Tracklog width',
+    'Brilho do mapa':'Map brightness',
+    'Cor da topologia RF':'RF topology color',
+    'Cor da topologia via IGate':'IGate topology color',
+    'Espessura da topologia':'Topology width',
+    'Restaurar topologia padrão':'Restore topology defaults',
+    'Aparência e aplicativo':'Appearance and application',
+    'Tema da aplicação':'Application theme',
+    'Escuro - padrão':'Dark - default',
+    'Claro':'Light',
+    'Idioma / Language':'Language / Idioma',
+    'Português - padrão':'Portuguese - default',
+    'English':'English',
+    'Abrir também no navegador ao iniciar':'Also open in browser at startup',
+    'Fonte':'Font',
+    'Tamanho':'Size',
+    'Tocar sinal sonoro ao receber mensagem para minha estação':'Play a sound when a message for my station arrives',
+    'Duração do aviso na aba Mensagens':'Alert duration in Messages tab',
+    'Salvar configurações do aplicativo':'Save application settings',
+    'Backup da configuração':'Configuration backup',
+    'Salvar em arquivo':'Save to file',
+    'Recuperar de arquivo':'Restore from file',
+    'Primeiros passos':'Getting started',
+    'Configure sua estação antes de conectar ao APRS-IS':'Configure your station before connecting to APRS-IS',
+    'Abrir Configuração':'Open Settings',
+    'Dúvidas, dificuldades ou sugestões?':'Questions, problems or suggestions?',
+    'Fale comigo':'Contact me',
+    'Nova mensagem APRS':'New APRS message',
+    'Mensagem para esta estação':'Message for this station',
+    'Responder':'Reply',
+    'Fechar aviso':'Close alert',
+    'OK':'OK',
+    'Topologia observada':'Observed topology'
+  }));
+
+
+  Object.entries({
+    'Grupo de configurações':'Settings group',
+    'Campos marcados como':'Fields marked as',
+    'precisam ser preenchidos antes de conectar ao APRS-IS.':'must be filled in before connecting to APRS-IS.',
+    'calculado automaticamente':'calculated automatically',
+    'Calculado automaticamente pelo indicativo-base; o SSID não altera o código.':'Calculated automatically from the base callsign; SSID does not change the code.',
+    'Os valores em graus/minutos/segundos são convertidos automaticamente para decimal antes de salvar.':'Degrees/minutes/seconds values are automatically converted to decimal before saving.',
+    'opcional':'optional',
+    'usa sua latitude/longitude configuradas como centro e recebe estações em um raio de 2.000 km. O campo continua totalmente editável para filtros manuais.':'uses your configured latitude/longitude as the center and receives stations within a 2,000 km radius. The field remains fully editable for manual filters.',
+    'Monte os componentes abaixo e gere a string APRS-IS automaticamente.':'Choose the components below and generate the APRS-IS filter string automatically.',
+    'Gera':'Generates',
+    'Se o filtro for deixado vazio, o programa pedirá confirmação antes de salvar. Dependendo do servidor/porta, isso pode resultar em um fluxo de tráfego muito amplo.':'If the filter is left empty, the program will ask for confirmation before saving. Depending on the server/port, this can result in a very broad traffic stream.',
+    'Satélite — Esri World Imagery':'Satellite - Esri World Imagery',
+    'Cor dos enlaces RF':'RF link color',
+    'Cor dos enlaces IGate':'IGate link color',
+    'Padrão: RF #35a7ff, IGate #b06cff, 2 px.':'Default: RF #35a7ff, IGate #b06cff, 2 px.',
+    'OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography. Satellite mode uses Esri World Imagery. Topology colors and width are applied immediately and persisted when saving.',
+    'A alteração é aplicada imediatamente e fica salva após clicar em Salvar.':'The change is applied immediately and persisted after clicking Save.',
+    'O idioma é aplicado imediatamente à interface.':'The language is applied immediately to the interface.',
+    'Sistema':'System',
+    'Tempo, em segundos, antes do pequeno aviso fechar automaticamente. Ele também pode ser fechado manualmente.':'Time in seconds before the compact alert closes automatically. It can also be closed manually.',
+    'Tema, idioma, fontes e tamanhos são aplicados à interface e persistidos no banco local.':'Theme, language, fonts and sizes are applied to the interface and stored in the local database.',
+    'O arquivo exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.':'The exported file contains the APRS-IS passcode in readable text. Keep it in a secure location.',
+    'Guia rápido para configurar, usar e diagnosticar o PT2VHF APRS Client.':'Quick guide to configure, use and troubleshoot PT2VHF APRS Client.',
+    'Na aba':'In the',
+    'informe seu indicativo, SSID, posição e parâmetros APRS-IS. O passcode é calculado automaticamente a partir do indicativo-base.':'tab, enter your callsign, SSID, position and APRS-IS parameters. The passcode is calculated automatically from the base callsign.',
+    '1. Estação':'1. Station',
+    '2. APRS-IS':'2. APRS-IS',
+    '3. Mapa':'3. Map',
+    '4. Mensagens e boletins':'4. Messages and bulletins',
+    '5. Estações':'5. Stations',
+    '6. Log APRS-IS':'6. APRS-IS Log',
+    '7. Atualizações':'7. Updates',
+    '8. Banco e backup':'8. Database and backup',
+    'Diagnóstico rápido':'Quick troubleshooting',
+    'Indicativo:':'Callsign:',
+    'informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo':'enter your amateur-radio callsign. The SSID identifies the station purpose, for example',
+    'para móvel.':'for mobile.',
+    'Passcode APRS-IS:':'APRS-IS passcode:',
+    'é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.':'is calculated automatically and appears next to the callsign. The SSID does not change this code.',
+    'Latitude/Longitude:':'Latitude/Longitude:',
+    'podem ser informadas em decimal ou graus/minutos/segundos. O botão':'can be entered in decimal or degrees/minutes/seconds. The button',
+    'solicita a posição ao navegador/SO e preenche os campos quando autorizado. A altitude também é obrigatória para conectar.':'requests the location from the browser/OS and fills the fields when authorized. Altitude is also required to connect.',
+    'Ícone APRS:':'APRS icon:',
+    'escolha o símbolo adequado à sua estação ou veículo.':'choose the appropriate symbol for your station or vehicle.',
+    'O servidor padrão é':'The default server is',
+    'porta':'port',
+    'Filtro de recepção:':'Receive filter:',
+    'como configuração inicial, use':'for initial configuration, use',
+    'O editor gráfico pode montar filtros radiais, por prefixo, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.':'The graphical editor can build radial, prefix, exact-callsign and packet-type filters while keeping the manual field always available.',
+    'Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.':'If the filter is empty, the program asks for confirmation before saving and explains the potential impact on traffic volume.',
+    'Se o Log mostrar':'If the Log shows',
+    'revise o campo de filtro APRS-IS. Um texto livre como':'review the APRS-IS filter field. Free text such as',
+    'não é um filtro APRS-IS válido.':'is not a valid APRS-IS filter.',
+    'Marque':'Enable',
+    'se quiser que o cliente tente conectar automaticamente.':'if you want the client to connect automatically.',
+    'mantém a janela integrada e abre uma segunda visualização no navegador padrão. A opção vem desligada por padrão.':'keeps the integrated window and opens a second view in the default browser. This option is off by default.',
+    'Escolha entre':'Choose between',
+    'e':'and',
+    'Satélite':'Satellite',
+    'É possível ajustar':'You can adjust',
+    'brilho do mapa':'map brightness',
+    'cor':'color',
+    'espessura dos tracklogs':'tracklog width',
+    'além das':'as well as',
+    'cores e espessura da topologia observada':'observed topology colors and width',
+    'Clique em uma estação para abrir os detalhes. O botão':'Click a station to open its details. The button',
+    'Enviar mensagem':'Send message',
+    'leva diretamente à tela de mensagens com o destino preenchido.':'opens the message screen with the destination filled in.',
+    'A posição e o zoom do mapa ficam salvos localmente.':'Map position and zoom are stored locally.',
+    'Mensagem:':'Message:',
+    'comunicação APRS direcionada a um indicativo, com suporte a ACK/REJ.':'APRS communication addressed to a callsign, with ACK/REJ support.',
+    'Boletim geral:':'General bulletin:',
+    'usa':'uses',
+    'a':'to',
+    'e não solicita ACK.':'and does not request an ACK.',
+    'Boletim de grupo:':'Group bulletin:',
+    'permite informar um grupo de até cinco caracteres.':'allows a group of up to five characters.',
+    'O botão':'The',
+    'mostra apenas mensagens individuais de ou para o seu':'button shows only individual messages from or to your',
+    'As mensagens seguem fluxo de chat, com as mais novas embaixo. A opção':'Messages follow a chat flow, with the newest at the bottom. The',
+    'organiza o histórico em conversas por contato.':'option organizes history into conversations by contact.',
+    'Clique em qualquer indicativo nas colunas':'Click any callsign in the',
+    'ou':'or',
+    'para selecioná-lo como destinatário e responder. Se clicar no próprio indicativo, o programa tenta selecionar o outro participante.':'columns to select it as the recipient and reply. If you click your own callsign, the program tries to select the other participant.',
+    'O compositor aceita mensagens longas. Use':'The composer accepts long messages. Use',
+    'para enviar e':'to send and',
+    'para nova linha. Mensagens maiores são divididas automaticamente em partes APRS numeradas, cada uma com confirmação própria.':'for a new line. Longer messages are automatically split into numbered APRS parts, each with its own confirmation.',
+    'apaga todo o histórico local de mensagens e boletins após confirmação.':'deletes the entire local message and bulletin history after confirmation.',
+    'Quando chega uma nova mensagem para sua estação e a aba Mensagens já está aberta, o programa usa um aviso pequeno e não bloqueante, que fecha automaticamente pelo tempo definido em Configuração. Fora da aba Mensagens, permanece o aviso completo com opção de responder.':'When a new message for your station arrives while the Messages tab is open, the program shows a small non-blocking alert that closes automatically after the configured time. Outside the Messages tab, the full alert remains available with a Reply option.',
+    'A lista mostra indicativo, última recepção, distância, velocidade, curso, altitude e informações conhecidas.':'The list shows callsign, last heard, distance, speed, course, altitude and known information.',
+    'Clique em uma linha para abrir o':'Click a row to open the',
+    'centralizar a estação e mostrar o popup correspondente.':'center the station and show its popup.',
+    'Os títulos das colunas podem ser clicados para alterar a ordenação.':'Column headers can be clicked to change sorting.',
+    'apaga todas as estações e tracklogs locais; novas estações voltarão a aparecer quando forem recebidas.':'deletes all local stations and tracklogs; new stations will appear again when received.',
+    'Fonte e tamanho da tabela podem ser ajustados em':'Table font and size can be adjusted under',
+    'Aparência':'Appearance',
+    'Use o Log para diagnosticar conexão, autenticação, filtro e tráfego recebido/transmitido.':'Use the Log to diagnose connection, authentication, filtering and received/transmitted traffic.',
+    'indica dados recebidos e':'indicates received data and',
+    'indica dados enviados.':'indicates transmitted data.',
+    'confirma autenticação APRS-IS. Linhas iniciadas por':'confirms APRS-IS authentication. Lines starting with',
+    'são mensagens de controle do servidor, não estações APRS.':'are server control messages, not APRS stations.',
+    'O passcode é mascarado no Log.':'The passcode is masked in the Log.',
+    'O cabeçalho informa se você está usando a':'The header indicates whether you are using the',
+    'última versão':'latest version',
+    'ou se existe uma':'or whether a',
+    'nova versão':'new version',
+    'publicada.':'is available.',
+    'Quando houver atualização, clique no aviso para abrir a Release no GitHub.':'When an update is available, click the notice to open the GitHub Release.',
+    'O instalador encerra automaticamente a versão anterior antes de substituir os arquivos.':'The installer automatically closes the previous version before replacing files.',
+    'O banco SQLite fica em:':'The SQLite database is stored at:',
+    'O instalador e o Portable EXE usam esse mesmo banco local.':'The installer and Portable EXE use the same local database.',
+    'Em':'Under',
+    'você pode salvar ou recuperar as preferências em JSON.':'you can save or restore preferences as JSON.',
+    'O JSON exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.':'The exported JSON contains the APRS-IS passcode in readable text. Keep it in a secure location.',
+    'Conecta, mas não aparecem estações':'Connects, but no stations appear',
+    'Confira o filtro APRS-IS e procure erros de filtro no Log.':'Check the APRS-IS filter and look for filter errors in the Log.',
+    'Não transmite':'Does not transmit',
+    'Confira se a conexão está como verificada e se indicativo/passcode estão corretos.':'Check that the connection is verified and that callsign/passcode are correct.',
+    'Mapa não carrega':'Map does not load',
+    'Confira a conexão com a Internet; os tiles dos mapas são carregados de provedores externos.':'Check the Internet connection; map tiles are loaded from external providers.',
+    'Distâncias incorretas':'Incorrect distances',
+    'Confira latitude e longitude da sua estação em Configuração.':'Check your station latitude and longitude in Settings.',
+    'Sem aviso sonoro':'No sound alert',
+    'Confira a opção de som em Configuração → Aparência e o volume do Windows.':'Check the sound option under Settings > Appearance and the system volume.',
+    'Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.':'If you need help configuring the program, found a problem or have an improvement suggestion, get in touch.',
+    'Escolher ícone APRS':'Choose APRS icon',
+    'Tabela primária (/) e secundária (\\).':'Primary (/) and secondary (\\) table.',
+    'Primária /':'Primary /',
+    'Secundária \\':'Secondary \\'
+  }).forEach(([key, value]) => EN_TEXT.set(key, value));
+
+  function translateConnectionState(value) {
+    const map = {
+      'Desconectado':'Disconnected',
+      'Desconectando...':'Disconnecting...',
+      'Conectado; autenticando...':'Connected; authenticating...',
+      'Conectado e verificado':'Connected and verified',
+      'Conectado sem verificação':'Connected without verification',
+      'Conexão perdida':'Connection lost',
+      'Configuração incompleta':'Incomplete configuration',
+      'Reconectando com a nova configuração...':'Reconnecting with new settings...'
+    };
+    return state.language === 'en' ? (map[value] || value) : value;
+  }
+
+  function translateDom(root = document.body) {
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const parent = node.parentElement;
+      if (!parent || ['SCRIPT','STYLE','CODE'].includes(parent.tagName)) continue;
+      if (node._pt2vhfOriginalText === undefined) node._pt2vhfOriginalText = node.nodeValue;
+      const original = node._pt2vhfOriginalText;
+      const trimmed = original.trim();
+      if (!trimmed) continue;
+      const translated = EN_TEXT.get(trimmed);
+      const chosen = state.language === 'en' && translated ? translated : trimmed;
+      const lead = original.match(/^\s*/)?.[0] || '';
+      const trail = original.match(/\s*$/)?.[0] || '';
+      node.nodeValue = lead + chosen + trail;
+    }
+
+    const attrs = ['placeholder', 'title', 'aria-label'];
+    for (const el of root.querySelectorAll?.('*') || []) {
+      for (const attr of attrs) {
+        if (!el.hasAttribute(attr)) continue;
+        const key = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
+        if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
+        const original = el.dataset[key];
+        const translated = EN_TEXT.get(original);
+        el.setAttribute(attr, state.language === 'en' && translated ? translated : original);
+      }
+    }
+  }
+
+  function applyLanguage(language) {
+    state.language = language === 'en' ? 'en' : 'pt-BR';
+    document.documentElement.lang = state.language === 'en' ? 'en' : 'pt-BR';
+    translateDom(document.body);
+    refreshStatus();
+    if (state.messages.length) renderMessages();
+    if (state.stations.length) renderStations();
+  }
+
+  const languageObserver = new MutationObserver(records => {
+    if (state.language !== 'en') return;
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE) translateDom(node);
+      }
+    }
+  });
+  languageObserver.observe(document.body, { childList: true, subtree: true });
+
+  function showConfigSection(section) {
+    state.configSection = section === 'app' ? 'app' : 'aprs';
+    localStorage.setItem('pt2vhf_config_section', state.configSection);
+    $('.config-section-tab').forEach(btn => {
+      const active = btn.dataset.configSection === state.configSection;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    $('.config-section-aprs').forEach(el => el.classList.toggle('hidden', state.configSection !== 'aprs'));
+    $('.config-section-app').forEach(el => el.classList.toggle('hidden', state.configSection !== 'app'));
+  }
+
+  $('.config-section-tab').forEach(btn => btn.addEventListener('click', () => showConfigSection(btn.dataset.configSection)));
+  showConfigSection(localStorage.getItem('pt2vhf_config_section') || 'aprs');
+
+  function guideToRequiredStationFields() {
+    $('.tab[data-tab="config"]')?.click();
+    setTimeout(() => {
+      showConfigSection('aprs');
+      const form = $('#configForm');
+      const fields = [
+        form?.elements.namedItem('callsign'),
+        form?.elements.namedItem('latitude'),
+        form?.elements.namedItem('longitude'),
+        form?.elements.namedItem('altitude')
+      ];
+      const firstMissing = fields.find(input => !String(input?.value || '').trim());
+      firstMissing?.focus();
+      firstMissing?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast(ui(
+        'Preencha os campos obrigatórios em Configuração → APRS / Estação: Indicativo, Latitude, Longitude e Altitude.',
+        'Fill in the required fields under Settings → APRS / Station: Callsign, Latitude, Longitude and Altitude.'
+      ), 'error');
+    }, 80);
+  }
+
+  function decimalToDms(value, lat) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    const abs = Math.abs(number);
+    const deg = Math.floor(abs);
+    const minFloat = (abs - deg) * 60;
+    const min = Math.floor(minFloat);
+    const sec = (minFloat - min) * 60;
+    return { deg, min, sec, hem: lat ? (number < 0 ? 'S' : 'N') : (number < 0 ? 'W' : 'E') };
+  }
+
+  function dmsToDecimal(deg, min, sec, hem) {
+    const d = Number(deg), m = Number(min), s = Number(sec);
+    if (![d,m,s].every(Number.isFinite) || d < 0 || m < 0 || m >= 60 || s < 0 || s >= 60) return null;
+    let value = d + m / 60 + s / 3600;
+    if (hem === 'S' || hem === 'W') value *= -1;
+    return value;
+  }
+
+  function syncDmsFromDecimal() {
+    const lat = decimalToDms($('#latitudeDecimal')?.value, true);
+    const lon = decimalToDms($('#longitudeDecimal')?.value, false);
+    if (lat) {
+      $('#latDeg').value = lat.deg; $('#latMin').value = lat.min; $('#latSec').value = lat.sec.toFixed(4); $('#latHem').value = lat.hem;
+    }
+    if (lon) {
+      $('#lonDeg').value = lon.deg; $('#lonMin').value = lon.min; $('#lonSec').value = lon.sec.toFixed(4); $('#lonHem').value = lon.hem;
+    }
+  }
+
+  function syncDecimalFromDmsIfNeeded() {
+    if ($('#coordinateInputMode')?.value !== 'dms') return true;
+    const lat = dmsToDecimal($('#latDeg')?.value, $('#latMin')?.value, $('#latSec')?.value, $('#latHem')?.value);
+    const lon = dmsToDecimal($('#lonDeg')?.value, $('#lonMin')?.value, $('#lonSec')?.value, $('#lonHem')?.value);
+    if (lat !== null) $('#latitudeDecimal').value = lat.toFixed(6);
+    if (lon !== null) $('#longitudeDecimal').value = lon.toFixed(6);
+    return lat !== null && lon !== null;
+  }
+
+  function applyCoordinateMode(mode) {
+    const selected = mode === 'dms' ? 'dms' : 'decimal';
+    if ($('#coordinateInputMode')) $('#coordinateInputMode').value = selected;
+    $('#coordinateDecimalFields')?.classList.toggle('hidden', selected !== 'decimal');
+    $('#coordinateDmsFields')?.classList.toggle('hidden', selected !== 'dms');
+    localStorage.setItem('pt2vhf_coordinate_mode', selected);
+    if (selected === 'dms') syncDmsFromDecimal();
+  }
+
+  $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
+  for (const id of ['latDeg','latMin','latSec','latHem','lonDeg','lonMin','lonSec','lonHem']) {
+    $('#' + id)?.addEventListener('input', syncDecimalFromDmsIfNeeded);
+    $('#' + id)?.addEventListener('change', syncDecimalFromDmsIfNeeded);
+  }
+  $('#latitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
+  $('#longitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
+
+  $('#useCurrentLocationButton')?.addEventListener('click', () => {
+    const status = $('#currentLocationStatus');
+    syncDecimalFromDmsIfNeeded();
+    const currentLat = String($('#latitudeDecimal')?.value || '').trim();
+    const currentLon = String($('#longitudeDecimal')?.value || '').trim();
+    if ((currentLat || currentLon) && !window.confirm(ui(
+      'Já existem coordenadas preenchidas. Deseja substituí-las pela sua localização atual?',
+      'Coordinates are already filled in. Replace them with your current location?'
+    ))) return;
+    if (!navigator.geolocation) {
+      if (status) status.textContent = ui('Localização não disponível neste ambiente.', 'Location is not available in this environment.');
+      toast(ui('Este ambiente não oferece geolocalização.', 'This environment does not provide geolocation.'), 'error');
+      return;
+    }
+    const button = $('#useCurrentLocationButton');
+    button.disabled = true;
+    if (status) status.textContent = ui('Solicitando localização…', 'Requesting location…');
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = Number(position.coords.latitude);
+      const lon = Number(position.coords.longitude);
+      const alt = Number(position.coords.altitude);
+      const accuracy = Number(position.coords.accuracy);
+      if (Number.isFinite(lat)) $('#latitudeDecimal').value = lat.toFixed(6);
+      if (Number.isFinite(lon)) $('#longitudeDecimal').value = lon.toFixed(6);
+      if (Number.isFinite(alt)) $('#altitudeInput').value = alt.toFixed(1);
+      syncDmsFromDecimal();
+      const accuracyText = Number.isFinite(accuracy)
+        ? ui(`Precisão aproximada: ${Math.round(accuracy)} m.`, `Approximate accuracy: ${Math.round(accuracy)} m.`)
+        : ui('Posição obtida.', 'Location obtained.');
+      if (status) status.textContent = Number.isFinite(alt)
+        ? accuracyText + ' ' + ui('Altitude fornecida pelo sistema.', 'Altitude provided by the system.')
+        : accuracyText + ' ' + ui('Informe a altitude manualmente.', 'Enter altitude manually.');
+      button.disabled = false;
+    }, error => {
+      const messagesPt = {1:'Permissão de localização negada.',2:'Não foi possível determinar a localização.',3:'A localização demorou demais para responder.'};
+      const messagesEn = {1:'Location permission was denied.',2:'Unable to determine location.',3:'Location request timed out.'};
+      const message = state.language === 'en' ? messagesEn[error.code] : messagesPt[error.code];
+      if (status) status.textContent = message || ui('Falha ao obter a localização.', 'Unable to obtain location.');
+      button.disabled = false;
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+  });
+
+  $('#toggleFilterBuilderButton')?.addEventListener('click', () => {
+    const panel = $('#filterBuilderPanel');
+    const hidden = panel.classList.toggle('hidden');
+    $('#toggleFilterBuilderButton').textContent = hidden ? ui('Abrir editor', 'Open editor') : ui('Fechar editor', 'Close editor');
+  });
+
+  function splitFilterValues(value) {
+    return String(value || '').toUpperCase().split(/[\s,;\/]+/).map(v => v.trim()).filter(Boolean);
+  }
+
+  $('#generateFilterButton')?.addEventListener('click', () => {
+    syncDecimalFromDmsIfNeeded();
+    const parts = [];
+    const radius = Number($('#filterRadiusKm')?.value);
+    if (Number.isFinite(radius) && radius > 0) {
+      const lat = Number($('#latitudeDecimal')?.value);
+      const lon = Number($('#longitudeDecimal')?.value);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        parts.push(`r/${lat.toFixed(6)}/${lon.toFixed(6)}/${Math.round(radius)}`);
+      } else {
+        toast(ui('Informe Latitude e Longitude para gerar o filtro radial.', 'Enter Latitude and Longitude to generate the radial filter.'), 'error');
+        return;
+      }
+    }
+
+    const prefixes = splitFilterValues($('#filterPrefixes')?.value);
+    if (prefixes.length) parts.push('p/' + prefixes.join('/'));
+    const buddies = splitFilterValues($('#filterBuddies')?.value);
+    if (buddies.length) parts.push('b/' + buddies.join('/'));
+    const types = $('.filter-type:checked').map(input => input.value).join('');
+    if (types) parts.push('t/' + types);
+    $('#aprsFilterInput').value = parts.join(' ');
+    toast(ui('Filtro APRS-IS gerado. Revise a string antes de salvar.', 'APRS-IS filter generated. Review the string before saving.'), 'ok');
+  });
+
+  $('#restoreDefaultFilterButton')?.addEventListener('click', () => {
+    $('#aprsFilterInput').value = 'r/2000';
+    $('#filterRadiusKm').value = '2000';
+    $('#filterPrefixes').value = '';
+    $('#filterBuddies').value = '';
+    $('.filter-type').forEach(input => { input.checked = false; });
+    toast(ui('Filtro padrão r/2000 restaurado.', 'Default r/2000 filter restored.'), 'ok');
+  });
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
   setupSortableTable('stationsTable', 'stations', renderStations);
