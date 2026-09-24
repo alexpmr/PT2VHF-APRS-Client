@@ -72,6 +72,14 @@ These services receive normal HTTP request metadata such as the requesting IP ad
 
 Future releases may vendor more of these resources locally.
 
+## Interface integrada com Microsoft Edge WebView2
+
+A partir da v0.3.0, a interface principal é exibida em uma janela própria usando o Microsoft Edge WebView2 Runtime instalado no Windows. O conteúdo principal continua sendo servido localmente em `127.0.0.1`.
+
+O WebView2 processa a interface HTML/CSS/JavaScript local e também acessa os recursos externos necessários ao funcionamento do aplicativo, como os provedores de mapas já utilizados pelo projeto. Links externos selecionados pelo usuário, como GitHub, WhatsApp ou e-mail, são abertos no navegador padrão do sistema.
+
+O uso do WebView2 não adiciona telemetria própria do PT2VHF APRS Client. Políticas de privacidade e telemetria do próprio Windows/Microsoft Edge WebView2 são regidas pela Microsoft.
+
 ## Verificação de atualizações no GitHub
 
 O aplicativo consulta periodicamente a API pública de Releases do GitHub para verificar se existe uma versão mais recente do PT2VHF APRS Client.
