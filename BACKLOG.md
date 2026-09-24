@@ -154,3 +154,21 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Oferecer botão **Restaurar filtro padrão**.
 - Manter o filtro padrão da aplicação como **`r/2000`** em novas instalações, salvo alteração futura deliberada.
 - Não reconectar automaticamente ao APRS-IS enquanto o usuário ainda estiver editando; aplicar/reconectar somente após salvar a configuração.
+
+
+## Alerta para filtro APRS-IS vazio
+
+**Objetivo:** evitar que o usuário deixe o campo de filtro vazio sem perceber o impacto operacional.
+
+- Quando o campo **Filtro APRS-IS** estiver vazio ao salvar/aplicar a configuração, exibir um alerta de confirmação.
+- Informar claramente que, **sem filtro**, o cliente poderá receber todo o tráfego disponibilizado pelo servidor APRS-IS, aumentando significativamente o volume de dados processados.
+- O alerta deve oferecer duas ações claras:
+  - **Voltar e configurar um filtro**;
+  - **Continuar sem filtro**.
+- Não preencher automaticamente um filtro caso o usuário confirme explicitamente que deseja continuar sem filtro.
+- Se o filtro for apagado acidentalmente e o usuário cancelar o alerta, manter a tela de Configuração aberta e devolver o foco ao campo de filtro.
+- Integrar essa validação tanto ao modo **Filtro manual** quanto ao futuro **Editor gráfico de filtro APRS-IS**.
+- Na Ajuda, explicar a diferença entre:
+  - filtro configurado;
+  - filtro vazio;
+  - filtro padrão da aplicação.
