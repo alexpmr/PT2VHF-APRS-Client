@@ -2770,7 +2770,7 @@
     $('#filterPrefixes').value = '';
     $('#filterBuddies').value = '';
     for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
-    $('.filter-type').forEach(input => { input.checked = false; });
+    $$('.filter-type').forEach(input => { input.checked = false; });
     const unsupported = [];
     for (const term of terms) {
       const [kind, ...values] = term.split('/');
@@ -2865,7 +2865,7 @@
       parts.push(`a/${areaValues.join('/')}`);
     }
 
-    const types = $('.filter-type:checked').map(input => input.value).join('');
+    const types = $$('.filter-type:checked').map(input => input.value).join('');
     if (types) parts.push('t/' + types);
     $('#aprsFilterInput').value = parts.join(' ');
     parseFilterIntoBuilder();
@@ -2892,7 +2892,7 @@
     $('#filterPrefixes').value = '';
     $('#filterBuddies').value = '';
     for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
-    $('.filter-type').forEach(input => { input.checked = false; });
+    $$('.filter-type').forEach(input => { input.checked = false; });
     parseFilterIntoBuilder();
     markConfigDirty();
     toast(ui('Filtro padrão para estações brasileiras restaurado.', 'Default Brazil-only filter restored.'), 'ok');
