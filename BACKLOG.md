@@ -116,3 +116,41 @@ Reorganizar a aba Configuração em grupos ou subabas claramente separados:
   - ações relacionadas a backup/restauração.
 
 A reorganização não deve alterar os valores já armazenados nem quebrar arquivos JSON de configuração existentes.
+
+
+## Editor gráfico de filtro APRS-IS
+
+**Objetivo:** facilitar a criação de filtros APRS-IS sem esconder ou limitar a sintaxe nativa.
+
+- Manter o campo atual de **filtro manual por string** para usuários avançados.
+- Adicionar um modo **Editor gráfico** que componha automaticamente a string APRS-IS equivalente.
+- Permitir alternar entre:
+  - **Editor gráfico**;
+  - **Filtro manual**.
+- Ao alterar opções no editor gráfico, atualizar em tempo real a string APRS-IS gerada.
+- Ao editar a string manualmente, preservar o valor informado mesmo que ela utilize recursos ainda não representados no editor gráfico.
+- Quando possível, interpretar a string existente e preencher automaticamente os controles gráficos correspondentes.
+- Quando a string contiver elementos que o editor gráfico ainda não suporte, exibir aviso claro e manter a string original intacta.
+
+### Componentes previstos no editor
+
+O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
+
+- **Raio em torno da posição configurada**;
+- **Raio em torno de coordenadas informadas**;
+- **Indicativo(s) específicos**;
+- **Prefixos/sufixos de indicativos**, quando aplicável;
+- **Tipos de pacote/estações**;
+- **Objetos/itens**;
+- **Faixa geográfica/área**, quando suportada;
+- combinação de múltiplos critérios.
+
+### Usabilidade
+
+- Mostrar a **string final gerada** antes de salvar.
+- Disponibilizar ação **Copiar filtro**.
+- Validar a sintaxe antes de aplicar.
+- Exibir explicação curta de cada critério e exemplo prático.
+- Oferecer botão **Restaurar filtro padrão**.
+- Manter o filtro padrão da aplicação como **`r/2000`** em novas instalações, salvo alteração futura deliberada.
+- Não reconectar automaticamente ao APRS-IS enquanto o usuário ainda estiver editando; aplicar/reconectar somente após salvar a configuração.
