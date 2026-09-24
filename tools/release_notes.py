@@ -14,7 +14,7 @@ def current_version() -> str:
 def changelog_section(version: str) -> str:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     pattern = re.compile(
-        rf"^## v{re.escape(version)}\\b[^\\n]*\\n(?P<body>.*?)(?=^## v|\\Z)",
+        rf"^## v{re.escape(version)}\b[^\n]*\n(?P<body>.*?)(?=^## v|\Z)",
         re.MULTILINE | re.DOTALL,
     )
     match = pattern.search(text)
@@ -43,6 +43,7 @@ def main() -> int:
 - `PT2VHF_APRS_Client_Portable_x64_v{version}.exe` - executável portátil.
 
 ### Linux
+- `PT2VHF_APRS_Client_x86_64_v{version}.AppImage` - AppImage portátil.
 - `PT2VHF_APRS_Client_Linux_x86_64_v{version}.tar.gz` - pacote portátil.
 - `pt2vhf-aprs-client_{version}_amd64.deb` - Debian/Ubuntu e derivados.
 

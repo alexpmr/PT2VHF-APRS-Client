@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import re
+import shutil
 import socket
+import subprocess
+import sys
 import threading
 import time
 from dataclasses import dataclass, asdict
@@ -57,6 +60,33 @@ def _play_windows_message_sound() -> None:
                 pass
 
     threading.Thread(target=_sound, name="pt2vhf-message-sound", daemon=True).start()
+
+
+def _notify_personal_message(from_call: str, message: str) -> None:
+    """Notificação local best-effort, sem interferir na thread APRS."""
+    _play_windows_message_sound()
+
+    def _notify() -> None:
+        title = f"APRS de {from_call}"
+        body = str(message or "")[:180]
+        try:
+            if sys.platform == "darwin":
+                safe_title = title.replace('"', "'")
+                safe_body = body.replace('"', "'")
+                subprocess.Popen(
+                    ["osascript", "-e", f'display notification "{safe_body}" with title "{safe_title}"'],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+            elif sys.platform.startswith("linux") and shutil.which("notify-send"):
+                subprocess.Popen(
+                    ["notify-send", title, body],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+        except Exception:
+            pass
+
+    if sys.platform != "win32":
+        threading.Thread(target=_notify, name="pt2vhf-message-notification", daemon=True).start()
 
 
 MESSAGE_RE = re.compile(r"^(?P<from>[^>]+)>[^:]+::(?P<to>.{9}):(?P<text>.*)$")
@@ -316,7 +346,7 @@ class APRSService:
         is_personal_message = message_type == "message" and to_call == full_callsign(cfg).upper()
 
         if is_personal_message and bool(cfg.get("sound_on_personal_message", 1)):
-            _play_windows_message_sound()
+            _notify_personal_message(from_call, message_text)
 
         if is_personal_message and msg_id and self.status()["verified"]:
             try:
@@ -354,6 +384,7 @@ class APRSService:
         parts = split_aprs_message_parts(text)
         row_ids: list[int] = []
         message_ids: list[str] = []
+        group_id = f"{int(time.time() * 1000)}-{self._msg_counter:03d}"
 
         for index, part in enumerate(parts):
             self._msg_counter = (self._msg_counter + 1) % 1000
@@ -364,6 +395,10 @@ class APRSService:
                 db.add_message(
                     "out", source, destination, part,
                     msg_id=msg_id, status="Enviada", raw=packet,
+                    message_group_id=group_id,
+                    part_index=index + 1,
+                    part_count=len(parts),
+                    retry_count=0,
                 )
             )
             message_ids.append(msg_id)
@@ -375,7 +410,43 @@ class APRSService:
             "message_ids": message_ids,
             "parts": parts,
             "part_count": len(parts),
+            "group_id": group_id,
         }
+
+    def retry_message(self, row_id: int) -> dict[str, Any]:
+        status = self.status()
+        if not status["connected"] or not status["verified"]:
+            raise ConnectionError("Retry exige conexão APRS-IS conectada e verificada.")
+
+        original = db.get_message(row_id)
+        if not original or original.get("direction") != "out" or original.get("message_type") != "message":
+            raise ValueError("Mensagem de saída não encontrada.")
+
+        cfg = db.get_config()
+        max_retries = max(0, int(cfg.get("message_retry_attempts") or 0))
+        retry_count = int(original.get("retry_count") or 0)
+        if retry_count >= max_retries:
+            raise ValueError("A mensagem já atingiu o limite configurado de tentativas.")
+
+        source = full_callsign(cfg)
+        destination = str(original.get("to_call") or "").upper().strip()
+        part = str(original.get("message") or "")
+        self._msg_counter = (self._msg_counter + 1) % 1000
+        msg_id = f"{self._msg_counter:03d}"
+        packet = f"{source}>APRS,TCPIP*::{destination:<9}:{part}{{{msg_id}"
+        self._send_raw(packet)
+        db.mark_message_retried(int(original["id"]))
+        new_row = db.add_message(
+            "out", source, destination, part,
+            msg_id=msg_id,
+            status="Reenviada",
+            raw=packet,
+            message_group_id=original.get("message_group_id"),
+            part_index=original.get("part_index"),
+            part_count=original.get("part_count"),
+            retry_count=retry_count + 1,
+        )
+        return {"id": new_row, "message_id": msg_id, "retry_count": retry_count + 1}
 
     def send_bulletin(self, text: str, bulletin_id: str = "0", group: str = "") -> int:
         status = self.status()
@@ -430,6 +501,7 @@ class APRSService:
         self._last_beacon = time.time()
 
     def _beacon_loop(self) -> None:
+        last_retry_check = 0.0
         while self.status()["wanted"]:
             status = self.status()
             cfg = db.get_config()
@@ -440,6 +512,19 @@ class APRSService:
                 except Exception as exc:
                     self._set_status(last_error=f"Beacon: {exc}")
                     self._last_beacon = time.time()
+
+            if status["connected"] and status["verified"] and time.time() - last_retry_check >= 10:
+                last_retry_check = time.time()
+                retry_seconds = max(15, int(cfg.get("message_retry_seconds") or 60))
+                max_retries = max(0, int(cfg.get("message_retry_attempts") or 0))
+                if max_retries:
+                    for pending in db.list_retry_candidates(retry_seconds, max_retries, limit=3):
+                        try:
+                            self.retry_message(int(pending["id"]))
+                            time.sleep(0.35)
+                        except Exception as exc:
+                            self._set_status(last_error=f"Retry de mensagem: {exc}")
+                            break
             time.sleep(2)
 
 

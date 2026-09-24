@@ -1,11 +1,12 @@
 # PT2VHF APRS Client — instalação no Linux
 
-A partir da **v1.0**, o projeto publica uma versão oficial para **Linux x86_64 / amd64**.
+O projeto publica versões oficiais para **Linux x86_64 / amd64** em .deb, AppImage e tar.gz.
 
 ## Arquivos da Release
 
+- `PT2VHF_APRS_Client_x86_64_vX.Y.AppImage` — AppImage portátil.
 - `PT2VHF_APRS_Client_Linux_x86_64_vX.Y.tar.gz` — pacote portátil genérico.
-- `pt2vhf-aprs-client_X.Y_amd64.deb` — pacote para Debian/Ubuntu e derivados, quando o build estiver disponível.
+- `pt2vhf-aprs-client_X.Y_amd64.deb` — pacote para Debian/Ubuntu e derivados.
 
 O cliente tenta abrir uma janela integrada. Se o ambiente gráfico não oferecer um backend WebView compatível, ele abre automaticamente a interface local no navegador padrão.
 
@@ -15,7 +16,7 @@ Baixe o arquivo da Release e execute:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./pt2vhf-aprs-client_1.0_amd64.deb
+sudo apt install ./pt2vhf-aprs-client_1.6_amd64.deb
 pt2vhf-aprs-client
 ```
 
@@ -27,14 +28,24 @@ sudo apt remove pt2vhf-aprs-client
 
 A remoção do pacote **não apaga** o banco local do usuário.
 
+## AppImage
+
+```bash
+cd ~/Downloads
+chmod +x PT2VHF_APRS_Client_x86_64_v1.6.AppImage
+./PT2VHF_APRS_Client_x86_64_v1.6.AppImage
+```
+
+O AppImage é a opção portátil recomendada na v1.6. Se **Instalar atualização automaticamente ao fechar** estiver habilitado, o cliente pode baixar e iniciar a nova versão AppImage sem precisar alterar pacotes do sistema.
+
 ## Pacote portátil .tar.gz
 
 ```bash
 cd ~/Downloads
 mkdir -p ~/Aplicativos/PT2VHF-APRS-Client
-tar -xzf PT2VHF_APRS_Client_Linux_x86_64_v1.0.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
-chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.0
-~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.0
+tar -xzf PT2VHF_APRS_Client_Linux_x86_64_v1.6.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
+chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6
+~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6
 ```
 
 Para atualizar, substitua somente o executável/pasta do programa pelo conteúdo da nova versão. O banco de dados fica separado e é preservado.
@@ -70,7 +81,7 @@ pt2vhf-aprs-client --browser
 ou, na versão portátil:
 
 ```bash
-~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.0 --browser
+~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6 --browser
 ```
 
 A porta continua restrita a `127.0.0.1`; não exponha a porta 8080 diretamente à Internet.
@@ -120,6 +131,6 @@ pip install -r requirements-linux.txt
 python linux_app.py
 ```
 
-## Observação sobre AppImage
+## Testes e notificações
 
-A v1.0 inicia a distribuição Linux oficial com **.deb** e **.tar.gz**. AppImage permanece em avaliação para uma versão futura; o objetivo é não atrasar a disponibilidade Linux com uma cadeia adicional de empacotamento.
+O workflow da v1.6 executa testes de núcleo em Ubuntu 22.04 e Ubuntu 24.04. Em desktops que fornecem `notify-send`, mensagens pessoais podem gerar notificações nativas quando o aviso de mensagem está habilitado.

@@ -16,6 +16,7 @@ from pystray import MenuItem as Item
 from waitress import serve
 
 from pt2vhf_aprs import database as db
+from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.web import create_app
 
@@ -154,6 +155,13 @@ def _shutdown_components(icon: pystray.Icon | None = None) -> None:
     try:
         if tray:
             tray.stop()
+    except Exception:
+        pass
+
+    # Se uma atualização compatível já foi baixada e o usuário habilitou
+    # instalação ao fechar, o helper assume a troca após este processo encerrar.
+    try:
+        updater.launch_pending_update()
     except Exception:
         pass
 

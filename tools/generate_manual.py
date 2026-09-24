@@ -314,6 +314,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         ["Windows x64", f"PT2VHF_APRS_Client_Setup_x64_v{version}.exe", "Instalador principal"],
         ["Windows x64", f"PT2VHF_APRS_Client_Portable_x64_v{version}.exe", "Executável portátil"],
         ["Linux amd64", f"pt2vhf-aprs-client_{version}_amd64.deb", "Debian/Ubuntu"],
+        ["Linux x86_64", f"PT2VHF_APRS_Client_x86_64_v{version}.AppImage", "AppImage portátil"],
         ["Linux x86_64", f"PT2VHF_APRS_Client_Linux_x86_64_v{version}.tar.gz", "Pacote portátil"],
         ["macOS Apple Silicon", f"PT2VHF_APRS_Client_macOS_arm64_v{version}.dmg", "M1/M2/M3/M4 e compatíveis"],
         ["macOS Intel", f"PT2VHF_APRS_Client_macOS_x86_64_v{version}.dmg", "Mac Intel"],
@@ -347,10 +348,13 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     ])
 
     section(story, st, "5. Instalação no Linux", [
-        "No Debian, Ubuntu e derivados, prefira o pacote .deb. Em outras distribuições x86_64, use o tar.gz."
+        "No Debian, Ubuntu e derivados, prefira o pacote .deb. A v1.6 também publica AppImage x86_64 para uso portátil e mantém o tar.gz para instalação manual."
     ], [
         f"Debian/Ubuntu: sudo apt install ./pt2vhf-aprs-client_{version}_amd64.deb",
-        "Pacote portátil: descompacte o tar.gz e execute o binário incluído.",
+        f"AppImage: chmod +x PT2VHF_APRS_Client_x86_64_v{version}.AppImage && ./PT2VHF_APRS_Client_x86_64_v{version}.AppImage",
+        "Pacote tar.gz: descompacte e execute o binário incluído.",
+        "O workflow testa o núcleo da aplicação em Ubuntu 22.04 e Ubuntu 24.04.",
+        "Em desktops Linux com notify-send, mensagens pessoais podem gerar notificação nativa.",
         "Os dados ficam por padrão em ~/.local/share/PT2VHF-APRS-Client/data/pt2vhf_aprs.db.",
         "Se a janela WebView não estiver disponível, o navegador local é usado como fallback."
     ])
@@ -366,8 +370,11 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     story.append(PageBreak())
 
     section(story, st, "7. Primeira configuração", [
-        "A Configuração é dividida em dois grupos: APRS / Estação e Aplicativo. Isso evita misturar parâmetros de rádio/rede com preferências visuais.",
-        "Antes de conectar ao APRS-IS, preencha Indicativo, Latitude, Longitude e Altitude. Caso tente conectar sem esses dados, o programa abre Configuração > APRS / Estação e leva o foco ao primeiro campo ausente."
+        "A v1.6 usa uma única página de Configuração, organizada em cartões/seções para Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.",
+        "Antes de conectar ao APRS-IS, preencha Indicativo, Latitude, Longitude e Altitude. Caso tente conectar sem esses dados, o programa leva o usuário à Configuração e destaca os campos pendentes.",
+        "Conectar ao iniciar vem habilitado por padrão em novas instalações e fica na seção APRS-IS.",
+        "Latitude, Longitude e Altitude são apresentadas em linhas independentes para manter a leitura e a edição dentro do cartão mesmo em DMS, janelas menores ou fontes ampliadas.",
+        "Se algum campo for alterado e você tentar mudar de aba antes de salvar, o cliente oferece Salvar e sair, Descartar alterações ou Cancelar."
     ])
     story.append(Paragraph("Campos principais", st["h2"]))
     story.append(bullet_list([
@@ -392,15 +399,19 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
 
     section(story, st, "9. APRS-IS e filtros", [
         "O servidor padrão é soam.aprs2.net na porta 14580. Se esse endereço não puder ser alcançado, o cliente pode tentar rotate.aprs2.net como alternativa. O campo de servidor continua editável e oferece sugestões regionais.",
-        "O filtro padrão de novas instalações é r/2000, que o aplicativo expande usando as coordenadas configuradas. O campo manual continua sempre disponível e o editor gráfico serve como assistente para compor a mesma string de filtro."
+        "Em novas instalações, o filtro padrão usa os prefixos brasileiros: p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ. Filtros personalizados existentes são preservados durante atualizações.",
+        "O filtro é enviado ao APRS-IS; portanto, a redução do tráfego ocorre na conexão com o servidor, e não apenas depois que os pacotes chegam à interface."
     ])
     story.append(Paragraph("Editor gráfico", st["h2"]))
     story.append(bullet_list([
-        "Filtro radial: usa a posição da estação e um raio em quilômetros.",
-        "Prefixos: gera componentes como p/PT2/PY2.",
-        "Indicativos exatos: gera componentes como b/PT2VHF-15/PY2ABC.",
-        "Tipos de pacote: gera componente t/... para posições, mensagens, meteorologia, telemetria, objetos e itens.",
-        "O botão Gerar filtro escreve a string final no campo manual para revisão antes de salvar."
+        "Opção Somente estações brasileiras, ativada por padrão.",
+        "Filtro radial com centro na posição da estação ou coordenadas de centro informadas manualmente.",
+        "Prefixos e indicativos exatos.",
+        "Área geográfica por limites Norte/Oeste/Sul/Leste.",
+        "Tipos de pacote para posição, mensagens, meteorologia, telemetria, objetos e itens.",
+        "Interpretação da string manual quando os componentes são reconhecidos; componentes não representados permanecem preservados até que uma nova string seja gerada.",
+        "Botões Gerar filtro, Copiar filtro e Restaurar filtro Brasil.",
+        "Validação básica dos componentes conhecidos antes de salvar."
     ], st))
     story.append(Paragraph(
         "Filtro vazio: ao salvar as configurações APRS com o campo vazio, o programa pede confirmação. Dependendo do servidor e da porta, uma conexão sem filtro personalizado pode receber um fluxo muito maior de tráfego. Use filtro vazio somente de forma consciente.",
@@ -415,6 +426,8 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Tracklogs: cor e espessura configuráveis.",
         "Topologia observada: pode ser ligada/desligada e filtrada por 1 h, 6 h, 24 h ou 7 dias.",
         "Enlaces RF e via IGate possuem cores independentes e espessura configurável.",
+        "A análise da topologia mostra ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
+        "Os eventos observados são mantidos em histórico limitado e podem ser reproduzidos no mapa com a função Animar período.",
         "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px."
     ])
 
@@ -424,8 +437,11 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "A aba Mensagens apresenta o histórico em fluxo de chat, com mensagens antigas acima e novas abaixo. Também pode agrupar conversas por remetente."
     ], [
         "Clique em um indicativo De ou Para para preencher o destinatário.",
+        "No modo Agrupar por remetente, clique em Conversas para alternar A-Z/Z-A; ao escolher uma conversa, o campo Destino é preenchido automaticamente com o contato selecionado.",
+        "O pop-up de nova mensagem oferece Ler mensagem, Responder e OK. Ler mensagem abre a aba Mensagens e foca a conversa do remetente quando o agrupamento estiver ativo; na lista normal, posiciona a visualização na mensagem recebida.",
         "Enter envia; Shift+Enter cria nova linha.",
-        "Mensagens longas são divididas em partes APRS, cada uma com seu próprio ID e ACK.",
+        "Mensagens longas são divididas em partes APRS, cada uma com seu próprio ID e ACK, e exibem status agregado como 2/3 confirmadas ou Todas confirmadas.",
+        "Partes sem ACK/REJ podem ser reenviadas com Retry; timeout e número máximo de tentativas são configuráveis, com novo ID APRS a cada tentativa.",
         "ACK é mostrado como Lido; REJ indica rejeição.",
         "Boletins gerais e de grupo são suportados.",
         "Na aba Mensagens, novas mensagens usam um aviso compacto, não bloqueante, com fechamento manual e temporizador configurável."
@@ -439,20 +455,28 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "verified no logresp confirma autenticação APRS-IS.",
         "Linhas iniciadas por # são mensagens de controle do servidor.",
         "O passcode é mascarado no Log.",
+        "A coluna Hora mantém data e hora em uma única linha e pode ser clicada para alternar entre ordem cronológica crescente e decrescente.",
+        "Cabeçalhos e colunas usam alinhamento consistente; o peso configurado para Mensagens também é aplicado às colunas De, Para e Tipo.",
         "O histórico de log é limitado aos registros mais recentes para evitar crescimento sem controle."
     ])
 
     add_screenshot(story, st, screenshots_dir, "stations.png", "Aba Estações com os últimos dados conhecidos.")
     add_screenshot(story, st, screenshots_dir, "log.png", "Log APRS-IS para diagnóstico de RX/TX.")
     section(story, st, "13. Aparência, idioma e preferências", [
-        "Em Configuração > Aplicativo, escolha tema Escuro ou Claro, idioma Português ou English, fontes e tamanhos das telas.",
-        "O Português é o idioma padrão. A troca para English é aplicada à interface e fica persistida após salvar.",
+        "Na página única de Configuração, escolha tema Escuro ou Claro, fontes e tamanhos das telas e demais preferências do aplicativo.",
+        "O Português é o idioma padrão e aparece como 🇧🇷 Português; English aparece como 🇺🇸 English. A troca é aplicada imediatamente e fica persistida após salvar.",
+        "O peso da fonte de Mensagens é aplicado de forma consistente também aos indicativos De/Para e à coluna Tipo.",
+        "Há um botão rápido de tema no cabeçalho, sincronizado com a preferência persistida.",
         "Também é possível habilitar a abertura simultânea no navegador ao iniciar."
     ])
 
     add_screenshot(story, st, screenshots_dir, "config-app.png", "Configuração do aplicativo, incluindo tema e formatação por tela.")
     section(story, st, "14. Backup, atualização e banco local", [
         "A exportação JSON salva a configuração. O arquivo pode conter o passcode APRS-IS em texto legível; armazene-o em local seguro.",
+        "O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.",
+        "O atualizador consulta a Release oficial, escolhe o pacote da plataforma, baixa para a pasta local de atualizações e calcula SHA-256; quando a Release fornece digest SHA-256, ele é conferido antes da instalação.",
+        "As opções Verificar atualizações automaticamente, Baixar atualização automaticamente e Instalar atualização automaticamente ao fechar são independentes; somente a verificação vem habilitada por padrão.",
+        "No Windows Portable, a atualização pode ser aplicada ao fechar e uma cópia anterior é mantida para rollback. No Windows instalado, o Setup pode ser iniciado silenciosamente. No macOS, o DMG baixado é aberto ao fechar; no Linux AppImage, o novo AppImage pode ser iniciado. Pacotes .deb e .tar.gz continuam exigindo instalação manual pelo sistema.",
         "As atualizações preservam o banco local. Antes de mudanças importantes, é recomendável fazer backup do arquivo SQLite."
     ])
     story.append(Paragraph("Locais do banco", st["h2"]))
@@ -465,7 +489,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
 
     section(story, st, "15. Diagnóstico rápido", bullets=[
         "Não conecta: confira servidor, porta, Internet, indicativo e passcode.",
-        "Mensagem de campos obrigatórios: abra Configuração > APRS / Estação e preencha Indicativo, Latitude, Longitude e Altitude.",
+        "Mensagem de campos obrigatórios: abra Configuração e preencha Indicativo, Latitude, Longitude e Altitude.",
         "Conecta sem estações: confira o filtro e procure erros no Log.",
         "Mapa sem tiles: confira o acesso à Internet e o provedor de mapas.",
         "Localização atual não funciona: confira a permissão de localização do sistema/WebView/navegador.",

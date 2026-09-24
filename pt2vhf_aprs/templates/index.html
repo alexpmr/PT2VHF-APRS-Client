@@ -22,6 +22,7 @@
     </div>
   </div>
   <div class="connection-box">
+    <button id="themeQuickToggle" type="button" class="btn secondary theme-quick-toggle" title="Alternar tema">☀/☾</button>
     <a id="versionStatus" class="version-status checking" href="#" target="_blank" rel="noopener" title="Verificando a versão mais recente">
       <span class="version-status-dot"></span>
       <span id="versionStatusText">Verificando versão…</span>
@@ -81,7 +82,7 @@
 
     <div id="groupedMessagesView" class="grouped-messages-view hidden">
       <aside class="conversation-list-panel">
-        <div class="conversation-list-title">Conversas</div>
+        <button id="conversationSortButton" type="button" class="conversation-list-title conversation-sort-button" title="Ordenar conversas">Conversas <span id="conversationSortIndicator">▲</span></button>
         <div id="conversationList" class="conversation-list"></div>
       </aside>
       <section class="conversation-thread-panel">
@@ -211,7 +212,7 @@
     <div id="logViewport" class="log-viewport">
       <table id="logTable" class="log-table">
         <thead><tr>
-          <th>Hora</th>
+          <th id="logTimeHeader" data-key="timestamp">Hora <span class="sort-indicator">▼</span></th>
           <th>Dir.</th>
           <th>Tráfego APRS-IS</th>
         </tr></thead>
@@ -229,9 +230,9 @@
     </div>
 
     <form id="configForm" class="config-grid">
-      <div class="config-section-tabs full-card" role="tablist" aria-label="Grupo de configurações">
-        <button type="button" class="config-section-tab active" data-config-section="aprs" aria-pressed="true">APRS / Estação</button>
-        <button type="button" class="config-section-tab" data-config-section="app" aria-pressed="false">Aplicativo</button>
+      <div class="config-page-intro full-card">
+        <strong>Página única de configuração</strong>
+        <span>As opções estão organizadas por seções. Role a página para acessar Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.</span>
       </div>
 
       <div class="config-card config-section config-section-aprs">
@@ -318,8 +319,8 @@
           <label class="field"><span>Porta</span><input name="port" type="number" value="14580" min="1" max="65535" required></label>
           <label class="field full">
             <span>Filtro APRS-IS</span>
-            <input name="aprs_filter" id="aprsFilterInput" value="r/2000" placeholder="Ex.: r/2000 ou r/-15.8/-47.9/2000">
-            <small><code>r/2000</code> usa sua latitude/longitude configuradas como centro e recebe estações em um raio de 2.000 km. O campo continua totalmente editável para filtros manuais.</small>
+            <input name="aprs_filter" id="aprsFilterInput" value="p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ" placeholder="Ex.: p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ">
+            <small>O padrão de novas instalações recebe indicativos brasileiros. O campo continua totalmente editável para filtros APRS-IS manuais.</small>
           </label>
           <div class="filter-builder full">
             <div class="filter-builder-header">
@@ -330,9 +331,22 @@
               <button id="toggleFilterBuilderButton" type="button" class="btn secondary">Abrir editor</button>
             </div>
             <div id="filterBuilderPanel" class="filter-builder-panel hidden">
+              <label class="check-field filter-brazil-only">
+                <input id="filterBrazilOnly" type="checkbox" checked>
+                <span>Somente estações brasileiras (padrão)</span>
+              </label>
               <label class="field">
-                <span>Raio a partir da posição da estação (km)</span>
-                <input id="filterRadiusKm" type="number" min="1" max="9999" step="1" value="2000">
+                <span>Raio (km)</span>
+                <input id="filterRadiusKm" type="number" min="1" max="9999" step="1" placeholder="Opcional">
+                <small>Sem centro informado, usa a posição configurada da estação.</small>
+              </label>
+              <label class="field">
+                <span>Centro radial — Latitude</span>
+                <input id="filterRadiusLat" type="number" min="-90" max="90" step="0.000001" placeholder="Opcional">
+              </label>
+              <label class="field">
+                <span>Centro radial — Longitude</span>
+                <input id="filterRadiusLon" type="number" min="-180" max="180" step="0.000001" placeholder="Opcional">
               </label>
               <label class="field">
                 <span>Prefixos de indicativo</span>
@@ -344,6 +358,13 @@
                 <input id="filterBuddies" type="text" placeholder="Ex.: PT2VHF-15, PY2ABC">
                 <small>Gera <code>b/PT2VHF-15/PY2ABC</code>.</small>
               </label>
+              <fieldset class="filter-area">
+                <legend>Área geográfica opcional</legend>
+                <label class="field"><span>Norte</span><input id="filterAreaNorth" type="number" min="-90" max="90" step="0.000001" placeholder="lat. norte"></label>
+                <label class="field"><span>Oeste</span><input id="filterAreaWest" type="number" min="-180" max="180" step="0.000001" placeholder="long. oeste"></label>
+                <label class="field"><span>Sul</span><input id="filterAreaSouth" type="number" min="-90" max="90" step="0.000001" placeholder="lat. sul"></label>
+                <label class="field"><span>Leste</span><input id="filterAreaEast" type="number" min="-180" max="180" step="0.000001" placeholder="long. leste"></label>
+              </fieldset>
               <fieldset class="filter-types">
                 <legend>Tipos de pacote</legend>
                 <label><input type="checkbox" class="filter-type" value="p"> Posição</label>
@@ -355,13 +376,17 @@
               </fieldset>
               <div class="filter-builder-actions">
                 <button id="generateFilterButton" type="button" class="btn primary">Gerar filtro</button>
-                <button id="restoreDefaultFilterButton" type="button" class="btn secondary">Restaurar r/2000</button>
+                <button id="copyFilterButton" type="button" class="btn secondary">Copiar filtro</button>
+                <button id="restoreDefaultFilterButton" type="button" class="btn secondary">Restaurar filtro Brasil</button>
               </div>
+              <div id="filterBuilderParseStatus" class="hint full"></div>
             </div>
             <div class="filter-empty-warning">Se o filtro for deixado vazio, o programa pedirá confirmação antes de salvar. Dependendo do servidor/porta, isso pode resultar em um fluxo de tráfego muito amplo.</div>
           </div>
           <label class="field"><span>Beacon (minutos)</span><input name="beacon_minutes" type="number" min="1" value="10"></label>
-          <label class="check-field"><input name="connect_on_start" type="checkbox"><span>Conectar ao iniciar</span></label>
+          <label class="check-field"><input name="connect_on_start" type="checkbox" checked><span>Conectar ao iniciar</span></label>
+          <label class="field"><span>Retry de mensagem após (segundos)</span><input name="message_retry_seconds" type="number" min="15" max="3600" value="60"></label>
+          <label class="field"><span>Máximo de retries por parte</span><input name="message_retry_attempts" type="number" min="0" max="10" value="2"></label>
         </div>
         <div class="config-actions">
           <button type="submit" class="btn primary">Salvar configuração APRS</button>
@@ -369,7 +394,7 @@
         </div>
       </div>
 
-      <div class="config-card full-card config-section config-section-app hidden">
+      <div class="config-card full-card config-section config-section-app">
         <h3>Mapa</h3>
         <div class="form-grid map-config-grid">
           <label class="field">
@@ -430,9 +455,19 @@
         <div class="hint map-provider-hint">
           OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.
         </div>
+        <div class="topology-stats-box">
+          <div class="filter-builder-header">
+            <div><strong>Análise da topologia observada</strong><span class="hint">Rankings de digipeaters/IGates e enlaces que deixaram de aparecer no período.</span></div>
+            <div class="config-actions">
+              <button id="refreshTopologyStatsButton" type="button" class="btn secondary">Atualizar análise</button>
+              <button id="animateTopologyButton" type="button" class="btn secondary">Animar período</button>
+            </div>
+          </div>
+          <div id="topologyStatsContent" class="topology-stats-content">Clique em Atualizar análise.</div>
+        </div>
       </div>
 
-      <div class="config-card full-card config-section config-section-app hidden">
+      <div class="config-card full-card config-section config-section-app">
         <h3>Aparência e aplicativo</h3>
         <div class="theme-selector-row app-general-grid">
           <label class="field theme-field">
@@ -446,8 +481,8 @@
           <label class="field theme-field">
             <span>Idioma / Language</span>
             <select name="language" id="appLanguage">
-              <option value="pt-BR">Português - padrão</option>
-              <option value="en">English</option>
+              <option value="pt-BR">🇧🇷 Português - padrão</option>
+              <option value="en">🇺🇸 English</option>
             </select>
             <small>O idioma é aplicado imediatamente à interface.</small>
           </label>
@@ -537,12 +572,35 @@
         </div>
       </div>
 
-      <div class="config-card full-card config-section config-section-app hidden">
+      <div class="config-card full-card config-section config-section-app">
+        <h3>Atualizações</h3>
+        <div class="form-grid two-cols">
+          <label class="check-field"><input name="check_updates_on_start" type="checkbox" checked><span>Verificar atualizações automaticamente</span></label>
+          <label class="check-field"><input name="auto_download_updates" type="checkbox"><span>Baixar atualização automaticamente</span></label>
+          <label class="check-field"><input name="install_updates_on_exit" type="checkbox"><span>Instalar atualização automaticamente ao fechar</span></label>
+          <div class="field">
+            <span>Status</span>
+            <small id="updateSettingsStatus">Nenhuma atualização pendente.</small>
+          </div>
+        </div>
+        <div class="config-actions">
+          <button id="checkUpdatesNowButton" type="button" class="btn secondary">Verificar atualização agora</button>
+          <button id="downloadUpdateButton" type="button" class="btn primary hidden">Baixar atualização</button>
+          <button id="rollbackUpdateButton" type="button" class="btn secondary hidden">Restaurar versão anterior</button>
+        </div>
+        <div class="hint">Windows Portable pode aplicar a atualização ao fechar e mantém backup para rollback. Instaladores Windows podem ser executados silenciosamente. No macOS/AppImage o pacote baixado é aberto ao fechar; .deb/.tar.gz exigem instalação pelo sistema.</div>
+      </div>
+
+      <div class="config-card full-card config-section config-section-app">
         <h3>Backup da configuração</h3>
         <div class="backup-row">
           <a class="btn secondary" href="/api/config/export" download>Salvar em arquivo</a>
           <label class="btn secondary file-button">Recuperar de arquivo<input id="configImportFile" type="file" accept="application/json,.json"></label>
           <span class="hint">O arquivo exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.</span>
+        </div>
+        <div class="config-actions reset-config-actions">
+          <button id="resetConfigButton" type="button" class="btn danger">Restaurar configuração padrão</button>
+          <span class="hint">Restaura preferências e dados da estação; mensagens, estações, logs e tracklogs não são apagados.</span>
         </div>
       </div>
     </form>
@@ -578,9 +636,9 @@
         <article class="help-card">
           <h3>2. APRS-IS</h3>
           <p>O servidor padrão é <code>soam.aprs2.net</code>, porta <code>14580</code>, com alternativa automática para <code>rotate.aprs2.net</code> quando necessário. A configuração oferece sugestões regionais e continua aceitando servidor manual.</p>
-          <p><strong>Filtro de recepção:</strong> como configuração inicial, use <code>r/2000</code>. O editor gráfico pode montar filtros radiais, por prefixo, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.</p><p>Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.</p>
+          <p><strong>Filtro de recepção:</strong> novas instalações usam por padrão os prefixos brasileiros. O editor gráfico pode combinar filtro Brasil, raio, área geográfica, prefixos, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.</p><p>Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.</p>
           <p>Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
-          <p>Marque <strong>Conectar ao iniciar</strong> se quiser que o cliente tente conectar automaticamente.</p>
+          <p><strong>Conectar ao iniciar</strong> vem habilitado em novas instalações e pode ser desligado nesta seção.</p>
           <p><strong>Abrir também no navegador ao iniciar</strong> mantém a janela integrada e abre uma segunda visualização no navegador padrão. A opção vem desligada por padrão.</p>
         </article>
 
@@ -625,8 +683,8 @@
         <article class="help-card">
           <h3>7. Atualizações</h3>
           <p>O cabeçalho informa se você está usando a <strong>última versão</strong> ou se existe uma <strong>nova versão</strong> publicada.</p>
-          <p>Quando houver atualização, clique no aviso para abrir a Release no GitHub.</p>
-          <p>O instalador encerra automaticamente a versão anterior antes de substituir os arquivos.</p>
+          <p>Quando houver atualização, clique no aviso para abrir o painel integrado, consultar as novidades e baixar o pacote compatível.</p>
+          <p>É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.</p>
         </article>
 
         <article class="help-card">
@@ -717,8 +775,43 @@
       </div>
       <div id="incomingMessageText" class="message-alert-text"></div>
       <div class="message-alert-actions">
-        <button id="incomingMessageReply" type="button" class="btn primary">Responder</button>
+        <button id="incomingMessageRead" type="button" class="btn primary">Ler mensagem</button>
+        <button id="incomingMessageReply" type="button" class="btn secondary">Responder</button>
         <button id="incomingMessageClose" type="button" class="btn secondary">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="unsavedConfigModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="unsavedConfigTitle">
+  <div class="message-alert-card">
+    <div class="message-alert-icon">!</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Alterações não salvas</div>
+      <h3 id="unsavedConfigTitle">Salvar alterações da Configuração?</h3>
+      <p>Há alterações que ainda não foram salvas.</p>
+      <div class="message-alert-actions">
+        <button id="unsavedSaveButton" type="button" class="btn primary">Salvar e sair</button>
+        <button id="unsavedDiscardButton" type="button" class="btn secondary">Descartar alterações</button>
+        <button id="unsavedCancelButton" type="button" class="btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="updateModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="updateModalTitle">
+  <div class="message-alert-card update-dialog">
+    <div class="message-alert-icon">↻</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Atualização do aplicativo</div>
+      <h3 id="updateModalTitle">Nova versão disponível</h3>
+      <p id="updateModalSummary"></p>
+      <pre id="updateReleaseNotes" class="update-release-notes"></pre>
+      <div id="updateDownloadProgress" class="hint"></div>
+      <div class="message-alert-actions">
+        <button id="updateDownloadNow" type="button" class="btn primary">Baixar agora</button>
+        <button id="updateOpenRelease" type="button" class="btn secondary">Ver Release</button>
+        <button id="updateModalClose" type="button" class="btn secondary">Depois</button>
       </div>
     </div>
   </div>

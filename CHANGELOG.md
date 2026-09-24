@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.6 - 2026-09-24
+
+- Consolidado o backlog funcional acumulado até 24/09/2026 e retomada a geração completa para Windows, Linux, macOS e manual PDF.
+- A tela **Configuração** passa a ser uma página única, com seções compartimentalizadas para Estação APRS, APRS-IS, Mapa/Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.
+- Ao tentar mudar de aba com alterações não salvas, o cliente oferece **Salvar e sair**, **Descartar alterações** ou **Cancelar**, preservando valores digitados quando o salvamento falha.
+- Adicionado **Restaurar configuração padrão**, que redefine preferências sem apagar mensagens, estações, logs ou tracklogs.
+- **Conectar ao iniciar** foi mantido junto aos parâmetros APRS-IS e passa a vir habilitado em novas instalações, sem sobrescrever a preferência já salva em instalações existentes.
+- O filtro padrão de novas instalações passa a usar prefixos brasileiros: `p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ`; filtros personalizados existentes permanecem intactos.
+- O editor gráfico APRS-IS passa a suportar filtro Brasil, raio com centro da estação ou coordenadas informadas, prefixos, indicativos exatos, área geográfica, tipos de pacote, interpretação dos componentes conhecidos, validação básica e cópia da string.
+- A seleção de idioma mostra **🇧🇷 Português** como padrão e **🇺🇸 English**; os novos controles da v1.6 também receberam tradução.
+- Adicionado botão rápido de tema no cabeçalho, sincronizado com a configuração persistida.
+- Em Mensagens agrupadas, o título **Conversas** alterna a ordenação alfabética A–Z/Z–A e a conversa selecionada preenche automaticamente o campo **Destino**, incluindo SSID.
+- Mensagens longas passam a registrar grupo/parte, mostrar status agregado e permitir retry individual. Timeout e número máximo de retries são configuráveis, e o retry automático usa novo ID APRS.
+- Corrigida a aplicação do peso da fonte nas colunas **De**, **Para** e **Tipo**.
+- Na aba Log, **data e hora permanecem em uma única linha**; clicar em **Hora** alterna a ordenação cronológica nos dois sentidos e o alinhamento das colunas foi padronizado.
+- A topologia observada ganha ranking de digipeaters, ranking de IGates, identificação de enlaces que deixaram de aparecer, comparação com o período anterior, histórico de eventos e animação temporal no mapa.
+- Linux passa a publicar **AppImage x86_64**, além de `.deb` e `.tar.gz`; o workflow também executa testes de núcleo em Ubuntu 22.04 e 24.04.
+- Adicionadas notificações nativas best-effort para mensagens pessoais no Linux (`notify-send`) e macOS (`osascript`), mantendo o aviso sonoro existente no Windows.
+- Implementado atualizador integrado com consulta da Release oficial, seleção do asset da plataforma, download, cálculo SHA-256 e conferência do digest SHA-256 quando fornecido pelo GitHub.
+- Novas opções: **Verificar atualizações automaticamente** (padrão ligado), **Baixar atualização automaticamente** (padrão desligado) e **Instalar atualização automaticamente ao fechar** (padrão desligado), além do botão **Verificar atualização agora**.
+- Windows Portable pode aplicar a atualização ao fechar e mantém uma cópia anterior para rollback; Windows Setup pode iniciar o instalador; macOS abre o DMG baixado; Linux AppImage pode iniciar o novo AppImage. Pacotes Linux `.deb`/`.tar.gz` continuam com instalação manual quando privilégios do sistema são necessários.
+- O envio manual de beacon com altitude de contingência em **0 m** continua permitido e agora exibe uma recomendação não bloqueante para informar a altitude real.
+- O pop-up de nova mensagem passa a oferecer **Ler mensagem** além de **Responder** e **OK**; a ação abre Mensagens e foca a conversa do remetente quando o agrupamento estiver ativo, ou a linha recebida na visualização normal.
+- O bloco de Estação foi corrigido para manter **Latitude, Longitude e Altitude em linhas independentes**, evitando extrapolação horizontal em DMS e com fontes maiores.
+- Atualizados README, guia Linux, notas de Release, screenshots do manual e gerador do PDF para refletir a v1.6.
+
 ## v1.5 - 2026-09-24
 
 - Hotfix focado exclusivamente na versão **Windows portátil** para validação antes de gerar os demais instaladores.

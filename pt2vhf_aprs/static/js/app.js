@@ -26,7 +26,8 @@
     logs: [],
     sort: {
       messages: { key: 'timestamp', dir: 'asc', type: 'text' },
-      stations: { key: 'last_heard', dir: 'desc', type: 'text' }
+      stations: { key: 'last_heard', dir: 'desc', type: 'text' },
+      logs: { key: 'timestamp', dir: 'desc', type: 'text' }
     },
     connected: false,
     symbolTable: '/',
@@ -46,7 +47,17 @@
     currentConfig: null,
     autoLocationInProgress: false,
     lastConnectionErrorShown: '',
+    conversationSort: localStorage.getItem('pt2vhf_conversation_sort') === 'desc' ? 'desc' : 'asc',
+    configDirty: false,
+    configLoading: false,
+    configBaseline: '',
+    pendingTab: '',
+    updateInfo: null,
+    updateDownloading: false,
   };
+
+  const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
+  const BRAZIL_FILTER = 'p/' + BRAZIL_PREFIXES.join('/');
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -89,51 +100,152 @@
     const el = $('#versionStatus');
     const textEl = $('#versionStatusText');
     if (!el || !textEl) return;
+    if (!force && state.configLoaded && !state.currentConfig?.check_updates_on_start) {
+      el.classList.remove('checking', 'latest', 'update', 'error', 'ahead');
+      textEl.textContent = ui('Verificação manual', 'Manual check');
+      el.title = ui('Clique para verificar atualizações.', 'Click to check for updates.');
+      return;
+    }
 
     el.classList.remove('latest', 'update', 'error', 'ahead');
     el.classList.add('checking');
-    textEl.textContent = 'Verificando versão…';
-    el.removeAttribute('href');
+    textEl.textContent = ui('Verificando versão…', 'Checking version…');
 
     try {
       const data = await api(`/api/update-status${force ? '?force=1' : ''}`);
+      state.updateInfo = data;
       el.classList.remove('checking');
 
-      const current = data.current_version ? `v${data.current_version}` : 'versão atual';
+      const current = data.current_version ? `v${data.current_version}` : ui('versão atual', 'current version');
       const latest = data.latest_version ? `v${data.latest_version}` : '';
 
       if (data.status === 'update_available') {
         el.classList.add('update');
-        textEl.textContent = `Nova versão ${latest}`;
-        el.title = `Instalada ${current}. Clique para abrir a nova release.`;
-        if (data.release_url) el.href = data.release_url;
+        textEl.textContent = ui(`Nova versão ${latest}`, `New version ${latest}`);
+        el.title = ui(`Instalada ${current}. Clique para atualizar.`, `Installed ${current}. Click to update.`);
+        if (state.currentConfig?.auto_download_updates && !data.downloaded && !state.updateDownloading) {
+          downloadAvailableUpdate(true);
+        }
       } else if (data.status === 'latest') {
         el.classList.add('latest');
-        textEl.textContent = 'Última versão';
-        el.title = `${current} é a versão mais recente publicada.`;
+        textEl.textContent = ui('Última versão', 'Latest version');
+        el.title = ui(`${current} é a versão mais recente publicada.`, `${current} is the latest published version.`);
       } else if (data.status === 'ahead') {
         el.classList.add('ahead');
         textEl.textContent = `Build ${current}`;
-        el.title = latest ? `Este build é mais novo que a release publicada ${latest}.` : 'Build de desenvolvimento.';
+        el.title = latest ? `Build > ${latest}` : ui('Build de desenvolvimento.', 'Development build.');
       } else {
         el.classList.add('error');
-        textEl.textContent = 'Versão não verificada';
-        el.title = 'Não foi possível consultar a release mais recente no GitHub.';
+        textEl.textContent = ui('Versão não verificada', 'Version not verified');
+        el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
       }
+      updateUpdateSettingsUi();
     } catch (_) {
       el.classList.remove('checking');
       el.classList.add('error');
-      textEl.textContent = 'Versão não verificada';
-      el.title = 'Não foi possível consultar a release mais recente no GitHub.';
+      textEl.textContent = ui('Versão não verificada', 'Version not verified');
+      el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
     }
   }
 
-  $('#versionStatus')?.addEventListener('click', e => {
-    const el = e.currentTarget;
-    if (!el.getAttribute('href')) {
-      e.preventDefault();
-      refreshVersionStatus(true);
+  function showUpdateModal() {
+    const data = state.updateInfo;
+    if (!data || data.status !== 'update_available') return;
+    $('#updateModalTitle').textContent = ui(`Nova versão v${data.latest_version} disponível`, `New version v${data.latest_version} available`);
+    $('#updateModalSummary').textContent = data.asset_name
+      ? ui(`Pacote compatível: ${data.asset_name}`, `Compatible package: ${data.asset_name}`)
+      : ui('Não há pacote automático compatível para esta plataforma.', 'No automatic package is available for this platform.');
+    $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
+    $('#updateDownloadNow').classList.toggle('hidden', !data.asset_url || !!data.downloaded);
+    $('#updateDownloadProgress').textContent = data.downloaded
+      ? ui('Atualização já baixada. Ela será aplicada ao fechar se essa opção estiver habilitada.', 'Update already downloaded. It will be applied on exit if enabled.')
+      : '';
+    $('#updateModal').classList.remove('hidden');
+  }
+
+  async function downloadAvailableUpdate(silent = false) {
+    if (state.updateDownloading) return;
+    if (!state.updateInfo?.asset_url) {
+      if (!silent) toast(ui('Não há pacote automático compatível.', 'No compatible automatic package.'), 'error');
+      return;
     }
+    state.updateDownloading = true;
+    const progress = $('#updateDownloadProgress');
+    if (progress) progress.textContent = ui('Baixando e verificando SHA-256…', 'Downloading and verifying SHA-256…');
+    try {
+      const result = await api('/api/update/download', { method: 'POST' });
+      if (progress) progress.textContent = ui(`Atualização baixada: ${result.update.asset_name}`, `Update downloaded: ${result.update.asset_name}`);
+      if (!silent) {
+        toast(ui('Atualização baixada e verificada.', 'Update downloaded and verified.'), 'ok');
+        if (state.updateInfo?.install_supported && !state.currentConfig?.install_updates_on_exit) {
+          const enable = window.confirm(ui(
+            'Deseja instalar automaticamente esta atualização quando fechar o aplicativo?',
+            'Install this update automatically when the application closes?'
+          ));
+          if (enable) {
+            const payload = { ...(state.currentConfig || {}), install_updates_on_exit: true };
+            const saved = await api('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+            state.currentConfig = saved.config || payload;
+            const checkbox = $('#configForm')?.elements.namedItem('install_updates_on_exit');
+            if (checkbox) checkbox.checked = true;
+          }
+        }
+      }
+      await refreshVersionStatus(true);
+      await refreshPendingUpdateStatus();
+    } catch (err) {
+      if (progress) progress.textContent = err.message;
+      if (!silent) toast(err.message, 'error');
+    } finally {
+      state.updateDownloading = false;
+    }
+  }
+
+  async function refreshPendingUpdateStatus() {
+    try {
+      const data = await api('/api/update/pending');
+      const status = $('#updateSettingsStatus');
+      if (status) {
+        status.textContent = data.pending
+          ? ui(`Baixada v${data.pending.version}: ${data.pending.asset_name}`, `Downloaded v${data.pending.version}: ${data.pending.asset_name}`)
+          : ui('Nenhuma atualização pendente.', 'No pending update.');
+      }
+      $('#rollbackUpdateButton')?.classList.toggle('hidden', !data.rollback);
+      $('#downloadUpdateButton')?.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && !data.pending));
+    } catch (_) {}
+  }
+
+  function updateUpdateSettingsUi() {
+    const btn = $('#downloadUpdateButton');
+    if (btn) btn.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && state.updateInfo?.asset_url && !state.updateInfo?.downloaded));
+  }
+
+  $('#versionStatus')?.addEventListener('click', e => {
+    e.preventDefault();
+    if (state.updateInfo?.status === 'update_available') showUpdateModal();
+    else refreshVersionStatus(true);
+  });
+  $('#updateModalClose')?.addEventListener('click', () => $('#updateModal')?.classList.add('hidden'));
+  $('#updateDownloadNow')?.addEventListener('click', () => downloadAvailableUpdate(false));
+  $('#downloadUpdateButton')?.addEventListener('click', () => downloadAvailableUpdate(false));
+  $('#checkUpdatesNowButton')?.addEventListener('click', async () => {
+    await refreshVersionStatus(true);
+    if (state.updateInfo?.status === 'update_available') showUpdateModal();
+    else toast(ui('Verificação concluída.', 'Update check completed.'), 'ok');
+  });
+  $('#updateOpenRelease')?.addEventListener('click', () => {
+    const url = state.updateInfo?.release_url;
+    if (!url) return;
+    const nativeApi = window.pywebview?.api;
+    if (nativeApi?.open_external) nativeApi.open_external(url);
+    else window.open(url, '_blank', 'noopener');
+  });
+  $('#rollbackUpdateButton')?.addEventListener('click', async () => {
+    if (!window.confirm(ui('Preparar rollback para a versão anterior ao fechar o aplicativo?', 'Prepare rollback to the previous version when the app closes?'))) return;
+    try {
+      const result = await api('/api/update/rollback', { method:'POST' });
+      toast(result.message || ui('Rollback preparado.', 'Rollback prepared.'), 'ok');
+    } catch (err) { toast(err.message, 'error'); }
   });
 
   let toastTimer = null;
@@ -219,22 +331,30 @@
     });
   }
 
+  function activateTab(tab) {
+    state.activeTab = tab;
+    $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+    if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
+    if (tab === 'messages') {
+      markMessagesSeen();
+      loadMessages({ scrollToNewest: true });
+    }
+    if (tab === 'stations') loadStations({ scrollToNewest: true });
+    if (tab === 'log') loadLog(true);
+    if (tab === 'config') loadConfig();
+  }
+
   function tabSetup() {
     $$('.tab').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
-      state.activeTab = tab;
-      $$('.tab').forEach(b => b.classList.toggle('active', b === btn));
-      $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
-      if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
-      if (tab === 'messages') {
-        markMessagesSeen();
-        loadMessages({ scrollToNewest: true });
+      if (tab === state.activeTab) return;
+      if (state.activeTab === 'config' && tab !== 'config' && state.configDirty) {
+        state.pendingTab = tab;
+        $('#unsavedConfigModal')?.classList.remove('hidden');
+        return;
       }
-      if (tab === 'stations') loadStations({ scrollToNewest: true });
-      if (tab === 'log') {
-        loadLog(true);
-      }
-      if (tab === 'config') loadConfig();
+      activateTab(tab);
     }));
   }
 
@@ -771,6 +891,34 @@
     return status || '';
   }
 
+  function messageGroupSummary(message) {
+    const groupId = String(message?.message_group_id || '');
+    const total = Number(message?.part_count || 0);
+    if (!groupId || total <= 1) return '';
+    const latestByPart = new Map();
+    for (const row of state.messages) {
+      if (String(row.message_group_id || '') !== groupId || row.direction !== 'out') continue;
+      const part = Number(row.part_index || 0);
+      if (!part) continue;
+      const current = latestByPart.get(part);
+      if (!current || Number(row.id || 0) > Number(current.id || 0)) latestByPart.set(part, row);
+    }
+    const rows = [...latestByPart.values()];
+    const ack = rows.filter(row => row.status === 'ACK').length;
+    const rej = rows.filter(row => row.status === 'REJ').length;
+    if (ack >= total) return ui('Todas confirmadas', 'All confirmed');
+    if (rej) return ui(`${ack}/${total} confirmadas · ${rej} rejeitada(s)`, `${ack}/${total} confirmed · ${rej} rejected`);
+    return ui(`${ack}/${total} confirmadas`, `${ack}/${total} confirmed`);
+  }
+
+  function retryButtonHtml(message) {
+    if (message?.direction !== 'out' || message?.message_type !== 'message') return '';
+    if (['ACK', 'Substituída por retry'].includes(String(message.status || ''))) return '';
+    const max = Number(state.currentConfig?.message_retry_attempts || 0);
+    const used = Number(message.retry_count || 0);
+    if (max <= 0 || used >= max) return '';
+    return `<button type="button" class="btn secondary message-retry-button" data-retry-row-id="${Number(message.id)}" title="${escapeHtml(ui('Reenviar esta parte', 'Retry this part'))}">↻ ${escapeHtml(ui('Retry', 'Retry'))}</button>`;
+  }
   function isTelemetryMessage(message) {
     const text = String(message?.message || '').trim().toUpperCase();
     if (!text) return false;
@@ -843,6 +991,7 @@
       if (message.direction === 'in' && Number(message.id || 0) > seen) item.unread += 1;
     }
 
+    const factor = state.conversationSort === 'asc' ? 1 : -1;
     return [...conversations.values()]
       .map(item => ({
         ...item,
@@ -851,7 +1000,7 @@
           return time || (Number(a.id || 0) - Number(b.id || 0));
         })
       }))
-      .sort((a, b) => Number(b.last?.id || 0) - Number(a.last?.id || 0));
+      .sort((a, b) => a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor);
   }
 
   function renderGroupedMessages() {
@@ -902,6 +1051,8 @@
           <div class="chat-bubble-meta">
             <span>${escapeHtml(fmtDate(message.timestamp))}</span>
             ${status ? `<span class="${message.status === 'ACK' ? 'status-ack' : message.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(status)}</span>` : ''}
+            ${messageGroupSummary(message) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(message))}</span>` : ''}
+            ${retryButtonHtml(message)}
           </div>
         </div>
       </div>`;
@@ -928,7 +1079,11 @@
         <td>${messageTypeLabel(m.message_type)}</td>
         <td>${escapeHtml(m.message)}</td>
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
-        <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(messageStatusLabel(m.status))}</td>
+        <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">
+          ${escapeHtml(messageStatusLabel(m.status))}
+          ${messageGroupSummary(m) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(m))}</span>` : ''}
+          ${retryButtonHtml(m)}
+        </td>
       </tr>`).join('');
     updateSortIndicators('messagesTable', spec);
   }
@@ -976,22 +1131,59 @@
     const item = event.target.closest('[data-conversation-contact]');
     if (!item) return;
     state.selectedConversation = normalizedCall(item.dataset.conversationContact);
+    if (state.selectedConversation) {
+      $('#messageType').value = 'message';
+      updateMessageComposerMode();
+      $('#messageTo').value = state.selectedConversation;
+    }
     renderGroupedMessages();
     const thread = $('#conversationMessages');
     if (thread) thread.scrollTop = thread.scrollHeight;
   });
+
+  $('#conversationSortButton')?.addEventListener('click', () => {
+    state.conversationSort = state.conversationSort === 'asc' ? 'desc' : 'asc';
+    localStorage.setItem('pt2vhf_conversation_sort', state.conversationSort);
+    const indicator = $('#conversationSortIndicator');
+    if (indicator) indicator.textContent = state.conversationSort === 'asc' ? '▲' : '▼';
+    renderGroupedMessages();
+  });
+  if ($('#conversationSortIndicator')) $('#conversationSortIndicator').textContent = state.conversationSort === 'asc' ? '▲' : '▼';
 
   $('#conversationRecipientButton')?.addEventListener('click', event => {
     selectMessageRecipient(event.currentTarget.dataset.callsign || '');
   });
 
   $('#messagesTable tbody')?.addEventListener('click', event => {
+    const retry = event.target.closest('.message-retry-button');
+    if (retry) {
+      event.preventDefault();
+      event.stopPropagation();
+      retryMessagePart(Number(retry.dataset.retryRowId || 0));
+      return;
+    }
     const button = event.target.closest('.message-callsign-link');
     if (!button) return;
     event.preventDefault();
     event.stopPropagation();
     selectMessageRecipient(button.dataset.callsign || '', button.dataset.otherCall || '');
   });
+
+  $('#conversationMessages')?.addEventListener('click', event => {
+    const retry = event.target.closest('.message-retry-button');
+    if (!retry) return;
+    event.preventDefault();
+    retryMessagePart(Number(retry.dataset.retryRowId || 0));
+  });
+
+  async function retryMessagePart(rowId) {
+    if (!rowId) return;
+    try {
+      await api(`/api/messages/${rowId}/retry`, { method:'POST' });
+      toast(ui('Parte reenviada com novo ID APRS.', 'Part retried with a new APRS ID.'), 'ok');
+      await loadMessages({ scrollToNewest:true });
+    } catch (err) { toast(err.message, 'error'); }
+  }
 
   function updateMyMessagesButton() {
     const btn = $('#myMessagesButton');
@@ -1222,6 +1414,48 @@
     selectMessageRecipient(sender);
   });
 
+  async function readIncomingMessage(message) {
+    if (!message) return;
+    const sender = normalizedCall(message.from_call || '');
+    const messageId = Number(message.id || 0);
+    closeIncomingMessageAlert();
+    closeCompactIncomingMessageAlert();
+    activateTab('messages');
+    await loadMessages({ scrollToNewest:false });
+    if (state.groupMessages && sender) {
+      state.selectedConversation = sender;
+      $('#messageType').value = 'message';
+      updateMessageComposerMode();
+      $('#messageTo').value = sender;
+      renderGroupedMessages();
+      requestAnimationFrame(() => {
+        const selected = document.querySelector('[data-conversation-contact="' + CSS.escape(sender) + '"]');
+        selected?.scrollIntoView({ block:'nearest' });
+        const thread = $('#conversationMessages');
+        if (thread) thread.scrollTop = thread.scrollHeight;
+      });
+    } else {
+      renderMessages();
+      requestAnimationFrame(() => {
+        const rows = $('#messagesTable tbody tr');
+        const visible = visibleMessages();
+        const spec = state.sort.messages;
+        const ordered = sortedData(visible, spec);
+        const index = ordered.findIndex(row => Number(row.id || 0) === messageId);
+        const row = index >= 0 ? rows[index] : null;
+        row?.scrollIntoView({ block:'center' });
+        row?.classList.add('message-focus-row');
+        setTimeout(() => row?.classList.remove('message-focus-row'), 2200);
+      });
+    }
+    if (messageId) {
+      const seen = Math.max(Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0), messageId);
+      localStorage.setItem('pt2vhf_last_seen_msg', String(seen));
+    }
+    updateUnread();
+  }
+
+  $('#incomingMessageRead')?.addEventListener('click', () => readIncomingMessage(state.currentAlertMessage));
   $('#incomingMessageClose')?.addEventListener('click', closeIncomingMessageAlert);
   $('#incomingMessageModal')?.addEventListener('click', e => {
     if (e.target.id === 'incomingMessageModal') closeIncomingMessageAlert();
@@ -1279,7 +1513,8 @@
       return;
     }
 
-    tbody.innerHTML = state.logs.map(row => {
+    const rows = sortedData(state.logs, state.sort.logs);
+    tbody.innerHTML = rows.map(row => {
       const direction = row.direction === 'TX' ? 'TX' : 'RX';
       return `<tr class="log-${direction.toLowerCase()}">
         <td>${escapeHtml(fmtDate(row.timestamp))}</td>
@@ -1287,6 +1522,8 @@
         <td class="log-raw">${escapeHtml(row.raw || '')}</td>
       </tr>`;
     }).join('');
+    const indicator = $('#logTimeHeader .sort-indicator');
+    if (indicator) indicator.textContent = state.sort.logs.dir === 'asc' ? '▲' : '▼';
 
     if (auto && (forceScroll || wasNearTop)) {
       viewport.scrollTop = 0;
@@ -1294,6 +1531,11 @@
       viewport.scrollTop = previousScrollTop;
     }
   }
+
+  $('#logTimeHeader')?.addEventListener('click', () => {
+    state.sort.logs.dir = state.sort.logs.dir === 'asc' ? 'desc' : 'asc';
+    renderLog(false, $('#logViewport')?.scrollTop || 0, false);
+  });
 
   const loadLogDebounced = debounce(() => loadLog(true), 220);
   $('#logFilter')?.addEventListener('input', loadLogDebounced);
@@ -1489,7 +1731,24 @@
     refreshRequiredFieldHighlights();
   });
 
+  function configFormSnapshot() {
+    const form = $('#configForm');
+    if (!form) return '';
+    const data = {};
+    for (const el of [...form.elements]) {
+      if (!el.name || el.type === 'file' || el.type === 'submit' || el.type === 'button') continue;
+      data[el.name] = el.type === 'checkbox' ? !!el.checked : String(el.value ?? '');
+    }
+    return JSON.stringify(Object.keys(data).sort().reduce((acc, key) => { acc[key] = data[key]; return acc; }, {}));
+  }
+
+  function markConfigDirty() {
+    if (!state.configLoaded || state.configLoading) return;
+    state.configDirty = configFormSnapshot() !== state.configBaseline;
+  }
+
   async function loadConfig() {
+    state.configLoading = true;
     try {
       const cfg = await api('/api/config');
       state.currentConfig = cfg;
@@ -1518,19 +1777,35 @@
       applyCoordinateMode(localStorage.getItem('pt2vhf_coordinate_mode') || 'decimal');
       applyLanguage(state.language);
       state.configLoaded = true;
+      state.configBaseline = configFormSnapshot();
+      state.configDirty = false;
+      await refreshPendingUpdateStatus();
     } catch (err) { toast(err.message, 'error'); }
+    finally { state.configLoading = false; }
   }
 
-  $('#configForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const form = e.currentTarget;
+  async function saveConfigForm() {
+    const form = $('#configForm');
     syncDecimalFromDmsIfNeeded();
     const data = Object.fromEntries(new FormData(form).entries());
-    data.connect_on_start = form.elements.connect_on_start.checked;
-    data.open_browser_on_start = form.elements.open_browser_on_start.checked;
-    data.sound_on_personal_message = form.elements.sound_on_personal_message.checked;
+    data.connect_on_start = !!form.elements.connect_on_start?.checked;
+    data.open_browser_on_start = !!form.elements.open_browser_on_start?.checked;
+    data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
+    data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
+    data.auto_download_updates = !!form.elements.auto_download_updates?.checked;
+    data.install_updates_on_exit = !!form.elements.install_updates_on_exit?.checked;
 
-    if (state.configSection === 'aprs' && !String(data.aprs_filter || '').trim()) {
+    const filterValidation = validateAprsFilterSyntax(data.aprs_filter || '');
+    if (!filterValidation.valid) {
+      toast(ui(
+        `Filtro APRS-IS inválido: ${filterValidation.invalid.join(', ')}`,
+        `Invalid APRS-IS filter: ${filterValidation.invalid.join(', ')}`
+      ), 'error');
+      $('#aprsFilterInput')?.focus();
+      return false;
+    }
+
+    if (!String(data.aprs_filter || '').trim()) {
       const proceed = window.confirm(ui(
         'O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?',
         'The APRS-IS filter is empty. Depending on the server and port in use, the client may receive a much larger traffic stream, including all traffic made available on that connection.\n\nDo you want to continue without a filter?'
@@ -1538,7 +1813,7 @@
       if (!proceed) {
         showConfigSection('aprs');
         $('#aprsFilterInput')?.focus();
-        return;
+        return false;
       }
     }
 
@@ -1556,6 +1831,53 @@
       applyAppearancePreferences(result.config || data);
       await loadConfig();
       await loadStations();
+      state.configDirty = false;
+      return true;
+    } catch (err) {
+      toast(err.message, 'error');
+      return false;
+    }
+  }
+
+  $('#configForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    await saveConfigForm();
+  });
+  $('#configForm').addEventListener('input', markConfigDirty);
+  $('#configForm').addEventListener('change', markConfigDirty);
+
+  $('#unsavedSaveButton')?.addEventListener('click', async () => {
+    const target = state.pendingTab;
+    if (await saveConfigForm()) {
+      $('#unsavedConfigModal')?.classList.add('hidden');
+      state.pendingTab = '';
+      if (target) activateTab(target);
+    }
+  });
+  $('#unsavedDiscardButton')?.addEventListener('click', async () => {
+    const target = state.pendingTab;
+    await loadConfig();
+    $('#unsavedConfigModal')?.classList.add('hidden');
+    state.pendingTab = '';
+    if (target) activateTab(target);
+  });
+  $('#unsavedCancelButton')?.addEventListener('click', () => {
+    $('#unsavedConfigModal')?.classList.add('hidden');
+    state.pendingTab = '';
+  });
+
+  $('#sendBeaconButton')?.addEventListener('click', async () => {
+    const altitude = Number($('#altitudeInput')?.value);
+    const source = String($('#altitudeSourceInput')?.value || '');
+    if (altitude === 0 && source === 'fallback_zero') {
+      toast(ui(
+        'A altitude ainda está em 0 m porque não foi obtida automaticamente. O beacon será enviado, mas recomendamos informar a altitude real.',
+        'Altitude is still 0 m because it was not obtained automatically. The beacon will be sent, but entering the real altitude is recommended.'
+      ), 'error');
+    }
+    try {
+      await api('/api/beacon', { method:'POST' });
+      toast(ui('Beacon enviado ao APRS-IS.', 'Beacon sent to APRS-IS.'), 'ok');
     } catch (err) { toast(err.message, 'error'); }
   });
 
@@ -1661,7 +1983,8 @@
     form.elements.namedItem('topology_igate_color').value = '#b06cff';
     form.elements.namedItem('topology_width').value = '2';
     previewTopologyStyleFromForm();
-    toast('Visual da topologia restaurado ao padrão. Clique em Salvar configuração para persistir.', 'ok');
+    markConfigDirty();
+    toast(ui('Visual da topologia restaurado ao padrão. Clique em Salvar configuração para persistir.', 'Topology appearance restored to defaults. Click Save to persist.'), 'ok');
   });
 
   function syncAppearanceControls() {
@@ -1724,6 +2047,7 @@
       form.elements.symbol_table.value = table;
       form.elements.symbol.value = btn.dataset.symbol;
       updateSelectedSymbol();
+      markConfigDirty();
       $('#symbolModal').classList.add('hidden');
     }));
   }
@@ -1747,6 +2071,7 @@
       if (el) el.value = String(value);
     }
     previewAppearanceFromForm();
+    markConfigDirty();
     toast(ui('Formatação restaurada ao padrão. Clique em Salvar para persistir.', 'Formatting restored to defaults. Click Save to persist.'), 'ok');
   }
   $('#resetMessagesTypography')?.addEventListener('click', () => resetTypography('messages', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.35}));
@@ -2030,7 +2355,55 @@
     'Escolher ícone APRS':'Choose APRS icon',
     'Tabela primária (/) e secundária (\\).':'Primary (/) and secondary (\\) table.',
     'Primária /':'Primary /',
-    'Secundária \\':'Secondary \\'
+    'Secundária \\':'Secondary \\',
+    'Página única de configuração':'Single settings page',
+    'As opções estão organizadas por seções. Role a página para acessar Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.':'Settings are organized into sections. Scroll to access APRS Station, APRS-IS, Map and Topology, Messages/Appearance, Application, Updates and Backup/Data.',
+    'Somente estações brasileiras (padrão)':'Brazilian stations only (default)',
+    'Raio (km)':'Radius (km)',
+    'Centro radial — Latitude':'Radial center — Latitude',
+    'Centro radial — Longitude':'Radial center — Longitude',
+    'Sem centro informado, usa a posição configurada da estação.':'If no center is provided, the configured station position is used.',
+    'Área geográfica opcional':'Optional geographic area',
+    'Norte':'North',
+    'Oeste':'West',
+    'Sul':'South',
+    'Leste':'East',
+    'Copiar filtro':'Copy filter',
+    'Restaurar filtro Brasil':'Restore Brazil filter',
+    'Retry de mensagem após (segundos)':'Retry message after (seconds)',
+    'Máximo de retries por parte':'Maximum retries per part',
+    'Análise da topologia observada':'Observed topology analysis',
+    'Rankings de digipeaters/IGates e enlaces que deixaram de aparecer no período.':'Digipeater/IGate rankings and links no longer seen in the period.',
+    'Atualizar análise':'Refresh analysis',
+    'Animar período':'Animate period',
+    'Atualizações':'Updates',
+    'Verificar atualizações automaticamente':'Check for updates automatically',
+    'Baixar atualização automaticamente':'Download updates automatically',
+    'Instalar atualização automaticamente ao fechar':'Install updates automatically on exit',
+    'Nenhuma atualização pendente.':'No pending update.',
+    'Verificar atualização agora':'Check for updates now',
+    'Baixar atualização':'Download update',
+    'Restaurar versão anterior':'Restore previous version',
+    'Restaurar configuração padrão':'Restore default settings',
+    'Restaura preferências e dados da estação; mensagens, estações, logs e tracklogs não são apagados.':'Restores preferences and station settings; messages, stations, logs and tracklogs are not deleted.',
+    'Alterações não salvas':'Unsaved changes',
+    'Salvar alterações da Configuração?':'Save Settings changes?',
+    'Há alterações que ainda não foram salvas.':'There are changes that have not been saved yet.',
+    'Salvar e sair':'Save and leave',
+    'Descartar alterações':'Discard changes',
+    'Cancelar':'Cancel',
+    'Atualização do aplicativo':'Application update',
+    'Nova versão disponível':'New version available',
+    'Baixar agora':'Download now',
+    'Ver Release':'View Release',
+    'Depois':'Later',
+    'Alternar tema':'Toggle theme',
+    'A configuração oferece sugestões regionais e continua aceitando servidor manual.':'Settings provide regional suggestions and still accept a custom server.',
+    'O padrão de novas instalações recebe indicativos brasileiros. O campo continua totalmente editável para filtros APRS-IS manuais.':'New installations default to Brazilian callsigns. The field remains fully editable for manual APRS-IS filters.',
+    'Conectar ao iniciar vem habilitado em novas instalações e pode ser desligado nesta seção.':'Connect at startup is enabled on new installations and can be disabled in this section.',
+    'Quando houver atualização, clique no aviso para abrir o painel integrado, consultar as novidades e baixar o pacote compatível.':'When an update is available, click the notice to open the integrated panel, review changes and download the compatible package.',
+    'É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.':'Updates can be checked and downloaded automatically and, on supported platforms, installed on exit. Windows Portable keeps a rollback backup.',
+    'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.'
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
   function translateConnectionState(value) {
@@ -2098,20 +2471,11 @@
   });
   languageObserver.observe(document.body, { childList: true, subtree: true });
 
-  function showConfigSection(section) {
-    state.configSection = section === 'app' ? 'app' : 'aprs';
-    localStorage.setItem('pt2vhf_config_section', state.configSection);
-    $$('.config-section-tab').forEach(btn => {
-      const active = btn.dataset.configSection === state.configSection;
-      btn.classList.toggle('active', active);
-      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    $$('.config-section-aprs').forEach(el => el.classList.toggle('hidden', state.configSection !== 'aprs'));
-    $$('.config-section-app').forEach(el => el.classList.toggle('hidden', state.configSection !== 'app'));
+  function showConfigSection(_section) {
+    state.configSection = 'all';
+    $$('.config-section').forEach(el => el.classList.remove('hidden'));
   }
-
-  $$('.config-section-tab').forEach(btn => btn.addEventListener('click', () => showConfigSection(btn.dataset.configSection)));
-  showConfigSection(localStorage.getItem('pt2vhf_config_section') || 'aprs');
+  showConfigSection('all');
 
   function requiredStationDefinitions() {
     syncDecimalFromDmsIfNeeded();
@@ -2339,6 +2703,7 @@
       syncDmsFromDecimal();
       updateAltitudeSourceStatus(altitudeSource, altitudeValue);
       refreshRequiredFieldHighlights();
+      if (state.activeTab === 'config' && state.configLoaded && !state.configLoading) markConfigDirty();
     }
 
     const status = $('#currentLocationStatus');
@@ -2468,23 +2833,102 @@
   }
 
 
-  $('#toggleFilterBuilderButton')?.addEventListener('click', () => {
-    const panel = $('#filterBuilderPanel');
-    const hidden = panel.classList.toggle('hidden');
-    $('#toggleFilterBuilderButton').textContent = hidden ? ui('Abrir editor', 'Open editor') : ui('Fechar editor', 'Close editor');
-  });
-
   function splitFilterValues(value) {
     return String(value || '').toUpperCase().split(/[\s,;\/]+/).map(v => v.trim()).filter(Boolean);
   }
 
+  function validateAprsFilterSyntax(value) {
+    const terms = String(value || '').trim().split(/\s+/).filter(Boolean);
+    const invalid = [];
+    const unsupported = [];
+    for (const term of terms) {
+      const lower = term.toLowerCase();
+      let ok = true;
+      if (lower.startsWith('r/')) ok = /^r\/(?:\d+(?:\.\d+)?|-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/\d+(?:\.\d+)?)$/i.test(term);
+      else if (lower.startsWith('p/')) ok = /^p\/[a-z0-9]+(?:\/[a-z0-9]+)*$/i.test(term);
+      else if (lower.startsWith('b/')) ok = /^b\/[a-z0-9-]+(?:\/[a-z0-9-]+)*$/i.test(term);
+      else if (lower.startsWith('t/')) ok = /^t\/[a-z]+$/i.test(term);
+      else if (lower.startsWith('a/')) ok = /^a\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?$/i.test(term);
+      else unsupported.push(term);
+      if (!ok) invalid.push(term);
+    }
+    return { valid: invalid.length === 0, invalid, unsupported };
+  }
+
+  function parseFilterIntoBuilder() {
+    const value = String($('#aprsFilterInput')?.value || '').trim();
+    const terms = value.split(/\s+/).filter(Boolean);
+    if ($('#filterBrazilOnly')) $('#filterBrazilOnly').checked = false;
+    $('#filterRadiusKm').value = '';
+    $('#filterRadiusLat').value = '';
+    $('#filterRadiusLon').value = '';
+    $('#filterPrefixes').value = '';
+    $('#filterBuddies').value = '';
+    for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
+    $$('.filter-type').forEach(input => { input.checked = false; });
+    const unsupported = [];
+    for (const term of terms) {
+      const [kind, ...values] = term.split('/');
+      const lower = String(kind || '').toLowerCase();
+      if (lower === 'p' && values.length) {
+        const normalized = values.map(v => v.toUpperCase());
+        const isBrazil = BRAZIL_PREFIXES.every(p => normalized.includes(p)) && normalized.every(p => BRAZIL_PREFIXES.includes(p));
+        if ($('#filterBrazilOnly')) $('#filterBrazilOnly').checked = isBrazil;
+        if (!isBrazil) $('#filterPrefixes').value = normalized.join(', ');
+      } else if (lower === 'b' && values.length) {
+        $('#filterBuddies').value = values.join(', ').toUpperCase();
+      } else if (lower === 'r' && values.length === 1) {
+        $('#filterRadiusKm').value = values[0];
+      } else if (lower === 'r' && values.length >= 3) {
+        $('#filterRadiusLat').value = values[0];
+        $('#filterRadiusLon').value = values[1];
+        $('#filterRadiusKm').value = values[2];
+      } else if (lower === 't' && values.length) {
+        for (const ch of values.join('')) {
+          const input = document.querySelector(`.filter-type[value="${CSS.escape(ch)}"]`);
+          if (input) input.checked = true;
+        }
+      } else if (lower === 'a' && values.length >= 4) {
+        $('#filterAreaNorth').value = values[0];
+        $('#filterAreaWest').value = values[1];
+        $('#filterAreaSouth').value = values[2];
+        $('#filterAreaEast').value = values[3];
+      } else if (term) {
+        unsupported.push(term);
+      }
+    }
+    const validation = validateAprsFilterSyntax(value);
+    const status = $('#filterBuilderParseStatus');
+    if (status) {
+      if (!validation.valid) status.textContent = ui(`Filtro com componente inválido: ${validation.invalid.join(', ')}`, `Filter has invalid component: ${validation.invalid.join(', ')}`);
+      else if (unsupported.length || validation.unsupported.length) status.textContent = ui('A string contém componentes ainda não representados no editor. Eles serão preservados enquanto você não gerar uma nova string.', 'The string contains components not yet represented in the editor. They are preserved until you generate a new string.');
+      else status.textContent = ui('Filtro interpretado pelo editor gráfico.', 'Filter interpreted by the graphical editor.');
+    }
+  }
+
+  $('#toggleFilterBuilderButton')?.addEventListener('click', () => {
+    const panel = $('#filterBuilderPanel');
+    const hidden = panel.classList.toggle('hidden');
+    $('#toggleFilterBuilderButton').textContent = hidden ? ui('Abrir editor', 'Open editor') : ui('Fechar editor', 'Close editor');
+    if (!hidden) parseFilterIntoBuilder();
+  });
+
+  $('#aprsFilterInput')?.addEventListener('change', parseFilterIntoBuilder);
+
   $('#generateFilterButton')?.addEventListener('click', () => {
     syncDecimalFromDmsIfNeeded();
     const parts = [];
-    const radius = Number($('#filterRadiusKm')?.value);
+    const radiusText = String($('#filterRadiusKm')?.value || '').trim();
+    const radius = radiusText ? Number(radiusText) : NaN;
     if (Number.isFinite(radius) && radius > 0) {
-      const lat = Number($('#latitudeDecimal')?.value);
-      const lon = Number($('#longitudeDecimal')?.value);
+      const customLatText = String($('#filterRadiusLat')?.value || '').trim();
+      const customLonText = String($('#filterRadiusLon')?.value || '').trim();
+      if (!!customLatText !== !!customLonText) {
+        toast(ui('Informe latitude e longitude do centro radial, ou deixe ambas vazias.', 'Enter both radial center latitude and longitude, or leave both blank.'), 'error');
+        return;
+      }
+      const lat = customLatText ? Number(customLatText) : Number($('#latitudeDecimal')?.value);
+      const lon = customLonText ? Number(customLonText) : Number($('#longitudeDecimal')?.value);
       if (Number.isFinite(lat) && Number.isFinite(lon)) {
         parts.push(`r/${lat.toFixed(6)}/${lon.toFixed(6)}/${Math.round(radius)}`);
       } else {
@@ -2493,23 +2937,154 @@
       }
     }
 
+    const brazilOnly = !!$('#filterBrazilOnly')?.checked;
     const prefixes = splitFilterValues($('#filterPrefixes')?.value);
-    if (prefixes.length) parts.push('p/' + prefixes.join('/'));
+    if (brazilOnly) parts.push(BRAZIL_FILTER);
+    else if (prefixes.length) parts.push('p/' + prefixes.join('/'));
+
     const buddies = splitFilterValues($('#filterBuddies')?.value);
     if (buddies.length) parts.push('b/' + buddies.join('/'));
-    const types = $('.filter-type:checked').map(input => input.value).join('');
+
+    const areaTexts = ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast'].map(id => String($('#' + id)?.value || '').trim());
+    const anyArea = areaTexts.some(Boolean);
+    if (anyArea) {
+      if (!areaTexts.every(Boolean)) {
+        toast(ui('Preencha os quatro limites da área geográfica.', 'Fill all four geographic area limits.'), 'error');
+        return;
+      }
+      const areaValues = areaTexts.map(Number);
+      if (!areaValues.every(Number.isFinite)) {
+        toast(ui('Os limites da área geográfica são inválidos.', 'Geographic area limits are invalid.'), 'error');
+        return;
+      }
+      parts.push(`a/${areaValues.join('/')}`);
+    }
+
+    const types = $$('.filter-type:checked').map(input => input.value).join('');
     if (types) parts.push('t/' + types);
     $('#aprsFilterInput').value = parts.join(' ');
+    parseFilterIntoBuilder();
+    markConfigDirty();
     toast(ui('Filtro APRS-IS gerado. Revise a string antes de salvar.', 'APRS-IS filter generated. Review the string before saving.'), 'ok');
   });
 
+  $('#copyFilterButton')?.addEventListener('click', async () => {
+    const value = String($('#aprsFilterInput')?.value || '');
+    try {
+      await navigator.clipboard.writeText(value);
+      toast(ui('Filtro copiado.', 'Filter copied.'), 'ok');
+    } catch (_) {
+      window.prompt(ui('Copie o filtro:', 'Copy the filter:'), value);
+    }
+  });
+
   $('#restoreDefaultFilterButton')?.addEventListener('click', () => {
-    $('#aprsFilterInput').value = 'r/2000';
-    $('#filterRadiusKm').value = '2000';
+    $('#aprsFilterInput').value = BRAZIL_FILTER;
+    if ($('#filterBrazilOnly')) $('#filterBrazilOnly').checked = true;
+    $('#filterRadiusKm').value = '';
+    $('#filterRadiusLat').value = '';
+    $('#filterRadiusLon').value = '';
     $('#filterPrefixes').value = '';
     $('#filterBuddies').value = '';
+    for (const id of ['filterAreaNorth','filterAreaWest','filterAreaSouth','filterAreaEast']) if ($('#' + id)) $('#' + id).value = '';
     $$('.filter-type').forEach(input => { input.checked = false; });
-    toast(ui('Filtro padrão r/2000 restaurado.', 'Default r/2000 filter restored.'), 'ok');
+    parseFilterIntoBuilder();
+    markConfigDirty();
+    toast(ui('Filtro padrão para estações brasileiras restaurado.', 'Default Brazil-only filter restored.'), 'ok');
+  });
+  $('#themeQuickToggle')?.addEventListener('click', async () => {
+    const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    const formTheme = $('#configForm')?.elements.namedItem('app_theme');
+    if (formTheme) formTheme.value = next;
+    applyAppearancePreferences({ ...(state.currentConfig || {}), app_theme: next });
+    if (state.activeTab === 'config') {
+      markConfigDirty();
+      return;
+    }
+    try {
+      const payload = { ...(state.currentConfig || {}), app_theme: next };
+      const saved = await api('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+      state.currentConfig = saved.config || payload;
+    } catch (err) { toast(err.message, 'error'); }
+  });
+
+  $('#refreshTopologyStatsButton')?.addEventListener('click', async () => {
+    const box = $('#topologyStatsContent');
+    if (!box) return;
+    box.textContent = ui('Carregando análise…', 'Loading analysis…');
+    try {
+      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(state.topologyHours || 24)}`);
+      const list = (items, formatter) => items.length ? '<ol>' + items.map(formatter).join('') + '</ol>' : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
+      box.innerHTML =
+        '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
+        list(data.digipeaters || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+        '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
+        list(data.igates || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+        '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
+        list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>' +
+        '<div class="topology-stat-group"><h4>' + ui('Comparação com período anterior', 'Comparison with previous period') + '</h4>' +
+        '<div class="hint">' +
+        ui(
+          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
+          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
+        ) + '</div></div>';
+    } catch (err) { box.textContent = err.message; }
+  });
+
+  $('#animateTopologyButton')?.addEventListener('click', async () => {
+    if (state.configDirty) {
+      toast(ui('Salve ou descarte as alterações da Configuração antes de abrir a animação.', 'Save or discard Settings changes before opening the animation.'), 'error');
+      return;
+    }
+    if (!state.map) return;
+    try {
+      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(state.topologyHours || 24)}&limit=2500`);
+      if (!events.length) {
+        toast(ui('Não há eventos de topologia com posição para animar.', 'There are no positioned topology events to animate.'), 'error');
+        return;
+      }
+      activateTab('map');
+      clearTopologyLines();
+      state.topologyEnabled = true;
+      localStorage.setItem('pt2vhf_topology_enabled', '1');
+      const step = Math.max(1, Math.ceil(events.length / 180));
+      let index = 0;
+      const timer = setInterval(() => {
+        const slice = events.slice(index, index + step);
+        for (const edge of slice) {
+          const points = [
+            [Number(edge.source_lat), Number(edge.source_lon)],
+            [Number(edge.target_lat), Number(edge.target_lon)]
+          ];
+          if (!points.flat().every(Number.isFinite)) continue;
+          const key = `timeline:${index}:${edge.source}>${edge.target}`;
+          const line = L.polyline(points, {
+            color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+            weight: state.mapConfig.topology_width,
+            opacity: .64,
+            dashArray: edge.kind === 'igate' ? '7 5' : null
+          }).addTo(state.map);
+          line.bindPopup(`${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}<br>${escapeHtml(fmtDate(edge.timestamp))}`);
+          state.topologyLines.set(key, line);
+        }
+        index += step;
+        if (index >= events.length) {
+          clearInterval(timer);
+          setTimeout(() => loadTopology(), 700);
+        }
+      }, 80);
+    } catch (err) { toast(err.message, 'error'); }
+  });
+
+  $('#resetConfigButton')?.addEventListener('click', async () => {
+    if (!window.confirm(ui('Restaurar TODA a configuração para os padrões atuais? Mensagens, estações, logs e tracklogs serão preservados.', 'Restore ALL settings to current defaults? Messages, stations, logs and tracklogs will be preserved.'))) return;
+    try {
+      await api('/api/config/reset', { method:'POST' });
+      localStorage.removeItem('pt2vhf_coordinate_mode');
+      await loadConfig();
+      toast(ui('Configuração padrão restaurada.', 'Default configuration restored.'), 'ok');
+    } catch (err) { toast(err.message, 'error'); }
   });
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
@@ -2522,7 +3097,10 @@
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
     updateMyMessagesButton();
-    await Promise.allSettled([loadMessages(), checkIncomingPersonalMessages(), refreshVersionStatus()]);
+    await Promise.allSettled([loadMessages(), checkIncomingPersonalMessages()]);
+    if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
+    else updateUpdateSettingsUi();
+    await refreshPendingUpdateStatus();
 
     // Não bloqueia a inicialização da interface aguardando permissão/localização.
     setTimeout(() => { initializeAutomaticLocation().catch(err => console.warn(err)); }, 1200);
@@ -2531,7 +3109,7 @@
     setInterval(loadMapData, 5000);
     setInterval(loadMessages, 3000);
     setInterval(checkIncomingPersonalMessages, 3000);
-    setInterval(refreshVersionStatus, 30 * 60 * 1000);
+    setInterval(() => { if (state.currentConfig?.check_updates_on_start) refreshVersionStatus(false); }, 30 * 60 * 1000);
     setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
     setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
   }

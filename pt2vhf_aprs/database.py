@@ -31,6 +31,8 @@ def _default_data_dir() -> Path:
 
 DB_PATH = _default_data_dir() / "pt2vhf_aprs.db"
 
+BRAZIL_FILTER = "p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ"
+
 DEFAULT_CONFIG = {
     "callsign": "",
     "ssid": 0,
@@ -46,9 +48,14 @@ DEFAULT_CONFIG = {
     "server": "soam.aprs2.net",
     "port": 14580,
     "passcode": "",
-    "aprs_filter": "r/2000",
-    "connect_on_start": 0,
+    "aprs_filter": BRAZIL_FILTER,
+    "connect_on_start": 1,
     "open_browser_on_start": 0,
+    "check_updates_on_start": 1,
+    "auto_download_updates": 0,
+    "install_updates_on_exit": 0,
+    "message_retry_seconds": 60,
+    "message_retry_attempts": 2,
     "language": "pt-BR",
     "map_type": "osm",
     "track_color": "#3ba6ff",
@@ -113,9 +120,14 @@ def init_db() -> None:
                 server TEXT NOT NULL DEFAULT 'soam.aprs2.net',
                 port INTEGER NOT NULL DEFAULT 14580,
                 passcode TEXT NOT NULL DEFAULT '',
-                aprs_filter TEXT NOT NULL DEFAULT 'r/2000',
-                connect_on_start INTEGER NOT NULL DEFAULT 0,
+                aprs_filter TEXT NOT NULL DEFAULT 'p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ',
+                connect_on_start INTEGER NOT NULL DEFAULT 1,
                 open_browser_on_start INTEGER NOT NULL DEFAULT 0,
+                check_updates_on_start INTEGER NOT NULL DEFAULT 1,
+                auto_download_updates INTEGER NOT NULL DEFAULT 0,
+                install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
+                message_retry_seconds INTEGER NOT NULL DEFAULT 60,
+                message_retry_attempts INTEGER NOT NULL DEFAULT 2,
                 language TEXT NOT NULL DEFAULT 'pt-BR',
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
@@ -190,6 +202,10 @@ def init_db() -> None:
                 message_type TEXT NOT NULL DEFAULT 'message',
                 msg_id TEXT,
                 status TEXT NOT NULL DEFAULT '',
+                message_group_id TEXT,
+                part_index INTEGER,
+                part_count INTEGER,
+                retry_count INTEGER NOT NULL DEFAULT 0,
                 timestamp TEXT NOT NULL,
                 raw TEXT
             );
@@ -225,6 +241,15 @@ def init_db() -> None:
                 PRIMARY KEY(source, target, kind)
             );
             CREATE INDEX IF NOT EXISTS idx_topology_last_seen ON topology_edges(last_seen DESC);
+
+            CREATE TABLE IF NOT EXISTS topology_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                source TEXT NOT NULL,
+                target TEXT NOT NULL,
+                kind TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_topology_events_time ON topology_events(timestamp DESC);
             """
         )
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
@@ -278,6 +303,16 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN logs_line_height REAL NOT NULL DEFAULT 1.30")
         if "altitude_source" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN altitude_source TEXT NOT NULL DEFAULT 'manual'")
+        if "check_updates_on_start" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN check_updates_on_start INTEGER NOT NULL DEFAULT 1")
+        if "auto_download_updates" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN auto_download_updates INTEGER NOT NULL DEFAULT 0")
+        if "install_updates_on_exit" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN install_updates_on_exit INTEGER NOT NULL DEFAULT 0")
+        if "message_retry_seconds" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN message_retry_seconds INTEGER NOT NULL DEFAULT 60")
+        if "message_retry_attempts" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN message_retry_attempts INTEGER NOT NULL DEFAULT 2")
 
         # Corrige o antigo padrão v1.2, que combinava brazil.aprs2.net com 14580.
         # Mantém configurações personalizadas intactas.
@@ -291,6 +326,14 @@ def init_db() -> None:
         message_columns = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()}
         if "message_type" not in message_columns:
             conn.execute("ALTER TABLE messages ADD COLUMN message_type TEXT NOT NULL DEFAULT 'message'")
+        if "message_group_id" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN message_group_id TEXT")
+        if "part_index" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN part_index INTEGER")
+        if "part_count" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN part_count INTEGER")
+        if "retry_count" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0")
 
         row = conn.execute("SELECT id FROM config WHERE id=1").fetchone()
         if not row:
@@ -348,6 +391,11 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["beacon_minutes"] = max(1, int(merged["beacon_minutes"] or 10))
     merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
     merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
+    merged["check_updates_on_start"] = 1 if bool(merged["check_updates_on_start"]) else 0
+    merged["auto_download_updates"] = 1 if bool(merged["auto_download_updates"]) else 0
+    merged["install_updates_on_exit"] = 1 if bool(merged["install_updates_on_exit"]) else 0
+    merged["message_retry_seconds"] = max(15, min(3600, int(merged["message_retry_seconds"] or 60)))
+    merged["message_retry_attempts"] = max(0, min(10, int(merged["message_retry_attempts"] or 0)))
     merged["language"] = str(merged["language"] or "pt-BR").strip()
     merged["aprs_filter"] = str(merged["aprs_filter"] or "").strip()
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
@@ -679,6 +727,13 @@ def record_topology_from_raw(raw: str) -> None:
                 """,
                 (edge_source, target, kind, now, now, edge_igate),
             )
+            conn.execute(
+                "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
+                (now, edge_source, target, kind),
+            )
+        conn.execute(
+            "DELETE FROM topology_events WHERE id NOT IN (SELECT id FROM topology_events ORDER BY id DESC LIMIT 200000)"
+        )
 
 
 def list_topology_edges(hours: int = 24) -> list[dict[str, Any]]:
@@ -702,6 +757,94 @@ def list_topology_edges(hours: int = 24) -> list[dict[str, Any]]:
             (cutoff,),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+def topology_stats(hours: int = 24) -> dict[str, Any]:
+    """Resumo agregado da topologia observada para diagnóstico rápido."""
+    hours = max(1, min(int(hours or 24), 24 * 30))
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+    stale_cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours * 2)).isoformat(timespec="seconds")
+    with connection() as conn:
+        digis = [dict(r) for r in conn.execute(
+            """
+            SELECT target AS callsign, SUM(packet_count) AS packets, MAX(last_seen) AS last_seen
+            FROM topology_edges
+            WHERE kind='rf' AND last_seen >= ?
+            GROUP BY target ORDER BY packets DESC, callsign LIMIT 20
+            """, (cutoff,)
+        ).fetchall()]
+        igates = [dict(r) for r in conn.execute(
+            """
+            SELECT COALESCE(igate,target) AS callsign, SUM(packet_count) AS packets, MAX(last_seen) AS last_seen
+            FROM topology_edges
+            WHERE kind='igate' AND last_seen >= ?
+            GROUP BY COALESCE(igate,target) ORDER BY packets DESC, callsign LIMIT 20
+            """, (cutoff,)
+        ).fetchall()]
+        stale = [dict(r) for r in conn.execute(
+            """
+            SELECT source,target,kind,packet_count,last_seen
+            FROM topology_edges
+            WHERE last_seen < ? AND last_seen >= ?
+            ORDER BY last_seen DESC LIMIT 50
+            """, (cutoff, stale_cutoff)
+        ).fetchall()]
+        totals = conn.execute(
+            "SELECT COUNT(*) AS edges, COALESCE(SUM(packet_count),0) AS packets FROM topology_edges WHERE last_seen >= ?",
+            (cutoff,)
+        ).fetchone()
+    return {
+        "hours": hours,
+        "edges": int(totals["edges"] or 0),
+        "packets": int(totals["packets"] or 0),
+        "digipeaters": digis,
+        "igates": igates,
+        "recently_disappeared": stale,
+    }
+
+
+def topology_timeline(hours: int = 24, limit: int = 2500) -> list[dict[str, Any]]:
+    hours = max(1, min(int(hours or 24), 24 * 30))
+    limit = max(100, min(int(limit or 2500), 10000))
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+    with connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT e.timestamp,e.source,e.target,e.kind,
+                   s1.latitude AS source_lat,s1.longitude AS source_lon,
+                   s2.latitude AS target_lat,s2.longitude AS target_lon
+            FROM topology_events e
+            JOIN stations s1 ON UPPER(s1.callsign)=UPPER(e.source)
+            JOIN stations s2 ON UPPER(s2.callsign)=UPPER(e.target)
+            WHERE e.timestamp >= ?
+              AND s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
+              AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
+            ORDER BY e.timestamp ASC, e.id ASC
+            LIMIT ?
+            """,
+            (cutoff, limit),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def topology_period_comparison(hours: int = 24) -> dict[str, Any]:
+    hours = max(1, min(int(hours or 24), 24 * 30))
+    now = datetime.now(timezone.utc)
+    current_start = (now - timedelta(hours=hours)).isoformat(timespec="seconds")
+    previous_start = (now - timedelta(hours=hours * 2)).isoformat(timespec="seconds")
+    now_iso = now.isoformat(timespec="seconds")
+    with connection() as conn:
+        current = int(conn.execute(
+            "SELECT COUNT(*) FROM topology_events WHERE timestamp >= ? AND timestamp <= ?",
+            (current_start, now_iso),
+        ).fetchone()[0])
+        previous = int(conn.execute(
+            "SELECT COUNT(*) FROM topology_events WHERE timestamp >= ? AND timestamp < ?",
+            (previous_start, current_start),
+        ).fetchone()[0])
+    delta = current - previous
+    pct = None if previous == 0 else round((delta / previous) * 100.0, 1)
+    return {"hours": hours, "current_events": current, "previous_events": previous, "delta": delta, "percent": pct}
 
 
 def summary_counts() -> dict[str, int]:
@@ -743,17 +886,65 @@ def map_data() -> dict[str, Any]:
 
 
 def add_message(direction: str, from_call: str, to_call: str, message: str, msg_id: str | None = None,
-                status: str = "", raw: str | None = None, message_type: str = "message") -> int:
+                status: str = "", raw: str | None = None, message_type: str = "message",
+                message_group_id: str | None = None, part_index: int | None = None,
+                part_count: int | None = None, retry_count: int = 0) -> int:
     message_type = str(message_type or "message").strip().lower()
     if message_type not in {"message", "bulletin", "group_bulletin"}:
         message_type = "message"
     with connection() as conn:
         cur = conn.execute(
-            """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,timestamp,raw)
-               VALUES(?,?,?,?,?,?,?,?,?)""",
-            (direction, from_call.upper(), to_call.upper(), message, message_type, msg_id, status, utc_now_iso(), raw),
+            """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,
+                                    message_group_id,part_index,part_count,retry_count,timestamp,raw)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                direction, from_call.upper(), to_call.upper(), message, message_type, msg_id, status,
+                message_group_id, part_index, part_count, max(0, int(retry_count or 0)), utc_now_iso(), raw,
+            ),
         )
         return int(cur.lastrowid)
+
+
+def get_message(row_id: int) -> dict[str, Any] | None:
+    with connection() as conn:
+        row = conn.execute("SELECT * FROM messages WHERE id=?", (int(row_id),)).fetchone()
+    return dict(row) if row else None
+
+
+def reset_config() -> dict[str, Any]:
+    """Restaura somente preferências/configuração; não apaga dados operacionais."""
+    with connection() as conn:
+        assignments = ", ".join(f"{key}=?" for key in DEFAULT_CONFIG)
+        conn.execute(
+            f"UPDATE config SET {assignments}, updated_at=? WHERE id=1",
+            [*DEFAULT_CONFIG.values(), utc_now_iso()],
+        )
+    return get_config()
+
+
+def mark_message_retried(row_id: int) -> None:
+    with connection() as conn:
+        conn.execute("UPDATE messages SET status='Substituída por retry' WHERE id=?", (int(row_id),))
+
+
+def list_retry_candidates(timeout_seconds: int, max_retries: int, limit: int = 20) -> list[dict[str, Any]]:
+    timeout_seconds = max(15, int(timeout_seconds or 60))
+    max_retries = max(0, int(max_retries or 0))
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=timeout_seconds)).isoformat(timespec="seconds")
+    with connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM messages
+            WHERE direction='out'
+              AND message_type='message'
+              AND status IN ('Enviada','Reenviada')
+              AND COALESCE(retry_count,0) < ?
+              AND timestamp <= ?
+            ORDER BY id ASC LIMIT ?
+            """,
+            (max_retries, cutoff, int(limit)),
+        ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def mark_message_status(msg_id: str, status: str, peer: str | None = None) -> None:
