@@ -234,6 +234,9 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["latitude"] is None
             assert cfg["longitude"] is None
             assert cfg["altitude"] is None
+            assert cfg["altitude_source"] == "manual"
+            assert cfg["server"] == "soam.aprs2.net"
+            assert cfg["port"] == 14580
             assert cfg["aprs_filter"] == "r/2000"
             assert cfg["app_theme"] == "dark"
             assert cfg["topology_rf_color"] == "#35a7ff"
@@ -271,10 +274,23 @@ def test_new_install_defaults_and_required_station_fields():
                 "callsign": "PY2ABC",
                 "latitude": -15.8,
                 "longitude": -47.9,
-                "altitude": 1000,
+                "altitude": 0,
+                "altitude_source": "fallback_zero",
             })
+            db.validate_required_station_config(saved)
             assert saved["callsign"] == "PY2ABC"
+            assert saved["altitude"] == 0
+            assert saved["altitude_source"] == "fallback_zero"
             assert saved["aprs_filter"] == "r/2000"
+
+            invalid = db.save_config({
+                "callsign": "PY2-ABC",
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": 0,
+            })
+            with pytest.raises(ValueError, match="Indicativo inválido"):
+                db.validate_required_station_config(invalid)
     finally:
         db.DB_PATH = original
 

@@ -240,7 +240,8 @@
         <div class="form-grid two-cols">
           <label class="field">
             <span>Indicativo <em class="required-badge">Obrigatório</em></span>
-            <input name="callsign" id="callsignInput" required maxlength="6" placeholder="Ex.: PY2ABC" autocomplete="off">
+            <input name="callsign" id="callsignInput" required maxlength="6" pattern="[A-Za-z0-9]{1,6}" title="Use de 1 a 6 letras ou números, sem SSID." placeholder="Ex.: PY2ABC" autocomplete="off">
+            <small id="callsignValidationStatus">Obrigatório. O passcode APRS-IS será calculado automaticamente.</small>
           </label>
           <label class="field">
             <span>Passcode APRS-IS</span>
@@ -281,7 +282,11 @@
             </div>
             <small class="hint">Os valores em graus/minutos/segundos são convertidos automaticamente para decimal antes de salvar.</small>
           </div>
-          <label class="field"><span>Altitude (m) <em class="required-badge">Obrigatório</em></span><input name="altitude" id="altitudeInput" type="number" step="0.1" placeholder="Ex.: 1000"></label>
+          <label class="field" id="altitudeField"><span>Altitude (m) <em class="required-badge">Obrigatório</em></span>
+            <input name="altitude" id="altitudeInput" type="number" step="0.1" placeholder="Ex.: 1000">
+            <input name="altitude_source" id="altitudeSourceInput" type="hidden" value="manual">
+            <small id="altitudeSourceStatus">Informe a altitude real da estação sempre que possível.</small>
+          </label>
           <label class="field"><span>E-mail</span><input name="email" type="email" placeholder="opcional"></label>
         </div>
         <div class="symbol-row">
@@ -298,7 +303,18 @@
       <div class="config-card config-section config-section-aprs">
         <h3>APRS-IS</h3>
         <div class="form-grid two-cols">
-          <label class="field full"><span>Servidor</span><input name="server" value="brazil.aprs2.net" required></label>
+          <label class="field full"><span>Servidor</span>
+            <input name="server" value="soam.aprs2.net" list="aprsServerOptions" required autocomplete="off">
+            <datalist id="aprsServerOptions">
+              <option value="soam.aprs2.net">América do Sul</option>
+              <option value="rotate.aprs2.net">Rotação global</option>
+              <option value="noam.aprs2.net">América do Norte</option>
+              <option value="euro.aprs2.net">Europa</option>
+              <option value="asia.aprs2.net">Ásia</option>
+              <option value="aunz.aprs2.net">Austrália / Nova Zelândia</option>
+            </datalist>
+            <small>Recomendado para a América do Sul: <code>soam.aprs2.net</code>. Campo livre para servidores personalizados.</small>
+          </label>
           <label class="field"><span>Porta</span><input name="port" type="number" value="14580" min="1" max="65535" required></label>
           <label class="field full">
             <span>Filtro APRS-IS</span>
@@ -554,13 +570,14 @@
           <h3>1. Estação</h3>
           <p><strong>Indicativo:</strong> informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo <code>-9</code> para móvel.</p>
           <p><strong>Passcode APRS-IS:</strong> é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.</p>
-          <p><strong>Latitude/Longitude:</strong> podem ser informadas em decimal ou graus/minutos/segundos. O botão <strong>Usar minha localização atual</strong> solicita a posição ao navegador/SO e preenche os campos quando autorizado. A altitude também é obrigatória para conectar.</p>
+          <p><strong>Latitude/Longitude:</strong> podem ser informadas em decimal ou graus/minutos/segundos. Na primeira execução, o cliente solicita a localização ao navegador/SO para pré-preencher as coordenadas e centralizar o mapa. O botão <strong>Usar minha localização atual</strong> permite repetir essa operação depois.</p>
+          <p><strong>Altitude:</strong> continua obrigatória para a configuração da estação. Se o sistema não fornecer altitude, o cliente usa <code>0 m</code> para não impedir a conexão e mostra um aviso recomendando informar a altitude real.</p>
           <p><strong>Ícone APRS:</strong> escolha o símbolo adequado à sua estação ou veículo.</p>
         </article>
 
         <article class="help-card">
           <h3>2. APRS-IS</h3>
-          <p>O servidor padrão é <code>brazil.aprs2.net</code>, porta <code>14580</code>.</p>
+          <p>O servidor padrão é <code>soam.aprs2.net</code>, porta <code>14580</code>, com alternativa automática para <code>rotate.aprs2.net</code> quando necessário. A configuração oferece sugestões regionais e continua aceitando servidor manual.</p>
           <p><strong>Filtro de recepção:</strong> como configuração inicial, use <code>r/2000</code>. O editor gráfico pode montar filtros radiais, por prefixo, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.</p><p>Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.</p>
           <p>Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
           <p>Marque <strong>Conectar ao iniciar</strong> se quiser que o cliente tente conectar automaticamente.</p>
@@ -572,7 +589,7 @@
           <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
           <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
           <p>Clique em uma estação para abrir os detalhes. O botão <strong>Enviar mensagem</strong> leva diretamente à tela de mensagens com o destino preenchido.</p>
-          <p>A posição e o zoom do mapa ficam salvos localmente.</p>
+          <p>Na primeira execução, quando a permissão é concedida, o mapa é centralizado na localização atual do usuário. Depois disso, a posição e o zoom escolhidos manualmente ficam salvos localmente e não são recentralizados continuamente.</p>
         </article>
 
         <article class="help-card">
@@ -660,6 +677,22 @@
       <button type="button" class="symbol-tab" data-symbol-table="\">Secundária \</button>
     </div>
     <div id="symbolGrid" class="symbol-grid"></div>
+  </div>
+</div>
+
+<div id="requiredFieldsModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="requiredFieldsTitle">
+  <div class="message-alert-card required-fields-dialog">
+    <div class="message-alert-icon">!</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Configuração necessária</div>
+      <h3 id="requiredFieldsTitle">Faltam dados para conectar</h3>
+      <p id="requiredFieldsMessage" class="required-fields-message"></p>
+      <div id="requiredFieldsList" class="required-fields-list"></div>
+      <div class="message-alert-actions">
+        <button id="requiredFieldsGoConfig" type="button" class="btn primary">Ir para Configuração</button>
+        <button id="requiredFieldsClose" type="button" class="btn secondary">Fechar</button>
+      </div>
+    </div>
   </div>
 </div>
 

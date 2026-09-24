@@ -382,16 +382,17 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
 
     section(story, st, "8. Coordenadas", [
         "Você pode informar latitude e longitude em decimal ou em graus/minutos/segundos (DMS). No modo DMS, a aplicação converte os valores para decimal antes de salvar.",
-        "O botão Usar minha localização atual solicita permissão de localização ao navegador/WebView/SO. Se autorizada, latitude e longitude são preenchidas automaticamente."
+        "Na primeira execução, o cliente solicita permissão de localização ao navegador/WebView/SO. Se autorizada, latitude e longitude são pré-preenchidas e o mapa é centralizado na posição atual.",
+        "O botão Usar minha localização atual permite repetir a operação posteriormente sem tornar o mapa dependente de recentralização contínua."
     ])
     story.append(Paragraph(
-        "A altitude só é preenchida automaticamente quando a plataforma fornece esse dado. Se não houver altitude confiável, informe-a manualmente.",
+        "Se a plataforma não fornecer altitude confiável, o cliente usa 0 m para não impedir a conexão e sinaliza claramente que esse valor deve ser revisado. Uma altitude informada manualmente não é substituída por 0 m em execuções futuras.",
         st["callout"]
     ))
 
     section(story, st, "9. APRS-IS e filtros", [
-        "O servidor padrão é brazil.aprs2.net na porta 14580. O filtro padrão de novas instalações é r/2000, que o aplicativo expande usando as coordenadas configuradas.",
-        "O campo manual continua sempre disponível. O editor gráfico serve como assistente para compor a mesma string de filtro."
+        "O servidor padrão é soam.aprs2.net na porta 14580. Se esse endereço não puder ser alcançado, o cliente pode tentar rotate.aprs2.net como alternativa. O campo de servidor continua editável e oferece sugestões regionais.",
+        "O filtro padrão de novas instalações é r/2000, que o aplicativo expande usando as coordenadas configuradas. O campo manual continua sempre disponível e o editor gráfico serve como assistente para compor a mesma string de filtro."
     ])
     story.append(Paragraph("Editor gráfico", st["h2"]))
     story.append(bullet_list([
@@ -408,7 +409,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
 
     add_screenshot(story, st, screenshots_dir, "map.png", "Tela principal: mapa e estações APRS.")
     section(story, st, "10. Mapa e topologia observada", [
-        "O mapa mostra estações com posição conhecida e mantém tracklogs das estações móveis. Centro e zoom são persistidos localmente."
+        "O mapa mostra estações com posição conhecida e mantém tracklogs das estações móveis. Na primeira execução, quando a localização é autorizada, ele abre centralizado na posição atual do usuário. Depois disso, centro e zoom escolhidos manualmente são persistidos localmente."
     ], [
         "Tipos de mapa: OpenStreetMap, OpenTopoMap e Satélite.",
         "Tracklogs: cor e espessura configuráveis.",

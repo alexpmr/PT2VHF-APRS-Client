@@ -43,6 +43,8 @@
     messagePopupSeconds: 5,
     language: 'pt-BR',
     configSection: 'aprs',
+    currentConfig: null,
+    autoLocationInProgress: false,
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -650,12 +652,23 @@
       if (state.connected || $('#connectButton').textContent === ui('Desconectar', 'Disconnect')) {
         await api('/api/disconnect', { method: 'POST' });
       } else {
+        const missing = missingRequiredStationFields();
+        if (missing.length) {
+          showRequiredFieldsModal(missing);
+          return;
+        }
+        if (!validateCallsignField()) {
+          const invalidCall = requiredStationDefinitions().find(item => item.key === 'callsign');
+          showRequiredFieldsModal(invalidCall ? [invalidCall] : []);
+          $('#callsignInput')?.reportValidity();
+          return;
+        }
         await api('/api/connect', { method: 'POST' });
       }
       await refreshStatus();
     } catch (err) {
       if (/Preencha os campos obrigatórios/i.test(String(err.message || ''))) {
-        guideToRequiredStationFields();
+        showRequiredFieldsModal(missingRequiredStationFields());
       } else {
         toast(err.message, 'error');
       }
@@ -1430,12 +1443,42 @@
     }
   }
 
-  $('#callsignInput')?.addEventListener('input', () => updateCalculatedPasscode(true));
-  $('#callsignInput')?.addEventListener('change', () => updateCalculatedPasscode(true));
+  function validateCallsignField() {
+    const input = $('#callsignInput');
+    const status = $('#callsignValidationStatus');
+    if (!input) return false;
+    const value = String(input.value || '').trim().toUpperCase();
+    const valid = /^[A-Z0-9]{1,6}$/.test(value);
+    input.setCustomValidity(!value ? '' : (valid ? '' : ui(
+      'Use de 1 a 6 letras ou números, sem SSID.',
+      'Use 1 to 6 letters or numbers, without SSID.'
+    )));
+    if (status) {
+      status.textContent = !value
+        ? ui('Obrigatório. O passcode APRS-IS será calculado automaticamente.', 'Required. The APRS-IS passcode will be calculated automatically.')
+        : valid
+          ? ui('Indicativo válido. Passcode atualizado automaticamente.', 'Valid callsign. Passcode updated automatically.')
+          : ui('Indicativo inválido. Use de 1 a 6 letras ou números, sem SSID.', 'Invalid callsign. Use 1 to 6 letters or numbers, without SSID.');
+      status.classList.toggle('field-status-error', !!value && !valid);
+    }
+    return valid;
+  }
+
+  $('#callsignInput')?.addEventListener('input', () => {
+    updateCalculatedPasscode(true);
+    validateCallsignField();
+    refreshRequiredFieldHighlights();
+  });
+  $('#callsignInput')?.addEventListener('change', () => {
+    updateCalculatedPasscode(true);
+    validateCallsignField();
+    refreshRequiredFieldHighlights();
+  });
 
   async function loadConfig() {
     try {
       const cfg = await api('/api/config');
+      state.currentConfig = cfg;
       const form = $('#configForm');
       for (const [key, value] of Object.entries(cfg)) {
         const input = form.elements.namedItem(key);
@@ -1451,6 +1494,8 @@
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
       state.language = cfg.language === 'en' ? 'en' : 'pt-BR';
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
+      validateCallsignField();
+      updateAltitudeSourceStatus(cfg.altitude_source, cfg.altitude);
       applyMapPreferences(cfg);
       applyAppearancePreferences(cfg);
       syncMapPreferenceControls();
@@ -2054,26 +2099,86 @@
   $('.config-section-tab').forEach(btn => btn.addEventListener('click', () => showConfigSection(btn.dataset.configSection)));
   showConfigSection(localStorage.getItem('pt2vhf_config_section') || 'aprs');
 
-  function guideToRequiredStationFields() {
+  function requiredStationDefinitions() {
+    syncDecimalFromDmsIfNeeded();
+    const form = $('#configForm');
+    return [
+      { key: 'callsign', labelPt: 'Indicativo', labelEn: 'Callsign', input: form?.elements.namedItem('callsign') },
+      { key: 'latitude', labelPt: 'Latitude', labelEn: 'Latitude', input: form?.elements.namedItem('latitude') },
+      { key: 'longitude', labelPt: 'Longitude', labelEn: 'Longitude', input: form?.elements.namedItem('longitude') },
+      { key: 'altitude', labelPt: 'Altitude', labelEn: 'Altitude', input: form?.elements.namedItem('altitude') },
+    ];
+  }
+
+  function missingRequiredStationFields() {
+    return requiredStationDefinitions().filter(item => !String(item.input?.value ?? '').trim());
+  }
+
+  function clearRequiredFieldHighlights() {
+    $$('.required-field-missing').forEach(el => el.classList.remove('required-field-missing'));
+  }
+
+  function highlightMissingRequiredFields(missing) {
+    clearRequiredFieldHighlights();
+    for (const item of missing) {
+      if (item.key === 'latitude' || item.key === 'longitude') {
+        $('#coordinateDecimalFields')?.classList.add('required-field-missing');
+        $('#coordinateDmsFields')?.classList.add('required-field-missing');
+      } else {
+        item.input?.closest('.field')?.classList.add('required-field-missing');
+      }
+    }
+  }
+
+  function refreshRequiredFieldHighlights() {
+    const modalOpen = !$('#requiredFieldsModal')?.classList.contains('hidden');
+    const highlighted = $$('.required-field-missing').length > 0;
+    if (!modalOpen && !highlighted) return;
+    const missing = missingRequiredStationFields();
+    highlightMissingRequiredFields(missing);
+    if (!missing.length) $('#requiredFieldsModal')?.classList.add('hidden');
+  }
+
+  function showRequiredFieldsModal(missing = missingRequiredStationFields()) {
+    if (!missing.length) return false;
+    highlightMissingRequiredFields(missing);
+    const names = missing.map(item => state.language === 'en' ? item.labelEn : item.labelPt);
+    const message = $('#requiredFieldsMessage');
+    const list = $('#requiredFieldsList');
+    if (message) message.textContent = ui(
+      'Antes de conectar ao APRS-IS, complete os campos obrigatórios abaixo.',
+      'Before connecting to APRS-IS, complete the required fields below.'
+    );
+    if (list) list.innerHTML = names.map(name => `<span>${escapeHtml(name)}</span>`).join('');
+    $('#requiredFieldsModal')?.classList.remove('hidden');
+    return true;
+  }
+
+  function guideToRequiredStationFields(missing = missingRequiredStationFields()) {
+    $('#requiredFieldsModal')?.classList.add('hidden');
     $('.tab[data-tab="config"]')?.click();
     setTimeout(() => {
       showConfigSection('aprs');
-      const form = $('#configForm');
-      const fields = [
-        form?.elements.namedItem('callsign'),
-        form?.elements.namedItem('latitude'),
-        form?.elements.namedItem('longitude'),
-        form?.elements.namedItem('altitude')
-      ];
-      const firstMissing = fields.find(input => !String(input?.value || '').trim());
-      firstMissing?.focus();
-      firstMissing?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      highlightMissingRequiredFields(missing);
+      const first = missing[0];
+      let focusTarget = first?.input;
+      if (first?.key === 'latitude') {
+        focusTarget = $('#coordinateInputMode')?.value === 'dms' ? $('#latDeg') : $('#latitudeDecimal');
+      } else if (first?.key === 'longitude') {
+        focusTarget = $('#coordinateInputMode')?.value === 'dms' ? $('#lonDeg') : $('#longitudeDecimal');
+      }
+      focusTarget?.focus();
+      focusTarget?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       toast(ui(
-        'Preencha os campos obrigatórios em Configuração → APRS / Estação: Indicativo, Latitude, Longitude e Altitude.',
-        'Fill in the required fields under Settings → APRS / Station: Callsign, Latitude, Longitude and Altitude.'
+        'Complete os campos realçados para conectar.',
+        'Complete the highlighted fields to connect.'
       ), 'error');
-    }, 80);
+    }, 100);
   }
+
+  $('#requiredFieldsGoConfig')?.addEventListener('click', () => guideToRequiredStationFields());
+  $('#requiredFieldsClose')?.addEventListener('click', () => $('#requiredFieldsModal')?.classList.add('hidden'));
+
 
   function decimalToDms(value, lat) {
     const number = Number(value);
@@ -2125,53 +2230,229 @@
 
   $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
   for (const id of ['latDeg','latMin','latSec','latHem','lonDeg','lonMin','lonSec','lonHem']) {
-    $('#' + id)?.addEventListener('input', syncDecimalFromDmsIfNeeded);
-    $('#' + id)?.addEventListener('change', syncDecimalFromDmsIfNeeded);
+    $('#' + id)?.addEventListener('input', () => {
+      syncDecimalFromDmsIfNeeded();
+      refreshRequiredFieldHighlights();
+    });
+    $('#' + id)?.addEventListener('change', () => {
+      syncDecimalFromDmsIfNeeded();
+      refreshRequiredFieldHighlights();
+    });
   }
   $('#latitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
   $('#longitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
 
-  $('#useCurrentLocationButton')?.addEventListener('click', () => {
-    const status = $('#currentLocationStatus');
-    syncDecimalFromDmsIfNeeded();
-    const currentLat = String($('#latitudeDecimal')?.value || '').trim();
-    const currentLon = String($('#longitudeDecimal')?.value || '').trim();
-    if ((currentLat || currentLon) && !window.confirm(ui(
-      'Já existem coordenadas preenchidas. Deseja substituí-las pela sua localização atual?',
-      'Coordinates are already filled in. Replace them with your current location?'
-    ))) return;
-    if (!navigator.geolocation) {
-      if (status) status.textContent = ui('Localização não disponível neste ambiente.', 'Location is not available in this environment.');
-      toast(ui('Este ambiente não oferece geolocalização.', 'This environment does not provide geolocation.'), 'error');
-      return;
+  function updateAltitudeSourceStatus(source, altitude) {
+    const status = $('#altitudeSourceStatus');
+    const field = $('#altitudeField');
+    const value = Number(altitude);
+    const fallback = source === 'fallback_zero' && value === 0;
+    field?.classList.toggle('altitude-fallback-zero', fallback);
+    if (!status) return;
+    if (fallback) {
+      status.textContent = ui(
+        'Altitude não disponível automaticamente. Foi usado 0 m para não impedir a conexão. Recomendamos informar a altitude real da estação.',
+        'Altitude was not available automatically. 0 m was used so the connection is not blocked. We recommend entering the station\'s actual altitude.'
+      );
+    } else if (source === 'geolocation' && Number.isFinite(value)) {
+      status.textContent = ui('Altitude fornecida pela localização do sistema. Revise se necessário.', 'Altitude provided by system location. Review if needed.');
+    } else {
+      status.textContent = ui('Informe a altitude real da estação sempre que possível.', 'Enter the station\'s actual altitude whenever possible.');
     }
-    const button = $('#useCurrentLocationButton');
-    button.disabled = true;
-    if (status) status.textContent = ui('Solicitando localização…', 'Requesting location…');
-    navigator.geolocation.getCurrentPosition(position => {
-      const lat = Number(position.coords.latitude);
-      const lon = Number(position.coords.longitude);
-      const alt = Number(position.coords.altitude);
-      const accuracy = Number(position.coords.accuracy);
-      if (Number.isFinite(lat)) $('#latitudeDecimal').value = lat.toFixed(6);
-      if (Number.isFinite(lon)) $('#longitudeDecimal').value = lon.toFixed(6);
-      if (Number.isFinite(alt)) $('#altitudeInput').value = alt.toFixed(1);
+  }
+
+  $('#altitudeInput')?.addEventListener('input', () => {
+    const source = $('#altitudeSourceInput');
+    if (source) source.value = 'manual';
+    updateAltitudeSourceStatus('manual', $('#altitudeInput')?.value);
+    refreshRequiredFieldHighlights();
+  });
+  $('#latitudeDecimal')?.addEventListener('input', refreshRequiredFieldHighlights);
+  $('#longitudeDecimal')?.addEventListener('input', refreshRequiredFieldHighlights);
+
+  function applyUserLocation(position, { fillStation = true, centerMap = true } = {}) {
+    const lat = Number(position.coords.latitude);
+    const lon = Number(position.coords.longitude);
+    const altRaw = position.coords.altitude;
+    const alt = altRaw === null || altRaw === undefined ? NaN : Number(altRaw);
+    const accuracy = Number(position.coords.accuracy);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error(ui('Localização inválida.', 'Invalid location.'));
+
+    if (centerMap && state.map) {
+      const point = [lat, lon];
+      state.map.setView(point, Math.max(Number(state.map.getZoom() || 0), 13), { animate: true });
+      if (state.userLocationMarker) state.userLocationMarker.setLatLng(point);
+      else {
+        state.userLocationMarker = L.marker(point, {
+          icon: L.divIcon({
+            className: '',
+            html: '<div class="user-location-dot"></div>',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+          }),
+          title: ui('Minha localização', 'My location'),
+          zIndexOffset: 1000
+        }).addTo(state.map).bindPopup(ui('Minha localização', 'My location'));
+      }
+      if (Number.isFinite(accuracy) && accuracy > 0) {
+        if (state.userLocationAccuracy) state.userLocationAccuracy.setLatLng(point).setRadius(accuracy);
+        else state.userLocationAccuracy = L.circle(point, {
+          radius: accuracy, weight: 1, opacity: .75, fillOpacity: .08
+        }).addTo(state.map);
+      }
+    }
+
+    let altitudeSource = String($('#altitudeSourceInput')?.value || state.currentConfig?.altitude_source || 'manual');
+    let altitudeValue = String($('#altitudeInput')?.value || '').trim();
+
+    if (fillStation) {
+      $('#latitudeDecimal').value = lat.toFixed(6);
+      $('#longitudeDecimal').value = lon.toFixed(6);
+
+      const existingAltitudeIsManual = altitudeValue !== '' && altitudeSource === 'manual';
+      if (!existingAltitudeIsManual) {
+        if (Number.isFinite(alt)) {
+          altitudeValue = alt.toFixed(1);
+          altitudeSource = 'geolocation';
+        } else {
+          altitudeValue = '0';
+          altitudeSource = 'fallback_zero';
+        }
+        $('#altitudeInput').value = altitudeValue;
+        if ($('#altitudeSourceInput')) $('#altitudeSourceInput').value = altitudeSource;
+      }
       syncDmsFromDecimal();
+      updateAltitudeSourceStatus(altitudeSource, altitudeValue);
+      refreshRequiredFieldHighlights();
+    }
+
+    const status = $('#currentLocationStatus');
+    if (status) {
       const accuracyText = Number.isFinite(accuracy)
         ? ui(`Precisão aproximada: ${Math.round(accuracy)} m.`, `Approximate accuracy: ${Math.round(accuracy)} m.`)
         : ui('Posição obtida.', 'Location obtained.');
-      if (status) status.textContent = Number.isFinite(alt)
-        ? accuracyText + ' ' + ui('Altitude fornecida pelo sistema.', 'Altitude provided by the system.')
-        : accuracyText + ' ' + ui('Informe a altitude manualmente.', 'Enter altitude manually.');
-      button.disabled = false;
-    }, error => {
-      const messagesPt = {1:'Permissão de localização negada.',2:'Não foi possível determinar a localização.',3:'A localização demorou demais para responder.'};
-      const messagesEn = {1:'Location permission was denied.',2:'Unable to determine location.',3:'Location request timed out.'};
-      const message = state.language === 'en' ? messagesEn[error.code] : messagesPt[error.code];
-      if (status) status.textContent = message || ui('Falha ao obter a localização.', 'Unable to obtain location.');
-      button.disabled = false;
-    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+      status.textContent = accuracyText + (altitudeSource === 'fallback_zero'
+        ? ' ' + ui('Altitude indisponível; usado 0 m. Recomendamos corrigir.', 'Altitude unavailable; 0 m was used. We recommend correcting it.')
+        : '');
+    }
+
+    return { lat, lon, altitude: Number(altitudeValue), altitudeSource, accuracy };
+  }
+
+  function geolocationErrorText(error) {
+    const pt = {1:'Permissão de localização negada.',2:'Não foi possível determinar a localização.',3:'A localização demorou demais para responder.'};
+    const en = {1:'Location permission was denied.',2:'Unable to determine location.',3:'Location request timed out.'};
+    return (state.language === 'en' ? en : pt)[error?.code] || ui('Falha ao obter a localização.', 'Unable to obtain location.');
+  }
+
+  function requestUserLocation(options = {}) {
+    const {
+      fillStation = true,
+      centerMap = true,
+      persist = false,
+      confirmOverwrite = false,
+      button = null,
+      automatic = false,
+    } = options;
+
+    if (!navigator.geolocation) {
+      const message = ui('Localização não disponível neste ambiente. Preencha as coordenadas manualmente.', 'Location is unavailable in this environment. Enter coordinates manually.');
+      if ($('#currentLocationStatus')) $('#currentLocationStatus').textContent = message;
+      if (!automatic) toast(message, 'error');
+      return Promise.resolve(null);
+    }
+
+    if (confirmOverwrite) {
+      syncDecimalFromDmsIfNeeded();
+      const currentLat = String($('#latitudeDecimal')?.value || '').trim();
+      const currentLon = String($('#longitudeDecimal')?.value || '').trim();
+      if ((currentLat || currentLon) && !window.confirm(ui(
+        'Já existem coordenadas preenchidas. Deseja substituí-las pela sua localização atual?',
+        'Coordinates are already filled in. Replace them with your current location?'
+      ))) return Promise.resolve(null);
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = ui('Localizando…', 'Locating…');
+    }
+    if ($('#currentLocationStatus')) $('#currentLocationStatus').textContent = ui('Solicitando localização…', 'Requesting location…');
+
+    return new Promise(resolve => {
+      navigator.geolocation.getCurrentPosition(async position => {
+        try {
+          const result = applyUserLocation(position, { fillStation, centerMap });
+          if (persist && fillStation) {
+            const payload = {
+              ...(state.currentConfig || {}),
+              latitude: result.lat,
+              longitude: result.lon,
+              altitude: Number.isFinite(result.altitude) ? result.altitude : 0,
+              altitude_source: result.altitudeSource,
+            };
+            const saved = await api('/api/config', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify(payload)
+            });
+            state.currentConfig = saved.config || payload;
+          }
+          if (!automatic) toast(ui('Localização atual aplicada.', 'Current location applied.'), 'ok');
+          resolve(result);
+        } catch (err) {
+          if (!automatic) toast(err.message, 'error');
+          resolve(null);
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = ui('Usar minha localização atual', 'Use my current location');
+          }
+        }
+      }, error => {
+        const message = geolocationErrorText(error);
+        if ($('#currentLocationStatus')) $('#currentLocationStatus').textContent = message + ' ' + ui('Preencha as coordenadas manualmente.', 'Enter the coordinates manually.');
+        if (!automatic) toast(message, 'error');
+        if (button) {
+          button.disabled = false;
+          button.textContent = ui('Usar minha localização atual', 'Use my current location');
+        }
+        resolve(null);
+      }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+    });
+  }
+
+  $('#useCurrentLocationButton')?.addEventListener('click', () => {
+    requestUserLocation({
+      fillStation: true,
+      centerMap: true,
+      persist: false,
+      confirmOverwrite: true,
+      button: $('#useCurrentLocationButton'),
+      automatic: false,
+    });
   });
+
+  async function initializeAutomaticLocation() {
+    if (state.autoLocationInProgress) return;
+    if (localStorage.getItem('pt2vhf_initial_location_attempted') === '1') return;
+    state.autoLocationInProgress = true;
+    localStorage.setItem('pt2vhf_initial_location_attempted', '1');
+    try {
+      const missingCoordinates = !String($('#latitudeDecimal')?.value || '').trim()
+        || !String($('#longitudeDecimal')?.value || '').trim();
+      await requestUserLocation({
+        fillStation: missingCoordinates,
+        centerMap: true,
+        persist: missingCoordinates,
+        confirmOverwrite: false,
+        automatic: true,
+      });
+    } finally {
+      state.autoLocationInProgress = false;
+    }
+  }
+
 
   $('#toggleFilterBuilderButton')?.addEventListener('click', () => {
     const panel = $('#filterBuilderPanel');
@@ -2224,6 +2505,7 @@
 
   async function boot() {
     await Promise.all([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
+    await initializeAutomaticLocation();
     updateMyMessagesButton();
     await loadMessages();
     await checkIncomingPersonalMessages();

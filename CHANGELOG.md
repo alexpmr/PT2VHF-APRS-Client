@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.3 - 2026-09-24
+
+- Corrigida a configuração inicial de conexão APRS-IS para novas instalações, usando **soam.aprs2.net:14580** como servidor padrão e tentativa alternativa por **rotate.aprs2.net**.
+- Instalações v1.2 ainda usando o antigo padrão **brazil.aprs2.net:14580** são migradas automaticamente para o novo servidor padrão.
+- O campo **Servidor APRS-IS** passa a oferecer sugestões regionais sem impedir o uso de um endereço manual.
+- **Indicativo** permanece obrigatório e agora é validado explicitamente antes da conexão.
+- O **Passcode APRS-IS** é calculado automaticamente a partir do indicativo-base e também é usado automaticamente na conexão quando o campo ainda não foi salvo.
+- Ao clicar em **Conectar** com Indicativo, Latitude, Longitude ou Altitude ausentes, o cliente mostra um **pop-up** com a relação exata dos campos pendentes.
+- O pop-up possui o botão **Ir para Configuração**, que abre **Configuração → APRS / Estação**, realça todos os campos obrigatórios ausentes e posiciona o foco no primeiro deles.
+- Os destaques dos campos obrigatórios desaparecem conforme os valores são preenchidos.
+- Na primeira execução, o cliente solicita a **localização atual** do usuário quando a plataforma oferece geolocalização.
+- Com autorização, **Latitude e Longitude são pré-preenchidas automaticamente** e o mapa é inicialmente centralizado na posição atual.
+- Depois da centralização inicial, o aplicativo respeita o centro e o zoom escolhidos manualmente e não recentraliza continuamente.
+- Se a geolocalização não fornecer altitude, o cliente usa **0 m** para não impedir a conexão, exibe uma recomendação para informar a altitude real e identifica visualmente que o valor foi assumido.
+- Uma altitude já informada manualmente não é sobrescrita por 0 m em execuções futuras.
+- Mantido o botão **Usar minha localização atual** para atualização manual posterior.
+- Manual PDF e ajuda interna atualizados para refletir o novo fluxo de conexão, localização automática, altitude de contingência e servidor APRS-IS padrão.
+
 ## v1.2 - 2026-09-24
 
 - Configuração de texto ampliada para **Mensagens, Estações e Logs**, com fonte, tamanho, peso normal/negrito e espaçamento entre linhas independentes.

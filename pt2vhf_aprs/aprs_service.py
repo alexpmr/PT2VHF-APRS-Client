@@ -134,18 +134,44 @@ class APRSService:
         retry = 3
         while self.status()["wanted"]:
             cfg = db.get_config()
-            server = cfg.get("server") or "brazil.aprs2.net"
+            configured_server = str(cfg.get("server") or "soam.aprs2.net").strip()
             port = int(cfg.get("port") or 14580)
             call = full_callsign(cfg)
             try:
-                self._set_status(state=f"Conectando a {server}:{port}...", connected=False, verified=False)
-                sock = socket.create_connection((server, port), timeout=20)
+                candidates = [configured_server]
+                if configured_server.lower() == "soam.aprs2.net":
+                    candidates.append("rotate.aprs2.net")
+
+                sock = None
+                last_connect_error: Exception | None = None
+                server = configured_server
+                for candidate in candidates:
+                    try:
+                        server = candidate
+                        self._set_status(
+                            state=f"Conectando a {candidate}:{port}...",
+                            connected=False,
+                            verified=False,
+                        )
+                        sock = socket.create_connection((candidate, port), timeout=20)
+                        break
+                    except OSError as exc:
+                        last_connect_error = exc
+
+                if sock is None:
+                    raise ConnectionError(
+                        f"Não foi possível conectar ao APRS-IS em {configured_server}:{port}: {last_connect_error}"
+                    )
+
                 sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 sock.settimeout(90)
                 with self._socket_lock:
                     self._socket = sock
 
-                login = f"user {call} pass {cfg.get('passcode') or -1} vers PT2VHFAPRSClient {VERSION}"
+                passcode = str(cfg.get("passcode") or "").strip()
+                if not passcode:
+                    passcode = str(calculate_aprs_passcode(call))
+                login = f"user {call} pass {passcode} vers PT2VHFAPRSClient {VERSION}"
                 aprs_filter = expand_filter(str(cfg.get("aprs_filter") or "").strip(), cfg)
                 if aprs_filter:
                     login += f" filter {aprs_filter}"
