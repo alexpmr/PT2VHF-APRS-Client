@@ -95,3 +95,13 @@ No APRS, o **ACK confirma o recebimento da mensagem pelo cliente remoto**, mas n
 - O mapa deverá ficar dedicado apenas à visualização geográfica das estações, símbolos, tracklogs e demais camadas.
 - Informações técnicas como quantidade de pacotes APRS-IS, filtro ativo e última atualização poderão ser mantidas em uma área de status/diagnóstico fora do mapa, caso ainda sejam úteis, sem recriar a barra flutuante.
 
+
+
+## Simplificação do título/cabeçalho da aplicação
+
+**Objetivo:** deixar o cabeçalho principal mais limpo e direto.
+
+- Remover a frase **“Cliente APRS-IS com banco local SQLite”** do título/cabeçalho exibido na interface.
+- Manter como identificação principal apenas **PT2VHF APRS Client**.
+- Preservar informações técnicas sobre APRS-IS e SQLite apenas na documentação/Ajuda, e não no título principal da aplicação.
+
