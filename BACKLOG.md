@@ -351,3 +351,15 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Manter a conversa atualmente selecionada aberta após a troca da ordenação.
 - Não alterar a ordem cronológica das mensagens dentro de cada conversa; a ordenação afeta apenas a lista de conversas/remetentes.
 - Persistir a preferência de ordenação durante a sessão e, se conveniente, entre execuções.
+
+## Selecionar conversa e preencher destino automaticamente
+
+**Objetivo:** agilizar o envio de mensagens quando o modo **Agrupar por remetente** estiver ativo.
+
+- Ao selecionar uma conversa/remetente na lista agrupada, preencher automaticamente o campo **Destino** do compositor de mensagens com o indicativo correspondente.
+- Usar o indicativo completo da estação selecionada, incluindo SSID quando houver.
+- Atualizar o campo imediatamente ao trocar de conversa, sem exigir clique adicional no indicativo.
+- Manter o campo **Destino** editável para permitir que o usuário altere manualmente o destinatário depois.
+- Se o usuário selecionar a própria estação em algum contexto, evitar preencher o próprio indicativo como destino quando houver outro participante claramente identificável na conversa.
+- Não enviar a mensagem automaticamente; apenas preparar o destinatário para que o usuário escreva e confirme o envio.
+- Manter esse comportamento compatível com a seleção direta de indicativos já existente em mensagens e estações.
