@@ -19,7 +19,10 @@ def _default_data_dir() -> Path:
         if base:
             return Path(base) / "PT2VHF APRS Client" / "data"
         return Path.home() / "AppData" / "Local" / "PT2VHF APRS Client" / "data"
-    return Path(__file__).resolve().parent.parent / "data"
+
+    xdg_data_home = os.getenv("XDG_DATA_HOME")
+    linux_base = Path(xdg_data_home).expanduser() if xdg_data_home else Path.home() / ".local" / "share"
+    return linux_base / "PT2VHF-APRS-Client" / "data"
 
 
 DB_PATH = _default_data_dir() / "pt2vhf_aprs.db"
@@ -40,11 +43,16 @@ DEFAULT_CONFIG = {
     "passcode": "",
     "aprs_filter": "r/2000",
     "connect_on_start": 0,
+    "open_browser_on_start": 0,
     "map_type": "osm",
     "track_color": "#3ba6ff",
     "track_width": 2,
+    "topology_rf_color": "#35a7ff",
+    "topology_igate_color": "#b06cff",
+    "topology_width": 2,
     "map_brightness": 100,
     "sound_on_personal_message": 1,
+    "message_popup_seconds": 5,
     "app_theme": "dark",
     "messages_font_family": "system",
     "messages_font_size": 12,
@@ -92,11 +100,16 @@ def init_db() -> None:
                 passcode TEXT NOT NULL DEFAULT '',
                 aprs_filter TEXT NOT NULL DEFAULT 'r/2000',
                 connect_on_start INTEGER NOT NULL DEFAULT 0,
+                open_browser_on_start INTEGER NOT NULL DEFAULT 0,
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
                 track_width INTEGER NOT NULL DEFAULT 2,
+                topology_rf_color TEXT NOT NULL DEFAULT '#35a7ff',
+                topology_igate_color TEXT NOT NULL DEFAULT '#b06cff',
+                topology_width INTEGER NOT NULL DEFAULT 2,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
+                message_popup_seconds INTEGER NOT NULL DEFAULT 5,
                 app_theme TEXT NOT NULL DEFAULT 'dark',
                 messages_font_family TEXT NOT NULL DEFAULT 'system',
                 messages_font_size INTEGER NOT NULL DEFAULT 12,
@@ -191,16 +204,26 @@ def init_db() -> None:
             """
         )
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
+        if "open_browser_on_start" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN open_browser_on_start INTEGER NOT NULL DEFAULT 0")
         if "map_type" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN map_type TEXT NOT NULL DEFAULT 'osm'")
         if "track_color" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN track_color TEXT NOT NULL DEFAULT '#3ba6ff'")
         if "track_width" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN track_width INTEGER NOT NULL DEFAULT 2")
+        if "topology_rf_color" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_color TEXT NOT NULL DEFAULT '#35a7ff'")
+        if "topology_igate_color" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_igate_color TEXT NOT NULL DEFAULT '#b06cff'")
+        if "topology_width" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_width INTEGER NOT NULL DEFAULT 2")
         if "map_brightness" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN map_brightness INTEGER NOT NULL DEFAULT 100")
         if "sound_on_personal_message" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
+        if "message_popup_seconds" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN message_popup_seconds INTEGER NOT NULL DEFAULT 5")
         if "app_theme" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN app_theme TEXT NOT NULL DEFAULT 'dark'")
         if "messages_font_family" not in config_columns:
@@ -266,11 +289,16 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["port"] = int(merged["port"] or 14580)
     merged["beacon_minutes"] = max(1, int(merged["beacon_minutes"] or 10))
     merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
+    merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
     merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()
     merged["track_width"] = int(merged["track_width"] or 2)
+    merged["topology_rf_color"] = str(merged["topology_rf_color"] or "#35a7ff").lower().strip()
+    merged["topology_igate_color"] = str(merged["topology_igate_color"] or "#b06cff").lower().strip()
+    merged["topology_width"] = int(merged["topology_width"] or 2)
     merged["map_brightness"] = int(merged["map_brightness"] or 100)
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
+    merged["message_popup_seconds"] = int(merged["message_popup_seconds"] or 5)
     merged["app_theme"] = str(merged["app_theme"] or "dark").lower().strip()
     merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
     merged["messages_font_size"] = int(merged["messages_font_size"] or 12)
@@ -299,8 +327,16 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Cor do tracklog inválida.")
     if not (1 <= merged["track_width"] <= 10):
         raise ValueError("Espessura do tracklog deve estar entre 1 e 10.")
+    if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_color"]):
+        raise ValueError("Cor dos enlaces RF da topologia inválida.")
+    if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_igate_color"]):
+        raise ValueError("Cor dos enlaces IGate da topologia inválida.")
+    if not (1 <= merged["topology_width"] <= 10):
+        raise ValueError("Espessura da topologia deve estar entre 1 e 10.")
     if not (30 <= merged["map_brightness"] <= 150):
         raise ValueError("Brilho do mapa deve estar entre 30% e 150%.")
+    if not (1 <= merged["message_popup_seconds"] <= 60):
+        raise ValueError("Duração do aviso de mensagem deve estar entre 1 e 60 segundos.")
 
     if merged["app_theme"] not in {"dark", "light"}:
         raise ValueError("Tema da aplicação inválido.")
