@@ -885,7 +885,7 @@
     marker?.openPopup();
   }
 
-  $('#clearStationsButton')?.addEventListener('click', async () => {
+  async function clearAllStations() {
     if (!window.confirm('Apagar TODAS as estações e todos os tracklogs armazenados neste computador? Novas estações voltarão a aparecer quando forem recebidas.')) return;
     try {
       const result = await api('/api/stations/clear', { method: 'POST' });
@@ -906,7 +906,24 @@
     } catch (err) {
       toast(err.message, 'error');
     }
-  });
+  }
+
+  async function clearMapTracklogs() {
+    if (!window.confirm('Apagar TODOS os tracklogs armazenados neste computador? As estações permanecerão no mapa. Esta ação não pode ser desfeita.')) return;
+    try {
+      const result = await api('/api/tracks/clear', { method: 'POST' });
+      for (const line of state.trackLines.values()) state.map?.removeLayer(line);
+      state.trackLines.clear();
+      await loadMapData();
+      toast(`Tracklogs apagados (${Number(result.deleted || 0)} ponto(s)).`, 'ok');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  $('#clearStationsButton')?.addEventListener('click', clearAllStations);
+  $('#clearMapStationsButton')?.addEventListener('click', clearAllStations);
+  $('#clearMapTracksButton')?.addEventListener('click', clearMapTracklogs);
 
   $('#stationFilter').addEventListener('input', debounce(loadStations, 250));
 
