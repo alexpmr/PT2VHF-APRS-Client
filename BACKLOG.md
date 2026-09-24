@@ -93,3 +93,31 @@ As instruções deverão cobrir:
 - Nas notas de cada Release, identificar claramente quais arquivos são para Windows e quais são para Linux.
 - Fornecer comandos prontos para copiar e colar, evitando exigir conhecimento avançado de Linux.
 
+
+
+## Nova política de versionamento
+
+**Objetivo:** simplificar a identificação das versões publicadas do PT2VHF APRS Client.
+
+- A próxima versão oficial deverá iniciar em **v1.0**.
+- As versões seguintes deverão avançar em incrementos simples:
+  - **v1.1**
+  - **v1.2**
+  - **v1.3**
+  - e assim sucessivamente.
+- Deixar de usar, nas novas releases, o esquema atual `0.3.x`.
+- Atualizar de forma consistente:
+  - arquivo `VERSION`;
+  - metadados do executável Windows;
+  - versão do instalador;
+  - nome dos arquivos publicados;
+  - README;
+  - CHANGELOG;
+  - notas da Release;
+  - indicador de versão dentro da aplicação;
+  - testes automatizados relacionados à versão.
+- Preservar normalmente o histórico das versões antigas `0.x`; não renomear releases já publicadas.
+- Os arquivos publicados deverão seguir o novo número, por exemplo:
+  - `PT2VHF_APRS_Client_Setup_x64_v1.0.exe`
+  - `PT2VHF_APRS_Client_Portable_x64_v1.0.exe`
+
