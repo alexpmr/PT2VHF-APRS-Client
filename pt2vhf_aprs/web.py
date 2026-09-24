@@ -189,6 +189,11 @@ def create_app() -> Flask:
     def api_stations():
         return jsonify(db.list_stations(request.args.get("filter", "")))
 
+    @app.post("/api/tracks/clear")
+    def api_clear_tracklogs():
+        deleted = db.clear_tracklogs()
+        return jsonify({"ok": True, "deleted": deleted})
+
     @app.post("/api/stations/clear")
     def api_clear_stations():
         deleted = db.clear_stations()
