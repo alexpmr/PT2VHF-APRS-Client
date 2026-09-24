@@ -1,9 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 ROOT = Path(SPECPATH).parent
-hiddenimports = collect_submodules('aprslib')
+hiddenimports = collect_submodules('aprslib') + collect_submodules('webview')
+webview_datas = collect_data_files('webview')
 
 a = Analysis(
     [str(ROOT / 'windows_app.py')],
@@ -13,6 +14,7 @@ a = Analysis(
         (str(ROOT / 'pt2vhf_aprs' / 'templates'), 'pt2vhf_aprs/templates'),
         (str(ROOT / 'pt2vhf_aprs' / 'static'), 'pt2vhf_aprs/static'),
         (str(ROOT / 'VERSION'), '.'),
+        *webview_datas,
     ],
     hiddenimports=hiddenimports,
     hookspath=[],
