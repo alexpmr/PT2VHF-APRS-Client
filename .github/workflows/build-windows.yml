@@ -101,6 +101,15 @@ jobs:
           - [Política de privacidade](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/PRIVACY.md)
           - [Avisos e licenças de terceiros](https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/THIRD_PARTY_NOTICES.md)
 
+          ## Interface integrada no Windows
+
+          A partir da v0.3.0, o PT2VHF APRS Client abre a interface em uma janela própria baseada no **Microsoft Edge WebView2**, sem depender de uma aba do navegador durante o uso normal.
+
+          - Fechar a janela pelo **X** mantém o cliente ativo na bandeja.
+          - Links externos continuam abrindo no navegador padrão.
+          - O parâmetro `--browser` força o modo de diagnóstico pelo navegador.
+          - Se o WebView2 Runtime estiver indisponível, o cliente informa o problema e utiliza o navegador como fallback.
+
           ## Arquivos para download
 
           - **PT2VHF_APRS_Client_Setup_x64.exe** — instalador para Windows. **Opção recomendada para a maioria dos usuários.**
