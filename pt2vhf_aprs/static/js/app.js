@@ -346,8 +346,9 @@
   }
 
   function tabSetup() {
-    $$('.tab').forEach(btn => btn.addEventListener('click', () => {
+    $('.tab').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
+      if (tab === state.activeTab) return;
       if (state.activeTab === 'config' && tab !== 'config' && state.configDirty) {
         state.pendingTab = tab;
         $('#unsavedConfigModal')?.classList.remove('hidden');
