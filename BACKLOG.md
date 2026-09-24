@@ -30,3 +30,17 @@ A partir desta versão, novas demandas serão adicionadas novamente neste arquiv
 - Log com data/hora em uma linha, alinhamento consistente e ordenação nos dois sentidos;
 - manual PDF profissional com screenshots e validação automática;
 - atualização integrada com verificação, download, SHA-256, instalação assistida e rollback onde suportado.
+
+## Atualizações automáticas ativadas por padrão
+
+**Objetivo:** deixar o fluxo OTA completamente automático em novas instalações.
+
+- Em novas instalações, deixar ativadas por padrão as três opções de **Atualizações**:
+  - **Verificar atualizações automaticamente**;
+  - **Baixar atualização automaticamente**;
+  - **Instalar atualização automaticamente ao fechar**.
+- O usuário continua podendo desativar qualquer uma das três opções individualmente.
+- Em instalações existentes, preservar a preferência já salva pelo usuário; não reativar automaticamente uma opção que ele tenha desligado.
+- Quando uma nova versão compatível for detectada, o cliente deverá verificar, baixar e preparar a instalação automaticamente conforme essas preferências.
+- Manter a validação de origem e SHA-256 antes de considerar o pacote pronto para instalação.
+- Para plataformas que exigem intervenção do sistema ou privilégios adicionais, manter o comportamento seguro já definido para cada tipo de pacote.
