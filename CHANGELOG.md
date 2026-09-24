@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.1 - 2026-09-24
+
+- Nova identidade visual **PT2VHF / APRS / CLIENT**, com logotipo vetorial mais nítido e maior no cabeçalho da aplicação.
+- A tela **Configuração** passa a separar claramente **APRS / Estação** das preferências do **Aplicativo**.
+- Ao tentar conectar sem Indicativo, Latitude, Longitude ou Altitude, o cliente abre a configuração APRS e destaca o primeiro campo obrigatório ausente.
+- Coordenadas podem ser informadas em **decimal** ou **graus/minutos/segundos (DMS)**, com conversão automática entre os formatos.
+- Novo botão **Usar minha localização atual**, usando a geolocalização disponibilizada pelo navegador/WebView/SO e mostrando a precisão quando disponível.
+- A altitude só é preenchida automaticamente quando a plataforma fornece esse dado; caso contrário, permanece como preenchimento manual.
+- Mantido o filtro APRS-IS em string para usuários avançados e adicionado **editor gráfico de filtro**, com composição assistida de filtro radial, prefixos, indicativos exatos e tipos de pacote.
+- Ao salvar com o filtro APRS-IS vazio, o cliente exibe aviso explícito sobre o possível aumento de tráfego e exige confirmação para continuar.
+- Tema **Escuro/Claro** com aplicação imediata.
+- Novo chaveamento de idioma **Português/English**, com Português como padrão.
+- Mantidas as preferências configuráveis de mapa, tracklogs, topologia observada, fontes e avisos de mensagem.
+- Primeira distribuição para **macOS**, com builds separados para **Apple Silicon (arm64)** e **Intel (x86_64)** em imagens DMG.
+- Dados no macOS passam a usar ~/Library/Application Support/PT2VHF APRS Client/data/pt2vhf_aprs.db.
+- Adicionado guia de instalação específico para macOS, incluindo orientações sobre Gatekeeper para builds ainda não notarizados.
+- Novo **manual PDF versionado**, gerado automaticamente a partir de VERSION, CHANGELOG.md e documentação do projeto e publicado em cada Release.
+- Notas de Release passam a ser geradas automaticamente a partir do changelog da versão.
+- Workflow de release passa a produzir artefatos Windows, Linux, macOS e o manual PDF na mesma versão.
+
 ## v1.0 — 2026-09-24
 
 - Nova política de versionamento: a linha oficial passa de `0.3.x` para **v1.0**, seguindo depois v1.1, v1.2, v1.3 etc.
