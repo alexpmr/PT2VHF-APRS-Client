@@ -80,6 +80,9 @@ def capture(output_dir: Path) -> None:
                     page.evaluate("""(name) => document.querySelector('.tab[data-tab="' + name + '"]').click()""", tab)
                     page.wait_for_timeout(650)
                     page.screenshot(path=str(output_dir / filename))
+                page.evaluate("""() => document.querySelector('.tab[data-tab="analysis"]').click()""")
+                page.wait_for_timeout(650)
+                page.screenshot(path=str(output_dir / "analysis.png"))
                 page.evaluate("""() => document.querySelector('.tab[data-tab="config"]').click()""")
                 page.wait_for_timeout(700)
                 # A v1.6 usa uma única página de Configuração, compartimentalizada por seções.
