@@ -14,6 +14,7 @@ from flask import Flask, jsonify, render_template, request, send_file
 from . import __version__
 from . import database as db
 from .aprs_service import full_callsign, service
+from . import updater
 
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
@@ -48,6 +49,14 @@ def get_update_status(force: bool = False) -> dict:
         "latest_version": None,
         "update_available": False,
         "release_url": None,
+        "release_notes": "",
+        "asset_name": None,
+        "asset_url": None,
+        "asset_size": 0,
+        "asset_digest": None,
+        "update_mode": updater.current_update_mode(),
+        "install_supported": updater.current_update_mode() in {"windows-portable", "windows-installer", "macos-dmg", "linux-appimage"},
+        "downloaded": False,
         "status": "unknown",
         "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "error": None,
@@ -69,9 +78,17 @@ def get_update_status(force: bool = False) -> dict:
         release_url = str(release.get("html_url") or "").strip() or None
         current_v = version_tuple(__version__)
         latest_v = version_tuple(latest)
+        asset = updater.select_asset(release, latest) if latest else None
+        pending = updater.pending_update()
 
         payload["latest_version"] = latest or None
         payload["release_url"] = release_url
+        payload["release_notes"] = str(release.get("body") or "")
+        payload["asset_name"] = asset.get("name") if asset else None
+        payload["asset_url"] = asset.get("url") if asset else None
+        payload["asset_size"] = int(asset.get("size") or 0) if asset else 0
+        payload["asset_digest"] = asset.get("digest") if asset else None
+        payload["downloaded"] = bool(pending and str(pending.get("version") or "") == latest)
         payload["update_available"] = latest_v > current_v
         if latest_v > current_v:
             payload["status"] = "update_available"
@@ -109,6 +126,43 @@ def create_app() -> Flask:
         force = str(request.args.get("force", "")).lower() in {"1", "true", "yes"}
         return jsonify(get_update_status(force=force))
 
+    @app.post("/api/update/download")
+    def api_update_download():
+        try:
+            status = get_update_status(force=True)
+            if status.get("status") != "update_available":
+                raise ValueError("Não há uma versão mais recente disponível.")
+            if not status.get("asset_url") or not status.get("asset_name"):
+                raise ValueError("A Release não possui um pacote compatível com esta plataforma.")
+            result = updater.download_asset(
+                str(status.get("latest_version") or ""),
+                {
+                    "name": status["asset_name"],
+                    "url": status["asset_url"],
+                    "size": status.get("asset_size") or 0,
+                    "digest": status.get("asset_digest") or "",
+                },
+            )
+            with _update_cache_lock:
+                _update_cache["timestamp"] = 0.0
+                _update_cache["payload"] = None
+            return jsonify({"ok": True, "update": result})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/update/pending")
+    def api_update_pending():
+        return jsonify({
+            "pending": updater.pending_update(),
+            "rollback": updater.rollback_available(),
+        })
+
+    @app.post("/api/update/rollback")
+    def api_update_rollback():
+        if updater.restore_windows_portable_backup():
+            return jsonify({"ok": True, "message": "Rollback preparado. Feche o aplicativo para concluir."})
+        return jsonify({"ok": False, "error": "Não há backup portátil disponível para rollback nesta plataforma."}), 400
+
     @app.post("/api/connect")
     def api_connect():
         try:
@@ -127,6 +181,15 @@ def create_app() -> Flask:
         cfg = db.get_config()
         cfg["passcode_set"] = bool(cfg.get("passcode"))
         return jsonify(cfg)
+
+    @app.post("/api/config/reset")
+    def api_reset_config():
+        try:
+            service.disconnect()
+            cfg = db.reset_config()
+            return jsonify({"ok": True, "config": cfg})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
 
     @app.post("/api/config")
     def api_save_config():
@@ -195,6 +258,14 @@ def create_app() -> Flask:
             hours = 24
         return jsonify(db.list_topology_edges(hours))
 
+    @app.get("/api/topology/stats")
+    def api_topology_stats():
+        try:
+            hours = int(request.args.get("hours", 24))
+        except (TypeError, ValueError):
+            hours = 24
+        return jsonify(db.topology_stats(hours))
+
     @app.get("/api/stations")
     def api_stations():
         return jsonify(db.list_stations(request.args.get("filter", "")))
@@ -217,6 +288,14 @@ def create_app() -> Flask:
             request.args.get("from", ""),
             station_filter=station,
         ))
+
+    @app.post("/api/messages/<int:row_id>/retry")
+    def api_retry_message(row_id: int):
+        try:
+            result = service.retry_message(row_id)
+            return jsonify({"ok": True, **result})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
 
     @app.post("/api/messages/clear")
     def api_clear_messages():
