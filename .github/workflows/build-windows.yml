@@ -242,12 +242,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install "reportlab>=4.0,<5.0" "pypdf>=5.0,<7.0" "playwright>=1.55,<2.0"
+          pip install "reportlab>=4.0,<5.0" "pypdf>=5.0,<7.0" "playwright>=1.55,<2.0" "cairosvg>=2.7,<3.0"
           python -m playwright install --with-deps chromium
           version="$(tr -d '\r\n ' < VERSION)"
           mkdir -p dist-docs/screenshots
+          python -c "import cairosvg; cairosvg.svg2png(url='pt2vhf_aprs/static/img/app_logo.svg', write_to='dist-docs/manual_logo.png', output_width=1200)"
           python tools/capture_manual_screenshots.py --output-dir dist-docs/screenshots
-          python tools/generate_manual.py --screenshots-dir dist-docs/screenshots --output "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
+          python tools/generate_manual.py --logo dist-docs/manual_logo.png --screenshots-dir dist-docs/screenshots --output "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
           python tools/validate_manual.py "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
 
       - name: Upload manual artifact
