@@ -173,7 +173,7 @@
       if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
       if (tab === 'messages') {
         markMessagesSeen();
-        loadMessages();
+        loadMessages({ scrollToNewest: true });
       }
       if (tab === 'stations') loadStations();
       if (tab === 'log') {
@@ -522,13 +522,21 @@
     });
   }
 
-  async function loadMessages() {
+  async function loadMessages(options = {}) {
     try {
+      const viewport = $('.messages-table-wrap');
+      const previousScrollTop = viewport?.scrollTop || 0;
+      const atNewest = previousScrollTop <= 12;
       const filter = $('#messageFilter').value.trim();
       const mine = state.myMessagesOnly ? '&mine=1' : '';
       state.messages = await api(`/api/messages?from=${encodeURIComponent(filter)}${mine}`);
       renderMessages();
       updateUnread();
+
+      if (viewport && state.sort.messages.key === 'timestamp' && state.sort.messages.dir === 'desc') {
+        if (options.scrollToNewest || atNewest) viewport.scrollTop = 0;
+        else viewport.scrollTop = previousScrollTop;
+      }
     } catch (err) { console.warn(err); }
   }
 
