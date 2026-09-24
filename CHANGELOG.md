@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.3.0 — em desenvolvimento
+## v0.3.0 — 2026-09-24
 
 - A interface principal passa a abrir dentro de uma **janela própria do PT2VHF APRS Client**, sem depender de uma aba do navegador durante o uso normal.
 - A janela integrada usa **Microsoft Edge WebView2** por meio do pywebview, preservando a interface HTML/CSS/JavaScript existente.
