@@ -241,3 +241,19 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Atualizar automaticamente o passcode se o indicativo for alterado.
 - Manter o campo visível para conferência, mas evitar exigir que o usuário conheça ou calcule manualmente o passcode.
 - Validar o indicativo antes de calcular o passcode e mostrar uma mensagem clara se o formato for inválido.
+
+## Coordenadas automáticas e mapa centralizado no usuário
+
+**Objetivo:** reduzir a configuração inicial manual e abrir o aplicativo já contextualizado na localização atual do usuário.
+
+- Na primeira execução, solicitar ao navegador/WebView/SO permissão para acessar a **localização atual** do usuário.
+- Quando a permissão for concedida, **pré-preencher automaticamente Latitude e Longitude** em **Configuração → APRS / Estação**.
+- Manter os campos de Latitude e Longitude totalmente editáveis após o preenchimento automático.
+- Exibir a **precisão estimada** da localização quando o provedor disponibilizar essa informação.
+- Preencher **Altitude** automaticamente somente quando a plataforma fornecer um valor confiável; caso contrário, manter o campo para preenchimento manual.
+- Na primeira abertura do mapa, centralizar automaticamente o mapa na **localização atual do usuário** quando houver permissão e coordenadas válidas.
+- Usar um nível de zoom inicial adequado para visualizar a região ao redor do usuário, sem impedir que ele altere zoom e posição manualmente.
+- Após o usuário mover o mapa manualmente, respeitar a posição escolhida e não recentralizar continuamente sem solicitação.
+- Manter o botão **Usar minha localização atual** para permitir atualização manual posterior das coordenadas e do centro do mapa.
+- Se a permissão de localização for negada ou indisponível, não bloquear o aplicativo; mostrar instrução clara para preencher as coordenadas manualmente.
+- Tratar separadamente a localização usada para centralizar o mapa e as coordenadas salvas da estação, evitando sobrescrever dados já confirmados sem aviso.
