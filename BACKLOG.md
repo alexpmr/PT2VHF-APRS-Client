@@ -293,3 +293,12 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Manter a preferência de idioma persistida entre execuções.
 - A alteração de idioma deve ser aplicada imediatamente, sem necessidade de reiniciar o aplicativo.
 - Garantir que novos recursos adicionados futuramente incluam os textos nos dois idiomas.
+
+## “Conectar ao iniciar” habilitado por padrão
+
+**Objetivo:** fazer o cliente tentar conectar automaticamente ao APRS-IS ao abrir o aplicativo, sem exigir ativação manual dessa preferência em novas instalações.
+
+- Definir **Conectar ao iniciar** como **habilitado por padrão** em novas instalações.
+- Manter a opção disponível em **Configuração → APRS / Estação → APRS-IS** para o usuário poder desativá-la.
+- Preservar a preferência já salva em instalações existentes; não reativar automaticamente se o usuário já tiver desabilitado essa opção.
+- Se a configuração obrigatória da estação estiver incompleta, não iniciar tentativas repetidas de conexão; mostrar a orientação de campos obrigatórios e aguardar correção do usuário.
