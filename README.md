@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.3
+# PT2VHF APRS Client - v1.4
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2 e banco SQLite local.
 
-A v1.3 melhora a primeira conexão ao APRS-IS: orienta campos obrigatórios em um pop-up, calcula o passcode automaticamente, tenta preencher a localização da estação, centraliza o mapa na posição do usuário e evita bloquear a conexão quando a altitude não é fornecida pelo sistema.
+A v1.4 é um hotfix de estabilidade: evita que o carregamento do mapa bloqueie toda a interface e torna a conexão APRS-IS mais rápida para falhar, mais clara para diagnosticar e mais tolerante a problemas de IPv6, DNS ou servidor.
 
 ## Downloads
 
@@ -51,7 +51,7 @@ Cada Release publica, conforme o build:
 - Passcode mascarado no Log.
 - Formatação independente para Mensagens, Estações e Logs: fonte, tamanho, negrito e espaçamento entre linhas.
 
-## Configuração v1.3
+## Configuração v1.4
 
 A tela é dividida em:
 

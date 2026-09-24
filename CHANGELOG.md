@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.4 - 2026-09-24
+
+- Hotfix para a regressão da v1.3 em que a interface podia ficar aparentemente travada quando o carregamento remoto do Leaflet demorava ou falhava.
+- O carregamento do JavaScript do Leaflet passa a ser **assíncrono**, evitando que um CDN lento ou bloqueado impeça o funcionamento das abas, configurações e demais recursos locais.
+- A inicialização do aplicativo passa a tolerar falhas parciais: mapa, versão, log ou outras rotinas não interrompem mais toda a interface.
+- A geolocalização automática deixa de bloquear a sequência de inicialização e é executada de forma atrasada e independente.
+- A conexão APRS-IS passa a usar **IPv4 explicitamente**, reduzindo esperas em redes Windows com IPv6 parcial ou sem rota funcional.
+- Cada tentativa TCP utiliza timeout menor e o cliente testa, em sequência, o servidor configurado, **rotate.aprs2.net** e **soam.aprs2.net**, sem repetir endereços.
+- Na conexão inicial, o cliente deixa de tentar indefinidamente: após três ciclos sem sucesso, encerra as tentativas e volta a exibir **Conectar**.
+- O erro final de conexão APRS-IS passa a ser mostrado diretamente ao usuário, facilitando diagnóstico de DNS, firewall, porta bloqueada ou servidor indisponível.
+- Reconexões após uma sessão que já esteve conectada continuam automáticas.
+
 ## v1.3 - 2026-09-24
 
 - Corrigida a configuração inicial de conexão APRS-IS para novas instalações, usando **soam.aprs2.net:14580** como servidor padrão e tentativa alternativa por **rotate.aprs2.net**.

@@ -45,6 +45,7 @@
     configSection: 'aprs',
     currentConfig: null,
     autoLocationInProgress: false,
+    lastConnectionErrorShown: '',
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -321,9 +322,17 @@
     }
   }
 
+  async function waitForLeaflet(timeoutMs = 10000) {
+    const started = Date.now();
+    while (typeof L === 'undefined' && Date.now() - started < timeoutMs) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return typeof L !== 'undefined';
+  }
+
   async function initMap() {
-    if (typeof L === 'undefined') {
-      $('#map').innerHTML = '<div style="padding:30px">Não foi possível carregar o Leaflet.</div>';
+    if (!(await waitForLeaflet())) {
+      $('#map').innerHTML = '<div style="padding:30px">O mapa não pôde ser carregado, mas as demais abas continuam disponíveis. Verifique o acesso ao CDN do Leaflet.</div>';
       return;
     }
     let saved = { latitude: -14.2350, longitude: -51.9253, zoom: 4 };
@@ -637,6 +646,11 @@
       el.querySelector('span:last-child').textContent = translateConnectionState(s.state || (s.connected ? 'Conectado' : 'Desconectado'));
       el.title = s.last_error || s.server_message || '';
       $('#connectButton').textContent = s.connected || s.wanted ? ui('Desconectar', 'Disconnect') : ui('Conectar', 'Connect');
+      if (!s.connected && !s.wanted && s.last_error && s.last_error !== state.lastConnectionErrorShown) {
+        state.lastConnectionErrorShown = s.last_error;
+        toast(ui('Falha na conexão APRS-IS: ', 'APRS-IS connection failed: ') + s.last_error, 'error');
+      }
+      if (s.connected) state.lastConnectionErrorShown = '';
       const stationCount = Number(s.stations || 0);
       const messageCount = Number(s.messages || 0);
       const packetCount = Number(s.packets_received || 0);
@@ -2504,12 +2518,15 @@
   tabSetup();
 
   async function boot() {
-    await Promise.all([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
-    await initializeAutomaticLocation();
+    const startup = await Promise.allSettled([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
+    const failed = startup.filter(item => item.status === 'rejected');
+    if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
     updateMyMessagesButton();
-    await loadMessages();
-    await checkIncomingPersonalMessages();
-    await refreshVersionStatus();
+    await Promise.allSettled([loadMessages(), checkIncomingPersonalMessages(), refreshVersionStatus()]);
+
+    // Não bloqueia a inicialização da interface aguardando permissão/localização.
+    setTimeout(() => { initializeAutomaticLocation().catch(err => console.warn(err)); }, 1200);
+
     setInterval(refreshStatus, 2000);
     setInterval(loadMapData, 5000);
     setInterval(loadMessages, 3000);

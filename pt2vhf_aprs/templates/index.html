@@ -642,8 +642,9 @@
           <h3>Diagnóstico rápido</h3>
           <div class="help-troubleshoot">
             <div><strong>Conecta, mas não aparecem estações</strong><span>Confira o filtro APRS-IS e procure erros de filtro no Log.</span></div>
+            <div><strong>Não conecta</strong><span>Observe o erro mostrado após as tentativas. Ele identifica falhas de DNS, TCP/porta ou servidor; confira também firewall e porta 14580.</span></div>
             <div><strong>Não transmite</strong><span>Confira se a conexão está como verificada e se indicativo/passcode estão corretos.</span></div>
-            <div><strong>Mapa não carrega</strong><span>Confira a conexão com a Internet; os tiles dos mapas são carregados de provedores externos.</span></div>
+            <div><strong>Mapa não carrega</strong><span>Confira a conexão com a Internet ou bloqueios ao CDN/tiles. A v1.4 mantém as demais abas funcionando mesmo quando o mapa não carrega.</span></div>
             <div><strong>Distâncias incorretas</strong><span>Confira latitude e longitude da sua estação em Configuração.</span></div>
             <div><strong>Sem aviso sonoro</strong><span>Confira a opção de som em Configuração → Aparência e o volume do Windows.</span></div>
           </div>
@@ -725,7 +726,7 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+<script id="leafletScript" async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

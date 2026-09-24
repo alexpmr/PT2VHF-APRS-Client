@@ -18,6 +18,27 @@ from . import database as db
 VERSION = __version__
 
 
+def _connect_ipv4(host: str, port: int, timeout: float = 8.0) -> socket.socket:
+    """Conecta explicitamente por IPv4 para evitar esperas longas em redes com IPv6 parcial."""
+    last_error: Exception | None = None
+    addresses = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+    if not addresses:
+        raise OSError(f"DNS não retornou endereço IPv4 para {host}")
+    for family, socktype, proto, _canonname, sockaddr in addresses:
+        sock = socket.socket(family, socktype, proto)
+        sock.settimeout(timeout)
+        try:
+            sock.connect(sockaddr)
+            return sock
+        except OSError as exc:
+            last_error = exc
+            try:
+                sock.close()
+            except OSError:
+                pass
+    raise OSError(f"Falha ao conectar em {host}:{port}: {last_error}")
+
+
 def _play_windows_message_sound() -> None:
     """Toca um aviso curto no Windows sem bloquear a thread de recepção APRS."""
     try:
@@ -132,35 +153,39 @@ class APRSService:
 
     def _connection_loop(self) -> None:
         retry = 3
+        initial_failures = 0
+        had_connected = False
         while self.status()["wanted"]:
             cfg = db.get_config()
             configured_server = str(cfg.get("server") or "soam.aprs2.net").strip()
             port = int(cfg.get("port") or 14580)
             call = full_callsign(cfg)
             try:
-                candidates = [configured_server]
-                if configured_server.lower() == "soam.aprs2.net":
-                    candidates.append("rotate.aprs2.net")
+                candidates: list[str] = []
+                for candidate in (configured_server, "rotate.aprs2.net", "soam.aprs2.net"):
+                    if candidate and candidate.lower() not in {item.lower() for item in candidates}:
+                        candidates.append(candidate)
 
                 sock = None
-                last_connect_error: Exception | None = None
+                errors: list[str] = []
                 server = configured_server
-                for candidate in candidates:
+                for index, candidate in enumerate(candidates, start=1):
                     try:
                         server = candidate
                         self._set_status(
-                            state=f"Conectando a {candidate}:{port}...",
+                            state=f"Conectando a {candidate}:{port} ({index}/{len(candidates)})...",
                             connected=False,
                             verified=False,
+                            last_error="",
                         )
-                        sock = socket.create_connection((candidate, port), timeout=20)
+                        sock = _connect_ipv4(candidate, port, timeout=8.0)
                         break
                     except OSError as exc:
-                        last_connect_error = exc
+                        errors.append(f"{candidate}: {exc}")
 
                 if sock is None:
                     raise ConnectionError(
-                        f"Não foi possível conectar ao APRS-IS em {configured_server}:{port}: {last_connect_error}"
+                        "Não foi possível abrir conexão TCP com o APRS-IS. " + " | ".join(errors)
                     )
 
                 sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -183,6 +208,8 @@ class APRSService:
                 self._send_raw(login)
                 self._set_status(connected=True, state="Conectado; autenticando...", connected_since=db.utc_now_iso())
                 retry = 3
+                initial_failures = 0
+                had_connected = True
                 self._last_beacon = 0
 
                 buffer = b""
@@ -196,10 +223,24 @@ class APRSService:
                         line = raw_line.rstrip(b"\r").decode("latin-1", errors="replace")
                         self._handle_line(line)
             except Exception as exc:
-                self._set_status(connected=False, verified=False, state="Conexão perdida", last_error=str(exc))
+                initial_failures += 1
+                state_text = "Conexão perdida" if had_connected else f"Falha ao conectar ({initial_failures}/3)"
+                self._set_status(connected=False, verified=False, state=state_text, last_error=str(exc))
                 self._close_socket()
                 if not self.status()["wanted"]:
                     break
+
+                # Na primeira conexão, não deixa o usuário preso em tentativas infinitas.
+                if not had_connected and initial_failures >= 3:
+                    self._set_status(
+                        wanted=False,
+                        connected=False,
+                        verified=False,
+                        state="Falha ao conectar",
+                        last_error=str(exc),
+                    )
+                    break
+
                 for _ in range(retry):
                     if not self.status()["wanted"]:
                         break
