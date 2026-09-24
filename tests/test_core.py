@@ -321,7 +321,7 @@ def test_observed_topology_from_aprs_path():
             })
             for call, lat, lon in [
                 ("PY2ABC-9", -15.81, -47.91),
-                ("PT2DIGI", -15.82, -47.92),
+                ("PT2DGI", -15.82, -47.92),
                 ("PT2IGT", -15.83, -47.93),
             ]:
                 db.upsert_station({
@@ -340,11 +340,11 @@ def test_observed_topology_from_aprs_path():
                 })
 
             db.record_topology_from_raw(
-                "PY2ABC-9>APRS,PT2DIGI*,WIDE2-1,qAR,PT2IGT:>teste"
+                "PY2ABC-9>APRS,PT2DGI*,WIDE2-1,qAR,PT2IGT:>teste"
             )
             edges = db.list_topology_edges(24)
             keys = {(e["source"], e["target"], e["kind"]) for e in edges}
-            assert ("PY2ABC-9", "PT2DIGI", "rf") in keys
-            assert ("PT2DIGI", "PT2IGT", "igate") in keys
+            assert ("PY2ABC-9", "PT2DGI", "rf") in keys
+            assert ("PT2DGI", "PT2IGT", "igate") in keys
     finally:
         db.DB_PATH = original
