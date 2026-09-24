@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import re
+import shutil
 import socket
+import subprocess
+import sys
 import threading
 import time
 from dataclasses import dataclass, asdict
@@ -57,6 +60,33 @@ def _play_windows_message_sound() -> None:
                 pass
 
     threading.Thread(target=_sound, name="pt2vhf-message-sound", daemon=True).start()
+
+
+def _notify_personal_message(from_call: str, message: str) -> None:
+    """Notificação local best-effort, sem interferir na thread APRS."""
+    _play_windows_message_sound()
+
+    def _notify() -> None:
+        title = f"APRS de {from_call}"
+        body = str(message or "")[:180]
+        try:
+            if sys.platform == "darwin":
+                safe_title = title.replace('"', "'")
+                safe_body = body.replace('"', "'")
+                subprocess.Popen(
+                    ["osascript", "-e", f'display notification "{safe_body}" with title "{safe_title}"'],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+            elif sys.platform.startswith("linux") and shutil.which("notify-send"):
+                subprocess.Popen(
+                    ["notify-send", title, body],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+        except Exception:
+            pass
+
+    if sys.platform != "win32":
+        threading.Thread(target=_notify, name="pt2vhf-message-notification", daemon=True).start()
 
 
 MESSAGE_RE = re.compile(r"^(?P<from>[^>]+)>[^:]+::(?P<to>.{9}):(?P<text>.*)$")
@@ -316,7 +346,7 @@ class APRSService:
         is_personal_message = message_type == "message" and to_call == full_callsign(cfg).upper()
 
         if is_personal_message and bool(cfg.get("sound_on_personal_message", 1)):
-            _play_windows_message_sound()
+            _notify_personal_message(from_call, message_text)
 
         if is_personal_message and msg_id and self.status()["verified"]:
             try:
