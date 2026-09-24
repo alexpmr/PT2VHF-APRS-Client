@@ -1919,3 +1919,71 @@ html[data-theme="light"] #logTimeHeader:hover {
     grid-column: 1 / -1;
   }
 }
+
+
+/* v1.6.1 - aba Análise e ações de diagnóstico */
+.analysis-header {
+  align-items: flex-end;
+}
+.analysis-controls {
+  display: flex;
+  gap: 9px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.analysis-content {
+  height: calc(100% - 92px);
+  overflow: auto;
+  padding: 16px;
+}
+.analysis-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.analysis-metric {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #121a21;
+}
+.analysis-metric span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.analysis-metric strong {
+  font-size: 20px;
+}
+.analysis-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.station-popup-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.station-popup-actions .station-log-button,
+.station-popup-actions .station-message-button {
+  min-height: 34px;
+  padding: 7px 11px;
+  font-size: 12px;
+}
+.log-filter-focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(59,166,255,.18) !important;
+}
+html[data-theme="light"] .analysis-metric {
+  background: #fff;
+}
+@media (max-width: 900px) {
+  .analysis-summary,
+  .analysis-stats {
+    grid-template-columns: 1fr;
+  }
+  .analysis-content {
+    height: calc(100% - 135px);
+  }
+}
