@@ -1,7 +1,8 @@
 # Changelog
 
-## v0.2.7 — em desenvolvimento
+## v0.2.7 — 2026-09-23
 
+- Política de privacidade atualizada para documentar a consulta automática ao GitHub usada pelo verificador de novas versões; nenhum indicativo, posição, mensagem ou passcode é enviado nessa consulta.
 - Na aba **Mensagens**, o status `ACK` passa a ser exibido como **Lido** em verde, mantendo `ACK` apenas internamente no protocolo APRS.
 - Ajustada a aba **Mensagens** para caber integralmente na altura disponível da janela.
 - A lista de mensagens passa a usar automaticamente o espaço restante e possui **barra de rolagem própria**.
