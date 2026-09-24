@@ -2,6 +2,10 @@
 
 ## v0.2.9 — em desenvolvimento
 
+- **Log, Mensagens e Estações** passam a seguir o mesmo padrão de navegação: registros mais recentes no topo e históricos mais antigos abaixo.
+- No **Log**, os pacotes APRS-IS mais recentes agora aparecem no topo; rolar para baixo mostra os anteriores.
+- Em **Estações**, a ordenação padrão continua pela última recepção em ordem decrescente, e a rolagem é preservada durante atualizações automáticas.
+- Se o usuário estiver consultando registros antigos, as atualizações não forçam a tela de volta ao topo.
 - Na aba **Mensagens**, adicionada a opção **Ocultar telemetria**, ligada por padrão.
 - O filtro reconhece mensagens APRS de telemetria nos formatos `PARM.`, `UNIT.`, `EQNS.`, `BITS.` e relatórios `T#nnn`.
 - A telemetria continua armazenada no histórico; o controle apenas esconde ou mostra esses registros.
