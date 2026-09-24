@@ -1139,12 +1139,35 @@
   });
 
   $('#messagesTable tbody')?.addEventListener('click', event => {
+    const retry = event.target.closest('.message-retry-button');
+    if (retry) {
+      event.preventDefault();
+      event.stopPropagation();
+      retryMessagePart(Number(retry.dataset.retryRowId || 0));
+      return;
+    }
     const button = event.target.closest('.message-callsign-link');
     if (!button) return;
     event.preventDefault();
     event.stopPropagation();
     selectMessageRecipient(button.dataset.callsign || '', button.dataset.otherCall || '');
   });
+
+  $('#conversationMessages')?.addEventListener('click', event => {
+    const retry = event.target.closest('.message-retry-button');
+    if (!retry) return;
+    event.preventDefault();
+    retryMessagePart(Number(retry.dataset.retryRowId || 0));
+  });
+
+  async function retryMessagePart(rowId) {
+    if (!rowId) return;
+    try {
+      await api(`/api/messages/${rowId}/retry`, { method:'POST' });
+      toast(ui('Parte reenviada com novo ID APRS.', 'Part retried with a new APRS ID.'), 'ok');
+      await loadMessages({ scrollToNewest:true });
+    } catch (err) { toast(err.message, 'error'); }
+  }
 
   function updateMyMessagesButton() {
     const btn = $('#myMessagesButton');
