@@ -228,3 +228,16 @@ O editor deve permitir combinar, conforme a sintaxe APRS-IS suportada:
 - Colocar o foco no primeiro campo ausente para facilitar o preenchimento.
 - Após o usuário corrigir os campos, remover o destaque visual correspondente.
 - Manter também a mensagem de erro acessível no status/log para diagnóstico.
+
+## Indicativo obrigatório e passcode automático
+
+**Objetivo:** simplificar a configuração inicial e impedir tentativa de conexão sem identificação da estação.
+
+- Tornar o campo **Indicativo** obrigatório para conexão ao APRS-IS.
+- Ao clicar em **Conectar** sem indicativo, incluir **Indicativo** no mesmo pop-up de campos obrigatórios ausentes.
+- O botão **Ir para Configuração** deve abrir **Configuração → APRS / Estação**, destacar o campo Indicativo e posicionar o foco nele quando for o primeiro campo ausente.
+- Preencher o **Passcode APRS-IS automaticamente** assim que o usuário informar ou alterar o indicativo.
+- Calcular o passcode usando apenas o indicativo-base; o **SSID não altera o passcode**.
+- Atualizar automaticamente o passcode se o indicativo for alterado.
+- Manter o campo visível para conferência, mas evitar exigir que o usuário conheça ou calcule manualmente o passcode.
+- Validar o indicativo antes de calcular o passcode e mostrar uma mensagem clara se o formato for inválido.
