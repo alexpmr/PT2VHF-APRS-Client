@@ -15,7 +15,10 @@ fi
 "$VENV/bin/python" -m pytest -q
 
 rm -rf build dist dist-linux
+mkdir -p dist-linux
 "$VENV/bin/pyinstaller" --noconfirm --clean linux/PT2VHF_APRS_Client_Linux.spec
+"$VENV/bin/cyclonedx-py" environment --spec-version 1.6 --output-format JSON --output-file dist-linux/SBOM-Linux.cdx.json
+"$VENV/bin/pip-licenses" --format=plain-vertical --with-license-file --no-license-path --output-file=dist-linux/THIRD_PARTY_LICENSES_Linux.txt
 
 version="$(tr -d '\r\n ' < VERSION)"
 mkdir -p dist-linux/package
@@ -23,6 +26,8 @@ cp dist/PT2VHF_APRS_Client_Linux_x86_64 "dist-linux/package/PT2VHF_APRS_Client_L
 cp docs/INSTALL_LINUX.md dist-linux/package/INSTALL_LINUX.md
 cp LICENSE dist-linux/package/LICENSE
 cp THIRD_PARTY_NOTICES.md dist-linux/package/THIRD_PARTY_NOTICES.md
+cp dist-linux/SBOM-Linux.cdx.json dist-linux/package/SBOM-Linux.cdx.json
+cp dist-linux/THIRD_PARTY_LICENSES_Linux.txt dist-linux/package/THIRD_PARTY_LICENSES_Linux.txt
 tar -C dist-linux/package -czf "dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v${version}.tar.gz" .
 
 if command -v dpkg-deb >/dev/null 2>&1; then
