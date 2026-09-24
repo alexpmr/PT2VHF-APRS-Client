@@ -270,8 +270,10 @@ def main() -> int:
     if _already_running():
         if _browser_mode:
             _open_browser()
-        else:
-            _focus_existing_window()
+        elif not _focus_existing_window():
+            # A instância existente pode estar em modo --browser ou em fallback
+            # por indisponibilidade do WebView2.
+            _open_browser()
         return 0
 
     db.init_db()
