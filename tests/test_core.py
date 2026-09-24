@@ -3,6 +3,7 @@ from pathlib import Path
 import tempfile
 
 from pt2vhf_aprs import database as db
+from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import build_beacon_packet, build_bulletin_packet, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id, split_aprs_message_parts
 from pt2vhf_aprs.web import version_tuple
 
@@ -237,13 +238,19 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["altitude_source"] == "manual"
             assert cfg["server"] == "soam.aprs2.net"
             assert cfg["port"] == 14580
-            assert cfg["aprs_filter"] == "r/2000"
+            assert cfg["aprs_filter"] == db.BRAZIL_FILTER
             assert cfg["app_theme"] == "dark"
             assert cfg["topology_rf_color"] == "#35a7ff"
             assert cfg["topology_igate_color"] == "#b06cff"
             assert cfg["topology_width"] == 2
             assert cfg["message_popup_seconds"] == 5
+            assert cfg["connect_on_start"] == 1
             assert cfg["open_browser_on_start"] == 0
+            assert cfg["check_updates_on_start"] == 1
+            assert cfg["auto_download_updates"] == 0
+            assert cfg["install_updates_on_exit"] == 0
+            assert cfg["message_retry_seconds"] == 60
+            assert cfg["message_retry_attempts"] == 2
             assert cfg["messages_font_weight"] == "normal"
             assert cfg["stations_font_weight"] == "normal"
             assert cfg["logs_font_family"] == "consolas"
@@ -281,7 +288,7 @@ def test_new_install_defaults_and_required_station_fields():
             assert saved["callsign"] == "PY2ABC"
             assert saved["altitude"] == 0
             assert saved["altitude_source"] == "fallback_zero"
-            assert saved["aprs_filter"] == "r/2000"
+            assert saved["aprs_filter"] == db.BRAZIL_FILTER
 
             invalid = db.save_config({
                 "callsign": "PY2-ABC",
@@ -410,5 +417,80 @@ def test_observed_topology_from_aprs_path():
 def test_frontend_collection_selectors_use_query_selector_all():
     import re
     source = (Path(__file__).resolve().parent.parent / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
-    bad = re.findall(r"(?<!\$)\$\([^\n;]+\)\.forEach\(", source)
-    assert not bad, f"Use $$() (querySelectorAll) before .forEach(): {bad}"
+    bad = re.findall(r"(?<!\$)\$\([^\n;]+?\)\.(?:forEach|map|filter|find|some|every)\(", source)
+    assert not bad, f"Use $() (querySelectorAll) before collection methods: {bad}"
+
+
+def test_reset_config_preserves_operational_data():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({
+                "callsign": "PT2VHF", "latitude": -15.8, "longitude": -47.9,
+                "altitude": 1000, "app_theme": "light", "aprs_filter": "b/PT2VHF",
+            })
+            db.add_message("in", "PY2ABC", "PT2VHF", "Teste", msg_id="001", status="Recebida")
+            reset = db.reset_config()
+            assert reset["callsign"] == ""
+            assert reset["app_theme"] == "dark"
+            assert reset["aprs_filter"] == db.BRAZIL_FILTER
+            assert reset["connect_on_start"] == 1
+            assert len(db.list_messages()) == 1
+    finally:
+        db.DB_PATH = original
+
+
+def test_message_group_metadata_and_retry_candidates():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            row_id = db.add_message(
+                "out", "PT2VHF", "PY2ABC", "[1/2] teste",
+                msg_id="123", status="Enviada",
+                message_group_id="g1", part_index=1, part_count=2, retry_count=0,
+            )
+            row = db.get_message(row_id)
+            assert row["message_group_id"] == "g1"
+            assert row["part_index"] == 1
+            assert row["part_count"] == 2
+            assert row["retry_count"] == 0
+            candidates = db.list_retry_candidates(15, 2, limit=10)
+            # Registro acabou de ser criado, portanto ainda não venceu o timeout.
+            assert candidates == []
+    finally:
+        db.DB_PATH = original
+
+
+def test_topology_timeline_and_period_comparison():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            for call, lat, lon in [
+                ("PY2ABC-9", -15.81, -47.91),
+                ("PT2DGI", -15.82, -47.92),
+            ]:
+                db.upsert_station({
+                    "from": call, "format": "uncompressed", "latitude": lat, "longitude": lon,
+                    "speed": 0, "course": 0, "altitude": 1000,
+                    "symbol_table": "/", "symbol": ">", "comment": "Teste", "path": [], "raw": "x",
+                })
+            db.record_topology_from_raw("PY2ABC-9>APRS,PT2DGI*:>teste")
+            timeline = db.topology_timeline(24)
+            assert timeline
+            assert timeline[0]["source"] == "PY2ABC-9"
+            comparison = db.topology_period_comparison(24)
+            assert comparison["current_events"] >= 1
+    finally:
+        db.DB_PATH = original
+
+
+def test_updater_asset_name_contains_version():
+    name = updater.desired_asset_name("1.6")
+    assert "1.6" in name
+    assert name
