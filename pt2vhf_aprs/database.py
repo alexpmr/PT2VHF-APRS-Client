@@ -216,6 +216,7 @@ def init_db() -> None:
                 part_index INTEGER,
                 part_count INTEGER,
                 retry_count INTEGER NOT NULL DEFAULT 0,
+                read_at TEXT,
                 timestamp TEXT NOT NULL,
                 raw TEXT
             );
@@ -348,6 +349,9 @@ def init_db() -> None:
             conn.execute("ALTER TABLE messages ADD COLUMN part_count INTEGER")
         if "retry_count" not in message_columns:
             conn.execute("ALTER TABLE messages ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0")
+        if "read_at" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN read_at TEXT")
+            conn.execute("UPDATE messages SET read_at=timestamp WHERE direction='in'")
 
         row = conn.execute("SELECT id FROM config WHERE id=1").fetchone()
         if not row:
@@ -1155,6 +1159,41 @@ def list_messages(from_filter: str = "", station_filter: str = "", limit: int = 
                 (q, int(limit)),
             ).fetchall()
     return [dict(r) for r in rows]
+
+
+def mark_message_read(row_id: int) -> int:
+    with connection() as conn:
+        cur = conn.execute(
+            "UPDATE messages SET read_at=COALESCE(read_at, ?) WHERE id=? AND direction='in'",
+            (utc_now_iso(), int(row_id)),
+        )
+        return max(0, int(cur.rowcount or 0))
+
+
+def mark_conversation_read(contact: str, own_callsign: str = "") -> int:
+    contact = str(contact or "").upper().strip()
+    own = str(own_callsign or "").upper().strip()
+    if not contact:
+        return 0
+    with connection() as conn:
+        if own:
+            cur = conn.execute(
+                """
+                UPDATE messages SET read_at=COALESCE(read_at, ?)
+                WHERE direction='in' AND message_type='message'
+                  AND UPPER(from_call)=UPPER(?) AND UPPER(to_call)=UPPER(?)
+                """,
+                (utc_now_iso(), contact, own),
+            )
+        else:
+            cur = conn.execute(
+                """
+                UPDATE messages SET read_at=COALESCE(read_at, ?)
+                WHERE direction='in' AND message_type='message' AND UPPER(from_call)=UPPER(?)
+                """,
+                (utc_now_iso(), contact),
+            )
+        return max(0, int(cur.rowcount or 0))
 
 
 def clear_messages() -> int:
