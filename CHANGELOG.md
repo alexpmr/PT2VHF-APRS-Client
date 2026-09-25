@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.6.2 - 2026-09-25
+
+- Adicionado **Replay da Rede** na parte inferior do Mapa, com linha do tempo arrastável, densidade de tráfego, seek por horário, intervalo personalizado, modo Ao vivo e velocidades de 0,25x a 20x.
+- A animação continua usando apenas caminhos APRS observados e pode movimentar o mesmo pacote por vários enlaces simultaneamente.
+- Som e destaque de atividade passam a ocorrer somente para estações realmente visíveis no enquadramento/zoom atual; o marcador recebe ondas concêntricas animadas.
+- Adicionado indicador **RX/TX** na barra superior para sinalizar atividade de tráfego recebido e transmitido.
+- A legenda do Mapa passa a acompanhar imediatamente as cores e espessuras definidas em Configuração.
+- Corrigida a aplicação da **espessura da topologia** no Mapa.
+- Os controles de replay/animação foram removidos da aba Análise e concentrados no Mapa; o antigo botão **Animar período** foi removido.
+- O botão do popup da estação passa a se chamar **Ver logs**, abrindo a aba Log já filtrada pelo indicativo/SSID.
+- O fluxo de Configuração passa a ter um único botão **Salvar configuração** no rodapé, confirmação visual de salvamento e aviso ao sair com alterações pendentes.
+- O **auto-update foi desativado**: o cliente apenas detecta e informa novas versões; download e instalação são manuais pela página oficial da Release.
+- A checagem de versão ganhou timeout, recuperação após falhas e deixou de manter erro em cache.
+- Após uma atualização, o aplicativo mostra uma única vez um popup local com as principais novidades da versão.
+- Esta Release foi gerada somente para **Windows x64** (instalador e portátil), sem nova documentação PDF, Linux ou macOS.
+
 ## v1.6.1 - 2026-09-24
 
 - As três opções de atualização OTA passam a vir **ativadas por padrão em novas instalações**: verificar, baixar e instalar ao fechar. Preferências já salvas continuam preservadas em instalações existentes.
