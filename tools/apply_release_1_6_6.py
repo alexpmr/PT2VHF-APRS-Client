@@ -211,8 +211,8 @@ if "$('#clearAllDataButton')?.addEventListener('click'" not in js:
   $('#clearAllDataButton')?.addEventListener('click', async () => {
     const first = window.confirm(
       ui(
-        'LIMPAR TUDO? Esta ação apagará estações, tracklogs, mensagens, Log APRS-IS, pacotes e histórico de topologia. A configuração da estação e os favoritos serão preservados.\n\nEsta operação não pode ser desfeita.',
-        'CLEAR EVERYTHING? This will delete stations, track logs, messages, APRS-IS log, packets and topology history. Station configuration and favorites will be preserved.\n\nThis operation cannot be undone.'
+        'LIMPAR TUDO? Esta ação apagará estações, tracklogs, mensagens, Log APRS-IS, pacotes e histórico de topologia. A configuração da estação e os favoritos serão preservados.\\n\\nEsta operação não pode ser desfeita.',
+        'CLEAR EVERYTHING? This will delete stations, track logs, messages, APRS-IS log, packets and topology history. Station configuration and favorites will be preserved.\\n\\nThis operation cannot be undone.'
       )
     );
     if (!first) return;
