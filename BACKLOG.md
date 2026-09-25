@@ -145,3 +145,14 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Manter a verificação de integridade/download somente para fluxos manuais que vierem a ser explicitamente reintroduzidos no futuro.
 - Preservar a checagem periódica de nova versão sem bloquear a interface nem interferir no encerramento do aplicativo.
 - Esta mudança deve priorizar **estabilidade** e evitar que o mecanismo de atualização cause travamentos para usuários.
+
+
+## Remover “Animar período” da aba Análise
+
+**Objetivo:** concentrar todos os controles de animação/replay exclusivamente na aba Mapa.
+
+- Remover o botão **Animar período** da aba **Análise**.
+- A aba **Análise** deve permanecer focada em métricas, rankings, períodos e indicadores da rede.
+- Toda reprodução visual de tráfego, replay histórico e navegação temporal deve ficar na aba **Mapa**, junto ao painel inferior de animação.
+- Não manter controles de animação duplicados entre Análise e Mapa.
+- Quando o usuário alterar o período na aba Análise, o período selecionado pode continuar sincronizado com o Replay da Rede no Mapa, mas a reprodução deverá ser iniciada/controlada somente pelo painel do Mapa.
