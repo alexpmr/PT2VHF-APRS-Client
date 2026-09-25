@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.6.16 - 2026-09-25
+
+- Release de teste somente **Windows x64 Portable**.
+- Corrigido o gargalo confirmado no `diagnostics.log`: `GET /api/topology` ocupava workers do Waitress por vários minutos.
+- Os JOINs de topologia deixam de aplicar `UPPER()` em `callsign/source/target`, permitindo o uso do índice/PRIMARY KEY de `stations.callsign`.
+- Adicionado cache curto e coalescência: nunca mais várias threads executam simultaneamente a mesma consulta de topologia.
+- Adicionado limite interno de **2,5 s** para abortar uma consulta patológica antes que monopolize um worker HTTP.
+- `loadTopology()` no frontend passa a ser single-flight.
+- Adicionados índices auxiliares para `topology_edges` e `topology_events`.
+
+
 ## v1.6.15 - 2026-09-25
 
 - Release de teste somente **Windows x64 Portable**.

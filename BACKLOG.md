@@ -92,6 +92,7 @@
 
 
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
+  - **Teste v1.6.16 topologia indexada:** corrigida a causa confirmada no diagnóstico: JOINs de `/api/topology` deixam de usar `UPPER()`, consultas concorrentes são coalescidas/cacheadas, há limite interno de 2,5 s e o frontend não inicia mais múltiplos `loadTopology()` simultâneos. Validar CPU, envio de mensagens, salvamento de Configuração e estabilidade prolongada.
   - **Teste v1.6.15 Mapa/single-flight:** removido o `loadMapData()` disparado por `stationActivity()`, adicionada trava para impedir refreshes completos concorrentes e limitado o processamento visual de rajadas. Esta versão também implementa os gauges de CPU/RAM para observar o comportamento em tempo real.
   - **Resultado da v1.6.15:** a CPU deixou de crescer indefinidamente, mas estabilizou em aproximadamente **55%** e a aplicação ainda **congelou**. Isso indica que o fan-out do Mapa era parte do problema, porém permanece uma carga sustentada anormal ou um bloqueio subsequente.
   - **Mensagens na v1.6.15:** a aplicação trava menos, porém `POST /api/messages/send` ainda excede 10 s e a mensagem não entra na fila. O caminho de envio ainda faz `db.get_config()` e `db.add_outgoing_message_parts()` de forma síncrona antes de responder ao HTTP; portanto, qualquer contenção do writer SQLite bloqueia diretamente o botão Enviar.

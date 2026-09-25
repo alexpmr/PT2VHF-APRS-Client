@@ -22,6 +22,7 @@
     topologyLines: new Map(),
     topologyEnabled: false,
     topologyHours: 0,
+    topologyLoadBusy: false,
     mapLegendElement: null,
     trafficReplayLayers: new Set(),
     timelineReplayActive: false,
@@ -687,7 +688,9 @@
   }
 
   async function loadTopology() {
-    if (!state.map || !state.topologyEnabled) return;
+    if (!state.map || !state.topologyEnabled || state.activeTab !== 'map') return;
+    if (state.topologyLoadBusy) return;
+    state.topologyLoadBusy = true;
     try {
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.topologyHours)}`);
       const active = new Set();
@@ -734,6 +737,8 @@
       }
     } catch (err) {
       console.warn(err);
+    } finally {
+      state.topologyLoadBusy = false;
     }
   }
 

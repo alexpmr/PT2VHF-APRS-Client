@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.16": {
+        "title": "Correção da consulta de topologia que saturava o backend",
+        "items": [
+            "Remove UPPER() dos JOINs de topologia para permitir lookup indexado pelo callsign.",
+            "Impede consultas /api/topology concorrentes com coalescência/cache curto.",
+            "Adiciona limite interno de tempo à consulta para que nenhum worker fique preso por minutos.",
+            "Adiciona single-flight ao carregamento de topologia no frontend.",
+            "Inclui índices auxiliares de topologia para bancos existentes e novos.",
+            "Release de teste somente Windows x64 Portable, sem instalador e sem documentação.",
+        ],
+    },
     "1.6.15": {
         "title": "Correção do fan-out do Mapa e medidores de recursos",
         "items": [

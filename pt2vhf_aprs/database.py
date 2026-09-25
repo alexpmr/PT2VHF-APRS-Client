@@ -50,6 +50,12 @@ _retention_state = {
     "topology_events": {"pending": 0, "last": time.monotonic()},
 }
 
+_topology_query_lock = threading.Lock()
+_topology_cache_lock = threading.Lock()
+_topology_cache: dict[int, tuple[float, list[dict[str, Any]]]] = {}
+TOPOLOGY_CACHE_SECONDS = 2.0
+TOPOLOGY_QUERY_MAX_SECONDS = 2.5
+
 
 def _retention_due(name: str, added: int = 1) -> bool:
     """Executa housekeeping apenas em lotes, nunca a cada pacote recebido."""
@@ -323,6 +329,8 @@ def init_db() -> None:
                 PRIMARY KEY(source, target, kind)
             );
             CREATE INDEX IF NOT EXISTS idx_topology_last_seen ON topology_edges(last_seen DESC);
+            CREATE INDEX IF NOT EXISTS idx_topology_source_target ON topology_edges(source, target);
+            CREATE INDEX IF NOT EXISTS idx_topology_target ON topology_edges(target);
 
             CREATE TABLE IF NOT EXISTS topology_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -332,6 +340,7 @@ def init_db() -> None:
                 kind TEXT NOT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_topology_events_time ON topology_events(timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_topology_events_source_target ON topology_events(source, target);
             """
         )
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
@@ -852,33 +861,96 @@ def record_topology_from_raw(raw: str) -> None:
         _record_topology_from_raw_conn(conn, raw)
 
 def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
+    """Retorna enlaces observados sem permitir que uma consulta monopolize workers HTTP."""
     hours = int(hours or 0)
-    params: list[Any] = []
-    where = ""
     if hours > 0:
         hours = max(1, min(hours, 24 * 30))
-        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
-        where = "AND e.last_seen >= ?"
-        params.append(cutoff)
-    with connection() as conn:
-        rows = conn.execute(
-            f"""
-            SELECT e.source,e.target,e.kind,e.packet_count,e.first_seen,e.last_seen,e.igate,
-                   s1.latitude AS source_lat,s1.longitude AS source_lon,
-                   s2.latitude AS target_lat,s2.longitude AS target_lon
-            FROM topology_edges e
-            JOIN stations s1 ON UPPER(s1.callsign)=UPPER(e.source)
-            JOIN stations s2 ON UPPER(s2.callsign)=UPPER(e.target)
-            WHERE s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
-              AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
-              {where}
-            ORDER BY e.packet_count DESC, e.last_seen DESC
-            LIMIT 5000
-            """,
-            params,
-        ).fetchall()
-    return [dict(r) for r in rows]
+    else:
+        hours = 0
 
+    now = time.monotonic()
+    with _topology_cache_lock:
+        cached = _topology_cache.get(hours)
+        if cached and now - cached[0] <= TOPOLOGY_CACHE_SECONDS:
+            return [dict(item) for item in cached[1]]
+        stale = [dict(item) for item in cached[1]] if cached else []
+
+    # Nunca deixa várias threads do Waitress executarem a mesma consulta pesada.
+    if not _topology_query_lock.acquire(blocking=False):
+        diag.log_event("topology_query_coalesced", hours=hours, cached=bool(stale))
+        return stale
+
+    try:
+        # Outro request pode ter preenchido o cache enquanto aguardávamos o lock.
+        now = time.monotonic()
+        with _topology_cache_lock:
+            cached = _topology_cache.get(hours)
+            if cached and now - cached[0] <= TOPOLOGY_CACHE_SECONDS:
+                return [dict(item) for item in cached[1]]
+            stale = [dict(item) for item in cached[1]] if cached else stale
+
+        params: list[Any] = []
+        where = ""
+        if hours > 0:
+            cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+            where = "AND e.last_seen >= ?"
+            params.append(cutoff)
+
+        started = time.monotonic()
+        deadline = started + TOPOLOGY_QUERY_MAX_SECONDS
+        rows: list[sqlite3.Row] = []
+        interrupted = False
+
+        with connection() as conn:
+            # Proteção adicional: mesmo um plano ruim/DB legado nunca fica minutos
+            # segurando uma thread do servidor.
+            conn.set_progress_handler(
+                lambda: 1 if time.monotonic() >= deadline else 0,
+                20_000,
+            )
+            try:
+                rows = conn.execute(
+                    f"""
+                    SELECT e.source,e.target,e.kind,e.packet_count,e.first_seen,e.last_seen,e.igate,
+                           s1.latitude AS source_lat,s1.longitude AS source_lon,
+                           s2.latitude AS target_lat,s2.longitude AS target_lon
+                    FROM topology_edges e
+                    JOIN stations s1 ON s1.callsign = e.source
+                    JOIN stations s2 ON s2.callsign = e.target
+                    WHERE s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
+                      AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
+                      {where}
+                    ORDER BY e.packet_count DESC, e.last_seen DESC
+                    LIMIT 5000
+                    """,
+                    params,
+                ).fetchall()
+            except sqlite3.OperationalError as exc:
+                if "interrupted" in str(exc).lower():
+                    interrupted = True
+                    diag.log_event(
+                        "topology_query_timeout",
+                        hours=hours,
+                        duration_ms=round((time.monotonic() - started) * 1000, 1),
+                    )
+                else:
+                    raise
+            finally:
+                conn.set_progress_handler(None, 0)
+
+        if interrupted:
+            return stale
+
+        result = [dict(r) for r in rows]
+        with _topology_cache_lock:
+            _topology_cache[hours] = (time.monotonic(), result)
+
+        elapsed_ms = (time.monotonic() - started) * 1000
+        if elapsed_ms >= 250:
+            diag.log_event("topology_query_slow", hours=hours, duration_ms=round(elapsed_ms, 1), rows=len(result))
+        return [dict(item) for item in result]
+    finally:
+        _topology_query_lock.release()
 
 def topology_stats(hours: int = 0) -> dict[str, Any]:
     """Resumo agregado da topologia observada para diagnóstico rápido."""
@@ -950,8 +1022,8 @@ def topology_timeline(hours: int = 0, limit: int = 2500) -> list[dict[str, Any]]
                    s1.latitude AS source_lat,s1.longitude AS source_lon,
                    s2.latitude AS target_lat,s2.longitude AS target_lon
             FROM topology_events e
-            JOIN stations s1 ON UPPER(s1.callsign)=UPPER(e.source)
-            JOIN stations s2 ON UPPER(s2.callsign)=UPPER(e.target)
+            JOIN stations s1 ON s1.callsign = e.source
+            JOIN stations s2 ON s2.callsign = e.target
             WHERE s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
               AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
               {where}
