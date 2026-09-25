@@ -231,3 +231,22 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Manter também sincronizados, quando aplicável, **espessura** e **estilo** da linha (contínua/tracejada).
 - A legenda não deve manter cores fixas hard-coded quando existir uma preferência correspondente configurável.
 - A sincronização deve funcionar nos temas Claro e Escuro.
+
+
+## Corrigir espessura da topologia e melhorar salvamento da Configuração
+
+**Objetivo:** garantir que alterações visuais sejam aplicadas corretamente e tornar o fluxo de salvamento da aba Configuração mais claro e seguro.
+
+- Corrigir o ajuste de **Espessura da topologia** para que a alteração seja refletida imediatamente no Mapa e permaneça correta após salvar/reabrir a configuração.
+- Ao alterar a espessura, atualizar tanto os enlaces RF quanto os enlaces via IGate/APRS-IS já desenhados, sem exigir reiniciar o aplicativo.
+- Garantir que a legenda do Mapa acompanhe a mesma espessura configurada.
+- Mover o botão principal **Salvar configuração** para o **rodapé da aba Configuração**, após todas as seções.
+- Evitar botões de salvar duplicados no meio da página; manter uma ação principal clara no final da aba.
+- Ao clicar em **Salvar configuração**, exibir uma confirmação visual clara de que os dados foram salvos com sucesso.
+- A confirmação pode usar toast/aviso e deve indicar explicitamente **Configuração salva**.
+- Se houver qualquer alteração não salva e o usuário tentar mudar para outra aba, abrir uma confirmação perguntando se deseja:
+  - **Salvar e sair**;
+  - **Descartar/Cancelar as alterações**;
+  - **Continuar na Configuração**.
+- A detecção de alterações deve incluir campos de texto, seletores, checkboxes, cores, espessuras, tema e demais preferências da página.
+- Se o salvamento falhar, permanecer na aba Configuração e preservar os valores digitados para correção/tentativa posterior.
