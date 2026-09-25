@@ -215,3 +215,19 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Não confundir esse indicador com o estado de conexão APRS-IS; conexão e atividade devem continuar sendo informações separadas.
 - O design deve funcionar nos temas Claro e Escuro e ocupar pouco espaço na barra superior.
 - Como melhoria opcional, permitir tooltip ao passar o mouse mostrando algo como **Último RX: 21:42:03** / **Último TX: 21:42:05** e contadores acumulados da sessão.
+
+
+## Sincronizar legenda do Mapa com as cores configuradas
+
+**Objetivo:** garantir que a legenda represente exatamente os estilos visuais definidos pelo usuário nas Configurações.
+
+- A legenda da aba **Mapa** deve usar automaticamente as mesmas **cores dos traços** definidas em **Configuração → Mapa e Topologia**.
+- Sincronizar pelo menos:
+  - cor do **Tracklog**;
+  - cor dos **enlaces RF**;
+  - cor dos **enlaces via IGate/APRS-IS**;
+  - demais traços configuráveis que vierem a aparecer na legenda.
+- Quando o usuário alterar uma cor e salvar/aplicar a configuração, atualizar a legenda imediatamente, sem exigir reiniciar o aplicativo.
+- Manter também sincronizados, quando aplicável, **espessura** e **estilo** da linha (contínua/tracejada).
+- A legenda não deve manter cores fixas hard-coded quando existir uma preferência correspondente configurável.
+- A sincronização deve funcionar nos temas Claro e Escuro.
