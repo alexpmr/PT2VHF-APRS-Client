@@ -15,6 +15,7 @@ from . import __version__
 from . import database as db
 from .aprs_service import full_callsign, service
 from . import updater
+from .version_notes import notes_for
 
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
@@ -54,8 +55,8 @@ def get_update_status(force: bool = False) -> dict:
         "asset_url": None,
         "asset_size": 0,
         "asset_digest": None,
-        "update_mode": updater.current_update_mode(),
-        "install_supported": updater.current_update_mode() in {"windows-portable", "windows-installer", "macos-dmg", "linux-appimage"},
+        "update_mode": "manual",
+        "install_supported": False,
         "downloaded": False,
         "status": "unknown",
         "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -75,20 +76,15 @@ def get_update_status(force: bool = False) -> dict:
             release = json.loads(response.read().decode("utf-8"))
 
         latest = str(release.get("tag_name") or "").strip().lstrip("vV")
+        if not latest:
+            raise ValueError("Release mais recente sem tag de versão.")
         release_url = str(release.get("html_url") or "").strip() or None
         current_v = version_tuple(__version__)
         latest_v = version_tuple(latest)
-        asset = updater.select_asset(release, latest) if latest else None
-        pending = updater.pending_update()
 
-        payload["latest_version"] = latest or None
+        payload["latest_version"] = latest
         payload["release_url"] = release_url
         payload["release_notes"] = str(release.get("body") or "")
-        payload["asset_name"] = asset.get("name") if asset else None
-        payload["asset_url"] = asset.get("url") if asset else None
-        payload["asset_size"] = int(asset.get("size") or 0) if asset else 0
-        payload["asset_digest"] = asset.get("digest") if asset else None
-        payload["downloaded"] = bool(pending and str(pending.get("version") or "") == latest)
         payload["update_available"] = latest_v > current_v
         if latest_v > current_v:
             payload["status"] = "update_available"
@@ -96,14 +92,17 @@ def get_update_status(force: bool = False) -> dict:
             payload["status"] = "latest"
         else:
             payload["status"] = "ahead"
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+
+        # Somente resultados válidos entram no cache. Falhas nunca bloqueiam o
+        # próximo ciclo de verificação.
+        with _update_cache_lock:
+            _update_cache["timestamp"] = now
+            _update_cache["payload"] = dict(payload)
+        return payload
+    except Exception as exc:
         payload["status"] = "error"
         payload["error"] = str(exc)
-
-    with _update_cache_lock:
-        _update_cache["timestamp"] = now
-        _update_cache["payload"] = dict(payload)
-    return payload
+        return payload
 
 
 def create_app() -> Flask:
@@ -121,6 +120,18 @@ def create_app() -> Flask:
         payload.update(db.summary_counts())
         return jsonify(payload)
 
+    @app.get("/api/current-version-info")
+    def api_current_version_info():
+        cfg = db.get_config()
+        counts = db.summary_counts()
+        info = notes_for(__version__)
+        info["existing_install"] = bool(
+            str(cfg.get("callsign") or "").strip()
+            or int(counts.get("stations") or 0)
+            or int(counts.get("messages") or 0)
+        )
+        return jsonify(info)
+
     @app.get("/api/update-status")
     def api_update_status():
         force = str(request.args.get("force", "")).lower() in {"1", "true", "yes"}
@@ -128,40 +139,21 @@ def create_app() -> Flask:
 
     @app.post("/api/update/download")
     def api_update_download():
-        try:
-            status = get_update_status(force=True)
-            if status.get("status") != "update_available":
-                raise ValueError("Não há uma versão mais recente disponível.")
-            if not status.get("asset_url") or not status.get("asset_name"):
-                raise ValueError("A Release não possui um pacote compatível com esta plataforma.")
-            result = updater.download_asset(
-                str(status.get("latest_version") or ""),
-                {
-                    "name": status["asset_name"],
-                    "url": status["asset_url"],
-                    "size": status.get("asset_size") or 0,
-                    "digest": status.get("asset_digest") or "",
-                },
-            )
-            with _update_cache_lock:
-                _update_cache["timestamp"] = 0.0
-                _update_cache["payload"] = None
-            return jsonify({"ok": True, "update": result})
-        except Exception as exc:
-            return jsonify({"ok": False, "error": str(exc)}), 400
+        return jsonify({
+            "ok": False,
+            "error": "Atualização automática desativada. Abra a página oficial da Release para baixar manualmente.",
+        }), 410
 
     @app.get("/api/update/pending")
     def api_update_pending():
-        return jsonify({
-            "pending": updater.pending_update(),
-            "rollback": updater.rollback_available(),
-        })
+        return jsonify({"pending": None, "rollback": None, "auto_update": False})
 
     @app.post("/api/update/rollback")
     def api_update_rollback():
-        if updater.restore_windows_portable_backup():
-            return jsonify({"ok": True, "message": "Rollback preparado. Feche o aplicativo para concluir."})
-        return jsonify({"ok": False, "error": "Não há backup portátil disponível para rollback nesta plataforma."}), 400
+        return jsonify({
+            "ok": False,
+            "error": "Rollback automático desativado junto com o auto-update.",
+        }), 410
 
     @app.post("/api/connect")
     def api_connect():
@@ -277,6 +269,15 @@ def create_app() -> Flask:
             hours, limit = 0, 2500
         return jsonify(db.topology_timeline(hours, limit))
 
+    @app.get("/api/traffic/overview")
+    def api_traffic_overview():
+        try:
+            hours = int(request.args.get("hours", 0))
+            bins = int(request.args.get("bins", 120))
+            return jsonify(db.packet_traffic_overview(hours=hours, bins=bins))
+        except Exception as exc:
+            return jsonify({"first_timestamp": None, "last_timestamp": None, "total": 0, "bins": [], "error": str(exc)}), 400
+
     @app.get("/api/traffic/events")
     def api_traffic_events():
         try:
@@ -285,7 +286,15 @@ def create_app() -> Flask:
             after_id = int(request.args.get("after_id", 0))
             hours = int(request.args.get("hours", 0))
             limit = int(request.args.get("limit", 1000))
-            return jsonify(db.packet_traffic_events(after_id=after_id, hours=hours, limit=limit))
+            start = str(request.args.get("start") or "").strip() or None
+            end = str(request.args.get("end") or "").strip() or None
+            return jsonify(db.packet_traffic_events(
+                after_id=after_id,
+                hours=hours,
+                limit=limit,
+                start=start,
+                end=end,
+            ))
         except Exception as exc:
             return jsonify({"events": [], "last_id": db.latest_packet_id(), "error": str(exc)}), 400
 
