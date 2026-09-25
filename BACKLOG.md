@@ -34,3 +34,42 @@
 - Release Windows-only conforme solicitado: Setup x64 + Portable x64, sem nova documentação PDF/Linux/macOS.
 
 Novas demandas devem ser adicionadas abaixo deste ponto e continuar na série **1.6.x** até indicação explícita para avançar para **1.7**.
+
+
+## Corrigir espessura da Topologia observada no Mapa
+
+**Objetivo:** garantir que a espessura configurada para os enlaces da topologia seja aplicada imediatamente e de forma consistente no mapa.
+
+- Corrigir o caso em que **Configuração → Mapa e Topologia → Espessura da topologia** é alterada, mas o mapa continua exibindo os enlaces com a espessura anterior.
+- Ao salvar/aplicar a configuração, atualizar imediatamente todas as linhas de topologia já desenhadas.
+- Aplicar a espessura configurada também aos novos enlaces carregados posteriormente.
+- Manter a legenda sincronizada com a mesma espessura usada no mapa.
+- A correção deve valer para enlaces RF, IGate/APRS-IS e demais linhas da topologia que usem essa preferência.
+
+
+## Botão “Salvar configuração” no rodapé e confirmação visual de salvamento
+
+**Objetivo:** tornar o fluxo de edição da Configuração mais claro e evitar perda acidental de alterações.
+
+- Mover o botão **Salvar configuração** para o **rodapé da aba Configuração**, após todas as seções.
+- Manter o botão visível e acessível ao final da página, sem duplicá-lo no topo.
+- Ao salvar com sucesso, exibir uma confirmação visual clara, por exemplo **Configuração salva**.
+- A confirmação deve desaparecer automaticamente após alguns segundos e não bloquear a interface.
+- Se houver qualquer alteração não salva e o usuário tentar mudar de aba, exibir confirmação com opções:
+  - **Salvar e sair**;
+  - **Cancelar** a troca de aba e continuar editando;
+  - **Descartar alterações** quando aplicável.
+- Não perder valores digitados quando o salvamento falhar.
+
+
+## Popup “Atualizado para esta versão” após a primeira inicialização
+
+**Objetivo:** informar claramente ao usuário que o cliente foi atualizado e apresentar as novidades da versão recém-instalada.
+
+- Após iniciar pela primeira vez uma nova versão, exibir um popup informando **Atualizado para vX.Y.Z**.
+- Mostrar no popup um resumo das **novidades da versão atual**, preferencialmente derivado do changelog/release notes embutido no aplicativo.
+- Exibir o popup somente **uma vez por versão instalada**.
+- Persistir localmente qual foi a última versão cujo popup de novidades já foi exibido.
+- Incluir botão **OK/Fechar** e, quando houver, opção para abrir a página oficial da Release.
+- O popup não deve depender de acesso à Internet para mostrar as novidades básicas da versão instalada.
+- Atualizações futuras devem reutilizar a mesma estrutura automaticamente.
