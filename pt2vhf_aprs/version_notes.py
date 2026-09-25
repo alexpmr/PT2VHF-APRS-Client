@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.17": {
+        "title": "Release completa multiplataforma com correções de estabilidade",
+        "items": [
+            "Consolida as correções de CPU e travamento introduzidas nas versões 1.6.13 a 1.6.16.",
+            "Mantém o pipeline RX otimizado, o refresh de mapa single-flight e a consulta de topologia indexada com proteção de timeout.",
+            "Mantém os indicadores de CPU e RAM em tempo real na barra superior para diagnóstico operacional.",
+            "Publica Windows x64 Setup + Portable, Linux x86_64 TAR.GZ/AppImage/DEB, macOS ARM64/Intel e Manual PDF versionado.",
+            "O manual é regenerado com screenshots da própria versão e validado no workflow antes da publicação.",
+        ],
+    },
     "1.6.16": {
         "title": "Correção da consulta de topologia que saturava o backend",
         "items": [

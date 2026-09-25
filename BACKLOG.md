@@ -149,3 +149,11 @@
   - Adicionar validação de integridade da imagem no pipeline para evitar novos empacotamentos com arquivo corrompido.
 
 Novas demandas devem continuar na série **1.6.x** até indicação explícita para avançar para **1.7**.
+
+
+## Consolidado na v1.6.17
+
+- Release completa multiplataforma baseada nas correções testadas até a v1.6.16.
+- CPU inicial observada em torno de 1% após a correção da consulta de topologia, contra aproximadamente 55% na v1.6.15.
+- Mantida a instrumentação diagnóstica e os gauges de CPU/RAM para acompanhar estabilidade em uso real.
+- Publicação prevista para Windows, Linux, macOS e Manual PDF.

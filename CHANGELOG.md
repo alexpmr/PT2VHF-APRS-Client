@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.6.17 - 2026-09-25
+
+- Release completa multiplataforma consolidando as correções de estabilidade testadas na série 1.6.13-1.6.16.
+- Mantida a correção do gargalo em `/api/topology`: JOINs indexáveis, cache/coalescência, limite interno de tempo e carregamento single-flight.
+- Mantida a redução de fan-out do Mapa e o bloqueio de atualizações completas concorrentes.
+- Mantida a consolidação do processamento RX em uma única transação por pacote e o housekeeping SQLite em lotes.
+- Mantidos os indicadores de **CPU** e **RAM** em tempo real na barra superior.
+- Publicados artefatos para **Windows x64** (Setup + Portable), **Linux x86_64** (TAR.GZ, AppImage e DEB) e **macOS** (Apple Silicon ARM64 e Intel x86_64).
+- Manual PDF versionado regenerado com screenshots da versão e validado automaticamente no workflow.
+
+
 ## v1.6.16 - 2026-09-25
 
 - Release de teste somente **Windows x64 Portable**.
