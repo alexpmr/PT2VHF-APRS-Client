@@ -131,8 +131,10 @@
     el.classList.add('checking');
     textEl.textContent = ui('Verificando versão…', 'Checking version…');
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
-      const data = await api(`/api/update-status${force ? '?force=1' : ''}`);
+      const data = await api(`/api/update-status${force ? '?force=1' : ''}`, { signal: controller.signal });
       state.updateInfo = data;
       el.classList.remove('checking');
 
@@ -142,10 +144,7 @@
       if (data.status === 'update_available') {
         el.classList.add('update');
         textEl.textContent = ui(`Nova versão ${latest}`, `New version ${latest}`);
-        el.title = ui(`Instalada ${current}. Clique para atualizar.`, `Installed ${current}. Click to update.`);
-        if (state.currentConfig?.auto_download_updates && !data.downloaded && !state.updateDownloading) {
-          downloadAvailableUpdate(true);
-        }
+        el.title = ui(`Instalada ${current}. Clique para ver a Release e baixar manualmente.`, `Installed ${current}. Click to open the Release and download manually.`);
       } else if (data.status === 'latest') {
         el.classList.add('latest');
         textEl.textContent = ui('Última versão', 'Latest version');
@@ -155,17 +154,28 @@
         textEl.textContent = `Build ${current}`;
         el.title = latest ? `Build > ${latest}` : ui('Build de desenvolvimento.', 'Development build.');
       } else {
-        el.classList.add('error');
-        textEl.textContent = ui('Versão não verificada', 'Version not verified');
-        el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
+        throw new Error(data.error || ui('Falha temporária na verificação.', 'Temporary update check failure.'));
       }
       updateUpdateSettingsUi();
-    } catch (_) {
+    } catch (err) {
+      console.warn('Falha ao verificar nova versão:', err);
       el.classList.remove('checking');
       el.classList.add('error');
-      textEl.textContent = ui('Versão não verificada', 'Version not verified');
-      el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
+      const current = state.updateInfo?.current_version ? `v${state.updateInfo.current_version}` : '';
+      textEl.textContent = current
+        ? ui(`${current} · verificação indisponível`, `${current} · check unavailable`)
+        : ui('Falha temporária na verificação', 'Temporary check failure');
+      el.title = ui(
+        'Não foi possível verificar agora; nova tentativa será feita automaticamente.',
+        'Could not check now; another attempt will be made automatically.'
+      );
+      const status = $('#updateSettingsStatus');
+      if (status) status.textContent = ui(
+        'Não foi possível verificar agora; nova tentativa será feita automaticamente.',
+        'Could not check now; another attempt will be made automatically.'
+      );
     } finally {
+      clearTimeout(timeout);
       state.versionCheckInProgress = false;
     }
   }
@@ -174,72 +184,41 @@
     const data = state.updateInfo;
     if (!data || data.status !== 'update_available') return;
     $('#updateModalTitle').textContent = ui(`Nova versão v${data.latest_version} disponível`, `New version v${data.latest_version} available`);
-    $('#updateModalSummary').textContent = data.asset_name
-      ? ui(`Pacote compatível: ${data.asset_name}`, `Compatible package: ${data.asset_name}`)
-      : ui('Não há pacote automático compatível para esta plataforma.', 'No automatic package is available for this platform.');
+    $('#updateModalSummary').textContent = ui(
+      `Instalada v${data.current_version}. O download e a instalação são manuais.`,
+      `Installed v${data.current_version}. Download and installation are manual.`
+    );
     $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
-    $('#updateDownloadNow').classList.toggle('hidden', !data.asset_url || !!data.downloaded);
-    $('#updateDownloadProgress').textContent = data.downloaded
-      ? ui('Atualização já baixada. Ela será aplicada ao fechar se essa opção estiver habilitada.', 'Update already downloaded. It will be applied on exit if enabled.')
-      : '';
     $('#updateModal').classList.remove('hidden');
   }
 
-  async function downloadAvailableUpdate(silent = false) {
-    if (state.updateDownloading) return;
-    if (!state.updateInfo?.asset_url) {
-      if (!silent) toast(ui('Não há pacote automático compatível.', 'No compatible automatic package.'), 'error');
-      return;
-    }
-    state.updateDownloading = true;
-    const progress = $('#updateDownloadProgress');
-    if (progress) progress.textContent = ui('Baixando e verificando SHA-256…', 'Downloading and verifying SHA-256…');
-    try {
-      const result = await api('/api/update/download', { method: 'POST' });
-      if (progress) progress.textContent = ui(`Atualização baixada: ${result.update.asset_name}`, `Update downloaded: ${result.update.asset_name}`);
-      if (!silent) {
-        toast(ui('Atualização baixada e verificada.', 'Update downloaded and verified.'), 'ok');
-        if (state.updateInfo?.install_supported && !state.currentConfig?.install_updates_on_exit) {
-          const enable = window.confirm(ui(
-            'Deseja instalar automaticamente esta atualização quando fechar o aplicativo?',
-            'Install this update automatically when the application closes?'
-          ));
-          if (enable) {
-            const payload = { ...(state.currentConfig || {}), install_updates_on_exit: true };
-            const saved = await api('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-            state.currentConfig = saved.config || payload;
-            const checkbox = $('#configForm')?.elements.namedItem('install_updates_on_exit');
-            if (checkbox) checkbox.checked = true;
-          }
-        }
-      }
-      await refreshVersionStatus(true);
-      await refreshPendingUpdateStatus();
-    } catch (err) {
-      if (progress) progress.textContent = err.message;
-      if (!silent) toast(err.message, 'error');
-    } finally {
-      state.updateDownloading = false;
-    }
-  }
-
   async function refreshPendingUpdateStatus() {
-    try {
-      const data = await api('/api/update/pending');
-      const status = $('#updateSettingsStatus');
-      if (status) {
-        status.textContent = data.pending
-          ? ui(`Baixada v${data.pending.version}: ${data.pending.asset_name}`, `Downloaded v${data.pending.version}: ${data.pending.asset_name}`)
-          : ui('Nenhuma atualização pendente.', 'No pending update.');
-      }
-      $('#rollbackUpdateButton')?.classList.toggle('hidden', !data.rollback);
-      $('#downloadUpdateButton')?.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && !data.pending));
-    } catch (_) {}
+    const status = $('#updateSettingsStatus');
+    if (!status) return;
+    if (state.updateInfo?.status === 'update_available') {
+      status.textContent = ui(
+        `Nova versão v${state.updateInfo.latest_version} disponível. Instalação manual.`,
+        `New version v${state.updateInfo.latest_version} available. Manual installation.`
+      );
+    } else if (state.updateInfo?.status === 'latest') {
+      status.textContent = ui('Você está usando a última versão.', 'You are using the latest version.');
+    } else if (!state.versionCheckInProgress) {
+      status.textContent = ui('Aguardando próxima verificação.', 'Waiting for the next check.');
+    }
   }
 
   function updateUpdateSettingsUi() {
-    const btn = $('#downloadUpdateButton');
-    if (btn) btn.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && state.updateInfo?.asset_url && !state.updateInfo?.downloaded));
+    const btn = $('#openLatestReleaseButton');
+    if (btn) btn.classList.toggle('hidden', state.updateInfo?.status !== 'update_available' || !state.updateInfo?.release_url);
+    refreshPendingUpdateStatus();
+  }
+
+  function openLatestRelease() {
+    const url = state.updateInfo?.release_url;
+    if (!url) return;
+    const nativeApi = window.pywebview?.api;
+    if (nativeApi?.open_external) nativeApi.open_external(url);
+    else window.open(url, '_blank', 'noopener');
   }
 
   $('#versionStatus')?.addEventListener('click', e => {
@@ -248,27 +227,13 @@
     else refreshVersionStatus(true);
   });
   $('#updateModalClose')?.addEventListener('click', () => $('#updateModal')?.classList.add('hidden'));
-  $('#updateDownloadNow')?.addEventListener('click', () => downloadAvailableUpdate(false));
-  $('#downloadUpdateButton')?.addEventListener('click', () => downloadAvailableUpdate(false));
   $('#checkUpdatesNowButton')?.addEventListener('click', async () => {
     await refreshVersionStatus(true);
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
-    else toast(ui('Verificação concluída.', 'Update check completed.'), 'ok');
+    else if (state.updateInfo?.status === 'latest') toast(ui('Verificação concluída: última versão.', 'Check complete: latest version.'), 'ok');
   });
-  $('#updateOpenRelease')?.addEventListener('click', () => {
-    const url = state.updateInfo?.release_url;
-    if (!url) return;
-    const nativeApi = window.pywebview?.api;
-    if (nativeApi?.open_external) nativeApi.open_external(url);
-    else window.open(url, '_blank', 'noopener');
-  });
-  $('#rollbackUpdateButton')?.addEventListener('click', async () => {
-    if (!window.confirm(ui('Preparar rollback para a versão anterior ao fechar o aplicativo?', 'Prepare rollback to the previous version when the app closes?'))) return;
-    try {
-      const result = await api('/api/update/rollback', { method:'POST' });
-      toast(result.message || ui('Rollback preparado.', 'Rollback prepared.'), 'ok');
-    } catch (err) { toast(err.message, 'error'); }
-  });
+  $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
+  $('#openLatestReleaseButton')?.addEventListener('click', openLatestRelease);
 
   let toastTimer = null;
   function toast(message, type = '') {
@@ -2220,7 +2185,7 @@
       state.configLoaded = true;
       state.configBaseline = configFormSnapshot();
       state.configDirty = false;
-      await refreshPendingUpdateStatus();
+      updateUpdateSettingsUi();
     } catch (err) { toast(err.message, 'error'); }
     finally { state.configLoading = false; }
   }
@@ -2235,8 +2200,8 @@
     data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
     data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
     data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
-    data.auto_download_updates = !!form.elements.auto_download_updates?.checked;
-    data.install_updates_on_exit = !!form.elements.install_updates_on_exit?.checked;
+    data.auto_download_updates = false;
+    data.install_updates_on_exit = false;
 
     const filterValidation = validateAprsFilterSyntax(data.aprs_filter || '');
     if (!filterValidation.valid) {
@@ -2267,9 +2232,15 @@
       toast(
         result.reconnected
           ? ui('Configuração salva. APRS-IS reconectando com os novos parâmetros.', 'Configuration saved. APRS-IS is reconnecting with the new parameters.')
-          : ui('Configuração salva no banco local.', 'Configuration saved to the local database.'),
+          : ui('Configuração salva.', 'Configuration saved.'),
         'ok'
       );
+      const saveStatus = $('#configSaveStatus');
+      if (saveStatus) {
+        saveStatus.textContent = ui('Configuração salva com sucesso.', 'Configuration saved successfully.');
+        saveStatus.classList.add('saved');
+        setTimeout(() => saveStatus.classList.remove('saved'), 2600);
+      }
       applyMapPreferences(result.config || data);
       applyAppearancePreferences(result.config || data);
       await loadConfig();
@@ -3704,7 +3675,7 @@
     await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages(), pollTrafficEvents()]);
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
-    await refreshPendingUpdateStatus();
+    updateUpdateSettingsUi();
 
     // Não bloqueia a inicialização da interface aguardando permissão/localização.
     setTimeout(() => { initializeAutomaticLocation().catch(err => console.warn(err)); }, 1200);
