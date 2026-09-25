@@ -2365,3 +2365,17 @@ html[data-theme="light"] .config-save-footer {
     gap: 8px 14px;
   }
 }
+
+.traffic-replay-range {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 8px;
+}
+.traffic-replay-range .field.compact {
+  min-width: 185px;
+}
+.traffic-replay-range input[type="datetime-local"] {
+  min-height: 34px;
+}
