@@ -444,7 +444,8 @@ def test_v162_replay_update_and_settings_ui():
     assert 'id="trafficLiveButton"' in html
     assert 'id="trafficActivityIndicator"' in html
     assert 'id="animateTopologyButton"' not in html
-    assert html.count('type="submit"') == 1
+    assert html.count('type="submit"') == 0
+    assert 'id="saveConfigFooterButton" type="button"' in html
     assert 'id="saveConfigFooterButton"' in html
     assert 'id="whatsNewModal"' in html
     assert 'name="sound_on_station_activity" type="checkbox" checked' in html
