@@ -81,9 +81,11 @@
 
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
   - Na versão **Portable**, após alguns minutos aberta, a interface aparenta continuar visível, mas as operações que dependem do backend deixam de responder.
+  - **Reprodutibilidade confirmada:** ao fechar e abrir novamente, a aplicação volta a funcionar normalmente por algum tempo e depois trava de novo.
   - Sintomas observados: **não conecta ao APRS-IS**, **não verifica nova versão**, **não salva Configurações** e outras chamadas da interface ficam sem conclusão.
+  - O padrão temporal sugere acúmulo progressivo de requests/threads/conexões, lock persistente, polling sobreposto ou recurso não liberado, e não apenas erro pontual de uma tela.
   - Investigar travamento/indisponibilidade do servidor HTTP local, esgotamento ou bloqueio das threads do Waitress, chamadas `fetch` sem timeout, pollings concorrentes, contenção/lock do SQLite e interação com o WebView.
-  - Instrumentar watchdog/health-check interno do backend e registrar último request iniciado/concluído, threads ativas, tempo das consultas SQLite e exceções não tratadas.
+  - Instrumentar watchdog/health-check interno do backend e registrar último request iniciado/concluído, threads ativas, fila de requests, conexões SQLite abertas/tempo de espera e exceções não tratadas.
   - Evitar que uma operação lenta bloqueie as demais rotas da aplicação.
   - Adicionar timeout e cancelamento às chamadas HTTP do frontend, com feedback explícito quando o backend local não responder.
   - Criar teste de estabilidade prolongada da versão portátil, mantendo a aplicação aberta com recepção APRS, atualização de mapa/mensagens e ações de Configuração por vários minutos.
