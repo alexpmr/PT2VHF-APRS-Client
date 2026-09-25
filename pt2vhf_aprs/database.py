@@ -911,17 +911,30 @@ def latest_packet_id() -> int:
     return int(row[0] or 0)
 
 
-def packet_traffic_overview(hours: int = 0, bins: int = 120) -> dict[str, Any]:
-    """Faixa temporal e densidade para a timeline do Replay da Rede."""
+def packet_traffic_overview(
+    hours: int = 0,
+    bins: int = 120,
+    start: str | None = None,
+    end: str | None = None,
+) -> dict[str, Any]:
+    """Faixa temporal e densidade agregada para a timeline do Replay da Rede."""
     hours = int(hours or 0)
     bins = max(20, min(int(bins or 120), 240))
     clauses: list[str] = []
     params: list[Any] = []
-    if hours > 0:
+
+    if start:
+        clauses.append("timestamp >= ?")
+        params.append(str(start))
+    if end:
+        clauses.append("timestamp <= ?")
+        params.append(str(end))
+    if not start and hours > 0:
         hours = max(1, min(hours, 24 * 30))
         cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
         clauses.append("timestamp >= ?")
         params.append(cutoff)
+
     where = "WHERE " + " AND ".join(clauses) if clauses else ""
 
     with connection() as conn:
@@ -933,32 +946,46 @@ def packet_traffic_overview(hours: int = 0, bins: int = 120) -> dict[str, Any]:
         last_ts = row["last_ts"] if row else None
         total = int(row["total"] or 0) if row else 0
         density = [0 for _ in range(bins)]
+
         if first_ts and last_ts and total:
             try:
                 first_dt = datetime.fromisoformat(str(first_ts).replace("Z", "+00:00"))
                 last_dt = datetime.fromisoformat(str(last_ts).replace("Z", "+00:00"))
-                span = max(1.0, (last_dt - first_dt).total_seconds())
+                first_epoch = int(first_dt.timestamp())
+                last_epoch = int(last_dt.timestamp())
+                span = max(1, last_epoch - first_epoch + 1)
+                bucket_seconds = max(1.0, span / bins)
                 rows = conn.execute(
-                    f"SELECT timestamp FROM packets {where} ORDER BY timestamp",
-                    params,
+                    f"""
+                    SELECT CAST((CAST(strftime('%s', timestamp) AS INTEGER) - ?) / ? AS INTEGER) AS bucket,
+                           COUNT(*) AS packet_count
+                    FROM packets
+                    {where}
+                    GROUP BY bucket
+                    """,
+                    [first_epoch, bucket_seconds, *params],
                 ).fetchall()
-                for packet in rows:
-                    try:
-                        current = datetime.fromisoformat(str(packet["timestamp"]).replace("Z", "+00:00"))
-                        ratio = max(0.0, min(0.999999, (current - first_dt).total_seconds() / span))
-                        density[min(bins - 1, int(ratio * bins))] += 1
-                    except Exception:
-                        continue
+                for item in rows:
+                    bucket = int(item["bucket"] or 0)
+                    if 0 <= bucket < bins:
+                        density[bucket] += int(item["packet_count"] or 0)
+                    elif bucket >= bins:
+                        density[-1] += int(item["packet_count"] or 0)
             except Exception:
+                # A timeline continua utilizável mesmo se uma versão antiga do
+                # SQLite não interpretar algum formato ISO no strftime().
                 density = [0 for _ in range(bins)]
 
     return {
-        "hours": hours if hours > 0 else 0,
+        "hours": hours if hours > 0 and not start else 0,
+        "requested_start": start,
+        "requested_end": end,
         "first_timestamp": first_ts,
         "last_timestamp": last_ts,
         "total": total,
         "bins": density,
     }
+
 
 
 def packet_traffic_events(
@@ -978,6 +1005,9 @@ def packet_traffic_events(
     if after_id > 0:
         clauses.append("id > ?")
         params.append(after_id)
+        if end:
+            clauses.append("timestamp <= ?")
+            params.append(str(end))
     else:
         if start:
             clauses.append("timestamp >= ?")
