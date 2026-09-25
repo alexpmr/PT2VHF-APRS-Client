@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.13 - 2026-09-25
+
+- Release de teste somente **Windows x64 Portable**.
+- Removidas as consultas de retenção pesadas executadas a cada pacote recebido em `packets`, `aprs_log` e `topology_events`.
+- Housekeeping passa a ocorrer em lotes de aproximadamente **1.000 novos registros** ou após **5 minutos**, usando corte por chave primária.
+- Pollings pesados da interface foram desacelerados e passam a consultar mapa, mensagens, estações e log principalmente quando a aba correspondente está ativa.
+- Mantida a instrumentação diagnóstica para registrar requests lentos, SQLite lento e thread dumps caso o backend ainda fique indisponível.
+
+
 ## v1.6.12 - 2026-09-25
 
 - Release de diagnóstico somente **Windows x64 Portable**, sem instalador e sem manual.

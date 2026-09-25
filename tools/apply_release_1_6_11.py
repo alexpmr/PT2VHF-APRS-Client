@@ -13,7 +13,7 @@ checks = {
         "queue_message_parts",
     ],
     "pt2vhf_aprs/static/js/app.js": [
-        "O backend local não respondeu em 10 segundos.",
+        "O backend local não respondeu em 10 segundos",
         "schedulePolling",
         "void loadMessages({ scrollToNewest:true });",
     ],

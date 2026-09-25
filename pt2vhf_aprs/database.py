@@ -6,6 +6,7 @@ import os
 import re
 import sqlite3
 import sys
+import threading
 import time
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
@@ -35,6 +36,49 @@ def _default_data_dir() -> Path:
 DB_PATH = _default_data_dir() / "pt2vhf_aprs.db"
 
 BRAZIL_FILTER = "p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ"
+
+PACKET_RETENTION = 100_000
+APRS_LOG_RETENTION = 100_000
+TOPOLOGY_EVENT_RETENTION = 200_000
+RETENTION_SWEEP_EVERY = 1_000
+RETENTION_SWEEP_SECONDS = 300.0
+
+_retention_lock = threading.Lock()
+_retention_state = {
+    "packets": {"pending": 0, "last": time.monotonic()},
+    "aprs_log": {"pending": 0, "last": time.monotonic()},
+    "topology_events": {"pending": 0, "last": time.monotonic()},
+}
+
+
+def _retention_due(name: str, added: int = 1) -> bool:
+    """Executa housekeeping apenas em lotes, nunca a cada pacote recebido."""
+    now = time.monotonic()
+    with _retention_lock:
+        state = _retention_state[name]
+        state["pending"] = int(state["pending"]) + max(1, int(added or 1))
+        if int(state["pending"]) < RETENTION_SWEEP_EVERY and now - float(state["last"]) < RETENTION_SWEEP_SECONDS:
+            return False
+        state["pending"] = 0
+        state["last"] = now
+        return True
+
+
+def _trim_history_table(conn: sqlite3.Connection, table: str, keep: int) -> int:
+    """Remove somente o excedente usando a PK; chamada esporadicamente."""
+    if table not in {"packets", "aprs_log", "topology_events"}:
+        raise ValueError("Tabela de retenção inválida.")
+    keep = max(1, int(keep))
+    row = conn.execute(
+        f"SELECT id FROM {table} ORDER BY id DESC LIMIT 1 OFFSET ?",
+        (keep - 1,),
+    ).fetchone()
+    if not row:
+        return 0
+    cutoff = int(row[0])
+    cur = conn.execute(f"DELETE FROM {table} WHERE id < ?", (cutoff,))
+    return max(0, int(cur.rowcount or 0))
+
 
 DEFAULT_CONFIG = {
     "callsign": "",
@@ -588,10 +632,10 @@ def record_packet(raw: str, from_call: str | None = None, packet_format: str | N
             "INSERT INTO packets(timestamp, from_call, packet_format, raw) VALUES (?, ?, ?, ?)",
             (utc_now_iso(), from_call, packet_format, raw),
         )
-        # Retém os últimos 100 mil pacotes para evitar crescimento sem limite.
-        conn.execute(
-            "DELETE FROM packets WHERE id NOT IN (SELECT id FROM packets ORDER BY id DESC LIMIT 100000)"
-        )
+        if _retention_due("packets"):
+            deleted = _trim_history_table(conn, "packets", PACKET_RETENTION)
+            if deleted:
+                diag.log_event("retention_sweep", table="packets", deleted=deleted)
 
 
 def upsert_station(packet: dict[str, Any]) -> None:
@@ -783,9 +827,10 @@ def record_topology_from_raw(raw: str) -> None:
                 "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
                 (now, edge_source, target, kind),
             )
-        conn.execute(
-            "DELETE FROM topology_events WHERE id NOT IN (SELECT id FROM topology_events ORDER BY id DESC LIMIT 200000)"
-        )
+        if _retention_due("topology_events", len(edges)):
+            deleted = _trim_history_table(conn, "topology_events", TOPOLOGY_EVENT_RETENTION)
+            if deleted:
+                diag.log_event("retention_sweep", table="topology_events", deleted=deleted)
 
 
 def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
@@ -1390,10 +1435,10 @@ def add_aprs_log(direction: str, raw: str) -> int:
             "INSERT INTO aprs_log(timestamp, direction, raw) VALUES (?, ?, ?)",
             (utc_now_iso(), direction, str(raw)),
         )
-        # Retém os 100 mil registros mais recentes.
-        conn.execute(
-            "DELETE FROM aprs_log WHERE id NOT IN (SELECT id FROM aprs_log ORDER BY id DESC LIMIT 100000)"
-        )
+        if _retention_due("aprs_log"):
+            deleted = _trim_history_table(conn, "aprs_log", APRS_LOG_RETENTION)
+            if deleted:
+                diag.log_event("retention_sweep", table="aprs_log", deleted=deleted)
         return int(cur.lastrowid)
 
 

@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.13": {
+        "title": "Redução de CPU e housekeeping SQLite",
+        "items": [
+            "Remove as limpezas de tabelas grandes executadas a cada pacote APRS recebido.",
+            "Housekeeping de packets, aprs_log e topology_events passa a ocorrer em lotes a cada 1.000 registros ou 5 minutos.",
+            "A remoção do histórico excedente passa a usar corte por chave primária, evitando varreduras completas repetidas.",
+            "Reduz a frequência de pollings pesados e atualiza mapa, mensagens, estações e log principalmente quando a aba correspondente está ativa.",
+            "Mantém a instrumentação diagnóstica da v1.6.12 para acompanhar eventuais travamentos residuais.",
+            "Release de teste somente Windows x64 Portable, sem instalador e sem documentação.",
+        ],
+    },
     "1.6.12": {
         "title": "Portable de diagnóstico do travamento",
         "items": [

@@ -397,7 +397,11 @@
     state.activeTab = tab;
     $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
-    if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
+    if (tab === 'map') {
+      setTimeout(() => state.map?.invalidateSize(), 30);
+      void loadMapData();
+      void pollTrafficEvents();
+    }
     if (tab === 'messages') {
       loadMessages({ scrollToNewest: true });
     }
@@ -4079,20 +4083,26 @@
 
     // Cada rotina agenda a próxima execução apenas depois que a anterior termina.
     // Isso impede acúmulo de requests quando SQLite/backend ficam momentaneamente lentos.
-    schedulePolling(refreshStatus, 2000);
-    schedulePolling(loadMapData, 5000);
-    schedulePolling(pollTrafficEvents, 2000);
-    schedulePolling(loadMessages, 3000);
-    schedulePolling(checkIncomingPersonalMessages, 3000);
+    schedulePolling(refreshStatus, 3000);
+    schedulePolling(async () => {
+      if (state.activeTab === 'map') await loadMapData();
+    }, 10000);
+    schedulePolling(async () => {
+      if (state.activeTab === 'map') await pollTrafficEvents();
+    }, 3000);
+    schedulePolling(async () => {
+      if (state.activeTab === 'messages') await loadMessages();
+    }, 5000);
+    schedulePolling(checkIncomingPersonalMessages, 5000);
     schedulePolling(async () => {
       if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     }, 5 * 60 * 1000);
     schedulePolling(async () => {
       if (state.activeTab === 'stations') await loadStations();
-    }, 5000);
+    }, 10000);
     schedulePolling(async () => {
       if (state.activeTab === 'log') await loadLog(false);
-    }, 1000);
+    }, 3000);
   }
 
   boot();
