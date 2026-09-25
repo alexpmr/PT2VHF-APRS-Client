@@ -32,6 +32,13 @@
     trafficPollBusy: false,
     lastActivitySoundAt: 0,
     activityAudioContext: null,
+    lastRxCount: 0,
+    lastTxCount: 0,
+    trafficIndicatorTimer: null,
+    replayBounds: null,
+    replayWindowStart: null,
+    replayWindowEnd: null,
+    replaySeeking: false,
     favoriteCallsigns: new Set(),
     userLocationMarker: null,
     userLocationAccuracy: null,
@@ -754,7 +761,7 @@
       </div>
       <div class="station-popup-actions">
         ${favoriteStarHtml(s.callsign, false)}
-        <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Mostrar log</button>
+        <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Ver logs</button>
         <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}">Enviar mensagem</button>
       </div>
     </div>`;
@@ -822,8 +829,17 @@
     }
   }
 
-  function playStationActivitySound() {
-    if (!state.soundOnStationActivity) return;
+  function stationIsVisible(callsign) {
+    const call = normalizedCall(callsign);
+    if (!call || !state.map) return false;
+    const marker = state.markers.get(call);
+    const point = marker?.getLatLng?.();
+    if (!point || !Number.isFinite(Number(point.lat)) || !Number.isFinite(Number(point.lng))) return false;
+    return state.map.getBounds().contains(point);
+  }
+
+  function playStationActivitySound(callsign) {
+    if (!state.soundOnStationActivity || !stationIsVisible(callsign)) return;
     const now = Date.now();
     if (now - state.lastActivitySoundAt < 700) return;
     state.lastActivitySoundAt = now;
@@ -848,7 +864,7 @@
 
   function pulseStation(callsign, options = {}) {
     const call = normalizedCall(callsign);
-    if (!call || !state.highlightStationActivity) return;
+    if (!call || !state.highlightStationActivity || !stationIsVisible(call)) return;
     const marker = state.markers.get(call);
     const el = marker?.getElement?.();
     if (!el) return;
@@ -860,13 +876,21 @@
 
   function stationActivity(callsign) {
     const call = normalizedCall(callsign);
-    if (call && state.highlightStationActivity && !state.markers.has(call) && state.map) {
-      loadMapData().then(() => pulseStation(call)).catch(() => {});
-    } else {
-      pulseStation(call);
-    }
-    playStationActivitySound();
+    if (!call || !stationIsVisible(call)) return;
+    pulseStation(call);
+    playStationActivitySound(call);
   }
+
+  function trafficSegmentVisible(segment) {
+    if (!state.map) return false;
+    const from = L.latLng(Number(segment.source_lat), Number(segment.source_lon));
+    const to = L.latLng(Number(segment.target_lat), Number(segment.target_lon));
+    if (![from.lat, from.lng, to.lat, to.lng].every(Number.isFinite)) return false;
+    const bounds = state.map.getBounds();
+    if (bounds.contains(from) || bounds.contains(to)) return true;
+    return bounds.intersects(L.latLngBounds(from, to));
+  }
+
 
   function clearTrafficReplayLayers() {
     for (const layer of state.trafficReplayLayers) {
@@ -891,6 +915,7 @@
     const from = [Number(segment.source_lat), Number(segment.source_lon)];
     const to = [Number(segment.target_lat), Number(segment.target_lon)];
     if (![...from, ...to].every(Number.isFinite)) return Promise.resolve();
+    if (!trafficSegmentVisible(segment)) return Promise.resolve();
 
     const particle = L.circleMarker(from, {
       radius: 6,
@@ -2333,9 +2358,22 @@
     if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 2} px`;
   }
 
+  function previewTrackStyleFromForm() {
+    const form = $('#configForm');
+    if (!form) return;
+    state.mapConfig.track_color = form.elements.namedItem('track_color')?.value || '#3ba6ff';
+    state.mapConfig.track_width = Number(form.elements.namedItem('track_width')?.value || 2);
+    for (const line of state.trackLines.values()) {
+      line.setStyle({ color: state.mapConfig.track_color, weight: state.mapConfig.track_width, opacity: .78 });
+    }
+    syncMapPreferenceControls();
+    updateMapLegend();
+  }
+
   $('#configForm')?.elements.namedItem('track_color')?.addEventListener('input', e => {
     const colorText = $('#trackColorText');
     if (colorText) colorText.value = e.target.value;
+    previewTrackStyleFromForm();
   });
 
   $('#trackColorText')?.addEventListener('input', e => {
@@ -2344,13 +2382,11 @@
     if (/^#[0-9a-fA-F]{6}$/.test(value)) {
       const colorInput = $('#configForm')?.elements.namedItem('track_color');
       if (colorInput) colorInput.value = value;
+      previewTrackStyleFromForm();
     }
   });
 
-  $('#trackWidth')?.addEventListener('input', e => {
-    const out = $('#trackWidthValue');
-    if (out) out.textContent = `${e.target.value} px`;
-  });
+  $('#trackWidth')?.addEventListener('input', previewTrackStyleFromForm);
 
   $('#mapBrightness')?.addEventListener('input', e => {
     const out = $('#mapBrightnessValue');
@@ -2367,6 +2403,16 @@
     state.mapConfig.topology_width = Number(form.elements.namedItem('topology_width')?.value || 2);
     syncMapPreferenceControls();
     if (state.topologyEnabled) loadTopology();
+    else {
+      for (const line of state.topologyLines.values()) {
+        const kind = line.options?.dashArray ? 'igate' : 'rf';
+        line.setStyle({
+          color: kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+          weight: state.mapConfig.topology_width
+        });
+      }
+    }
+    updateMapLegend();
   }
 
   function bindTopologyColor(name, textSelector) {
