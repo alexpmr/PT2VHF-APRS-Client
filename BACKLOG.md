@@ -51,17 +51,19 @@
 - Adicionados smoke tests em **Ubuntu 22.04** e **Ubuntu 24.04**.
 - Release somente Linux, sem Windows, macOS ou PDF.
 
+## Concluído na v1.6.8
+
+- Corrigido o travamento no envio de mensagens com **fila assíncrona de transmissão APRS**.
+- Adicionada **deduplicação** para impedir múltiplos envios após cliques repetidos.
+- Botão **Enviar** é temporariamente bloqueado enquanto a mensagem entra na fila.
+- Ao fechar a aplicação, filas pendentes são canceladas e não são reenviadas na próxima abertura.
+- Adicionada manutenção leve de encerramento com **PRAGMA optimize** e checkpoint do WAL do SQLite.
+- Serviços, conexão APRS-IS e worker de transmissão são encerrados de forma controlada.
+- Logo APRS oficial passa a ser referenciada diretamente no template.
+- Release para **Windows x64 e Linux x86_64**, sem macOS e sem PDF.
+
 ## Pendências para próximas versões
 
-- **Rotina de encerramento / manutenção automática**
-  - Ao fechar a aplicação, executar uma rotina leve de manutenção para deixar o ambiente consistente para a próxima inicialização.
-  - Encerrar corretamente threads, timers, filas e conexões APRS-IS antes de finalizar o processo.
-  - Limpar caches temporários e estados transitórios que não precisem persistir.
-  - Fazer commit/flush seguro de operações pendentes no SQLite.
-  - Executar manutenção do banco apenas quando necessário, evitando operações pesadas a cada fechamento.
-  - Remover registros temporários/orfãos e resíduos de sessões incompletas, sem apagar dados operacionais legítimos.
-  - Garantir que filas de transmissão não fiquem penduradas para serem reenviadas indevidamente na próxima abertura.
-  - Registrar em log qualquer erro ocorrido durante a rotina de encerramento.
-  - A rotina não deve atrasar perceptivelmente o fechamento da aplicação.
+Nenhum item pendente registrado neste momento.
 
 Novas demandas devem continuar na série **1.6.x** até indicação explícita para avançar para **1.7**.
