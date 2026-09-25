@@ -1363,3 +1363,31 @@ def list_aprs_log(filter_text: str = "", direction: str = "ALL", limit: int = 10
 def clear_aprs_log() -> None:
     with connection() as conn:
         conn.execute("DELETE FROM aprs_log")
+
+
+def shutdown_maintenance() -> dict[str, int]:
+    """Manutenção leve e segura ao encerrar a aplicação."""
+    cancelled = 0
+    with connection() as conn:
+        cur = conn.execute(
+            "UPDATE messages SET status='Cancelada no encerramento' "
+            "WHERE direction='out' AND status='Na fila'"
+        )
+        cancelled = max(0, int(cur.rowcount or 0))
+        conn.execute("PRAGMA optimize")
+
+    checkpointed = 0
+    try:
+        raw = sqlite3.connect(DB_PATH, timeout=5)
+        try:
+            row = raw.execute("PRAGMA wal_checkpoint(PASSIVE)").fetchone()
+            checkpointed = int(row[1] if row and len(row) > 1 else 0)
+        finally:
+            raw.close()
+    except Exception:
+        checkpointed = 0
+
+    return {
+        "cancelled_queued_messages": cancelled,
+        "checkpointed_frames": checkpointed,
+    }
