@@ -59,11 +59,13 @@
 - Ao fechar a aplicação, filas pendentes são canceladas e não são reenviadas na próxima abertura.
 - Adicionada manutenção leve de encerramento com **PRAGMA optimize** e checkpoint do WAL do SQLite.
 - Serviços, conexão APRS-IS e worker de transmissão são encerrados de forma controlada.
-- Logo APRS oficial passa a ser referenciada diretamente no template.
 - Release para **Windows x64 e Linux x86_64**, sem macOS e sem PDF.
 
 ## Pendências para próximas versões
 
-Nenhum item pendente registrado neste momento.
+- **Logo APRS oficial ainda não aplicada corretamente**
+  - A imagem enviada pelo usuário ainda precisa ser incorporada com um arquivo de imagem válido no repositório.
+  - Atualizar cabeçalho/interface, favicon, ícones Windows/Linux e demais pontos visuais sem quebrar o build.
+  - Adicionar validação de integridade da imagem no pipeline para evitar novos empacotamentos com arquivo corrompido.
 
 Novas demandas devem continuar na série **1.6.x** até indicação explícita para avançar para **1.7**.
