@@ -856,6 +856,189 @@
     }
   }
 
+  function playStationActivitySound() {
+    if (!state.soundOnStationActivity) return;
+    const now = Date.now();
+    if (now - state.lastActivitySoundAt < 700) return;
+    state.lastActivitySoundAt = now;
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!state.activityAudioContext) state.activityAudioContext = new AudioContextClass();
+      const ctx = state.activityAudioContext;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
+      oscillator.connect(gain).connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.18);
+    } catch (_) {}
+  }
+
+  function pulseStation(callsign, options = {}) {
+    const call = normalizedCall(callsign);
+    if (!call || !state.highlightStationActivity) return;
+    const marker = state.markers.get(call);
+    const el = marker?.getElement?.();
+    if (!el) return;
+    el.classList.remove('station-transmitting');
+    void el.offsetWidth;
+    el.classList.add('station-transmitting');
+    setTimeout(() => el.classList.remove('station-transmitting'), Number(options.duration || 1800));
+  }
+
+  function stationActivity(callsign) {
+    pulseStation(callsign);
+    playStationActivitySound();
+  }
+
+  function clearTrafficReplayLayers() {
+    for (const layer of state.trafficReplayLayers) {
+      try { state.map?.removeLayer(layer); } catch (_) {}
+    }
+    state.trafficReplayLayers.clear();
+    updateMapLegend();
+  }
+
+  function trafficEventDetails(event) {
+    return `<div class="traffic-packet-popup">
+      <strong>${escapeHtml(event.source || ui('Origem desconhecida', 'Unknown source'))}</strong><br>
+      ${escapeHtml(fmtDate(event.timestamp))}<br>
+      <span>${escapeHtml(event.packet_format || '')}</span>
+      <pre>${escapeHtml(event.raw || '')}</pre>
+    </div>`;
+  }
+
+  function animateTrafficSegment(segment, event, durationMs) {
+    if (!state.map) return Promise.resolve();
+    const from = [Number(segment.source_lat), Number(segment.source_lon)];
+    const to = [Number(segment.target_lat), Number(segment.target_lon)];
+    if (![...from, ...to].every(Number.isFinite)) return Promise.resolve();
+
+    const particle = L.circleMarker(from, {
+      radius: 6,
+      color: '#ffffff',
+      weight: 1,
+      fillColor: segment.kind === 'igate' ? state.mapConfig.topology_igate_color : '#ffd54a',
+      fillOpacity: .95,
+      opacity: .95,
+      pane: 'markerPane'
+    }).addTo(state.map);
+    particle.bindPopup(trafficEventDetails(event), { maxWidth: 440 });
+    state.trafficReplayLayers.add(particle);
+    updateMapLegend();
+
+    const start = performance.now();
+    return new Promise(resolve => {
+      const tick = now => {
+        const t = Math.min(1, (now - start) / Math.max(120, durationMs));
+        const eased = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+        particle.setLatLng([
+          from[0] + (to[0] - from[0]) * eased,
+          from[1] + (to[1] - from[1]) * eased
+        ]);
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          setTimeout(() => {
+            try { state.map?.removeLayer(particle); } catch (_) {}
+            state.trafficReplayLayers.delete(particle);
+            updateMapLegend();
+          }, 650);
+          resolve();
+        }
+      };
+      requestAnimationFrame(tick);
+    });
+  }
+
+  async function animateTrafficEvent(event) {
+    if (!event) return;
+    stationActivity(event.source);
+    const speed = Math.max(.5, Number(state.trafficSpeed || 1));
+    const duration = Math.max(180, 1150 / speed);
+    // Todos os segmentos observados do mesmo pacote começam juntos para mostrar a propagação multi-link simultânea.
+    await Promise.all((event.segments || []).map(segment => animateTrafficSegment(segment, event, duration)));
+    $('#trafficCurrentTime') && ($('#trafficCurrentTime').textContent = fmtDate(event.timestamp) || '—');
+  }
+
+  function updateTrafficAnimationUi() {
+    const total = state.trafficEvents.length;
+    const played = Math.min(state.trafficIndex, total);
+    const pending = Math.max(0, total - played);
+    if ($('#trafficPlayedCount')) $('#trafficPlayedCount').textContent = played.toLocaleString(currentLocale());
+    if ($('#trafficPendingCount')) $('#trafficPendingCount').textContent = pending.toLocaleString(currentLocale());
+    if ($('#trafficCurrentSpeed')) $('#trafficCurrentSpeed').textContent = `${String(state.trafficSpeed).replace('.', ',')}×`;
+    if ($('#trafficAnimationStatus')) {
+      $('#trafficAnimationStatus').textContent = state.trafficPlaying
+        ? (state.trafficMode === 'live' ? ui('Ao vivo', 'Live') : ui('Reproduzindo', 'Playing'))
+        : ui('Pausado', 'Paused');
+    }
+    if ($('#trafficPlayPauseButton')) $('#trafficPlayPauseButton').textContent = state.trafficPlaying ? '⏸ Pause' : '▶ Play';
+    updateMapLegend();
+  }
+
+  async function loadTrafficHistory(resetIndex = true) {
+    const hours = topologyPeriodValue(state.topologyHours);
+    const data = await api(`/api/traffic/events?hours=${encodeURIComponent(hours)}&limit=5000`);
+    state.trafficEvents = (data.events || []).filter(event => event.source || (event.segments || []).length);
+    if (resetIndex) state.trafficIndex = 0;
+    updateTrafficAnimationUi();
+  }
+
+  function stopTrafficTimer() {
+    if (state.trafficTimer) {
+      clearTimeout(state.trafficTimer);
+      state.trafficTimer = null;
+    }
+  }
+
+  async function playNextTrafficEvent() {
+    stopTrafficTimer();
+    if (!state.trafficPlaying || state.trafficMode !== 'history') return;
+    if (!state.trafficEvents.length) {
+      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); state.trafficPlaying = false; updateTrafficAnimationUi(); return; }
+    }
+    if (state.trafficIndex >= state.trafficEvents.length) {
+      state.trafficPlaying = false;
+      updateTrafficAnimationUi();
+      return;
+    }
+    const event = state.trafficEvents[state.trafficIndex++];
+    updateTrafficAnimationUi();
+    await animateTrafficEvent(event);
+    if (!state.trafficPlaying) return;
+    state.trafficTimer = setTimeout(playNextTrafficEvent, Math.max(60, 500 / Math.max(.5, Number(state.trafficSpeed || 1))));
+  }
+
+  async function pollTrafficEvents() {
+    if (state.trafficPollBusy) return;
+    state.trafficPollBusy = true;
+    try {
+      if (!state.lastTrafficPacketId) {
+        const baseline = await api('/api/traffic/events?bootstrap=1');
+        state.lastTrafficPacketId = Number(baseline.last_id || 0);
+        return;
+      }
+      const data = await api(`/api/traffic/events?after_id=${encodeURIComponent(state.lastTrafficPacketId)}&limit=500`);
+      const events = data.events || [];
+      state.lastTrafficPacketId = Math.max(state.lastTrafficPacketId, Number(data.last_id || 0));
+      for (const event of events) {
+        stationActivity(event.source);
+        if (state.trafficPlaying && state.trafficMode === 'live') animateTrafficEvent(event);
+      }
+    } catch (err) {
+      console.warn(err);
+    } finally {
+      state.trafficPollBusy = false;
+    }
+  }
+
   async function refreshStatus() {
     try {
       const s = await api('/api/status');
@@ -3243,10 +3426,10 @@
     const box = $('#topologyStatsContent');
     if (!box) return;
     const periodSelect = $('#analysisPeriod');
-    if (periodSelect) periodSelect.value = String(state.topologyHours || 24);
+    if (periodSelect) periodSelect.value = String(topologyPeriodValue(state.topologyHours));
     box.textContent = ui('Carregando análise…', 'Loading analysis…');
     try {
-      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(state.topologyHours || 24)}`);
+      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}`);
       const list = (items, formatter) => items.length
         ? '<ol>' + items.map(formatter).join('') + '</ol>'
         : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
@@ -3257,14 +3440,19 @@
         list(data.igates || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
         '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
         list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>' +
-        '<div class="topology-stat-group"><h4>' + ui('Comparação com período anterior', 'Comparison with previous period') + '</h4>' +
+        '<div class="topology-stat-group"><h4>' + ui(data.complete ? 'Histórico completo' : 'Comparação com período anterior', data.complete ? 'Complete history' : 'Comparison with previous period') + '</h4>' +
         '<div class="hint">' +
-        ui(
-          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
-          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
-        ) + '</div></div>';
+        (data.complete
+          ? ui(
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos armazenados no histórico disponível.`,
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events stored in the available history.`
+            )
+          : ui(
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
+            )) + '</div></div>';
 
-      if ($('#analysisMetricPeriod')) $('#analysisMetricPeriod').textContent = state.topologyHours === 168 ? '7 dias' : `${state.topologyHours} h`;
+      if ($('#analysisMetricPeriod')) $('#analysisMetricPeriod').textContent = topologyPeriodLabel();
       if ($('#analysisMetricEdges')) $('#analysisMetricEdges').textContent = Number(data.edges || 0).toLocaleString(currentLocale());
       if ($('#analysisMetricPackets')) $('#analysisMetricPackets').textContent = Number(data.packets || 0).toLocaleString(currentLocale());
       if ($('#analysisMetricEvents')) $('#analysisMetricEvents').textContent = Number(data.comparison?.current_events || 0).toLocaleString(currentLocale());
@@ -3275,7 +3463,7 @@
 
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
   $('#analysisPeriod')?.addEventListener('change', async event => {
-    state.topologyHours = Number(event.target.value) || 24;
+    state.topologyHours = topologyPeriodValue(event.target.value);
     localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
     const mapPeriod = $('#topologyHours');
     if (mapPeriod) mapPeriod.value = String(state.topologyHours);
@@ -3286,7 +3474,7 @@
   $('#animateTopologyButton')?.addEventListener('click', async () => {
     if (!state.map) return;
     try {
-      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(state.topologyHours || 24)}&limit=2500`);
+      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}&limit=5000`);
       if (!events.length) {
         toast(ui('Não há eventos de topologia com posição para animar.', 'There are no positioned topology events to animate.'), 'error');
         return;
@@ -3345,7 +3533,7 @@
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
     updateMyMessagesButton();
     updateUnreadMessagesButton();
-    await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages()]);
+    await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages(), pollTrafficEvents()]);
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
     await refreshPendingUpdateStatus();
@@ -3355,9 +3543,10 @@
 
     setInterval(refreshStatus, 2000);
     setInterval(loadMapData, 5000);
+    setInterval(pollTrafficEvents, 2000);
     setInterval(loadMessages, 3000);
     setInterval(checkIncomingPersonalMessages, 3000);
-    setInterval(() => { if (state.currentConfig?.check_updates_on_start) refreshVersionStatus(false); }, 30 * 60 * 1000);
+    setInterval(() => { if (state.currentConfig?.check_updates_on_start) refreshVersionStatus(false); }, 5 * 60 * 1000);
     setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
     setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
   }
