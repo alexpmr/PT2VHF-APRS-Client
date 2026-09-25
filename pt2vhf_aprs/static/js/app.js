@@ -245,6 +245,50 @@
   $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
   $('#openLatestReleaseButton')?.addEventListener('click', openLatestRelease);
 
+  async function showWhatsNewAfterUpdate() {
+    try {
+      const info = await api('/api/current-version-info');
+      const version = String(info.version || '').trim();
+      if (!version) return;
+      const key = 'pt2vhf_last_seen_version';
+      const previous = String(localStorage.getItem(key) || '').trim();
+
+      // Primeira instalação: apenas registra a versão. Em instalações já
+      // configuradas, ausência da chave indica atualização a partir de uma
+      // versão anterior que ainda não possuía este recurso.
+      if (!previous && !info.existing_install) {
+        localStorage.setItem(key, version);
+        return;
+      }
+      if (previous === version) return;
+
+      const list = $('#whatsNewList');
+      const title = $('#whatsNewTitle');
+      const summary = $('#whatsNewSummary');
+      if (!list || !title || !summary) return;
+
+      title.textContent = ui(
+        `PT2VHF APRS Client atualizado para v${version}`,
+        `PT2VHF APRS Client updated to v${version}`
+      );
+      summary.textContent = previous
+        ? ui(`Atualização concluída: v${previous} → v${version}. Principais novidades:`, `Update complete: v${previous} → v${version}. What's new:`)
+        : ui(`Atualização concluída para v${version}. Principais novidades:`, `Updated to v${version}. What's new:`);
+      list.innerHTML = (info.items || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
+      $('#whatsNewModal')?.classList.remove('hidden');
+      $('#whatsNewModal')?.setAttribute('data-version', version);
+    } catch (err) {
+      console.warn('Não foi possível carregar as novidades da versão:', err);
+    }
+  }
+
+  $('#whatsNewClose')?.addEventListener('click', () => {
+    const modal = $('#whatsNewModal');
+    const version = String(modal?.getAttribute('data-version') || '').trim();
+    if (version) localStorage.setItem('pt2vhf_last_seen_version', version);
+    modal?.classList.add('hidden');
+  });
+
   let toastTimer = null;
   function toast(message, type = '') {
     const el = $('#toast');
@@ -2340,6 +2384,13 @@
   function markConfigDirty() {
     if (!state.configLoaded || state.configLoading) return;
     state.configDirty = configFormSnapshot() !== state.configBaseline;
+    const status = $('#configSaveStatus');
+    if (status) {
+      status.textContent = state.configDirty
+        ? ui('Há alterações não salvas.', 'There are unsaved changes.')
+        : ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
+      status.classList.toggle('unsaved', state.configDirty);
+    }
   }
 
   async function loadConfig() {
@@ -2376,6 +2427,11 @@
       state.configLoaded = true;
       state.configBaseline = configFormSnapshot();
       state.configDirty = false;
+      const configStatus = $('#configSaveStatus');
+      if (configStatus && !configStatus.classList.contains('saved')) {
+        configStatus.textContent = ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
+        configStatus.classList.remove('unsaved');
+      }
       updateUpdateSettingsUi();
     } catch (err) { toast(err.message, 'error'); }
     finally { state.configLoading = false; }
@@ -2426,17 +2482,18 @@
           : ui('Configuração salva.', 'Configuration saved.'),
         'ok'
       );
-      const saveStatus = $('#configSaveStatus');
-      if (saveStatus) {
-        saveStatus.textContent = ui('Configuração salva com sucesso.', 'Configuration saved successfully.');
-        saveStatus.classList.add('saved');
-        setTimeout(() => saveStatus.classList.remove('saved'), 2600);
-      }
       applyMapPreferences(result.config || data);
       applyAppearancePreferences(result.config || data);
       await loadConfig();
       await loadStations();
       state.configDirty = false;
+      const saveStatus = $('#configSaveStatus');
+      if (saveStatus) {
+        saveStatus.textContent = ui('Configuração salva com sucesso.', 'Configuration saved successfully.');
+        saveStatus.classList.remove('unsaved');
+        saveStatus.classList.add('saved');
+        setTimeout(() => saveStatus.classList.remove('saved'), 2600);
+      }
       return true;
     } catch (err) {
       toast(err.message, 'error');
@@ -3880,6 +3937,8 @@
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
     updateUpdateSettingsUi();
+    await showWhatsNewAfterUpdate();
+    loadTrafficOverview().catch(err => console.warn('Replay overview:', err));
 
     // Não bloqueia a inicialização da interface aguardando permissão/localização.
     setTimeout(() => { initializeAutomaticLocation().catch(err => console.warn(err)); }, 1200);
