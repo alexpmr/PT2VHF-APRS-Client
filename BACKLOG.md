@@ -79,6 +79,16 @@
 
 ## Pendências para próximas versões
 
+- **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
+  - Na versão **Portable**, após alguns minutos aberta, a interface aparenta continuar visível, mas as operações que dependem do backend deixam de responder.
+  - Sintomas observados: **não conecta ao APRS-IS**, **não verifica nova versão**, **não salva Configurações** e outras chamadas da interface ficam sem conclusão.
+  - Investigar travamento/indisponibilidade do servidor HTTP local, esgotamento ou bloqueio das threads do Waitress, chamadas `fetch` sem timeout, pollings concorrentes, contenção/lock do SQLite e interação com o WebView.
+  - Instrumentar watchdog/health-check interno do backend e registrar último request iniciado/concluído, threads ativas, tempo das consultas SQLite e exceções não tratadas.
+  - Evitar que uma operação lenta bloqueie as demais rotas da aplicação.
+  - Adicionar timeout e cancelamento às chamadas HTTP do frontend, com feedback explícito quando o backend local não responder.
+  - Criar teste de estabilidade prolongada da versão portátil, mantendo a aplicação aberta com recepção APRS, atualização de mapa/mensagens e ações de Configuração por vários minutos.
+
+
 - **Configurações — falha de salvamento com banco antigo/inconsistente**
   - O problema desapareceu após apagar o banco local e iniciar com um banco novo.
   - Isso indica possível incompatibilidade de migração, esquema antigo, registro de configuração inconsistente ou dado legado inválido, e não necessariamente falha do botão de salvar em uma instalação limpa.
