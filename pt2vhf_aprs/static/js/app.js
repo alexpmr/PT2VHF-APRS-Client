@@ -1169,6 +1169,38 @@
     }
   }
 
+  function flashTrafficIndicator(direction) {
+    const root = $('#trafficActivityIndicator');
+    if (!root) return;
+    const cls = direction === 'tx' ? 'tx-active' : 'rx-active';
+    root.classList.add(cls);
+    clearTimeout(state.trafficIndicatorTimer);
+    state.trafficIndicatorTimer = setTimeout(() => {
+      root.classList.remove('rx-active', 'tx-active');
+    }, 360);
+  }
+
+  function updateTrafficActivityIndicator(status) {
+    const rx = Number(status.packets_received || 0);
+    const tx = Number(status.packets_sent || 0);
+
+    if (rx >= state.lastRxCount && rx > state.lastRxCount) flashTrafficIndicator('rx');
+    if (tx >= state.lastTxCount && tx > state.lastTxCount) flashTrafficIndicator('tx');
+
+    state.lastRxCount = rx;
+    state.lastTxCount = tx;
+
+    const root = $('#trafficActivityIndicator');
+    if (root) {
+      const rxText = status.last_packet_at ? fmtDate(status.last_packet_at) : '—';
+      const txText = status.last_tx_at ? fmtDate(status.last_tx_at) : '—';
+      root.title = ui(
+        `RX: ${rx.toLocaleString(currentLocale())} · último ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · último ${txText}`,
+        `RX: ${rx.toLocaleString(currentLocale())} · last ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · last ${txText}`
+      );
+    }
+  }
+
   async function refreshStatus() {
     try {
       const s = await api('/api/status');
@@ -1189,6 +1221,7 @@
       const stationCount = Number(s.stations || 0);
       const messageCount = Number(s.messages || 0);
       const packetCount = Number(s.packets_received || 0);
+      updateTrafficActivityIndicator(s);
       if ($('#headerStationCount')) $('#headerStationCount').textContent = stationCount.toLocaleString('pt-BR');
       if ($('#headerPacketCount')) $('#headerPacketCount').textContent = packetCount.toLocaleString('pt-BR');
       if ($('#stationTotalCount')) $('#stationTotalCount').textContent = stationCount.toLocaleString('pt-BR');
