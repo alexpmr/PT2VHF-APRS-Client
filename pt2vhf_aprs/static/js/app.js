@@ -957,14 +957,83 @@
     });
   }
 
+  function trafficTimestampMs(value) {
+    const ms = new Date(value || '').getTime();
+    return Number.isFinite(ms) ? ms : null;
+  }
+
+  function drawTrafficDensity() {
+    const canvas = $('#trafficDensityCanvas');
+    const bins = state.trafficOverview?.bins || [];
+    if (!canvas || !bins.length) return;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width || 800));
+    const height = Math.max(1, Math.round(rect.height || 42));
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, width, height);
+    const max = Math.max(1, ...bins.map(v => Number(v || 0)));
+    const barWidth = width / bins.length;
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3ba6ff';
+    bins.forEach((value, index) => {
+      const h = Math.max(1, Math.round((Number(value || 0) / max) * (height - 3)));
+      ctx.globalAlpha = .25 + .65 * (Number(value || 0) / max);
+      ctx.fillRect(index * barWidth, height - h, Math.max(1, barWidth), h);
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function trafficTimelineTimestamp(value) {
+    const first = trafficTimestampMs(state.trafficOverview?.first_timestamp);
+    const last = trafficTimestampMs(state.trafficOverview?.last_timestamp);
+    if (first === null || last === null) return null;
+    const ratio = Math.max(0, Math.min(1, Number(value || 0) / 1000));
+    return new Date(first + (last - first) * ratio).toISOString();
+  }
+
+  function syncTrafficTimeline(timestamp) {
+    const slider = $('#trafficTimeline');
+    const first = trafficTimestampMs(state.trafficOverview?.first_timestamp);
+    const last = trafficTimestampMs(state.trafficOverview?.last_timestamp);
+    const current = trafficTimestampMs(timestamp);
+    if (!slider || first === null || last === null || current === null) return;
+    const ratio = last > first ? (current - first) / (last - first) : 0;
+    slider.value = String(Math.round(Math.max(0, Math.min(1, ratio)) * 1000));
+    if ($('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(timestamp) || '—';
+  }
+
+  async function loadTrafficOverview() {
+    const hours = topologyPeriodValue(state.topologyHours);
+    const data = await api(`/api/traffic/overview?hours=${encodeURIComponent(hours)}&bins=140`);
+    state.trafficOverview = data;
+    if ($('#trafficTimelineStart')) $('#trafficTimelineStart').textContent = fmtDate(data.first_timestamp) || '—';
+    if ($('#trafficTimelineEnd')) $('#trafficTimelineEnd').textContent = fmtDate(data.last_timestamp) || '—';
+    const slider = $('#trafficTimeline');
+    if (slider) {
+      slider.min = '0';
+      slider.max = '1000';
+      slider.step = '1';
+      if (!state.replaySeeking) slider.value = '0';
+      slider.disabled = !data.first_timestamp || !data.last_timestamp;
+    }
+    if ($('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(data.first_timestamp) || '—';
+    requestAnimationFrame(drawTrafficDensity);
+    return data;
+  }
+
   async function animateTrafficEvent(event) {
     if (!event) return;
     stationActivity(event.source);
-    const speed = Math.max(.5, Number(state.trafficSpeed || 1));
-    const duration = Math.max(180, 1150 / speed);
+    const speed = Math.max(.25, Number(state.trafficSpeed || 1));
+    const duration = Math.max(90, 1150 / speed);
+    state.timelineReplayActive = state.trafficMode === 'history';
+    updateMapLegend();
     // Todos os segmentos observados do mesmo pacote começam juntos para mostrar a propagação multi-link simultânea.
     await Promise.all((event.segments || []).map(segment => animateTrafficSegment(segment, event, duration)));
-    $('#trafficCurrentTime') && ($('#trafficCurrentTime').textContent = fmtDate(event.timestamp) || '—');
+    if ($('#trafficCurrentTime')) $('#trafficCurrentTime').textContent = fmtDate(event.timestamp) || '—';
+    syncTrafficTimeline(event.timestamp);
   }
 
   function updateTrafficAnimationUi() {
@@ -980,15 +1049,60 @@
         : ui('Pausado', 'Paused');
     }
     if ($('#trafficPlayPauseButton')) $('#trafficPlayPauseButton').textContent = state.trafficPlaying ? '⏸ Pause' : '▶ Play';
+    $('#trafficLiveButton')?.classList.toggle('active-filter', state.trafficMode === 'live');
     updateMapLegend();
   }
 
-  async function loadTrafficHistory(resetIndex = true) {
+  async function loadTrafficHistory(resetIndex = true, startTimestamp = '') {
+    if (resetIndex || !state.trafficOverview) await loadTrafficOverview();
+    const first = startTimestamp || state.trafficOverview?.first_timestamp || '';
     const hours = topologyPeriodValue(state.topologyHours);
-    const data = await api(`/api/traffic/events?hours=${encodeURIComponent(hours)}&limit=5000`);
+    let url = '/api/traffic/events?limit=5000';
+    if (first) url += `&start=${encodeURIComponent(first)}`;
+    else if (hours) url += `&hours=${encodeURIComponent(hours)}`;
+    const data = await api(url);
     state.trafficEvents = (data.events || []).filter(event => event.source || (event.segments || []).length);
+    state.trafficHasMore = !!data.has_more;
+    state.trafficChunkLastId = Number(data.last_id || 0);
     if (resetIndex) state.trafficIndex = 0;
+    if (first) syncTrafficTimeline(first);
     updateTrafficAnimationUi();
+  }
+
+  async function appendNextTrafficChunk() {
+    if (!state.trafficHasMore || !state.trafficChunkLastId) return false;
+    const data = await api(`/api/traffic/events?after_id=${encodeURIComponent(state.trafficChunkLastId)}&limit=5000`);
+    const next = (data.events || []).filter(event => event.source || (event.segments || []).length);
+    if (!next.length) {
+      state.trafficHasMore = false;
+      return false;
+    }
+    state.trafficEvents.push(...next);
+    state.trafficHasMore = !!data.has_more;
+    state.trafficChunkLastId = Number(data.last_id || state.trafficChunkLastId);
+    updateTrafficAnimationUi();
+    return true;
+  }
+
+  async function seekTrafficTimeline(value) {
+    const target = trafficTimelineTimestamp(value);
+    if (!target) return;
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.replaySeeking = true;
+    clearTrafficReplayLayers();
+    if ($('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(target);
+    try {
+      await loadTrafficHistory(true, target);
+      if (state.trafficEvents[0]) {
+        await animateTrafficEvent(state.trafficEvents[0]);
+      }
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      state.replaySeeking = false;
+      updateTrafficAnimationUi();
+    }
   }
 
   function stopTrafficTimer() {
@@ -1002,10 +1116,23 @@
     stopTrafficTimer();
     if (!state.trafficPlaying || state.trafficMode !== 'history') return;
     if (!state.trafficEvents.length) {
-      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); state.trafficPlaying = false; updateTrafficAnimationUi(); return; }
+      try {
+        await loadTrafficHistory(true);
+      } catch (err) {
+        toast(err.message, 'error');
+        state.trafficPlaying = false;
+        updateTrafficAnimationUi();
+        return;
+      }
     }
     if (state.trafficIndex >= state.trafficEvents.length) {
+      try {
+        if (await appendNextTrafficChunk()) return playNextTrafficEvent();
+      } catch (err) {
+        console.warn(err);
+      }
       state.trafficPlaying = false;
+      state.timelineReplayActive = false;
       updateTrafficAnimationUi();
       return;
     }
@@ -1013,7 +1140,7 @@
     updateTrafficAnimationUi();
     await animateTrafficEvent(event);
     if (!state.trafficPlaying) return;
-    state.trafficTimer = setTimeout(playNextTrafficEvent, Math.max(60, 500 / Math.max(.5, Number(state.trafficSpeed || 1))));
+    state.trafficTimer = setTimeout(playNextTrafficEvent, Math.max(25, 500 / Math.max(.25, Number(state.trafficSpeed || 1))));
   }
 
   async function pollTrafficEvents() {
@@ -1029,8 +1156,11 @@
       const events = data.events || [];
       state.lastTrafficPacketId = Math.max(state.lastTrafficPacketId, Number(data.last_id || 0));
       for (const event of events) {
-        stationActivity(event.source);
-        if (state.trafficPlaying && state.trafficMode === 'live') animateTrafficEvent(event);
+        if (state.trafficPlaying && state.trafficMode === 'live') {
+          animateTrafficEvent(event);
+        } else {
+          stationActivity(event.source);
+        }
       }
     } catch (err) {
       console.warn(err);
