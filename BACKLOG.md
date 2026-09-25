@@ -82,6 +82,7 @@
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
   - **Teste v1.6.11:** preparada correção experimental para reduzir contenção SQLite, impedir pollings sobrepostos, limitar chamadas HTTP a 10 s e gravar mensagens multipartes em uma única transação. Manter este item aberto até validação em uso real.
   - **Resultado do teste v1.6.11:** ocorreu a mensagem **“O backend local não respondeu em 10 segundos.”**. Portanto, o timeout do frontend funcionou, mas a causa raiz permanece: o servidor HTTP local fica indisponível por mais de 10 s.
+  - **Configuração também afetada na v1.6.11:** o botão **Salvar configuração** não conclui a gravação quando o backend entra nesse estado. Isso confirma que a falha não está restrita a Mensagens; a rota `POST /api/config` também fica sem atendimento.
   - Tratar a v1.6.11 como **não resolvida**. O próximo diagnóstico deve identificar qual rota/request ocupa as threads do Waitress no momento do travamento e se há esgotamento do pool de workers.
   - Instrumentar cada request com início/fim/duração, endpoint, thread e status; incluir contador de requests ativos e dump das threads quando o health-check detectar atraso.
   - Quando o backend entrar em timeout, suspender temporariamente os pollings automáticos para evitar que novos requests agravem o esgotamento das threads.
