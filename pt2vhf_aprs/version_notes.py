@@ -11,7 +11,6 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "O botão Enviar fica bloqueado enquanto a solicitação é registrada.",
             "Falhas de socket deixam de prender a requisição web e passam a acionar recuperação da conexão.",
             "Ao encerrar, a aplicação cancela filas pendentes e executa manutenção leve do SQLite.",
-            "A logo APRS oficial passa a ser referenciada diretamente no template.",
             "Release para Windows x64 e Linux x86_64, sem macOS e sem PDF.",
         ],
     },
