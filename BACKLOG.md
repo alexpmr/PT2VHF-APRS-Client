@@ -119,3 +119,26 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Respeitar normalmente as opções de **baixar automaticamente** e **instalar automaticamente ao fechar**.
 - Em caso de falha de rede ou indisponibilidade do GitHub, não interromper o funcionamento do cliente; tentar novamente no próximo ciclo.
 - Não gerar pop-ups repetitivos para a mesma versão já detectada/baixada.
+
+
+## Estações favoritas com estrela amarela
+
+**Objetivo:** permitir destacar estações importantes e mantê-las facilmente acessíveis para acompanhamento e envio de mensagens.
+
+- Permitir marcar/desmarcar uma estação como **Favorita**.
+- Exibir uma **estrela amarela** ao lado do indicativo das estações favoritas.
+- A ação de favoritar deve estar disponível pelo menos:
+  - no popup da estação no **Mapa**;
+  - na aba **Estações**;
+  - na aba **Mensagens**, quando a estação/remetente estiver identificada.
+- Persistir a lista de favoritas no banco/configuração local para permanecer após reiniciar ou atualizar o aplicativo.
+- Na aba **Estações**, manter as favoritas **fixadas no topo da lista**, antes das demais estações, respeitando a ordenação selecionada dentro de cada grupo.
+- Na aba **Mensagens**, manter as favoritas **fixadas no topo da lista de conversas/remetentes** quando o modo agrupado estiver ativo.
+- Na composição de mensagens, priorizar as favoritas na lista/sugestões do campo **Destino**, facilitando o envio rápido.
+- Clicar na estrela deve alternar Favorita/Não favorita sem abrir outra tela.
+- A estrela deve ter estado visual claro:
+  - **amarela/preenchida** para favorita;
+  - **vazia/cinza** para não favorita.
+- Favoritar uma estação não deve alterar mensagens, histórico, tracklog ou dados APRS da estação.
+- Se uma estação favorita ficar sem atividade por longo período, ela continua marcada como favorita até o usuário removê-la manualmente.
+- Preparar a estrutura para futuramente permitir um filtro **Somente favoritas** nas abas Estações e Mensagens.
