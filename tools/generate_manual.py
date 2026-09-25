@@ -432,6 +432,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px."
     ])
 
+    add_screenshot(story, st, screenshots_dir, "analysis.png", "Aba Análise com métricas da topologia observada e comparação histórica.")
     add_screenshot(story, st, screenshots_dir, "config-aprs.png", "Configuração APRS/Estação com coordenadas e parâmetros APRS-IS.")
     add_screenshot(story, st, screenshots_dir, "filter-editor.png", "Editor gráfico de filtro APRS-IS, mantendo a string manual editável.")
     section(story, st, "11. Mensagens", [
