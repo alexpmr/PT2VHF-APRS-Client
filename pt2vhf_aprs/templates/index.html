@@ -232,9 +232,10 @@
         <label class="field compact">
           <span>Período</span>
           <select id="analysisPeriod">
+            <option value="0" selected>Completo</option>
             <option value="1">1 hora</option>
             <option value="6">6 horas</option>
-            <option value="24" selected>24 horas</option>
+            <option value="24">24 horas</option>
             <option value="168">7 dias</option>
           </select>
         </label>
@@ -244,12 +245,51 @@
     </div>
     <div class="analysis-content">
       <div class="analysis-summary">
-        <div class="analysis-metric"><span>Período</span><strong id="analysisMetricPeriod">24 h</strong></div>
+        <div class="analysis-metric"><span>Período</span><strong id="analysisMetricPeriod">Completo</strong></div>
         <div class="analysis-metric"><span>Enlaces ativos</span><strong id="analysisMetricEdges">0</strong></div>
         <div class="analysis-metric"><span>Pacotes observados</span><strong id="analysisMetricPackets">0</strong></div>
         <div class="analysis-metric"><span>Eventos do período</span><strong id="analysisMetricEvents">0</strong></div>
       </div>
       <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Atualizar análise.</div>
+
+      <div class="traffic-animation-panel">
+        <div class="traffic-animation-title">
+          <div>
+            <h3>Animação do tráfego APRS</h3>
+            <p>Simula os pacotes percorrendo os enlaces observados entre estação, digipeaters e IGates.</p>
+          </div>
+          <div id="trafficAnimationStatus" class="traffic-status">Parado</div>
+        </div>
+        <div class="traffic-animation-controls">
+          <label class="field compact">
+            <span>Modo</span>
+            <select id="trafficMode">
+              <option value="history">Histórico</option>
+              <option value="live">Ao vivo</option>
+            </select>
+          </label>
+          <label class="field compact">
+            <span>Velocidade</span>
+            <select id="trafficSpeed">
+              <option value="0.5">0,5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+              <option value="5">5×</option>
+              <option value="10">10×</option>
+            </select>
+          </label>
+          <button id="trafficResetButton" type="button" class="btn secondary" title="Voltar ao início">⏮ Início</button>
+          <button id="trafficBackButton" type="button" class="btn secondary" title="Evento anterior">◀</button>
+          <button id="trafficPlayPauseButton" type="button" class="btn primary">▶ Play</button>
+          <button id="trafficForwardButton" type="button" class="btn secondary" title="Próximo evento">▶</button>
+        </div>
+        <div class="traffic-animation-metrics">
+          <span><strong id="trafficPlayedCount">0</strong> reproduzidos</span>
+          <span><strong id="trafficPendingCount">0</strong> pendentes</span>
+          <span>Horário: <strong id="trafficCurrentTime">—</strong></span>
+          <span>Velocidade: <strong id="trafficCurrentSpeed">1×</strong></span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -559,6 +599,14 @@
               <output id="stationsLineHeightValue" for="stationsLineHeight">1,25×</output>
             </div></label>
             <button id="resetStationsTypography" type="button" class="btn secondary typography-reset">Restaurar padrão</button>
+            <label class="check-field">
+              <input name="sound_on_station_activity" type="checkbox" checked>
+              <span>Tocar sinal sonoro quando uma estação transmitir</span>
+            </label>
+            <label class="check-field">
+              <input name="highlight_station_activity" type="checkbox" checked>
+              <span>Destacar em vermelho a estação que acabou de transmitir</span>
+            </label>
           </div>
 
           <div class="appearance-group">
@@ -663,7 +711,8 @@
           <h3>3. Mapa</h3>
           <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
           <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
-          <p>Clique em uma estação para abrir os detalhes. O botão <strong>Enviar mensagem</strong> leva diretamente à tela de mensagens com o destino preenchido.</p>
+          <p>Clique em uma estação para abrir os detalhes. Use <strong>Enviar mensagem</strong>, <strong>Mostrar log</strong> ou a <strong>estrela amarela</strong> para favoritar a estação.</p>
+          <p>A topologia oferece período <strong>Completo</strong> por padrão, além de janelas em horas/dias, legenda dos tipos de linhas e animação de tráfego no mapa.</p>
           <p>Na primeira execução, quando a permissão é concedida, o mapa é centralizado na localização atual do usuário. Depois disso, a posição e o zoom escolhidos manualmente ficam salvos localmente e não são recentralizados continuamente.</p>
         </article>
 
@@ -675,7 +724,7 @@
           <p>O botão <strong>Minhas mensagens</strong> mostra apenas mensagens individuais de ou para o seu <code>CALL-SSID</code>.</p>
           <p>As mensagens seguem fluxo de chat, com as mais novas embaixo. A opção <strong>Agrupar por remetente</strong> organiza o histórico em conversas por contato.</p>
           <p>Clique em qualquer indicativo nas colunas <strong>De</strong> ou <strong>Para</strong> para selecioná-lo como destinatário e responder. Se clicar no próprio indicativo, o programa tenta selecionar o outro participante.</p>
-          <p>O compositor aceita mensagens longas. Use <strong>Enter</strong> para enviar e <strong>Shift+Enter</strong> para nova linha. Mensagens maiores são divididas automaticamente em partes APRS numeradas, cada uma com confirmação própria.</p>
+          <p>O compositor aceita mensagens longas. Use <strong>Enter</strong> para enviar e <strong>Shift+Enter</strong> para nova linha. Mensagens maiores são divididas automaticamente sem numeração visível, preservando palavras sempre que possível; cada parte mantém confirmação própria.</p>
           <p>O botão <strong>Limpar mensagens</strong> apaga todo o histórico local de mensagens e boletins após confirmação.</p>
           <p>Quando chega uma nova mensagem para sua estação e a aba Mensagens já está aberta, o programa usa um aviso pequeno e não bloqueante, que fecha automaticamente pelo tempo definido em Configuração. Fora da aba Mensagens, permanece o aviso completo com opção de responder.</p>
         </article>
@@ -684,7 +733,7 @@
           <h3>5. Estações</h3>
           <p>A lista mostra indicativo, última recepção, distância, velocidade, curso, altitude e informações conhecidas.</p>
           <p>Clique em uma linha para abrir o <strong>Mapa</strong>, centralizar a estação e mostrar o popup correspondente.</p>
-          <p>Os títulos das colunas podem ser clicados para alterar a ordenação.</p>
+          <p>Os títulos das colunas podem ser clicados para alterar a ordenação. Estações favoritas ficam fixadas no topo e são identificadas por uma estrela amarela.</p>
           <p>O botão <strong>Limpar estações</strong> apaga todas as estações e tracklogs locais; novas estações voltarão a aparecer quando forem recebidas.</p>
           <p>Fonte e tamanho da tabela podem ser ajustados em <strong>Configuração → Aparência</strong>.</p>
         </article>
