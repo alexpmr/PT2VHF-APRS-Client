@@ -106,3 +106,16 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - O estado selecionado deve ser persistido entre execuções.
 - Se o volume de dados completo for muito grande, carregar/processar de forma eficiente para não travar o mapa nem a interface.
 - Exibir claramente quando o usuário estiver vendo **Topologia completa** em vez de uma janela temporal parcial.
+
+
+## Verificação de atualização a cada 5 minutos
+
+**Objetivo:** reduzir o intervalo entre a publicação de uma nova versão e sua detecção pelo cliente.
+
+- Quando **Verificar atualizações automaticamente** estiver habilitado, consultar a Release oficial a cada **5 minutos**.
+- Substituir o intervalo atual de verificação periódica pela cadência de **300 segundos**.
+- Manter a verificação inicial na abertura do aplicativo.
+- Evitar verificações simultâneas ou sobrepostas se uma consulta anterior ainda estiver em andamento.
+- Respeitar normalmente as opções de **baixar automaticamente** e **instalar automaticamente ao fechar**.
+- Em caso de falha de rede ou indisponibilidade do GitHub, não interromper o funcionamento do cliente; tentar novamente no próximo ciclo.
+- Não gerar pop-ups repetitivos para a mesma versão já detectada/baixada.
