@@ -33,6 +33,16 @@
 - Popup de **novidades da versão** exibido uma única vez após atualização.
 - Release gerada somente para **Windows x64**: Setup + Portable, sem nova documentação PDF, Linux ou macOS.
 
+## Concluído na v1.6.4
+
+- Corrigido o envio na aba **Mensagens** pelo botão **Enviar** e pela tecla **Enter**.
+- Corrigido o **filtro por origem** na aba Mensagens.
+- Corrigido o **Replay da Rede** para voltar a mostrar os pacotes trafegando entre os nós, além do realce das estações.
+- Adicionado rastro visual ao pacote animado para destacar o enlace em uso.
+- Mantida a animação das estações móveis com tracklog progressivo.
+- Incluído teste de regressão para impedir que o replay volte a exibir apenas o *highlight* das estações.
+- Release somente **Windows x64 Portable**, sem instalador e sem PDF.
+
 ## Pendências para próximas versões
 
 Nenhum item pendente registrado neste momento.
