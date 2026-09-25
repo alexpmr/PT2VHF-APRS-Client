@@ -75,6 +75,13 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Se um pacote tiver origem fora da tela, mas algum trecho do seu caminho estiver visível, permitir animar apenas os segmentos visíveis, sem provocar som da estação de origem fora da tela.
 - O objetivo é evitar, por exemplo, que o cliente toque aviso de uma estação em outro estado ou região que esteja sendo recebida pelo APRS-IS, mas não esteja visível no zoom atual.
 
+- Quando uma estação visível transmitir, exibir no próprio marcador um efeito de **atividade/radiofrequência**, com **círculos/ondas concêntricas animadas** ao redor do ícone da estação.
+- O efeito deve ser curto, claramente perceptível e não deve substituir permanentemente o símbolo APRS original.
+- A animação deve nascer no marcador da estação e desaparecer suavemente após alguns segundos.
+- Se várias estações visíveis transmitirem em sequência, cada marcador deve poder executar sua própria animação de forma independente.
+- Além do som e do efeito visual, qualquer **notificação de atividade de estação** deve ser gerada somente quando a estação estiver realmente visível no mapa no enquadramento/zoom atual.
+- Se a estação estiver fora dos limites visíveis do mapa, não tocar som, não mostrar ondas/círculos e não exibir notificação de atividade.
+
 
 ## Mover controles da animação do tráfego para a parte inferior do Mapa
 
