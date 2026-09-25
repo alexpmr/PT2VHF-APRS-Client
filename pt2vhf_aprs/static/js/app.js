@@ -479,6 +479,17 @@
         });
       }
 
+      // Aplica imediatamente o estilo às linhas já desenhadas; a recarga
+      // posterior apenas sincroniza os enlaces/dados com o backend.
+      for (const line of state.topologyLines.values()) {
+        const kind = line.options?.dashArray ? 'igate' : 'rf';
+        line.setStyle({
+          color: kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+          weight: state.mapConfig.topology_width,
+          dashArray: kind === 'igate' ? '7 5' : null
+        });
+      }
+
       if (state.topologyEnabled) loadTopology();
       updateMapLegend();
     }
@@ -2661,17 +2672,19 @@
     state.mapConfig.topology_igate_color = form.elements.namedItem('topology_igate_color')?.value || '#b06cff';
     state.mapConfig.topology_width = Number(form.elements.namedItem('topology_width')?.value || 2);
     syncMapPreferenceControls();
-    if (state.topologyEnabled) loadTopology();
-    else {
-      for (const line of state.topologyLines.values()) {
-        const kind = line.options?.dashArray ? 'igate' : 'rf';
-        line.setStyle({
-          color: kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-          weight: state.mapConfig.topology_width
-        });
-      }
+
+    // Preview imediato: não depende de uma nova consulta à API para refletir
+    // cor/espessura nas linhas que já estão no mapa.
+    for (const line of state.topologyLines.values()) {
+      const kind = line.options?.dashArray ? 'igate' : 'rf';
+      line.setStyle({
+        color: kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+        weight: state.mapConfig.topology_width,
+        dashArray: kind === 'igate' ? '7 5' : null
+      });
     }
     updateMapLegend();
+    if (state.topologyEnabled) loadTopology();
   }
 
   function bindTopologyColor(name, textSelector) {
