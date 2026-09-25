@@ -79,6 +79,16 @@
 
 ## Pendências para próximas versões
 
+- **Barra superior — indicadores de CPU e memória em tempo real**
+  - Adicionar na barra superior indicadores compactos do consumo do processo do **PT2VHF APRS Client**.
+  - Exibir **CPU (%)** em tempo real.
+  - Exibir **memória RAM** usada pelo processo, em **MB** e, quando possível, também em **%**.
+  - Atualização sugerida a cada **2 segundos**, com baixo overhead.
+  - Usar apresentação compacta estilo gauge/medidor, com faixas visuais de normal, atenção e crítico.
+  - Tooltip opcional com detalhes adicionais: quantidade de threads, requests HTTP ativos, tamanho da fila TX e uptime.
+  - O indicador deve servir também como recurso permanente de diagnóstico de estabilidade e desempenho.
+
+
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
   - **Teste v1.6.13 CPU/SQLite:** removido o housekeeping pesado executado em cada pacote APRS. A retenção de `packets`, `aprs_log` e `topology_events` agora roda em lotes e usa corte pela chave primária. Pollings pesados também foram reduzidos/condicionados à aba ativa. Validar consumo de CPU e estabilidade prolongada antes de considerar o problema encerrado.
   - **Teste v1.6.12 diagnóstico:** instrumentação adicionada para registrar requests ativos, duração/endpoint/thread, operações SQLite lentas, health-check interno e dump automático de threads quando o servidor local parar de responder. O log fica em `diagnostics.log` na pasta de dados.
