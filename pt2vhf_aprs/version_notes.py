@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.6": {
+        "title": "Configuração, manutenção e identidade visual",
+        "items": [
+            "Corrigido o salvamento da aba Configuração e o fluxo Salvar e sair.",
+            "Seletor de idioma passa a exibir bandeiras reais do Brasil e dos EUA no Windows.",
+            "Adicionado Limpar tudo com destaque e confirmação dupla, preservando configuração e favoritos.",
+            "A logo APRS fornecida passa a ser usada na aplicação e como base do ícone Windows.",
+            "Release somente Windows x64, sem PDF.",
+        ],
+    },
     "1.6.5": {
         "title": "Manutenção e notificações",
         "items": [

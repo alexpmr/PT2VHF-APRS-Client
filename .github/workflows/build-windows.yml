@@ -34,6 +34,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_5.py
 
+      - name: Apply v1.6.6 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_6.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
