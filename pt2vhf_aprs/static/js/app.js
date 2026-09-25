@@ -46,6 +46,7 @@
     symbolTable: '/',
     configLoaded: false,
     myMessagesOnly: false,
+    unreadMessagesOnly: false,
     hideTelemetryMessages: true,
     groupMessages: false,
     selectedConversation: '',
@@ -54,6 +55,8 @@
     lastAlertedMessageId: 0,
     currentAlertMessage: null,
     soundOnPersonalMessage: true,
+    soundOnStationActivity: true,
+    highlightStationActivity: true,
     messagePopupSeconds: 5,
     language: 'pt-BR',
     configSection: 'aprs',
@@ -355,7 +358,6 @@
     $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
     if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
     if (tab === 'messages') {
-      markMessagesSeen();
       loadMessages({ scrollToNewest: true });
     }
     if (tab === 'stations') loadStations({ scrollToNewest: true });
@@ -1025,20 +1027,39 @@
       || /^T#\d{3}(?:,|$)/.test(text);
   }
 
+  function isUnreadPersonalMessage(message) {
+    if (!message || message.direction !== 'in' || message.message_type !== 'message' || message.read_at) return false;
+    const own = normalizedCall(state.ownCallsign);
+    return !own || normalizedCall(message.to_call) === own;
+  }
+
   function visibleMessages() {
-    return state.hideTelemetryMessages
+    let rows = state.hideTelemetryMessages
       ? state.messages.filter(message => !isTelemetryMessage(message))
-      : state.messages;
+      : [...state.messages];
+    if (state.unreadMessagesOnly) rows = rows.filter(isUnreadPersonalMessage);
+    return rows;
   }
 
   function normalizedCall(value) {
     return String(value || '').trim().toUpperCase();
   }
 
+  function isFavorite(callsign) {
+    return state.favoriteCallsigns.has(normalizedCall(callsign));
+  }
+
+  function favoriteStarHtml(callsign, compact = true) {
+    const call = normalizedCall(callsign);
+    if (!call) return '';
+    const favorite = isFavorite(call);
+    return `<button type="button" class="favorite-star${favorite ? ' is-favorite' : ''}${compact ? ' compact-star' : ''}" data-favorite-callsign="${escapeHtml(call)}" aria-pressed="${favorite ? 'true' : 'false'}" title="${escapeHtml(favorite ? ui('Remover dos favoritos', 'Remove from favorites') : ui('Adicionar aos favoritos', 'Add to favorites'))}">${favorite ? '★' : '☆'}</button>`;
+  }
+
   function callsignButtonHtml(callsign, otherCall = '') {
     const call = normalizedCall(callsign);
     if (!call) return '';
-    return `<button type="button" class="callsign-link message-callsign-link" data-callsign="${escapeHtml(call)}" data-other-call="${escapeHtml(normalizedCall(otherCall))}">${escapeHtml(call)}</button>`;
+    return `${favoriteStarHtml(call)}<button type="button" class="callsign-link message-callsign-link" data-callsign="${escapeHtml(call)}" data-other-call="${escapeHtml(normalizedCall(otherCall))}">${escapeHtml(call)}</button>`;
   }
 
   function resolveMessageContact(message) {
@@ -1074,7 +1095,6 @@
   }
 
   function conversationItems() {
-    const seen = Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0);
     const conversations = new Map();
 
     for (const message of visibleMessages()) {
@@ -1087,7 +1107,7 @@
       const item = conversations.get(contact);
       item.messages.push(message);
       if (!item.last || Number(message.id || 0) > Number(item.last.id || 0)) item.last = message;
-      if (message.direction === 'in' && Number(message.id || 0) > seen) item.unread += 1;
+      if (isUnreadPersonalMessage(message)) item.unread += 1;
     }
 
     const factor = state.conversationSort === 'asc' ? 1 : -1;
@@ -1099,7 +1119,12 @@
           return time || (Number(a.id || 0) - Number(b.id || 0));
         })
       }))
-      .sort((a, b) => a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor);
+      .filter(item => !state.unreadMessagesOnly || item.unread > 0)
+      .sort((a, b) => {
+        const favoriteDelta = Number(isFavorite(b.contact)) - Number(isFavorite(a.contact));
+        if (favoriteDelta) return favoriteDelta;
+        return a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor;
+      });
   }
 
   function renderGroupedMessages() {
@@ -1111,7 +1136,7 @@
     const thread = $('#conversationMessages');
 
     if (!conversations.length) {
-      list.innerHTML = '<div class="conversation-list-empty">Nenhuma conversa individual para os filtros atuais.</div>';
+      list.innerHTML = `<div class="conversation-list-empty">${state.unreadMessagesOnly ? ui('Nenhuma mensagem não lida.', 'No unread messages.') : ui('Nenhuma conversa individual para os filtros atuais.', 'No individual conversations for the current filters.')}</div>`;
       state.selectedConversation = '';
       empty.classList.remove('hidden');
       content.classList.add('hidden');
@@ -1126,7 +1151,7 @@
       const selected = item.contact === state.selectedConversation ? ' selected' : '';
       return `<button type="button" class="conversation-item${selected}" data-conversation-contact="${escapeHtml(item.contact)}">
         <span class="conversation-item-top">
-          <strong>${escapeHtml(item.contact)}</strong>
+          <strong>${favoriteStarHtml(item.contact)}${escapeHtml(item.contact)}</strong>
           <span>${escapeHtml(fmtDate(item.last?.timestamp))}</span>
         </span>
         <span class="conversation-item-bottom">
@@ -1172,7 +1197,7 @@
     const spec = state.sort.messages;
     const rows = sortedData(visibleMessages(), spec);
     $('#messagesTable tbody').innerHTML = rows.map(m => `
-      <tr class="${m.status === 'ACK' ? 'message-row-ack' : m.status === 'REJ' ? 'message-row-rej' : ''}">
+      <tr data-message-id="${Number(m.id || 0)}" class="${m.status === 'ACK' ? 'message-row-ack ' : m.status === 'REJ' ? 'message-row-rej ' : ''}${isUnreadPersonalMessage(m) ? 'message-row-unread' : ''}">
         <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${callsignButtonHtml(m.from_call, m.to_call)}</td>
         <td>${callsignButtonHtml(m.to_call, m.from_call)}</td>
         <td>${messageTypeLabel(m.message_type)}</td>
@@ -1877,6 +1902,8 @@
       const ssid = Number(cfg.ssid || 0);
       state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
       state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
+      state.soundOnStationActivity = !!cfg.sound_on_station_activity;
+      state.highlightStationActivity = !!cfg.highlight_station_activity;
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
       state.language = cfg.language === 'en' ? 'en' : 'pt-BR';
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
@@ -1904,6 +1931,8 @@
     data.connect_on_start = !!form.elements.connect_on_start?.checked;
     data.open_browser_on_start = !!form.elements.open_browser_on_start?.checked;
     data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
+    data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
+    data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
     data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
     data.auto_download_updates = !!form.elements.auto_download_updates?.checked;
     data.install_updates_on_exit = !!form.elements.install_updates_on_exit?.checked;
