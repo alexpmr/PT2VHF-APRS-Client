@@ -133,6 +133,10 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
+      - name: Apply v1.6.4 portable fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_4.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
