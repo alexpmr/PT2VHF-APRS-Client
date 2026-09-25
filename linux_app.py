@@ -40,9 +40,13 @@ def _open_browser() -> None:
 
 def _shutdown() -> None:
     try:
-        service.disconnect()
+        service.shutdown()
     except Exception:
         pass
+    try:
+        db.shutdown_maintenance()
+    except Exception as exc:
+        print(f"Falha na manutenção de encerramento: {exc}", file=sys.stderr)
 
 
 def _browser_loop() -> int:
