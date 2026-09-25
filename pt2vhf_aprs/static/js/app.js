@@ -787,6 +787,7 @@
         <strong>Via</strong><span>${escapeHtml(path)}</span>
       </div>
       <div class="station-popup-actions">
+        ${favoriteStarHtml(s.callsign, false)}
         <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Mostrar log</button>
         <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}">Enviar mensagem</button>
       </div>
@@ -1251,7 +1252,8 @@
     if (viewport) viewport.scrollTop = viewport.scrollHeight;
   });
 
-  $('#conversationList')?.addEventListener('click', event => {
+  $('#conversationList')?.addEventListener('click', async event => {
+    if (event.target.closest('.favorite-star')) return;
     const item = event.target.closest('[data-conversation-contact]');
     if (!item) return;
     state.selectedConversation = normalizedCall(item.dataset.conversationContact);
@@ -1259,8 +1261,21 @@
       $('#messageType').value = 'message';
       updateMessageComposerMode();
       $('#messageTo').value = state.selectedConversation;
+      try {
+        await api('/api/messages/conversation/read', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ contact: state.selectedConversation })
+        });
+        const now = new Date().toISOString();
+        state.messages = state.messages.map(m => (
+          isUnreadPersonalMessage(m) && resolveMessageContact(m) === state.selectedConversation
+            ? { ...m, read_at: now }
+            : m
+        ));
+      } catch (_) {}
     }
-    renderGroupedMessages();
+    renderMessages();
+    updateUnread();
     const thread = $('#conversationMessages');
     if (thread) thread.scrollTop = thread.scrollHeight;
   });
@@ -1278,7 +1293,7 @@
     selectMessageRecipient(event.currentTarget.dataset.callsign || '');
   });
 
-  $('#messagesTable tbody')?.addEventListener('click', event => {
+  $('#messagesTable tbody')?.addEventListener('click', async event => {
     const retry = event.target.closest('.message-retry-button');
     if (retry) {
       event.preventDefault();
@@ -1287,10 +1302,23 @@
       return;
     }
     const button = event.target.closest('.message-callsign-link');
-    if (!button) return;
-    event.preventDefault();
-    event.stopPropagation();
-    selectMessageRecipient(button.dataset.callsign || '', button.dataset.otherCall || '');
+    if (button) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectMessageRecipient(button.dataset.callsign || '', button.dataset.otherCall || '');
+      return;
+    }
+    const row = event.target.closest('tr[data-message-id]');
+    if (!row) return;
+    const id = Number(row.dataset.messageId || 0);
+    const message = state.messages.find(m => Number(m.id || 0) === id);
+    if (!isUnreadPersonalMessage(message)) return;
+    try {
+      await api(`/api/messages/${id}/read`, { method:'POST' });
+      message.read_at = new Date().toISOString();
+      renderMessages();
+      updateUnread();
+    } catch (_) {}
   });
 
   $('#conversationMessages')?.addEventListener('click', event => {
@@ -1327,6 +1355,20 @@
     updateMyMessagesButton();
     updateGroupMessagesButton();
     await loadMessages({ scrollToNewest: true });
+  });
+
+  function updateUnreadMessagesButton() {
+    const btn = $('#unreadMessagesButton');
+    if (!btn) return;
+    btn.classList.toggle('active-filter', state.unreadMessagesOnly);
+    btn.setAttribute('aria-pressed', state.unreadMessagesOnly ? 'true' : 'false');
+    btn.textContent = state.unreadMessagesOnly ? ui('✓ Não lidas', '✓ Unread') : ui('Não lidas', 'Unread');
+  }
+
+  $('#unreadMessagesButton')?.addEventListener('click', () => {
+    state.unreadMessagesOnly = !state.unreadMessagesOnly;
+    updateUnreadMessagesButton();
+    renderMessages();
   });
 
   $('#clearMessagesButton')?.addEventListener('click', async () => {
@@ -1558,6 +1600,9 @@
     const messageId = Number(message.id || 0);
     closeIncomingMessageAlert();
     closeCompactIncomingMessageAlert();
+    if (messageId) {
+      try { await api(`/api/messages/${messageId}/read`, { method:'POST' }); } catch (_) {}
+    }
     activateTab('messages');
     await loadMessages({ scrollToNewest:false });
     if (state.groupMessages && sender) {
@@ -1586,10 +1631,6 @@
         setTimeout(() => row?.classList.remove('message-focus-row'), 2200);
       });
     }
-    if (messageId) {
-      const seen = Math.max(Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0), messageId);
-      localStorage.setItem('pt2vhf_last_seen_msg', String(seen));
-    }
     updateUnread();
   }
 
@@ -1606,22 +1647,15 @@
   });
 
   function updateUnread() {
-    const incoming = visibleMessages().filter(m => m.direction === 'in');
-    const latest = incoming.reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
-    const seen = Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0);
-    const unread = incoming.filter(m => Number(m.id) > seen).length;
+    const unread = state.messages.filter(isUnreadPersonalMessage).length;
     const badge = $('#messageBadge');
+    if (!badge) return;
     badge.textContent = unread;
-    badge.classList.toggle('hidden', unread <= 0 || state.activeTab === 'messages');
-    if (state.activeTab === 'messages' && latest) {
-      localStorage.setItem('pt2vhf_last_seen_msg', String(latest));
-    }
+    badge.classList.toggle('hidden', unread <= 0);
   }
 
   function markMessagesSeen() {
-    const latest = state.messages.filter(m => m.direction === 'in').reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
-    if (latest) localStorage.setItem('pt2vhf_last_seen_msg', String(latest));
-    $('#messageBadge').classList.add('hidden');
+    updateUnread();
   }
 
   async function loadLog(forceScroll = false) {
@@ -1698,6 +1732,43 @@
     }
   });
 
+  async function loadFavorites() {
+    try {
+      const calls = await api('/api/favorites');
+      state.favoriteCallsigns = new Set((calls || []).map(normalizedCall).filter(Boolean));
+      if (state.stations.length) renderStations();
+      if (state.messages.length) renderMessages();
+      await loadMapData();
+    } catch (err) { console.warn(err); }
+  }
+
+  async function toggleFavorite(callsign) {
+    const call = normalizedCall(callsign);
+    if (!call) return;
+    const favorite = !isFavorite(call);
+    try {
+      await api(`/api/favorites/${encodeURIComponent(call)}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ favorite })
+      });
+      if (favorite) state.favoriteCallsigns.add(call);
+      else state.favoriteCallsigns.delete(call);
+      state.stations = state.stations.map(s => normalizedCall(s.callsign) === call ? { ...s, favorite: favorite ? 1 : 0 } : s);
+      renderStations();
+      renderMessages();
+      await loadMapData();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  document.addEventListener('click', event => {
+    const star = event.target.closest('.favorite-star');
+    if (!star) return;
+    event.preventDefault();
+    event.stopPropagation();
+    toggleFavorite(star.dataset.favoriteCallsign || '');
+  });
+
   async function loadStations(options = {}) {
     try {
       const viewport = $('.stations-table-wrap');
@@ -1716,10 +1787,12 @@
 
   function renderStations() {
     const spec = state.sort.stations;
-    const rows = sortedData(state.stations, spec);
+    const favoriteRows = state.stations.filter(s => isFavorite(s.callsign) || Number(s.favorite || 0) === 1);
+    const otherRows = state.stations.filter(s => !(isFavorite(s.callsign) || Number(s.favorite || 0) === 1));
+    const rows = [...sortedData(favoriteRows, spec), ...sortedData(otherRows, spec)];
     $('#stationsTable tbody').innerHTML = rows.map(s => `
-      <tr class="station-row" data-callsign="${escapeHtml(s.callsign)}" tabindex="0" title="Abrir esta estação no mapa">
-        <td>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.callsign)}</td>
+      <tr class="station-row${isFavorite(s.callsign) ? ' station-favorite' : ''}" data-callsign="${escapeHtml(s.callsign)}" tabindex="0" title="${escapeHtml(ui('Abrir esta estação no mapa', 'Open this station on the map'))}">
+        <td>${favoriteStarHtml(s.callsign)}${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.callsign)}</td>
         <td class="station-last-heard">${escapeHtml(fmtDate(s.last_heard))}</td>
         <td>${fmtNum(s.distance_km, 1, ' km')}</td>
         <td>${fmtNum(s.speed, 1, ' km/h')}</td>
@@ -1730,7 +1803,10 @@
 
     $$('#stationsTable tbody .station-row').forEach(row => {
       const open = () => focusStationOnMap(row.dataset.callsign);
-      row.addEventListener('click', open);
+      row.addEventListener('click', event => {
+        if (event.target.closest('.favorite-star')) return;
+        open();
+      });
       row.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -3268,7 +3344,8 @@
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
     updateMyMessagesButton();
-    await Promise.allSettled([loadMessages(), checkIncomingPersonalMessages()]);
+    updateUnreadMessagesButton();
+    await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages()]);
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
     await refreshPendingUpdateStatus();
