@@ -271,12 +271,12 @@ if "/* v1.6.6 */" not in css:
 '''
 css_path.write_text(css, encoding="utf-8")
 
-# Ícone Windows a partir da logo oficial.
+# Ícone Windows a partir da logo estável validada.
 icon_path.write_text('''from pathlib import Path
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "pt2vhf_aprs" / "static" / "img" / "aprs_logo_official.jpg"
+SOURCE = ROOT / "pt2vhf_aprs" / "static" / "img" / "app_logo.png"
 OUTPUT = ROOT / "windows" / "app_icon.ico"
 
 source = Image.open(SOURCE).convert("RGBA")

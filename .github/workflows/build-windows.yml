@@ -46,6 +46,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_9.py
 
+      - name: Apply v1.6.10 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_10.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -234,6 +238,7 @@ jobs:
           python tools/apply_release_1_6_6.py
           python tools/apply_release_1_6_8.py
           python tools/apply_release_1_6_9.py
+          python tools/apply_release_1_6_10.py
 
       - name: Build Linux packages
         shell: bash
@@ -267,9 +272,9 @@ jobs:
 
           python tools/release_notes.py --output release-notes.md
           if ! gh release view "$tag" >/dev/null 2>&1; then
-            gh release create "$tag" --target "$GITHUB_SHA" --title "PT2VHF APRS Client $tag - Linux" --notes-file release-notes.md
+            gh release create "$tag" --target "$GITHUB_SHA" --title "PT2VHF APRS Client $tag" --notes-file release-notes.md
           else
-            gh release edit "$tag" --title "PT2VHF APRS Client $tag - Linux" --notes-file release-notes.md
+            gh release edit "$tag" --title "PT2VHF APRS Client $tag" --notes-file release-notes.md
           fi
 
           gh release upload "$tag" \
@@ -306,6 +311,7 @@ jobs:
           python tools/apply_release_1_6_6.py
           python tools/apply_release_1_6_8.py
           python tools/apply_release_1_6_9.py
+          python tools/apply_release_1_6_10.py
 
       - name: Core smoke tests
         shell: bash
@@ -337,6 +343,16 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
+
+      - name: Apply release fixes
+        shell: bash
+        run: |
+          python tools/apply_release_1_6_4.py
+          python tools/apply_release_1_6_5.py
+          python tools/apply_release_1_6_6.py
+          python tools/apply_release_1_6_8.py
+          python tools/apply_release_1_6_9.py
+          python tools/apply_release_1_6_10.py
 
       - name: Build macOS DMG
         shell: bash
@@ -390,6 +406,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Apply release fixes
+        shell: bash
+        run: |
+          python tools/apply_release_1_6_4.py
+          python tools/apply_release_1_6_5.py
+          python tools/apply_release_1_6_6.py
+          python tools/apply_release_1_6_8.py
+          python tools/apply_release_1_6_9.py
+          python tools/apply_release_1_6_10.py
 
       - name: Generate versioned PDF manual
         shell: bash

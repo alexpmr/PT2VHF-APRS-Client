@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.10": {
+        "title": "Release completa multiplataforma",
+        "items": [
+            "Consolida a correção do envio de mensagens com fila assíncrona e deduplicação.",
+            "Mantém a rotina segura de encerramento e manutenção leve do SQLite.",
+            "Corrige definitivamente o pipeline do ícone Windows usando a identidade visual estável.",
+            "Aplica todos os patches acumulados também aos builds macOS e à geração do manual.",
+            "Publica Windows Setup e Portable, Linux TAR.GZ/AppImage/DEB, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.6.9": {
         "title": "Estabilidade de mensagens e build",
         "items": [

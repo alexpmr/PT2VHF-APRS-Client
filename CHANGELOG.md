@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.6.10 - 2026-09-25
+
+- Release completa multiplataforma com **Windows x64 Setup + Portable**, **Linux x86_64 TAR.GZ + AppImage + DEB**, **macOS ARM64 + Intel DMG** e **Manual PDF**.
+- Consolidada a correção do envio de mensagens usando **fila assíncrona no backend**, evitando que a interface fique presa ao envio pelo socket APRS-IS.
+- Adicionada proteção contra cliques repetidos/deduplicação para impedir múltiplos envios da mesma mensagem em sequência.
+- Ao encerrar, a aplicação cancela filas pendentes, encerra os serviços e executa manutenção leve do SQLite.
+- Corrigido o pipeline do ícone Windows para usar a identidade visual estável e válida durante o empacotamento.
+- Os patches acumulados da série 1.6 passam a ser aplicados também aos builds macOS e à captura usada no manual.
+- A nova logo APRS oficial permanece no backlog até ser reintegrada com arquivo de imagem validado.
+
+
 ## v1.6.2 - 2026-09-25
 
 - Adicionado **Replay da Rede** na parte inferior do Mapa, com linha do tempo arrastável, densidade de tráfego, seek por horário, intervalo personalizado, modo Ao vivo e velocidades de 0,25x a 20x.

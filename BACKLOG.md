@@ -61,12 +61,21 @@
 - Serviços, conexão APRS-IS e worker de transmissão são encerrados de forma controlada.
 - Release para **Windows x64 e Linux x86_64**, sem macOS e sem PDF.
 
-## Concluído na v1.6.9
+## Consolidado na v1.6.9
 
 - Consolidada a correção do travamento de mensagens com **fila assíncrona e deduplicação**.
 - Corrigido o teste legado que ainda exigia a logo APRS oficial e bloqueava os builds.
 - Mantida a logo estável anterior no empacotamento até a imagem oficial ser reintegrada com validação.
 - Release para **Windows x64 e Linux x86_64**, sem macOS e sem PDF.
+
+## Preparado para a v1.6.10
+
+- Release completa com **Windows x64 Setup + Portable**.
+- Release Linux x86_64 em **TAR.GZ, AppImage e DEB**.
+- Release macOS em **ARM64 e Intel x86_64 (DMG)**.
+- **Manual PDF versionado** gerado e validado no workflow.
+- Aplicação dos patches acumulados também aos builds macOS e ao ambiente de captura do manual.
+- Correção do pipeline do ícone Windows para não depender do JPEG oficial inválido.
 
 ## Pendências para próximas versões
 
