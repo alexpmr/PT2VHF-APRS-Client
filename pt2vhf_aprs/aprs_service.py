@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import queue
 import re
 import shutil
 import socket
@@ -113,9 +114,15 @@ class APRSService:
         self._status = ConnectionStatus()
         self._status_lock = threading.Lock()
         self._socket_lock = threading.Lock()
+        self._tx_send_lock = threading.Lock()
         self._socket: socket.socket | None = None
         self._worker: threading.Thread | None = None
         self._beacon_worker: threading.Thread | None = None
+        self._tx_worker: threading.Thread | None = None
+        self._tx_queue: queue.Queue[dict[str, Any]] = queue.Queue()
+        self._tx_stop_event = threading.Event()
+        self._tx_guard = threading.Lock()
+        self._recent_tx: dict[str, tuple[float, dict[str, Any]]] = {}
         self._stop_event = threading.Event()
         self._msg_counter = int(time.time()) % 1000
         self._last_beacon = 0.0
@@ -123,6 +130,56 @@ class APRSService:
     def status(self) -> dict[str, Any]:
         with self._status_lock:
             return asdict(self._status)
+
+    def _ensure_tx_worker(self) -> None:
+        if self._tx_worker and self._tx_worker.is_alive():
+            return
+        self._tx_stop_event.clear()
+        self._tx_worker = threading.Thread(target=self._tx_loop, name="aprs-tx", daemon=True)
+        self._tx_worker.start()
+
+    def _tx_loop(self) -> None:
+        while not self._tx_stop_event.is_set():
+            try:
+                job = self._tx_queue.get(timeout=0.4)
+            except queue.Empty:
+                continue
+            packets = list(job.get("packets") or [])
+            try:
+                for index, item in enumerate(packets):
+                    if self._tx_stop_event.is_set():
+                        db.mark_message_status(item["msg_id"], "Cancelada no encerramento")
+                        continue
+                    try:
+                        self._send_raw(item["packet"])
+                        db.mark_message_status(item["msg_id"], "Enviada")
+                    except Exception as exc:
+                        db.mark_message_status(item["msg_id"], "Falhou")
+                        for remaining in packets[index + 1:]:
+                            db.mark_message_status(remaining["msg_id"], "Falhou")
+                        self._set_status(last_error=f"TX de mensagem: {exc}")
+                        break
+                    if index + 1 < len(packets):
+                        time.sleep(0.25)
+            finally:
+                self._tx_queue.task_done()
+
+    def shutdown(self) -> None:
+        self._tx_stop_event.set()
+        while True:
+            try:
+                job = self._tx_queue.get_nowait()
+            except queue.Empty:
+                break
+            try:
+                for item in job.get("packets") or []:
+                    db.mark_message_status(item["msg_id"], "Cancelada no encerramento")
+            finally:
+                self._tx_queue.task_done()
+        self.disconnect()
+        if self._tx_worker and self._tx_worker.is_alive():
+            self._tx_worker.join(timeout=1.5)
+
 
     def _set_status(self, **kwargs: Any) -> None:
         with self._status_lock:
@@ -360,15 +417,65 @@ class APRSService:
         data = (line.rstrip("\r\n") + "\r\n").encode("latin-1", errors="replace")
         if len(data) > 512:
             raise ValueError("Pacote APRS excede 512 bytes.")
-        with self._socket_lock:
-            if not self._socket:
+        with self._tx_send_lock:
+            with self._socket_lock:
+                sock = self._socket
+            if not sock:
                 raise ConnectionError("Não conectado ao APRS-IS.")
-            self._socket.sendall(data)
+            try:
+                sock.sendall(data)
+            except OSError as exc:
+                self._set_status(connected=False, verified=False, last_error=f"Falha de transmissão: {exc}")
+                self._close_socket()
+                raise ConnectionError(f"Falha ao transmitir ao APRS-IS: {exc}") from exc
         if not line.lower().startswith("user "):
             with self._status_lock:
                 self._status.packets_sent = int(self._status.packets_sent or 0) + 1
                 self._status.last_tx_at = db.utc_now_iso()
         db.add_aprs_log("TX", mask_sensitive_log_line(line))
+
+    def queue_message_parts(self, destination: str, text: str) -> dict[str, Any]:
+        status = self.status()
+        if not status["connected"]:
+            raise ConnectionError("Cliente APRS-IS desconectado.")
+        if not status["verified"]:
+            raise PermissionError("Conexão APRS-IS não verificada; informe um passcode válido para transmitir.")
+
+        cfg = db.get_config()
+        source = full_callsign(cfg)
+        destination = str(destination or "").upper().strip()
+        if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", destination):
+            raise ValueError("Indicativo de destino inválido.")
+
+        parts = split_aprs_message_parts(text)
+        dedupe_key = destination + "\0" + " ".join(parts)
+        now = time.monotonic()
+        with self._tx_guard:
+            self._recent_tx = {k: v for k, v in self._recent_tx.items() if now - v[0] <= 5.0}
+            recent = self._recent_tx.get(dedupe_key)
+            if recent:
+                result = dict(recent[1])
+                result["duplicate"] = True
+                return result
+
+            row_ids = []
+            message_ids = []
+            packets = []
+            group_id = f"{int(time.time() * 1000)}-{self._msg_counter:03d}"
+            for index, part in enumerate(parts):
+                self._msg_counter = (self._msg_counter + 1) % 1000
+                msg_id = f"{self._msg_counter:03d}"
+                packet = f"{source}>APRS,TCPIP*::{destination:<9}:{part}{{{msg_id}"
+                row_ids.append(db.add_message("out", source, destination, part, msg_id=msg_id, status="Na fila", raw=packet, message_group_id=group_id, part_index=index + 1, part_count=len(parts), retry_count=0))
+                message_ids.append(msg_id)
+                packets.append({"packet": packet, "msg_id": msg_id})
+
+            result = {"row_ids": row_ids, "message_ids": message_ids, "parts": parts, "part_count": len(parts), "group_id": group_id, "queued": True, "duplicate": False}
+            self._recent_tx[dedupe_key] = (now, dict(result))
+
+        self._ensure_tx_worker()
+        self._tx_queue.put({"packets": packets, "group_id": group_id})
+        return result
 
     def send_message(self, destination: str, text: str) -> int:
         result = self.send_message_parts(destination, text)
@@ -384,7 +491,7 @@ class APRSService:
         cfg = db.get_config()
         source = full_callsign(cfg)
         destination = destination.upper().strip()
-        if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", destination):
+        if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", destination):
             raise ValueError("Indicativo de destino inválido.")
 
         parts = split_aprs_message_parts(text)
