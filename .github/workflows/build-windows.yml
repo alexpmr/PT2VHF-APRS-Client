@@ -26,9 +26,13 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Apply v1.6.3 release patch
+      - name: Apply v1.6.4 fixes
         shell: pwsh
-        run: python tools\apply_release_1_6_3.py
+        run: python tools\apply_release_1_6_4.py
+
+      - name: Apply v1.6.5 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_5.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -136,6 +140,10 @@ jobs:
       - name: Apply v1.6.4 portable fixes
         shell: pwsh
         run: python tools\apply_release_1_6_4.py
+
+      - name: Apply v1.6.5 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_5.py
 
       - name: Install Python dependencies
         shell: pwsh

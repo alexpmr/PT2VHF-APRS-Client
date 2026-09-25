@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.5": {
+        "title": "Manutenção e notificações",
+        "items": [
+            "Novo bloco Manutenção centraliza as ações de limpeza do banco.",
+            "Notificações do navegador agora têm volume, seleção de som e botão de teste.",
+            "A barra de histórico/replay do Mapa fica oculta por padrão e pode ser aberta pelo cabeçalho.",
+            "Corrigido o envio para destinatários com sufixo alfanumérico, incluindo PY2OFU-D.",
+            "Release somente Windows x64, sem PDF.",
+        ],
+    },
     "1.6.4": {
         "title": "Correções de Mensagens e Replay",
         "items": [
