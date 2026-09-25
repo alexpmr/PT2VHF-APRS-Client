@@ -74,3 +74,25 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - No **Replay da Rede/Histórico**, por padrão animar somente eventos cujo trecho ou estação esteja visível no mapa, evitando efeitos de atividade fora do enquadramento atual.
 - Se um pacote tiver origem fora da tela, mas algum trecho do seu caminho estiver visível, permitir animar apenas os segmentos visíveis, sem provocar som da estação de origem fora da tela.
 - O objetivo é evitar, por exemplo, que o cliente toque aviso de uma estação em outro estado ou região que esteja sendo recebida pelo APRS-IS, mas não esteja visível no zoom atual.
+
+
+## Mover controles da animação do tráfego para a parte inferior do Mapa
+
+**Objetivo:** manter os controles do replay/animação junto da visualização em que o usuário acompanha os pacotes.
+
+- Remover o bloco **Animação do tráfego APRS** da aba **Análise**.
+- Exibir esse bloco na aba **Mapa**, fixado na **parte inferior da tela**, imediatamente abaixo da área do mapa ou sobreposto em uma faixa inferior própria.
+- Manter no novo local todos os controles atuais:
+  - **Modo** (Histórico/Ao vivo);
+  - **Velocidade**;
+  - **Início**;
+  - **voltar**;
+  - **Play/Pausa**;
+  - **avançar**;
+  - contadores de reproduzidos/pendentes;
+  - horário atual da reprodução;
+  - velocidade atual.
+- Integrar nesse mesmo espaço, futuramente, a barra temporal do **Replay da Rede**, evitando controles duplicados em abas diferentes.
+- A aba **Análise** deve continuar concentrando métricas, rankings, comparações e comandos analíticos, enquanto a reprodução visual do tráfego fica junto do **Mapa**.
+- A faixa inferior deve ser responsiva e não reduzir excessivamente a área útil do mapa; em janelas menores, permitir layout compacto/recolhível.
+- Ao alternar entre Mapa e outras abas, preservar o estado da animação (posição, modo, velocidade e Play/Pausa).
