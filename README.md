@@ -2,7 +2,7 @@
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.1** é a primeira atualização incremental da série 1.6. Ela conclui o backlog aberto após a v1.6: OTA totalmente habilitada por padrão em novas instalações, divisão transparente de mensagens longas, nova aba Análise, atalho de Log no popup das estações e limpeza visual da página Configuração.
+A **v1.6.1** é a primeira atualização incremental da série 1.6 e consolida o backlog aberto após a v1.6: OTA automática, divisão transparente de mensagens longas, nova aba Análise, topologia completa, animação visual do tráfego APRS, estações favoritas, filtro de mensagens não lidas, aviso de atividade no mapa e melhorias de diagnóstico.
 
 ## Downloads
 
@@ -56,6 +56,9 @@ Cada Release completa publica:
 - Retry individual de partes e retry automático configurável por timeout/número máximo de tentativas.
 - Cada retry usa novo ID APRS.
 - O peso de fonte configurado em Mensagens é aplicado também a **De**, **Para** e **Tipo**.
+- Botão **Não lidas** para mostrar somente mensagens individuais recebidas ainda não lidas, inclusive no modo agrupado.
+- O estado lida/não lida é persistido; **Ler mensagem**, seleção de conversa ou seleção explícita de mensagem atualizam esse estado.
+- Estações favoritas recebem **estrela amarela** e ficam priorizadas nas conversas agrupadas e nas sugestões do campo Destino.
 
 ### Log
 - A coluna **Hora** mantém data e hora em uma única linha.
@@ -66,12 +69,16 @@ Cada Release completa publica:
 - OpenStreetMap, OpenTopoMap e Esri World Imagery.
 - Tracklogs automáticos de estações móveis.
 - O popup da estação oferece **Mostrar log**, abrindo o Log já filtrado pelo indicativo/SSID.
-- A análise da rede foi movida para a nova aba **Análise**, com períodos de 1 h, 6 h, 24 h ou 7 dias.
+- A análise da rede foi movida para a nova aba **Análise**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.
 - Ranking de digipeaters e IGates, enlaces que deixaram de aparecer, comparação com o período anterior e métricas agregadas.
-- Histórico limitado de eventos de topologia com **animação temporal no mapa**.
+- O Mapa ganhou **legenda dos tipos de linhas**: tracklog, enlace RF, IGate/APRS-IS, replay temporal e pacote em movimento.
+- Nova animação do tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, velocidades 0,5x/1x/2x/5x/10x, timestamp e contadores.
+- Em pacotes com múltiplos enlaces observados, os segmentos podem ser animados simultaneamente, reproduzindo a propagação multi-hop.
+- Cada transmissão recebida pode gerar som curto e destacar temporariamente em vermelho o marcador da estação de origem; som e destaque são configuráveis separadamente.
+- Estações favoritas são persistidas e ficam fixadas no topo da aba Estações; a estrela também aparece no popup do mapa e na área de Mensagens.
 
 ### Atualização integrada
-- **Verificar atualizações automaticamente** — habilitado por padrão.
+- **Verificar atualizações automaticamente** — habilitado por padrão e executado na abertura e depois a cada **5 minutos**.
 - **Baixar atualização automaticamente** — habilitado por padrão em novas instalações.
 - **Instalar atualização automaticamente ao fechar** — habilitado por padrão em novas instalações.
 - Botão **Verificar atualização agora**.
