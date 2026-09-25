@@ -1333,7 +1333,7 @@
 
     list.innerHTML = conversations.map(item => {
       const selected = item.contact === state.selectedConversation ? ' selected' : '';
-      return `<button type="button" class="conversation-item${selected}" data-conversation-contact="${escapeHtml(item.contact)}">
+      return `<div class="conversation-item${selected}" data-conversation-contact="${escapeHtml(item.contact)}" role="button" tabindex="0">
         <span class="conversation-item-top">
           <strong>${favoriteStarHtml(item.contact)}${escapeHtml(item.contact)}</strong>
           <span>${escapeHtml(fmtDate(item.last?.timestamp))}</span>
@@ -1342,7 +1342,7 @@
           <span>${escapeHtml(item.last?.message || '')}</span>
           ${item.unread ? `<span class="conversation-unread">${item.unread}</span>` : ''}
         </span>
-      </button>`;
+      </div>`;
     }).join('');
 
     const selected = conversations.find(item => item.contact === state.selectedConversation) || conversations[0];
@@ -1462,6 +1462,12 @@
     const thread = $('#conversationMessages');
     if (thread) thread.scrollTop = thread.scrollHeight;
   });
+  $('#conversationList')?.addEventListener('keydown', event => {
+    if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('[data-conversation-contact]') && !event.target.closest('.favorite-star')) {
+      event.preventDefault();
+      event.target.closest('[data-conversation-contact]').click();
+    }
+  });
 
   $('#conversationSortButton')?.addEventListener('click', () => {
     state.conversationSort = state.conversationSort === 'asc' ? 'desc' : 'asc';
@@ -1477,6 +1483,7 @@
   });
 
   $('#messagesTable tbody')?.addEventListener('click', async event => {
+    if (event.target.closest('.favorite-star')) return;
     const retry = event.target.closest('.message-retry-button');
     if (retry) {
       event.preventDefault();
@@ -1945,6 +1952,11 @@
       });
       if (favorite) state.favoriteCallsigns.add(call);
       else state.favoriteCallsigns.delete(call);
+      $('[data-favorite-callsign]').filter(el => normalizedCall(el.dataset.favoriteCallsign) === call).forEach(el => {
+        el.classList.toggle('is-favorite', favorite);
+        el.textContent = favorite ? '★' : '☆';
+        el.setAttribute('aria-pressed', favorite ? 'true' : 'false');
+      });
       state.stations = state.stations.map(s => normalizedCall(s.callsign) === call ? { ...s, favorite: favorite ? 1 : 0 } : s);
       renderStations();
       renderMessages();
@@ -3503,10 +3515,10 @@
           if (!points.flat().every(Number.isFinite)) continue;
           const key = `timeline:${index}:${edge.source}>${edge.target}`;
           const line = L.polyline(points, {
-            color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-            weight: state.mapConfig.topology_width,
-            opacity: .64,
-            dashArray: edge.kind === 'igate' ? '7 5' : null
+            color: '#ffd54a',
+            weight: Math.max(2, state.mapConfig.topology_width + 1),
+            opacity: .78,
+            dashArray: '5 4'
           }).addTo(state.map);
           line.bindPopup(`${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}<br>${escapeHtml(fmtDate(edge.timestamp))}`);
           state.topologyLines.set(key, line);
