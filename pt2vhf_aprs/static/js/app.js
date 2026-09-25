@@ -25,6 +25,9 @@
     trafficEvents: [],
     trafficIndex: 0,
     trafficPlaying: false,
+    trafficOverview: null,
+    trafficHasMore: false,
+    trafficChunkLastId: 0,
     trafficMode: 'history',
     trafficSpeed: 1,
     trafficTimer: null,
@@ -32,6 +35,13 @@
     trafficPollBusy: false,
     lastActivitySoundAt: 0,
     activityAudioContext: null,
+    lastRxCount: 0,
+    lastTxCount: 0,
+    trafficIndicatorTimer: null,
+    replayBounds: null,
+    replayWindowStart: null,
+    replayWindowEnd: null,
+    replaySeeking: false,
     favoriteCallsigns: new Set(),
     userLocationMarker: null,
     userLocationAccuracy: null,
@@ -131,8 +141,10 @@
     el.classList.add('checking');
     textEl.textContent = ui('Verificando versão…', 'Checking version…');
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
-      const data = await api(`/api/update-status${force ? '?force=1' : ''}`);
+      const data = await api(`/api/update-status${force ? '?force=1' : ''}`, { signal: controller.signal });
       state.updateInfo = data;
       el.classList.remove('checking');
 
@@ -142,10 +154,7 @@
       if (data.status === 'update_available') {
         el.classList.add('update');
         textEl.textContent = ui(`Nova versão ${latest}`, `New version ${latest}`);
-        el.title = ui(`Instalada ${current}. Clique para atualizar.`, `Installed ${current}. Click to update.`);
-        if (state.currentConfig?.auto_download_updates && !data.downloaded && !state.updateDownloading) {
-          downloadAvailableUpdate(true);
-        }
+        el.title = ui(`Instalada ${current}. Clique para ver a Release e baixar manualmente.`, `Installed ${current}. Click to open the Release and download manually.`);
       } else if (data.status === 'latest') {
         el.classList.add('latest');
         textEl.textContent = ui('Última versão', 'Latest version');
@@ -155,17 +164,28 @@
         textEl.textContent = `Build ${current}`;
         el.title = latest ? `Build > ${latest}` : ui('Build de desenvolvimento.', 'Development build.');
       } else {
-        el.classList.add('error');
-        textEl.textContent = ui('Versão não verificada', 'Version not verified');
-        el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
+        throw new Error(data.error || ui('Falha temporária na verificação.', 'Temporary update check failure.'));
       }
       updateUpdateSettingsUi();
-    } catch (_) {
+    } catch (err) {
+      console.warn('Falha ao verificar nova versão:', err);
       el.classList.remove('checking');
       el.classList.add('error');
-      textEl.textContent = ui('Versão não verificada', 'Version not verified');
-      el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
+      const current = state.updateInfo?.current_version ? `v${state.updateInfo.current_version}` : '';
+      textEl.textContent = current
+        ? ui(`${current} · verificação indisponível`, `${current} · check unavailable`)
+        : ui('Falha temporária na verificação', 'Temporary check failure');
+      el.title = ui(
+        'Não foi possível verificar agora; nova tentativa será feita automaticamente.',
+        'Could not check now; another attempt will be made automatically.'
+      );
+      const status = $('#updateSettingsStatus');
+      if (status) status.textContent = ui(
+        'Não foi possível verificar agora; nova tentativa será feita automaticamente.',
+        'Could not check now; another attempt will be made automatically.'
+      );
     } finally {
+      clearTimeout(timeout);
       state.versionCheckInProgress = false;
     }
   }
@@ -174,72 +194,41 @@
     const data = state.updateInfo;
     if (!data || data.status !== 'update_available') return;
     $('#updateModalTitle').textContent = ui(`Nova versão v${data.latest_version} disponível`, `New version v${data.latest_version} available`);
-    $('#updateModalSummary').textContent = data.asset_name
-      ? ui(`Pacote compatível: ${data.asset_name}`, `Compatible package: ${data.asset_name}`)
-      : ui('Não há pacote automático compatível para esta plataforma.', 'No automatic package is available for this platform.');
+    $('#updateModalSummary').textContent = ui(
+      `Instalada v${data.current_version}. O download e a instalação são manuais.`,
+      `Installed v${data.current_version}. Download and installation are manual.`
+    );
     $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
-    $('#updateDownloadNow').classList.toggle('hidden', !data.asset_url || !!data.downloaded);
-    $('#updateDownloadProgress').textContent = data.downloaded
-      ? ui('Atualização já baixada. Ela será aplicada ao fechar se essa opção estiver habilitada.', 'Update already downloaded. It will be applied on exit if enabled.')
-      : '';
     $('#updateModal').classList.remove('hidden');
   }
 
-  async function downloadAvailableUpdate(silent = false) {
-    if (state.updateDownloading) return;
-    if (!state.updateInfo?.asset_url) {
-      if (!silent) toast(ui('Não há pacote automático compatível.', 'No compatible automatic package.'), 'error');
-      return;
-    }
-    state.updateDownloading = true;
-    const progress = $('#updateDownloadProgress');
-    if (progress) progress.textContent = ui('Baixando e verificando SHA-256…', 'Downloading and verifying SHA-256…');
-    try {
-      const result = await api('/api/update/download', { method: 'POST' });
-      if (progress) progress.textContent = ui(`Atualização baixada: ${result.update.asset_name}`, `Update downloaded: ${result.update.asset_name}`);
-      if (!silent) {
-        toast(ui('Atualização baixada e verificada.', 'Update downloaded and verified.'), 'ok');
-        if (state.updateInfo?.install_supported && !state.currentConfig?.install_updates_on_exit) {
-          const enable = window.confirm(ui(
-            'Deseja instalar automaticamente esta atualização quando fechar o aplicativo?',
-            'Install this update automatically when the application closes?'
-          ));
-          if (enable) {
-            const payload = { ...(state.currentConfig || {}), install_updates_on_exit: true };
-            const saved = await api('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-            state.currentConfig = saved.config || payload;
-            const checkbox = $('#configForm')?.elements.namedItem('install_updates_on_exit');
-            if (checkbox) checkbox.checked = true;
-          }
-        }
-      }
-      await refreshVersionStatus(true);
-      await refreshPendingUpdateStatus();
-    } catch (err) {
-      if (progress) progress.textContent = err.message;
-      if (!silent) toast(err.message, 'error');
-    } finally {
-      state.updateDownloading = false;
-    }
-  }
-
   async function refreshPendingUpdateStatus() {
-    try {
-      const data = await api('/api/update/pending');
-      const status = $('#updateSettingsStatus');
-      if (status) {
-        status.textContent = data.pending
-          ? ui(`Baixada v${data.pending.version}: ${data.pending.asset_name}`, `Downloaded v${data.pending.version}: ${data.pending.asset_name}`)
-          : ui('Nenhuma atualização pendente.', 'No pending update.');
-      }
-      $('#rollbackUpdateButton')?.classList.toggle('hidden', !data.rollback);
-      $('#downloadUpdateButton')?.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && !data.pending));
-    } catch (_) {}
+    const status = $('#updateSettingsStatus');
+    if (!status) return;
+    if (state.updateInfo?.status === 'update_available') {
+      status.textContent = ui(
+        `Nova versão v${state.updateInfo.latest_version} disponível. Instalação manual.`,
+        `New version v${state.updateInfo.latest_version} available. Manual installation.`
+      );
+    } else if (state.updateInfo?.status === 'latest') {
+      status.textContent = ui('Você está usando a última versão.', 'You are using the latest version.');
+    } else if (!state.versionCheckInProgress) {
+      status.textContent = ui('Aguardando próxima verificação.', 'Waiting for the next check.');
+    }
   }
 
   function updateUpdateSettingsUi() {
-    const btn = $('#downloadUpdateButton');
-    if (btn) btn.classList.toggle('hidden', !(state.updateInfo?.status === 'update_available' && state.updateInfo?.asset_url && !state.updateInfo?.downloaded));
+    const btn = $('#openLatestReleaseButton');
+    if (btn) btn.classList.toggle('hidden', state.updateInfo?.status !== 'update_available' || !state.updateInfo?.release_url);
+    refreshPendingUpdateStatus();
+  }
+
+  function openLatestRelease() {
+    const url = state.updateInfo?.release_url;
+    if (!url) return;
+    const nativeApi = window.pywebview?.api;
+    if (nativeApi?.open_external) nativeApi.open_external(url);
+    else window.open(url, '_blank', 'noopener');
   }
 
   $('#versionStatus')?.addEventListener('click', e => {
@@ -248,26 +237,56 @@
     else refreshVersionStatus(true);
   });
   $('#updateModalClose')?.addEventListener('click', () => $('#updateModal')?.classList.add('hidden'));
-  $('#updateDownloadNow')?.addEventListener('click', () => downloadAvailableUpdate(false));
-  $('#downloadUpdateButton')?.addEventListener('click', () => downloadAvailableUpdate(false));
   $('#checkUpdatesNowButton')?.addEventListener('click', async () => {
     await refreshVersionStatus(true);
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
-    else toast(ui('Verificação concluída.', 'Update check completed.'), 'ok');
+    else if (state.updateInfo?.status === 'latest') toast(ui('Verificação concluída: última versão.', 'Check complete: latest version.'), 'ok');
   });
-  $('#updateOpenRelease')?.addEventListener('click', () => {
-    const url = state.updateInfo?.release_url;
-    if (!url) return;
-    const nativeApi = window.pywebview?.api;
-    if (nativeApi?.open_external) nativeApi.open_external(url);
-    else window.open(url, '_blank', 'noopener');
-  });
-  $('#rollbackUpdateButton')?.addEventListener('click', async () => {
-    if (!window.confirm(ui('Preparar rollback para a versão anterior ao fechar o aplicativo?', 'Prepare rollback to the previous version when the app closes?'))) return;
+  $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
+  $('#openLatestReleaseButton')?.addEventListener('click', openLatestRelease);
+
+  async function showWhatsNewAfterUpdate() {
     try {
-      const result = await api('/api/update/rollback', { method:'POST' });
-      toast(result.message || ui('Rollback preparado.', 'Rollback prepared.'), 'ok');
-    } catch (err) { toast(err.message, 'error'); }
+      const info = await api('/api/current-version-info');
+      const version = String(info.version || '').trim();
+      if (!version) return;
+      const key = 'pt2vhf_last_seen_version';
+      const previous = String(localStorage.getItem(key) || '').trim();
+
+      // Primeira instalação: apenas registra a versão. Em instalações já
+      // configuradas, ausência da chave indica atualização a partir de uma
+      // versão anterior que ainda não possuía este recurso.
+      if (!previous && !info.existing_install) {
+        localStorage.setItem(key, version);
+        return;
+      }
+      if (previous === version) return;
+
+      const list = $('#whatsNewList');
+      const title = $('#whatsNewTitle');
+      const summary = $('#whatsNewSummary');
+      if (!list || !title || !summary) return;
+
+      title.textContent = ui(
+        `PT2VHF APRS Client atualizado para v${version}`,
+        `PT2VHF APRS Client updated to v${version}`
+      );
+      summary.textContent = previous
+        ? ui(`Atualização concluída: v${previous} → v${version}. Principais novidades:`, `Update complete: v${previous} → v${version}. What's new:`)
+        : ui(`Atualização concluída para v${version}. Principais novidades:`, `Updated to v${version}. What's new:`);
+      list.innerHTML = (info.items || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
+      $('#whatsNewModal')?.classList.remove('hidden');
+      $('#whatsNewModal')?.setAttribute('data-version', version);
+    } catch (err) {
+      console.warn('Não foi possível carregar as novidades da versão:', err);
+    }
+  }
+
+  $('#whatsNewClose')?.addEventListener('click', () => {
+    const modal = $('#whatsNewModal');
+    const version = String(modal?.getAttribute('data-version') || '').trim();
+    if (version) localStorage.setItem('pt2vhf_last_seen_version', version);
+    modal?.classList.add('hidden');
   });
 
   let toastTimer = null;
@@ -789,7 +808,7 @@
       </div>
       <div class="station-popup-actions">
         ${favoriteStarHtml(s.callsign, false)}
-        <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Mostrar log</button>
+        <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Ver logs</button>
         <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}">Enviar mensagem</button>
       </div>
     </div>`;
@@ -857,8 +876,17 @@
     }
   }
 
-  function playStationActivitySound() {
-    if (!state.soundOnStationActivity) return;
+  function stationIsVisible(callsign) {
+    const call = normalizedCall(callsign);
+    if (!call || !state.map) return false;
+    const marker = state.markers.get(call);
+    const point = marker?.getLatLng?.();
+    if (!point || !Number.isFinite(Number(point.lat)) || !Number.isFinite(Number(point.lng))) return false;
+    return state.map.getBounds().contains(point);
+  }
+
+  function playStationActivitySound(callsign) {
+    if (!state.soundOnStationActivity || !stationIsVisible(callsign)) return;
     const now = Date.now();
     if (now - state.lastActivitySoundAt < 700) return;
     state.lastActivitySoundAt = now;
@@ -883,7 +911,7 @@
 
   function pulseStation(callsign, options = {}) {
     const call = normalizedCall(callsign);
-    if (!call || !state.highlightStationActivity) return;
+    if (!call || !state.highlightStationActivity || !stationIsVisible(call)) return;
     const marker = state.markers.get(call);
     const el = marker?.getElement?.();
     if (!el) return;
@@ -895,13 +923,34 @@
 
   function stationActivity(callsign) {
     const call = normalizedCall(callsign);
-    if (call && state.highlightStationActivity && !state.markers.has(call) && state.map) {
-      loadMapData().then(() => pulseStation(call)).catch(() => {});
-    } else {
+    if (!call || !state.map) return;
+
+    const notifyVisibleStation = () => {
+      if (!stationIsVisible(call)) return;
       pulseStation(call);
+      playStationActivitySound(call);
+    };
+
+    if (state.markers.has(call)) {
+      notifyVisibleStation();
+      return;
     }
-    playStationActivitySound();
+
+    // Uma estação recém-recebida pode ainda não ter marcador no refresh de 5 s.
+    // Atualiza o mapa primeiro e só então sinaliza se ela realmente estiver visível.
+    loadMapData().then(notifyVisibleStation).catch(() => {});
   }
+
+  function trafficSegmentVisible(segment) {
+    if (!state.map) return false;
+    const from = L.latLng(Number(segment.source_lat), Number(segment.source_lon));
+    const to = L.latLng(Number(segment.target_lat), Number(segment.target_lon));
+    if (![from.lat, from.lng, to.lat, to.lng].every(Number.isFinite)) return false;
+    const bounds = state.map.getBounds();
+    if (bounds.contains(from) || bounds.contains(to)) return true;
+    return bounds.intersects(L.latLngBounds(from, to));
+  }
+
 
   function clearTrafficReplayLayers() {
     for (const layer of state.trafficReplayLayers) {
@@ -926,6 +975,7 @@
     const from = [Number(segment.source_lat), Number(segment.source_lon)];
     const to = [Number(segment.target_lat), Number(segment.target_lon)];
     if (![...from, ...to].every(Number.isFinite)) return Promise.resolve();
+    if (!trafficSegmentVisible(segment)) return Promise.resolve();
 
     const particle = L.circleMarker(from, {
       radius: 6,
@@ -964,14 +1014,103 @@
     });
   }
 
+  function trafficTimestampMs(value) {
+    const ms = new Date(value || '').getTime();
+    return Number.isFinite(ms) ? ms : null;
+  }
+
+  function drawTrafficDensity() {
+    const canvas = $('#trafficDensityCanvas');
+    const bins = state.trafficOverview?.bins || [];
+    if (!canvas || !bins.length) return;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width || 800));
+    const height = Math.max(1, Math.round(rect.height || 42));
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, width, height);
+    const max = Math.max(1, ...bins.map(v => Number(v || 0)));
+    const barWidth = width / bins.length;
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3ba6ff';
+    bins.forEach((value, index) => {
+      const h = Math.max(1, Math.round((Number(value || 0) / max) * (height - 3)));
+      ctx.globalAlpha = .25 + .65 * (Number(value || 0) / max);
+      ctx.fillRect(index * barWidth, height - h, Math.max(1, barWidth), h);
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function trafficTimelineTimestamp(value) {
+    const first = trafficTimestampMs(state.trafficOverview?.first_timestamp);
+    const last = trafficTimestampMs(state.trafficOverview?.last_timestamp);
+    if (first === null || last === null) return null;
+    const ratio = Math.max(0, Math.min(1, Number(value || 0) / 1000));
+    return new Date(first + (last - first) * ratio).toISOString();
+  }
+
+  function syncTrafficTimeline(timestamp) {
+    const slider = $('#trafficTimeline');
+    const first = trafficTimestampMs(state.trafficOverview?.first_timestamp);
+    const last = trafficTimestampMs(state.trafficOverview?.last_timestamp);
+    const current = trafficTimestampMs(timestamp);
+    if (!slider || first === null || last === null || current === null) return;
+    const ratio = last > first ? (current - first) / (last - first) : 0;
+    slider.value = String(Math.round(Math.max(0, Math.min(1, ratio)) * 1000));
+    if ($('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(timestamp) || '—';
+  }
+
+  function isoToDatetimeLocal(value) {
+    const d = new Date(value || '');
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
+  function datetimeLocalToIso(value) {
+    const d = new Date(String(value || ''));
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+
+  async function loadTrafficOverview() {
+    const hours = topologyPeriodValue(state.topologyHours);
+    const params = new URLSearchParams({ bins: '140' });
+    if (state.replayWindowStart) params.set('start', state.replayWindowStart);
+    if (state.replayWindowEnd) params.set('end', state.replayWindowEnd);
+    if (!state.replayWindowStart && !state.replayWindowEnd) params.set('hours', String(hours));
+    const data = await api(`/api/traffic/overview?${params.toString()}`);
+    state.trafficOverview = data;
+    const startInput = $('#trafficRangeStart');
+    const endInput = $('#trafficRangeEnd');
+    if (startInput) startInput.value = state.replayWindowStart ? isoToDatetimeLocal(state.replayWindowStart) : '';
+    if (endInput) endInput.value = state.replayWindowEnd ? isoToDatetimeLocal(state.replayWindowEnd) : '';
+    if ($('#trafficTimelineStart')) $('#trafficTimelineStart').textContent = fmtDate(data.first_timestamp) || '—';
+    if ($('#trafficTimelineEnd')) $('#trafficTimelineEnd').textContent = fmtDate(data.last_timestamp) || '—';
+    const slider = $('#trafficTimeline');
+    if (slider) {
+      slider.min = '0';
+      slider.max = '1000';
+      slider.step = '1';
+      if (!state.replaySeeking) slider.value = '0';
+      slider.disabled = !data.first_timestamp || !data.last_timestamp;
+    }
+    if ($('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(data.first_timestamp) || '—';
+    requestAnimationFrame(drawTrafficDensity);
+    return data;
+  }
+
   async function animateTrafficEvent(event) {
     if (!event) return;
     stationActivity(event.source);
-    const speed = Math.max(.5, Number(state.trafficSpeed || 1));
-    const duration = Math.max(180, 1150 / speed);
+    const speed = Math.max(.25, Number(state.trafficSpeed || 1));
+    const duration = Math.max(90, 1150 / speed);
+    state.timelineReplayActive = state.trafficMode === 'history';
+    updateMapLegend();
     // Todos os segmentos observados do mesmo pacote começam juntos para mostrar a propagação multi-link simultânea.
     await Promise.all((event.segments || []).map(segment => animateTrafficSegment(segment, event, duration)));
-    $('#trafficCurrentTime') && ($('#trafficCurrentTime').textContent = fmtDate(event.timestamp) || '—');
+    if ($('#trafficCurrentTime')) $('#trafficCurrentTime').textContent = fmtDate(event.timestamp) || '—';
+    syncTrafficTimeline(event.timestamp);
   }
 
   function updateTrafficAnimationUi() {
@@ -987,15 +1126,63 @@
         : ui('Pausado', 'Paused');
     }
     if ($('#trafficPlayPauseButton')) $('#trafficPlayPauseButton').textContent = state.trafficPlaying ? '⏸ Pause' : '▶ Play';
+    $('#trafficLiveButton')?.classList.toggle('active-filter', state.trafficMode === 'live');
     updateMapLegend();
   }
 
-  async function loadTrafficHistory(resetIndex = true) {
+  async function loadTrafficHistory(resetIndex = true, startTimestamp = '') {
+    if (resetIndex || !state.trafficOverview) await loadTrafficOverview();
+    const first = startTimestamp || state.trafficOverview?.first_timestamp || '';
     const hours = topologyPeriodValue(state.topologyHours);
-    const data = await api(`/api/traffic/events?hours=${encodeURIComponent(hours)}&limit=5000`);
+    const params = new URLSearchParams({ limit: '5000' });
+    if (first) params.set('start', first);
+    else if (hours) params.set('hours', String(hours));
+    if (state.replayWindowEnd) params.set('end', state.replayWindowEnd);
+    const data = await api(`/api/traffic/events?${params.toString()}`);
     state.trafficEvents = (data.events || []).filter(event => event.source || (event.segments || []).length);
+    state.trafficHasMore = !!data.has_more;
+    state.trafficChunkLastId = Number(data.last_id || 0);
     if (resetIndex) state.trafficIndex = 0;
+    if (first) syncTrafficTimeline(first);
     updateTrafficAnimationUi();
+  }
+
+  async function appendNextTrafficChunk() {
+    if (!state.trafficHasMore || !state.trafficChunkLastId) return false;
+    const params = new URLSearchParams({ after_id: String(state.trafficChunkLastId), limit: '5000' });
+    if (state.replayWindowEnd) params.set('end', state.replayWindowEnd);
+    const data = await api(`/api/traffic/events?${params.toString()}`);
+    const next = (data.events || []).filter(event => event.source || (event.segments || []).length);
+    if (!next.length) {
+      state.trafficHasMore = false;
+      return false;
+    }
+    state.trafficEvents.push(...next);
+    state.trafficHasMore = !!data.has_more;
+    state.trafficChunkLastId = Number(data.last_id || state.trafficChunkLastId);
+    updateTrafficAnimationUi();
+    return true;
+  }
+
+  async function seekTrafficTimeline(value) {
+    const target = trafficTimelineTimestamp(value);
+    if (!target) return;
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.replaySeeking = true;
+    clearTrafficReplayLayers();
+    if ($('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(target);
+    try {
+      await loadTrafficHistory(true, target);
+      if (state.trafficEvents[0]) {
+        await animateTrafficEvent(state.trafficEvents[0]);
+      }
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      state.replaySeeking = false;
+      updateTrafficAnimationUi();
+    }
   }
 
   function stopTrafficTimer() {
@@ -1009,10 +1196,23 @@
     stopTrafficTimer();
     if (!state.trafficPlaying || state.trafficMode !== 'history') return;
     if (!state.trafficEvents.length) {
-      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); state.trafficPlaying = false; updateTrafficAnimationUi(); return; }
+      try {
+        await loadTrafficHistory(true);
+      } catch (err) {
+        toast(err.message, 'error');
+        state.trafficPlaying = false;
+        updateTrafficAnimationUi();
+        return;
+      }
     }
     if (state.trafficIndex >= state.trafficEvents.length) {
+      try {
+        if (await appendNextTrafficChunk()) return playNextTrafficEvent();
+      } catch (err) {
+        console.warn(err);
+      }
       state.trafficPlaying = false;
+      state.timelineReplayActive = false;
       updateTrafficAnimationUi();
       return;
     }
@@ -1020,7 +1220,7 @@
     updateTrafficAnimationUi();
     await animateTrafficEvent(event);
     if (!state.trafficPlaying) return;
-    state.trafficTimer = setTimeout(playNextTrafficEvent, Math.max(60, 500 / Math.max(.5, Number(state.trafficSpeed || 1))));
+    state.trafficTimer = setTimeout(playNextTrafficEvent, Math.max(25, 500 / Math.max(.25, Number(state.trafficSpeed || 1))));
   }
 
   async function pollTrafficEvents() {
@@ -1036,13 +1236,48 @@
       const events = data.events || [];
       state.lastTrafficPacketId = Math.max(state.lastTrafficPacketId, Number(data.last_id || 0));
       for (const event of events) {
-        stationActivity(event.source);
-        if (state.trafficPlaying && state.trafficMode === 'live') animateTrafficEvent(event);
+        if (state.trafficPlaying && state.trafficMode === 'live') {
+          animateTrafficEvent(event);
+        } else {
+          stationActivity(event.source);
+        }
       }
     } catch (err) {
       console.warn(err);
     } finally {
       state.trafficPollBusy = false;
+    }
+  }
+
+  function flashTrafficIndicator(direction) {
+    const root = $('#trafficActivityIndicator');
+    if (!root) return;
+    const cls = direction === 'tx' ? 'tx-active' : 'rx-active';
+    root.classList.add(cls);
+    clearTimeout(state.trafficIndicatorTimer);
+    state.trafficIndicatorTimer = setTimeout(() => {
+      root.classList.remove('rx-active', 'tx-active');
+    }, 360);
+  }
+
+  function updateTrafficActivityIndicator(status) {
+    const rx = Number(status.packets_received || 0);
+    const tx = Number(status.packets_sent || 0);
+
+    if (rx >= state.lastRxCount && rx > state.lastRxCount) flashTrafficIndicator('rx');
+    if (tx >= state.lastTxCount && tx > state.lastTxCount) flashTrafficIndicator('tx');
+
+    state.lastRxCount = rx;
+    state.lastTxCount = tx;
+
+    const root = $('#trafficActivityIndicator');
+    if (root) {
+      const rxText = status.last_packet_at ? fmtDate(status.last_packet_at) : '—';
+      const txText = status.last_tx_at ? fmtDate(status.last_tx_at) : '—';
+      root.title = ui(
+        `RX: ${rx.toLocaleString(currentLocale())} · último ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · último ${txText}`,
+        `RX: ${rx.toLocaleString(currentLocale())} · last ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · last ${txText}`
+      );
     }
   }
 
@@ -1066,6 +1301,7 @@
       const stationCount = Number(s.stations || 0);
       const messageCount = Number(s.messages || 0);
       const packetCount = Number(s.packets_received || 0);
+      updateTrafficActivityIndicator(s);
       if ($('#headerStationCount')) $('#headerStationCount').textContent = stationCount.toLocaleString('pt-BR');
       if ($('#headerPacketCount')) $('#headerPacketCount').textContent = packetCount.toLocaleString('pt-BR');
       if ($('#stationTotalCount')) $('#stationTotalCount').textContent = stationCount.toLocaleString('pt-BR');
@@ -2184,6 +2420,13 @@
   function markConfigDirty() {
     if (!state.configLoaded || state.configLoading) return;
     state.configDirty = configFormSnapshot() !== state.configBaseline;
+    const status = $('#configSaveStatus');
+    if (status) {
+      status.textContent = state.configDirty
+        ? ui('Há alterações não salvas.', 'There are unsaved changes.')
+        : ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
+      status.classList.toggle('unsaved', state.configDirty);
+    }
   }
 
   async function loadConfig() {
@@ -2220,7 +2463,12 @@
       state.configLoaded = true;
       state.configBaseline = configFormSnapshot();
       state.configDirty = false;
-      await refreshPendingUpdateStatus();
+      const configStatus = $('#configSaveStatus');
+      if (configStatus && !configStatus.classList.contains('saved')) {
+        configStatus.textContent = ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
+        configStatus.classList.remove('unsaved');
+      }
+      updateUpdateSettingsUi();
     } catch (err) { toast(err.message, 'error'); }
     finally { state.configLoading = false; }
   }
@@ -2235,8 +2483,8 @@
     data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
     data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
     data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
-    data.auto_download_updates = !!form.elements.auto_download_updates?.checked;
-    data.install_updates_on_exit = !!form.elements.install_updates_on_exit?.checked;
+    data.auto_download_updates = false;
+    data.install_updates_on_exit = false;
 
     const filterValidation = validateAprsFilterSyntax(data.aprs_filter || '');
     if (!filterValidation.valid) {
@@ -2267,7 +2515,7 @@
       toast(
         result.reconnected
           ? ui('Configuração salva. APRS-IS reconectando com os novos parâmetros.', 'Configuration saved. APRS-IS is reconnecting with the new parameters.')
-          : ui('Configuração salva no banco local.', 'Configuration saved to the local database.'),
+          : ui('Configuração salva.', 'Configuration saved.'),
         'ok'
       );
       applyMapPreferences(result.config || data);
@@ -2275,6 +2523,13 @@
       await loadConfig();
       await loadStations();
       state.configDirty = false;
+      const saveStatus = $('#configSaveStatus');
+      if (saveStatus) {
+        saveStatus.textContent = ui('Configuração salva com sucesso.', 'Configuration saved successfully.');
+        saveStatus.classList.remove('unsaved');
+        saveStatus.classList.add('saved');
+        setTimeout(() => saveStatus.classList.remove('saved'), 2600);
+      }
       return true;
     } catch (err) {
       toast(err.message, 'error');
@@ -2362,9 +2617,22 @@
     if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 2} px`;
   }
 
+  function previewTrackStyleFromForm() {
+    const form = $('#configForm');
+    if (!form) return;
+    state.mapConfig.track_color = form.elements.namedItem('track_color')?.value || '#3ba6ff';
+    state.mapConfig.track_width = Number(form.elements.namedItem('track_width')?.value || 2);
+    for (const line of state.trackLines.values()) {
+      line.setStyle({ color: state.mapConfig.track_color, weight: state.mapConfig.track_width, opacity: .78 });
+    }
+    syncMapPreferenceControls();
+    updateMapLegend();
+  }
+
   $('#configForm')?.elements.namedItem('track_color')?.addEventListener('input', e => {
     const colorText = $('#trackColorText');
     if (colorText) colorText.value = e.target.value;
+    previewTrackStyleFromForm();
   });
 
   $('#trackColorText')?.addEventListener('input', e => {
@@ -2373,13 +2641,11 @@
     if (/^#[0-9a-fA-F]{6}$/.test(value)) {
       const colorInput = $('#configForm')?.elements.namedItem('track_color');
       if (colorInput) colorInput.value = value;
+      previewTrackStyleFromForm();
     }
   });
 
-  $('#trackWidth')?.addEventListener('input', e => {
-    const out = $('#trackWidthValue');
-    if (out) out.textContent = `${e.target.value} px`;
-  });
+  $('#trackWidth')?.addEventListener('input', previewTrackStyleFromForm);
 
   $('#mapBrightness')?.addEventListener('input', e => {
     const out = $('#mapBrightnessValue');
@@ -2396,6 +2662,16 @@
     state.mapConfig.topology_width = Number(form.elements.namedItem('topology_width')?.value || 2);
     syncMapPreferenceControls();
     if (state.topologyEnabled) loadTopology();
+    else {
+      for (const line of state.topologyLines.values()) {
+        const kind = line.options?.dashArray ? 'igate' : 'rf';
+        line.setStyle({
+          color: kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+          weight: state.mapConfig.topology_width
+        });
+      }
+    }
+    updateMapLegend();
   }
 
   function bindTopologyColor(name, textSelector) {
@@ -3533,6 +3809,8 @@
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
   $('#analysisPeriod')?.addEventListener('change', async event => {
     state.topologyHours = topologyPeriodValue(event.target.value);
+    state.replayWindowStart = null;
+    state.replayWindowEnd = null;
     localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
     const mapPeriod = $('#topologyHours');
     if (mapPeriod) mapPeriod.value = String(state.topologyHours);
@@ -3546,53 +3824,42 @@
     await refreshTopologyAnalysis();
   });
 
-  $('#animateTopologyButton')?.addEventListener('click', async () => {
-    if (!state.map) return;
+  $('#trafficApplyRangeButton')?.addEventListener('click', async () => {
+    const start = datetimeLocalToIso($('#trafficRangeStart')?.value);
+    const end = datetimeLocalToIso($('#trafficRangeEnd')?.value);
+    if (!start || !end) {
+      toast(ui('Informe início e fim do intervalo.', 'Enter both interval start and end.'), 'error');
+      return;
+    }
+    if (new Date(start).getTime() >= new Date(end).getTime()) {
+      toast(ui('O início precisa ser anterior ao fim.', 'The start must be before the end.'), 'error');
+      return;
+    }
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.trafficMode = 'history';
+    state.replayWindowStart = start;
+    state.replayWindowEnd = end;
+    if ($('#trafficMode')) $('#trafficMode').value = 'history';
+    clearTrafficReplayLayers();
     try {
-      state.timelineReplayActive = true;
-      updateMapLegend();
-      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}&limit=5000`);
-      if (!events.length) {
-        toast(ui('Não há eventos de topologia com posição para animar.', 'There are no positioned topology events to animate.'), 'error');
-        return;
-      }
-      activateTab('map');
-      clearTopologyLines();
-      state.topologyEnabled = true;
-      localStorage.setItem('pt2vhf_topology_enabled', '1');
-      const step = Math.max(1, Math.ceil(events.length / 180));
-      let index = 0;
-      const timer = setInterval(() => {
-        const slice = events.slice(index, index + step);
-        for (const edge of slice) {
-          const points = [
-            [Number(edge.source_lat), Number(edge.source_lon)],
-            [Number(edge.target_lat), Number(edge.target_lon)]
-          ];
-          if (!points.flat().every(Number.isFinite)) continue;
-          const key = `timeline:${index}:${edge.source}>${edge.target}`;
-          const line = L.polyline(points, {
-            color: '#ffd54a',
-            weight: Math.max(2, state.mapConfig.topology_width + 1),
-            opacity: .78,
-            dashArray: '5 4'
-          }).addTo(state.map);
-          line.bindPopup(`${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}<br>${escapeHtml(fmtDate(edge.timestamp))}`);
-          state.topologyLines.set(key, line);
-        }
-        index += step;
-        if (index >= events.length) {
-          clearInterval(timer);
-          setTimeout(() => {
-            state.timelineReplayActive = false;
-            updateMapLegend();
-            loadTopology();
-          }, 700);
-        }
-      }, 80);
+      await loadTrafficHistory(true, start);
+      toast(ui('Intervalo aplicado ao Replay da Rede.', 'Replay interval applied.'), 'ok');
     } catch (err) {
-      state.timelineReplayActive = false;
-      updateMapLegend();
+      toast(err.message, 'error');
+    }
+  });
+
+  $('#trafficClearRangeButton')?.addEventListener('click', async () => {
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.replayWindowStart = null;
+    state.replayWindowEnd = null;
+    clearTrafficReplayLayers();
+    try {
+      await loadTrafficHistory(true);
+      toast(ui('Replay sincronizado com o período da Análise.', 'Replay synced with the Analysis period.'), 'ok');
+    } catch (err) {
       toast(err.message, 'error');
     }
   });
@@ -3601,23 +3868,40 @@
     state.trafficMode = event.target.value === 'live' ? 'live' : 'history';
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = false;
     clearTrafficReplayLayers();
     if (state.trafficMode === 'history') {
       try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); }
     } else {
       state.trafficEvents = [];
       state.trafficIndex = 0;
+      const overview = state.trafficOverview || await loadTrafficOverview().catch(() => null);
+      if (overview?.last_timestamp) syncTrafficTimeline(overview.last_timestamp);
     }
     updateTrafficAnimationUi();
   });
 
   $('#trafficSpeed')?.addEventListener('change', event => {
-    state.trafficSpeed = Math.max(.5, Number(event.target.value || 1));
+    state.trafficSpeed = Math.max(.25, Number(event.target.value || 1));
     updateTrafficAnimationUi();
+  });
+
+  $('#trafficTimeline')?.addEventListener('input', event => {
+    state.replaySeeking = true;
+    const target = trafficTimelineTimestamp(event.target.value);
+    if (target && $('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(target);
+  });
+  $('#trafficTimeline')?.addEventListener('change', async event => {
+    if (state.trafficMode !== 'history') {
+      state.trafficMode = 'history';
+      if ($('#trafficMode')) $('#trafficMode').value = 'history';
+    }
+    await seekTrafficTimeline(event.target.value);
   });
 
   $('#trafficPlayPauseButton')?.addEventListener('click', async () => {
     state.trafficPlaying = !state.trafficPlaying;
+    state.timelineReplayActive = state.trafficPlaying && state.trafficMode === 'history';
     updateTrafficAnimationUi();
     if (!state.trafficPlaying) {
       stopTrafficTimer();
@@ -3627,9 +3911,28 @@
     if (state.trafficMode === 'history') await playNextTrafficEvent();
   });
 
+  $('#trafficLiveButton')?.addEventListener('click', async () => {
+    stopTrafficTimer();
+    clearTrafficReplayLayers();
+    state.trafficMode = 'live';
+    state.trafficPlaying = true;
+    state.timelineReplayActive = false;
+    state.trafficEvents = [];
+    state.trafficIndex = 0;
+    if ($('#trafficMode')) $('#trafficMode').value = 'live';
+    try {
+      const overview = await loadTrafficOverview();
+      if (overview?.last_timestamp) syncTrafficTimeline(overview.last_timestamp);
+      const baseline = await api('/api/traffic/events?bootstrap=1');
+      state.lastTrafficPacketId = Number(baseline.last_id || state.lastTrafficPacketId || 0);
+    } catch (_) {}
+    updateTrafficAnimationUi();
+  });
+
   $('#trafficResetButton')?.addEventListener('click', async () => {
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = false;
     state.trafficIndex = 0;
     clearTrafficReplayLayers();
     if (state.trafficMode === 'history') {
@@ -3646,11 +3949,13 @@
     }
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = true;
     if (!state.trafficEvents.length) await loadTrafficHistory(true);
     state.trafficIndex = Math.max(0, state.trafficIndex - 1);
     const index = Math.max(0, state.trafficIndex - 1);
     const event = state.trafficEvents[index];
     activateTab('map');
+    clearTrafficReplayLayers();
     if (event) await animateTrafficEvent(event);
     updateTrafficAnimationUi();
   });
@@ -3662,11 +3967,16 @@
     }
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = true;
     if (!state.trafficEvents.length) await loadTrafficHistory(true);
+    if (state.trafficIndex >= state.trafficEvents.length && state.trafficHasMore) {
+      try { await appendNextTrafficChunk(); } catch (_) {}
+    }
     const event = state.trafficEvents[state.trafficIndex];
     if (event) {
       state.trafficIndex += 1;
       activateTab('map');
+      clearTrafficReplayLayers();
       await animateTrafficEvent(event);
     }
     updateTrafficAnimationUi();
@@ -3704,7 +4014,9 @@
     await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages(), pollTrafficEvents()]);
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
-    await refreshPendingUpdateStatus();
+    updateUpdateSettingsUi();
+    await showWhatsNewAfterUpdate();
+    loadTrafficOverview().catch(err => console.warn('Replay overview:', err));
 
     // Não bloqueia a inicialização da interface aguardando permissão/localização.
     setTimeout(() => { initializeAutomaticLocation().catch(err => console.warn(err)); }, 1200);

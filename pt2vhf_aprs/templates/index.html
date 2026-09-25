@@ -23,6 +23,10 @@
   </div>
   <div class="connection-box">
     <button id="themeQuickToggle" type="button" class="btn secondary theme-quick-toggle" title="Alternar tema">☀/☾</button>
+    <div id="trafficActivityIndicator" class="traffic-activity-indicator" title="Sem tráfego APRS nesta sessão" aria-label="Atividade de tráfego APRS">
+      <span class="traffic-arrow traffic-rx" aria-hidden="true">↓</span>
+      <span class="traffic-arrow traffic-tx" aria-hidden="true">↑</span>
+    </div>
     <a id="versionStatus" class="version-status checking" href="#" target="_blank" rel="noopener" title="Verificando a versão mais recente">
       <span class="version-status-dot"></span>
       <span id="versionStatusText">Verificando versão…</span>
@@ -44,7 +48,71 @@
 
 <main>
   <section id="tab-map" class="tab-panel active">
-    <div id="map"></div>
+    <div class="map-replay-layout">
+      <div id="map"></div>
+      <div class="traffic-animation-panel map-traffic-panel">
+        <div class="traffic-animation-title">
+          <div>
+            <h3>Replay da Rede</h3>
+            <p>Volte no tempo e acompanhe os pacotes pelos enlaces observados.</p>
+          </div>
+          <div id="trafficAnimationStatus" class="traffic-status">Parado</div>
+        </div>
+        <div class="traffic-timeline-wrap">
+          <canvas id="trafficDensityCanvas" class="traffic-density-canvas" width="1200" height="42" aria-hidden="true"></canvas>
+          <input id="trafficTimeline" class="traffic-timeline" type="range" min="0" max="0" value="0" step="1" aria-label="Linha do tempo do replay da rede">
+          <div class="traffic-timeline-labels">
+            <span id="trafficTimelineStart">—</span>
+            <strong id="trafficTimelineCursor">—</strong>
+            <span id="trafficTimelineEnd">—</span>
+          </div>
+        </div>
+        <div class="traffic-replay-range">
+          <label class="field compact">
+            <span>De</span>
+            <input id="trafficRangeStart" type="datetime-local" step="1">
+          </label>
+          <label class="field compact">
+            <span>Até</span>
+            <input id="trafficRangeEnd" type="datetime-local" step="1">
+          </label>
+          <button id="trafficApplyRangeButton" type="button" class="btn secondary">Aplicar intervalo</button>
+          <button id="trafficClearRangeButton" type="button" class="btn secondary">Usar período da Análise</button>
+        </div>
+        <div class="traffic-animation-controls">
+          <label class="field compact">
+            <span>Modo</span>
+            <select id="trafficMode">
+              <option value="history">Histórico</option>
+              <option value="live">Ao vivo</option>
+            </select>
+          </label>
+          <label class="field compact">
+            <span>Velocidade</span>
+            <select id="trafficSpeed">
+              <option value="0.25">0,25×</option>
+              <option value="0.5">0,5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+              <option value="5">5×</option>
+              <option value="10">10×</option>
+              <option value="20">20×</option>
+            </select>
+          </label>
+          <button id="trafficResetButton" type="button" class="btn secondary" title="Voltar ao início">⏮ Início</button>
+          <button id="trafficBackButton" type="button" class="btn secondary" title="Evento anterior">◀</button>
+          <button id="trafficPlayPauseButton" type="button" class="btn primary">▶ Play</button>
+          <button id="trafficForwardButton" type="button" class="btn secondary" title="Próximo evento">▶</button>
+          <button id="trafficLiveButton" type="button" class="btn secondary">● Ao vivo</button>
+        </div>
+        <div class="traffic-animation-metrics">
+          <span><strong id="trafficPlayedCount">0</strong> reproduzidos</span>
+          <span><strong id="trafficPendingCount">0</strong> pendentes</span>
+          <span>Horário: <strong id="trafficCurrentTime">—</strong></span>
+          <span>Velocidade: <strong id="trafficCurrentSpeed">1×</strong></span>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="tab-messages" class="tab-panel">
@@ -241,7 +309,6 @@
           </select>
         </label>
         <button id="refreshTopologyStatsButton" type="button" class="btn secondary">Atualizar análise</button>
-        <button id="animateTopologyButton" type="button" class="btn primary">Animar período</button>
       </div>
     </div>
     <div class="analysis-content">
@@ -253,44 +320,7 @@
       </div>
       <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Atualizar análise.</div>
 
-      <div class="traffic-animation-panel">
-        <div class="traffic-animation-title">
-          <div>
-            <h3>Animação do tráfego APRS</h3>
-            <p>Simula os pacotes percorrendo os enlaces observados entre estação, digipeaters e IGates.</p>
-          </div>
-          <div id="trafficAnimationStatus" class="traffic-status">Parado</div>
-        </div>
-        <div class="traffic-animation-controls">
-          <label class="field compact">
-            <span>Modo</span>
-            <select id="trafficMode">
-              <option value="history">Histórico</option>
-              <option value="live">Ao vivo</option>
-            </select>
-          </label>
-          <label class="field compact">
-            <span>Velocidade</span>
-            <select id="trafficSpeed">
-              <option value="0.5">0,5×</option>
-              <option value="1" selected>1×</option>
-              <option value="2">2×</option>
-              <option value="5">5×</option>
-              <option value="10">10×</option>
-            </select>
-          </label>
-          <button id="trafficResetButton" type="button" class="btn secondary" title="Voltar ao início">⏮ Início</button>
-          <button id="trafficBackButton" type="button" class="btn secondary" title="Evento anterior">◀</button>
-          <button id="trafficPlayPauseButton" type="button" class="btn primary">▶ Play</button>
-          <button id="trafficForwardButton" type="button" class="btn secondary" title="Próximo evento">▶</button>
-        </div>
-        <div class="traffic-animation-metrics">
-          <span><strong id="trafficPlayedCount">0</strong> reproduzidos</span>
-          <span><strong id="trafficPendingCount">0</strong> pendentes</span>
-          <span>Horário: <strong id="trafficCurrentTime">—</strong></span>
-          <span>Velocidade: <strong id="trafficCurrentSpeed">1×</strong></span>
-        </div>
-      </div>
+
     </div>
   </section>
 
@@ -457,7 +487,6 @@
           <label class="field"><span>Máximo de retries por parte</span><input name="message_retry_attempts" type="number" min="0" max="10" value="2"></label>
         </div>
         <div class="config-actions">
-          <button type="submit" class="btn primary">Salvar configuração APRS</button>
           <button id="sendBeaconButton" type="button" class="btn secondary">Enviar beacon agora</button>
         </div>
       </div>
@@ -633,28 +662,22 @@
           </div>
         </div>
         <div class="hint">Tema, idioma, fonte, tamanho, negrito e espaçamento de Mensagens, Estações e Logs são aplicados imediatamente e persistidos no banco local.</div>
-        <div class="config-actions app-save-actions">
-          <button type="submit" class="btn primary">Salvar configurações do aplicativo</button>
-        </div>
       </div>
 
       <div class="config-card full-card config-section config-section-app">
         <h3>Atualizações</h3>
         <div class="form-grid two-cols">
           <label class="check-field"><input name="check_updates_on_start" type="checkbox" checked><span>Verificar atualizações automaticamente</span></label>
-          <label class="check-field"><input name="auto_download_updates" type="checkbox" checked><span>Baixar atualização automaticamente</span></label>
-          <label class="check-field"><input name="install_updates_on_exit" type="checkbox" checked><span>Instalar atualização automaticamente ao fechar</span></label>
           <div class="field">
             <span>Status</span>
-            <small id="updateSettingsStatus">Nenhuma atualização pendente.</small>
+            <small id="updateSettingsStatus">Aguardando verificação.</small>
           </div>
         </div>
         <div class="config-actions">
           <button id="checkUpdatesNowButton" type="button" class="btn secondary">Verificar atualização agora</button>
-          <button id="downloadUpdateButton" type="button" class="btn primary hidden">Baixar atualização</button>
-          <button id="rollbackUpdateButton" type="button" class="btn secondary hidden">Restaurar versão anterior</button>
+          <button id="openLatestReleaseButton" type="button" class="btn primary hidden">Abrir página da nova versão</button>
         </div>
-        <div class="hint">Windows Portable pode aplicar a atualização ao fechar e mantém backup para rollback. Instaladores Windows podem ser executados silenciosamente. No macOS/AppImage o pacote baixado é aberto ao fechar; .deb/.tar.gz exigem instalação pelo sistema.</div>
+        <div class="hint">O cliente apenas informa quando existe uma nova versão. Download e instalação são sempre manuais para preservar a estabilidade da aplicação.</div>
       </div>
 
       <div class="config-card full-card config-section config-section-app">
@@ -668,6 +691,13 @@
           <button id="resetConfigButton" type="button" class="btn danger">Restaurar configuração padrão</button>
           <span class="hint">Restaura preferências e dados da estação; mensagens, estações, logs e tracklogs não são apagados.</span>
         </div>
+      </div>
+      <div class="config-save-footer full-card">
+        <div>
+          <strong>Salvar configuração</strong>
+          <span id="configSaveStatus" class="hint">Alterações ainda não salvas serão indicadas ao sair desta aba.</span>
+        </div>
+        <button id="saveConfigFooterButton" type="submit" class="btn primary">Salvar configuração</button>
       </div>
     </form>
   </section>
@@ -712,7 +742,7 @@
           <h3>3. Mapa</h3>
           <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
           <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
-          <p>Clique em uma estação para abrir os detalhes. Use <strong>Enviar mensagem</strong>, <strong>Mostrar log</strong> ou a <strong>estrela amarela</strong> para favoritar a estação.</p>
+          <p>Clique em uma estação para abrir os detalhes. Use <strong>Enviar mensagem</strong>, <strong>Ver logs</strong> ou a <strong>estrela amarela</strong> para favoritar a estação.</p>
           <p>A topologia oferece período <strong>Completo</strong> por padrão, além de janelas em horas/dias, legenda dos tipos de linhas e animação de tráfego no mapa.</p>
           <p>Na primeira execução, quando a permissão é concedida, o mapa é centralizado na localização atual do usuário. Depois disso, a posição e o zoom escolhidos manualmente ficam salvos localmente e não são recentralizados continuamente.</p>
         </article>
@@ -859,8 +889,23 @@
       <p>Há alterações que ainda não foram salvas.</p>
       <div class="message-alert-actions">
         <button id="unsavedSaveButton" type="button" class="btn primary">Salvar e sair</button>
-        <button id="unsavedDiscardButton" type="button" class="btn secondary">Descartar alterações</button>
-        <button id="unsavedCancelButton" type="button" class="btn secondary">Cancelar</button>
+        <button id="unsavedDiscardButton" type="button" class="btn secondary">Descartar alterações e sair</button>
+        <button id="unsavedCancelButton" type="button" class="btn secondary">Continuar na Configuração</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="whatsNewModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="whatsNewTitle">
+  <div class="message-alert-card whats-new-dialog">
+    <div class="message-alert-icon">✓</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Aplicativo atualizado</div>
+      <h3 id="whatsNewTitle">PT2VHF APRS Client atualizado</h3>
+      <p id="whatsNewSummary"></p>
+      <ul id="whatsNewList" class="whats-new-list"></ul>
+      <div class="message-alert-actions">
+        <button id="whatsNewClose" type="button" class="btn primary">Entendi</button>
       </div>
     </div>
   </div>
@@ -872,11 +917,10 @@
     <div class="message-alert-content">
       <div class="message-alert-eyebrow">Atualização do aplicativo</div>
       <h3 id="updateModalTitle">Nova versão disponível</h3>
-      <p id="updateModalSummary"></p>
+      <p id="updateModalSummary">Baixe e instale manualmente pela página oficial da Release.</p>
       <pre id="updateReleaseNotes" class="update-release-notes"></pre>
       <div id="updateDownloadProgress" class="hint"></div>
       <div class="message-alert-actions">
-        <button id="updateDownloadNow" type="button" class="btn primary">Baixar agora</button>
         <button id="updateOpenRelease" type="button" class="btn secondary">Ver Release</button>
         <button id="updateModalClose" type="button" class="btn secondary">Depois</button>
       </div>

@@ -104,6 +104,8 @@ class ConnectionStatus:
     active_filter: str = ""
     packets_received: int = 0
     last_packet_at: str = ""
+    packets_sent: int = 0
+    last_tx_at: str = ""
 
 
 class APRSService:
@@ -362,6 +364,10 @@ class APRSService:
             if not self._socket:
                 raise ConnectionError("Não conectado ao APRS-IS.")
             self._socket.sendall(data)
+        if not line.lower().startswith("user "):
+            with self._status_lock:
+                self._status.packets_sent = int(self._status.packets_sent or 0) + 1
+                self._status.last_tx_at = db.utc_now_iso()
         db.add_aprs_log("TX", mask_sensitive_log_line(line))
 
     def send_message(self, destination: str, text: str) -> int:

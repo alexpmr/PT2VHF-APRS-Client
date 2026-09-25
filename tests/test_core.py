@@ -249,8 +249,8 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["connect_on_start"] == 1
             assert cfg["open_browser_on_start"] == 0
             assert cfg["check_updates_on_start"] == 1
-            assert cfg["auto_download_updates"] == 1
-            assert cfg["install_updates_on_exit"] == 1
+            assert cfg["auto_download_updates"] == 0
+            assert cfg["install_updates_on_exit"] == 0
             assert cfg["message_retry_seconds"] == 60
             assert cfg["message_retry_attempts"] == 2
             assert cfg["messages_font_weight"] == "normal"
@@ -426,26 +426,40 @@ def test_observed_topology_from_aprs_path():
 
 
 
-def test_v161_analysis_tab_and_ota_defaults_in_ui():
+def test_v162_replay_update_and_settings_ui():
     root = Path(__file__).resolve().parent.parent
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
     assert 'data-tab="analysis"' in html
     assert 'id="tab-analysis"' in html
     assert html.count('id="topologyStatsContent"') == 1
     assert "Página única de configuração" not in html
-    assert 'name="auto_download_updates" type="checkbox" checked' in html
-    assert 'name="install_updates_on_exit" type="checkbox" checked' in html
+    assert 'name="auto_download_updates"' not in html
+    assert 'name="install_updates_on_exit"' not in html
     assert 'id="unreadMessagesButton"' in html
     assert '<option value="0" selected>Completo</option>' in html
     assert 'id="trafficPlayPauseButton"' in html
+    assert 'id="trafficTimeline"' in html
+    assert 'id="trafficLiveButton"' in html
+    assert 'id="trafficActivityIndicator"' in html
+    assert 'id="animateTopologyButton"' not in html
+    assert html.count('type="submit"') == 1
+    assert 'id="saveConfigFooterButton"' in html
+    assert 'id="whatsNewModal"' in html
     assert 'name="sound_on_station_activity" type="checkbox" checked' in html
     assert 'name="highlight_station_activity" type="checkbox" checked' in html
     assert "station-log-button" in js
+    assert "Ver logs" in html
     assert "favorite-star" in js
     assert "map-line-legend" in js
     assert "analysisPeriod" in js
     assert "5 * 60 * 1000" in js
+    assert "AbortController" in js
+    assert "showWhatsNewAfterUpdate" in js
+    assert "stationIsVisible" in js
+    assert ".map-replay-layout" in css
+    assert "@keyframes stationTxRing" in css
 
 
 def test_frontend_collection_selectors_use_query_selector_all():
@@ -561,6 +575,18 @@ def test_complete_topology_favorites_and_packet_traffic():
             assert event["source"] == "PY2ABC-9"
             assert len(event["segments"]) >= 2
 
+            overview = db.packet_traffic_overview(hours=0, bins=40)
+            assert overview["total"] >= 1
+            assert overview["first_timestamp"]
+            assert overview["last_timestamp"]
+            assert len(overview["bins"]) == 40
+            bounded = db.packet_traffic_events(
+                start=overview["first_timestamp"],
+                end=overview["last_timestamp"],
+                limit=20,
+            )
+            assert bounded["events"]
+
             assert db.set_favorite("PY2ABC-9", True) is True
             assert "PY2ABC-9" in db.list_favorites()
             station = next(s for s in db.list_stations() if s["callsign"] == "PY2ABC-9")
@@ -597,6 +623,15 @@ def test_incoming_message_read_state():
             assert db.get_message(second)["read_at"]
     finally:
         db.DB_PATH = original
+
+
+def test_auto_update_is_disabled_but_version_detection_remains():
+    root = Path(__file__).resolve().parent.parent
+    web_source = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+    windows_source = (root / "windows_app.py").read_text(encoding="utf-8")
+    assert "Atualização automática desativada" in web_source
+    assert "launch_pending_update" not in windows_source
+    assert "GITHUB_LATEST_RELEASE_API" in web_source
 
 
 def test_update_check_cache_is_five_minutes():

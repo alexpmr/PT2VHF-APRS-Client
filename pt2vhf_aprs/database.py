@@ -52,8 +52,8 @@ DEFAULT_CONFIG = {
     "connect_on_start": 1,
     "open_browser_on_start": 0,
     "check_updates_on_start": 1,
-    "auto_download_updates": 1,
-    "install_updates_on_exit": 1,
+    "auto_download_updates": 0,
+    "install_updates_on_exit": 0,
     "message_retry_seconds": 60,
     "message_retry_attempts": 2,
     "language": "pt-BR",
@@ -126,8 +126,8 @@ def init_db() -> None:
                 connect_on_start INTEGER NOT NULL DEFAULT 1,
                 open_browser_on_start INTEGER NOT NULL DEFAULT 0,
                 check_updates_on_start INTEGER NOT NULL DEFAULT 1,
-                auto_download_updates INTEGER NOT NULL DEFAULT 1,
-                install_updates_on_exit INTEGER NOT NULL DEFAULT 1,
+                auto_download_updates INTEGER NOT NULL DEFAULT 0,
+                install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
                 message_retry_attempts INTEGER NOT NULL DEFAULT 2,
                 language TEXT NOT NULL DEFAULT 'pt-BR',
@@ -362,6 +362,7 @@ def init_db() -> None:
                 f"INSERT INTO config (id, {cols}, updated_at) VALUES (1, {placeholders}, ?)",
                 [*DEFAULT_CONFIG.values(), now],
             )
+        conn.execute("UPDATE config SET auto_download_updates=0, install_updates_on_exit=0 WHERE id=1")
         row = conn.execute("SELECT id FROM map_state WHERE id=1").fetchone()
         if not row:
             conn.execute(
@@ -410,8 +411,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
     merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
     merged["check_updates_on_start"] = 1 if bool(merged["check_updates_on_start"]) else 0
-    merged["auto_download_updates"] = 1 if bool(merged["auto_download_updates"]) else 0
-    merged["install_updates_on_exit"] = 1 if bool(merged["install_updates_on_exit"]) else 0
+    merged["auto_download_updates"] = 0
+    merged["install_updates_on_exit"] = 0
     merged["message_retry_seconds"] = max(15, min(3600, int(merged["message_retry_seconds"] or 60)))
     merged["message_retry_attempts"] = max(0, min(10, int(merged["message_retry_attempts"] or 0)))
     merged["language"] = str(merged["language"] or "pt-BR").strip()
@@ -910,25 +911,121 @@ def latest_packet_id() -> int:
     return int(row[0] or 0)
 
 
-def packet_traffic_events(after_id: int = 0, hours: int = 0, limit: int = 1000) -> dict[str, Any]:
+def packet_traffic_overview(
+    hours: int = 0,
+    bins: int = 120,
+    start: str | None = None,
+    end: str | None = None,
+) -> dict[str, Any]:
+    """Faixa temporal e densidade agregada para a timeline do Replay da Rede."""
+    hours = int(hours or 0)
+    bins = max(20, min(int(bins or 120), 240))
+    clauses: list[str] = []
+    params: list[Any] = []
+
+    if start:
+        clauses.append("timestamp >= ?")
+        params.append(str(start))
+    if end:
+        clauses.append("timestamp <= ?")
+        params.append(str(end))
+    if not start and hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        clauses.append("timestamp >= ?")
+        params.append(cutoff)
+
+    where = "WHERE " + " AND ".join(clauses) if clauses else ""
+
+    with connection() as conn:
+        row = conn.execute(
+            f"SELECT MIN(timestamp) AS first_ts, MAX(timestamp) AS last_ts, COUNT(*) AS total FROM packets {where}",
+            params,
+        ).fetchone()
+        first_ts = row["first_ts"] if row else None
+        last_ts = row["last_ts"] if row else None
+        total = int(row["total"] or 0) if row else 0
+        density = [0 for _ in range(bins)]
+
+        if first_ts and last_ts and total:
+            try:
+                first_dt = datetime.fromisoformat(str(first_ts).replace("Z", "+00:00"))
+                last_dt = datetime.fromisoformat(str(last_ts).replace("Z", "+00:00"))
+                first_epoch = int(first_dt.timestamp())
+                last_epoch = int(last_dt.timestamp())
+                span = max(1, last_epoch - first_epoch + 1)
+                bucket_seconds = max(1.0, span / bins)
+                rows = conn.execute(
+                    f"""
+                    SELECT CAST((CAST(strftime('%s', timestamp) AS INTEGER) - ?) / ? AS INTEGER) AS bucket,
+                           COUNT(*) AS packet_count
+                    FROM packets
+                    {where}
+                    GROUP BY bucket
+                    """,
+                    [first_epoch, bucket_seconds, *params],
+                ).fetchall()
+                for item in rows:
+                    bucket = int(item["bucket"] or 0)
+                    if 0 <= bucket < bins:
+                        density[bucket] += int(item["packet_count"] or 0)
+                    elif bucket >= bins:
+                        density[-1] += int(item["packet_count"] or 0)
+            except Exception:
+                # A timeline continua utilizável mesmo se uma versão antiga do
+                # SQLite não interpretar algum formato ISO no strftime().
+                density = [0 for _ in range(bins)]
+
+    return {
+        "hours": hours if hours > 0 and not start else 0,
+        "requested_start": start,
+        "requested_end": end,
+        "first_timestamp": first_ts,
+        "last_timestamp": last_ts,
+        "total": total,
+        "bins": density,
+    }
+
+
+
+def packet_traffic_events(
+    after_id: int = 0,
+    hours: int = 0,
+    limit: int = 1000,
+    start: str | None = None,
+    end: str | None = None,
+) -> dict[str, Any]:
     """Pacotes APRS com segmentos observáveis e coordenadas conhecidas para animação."""
     after_id = max(0, int(after_id or 0))
     hours = int(hours or 0)
     limit = max(1, min(int(limit or 1000), 5000))
     params: list[Any] = []
     clauses: list[str] = []
+
     if after_id > 0:
         clauses.append("id > ?")
         params.append(after_id)
-    elif hours > 0:
-        hours = max(1, min(hours, 24 * 30))
-        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
-        clauses.append("timestamp >= ?")
-        params.append(cutoff)
+        if end:
+            clauses.append("timestamp <= ?")
+            params.append(str(end))
+    else:
+        if start:
+            clauses.append("timestamp >= ?")
+            params.append(str(start))
+        if end:
+            clauses.append("timestamp <= ?")
+            params.append(str(end))
+        if not start and hours > 0:
+            hours = max(1, min(hours, 24 * 30))
+            cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+            clauses.append("timestamp >= ?")
+            params.append(cutoff)
+
     where = "WHERE " + " AND ".join(clauses) if clauses else ""
 
     with connection() as conn:
-        if after_id > 0:
+        # Replays e seeks trabalham sempre em ordem cronológica.
+        if after_id > 0 or start or end:
             rows = conn.execute(
                 f"SELECT id,timestamp,from_call,packet_format,raw FROM packets {where} ORDER BY id ASC LIMIT ?",
                 (*params, limit),
@@ -994,8 +1091,10 @@ def packet_traffic_events(after_id: int = 0, hours: int = 0, limit: int = 1000) 
     return {
         "events": events,
         "last_id": max([int(row["id"]) for row in rows], default=latest_packet_id()),
-        "complete": hours <= 0 and after_id == 0,
+        "complete": hours <= 0 and after_id == 0 and not start and not end,
+        "has_more": len(rows) >= limit,
     }
+
 
 
 def list_favorites() -> list[str]:
