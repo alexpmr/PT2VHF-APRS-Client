@@ -1573,7 +1573,7 @@
   $('#messageTo').addEventListener('input', debounce(async (ev) => {
     try {
       const list = await api(`/api/callsigns?prefix=${encodeURIComponent(ev.target.value)}`);
-      $('#destinationList').innerHTML = list.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+      $('#destinationList').innerHTML = list.map(call => `<option value="${escapeHtml(call)}" label="${isFavorite(call) ? '★ ' + escapeHtml(ui('Favorita', 'Favorite')) : ''}"></option>`).join('');
     } catch (_) {}
   }, 180));
 
@@ -1769,11 +1769,15 @@
   }
 
   $('#incomingMessageCompactClose')?.addEventListener('click', closeCompactIncomingMessageAlert);
-  $('#incomingMessageCompactReply')?.addEventListener('click', () => {
+  $('#incomingMessageCompactReply')?.addEventListener('click', async () => {
     const message = state.currentAlertMessage;
     if (!message) return;
     const sender = message.from_call || '';
+    if (message.id) {
+      try { await api(`/api/messages/${Number(message.id)}/read`, { method:'POST' }); } catch (_) {}
+    }
     closeCompactIncomingMessageAlert();
+    await loadMessages({ scrollToNewest:false });
     selectMessageRecipient(sender);
   });
 
@@ -1822,10 +1826,14 @@
   $('#incomingMessageModal')?.addEventListener('click', e => {
     if (e.target.id === 'incomingMessageModal') closeIncomingMessageAlert();
   });
-  $('#incomingMessageReply')?.addEventListener('click', () => {
+  $('#incomingMessageReply')?.addEventListener('click', async () => {
     const message = state.currentAlertMessage;
     if (!message) return;
+    if (message.id) {
+      try { await api(`/api/messages/${Number(message.id)}/read`, { method:'POST' }); } catch (_) {}
+    }
     closeIncomingMessageAlert();
+    await loadMessages({ scrollToNewest:false });
     openMessageComposer(message.from_call || '');
   });
 
@@ -3510,6 +3518,81 @@
         }
       }, 80);
     } catch (err) { toast(err.message, 'error'); }
+  });
+
+  $('#trafficMode')?.addEventListener('change', async event => {
+    state.trafficMode = event.target.value === 'live' ? 'live' : 'history';
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    clearTrafficReplayLayers();
+    if (state.trafficMode === 'history') {
+      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); }
+    } else {
+      state.trafficEvents = [];
+      state.trafficIndex = 0;
+    }
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficSpeed')?.addEventListener('change', event => {
+    state.trafficSpeed = Math.max(.5, Number(event.target.value || 1));
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficPlayPauseButton')?.addEventListener('click', async () => {
+    state.trafficPlaying = !state.trafficPlaying;
+    updateTrafficAnimationUi();
+    if (!state.trafficPlaying) {
+      stopTrafficTimer();
+      return;
+    }
+    activateTab('map');
+    if (state.trafficMode === 'history') await playNextTrafficEvent();
+  });
+
+  $('#trafficResetButton')?.addEventListener('click', async () => {
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.trafficIndex = 0;
+    clearTrafficReplayLayers();
+    if (state.trafficMode === 'history') {
+      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); }
+    }
+    if ($('#trafficCurrentTime')) $('#trafficCurrentTime').textContent = '—';
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficBackButton')?.addEventListener('click', async () => {
+    if (state.trafficMode !== 'history') {
+      toast(ui('Voltar está disponível no modo Histórico.', 'Back is available in History mode.'), 'error');
+      return;
+    }
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    if (!state.trafficEvents.length) await loadTrafficHistory(true);
+    state.trafficIndex = Math.max(0, state.trafficIndex - 1);
+    const index = Math.max(0, state.trafficIndex - 1);
+    const event = state.trafficEvents[index];
+    activateTab('map');
+    if (event) await animateTrafficEvent(event);
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficForwardButton')?.addEventListener('click', async () => {
+    if (state.trafficMode !== 'history') {
+      toast(ui('Avançar está disponível no modo Histórico.', 'Forward is available in History mode.'), 'error');
+      return;
+    }
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    if (!state.trafficEvents.length) await loadTrafficHistory(true);
+    const event = state.trafficEvents[state.trafficIndex];
+    if (event) {
+      state.trafficIndex += 1;
+      activateTab('map');
+      await animateTrafficEvent(event);
+    }
+    updateTrafficAnimationUi();
   });
 
   $('#resetConfigButton')?.addEventListener('click', async () => {
