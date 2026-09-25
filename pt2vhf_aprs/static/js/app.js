@@ -82,6 +82,7 @@
     updateInfo: null,
     updateDownloading: false,
     versionCheckInProgress: false,
+    messageSending: false,
   };
 
   const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
@@ -1918,6 +1919,10 @@
   }
 
   async function sendMessage() {
+    if (state.messageSending) {
+      toast(ui('A mensagem já está sendo colocada na fila.', 'The message is already being queued.'), 'error');
+      return;
+    }
     const type = $('#messageType').value;
     const to = $('#messageTo').value.trim().toUpperCase();
     const message = $('#messageText').value.trim();
@@ -1929,6 +1934,12 @@
     if (type === 'group_bulletin' && !group) return toast('Informe o grupo do boletim.', 'error');
 
     const payload = { type, to, message, bulletin_id: bulletinId, group };
+    const button = $('#sendMessageButton');
+    state.messageSending = true;
+    if (button) {
+      button.disabled = true;
+      button.textContent = ui('Enviando…', 'Sending…');
+    }
 
     try {
       const result = await api('/api/messages/send', {
@@ -1938,22 +1949,34 @@
       updateMessageCharCounter();
       if (result.type === 'message') {
         const count = Number(result.part_count || 1);
-        toast(count > 1 ? `Mensagem enviada em ${count} partes APRS.` : 'Mensagem enviada ao APRS-IS.', 'ok');
+        if (result.duplicate) {
+          toast(ui('Esta mesma mensagem já estava na fila; o envio duplicado foi bloqueado.', 'This message was already queued; duplicate sending was blocked.'), 'ok');
+        } else {
+          toast(count > 1
+            ? ui(`Mensagem colocada na fila em ${count} partes APRS.`, `Message queued in ${count} APRS parts.`)
+            : ui('Mensagem colocada na fila de transmissão.', 'Message queued for transmission.'), 'ok');
+        }
       } else {
         toast('Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
       }
       await loadMessages();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      state.messageSending = false;
+      updateMessageComposerMode();
+      if (button) button.disabled = false;
+    }
   }
 
   $('#messageType').addEventListener('change', updateMessageComposerMode);
   $('#bulletinGroup').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); });
-  $('#sendMessageButton').addEventListener('click', sendMessage);
+  $('#sendMessageButton')?.addEventListener('click', event => { event.preventDefault(); void sendMessage(); });
   $('#messageText').addEventListener('input', updateMessageCharCounter);
   $('#messageText').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      void sendMessage();
     }
   });
   updateMessageComposerMode();
