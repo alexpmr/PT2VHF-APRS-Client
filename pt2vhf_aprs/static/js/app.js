@@ -923,9 +923,22 @@
 
   function stationActivity(callsign) {
     const call = normalizedCall(callsign);
-    if (!call || !stationIsVisible(call)) return;
-    pulseStation(call);
-    playStationActivitySound(call);
+    if (!call || !state.map) return;
+
+    const notifyVisibleStation = () => {
+      if (!stationIsVisible(call)) return;
+      pulseStation(call);
+      playStationActivitySound(call);
+    };
+
+    if (state.markers.has(call)) {
+      notifyVisibleStation();
+      return;
+    }
+
+    // Uma estação recém-recebida pode ainda não ter marcador no refresh de 5 s.
+    // Atualiza o mapa primeiro e só então sinaliza se ela realmente estiver visível.
+    loadMapData().then(notifyVisibleStation).catch(() => {});
   }
 
   function trafficSegmentVisible(segment) {
