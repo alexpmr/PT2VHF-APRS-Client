@@ -42,6 +42,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_8.py
 
+      - name: Apply v1.6.9 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_9.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -229,6 +233,7 @@ jobs:
           python tools/apply_release_1_6_5.py
           python tools/apply_release_1_6_6.py
           python tools/apply_release_1_6_8.py
+          python tools/apply_release_1_6_9.py
 
       - name: Build Linux packages
         shell: bash
@@ -300,6 +305,7 @@ jobs:
           python tools/apply_release_1_6_5.py
           python tools/apply_release_1_6_6.py
           python tools/apply_release_1_6_8.py
+          python tools/apply_release_1_6_9.py
 
       - name: Core smoke tests
         shell: bash
