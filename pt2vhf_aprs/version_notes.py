@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.8": {
+        "title": "Fila de transmissão e estabilidade",
+        "items": [
+            "Envio de mensagens passa a usar fila assíncrona no backend, evitando travamento da interface.",
+            "Cliques repetidos na mesma mensagem em poucos segundos são deduplicados.",
+            "O botão Enviar fica bloqueado enquanto a solicitação é registrada.",
+            "Falhas de socket deixam de prender a requisição web e passam a acionar recuperação da conexão.",
+            "Ao encerrar, a aplicação cancela filas pendentes e executa manutenção leve do SQLite.",
+            "A logo APRS oficial passa a ser referenciada diretamente no template.",
+            "Release para Windows x64 e Linux x86_64, sem macOS e sem PDF.",
+        ],
+    },
     "1.6.7": {
         "title": "Primeira release Linux atualizada",
         "items": [
