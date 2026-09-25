@@ -65,6 +65,8 @@ DEFAULT_CONFIG = {
     "topology_width": 2,
     "map_brightness": 100,
     "sound_on_personal_message": 1,
+    "sound_on_station_activity": 1,
+    "highlight_station_activity": 1,
     "message_popup_seconds": 5,
     "app_theme": "dark",
     "messages_font_family": "system",
@@ -137,6 +139,8 @@ def init_db() -> None:
                 topology_width INTEGER NOT NULL DEFAULT 2,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
+                sound_on_station_activity INTEGER NOT NULL DEFAULT 1,
+                highlight_station_activity INTEGER NOT NULL DEFAULT 1,
                 message_popup_seconds INTEGER NOT NULL DEFAULT 5,
                 app_theme TEXT NOT NULL DEFAULT 'dark',
                 messages_font_family TEXT NOT NULL DEFAULT 'system',
@@ -179,6 +183,12 @@ def init_db() -> None:
                 packet_format TEXT,
                 raw TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS favorites (
+                callsign TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_favorites_created ON favorites(created_at);
 
             CREATE TABLE IF NOT EXISTS tracks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -273,6 +283,10 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN map_brightness INTEGER NOT NULL DEFAULT 100")
         if "sound_on_personal_message" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
+        if "sound_on_station_activity" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN sound_on_station_activity INTEGER NOT NULL DEFAULT 1")
+        if "highlight_station_activity" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN highlight_station_activity INTEGER NOT NULL DEFAULT 1")
         if "message_popup_seconds" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN message_popup_seconds INTEGER NOT NULL DEFAULT 5")
         if "app_theme" not in config_columns:
@@ -406,6 +420,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["topology_width"] = int(merged["topology_width"] or 2)
     merged["map_brightness"] = int(merged["map_brightness"] or 100)
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
+    merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
+    merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0
     merged["message_popup_seconds"] = int(merged["message_popup_seconds"] or 5)
     merged["app_theme"] = str(merged["app_theme"] or "dark").lower().strip()
     merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
@@ -647,9 +663,11 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     with connection() as conn:
         rows = conn.execute(
             """
-            SELECT * FROM stations
-            WHERE UPPER(callsign) LIKE ? OR UPPER(COALESCE(name,'')) LIKE ? OR UPPER(COALESCE(info,'')) LIKE ?
-            ORDER BY last_heard DESC
+            SELECT s.*, CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
+            FROM stations s
+            LEFT JOIN favorites f ON UPPER(f.callsign)=UPPER(s.callsign)
+            WHERE UPPER(s.callsign) LIKE ? OR UPPER(COALESCE(s.name,'')) LIKE ? OR UPPER(COALESCE(s.info,'')) LIKE ?
+            ORDER BY favorite DESC, s.last_heard DESC
             """,
             (q, q, q),
         ).fetchall()
@@ -672,22 +690,21 @@ def _is_topology_callsign(value: str) -> bool:
     return not value.startswith(blocked)
 
 
-def record_topology_from_raw(raw: str) -> None:
-    """Registra somente relações observáveis no path APRS/TNC2."""
+def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, str | None]]]:
+    """Retorna a origem e os enlaces observáveis no path APRS/TNC2."""
     line = str(raw or "").strip()
     if ">" not in line or ":" not in line:
-        return
+        return "", []
     source = line.split(">", 1)[0].upper().strip()
     if not _is_topology_callsign(source):
-        return
+        return "", []
 
     header = line.split(":", 1)[0]
     route = header.split(">", 1)[1].split(",")
     if len(route) < 2:
-        return
+        return source, []
 
     path = [part.strip().upper() for part in route[1:] if part.strip()]
-    now = utc_now_iso()
     edges: list[tuple[str, str, str, str | None]] = []
     previous = source
 
@@ -701,18 +718,21 @@ def record_topology_from_raw(raw: str) -> None:
             edges.append((previous, node, "rf", None))
             previous = node
 
-    igate = None
     for i, token in enumerate(path):
         if token in {"QAR", "QAO"} and i + 1 < len(path):
             candidate = path[i + 1].rstrip("*")
-            if _is_topology_callsign(candidate):
-                igate = candidate
-                if igate != previous:
-                    edges.append((previous, igate, "igate", igate))
+            if _is_topology_callsign(candidate) and candidate != previous:
+                edges.append((previous, candidate, "igate", candidate))
             break
+    return source, edges
 
+
+def record_topology_from_raw(raw: str) -> None:
+    """Registra somente relações observáveis no path APRS/TNC2."""
+    _source, edges = _observed_topology_edges(raw)
     if not edges:
         return
+    now = utc_now_iso()
 
     with connection() as conn:
         for edge_source, target, kind, edge_igate in edges:
@@ -736,65 +756,79 @@ def record_topology_from_raw(raw: str) -> None:
         )
 
 
-def list_topology_edges(hours: int = 24) -> list[dict[str, Any]]:
-    hours = max(1, min(int(hours or 24), 24 * 30))
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
+    hours = int(hours or 0)
+    params: list[Any] = []
+    where = ""
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        where = "AND e.last_seen >= ?"
+        params.append(cutoff)
     with connection() as conn:
         rows = conn.execute(
-            """
+            f"""
             SELECT e.source,e.target,e.kind,e.packet_count,e.first_seen,e.last_seen,e.igate,
                    s1.latitude AS source_lat,s1.longitude AS source_lon,
                    s2.latitude AS target_lat,s2.longitude AS target_lon
             FROM topology_edges e
             JOIN stations s1 ON UPPER(s1.callsign)=UPPER(e.source)
             JOIN stations s2 ON UPPER(s2.callsign)=UPPER(e.target)
-            WHERE e.last_seen >= ?
-              AND s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
+            WHERE s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
               AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
+              {where}
             ORDER BY e.packet_count DESC, e.last_seen DESC
-            LIMIT 1500
+            LIMIT 5000
             """,
-            (cutoff,),
+            params,
         ).fetchall()
     return [dict(r) for r in rows]
 
 
-def topology_stats(hours: int = 24) -> dict[str, Any]:
+def topology_stats(hours: int = 0) -> dict[str, Any]:
     """Resumo agregado da topologia observada para diagnóstico rápido."""
-    hours = max(1, min(int(hours or 24), 24 * 30))
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
-    stale_cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours * 2)).isoformat(timespec="seconds")
+    hours = int(hours or 0)
+    complete = hours <= 0
+    params: list[Any] = []
+    time_filter = ""
+    if not complete:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        time_filter = "AND last_seen >= ?"
+        params = [cutoff]
+    stale_threshold = (datetime.now(timezone.utc) - timedelta(hours=(24 if complete else hours))).isoformat(timespec="seconds")
     with connection() as conn:
         digis = [dict(r) for r in conn.execute(
-            """
+            f"""
             SELECT target AS callsign, SUM(packet_count) AS packets, MAX(last_seen) AS last_seen
             FROM topology_edges
-            WHERE kind='rf' AND last_seen >= ?
+            WHERE kind='rf' {time_filter}
             GROUP BY target ORDER BY packets DESC, callsign LIMIT 20
-            """, (cutoff,)
+            """, params
         ).fetchall()]
         igates = [dict(r) for r in conn.execute(
-            """
+            f"""
             SELECT COALESCE(igate,target) AS callsign, SUM(packet_count) AS packets, MAX(last_seen) AS last_seen
             FROM topology_edges
-            WHERE kind='igate' AND last_seen >= ?
+            WHERE kind='igate' {time_filter}
             GROUP BY COALESCE(igate,target) ORDER BY packets DESC, callsign LIMIT 20
-            """, (cutoff,)
+            """, params
         ).fetchall()]
         stale = [dict(r) for r in conn.execute(
             """
             SELECT source,target,kind,packet_count,last_seen
             FROM topology_edges
-            WHERE last_seen < ? AND last_seen >= ?
+            WHERE last_seen < ?
             ORDER BY last_seen DESC LIMIT 50
-            """, (cutoff, stale_cutoff)
+            """, (stale_threshold,)
         ).fetchall()]
         totals = conn.execute(
-            "SELECT COUNT(*) AS edges, COALESCE(SUM(packet_count),0) AS packets FROM topology_edges WHERE last_seen >= ?",
-            (cutoff,)
+            f"SELECT COUNT(*) AS edges, COALESCE(SUM(packet_count),0) AS packets FROM topology_edges WHERE 1=1 {time_filter}",
+            params,
         ).fetchone()
     return {
-        "hours": hours,
+        "hours": 0 if complete else hours,
+        "complete": complete,
         "edges": int(totals["edges"] or 0),
         "packets": int(totals["packets"] or 0),
         "digipeaters": digis,
@@ -803,37 +837,56 @@ def topology_stats(hours: int = 24) -> dict[str, Any]:
     }
 
 
-def topology_timeline(hours: int = 24, limit: int = 2500) -> list[dict[str, Any]]:
-    hours = max(1, min(int(hours or 24), 24 * 30))
-    limit = max(100, min(int(limit or 2500), 10000))
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+def topology_timeline(hours: int = 0, limit: int = 2500) -> list[dict[str, Any]]:
+    hours = int(hours or 0)
+    limit = max(100, min(int(limit or 2500), 20000))
+    params: list[Any] = []
+    where = ""
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        where = "AND e.timestamp >= ?"
+        params.append(cutoff)
+    params.append(limit)
     with connection() as conn:
         rows = conn.execute(
-            """
+            f"""
             SELECT e.timestamp,e.source,e.target,e.kind,
                    s1.latitude AS source_lat,s1.longitude AS source_lon,
                    s2.latitude AS target_lat,s2.longitude AS target_lon
             FROM topology_events e
             JOIN stations s1 ON UPPER(s1.callsign)=UPPER(e.source)
             JOIN stations s2 ON UPPER(s2.callsign)=UPPER(e.target)
-            WHERE e.timestamp >= ?
-              AND s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
+            WHERE s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
               AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
+              {where}
             ORDER BY e.timestamp ASC, e.id ASC
             LIMIT ?
             """,
-            (cutoff, limit),
+            params,
         ).fetchall()
     return [dict(r) for r in rows]
 
 
-def topology_period_comparison(hours: int = 24) -> dict[str, Any]:
-    hours = max(1, min(int(hours or 24), 24 * 30))
-    now = datetime.now(timezone.utc)
-    current_start = (now - timedelta(hours=hours)).isoformat(timespec="seconds")
-    previous_start = (now - timedelta(hours=hours * 2)).isoformat(timespec="seconds")
-    now_iso = now.isoformat(timespec="seconds")
+def topology_period_comparison(hours: int = 0) -> dict[str, Any]:
+    hours = int(hours or 0)
     with connection() as conn:
+        if hours <= 0:
+            total = int(conn.execute("SELECT COUNT(*) FROM topology_events").fetchone()[0])
+            return {
+                "hours": 0,
+                "complete": True,
+                "current_events": total,
+                "previous_events": 0,
+                "delta": 0,
+                "percent": None,
+            }
+
+        hours = max(1, min(hours, 24 * 30))
+        now = datetime.now(timezone.utc)
+        current_start = (now - timedelta(hours=hours)).isoformat(timespec="seconds")
+        previous_start = (now - timedelta(hours=hours * 2)).isoformat(timespec="seconds")
+        now_iso = now.isoformat(timespec="seconds")
         current = int(conn.execute(
             "SELECT COUNT(*) FROM topology_events WHERE timestamp >= ? AND timestamp <= ?",
             (current_start, now_iso),
@@ -844,7 +897,122 @@ def topology_period_comparison(hours: int = 24) -> dict[str, Any]:
         ).fetchone()[0])
     delta = current - previous
     pct = None if previous == 0 else round((delta / previous) * 100.0, 1)
-    return {"hours": hours, "current_events": current, "previous_events": previous, "delta": delta, "percent": pct}
+    return {"hours": hours, "complete": False, "current_events": current, "previous_events": previous, "delta": delta, "percent": pct}
+
+
+def latest_packet_id() -> int:
+    with connection() as conn:
+        row = conn.execute("SELECT COALESCE(MAX(id),0) FROM packets").fetchone()
+    return int(row[0] or 0)
+
+
+def packet_traffic_events(after_id: int = 0, hours: int = 0, limit: int = 1000) -> dict[str, Any]:
+    """Pacotes APRS com segmentos observáveis e coordenadas conhecidas para animação."""
+    after_id = max(0, int(after_id or 0))
+    hours = int(hours or 0)
+    limit = max(1, min(int(limit or 1000), 5000))
+    params: list[Any] = []
+    clauses: list[str] = []
+    if after_id > 0:
+        clauses.append("id > ?")
+        params.append(after_id)
+    elif hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        clauses.append("timestamp >= ?")
+        params.append(cutoff)
+    where = "WHERE " + " AND ".join(clauses) if clauses else ""
+
+    with connection() as conn:
+        if after_id > 0:
+            rows = conn.execute(
+                f"SELECT id,timestamp,from_call,packet_format,raw FROM packets {where} ORDER BY id ASC LIMIT ?",
+                (*params, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                f"SELECT id,timestamp,from_call,packet_format,raw FROM packets {where} ORDER BY id DESC LIMIT ?",
+                (*params, limit),
+            ).fetchall()
+            rows = list(reversed(rows))
+
+        parsed: list[tuple[sqlite3.Row, str, list[tuple[str, str, str, str | None]]]] = []
+        calls: set[str] = set()
+        for row in rows:
+            source, edges = _observed_topology_edges(row["raw"])
+            source = source or str(row["from_call"] or "").upper().strip()
+            if source:
+                calls.add(source)
+            for a, b, _kind, _igate in edges:
+                calls.add(a)
+                calls.add(b)
+            parsed.append((row, source, edges))
+
+        coords: dict[str, tuple[float, float]] = {}
+        if calls:
+            placeholders = ",".join("?" for _ in calls)
+            station_rows = conn.execute(
+                f"SELECT callsign,latitude,longitude FROM stations WHERE UPPER(callsign) IN ({placeholders})",
+                [call.upper() for call in calls],
+            ).fetchall()
+            for station in station_rows:
+                if station["latitude"] is not None and station["longitude"] is not None:
+                    coords[str(station["callsign"]).upper()] = (float(station["latitude"]), float(station["longitude"]))
+
+    events: list[dict[str, Any]] = []
+    for row, source, edges in parsed:
+        segments = []
+        incomplete = False
+        for a, b, kind, _igate in edges:
+            ca, cb = coords.get(a.upper()), coords.get(b.upper())
+            if not ca or not cb:
+                incomplete = True
+                continue
+            segments.append({
+                "source": a,
+                "target": b,
+                "kind": kind,
+                "source_lat": ca[0],
+                "source_lon": ca[1],
+                "target_lat": cb[0],
+                "target_lon": cb[1],
+            })
+        events.append({
+            "id": int(row["id"]),
+            "timestamp": row["timestamp"],
+            "source": source,
+            "packet_format": row["packet_format"],
+            "raw": row["raw"],
+            "segments": segments,
+            "incomplete": incomplete,
+        })
+
+    return {
+        "events": events,
+        "last_id": max([int(row["id"]) for row in rows], default=latest_packet_id()),
+        "complete": hours <= 0 and after_id == 0,
+    }
+
+
+def list_favorites() -> list[str]:
+    with connection() as conn:
+        rows = conn.execute("SELECT callsign FROM favorites ORDER BY created_at, callsign").fetchall()
+    return [str(row["callsign"]).upper() for row in rows]
+
+
+def set_favorite(callsign: str, favorite: bool) -> bool:
+    call = str(callsign or "").upper().strip()
+    if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", call):
+        raise ValueError("Indicativo inválido para Favoritos.")
+    with connection() as conn:
+        if favorite:
+            conn.execute(
+                "INSERT INTO favorites(callsign,created_at) VALUES(?,?) ON CONFLICT(callsign) DO NOTHING",
+                (call, utc_now_iso()),
+            )
+        else:
+            conn.execute("DELETE FROM favorites WHERE UPPER(callsign)=UPPER(?)", (call,))
+    return favorite
 
 
 def summary_counts() -> dict[str, int]:
@@ -875,7 +1043,13 @@ def clear_stations() -> dict[str, int]:
 def map_data() -> dict[str, Any]:
     with connection() as conn:
         stations = [dict(r) for r in conn.execute(
-            "SELECT * FROM stations WHERE latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY last_heard DESC"
+            """
+            SELECT s.*, CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
+            FROM stations s
+            LEFT JOIN favorites f ON UPPER(f.callsign)=UPPER(s.callsign)
+            WHERE s.latitude IS NOT NULL AND s.longitude IS NOT NULL
+            ORDER BY favorite DESC, s.last_heard DESC
+            """
         ).fetchall()]
         # Últimos 10 mil pontos; o frontend agrupa por estação. Evita travar após meses de operação.
         tracks = [dict(r) for r in conn.execute(
@@ -994,13 +1168,17 @@ def callsign_suggestions(prefix: str = "", limit: int = 30) -> list[str]:
     with connection() as conn:
         rows = conn.execute(
             """
-            SELECT callsign FROM (
+            WITH calls AS (
                 SELECT callsign AS callsign FROM stations
                 UNION SELECT from_call FROM messages
                 UNION SELECT to_call FROM messages
             )
-            WHERE UPPER(callsign) LIKE ?
-            ORDER BY callsign LIMIT ?
+            SELECT c.callsign
+            FROM calls c
+            LEFT JOIN favorites f ON UPPER(f.callsign)=UPPER(c.callsign)
+            WHERE UPPER(c.callsign) LIKE ?
+            ORDER BY CASE WHEN f.callsign IS NULL THEN 1 ELSE 0 END, UPPER(c.callsign)
+            LIMIT ?
             """,
             (p, int(limit)),
         ).fetchall()
