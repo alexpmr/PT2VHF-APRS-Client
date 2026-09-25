@@ -146,7 +146,11 @@ def _show_native_window(*_args) -> None:
 def _shutdown_components(icon: pystray.Icon | None = None) -> None:
     """Encerra os componentes de fundo antes de finalizar o processo."""
     try:
-        service.disconnect()
+        service.shutdown()
+    except Exception:
+        pass
+    try:
+        db.shutdown_maintenance()
     except Exception:
         pass
 
