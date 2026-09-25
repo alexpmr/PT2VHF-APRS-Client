@@ -189,3 +189,22 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Registrar no Log/console técnico a causa da falha da consulta para facilitar diagnóstico, sem exibir detalhes excessivamente técnicos ao usuário comum.
 - Revisar também o cache da verificação para evitar que uma resposta incompleta/erro fique sendo reutilizada como se fosse uma consulta válida.
 - Como o auto-update será removido na próxima versão, esta rotina deve ficar responsável somente por **detectar e informar** que existe uma nova versão.
+
+
+## Indicador de atividade de tráfego na barra superior
+
+**Objetivo:** fornecer uma indicação visual imediata de que o cliente está recebendo ou transmitindo pacotes APRS, semelhante aos indicadores de tráfego de rede usados em celulares e interfaces de sistema.
+
+- Adicionar na **barra superior** um pequeno indicador de atividade de tráfego APRS.
+- O indicador deve reagir a **cada pacote recebido (RX)** e **cada pacote enviado (TX)** pelo cliente.
+- Diferenciar visualmente os dois sentidos:
+  - **RX / entrada** — animação/seta apontando para dentro ou para baixo;
+  - **TX / saída** — animação/seta apontando para fora ou para cima.
+- Quando houver RX e TX em sequência muito próxima, permitir mostrar os dois sentidos de forma alternada ou simultânea.
+- O efeito deve ser curto, apenas o suficiente para indicar atividade, retornando depois ao estado neutro.
+- Evitar animação contínua permanente; o indicador deve piscar/pulsar somente quando houver tráfego real.
+- Em períodos de tráfego intenso, aplicar agregação visual para evitar flicker excessivo, mantendo a sensação de atividade sem prejudicar a leitura da interface.
+- O indicador deve refletir tráfego efetivamente processado pelo cliente, incluindo pacotes APRS-IS recebidos e transmissões geradas pelo próprio aplicativo.
+- Não confundir esse indicador com o estado de conexão APRS-IS; conexão e atividade devem continuar sendo informações separadas.
+- O design deve funcionar nos temas Claro e Escuro e ocupar pouco espaço na barra superior.
+- Como melhoria opcional, permitir tooltip ao passar o mouse mostrando algo como **Último RX: 21:42:03** / **Último TX: 21:42:05** e contadores acumulados da sessão.
