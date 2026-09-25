@@ -27,6 +27,16 @@
       <span class="traffic-arrow traffic-rx" aria-hidden="true">↓</span>
       <span class="traffic-arrow traffic-tx" aria-hidden="true">↑</span>
     </div>
+    <div id="systemResourceMeter" class="system-resource-meter" title="Carregando métricas do aplicativo">
+      <div id="cpuResourceMetric" class="resource-metric" data-level="normal">
+        <span class="resource-label">CPU</span><strong id="headerCpuUsage">--%</strong>
+        <span class="resource-track"><span id="headerCpuBar" class="resource-fill"></span></span>
+      </div>
+      <div id="memoryResourceMetric" class="resource-metric" data-level="normal">
+        <span class="resource-label">RAM</span><strong id="headerMemoryUsage">-- MB</strong>
+        <span class="resource-track"><span id="headerMemoryBar" class="resource-fill"></span></span>
+      </div>
+    </div>
     <a id="versionStatus" class="version-status checking" href="#" target="_blank" rel="noopener" title="Verificando a versão mais recente">
       <span class="version-status-dot"></span>
       <span id="versionStatusText">Verificando versão…</span>

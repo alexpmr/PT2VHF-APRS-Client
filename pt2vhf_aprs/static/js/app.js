@@ -5,6 +5,9 @@
     activeTab: 'map',
     map: null,
     baseLayer: null,
+    mapLoadBusy: false,
+    mapLoadLastAt: 0,
+    systemMetricsBusy: false,
     mapConfig: {
       map_type: 'osm',
       track_color: '#3ba6ff',
@@ -840,7 +843,9 @@
   }
 
   async function loadMapData() {
-    if (!state.map) return;
+    if (!state.map || state.activeTab !== 'map') return;
+    if (state.mapLoadBusy) return;
+    state.mapLoadBusy = true;
     try {
       const data = await api('/api/map-data');
       const activeStations = new Set(data.stations.map(s => s.callsign));
@@ -898,6 +903,9 @@
       if (state.topologyEnabled) await loadTopology();
     } catch (err) {
       console.warn(err);
+    } finally {
+      state.mapLoadBusy = false;
+      state.mapLoadLastAt = Date.now();
     }
   }
 
@@ -948,22 +956,14 @@
 
   function stationActivity(callsign) {
     const call = normalizedCall(callsign);
-    if (!call || !state.map) return;
+    if (!call || !state.map || state.activeTab !== 'map') return;
 
-    const notifyVisibleStation = () => {
-      if (!stationIsVisible(call)) return;
-      pulseStation(call);
-      playStationActivitySound(call);
-    };
+    // Nunca dispara refresh completo do mapa a partir de um evento individual.
+    // Estações sem posição/marcador aguardam o refresh periódico normal.
+    if (!state.markers.has(call) || !stationIsVisible(call)) return;
 
-    if (state.markers.has(call)) {
-      notifyVisibleStation();
-      return;
-    }
-
-    // Uma estação recém-recebida pode ainda não ter marcador no refresh de 5 s.
-    // Atualiza o mapa primeiro e só então sinaliza se ela realmente estiver visível.
-    loadMapData().then(notifyVisibleStation).catch(() => {});
+    pulseStation(call);
+    playStationActivitySound(call);
   }
 
   function trafficSegmentVisible(segment) {
@@ -1249,7 +1249,7 @@
   }
 
   async function pollTrafficEvents() {
-    if (state.trafficPollBusy) return;
+    if (state.trafficPollBusy || state.activeTab !== 'map') return;
     state.trafficPollBusy = true;
     try {
       if (!state.lastTrafficPacketId) {
@@ -1260,12 +1260,14 @@
       const data = await api(`/api/traffic/events?after_id=${encodeURIComponent(state.lastTrafficPacketId)}&limit=500`);
       const events = data.events || [];
       state.lastTrafficPacketId = Math.max(state.lastTrafficPacketId, Number(data.last_id || 0));
-      for (const event of events) {
-        if (state.trafficPlaying && state.trafficMode === 'live') {
-          animateTrafficEvent(event);
-        } else {
-          stationActivity(event.source);
+
+      if (state.trafficPlaying && state.trafficMode === 'live') {
+        for (const event of events.slice(-20)) {
+          void animateTrafficEvent(event);
         }
+      } else {
+        const sources = [...new Set(events.map(event => normalizedCall(event.source)).filter(Boolean))].slice(-50);
+        for (const source of sources) stationActivity(source);
       }
     } catch (err) {
       console.warn(err);
@@ -1303,6 +1305,55 @@
         `RX: ${rx.toLocaleString(currentLocale())} · último ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · último ${txText}`,
         `RX: ${rx.toLocaleString(currentLocale())} · last ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · last ${txText}`
       );
+    }
+  }
+
+  function resourceLevel(value) {
+    const n = Number(value || 0);
+    if (n >= 85) return 'critical';
+    if (n >= 65) return 'warn';
+    return 'normal';
+  }
+
+  async function refreshSystemMetrics() {
+    if (state.systemMetricsBusy) return;
+    state.systemMetricsBusy = true;
+    try {
+      const m = await api('/api/system-metrics');
+      const cpu = Math.max(0, Number(m.cpu_percent || 0));
+      const memMb = Math.max(0, Number(m.memory_mb || 0));
+      const memPct = Math.max(0, Number(m.memory_percent || 0));
+      const root = $('#systemResourceMeter');
+      const cpuValue = $('#headerCpuUsage');
+      const memValue = $('#headerMemoryUsage');
+      const cpuBar = $('#headerCpuBar');
+      const memBar = $('#headerMemoryBar');
+      const cpuMetric = $('#cpuResourceMetric');
+      const memMetric = $('#memoryResourceMetric');
+      if (cpuValue) cpuValue.textContent = `${cpu.toFixed(cpu >= 10 ? 0 : 1)}%`;
+      if (memValue) memValue.textContent = `${memMb.toFixed(0)} MB`;
+      if (cpuBar) cpuBar.style.width = `${Math.min(100, cpu)}%`;
+      if (memBar) memBar.style.width = `${Math.min(100, memPct)}%`;
+      if (cpuMetric) cpuMetric.dataset.level = resourceLevel(cpu);
+      if (memMetric) memMetric.dataset.level = resourceLevel(memPct);
+      if (root) {
+        const uptime = Number(m.uptime_seconds || 0);
+        const h = Math.floor(uptime / 3600);
+        const min = Math.floor((uptime % 3600) / 60);
+        const sec = Math.floor(uptime % 60);
+        root.title = [
+          `CPU total do app: ${cpu.toFixed(1)}%`,
+          `RAM: ${memMb.toFixed(1)} MB (${memPct.toFixed(1)}%)`,
+          `Processos: ${Number(m.process_count || 0)}`,
+          `Threads: ${Number(m.thread_count || 0)}`,
+          `Requests HTTP ativos: ${Number(m.active_requests || 0)}`,
+          `Fila TX: ${Number(m.tx_queue || 0)}`,
+          `Uptime: ${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+        ].join('\n');
+      }
+    } catch (_) {
+    } finally {
+      state.systemMetricsBusy = false;
     }
   }
 
@@ -4084,6 +4135,7 @@
     // Cada rotina agenda a próxima execução apenas depois que a anterior termina.
     // Isso impede acúmulo de requests quando SQLite/backend ficam momentaneamente lentos.
     schedulePolling(refreshStatus, 3000);
+    schedulePolling(refreshSystemMetrics, 2000);
     schedulePolling(async () => {
       if (state.activeTab === 'map') await loadMapData();
     }, 10000);

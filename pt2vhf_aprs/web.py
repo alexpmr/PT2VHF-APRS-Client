@@ -155,6 +155,16 @@ def create_app() -> Flask:
     def index():
         return render_template("index.html", app_version=__version__)
 
+    @app.get("/api/system-metrics")
+    def api_system_metrics():
+        payload = diag.system_metrics()
+        payload["active_requests"] = len(diag.active_requests())
+        try:
+            payload["tx_queue"] = int(service._tx_queue.qsize())
+        except Exception:
+            payload["tx_queue"] = 0
+        return jsonify(payload)
+
     @app.get("/api/status")
     def api_status():
         payload = service.status()

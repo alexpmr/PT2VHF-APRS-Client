@@ -11,6 +11,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    import psutil
+except Exception:
+    psutil = None
+
 _lock = threading.RLock()
 _active: dict[str, dict[str, Any]] = {}
 _counter = 0
@@ -19,6 +24,10 @@ _watchdog_thread: threading.Thread | None = None
 _watchdog_stop = threading.Event()
 _last_dump_at = 0.0
 _max_log_bytes = 8 * 1024 * 1024
+_metrics_lock = threading.Lock()
+_metrics_started = time.monotonic()
+_metrics_prev_wall: float | None = None
+_metrics_prev_cpu: float | None = None
 
 
 def _utc_now() -> str:
@@ -235,3 +244,65 @@ def stop_watchdog() -> None:
     if thread and thread.is_alive() and thread is not threading.current_thread():
         thread.join(timeout=1.0)
     log_event("watchdog_stopped")
+
+
+def system_metrics() -> dict[str, Any]:
+    """CPU/RAM do processo principal somadas aos processos filhos do WebView2."""
+    global _metrics_prev_wall, _metrics_prev_cpu
+    if psutil is None:
+        return {
+            "cpu_percent": 0.0,
+            "memory_mb": 0.0,
+            "memory_percent": 0.0,
+            "process_count": 1,
+            "thread_count": len(threading.enumerate()),
+            "uptime_seconds": max(0.0, time.monotonic() - _metrics_started),
+            "available": False,
+        }
+
+    root = psutil.Process(os.getpid())
+    try:
+        processes = [root, *root.children(recursive=True)]
+    except Exception:
+        processes = [root]
+
+    cpu_total = 0.0
+    rss_total = 0
+    thread_total = 0
+    alive = 0
+    for proc in processes:
+        try:
+            times = proc.cpu_times()
+            cpu_total += float(times.user) + float(times.system)
+            rss_total += int(proc.memory_info().rss)
+            thread_total += int(proc.num_threads())
+            alive += 1
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+
+    now = time.monotonic()
+    cpu_percent = 0.0
+    with _metrics_lock:
+        if _metrics_prev_wall is not None and _metrics_prev_cpu is not None:
+            wall_delta = max(0.001, now - _metrics_prev_wall)
+            cpu_delta = max(0.0, cpu_total - _metrics_prev_cpu)
+            cores = max(1, int(psutil.cpu_count(logical=True) or 1))
+            cpu_percent = min(100.0, (cpu_delta / wall_delta / cores) * 100.0)
+        _metrics_prev_wall = now
+        _metrics_prev_cpu = cpu_total
+
+    try:
+        total_memory = max(1, int(psutil.virtual_memory().total))
+        memory_percent = min(100.0, (rss_total / total_memory) * 100.0)
+    except Exception:
+        memory_percent = 0.0
+
+    return {
+        "cpu_percent": round(cpu_percent, 1),
+        "memory_mb": round(rss_total / (1024 * 1024), 1),
+        "memory_percent": round(memory_percent, 1),
+        "process_count": alive,
+        "thread_count": thread_total,
+        "uptime_seconds": round(max(0.0, now - _metrics_started), 1),
+        "available": True,
+    }

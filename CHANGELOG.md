@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.15 - 2026-09-25
+
+- Release de teste somente **Windows x64 Portable**.
+- Removido o fan-out de `loadMapData()` causado por eventos de estações ainda sem marcador/posição.
+- O refresh completo do Mapa passa a ser **single-flight**: uma execução por vez.
+- Atividade visual por pacote foi deduplicada por estação e animações ao vivo foram limitadas por ciclo.
+- Adicionados medidores compactos de **CPU** e **RAM** na barra superior, atualizados a cada 2 segundos.
+- As métricas agregam o processo principal e os processos filhos do WebView2, além de expor threads, requests ativos, fila TX e uptime no tooltip.
+
+
 ## v1.6.14 - 2026-09-25
 
 - Release de teste somente **Windows x64 Portable**.

@@ -2157,6 +2157,52 @@ html[data-theme="light"] .traffic-animation-panel {
 
 
 /* v1.6.2 - replay no Mapa, atividade RX/TX e fluxo de configuração */
+.system-resource-meter {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 5px;
+  min-height: 34px;
+}
+.resource-metric {
+  min-width: 68px;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto 4px;
+  align-items: center;
+  column-gap: 5px;
+  row-gap: 3px;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1;
+}
+.resource-metric strong { color: var(--text); font-size: 10px; white-space: nowrap; }
+.resource-label { font-weight: 800; }
+.resource-track {
+  grid-column: 1 / -1;
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+}
+.resource-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ok);
+  transition: width .3s ease, background .2s ease;
+}
+.resource-metric[data-level="warn"] .resource-fill { background: var(--warn); }
+.resource-metric[data-level="critical"] .resource-fill { background: var(--danger); }
+.resource-metric[data-level="warn"] strong { color: #ffe0a0; }
+.resource-metric[data-level="critical"] strong { color: #ffb2b6; }
+@media (max-width: 980px) { .system-resource-meter { display: none; } }
+
 .traffic-activity-indicator {
   display: inline-flex;
   align-items: center;

@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.15": {
+        "title": "Correção do fan-out do Mapa e medidores de recursos",
+        "items": [
+            "Remove o refresh completo do mapa disparado por cada estação sem marcador.",
+            "Impede execuções simultâneas de loadMapData com trava single-flight.",
+            "Limita animações ao vivo e deduplica indicadores visuais por estação em cada ciclo.",
+            "Adiciona indicadores de CPU e RAM em tempo real na barra superior.",
+            "CPU/RAM somam o processo principal e processos filhos do WebView2.",
+            "Release de teste somente Windows x64 Portable, sem instalador e sem documentação.",
+        ],
+    },
     "1.6.14": {
         "title": "RX em transação única",
         "items": [

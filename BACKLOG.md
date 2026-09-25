@@ -87,11 +87,12 @@
   - Usar apresentação compacta estilo gauge/medidor, com faixas visuais de normal, atenção e crítico.
   - Tooltip opcional com detalhes adicionais: quantidade de threads, requests HTTP ativos, tamanho da fila TX e uptime.
   - O indicador deve servir também como recurso permanente de diagnóstico de estabilidade e desempenho.
-  - **Importante:** o gauge ainda não foi implementado nas builds de teste até a v1.6.14; até aqui ele estava apenas no backlog.
+  - **Implementado para teste na v1.6.15:** gauges compactos de CPU e RAM na barra superior, com atualização a cada 2 segundos.
   - Para refletir corretamente o consumo real do Portable, calcular CPU/RAM do **processo principal + processos filhos do WebView2**, e não apenas do executável Python, para evitar leitura enganosa.
 
 
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
+  - **Teste v1.6.15 Mapa/single-flight:** removido o `loadMapData()` disparado por `stationActivity()`, adicionada trava para impedir refreshes completos concorrentes e limitado o processamento visual de rajadas. Esta versão também implementa os gauges de CPU/RAM para observar o comportamento em tempo real.
   - **Teste v1.6.14 transação única RX:** o pipeline normal de recepção foi consolidado em uma única transação SQLite por pacote, agrupando log RX, histórico de pacotes, topologia e atualização de estação/track. Objetivo: reduzir a amplificação de escrita e impedir que o tráfego APRS monopolize CPU/banco e faça as rotas HTTP deixarem de responder. Manter o item aberto até teste prolongado em uso real.
   - **Resultado da v1.6.14:** o travamento persiste, com **CPU ainda alta**, e o salvamento de Configurações voltou a falhar com timeout em **`/api/config`**. A transação única por pacote não resolveu a causa raiz.
   - Próxima hipótese prioritária: mesmo com uma transação por pacote, o RX continua fazendo **um commit SQLite por pacote recebido**. Sob tráfego alto isso pode manter o writer quase continuamente ocupado e provocar starvation das escritas HTTP. Avaliar writer dedicado com **fila e commits em pequenos lotes** (por quantidade e/ou janela de tempo), com backpressure e métricas de profundidade da fila.
