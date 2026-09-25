@@ -87,3 +87,22 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Adicionar uma opção para **ativar/desativar o destaque visual de transmissão**, permitindo usar apenas som, apenas animação ou ambos.
 - Evitar reprodução excessiva de áudio em períodos de tráfego intenso, aplicando um pequeno cooldown/agregação sonora quando necessário.
 - Integrar esse efeito à futura animação de tráfego: quando um pacote iniciar sua animação, o marcador da estação de origem deve pulsar em vermelho no mesmo instante.
+
+
+## Período “Completo” na Topologia observada
+
+**Objetivo:** permitir visualizar toda a topologia histórica disponível no banco, sem limitar obrigatoriamente a análise às janelas parciais de horas ou dias.
+
+- No controle **Mapa → Topologia observada**, adicionar a opção **Completo**.
+- **Completo deve ser a opção padrão**.
+- Manter também as opções parciais já existentes por período, como:
+  - **1 hora**;
+  - **6 horas**;
+  - **24 horas**;
+  - **7 dias**;
+  - demais períodos em horas/dias que forem disponibilizados.
+- Ao selecionar **Completo**, carregar todos os enlaces de topologia ainda disponíveis no histórico/banco de dados, respeitando apenas os limites técnicos de retenção definidos pelo aplicativo.
+- A opção **Completo** deve valer também para a nova aba **Análise**, quando aplicável, para que rankings, métricas e comparação possam usar todo o histórico disponível.
+- O estado selecionado deve ser persistido entre execuções.
+- Se o volume de dados completo for muito grande, carregar/processar de forma eficiente para não travar o mapa nem a interface.
+- Exibir claramente quando o usuário estiver vendo **Topologia completa** em vez de uma janela temporal parcial.
