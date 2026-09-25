@@ -424,11 +424,14 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     ], [
         "Tipos de mapa: OpenStreetMap, OpenTopoMap e Satélite.",
         "Tracklogs: cor e espessura configuráveis.",
-        "Topologia observada: pode ser ligada/desligada e filtrada por 1 h, 6 h, 24 h ou 7 dias.",
+        "Topologia observada: pode ser ligada/desligada e usa Completo como período padrão, além de 1 h, 6 h, 24 h e 7 dias.",
         "Enlaces RF e via IGate possuem cores independentes e espessura configurável.",
         "A análise da rede fica na aba superior Análise, separada das preferências visuais de Configuração.",
         "A aba Análise oferece período, métricas agregadas, ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
         "Os eventos observados são mantidos em histórico limitado e podem ser reproduzidos no mapa com a função Animar período.",
+        "O Mapa possui legenda dinâmica para tracklog, enlaces RF, IGate/APRS-IS, replay temporal e pacotes em movimento.",
+        "A aba Análise inclui animação de tráfego APRS em modos Histórico e Ao vivo, com Play/Pausa, início, avanço/recuo, velocidades de 0,5x a 10x, timestamp e contadores. Em paths multi-hop, vários segmentos do mesmo pacote podem ser animados ao mesmo tempo.",
+        "Quando habilitado em Configuração, cada pacote recebido pode gerar um sinal sonoro curto e um pulso vermelho temporário no marcador da estação transmissora.",
         "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px."
     ])
 
@@ -440,6 +443,8 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     ], [
         "Clique em um indicativo De ou Para para preencher o destinatário.",
         "No modo Agrupar por remetente, clique em Conversas para alternar A-Z/Z-A; ao escolher uma conversa, o campo Destino é preenchido automaticamente com o contato selecionado.",
+        "O botão Não lidas mostra somente mensagens individuais recebidas ainda não lidas. No modo agrupado, mantém apenas conversas com pendências de leitura.",
+        "O estado lida/não lida fica persistido no banco e é atualizado ao usar Ler mensagem, selecionar uma conversa ou selecionar explicitamente uma mensagem.",
         "O pop-up de nova mensagem oferece Ler mensagem, Responder e OK. Ler mensagem abre a aba Mensagens e foca a conversa do remetente quando o agrupamento estiver ativo; na lista normal, posiciona a visualização na mensagem recebida.",
         "Enter envia; Shift+Enter cria nova linha.",
         "Mensagens longas são divididas em partes APRS sem marcadores visíveis como 1/2 ou 2/2. O cliente prefere quebrar entre palavras e só corta uma palavra se ela exceder sozinha o limite técnico. Cada parte mantém seu próprio ID/ACK e o status agregado continua disponível.",
@@ -452,6 +457,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     add_screenshot(story, st, screenshots_dir, "messages.png", "Aba Mensagens em fluxo de chat.")
     section(story, st, "12. Estações e Log", [
         "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa. No popup da estação, Mostrar log abre a aba Log com o indicativo/SSID aplicado ao filtro.",
+        "Estações favoritas usam estrela amarela, ficam fixadas no topo da lista de Estações e são priorizadas nas conversas e sugestões do campo Destino. A marcação persiste após reiniciar ou atualizar.",
         "O Log APRS-IS mostra tráfego TNC2 RX/TX e é a principal ferramenta para diagnosticar conexão, autenticação e filtro. Na conexão inicial, a v1.4 encerra as tentativas após três ciclos sem sucesso e mostra o erro final ao usuário."
     ], [
         "verified no logresp confirma autenticação APRS-IS.",
@@ -478,6 +484,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.",
         "O atualizador consulta a Release oficial, escolhe o pacote da plataforma, baixa para a pasta local de atualizações e calcula SHA-256; quando a Release fornece digest SHA-256, ele é conferido antes da instalação.",
         "As opções Verificar atualizações automaticamente, Baixar atualização automaticamente e Instalar atualização automaticamente ao fechar são independentes e vêm habilitadas por padrão em novas instalações. Preferências já salvas são preservadas em atualizações.",
+        "Com a verificação automática habilitada, a consulta é feita na abertura e novamente a cada 5 minutos. Falhas de rede não bloqueiam o cliente e a próxima tentativa ocorre no ciclo seguinte.",
         "No Windows Portable, a atualização pode ser aplicada ao fechar e uma cópia anterior é mantida para rollback. No Windows instalado, o Setup pode ser iniciado silenciosamente. No macOS, o DMG baixado é aberto ao fechar; no Linux AppImage, o novo AppImage pode ser iniciado. Pacotes .deb e .tar.gz continuam exigindo instalação manual pelo sistema.",
         "As atualizações preservam o banco local. Antes de mudanças importantes, é recomendável fazer backup do arquivo SQLite."
     ])
