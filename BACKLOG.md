@@ -53,6 +53,15 @@
 
 ## Pendências para próximas versões
 
-Nenhum item pendente registrado neste momento.
+- **Rotina de encerramento / manutenção automática**
+  - Ao fechar a aplicação, executar uma rotina leve de manutenção para deixar o ambiente consistente para a próxima inicialização.
+  - Encerrar corretamente threads, timers, filas e conexões APRS-IS antes de finalizar o processo.
+  - Limpar caches temporários e estados transitórios que não precisem persistir.
+  - Fazer commit/flush seguro de operações pendentes no SQLite.
+  - Executar manutenção do banco apenas quando necessário, evitando operações pesadas a cada fechamento.
+  - Remover registros temporários/orfãos e resíduos de sessões incompletas, sem apagar dados operacionais legítimos.
+  - Garantir que filas de transmissão não fiquem penduradas para serem reenviadas indevidamente na próxima abertura.
+  - Registrar em log qualquer erro ocorrido durante a rotina de encerramento.
+  - A rotina não deve atrasar perceptivelmente o fechamento da aplicação.
 
 Novas demandas devem continuar na série **1.6.x** até indicação explícita para avançar para **1.7**.
