@@ -893,7 +893,12 @@
   }
 
   function stationActivity(callsign) {
-    pulseStation(callsign);
+    const call = normalizedCall(callsign);
+    if (call && state.highlightStationActivity && !state.markers.has(call) && state.map) {
+      loadMapData().then(() => pulseStation(call)).catch(() => {});
+    } else {
+      pulseStation(call);
+    }
     playStationActivitySound();
   }
 
@@ -910,6 +915,7 @@
       <strong>${escapeHtml(event.source || ui('Origem desconhecida', 'Unknown source'))}</strong><br>
       ${escapeHtml(fmtDate(event.timestamp))}<br>
       <span>${escapeHtml(event.packet_format || '')}</span>
+      ${event.incomplete ? `<div class="traffic-incomplete">${escapeHtml(ui('Caminho incompleto: há nós sem posição conhecida.', 'Incomplete path: some nodes have no known position.'))}</div>` : ''}
       <pre>${escapeHtml(event.raw || '')}</pre>
     </div>`;
   }
@@ -1756,6 +1762,12 @@
         .sort((a, b) => Number(a.id) - Number(b.id));
 
       const latest = incoming.reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
+      const unreadCount = incoming.filter(m => !m.read_at).length;
+      const badge = $('#messageBadge');
+      if (badge) {
+        badge.textContent = unreadCount;
+        badge.classList.toggle('hidden', unreadCount <= 0);
+      }
       if (!state.messageAlertBaselineReady) {
         state.lastAlertedMessageId = latest;
         state.messageAlertBaselineReady = true;
@@ -3628,6 +3640,7 @@
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
     updateMyMessagesButton();
     updateUnreadMessagesButton();
+    updateTrafficAnimationUi();
     await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages(), pollTrafficEvents()]);
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
