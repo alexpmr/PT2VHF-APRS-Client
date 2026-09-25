@@ -1964,7 +1964,7 @@
       });
       if (favorite) state.favoriteCallsigns.add(call);
       else state.favoriteCallsigns.delete(call);
-      $('[data-favorite-callsign]').filter(el => normalizedCall(el.dataset.favoriteCallsign) === call).forEach(el => {
+      $$('[data-favorite-callsign]').filter(el => normalizedCall(el.dataset.favoriteCallsign) === call).forEach(el => {
         el.classList.toggle('is-favorite', favorite);
         el.textContent = favorite ? '★' : '☆';
         el.setAttribute('aria-pressed', favorite ? 'true' : 'false');
