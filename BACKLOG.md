@@ -142,3 +142,17 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Favoritar uma estação não deve alterar mensagens, histórico, tracklog ou dados APRS da estação.
 - Se uma estação favorita ficar sem atividade por longo período, ela continua marcada como favorita até o usuário removê-la manualmente.
 - Preparar a estrutura para futuramente permitir um filtro **Somente favoritas** nas abas Estações e Mensagens.
+
+
+## Filtro “Não lidas” na aba Mensagens
+
+**Objetivo:** permitir visualizar rapidamente apenas as mensagens recebidas que ainda não foram lidas.
+
+- Adicionar na aba **Mensagens** um botão **Não lidas** ao lado dos demais filtros/ações.
+- Quando ativado, mostrar somente mensagens individuais recebidas que ainda estejam marcadas como não lidas.
+- O botão deve funcionar tanto na visualização normal quanto no modo **Agrupar por remetente**.
+- No modo agrupado, exibir somente conversas que possuam pelo menos uma mensagem não lida e manter o contador de não lidas por conversa.
+- O estado lida/não lida deve ser persistido localmente e não deve depender apenas de abrir a aba Mensagens.
+- Ao usar **Ler mensagem** no popup, abrir uma conversa, ou selecionar explicitamente uma mensagem/conversa, marcar como lidas as mensagens correspondentes.
+- O botão deve indicar visualmente quando o filtro estiver ativo, por exemplo **✓ Não lidas**.
+- Se não houver mensagens não lidas, exibir um estado vazio claro em vez de uma tabela/conversa em branco sem explicação.
