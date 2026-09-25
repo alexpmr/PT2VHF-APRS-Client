@@ -117,12 +117,32 @@
   }
 
   async function api(url, options = {}) {
-    const response = await fetch(url, options);
-    let data = null;
-    const ct = response.headers.get('content-type') || '';
-    if (ct.includes('application/json')) data = await response.json();
-    if (!response.ok) throw new Error(data?.error || `Erro HTTP ${response.status}`);
-    return data;
+    const requestOptions = { ...options };
+    let timeoutId = null;
+    let controller = null;
+    if (!requestOptions.signal) {
+      controller = new AbortController();
+      requestOptions.signal = controller.signal;
+      timeoutId = setTimeout(() => controller.abort(), 10000);
+    }
+    try {
+      const response = await fetch(url, requestOptions);
+      let data = null;
+      const ct = response.headers.get('content-type') || '';
+      if (ct.includes('application/json')) data = await response.json();
+      if (!response.ok) throw new Error(data?.error || `Erro HTTP ${response.status}`);
+      return data;
+    } catch (err) {
+      if (err?.name === 'AbortError') {
+        throw new Error(ui(
+          'O backend local não respondeu em 10 segundos.',
+          'The local backend did not respond within 10 seconds.'
+        ));
+      }
+      throw err;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
   }
 
   async function refreshVersionStatus(force = false) {
@@ -1959,7 +1979,7 @@
       } else {
         toast('Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
       }
-      await loadMessages();
+      void loadMessages({ scrollToNewest:true });
     } catch (err) {
       toast(err.message, 'error');
     } finally {
@@ -4044,14 +4064,35 @@
     // Não bloqueia a inicialização da interface aguardando permissão/localização.
     setTimeout(() => { initializeAutomaticLocation().catch(err => console.warn(err)); }, 1200);
 
-    setInterval(refreshStatus, 2000);
-    setInterval(loadMapData, 5000);
-    setInterval(pollTrafficEvents, 2000);
-    setInterval(loadMessages, 3000);
-    setInterval(checkIncomingPersonalMessages, 3000);
-    setInterval(() => { if (state.currentConfig?.check_updates_on_start) refreshVersionStatus(false); }, 5 * 60 * 1000);
-    setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
-    setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
+    const schedulePolling = (task, intervalMs) => {
+      const run = async () => {
+        try {
+          await task();
+        } catch (err) {
+          console.warn('Polling:', err);
+        } finally {
+          setTimeout(run, intervalMs);
+        }
+      };
+      setTimeout(run, intervalMs);
+    };
+
+    // Cada rotina agenda a próxima execução apenas depois que a anterior termina.
+    // Isso impede acúmulo de requests quando SQLite/backend ficam momentaneamente lentos.
+    schedulePolling(refreshStatus, 2000);
+    schedulePolling(loadMapData, 5000);
+    schedulePolling(pollTrafficEvents, 2000);
+    schedulePolling(loadMessages, 3000);
+    schedulePolling(checkIncomingPersonalMessages, 3000);
+    schedulePolling(async () => {
+      if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
+    }, 5 * 60 * 1000);
+    schedulePolling(async () => {
+      if (state.activeTab === 'stations') await loadStations();
+    }, 5000);
+    schedulePolling(async () => {
+      if (state.activeTab === 'log') await loadLog(false);
+    }, 1000);
   }
 
   boot();

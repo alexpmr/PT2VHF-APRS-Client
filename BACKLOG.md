@@ -80,6 +80,7 @@
 ## Pendências para próximas versões
 
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
+  - **Teste v1.6.11:** preparada correção experimental para reduzir contenção SQLite, impedir pollings sobrepostos, limitar chamadas HTTP a 10 s e gravar mensagens multipartes em uma única transação. Manter este item aberto até validação em uso real.
   - Na versão **Portable**, após alguns minutos aberta, a interface aparenta continuar visível, mas as operações que dependem do backend deixam de responder.
   - **Reprodutibilidade confirmada:** ao fechar e abrir novamente, a aplicação volta a funcionar normalmente por algum tempo e depois trava de novo.
   - **Confirmação pelo navegador:** quando ocorre o travamento, abrir a interface pelo navegador ou tentar atualizar/recarregar a página também não responde. Isso indica indisponibilidade do **servidor HTTP local/backend**, e não apenas travamento do WebView ou da janela portátil.

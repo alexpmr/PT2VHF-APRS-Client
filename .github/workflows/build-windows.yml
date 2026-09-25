@@ -50,6 +50,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_10.py
 
+      - name: Apply v1.6.11 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_11.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -161,6 +165,26 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_5.py
 
+      - name: Apply v1.6.6 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_6.py
+
+      - name: Apply v1.6.8 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_8.py
+
+      - name: Apply v1.6.9 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_9.py
+
+      - name: Apply v1.6.10 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_10.py
+
+      - name: Apply v1.6.11 fixes
+        shell: pwsh
+        run: python tools\apply_release_1_6_11.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -218,7 +242,7 @@ jobs:
 
   linux-x64:
     needs: windows-x64
-    if: ${{ always() && !contains(github.event.head_commit.message, '[windows-only]') }}
+    if: ${{ always() && !contains(github.event.head_commit.message, '[windows-only]') && !contains(github.event.head_commit.message, '[portable-only]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -239,6 +263,7 @@ jobs:
           python tools/apply_release_1_6_8.py
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
+          python tools/apply_release_1_6_11.py
 
       - name: Build Linux packages
         shell: bash
@@ -286,7 +311,7 @@ jobs:
             --clobber
 
   linux-smoke:
-    if: ${{ !contains(github.event.head_commit.message, '[windows-only]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[windows-only]') && !contains(github.event.head_commit.message, '[portable-only]') }}
     name: linux-smoke (${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -312,6 +337,7 @@ jobs:
           python tools/apply_release_1_6_8.py
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
+          python tools/apply_release_1_6_11.py
 
       - name: Core smoke tests
         shell: bash
@@ -323,7 +349,7 @@ jobs:
           python -m pytest -q
 
   macos:
-    if: ${{ !contains(github.event.head_commit.message, '[windows-only]') && !contains(github.event.head_commit.message, '[linux-only]') && !contains(github.event.head_commit.message, '[windows-linux-only]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[windows-only]') && !contains(github.event.head_commit.message, '[linux-only]') && !contains(github.event.head_commit.message, '[windows-linux-only]') && !contains(github.event.head_commit.message, '[portable-only]') }}
     needs: windows-x64
     strategy:
       fail-fast: false
@@ -353,6 +379,7 @@ jobs:
           python tools/apply_release_1_6_8.py
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
+          python tools/apply_release_1_6_11.py
 
       - name: Build macOS DMG
         shell: bash
@@ -395,7 +422,7 @@ jobs:
             --clobber
 
   manual-pdf:
-    if: ${{ !contains(github.event.head_commit.message, '[windows-only]') && !contains(github.event.head_commit.message, '[linux-only]') && !contains(github.event.head_commit.message, '[windows-linux-only]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[windows-only]') && !contains(github.event.head_commit.message, '[linux-only]') && !contains(github.event.head_commit.message, '[windows-linux-only]') && !contains(github.event.head_commit.message, '[portable-only]') }}
     needs: windows-x64
     runs-on: ubuntu-latest
     steps:
@@ -416,6 +443,7 @@ jobs:
           python tools/apply_release_1_6_8.py
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
+          python tools/apply_release_1_6_11.py
 
       - name: Generate versioned PDF manual
         shell: bash

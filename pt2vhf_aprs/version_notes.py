@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.11": {
+        "title": "Teste de estabilidade do Portable",
+        "items": [
+            "Remove PRAGMA journal_mode=WAL do caminho de cada request e deixa a configuração WAL somente na inicialização.",
+            "Mensagens multipartes passam a ser registradas em uma única transação SQLite.",
+            "Pollings da interface deixam de se sobrepor quando uma chamada demora.",
+            "Chamadas ao backend local ganham timeout de 10 segundos em vez de permanecer indefinidamente presas.",
+            "Após enfileirar uma mensagem, o botão Enviar é liberado sem aguardar a recarga da lista.",
+            "Release de teste somente Windows x64 Portable, sem instalador e sem documentação.",
+        ],
+    },
     "1.6.10": {
         "title": "Release completa multiplataforma",
         "items": [

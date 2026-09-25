@@ -88,13 +88,26 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def _configure_database_runtime() -> None:
+    """Configura pragmas globais uma vez, antes de iniciar threads e requests."""
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH, timeout=10, check_same_thread=False)
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+        conn.commit()
+    finally:
+        conn.close()
+
+
 @contextmanager
 def connection():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
+    conn = sqlite3.connect(DB_PATH, timeout=5, check_same_thread=False)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
+    conn.execute("PRAGMA busy_timeout=5000")
     try:
         yield conn
         conn.commit()
@@ -103,6 +116,7 @@ def connection():
 
 
 def init_db() -> None:
+    _configure_database_runtime()
     with connection() as conn:
         conn.executescript(
             """
@@ -1180,6 +1194,37 @@ def add_message(direction: str, from_call: str, to_call: str, message: str, msg_
             ),
         )
         return int(cur.lastrowid)
+
+
+def add_outgoing_message_parts(rows: list[dict[str, Any]]) -> list[int]:
+    """Insere todas as partes de uma mensagem APRS na mesma transação SQLite."""
+    if not rows:
+        return []
+    ids: list[int] = []
+    with connection() as conn:
+        for row in rows:
+            cur = conn.execute(
+                """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,
+                                        message_group_id,part_index,part_count,retry_count,timestamp,raw)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    "out",
+                    str(row.get("from_call") or "").upper(),
+                    str(row.get("to_call") or "").upper(),
+                    str(row.get("message") or ""),
+                    "message",
+                    row.get("msg_id"),
+                    str(row.get("status") or "Na fila"),
+                    row.get("message_group_id"),
+                    row.get("part_index"),
+                    row.get("part_count"),
+                    max(0, int(row.get("retry_count") or 0)),
+                    utc_now_iso(),
+                    row.get("raw"),
+                ),
+            )
+            ids.append(int(cur.lastrowid))
+    return ids
 
 
 def get_message(row_id: int) -> dict[str, Any] | None:

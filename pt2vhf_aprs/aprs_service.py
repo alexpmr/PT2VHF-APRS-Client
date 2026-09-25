@@ -458,18 +458,30 @@ class APRSService:
                 result["duplicate"] = True
                 return result
 
-            row_ids = []
             message_ids = []
             packets = []
+            pending_rows = []
             group_id = f"{int(time.time() * 1000)}-{self._msg_counter:03d}"
             for index, part in enumerate(parts):
                 self._msg_counter = (self._msg_counter + 1) % 1000
                 msg_id = f"{self._msg_counter:03d}"
                 packet = f"{source}>APRS,TCPIP*::{destination:<9}:{part}{{{msg_id}"
-                row_ids.append(db.add_message("out", source, destination, part, msg_id=msg_id, status="Na fila", raw=packet, message_group_id=group_id, part_index=index + 1, part_count=len(parts), retry_count=0))
                 message_ids.append(msg_id)
                 packets.append({"packet": packet, "msg_id": msg_id})
+                pending_rows.append({
+                    "from_call": source,
+                    "to_call": destination,
+                    "message": part,
+                    "msg_id": msg_id,
+                    "status": "Na fila",
+                    "raw": packet,
+                    "message_group_id": group_id,
+                    "part_index": index + 1,
+                    "part_count": len(parts),
+                    "retry_count": 0,
+                })
 
+            row_ids = db.add_outgoing_message_parts(pending_rows)
             result = {"row_ids": row_ids, "message_ids": message_ids, "parts": parts, "part_count": len(parts), "group_id": group_id, "queued": True, "duplicate": False}
             self._recent_tx[dedupe_key] = (now, dict(result))
 
