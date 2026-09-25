@@ -87,10 +87,15 @@
   - Usar apresentação compacta estilo gauge/medidor, com faixas visuais de normal, atenção e crítico.
   - Tooltip opcional com detalhes adicionais: quantidade de threads, requests HTTP ativos, tamanho da fila TX e uptime.
   - O indicador deve servir também como recurso permanente de diagnóstico de estabilidade e desempenho.
+  - **Importante:** o gauge ainda não foi implementado nas builds de teste até a v1.6.14; até aqui ele estava apenas no backlog.
+  - Para refletir corretamente o consumo real do Portable, calcular CPU/RAM do **processo principal + processos filhos do WebView2**, e não apenas do executável Python, para evitar leitura enganosa.
 
 
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
   - **Teste v1.6.14 transação única RX:** o pipeline normal de recepção foi consolidado em uma única transação SQLite por pacote, agrupando log RX, histórico de pacotes, topologia e atualização de estação/track. Objetivo: reduzir a amplificação de escrita e impedir que o tráfego APRS monopolize CPU/banco e faça as rotas HTTP deixarem de responder. Manter o item aberto até teste prolongado em uso real.
+  - **Resultado da v1.6.14:** o travamento persiste, com **CPU ainda alta**, e o salvamento de Configurações voltou a falhar com timeout em **`/api/config`**. A transação única por pacote não resolveu a causa raiz.
+  - Próxima hipótese prioritária: mesmo com uma transação por pacote, o RX continua fazendo **um commit SQLite por pacote recebido**. Sob tráfego alto isso pode manter o writer quase continuamente ocupado e provocar starvation das escritas HTTP. Avaliar writer dedicado com **fila e commits em pequenos lotes** (por quantidade e/ou janela de tempo), com backpressure e métricas de profundidade da fila.
+  - Verificar também o custo do WebView/Leaflet e das animações de tráfego; quando o replay/live não estiver ativo, nenhum loop de animação deve consumir CPU continuamente.
   - **Teste v1.6.13 CPU/SQLite:** removido o housekeeping pesado executado em cada pacote APRS. A retenção de `packets`, `aprs_log` e `topology_events` agora roda em lotes e usa corte pela chave primária. Pollings pesados também foram reduzidos/condicionados à aba ativa. Validar consumo de CPU e estabilidade prolongada antes de considerar o problema encerrado.
   - **Resultado parcial da v1.6.13:** durante teste de envio de mensagem, a interface exibiu **“O backend local não respondeu em 10 segundos (/api/messages/send)”**. Portanto, a otimização de CPU/housekeeping não eliminou o travamento do envio. Preservar e analisar o `diagnostics.log` desta execução para identificar a thread/request bloqueado no momento do timeout.
   - **Configuração também continua afetada na v1.6.13:** o usuário não consegue concluir **Salvar configuração**. Tratar como evidência de indisponibilidade geral do backend, não apenas falha da rota de mensagens; verificar no diagnóstico se `POST /api/config` também permanece ativo/bloqueado durante o travamento.
