@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - release-v1.6.2
     tags:
       - 'v*'
 
@@ -185,6 +186,7 @@ jobs:
           gh release upload $tag "dist-portable\$portableName" --clobber
 
   linux-x64:
+    if: ${{ github.ref != 'refs/heads/release-v1.6.2' && !contains(github.event.head_commit.message, '[windows-only]') }}
     needs: windows-x64
     runs-on: ubuntu-latest
     steps:
@@ -236,6 +238,7 @@ jobs:
             --clobber
 
   linux-smoke:
+    if: ${{ github.ref != 'refs/heads/release-v1.6.2' && !contains(github.event.head_commit.message, '[windows-only]') }}
     name: linux-smoke (${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -262,6 +265,7 @@ jobs:
           python -m pytest -q
 
   macos:
+    if: ${{ github.ref != 'refs/heads/release-v1.6.2' && !contains(github.event.head_commit.message, '[windows-only]') }}
     needs: windows-x64
     strategy:
       fail-fast: false
@@ -323,6 +327,7 @@ jobs:
             --clobber
 
   manual-pdf:
+    if: ${{ github.ref != 'refs/heads/release-v1.6.2' && !contains(github.event.head_commit.message, '[windows-only]') }}
     needs: windows-x64
     runs-on: ubuntu-latest
     steps:
