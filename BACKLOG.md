@@ -250,3 +250,21 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
   - **Continuar na Configuração**.
 - A detecção de alterações deve incluir campos de texto, seletores, checkboxes, cores, espessuras, tema e demais preferências da página.
 - Se o salvamento falhar, permanecer na aba Configuração e preservar os valores digitados para correção/tentativa posterior.
+
+
+## Popup de novidades após atualização
+
+**Objetivo:** deixar claro para o usuário que o aplicativo foi atualizado e apresentar rapidamente as principais mudanças da nova versão.
+
+- Ao iniciar o aplicativo pela primeira vez após uma atualização, exibir um popup informando **PT2VHF APRS Client atualizado para vX.Y.Z**.
+- Mostrar no popup um resumo das **principais novidades da versão instalada**.
+- Exibir o popup **somente uma vez por versão**; após o usuário fechá-lo, não mostrar novamente nas próximas inicializações da mesma versão.
+- Não exibir esse popup em uma instalação realmente nova quando não houver evidência de uma versão anterior já executada.
+- Armazenar localmente a última versão já apresentada ao usuário para comparar com a versão atual.
+- Incluir no popup:
+  - versão anterior, quando conhecida;
+  - versão atual;
+  - lista resumida de novidades;
+  - botão **OK/Entendi** para fechar.
+- O recurso deve funcionar mesmo sem acesso à Internet; as notas essenciais da versão devem estar disponíveis localmente no pacote do aplicativo.
+- Preparar a estrutura para que as próximas versões possam fornecer suas próprias notas sem depender da Release do GitHub.
