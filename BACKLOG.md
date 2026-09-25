@@ -156,3 +156,15 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Toda reprodução visual de tráfego, replay histórico e navegação temporal deve ficar na aba **Mapa**, junto ao painel inferior de animação.
 - Não manter controles de animação duplicados entre Análise e Mapa.
 - Quando o usuário alterar o período na aba Análise, o período selecionado pode continuar sincronizado com o Replay da Rede no Mapa, mas a reprodução deverá ser iniciada/controlada somente pelo painel do Mapa.
+
+
+## Renomear ação do popup da estação para “Ver logs”
+
+**Objetivo:** padronizar o acesso rápido ao histórico da estação a partir do Mapa.
+
+- No popup exibido ao clicar em uma estação, usar o botão **Ver logs**.
+- Ao clicar em **Ver logs**, abrir automaticamente a aba **Log**.
+- Aplicar no campo de filtro o **indicativo completo da estação**, incluindo SSID quando houver.
+- Atualizar imediatamente a listagem para mostrar os registros relacionados à estação.
+- Dar foco visual ao campo de filtro para deixar claro qual estação está sendo analisada.
+- Esta demanda substitui a nomenclatura anterior **Mostrar log**; manter apenas **Ver logs** na interface.
