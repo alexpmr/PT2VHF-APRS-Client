@@ -79,6 +79,15 @@
 
 ## Pendências para próximas versões
 
+- **Configurações — salvamento não responde**
+  - Ao alterar qualquer opção em **Configurações**, o botão **Salvar configuração** não efetiva o salvamento.
+  - Ao tentar sair da tela com alterações pendentes, aparece a confirmação perguntando se deseja salvar.
+  - Ao escolher **Sim / Salvar e sair**, nada acontece: a configuração não é gravada e a navegação não prossegue.
+  - Revisar tanto o handler direto do botão `saveConfigFooterButton` quanto o fluxo do modal de alterações não salvas.
+  - Garantir feedback visual de sucesso/erro e impedir falhas silenciosas.
+  - Adicionar teste de regressão cobrindo: alterar configuração → salvar; alterar configuração → sair → confirmar salvamento → persistir e navegar.
+
+
 - **Logo APRS oficial ainda não aplicada corretamente**
   - A imagem enviada pelo usuário ainda precisa ser incorporada com um arquivo de imagem válido no repositório.
   - Atualizar cabeçalho/interface, favicon, ícones Windows/Linux e demais pontos visuais sem quebrar o build.
