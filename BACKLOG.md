@@ -96,3 +96,52 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - A aba **Análise** deve continuar concentrando métricas, rankings, comparações e comandos analíticos, enquanto a reprodução visual do tráfego fica junto do **Mapa**.
 - A faixa inferior deve ser responsiva e não reduzir excessivamente a área útil do mapa; em janelas menores, permitir layout compacto/recolhível.
 - Ao alternar entre Mapa e outras abas, preservar o estado da animação (posição, modo, velocidade e Play/Pausa).
+
+
+## Controles da animação de tráfego na parte inferior do Mapa
+
+**Objetivo:** manter os controles do replay/animação junto da visualização onde os pacotes são efetivamente acompanhados.
+
+- Mover o bloco **Animação do tráfego APRS** da aba **Análise** para a aba **Mapa**.
+- Posicionar o painel na **parte inferior da tela do Mapa**, abaixo/ao lado da área principal conforme o espaço disponível.
+- Manter no painel os controles de:
+  - modo **Histórico/Ao vivo**;
+  - velocidade;
+  - **Início**;
+  - voltar;
+  - **Play/Pausa**;
+  - avançar;
+  - contadores de reproduzidos/pendentes;
+  - horário atual;
+  - velocidade atual.
+- Não duplicar o painel na aba Análise; após a mudança, os controles devem existir somente no Mapa.
+- A aba Análise continua responsável por métricas, rankings, seleção de período e indicadores analíticos.
+- O painel deve permanecer integrado ao futuro **Replay da Rede** com linha do tempo interativa.
+- Em telas menores, permitir layout compacto para não reduzir excessivamente a área útil do mapa.
+
+
+## Desativar auto-update e manter apenas aviso de nova versão
+
+**Objetivo:** eliminar travamentos e regressões associados ao download/instalação automática, mantendo somente a detecção de novas versões.
+
+- **Desativar completamente o auto-update** do aplicativo.
+- O cliente deve continuar consultando a versão mais recente publicada e indicar claramente quando houver uma versão nova.
+- Manter a verificação automática de versão, mas **não baixar arquivos automaticamente**.
+- **Não instalar atualizações automaticamente ao fechar**.
+- Remover/desabilitar as opções de Configuração:
+  - **Baixar atualização automaticamente**;
+  - **Instalar atualização automaticamente ao fechar**.
+- Manter apenas:
+  - **Verificar atualizações automaticamente**;
+  - **Verificar atualização agora**.
+- Quando houver nova versão, mostrar aviso com:
+  - versão instalada;
+  - versão disponível;
+  - notas da release, quando disponíveis;
+  - botão/link para abrir a página oficial da Release/Download.
+- O usuário deve fazer o download e a instalação manualmente.
+- Não iniciar PowerShell, instalador, DMG, AppImage substituta ou qualquer processo de atualização automática ao encerrar o programa.
+- Não preparar atualização em background e não deixar arquivo pendente para instalação posterior.
+- Manter a verificação de integridade/download somente para fluxos manuais que vierem a ser explicitamente reintroduzidos no futuro.
+- Preservar a checagem periódica de nova versão sem bloquear a interface nem interferir no encerramento do aplicativo.
+- Esta mudança deve priorizar **estabilidade** e evitar que o mecanismo de atualização cause travamentos para usuários.
