@@ -18,7 +18,7 @@ from . import updater
 
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
-UPDATE_CACHE_SECONDS = 15 * 60
+UPDATE_CACHE_SECONDS = 5 * 60
 _update_cache: dict[str, object] = {"timestamp": 0.0, "payload": None}
 _update_cache_lock = threading.Lock()
 
