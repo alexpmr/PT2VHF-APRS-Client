@@ -253,17 +253,17 @@ def create_app() -> Flask:
     @app.get("/api/topology")
     def api_topology():
         try:
-            hours = int(request.args.get("hours", 24))
+            hours = int(request.args.get("hours", 0))
         except (TypeError, ValueError):
-            hours = 24
+            hours = 0
         return jsonify(db.list_topology_edges(hours))
 
     @app.get("/api/topology/stats")
     def api_topology_stats():
         try:
-            hours = int(request.args.get("hours", 24))
+            hours = int(request.args.get("hours", 0))
         except (TypeError, ValueError):
-            hours = 24
+            hours = 0
         payload = db.topology_stats(hours)
         payload["comparison"] = db.topology_period_comparison(hours)
         return jsonify(payload)
@@ -271,11 +271,37 @@ def create_app() -> Flask:
     @app.get("/api/topology/timeline")
     def api_topology_timeline():
         try:
-            hours = int(request.args.get("hours", 24))
+            hours = int(request.args.get("hours", 0))
             limit = int(request.args.get("limit", 2500))
         except (TypeError, ValueError):
-            hours, limit = 24, 2500
+            hours, limit = 0, 2500
         return jsonify(db.topology_timeline(hours, limit))
+
+    @app.get("/api/traffic/events")
+    def api_traffic_events():
+        try:
+            if str(request.args.get("bootstrap", "")).lower() in {"1", "true", "yes"}:
+                return jsonify({"events": [], "last_id": db.latest_packet_id(), "complete": False})
+            after_id = int(request.args.get("after_id", 0))
+            hours = int(request.args.get("hours", 0))
+            limit = int(request.args.get("limit", 1000))
+            return jsonify(db.packet_traffic_events(after_id=after_id, hours=hours, limit=limit))
+        except Exception as exc:
+            return jsonify({"events": [], "last_id": db.latest_packet_id(), "error": str(exc)}), 400
+
+    @app.get("/api/favorites")
+    def api_favorites():
+        return jsonify(db.list_favorites())
+
+    @app.post("/api/favorites/<callsign>")
+    def api_set_favorite(callsign: str):
+        try:
+            data = request.get_json(silent=True) or {}
+            favorite = bool(data.get("favorite", True))
+            db.set_favorite(callsign, favorite)
+            return jsonify({"ok": True, "callsign": callsign.upper(), "favorite": favorite})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
 
     @app.get("/api/stations")
     def api_stations():
