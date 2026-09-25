@@ -14,7 +14,6 @@ from flask import Flask, jsonify, render_template, request, send_file
 from . import __version__
 from . import database as db
 from .aprs_service import full_callsign, service
-from . import updater
 from .version_notes import notes_for
 
 
