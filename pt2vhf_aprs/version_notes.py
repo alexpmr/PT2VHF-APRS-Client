@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.4": {
+        "title": "Correções de Mensagens e Replay",
+        "items": [
+            "Corrigido o envio de mensagens pelo botão Enviar e pela tecla Enter.",
+            "Corrigido o filtro por origem na aba Mensagens.",
+            "Replay volta a mostrar os pacotes trafegando entre os nós, com rastro visual.",
+            "Estações móveis continuam deixando tracklog progressivo durante o replay.",
+            "Incluído teste de regressão para evitar replay apenas com highlight das estações.",
+            "Release somente Windows x64 Portable.",
+        ],
+    },
     "1.6.3": {
         "title": "Replay móvel e seleção rápida de período",
         "items": [
