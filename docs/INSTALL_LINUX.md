@@ -16,7 +16,7 @@ Baixe o arquivo da Release e execute:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./pt2vhf-aprs-client_1.6_amd64.deb
+sudo apt install ./pt2vhf-aprs-client_1.6.1_amd64.deb
 pt2vhf-aprs-client
 ```
 
@@ -32,8 +32,8 @@ A remoção do pacote **não apaga** o banco local do usuário.
 
 ```bash
 cd ~/Downloads
-chmod +x PT2VHF_APRS_Client_x86_64_v1.6.AppImage
-./PT2VHF_APRS_Client_x86_64_v1.6.AppImage
+chmod +x PT2VHF_APRS_Client_x86_64_v1.6.1.AppImage
+./PT2VHF_APRS_Client_x86_64_v1.6.1.AppImage
 ```
 
 O AppImage é a opção portátil recomendada na v1.6. Se **Instalar atualização automaticamente ao fechar** estiver habilitado, o cliente pode baixar e iniciar a nova versão AppImage sem precisar alterar pacotes do sistema.
@@ -43,9 +43,9 @@ O AppImage é a opção portátil recomendada na v1.6. Se **Instalar atualizaç�
 ```bash
 cd ~/Downloads
 mkdir -p ~/Aplicativos/PT2VHF-APRS-Client
-tar -xzf PT2VHF_APRS_Client_Linux_x86_64_v1.6.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
-chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6
-~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6
+tar -xzf PT2VHF_APRS_Client_Linux_x86_64_v1.6.1.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
+chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6.1
+~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6.1
 ```
 
 Para atualizar, substitua somente o executável/pasta do programa pelo conteúdo da nova versão. O banco de dados fica separado e é preservado.
@@ -81,7 +81,7 @@ pt2vhf-aprs-client --browser
 ou, na versão portátil:
 
 ```bash
-~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6 --browser
+~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6.1 --browser
 ```
 
 A porta continua restrita a `127.0.0.1`; não exponha a porta 8080 diretamente à Internet.

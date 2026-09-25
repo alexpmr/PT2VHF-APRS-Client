@@ -18,7 +18,21 @@
     trackLines: new Map(),
     topologyLines: new Map(),
     topologyEnabled: false,
-    topologyHours: 24,
+    topologyHours: 0,
+    mapLegendElement: null,
+    trafficReplayLayers: new Set(),
+    timelineReplayActive: false,
+    trafficEvents: [],
+    trafficIndex: 0,
+    trafficPlaying: false,
+    trafficMode: 'history',
+    trafficSpeed: 1,
+    trafficTimer: null,
+    lastTrafficPacketId: 0,
+    trafficPollBusy: false,
+    lastActivitySoundAt: 0,
+    activityAudioContext: null,
+    favoriteCallsigns: new Set(),
     userLocationMarker: null,
     userLocationAccuracy: null,
     messages: [],
@@ -33,6 +47,7 @@
     symbolTable: '/',
     configLoaded: false,
     myMessagesOnly: false,
+    unreadMessagesOnly: false,
     hideTelemetryMessages: true,
     groupMessages: false,
     selectedConversation: '',
@@ -41,6 +56,8 @@
     lastAlertedMessageId: 0,
     currentAlertMessage: null,
     soundOnPersonalMessage: true,
+    soundOnStationActivity: true,
+    highlightStationActivity: true,
     messagePopupSeconds: 5,
     language: 'pt-BR',
     configSection: 'aprs',
@@ -54,6 +71,7 @@
     pendingTab: '',
     updateInfo: null,
     updateDownloading: false,
+    versionCheckInProgress: false,
   };
 
   const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
@@ -97,6 +115,7 @@
   }
 
   async function refreshVersionStatus(force = false) {
+    if (state.versionCheckInProgress) return;
     const el = $('#versionStatus');
     const textEl = $('#versionStatusText');
     if (!el || !textEl) return;
@@ -107,6 +126,7 @@
       return;
     }
 
+    state.versionCheckInProgress = true;
     el.classList.remove('latest', 'update', 'error', 'ahead');
     el.classList.add('checking');
     textEl.textContent = ui('Verificando versão…', 'Checking version…');
@@ -145,6 +165,8 @@
       el.classList.add('error');
       textEl.textContent = ui('Versão não verificada', 'Version not verified');
       el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
+    } finally {
+      state.versionCheckInProgress = false;
     }
   }
 
@@ -337,11 +359,11 @@
     $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
     if (tab === 'map') setTimeout(() => state.map?.invalidateSize(), 30);
     if (tab === 'messages') {
-      markMessagesSeen();
       loadMessages({ scrollToNewest: true });
     }
     if (tab === 'stations') loadStations({ scrollToNewest: true });
     if (tab === 'log') loadLog(true);
+    if (tab === 'analysis') refreshTopologyAnalysis();
     if (tab === 'config') loadConfig();
   }
 
@@ -439,6 +461,7 @@
       }
 
       if (state.topologyEnabled) loadTopology();
+      updateMapLegend();
     }
   }
 
@@ -464,6 +487,7 @@
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
     addTopologyControl(state.map);
+    addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
   }
@@ -490,23 +514,35 @@
     new LocationControl().addTo(map);
   }
 
+  function topologyPeriodValue(value) {
+    const parsed = Number(value);
+    return [0, 1, 6, 24, 168].includes(parsed) ? parsed : 0;
+  }
+
+  function topologyPeriodLabel(hours = state.topologyHours) {
+    if (Number(hours) === 0) return ui('Completo', 'Complete');
+    if (Number(hours) === 168) return ui('7 dias', '7 days');
+    return `${Number(hours)} h`;
+  }
+
   function addTopologyControl(map) {
     const savedEnabled = localStorage.getItem('pt2vhf_topology_enabled');
-    const savedHours = Number(localStorage.getItem('pt2vhf_topology_hours') || 24);
+    const savedHoursRaw = localStorage.getItem('pt2vhf_topology_hours');
     state.topologyEnabled = savedEnabled === '1';
-    state.topologyHours = [1, 6, 24, 168].includes(savedHours) ? savedHours : 24;
+    state.topologyHours = savedHoursRaw === null ? 0 : topologyPeriodValue(savedHoursRaw);
 
     const TopologyControl = L.Control.extend({
       options: { position: 'topright' },
       onAdd() {
         const wrapper = L.DomUtil.create('div', 'leaflet-control topology-control');
         wrapper.innerHTML = `
-          <label><input id="topologyToggle" type="checkbox" ${state.topologyEnabled ? 'checked' : ''}> Topologia observada</label>
-          <select id="topologyHours" title="Período da topologia">
+          <label><input id="topologyToggle" type="checkbox" ${state.topologyEnabled ? 'checked' : ''}> ${ui('Topologia observada', 'Observed topology')}</label>
+          <select id="topologyHours" title="${ui('Período da topologia', 'Topology period')}">
+            <option value="0">${ui('Completo', 'Complete')}</option>
             <option value="1">1 h</option>
             <option value="6">6 h</option>
             <option value="24">24 h</option>
-            <option value="168">7 dias</option>
+            <option value="168">${ui('7 dias', '7 days')}</option>
           </select>`;
         L.DomEvent.disableClickPropagation(wrapper);
         L.DomEvent.disableScrollPropagation(wrapper);
@@ -520,17 +556,82 @@
             localStorage.setItem('pt2vhf_topology_enabled', state.topologyEnabled ? '1' : '0');
             if (state.topologyEnabled) await loadTopology();
             else clearTopologyLines();
+            updateMapLegend();
           });
           select.addEventListener('change', async () => {
-            state.topologyHours = Number(select.value) || 24;
+            state.topologyHours = topologyPeriodValue(select.value);
             localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
+            if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.topologyHours);
             if (state.topologyEnabled) await loadTopology();
+            if (state.activeTab === 'analysis') await refreshTopologyAnalysis();
           });
         }, 0);
         return wrapper;
       }
     });
     new TopologyControl().addTo(map);
+  }
+
+  function addMapLegendControl(map) {
+    const LegendControl = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd() {
+        const wrapper = L.DomUtil.create('div', 'leaflet-control map-line-legend');
+        wrapper.innerHTML = `
+          <button type="button" class="map-legend-toggle" aria-expanded="true">${ui('Legenda', 'Legend')} ▾</button>
+          <div class="map-legend-body">
+            <div class="map-legend-item" data-legend="track"><span class="legend-line"></span><span>${ui('Tracklog', 'Tracklog')}</span></div>
+            <div class="map-legend-item" data-legend="rf"><span class="legend-line"></span><span>${ui('Enlace RF', 'RF link')}</span></div>
+            <div class="map-legend-item" data-legend="igate"><span class="legend-line"></span><span>${ui('Via IGate/APRS-IS', 'Via IGate/APRS-IS')}</span></div>
+            <div class="map-legend-item" data-legend="replay"><span class="legend-line"></span><span>${ui('Animação temporal', 'Timeline replay')}</span></div>
+            <div class="map-legend-item" data-legend="packet"><span class="legend-packet"></span><span>${ui('Pacote em movimento', 'Moving packet')}</span></div>
+          </div>`;
+        L.DomEvent.disableClickPropagation(wrapper);
+        L.DomEvent.disableScrollPropagation(wrapper);
+        wrapper.querySelector('.map-legend-toggle')?.addEventListener('click', event => {
+          const body = wrapper.querySelector('.map-legend-body');
+          const expanded = !body.classList.toggle('hidden');
+          event.currentTarget.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          event.currentTarget.textContent = expanded ? `${ui('Legenda', 'Legend')} ▾` : `${ui('Legenda', 'Legend')} ▸`;
+        });
+        state.mapLegendElement = wrapper;
+        setTimeout(updateMapLegend, 0);
+        return wrapper;
+      }
+    });
+    new LegendControl().addTo(map);
+  }
+
+  function updateMapLegend() {
+    const root = state.mapLegendElement;
+    if (!root) return;
+    const track = root.querySelector('[data-legend="track"] .legend-line');
+    const rf = root.querySelector('[data-legend="rf"] .legend-line');
+    const igate = root.querySelector('[data-legend="igate"] .legend-line');
+    const replay = root.querySelector('[data-legend="replay"] .legend-line');
+    if (track) {
+      track.style.borderTopColor = state.mapConfig.track_color;
+      track.style.borderTopWidth = `${Math.max(2, state.mapConfig.track_width)}px`;
+    }
+    if (rf) {
+      rf.style.borderTopColor = state.mapConfig.topology_rf_color;
+      rf.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width)}px`;
+    }
+    if (igate) {
+      igate.style.borderTopColor = state.mapConfig.topology_igate_color;
+      igate.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width)}px`;
+      igate.style.borderTopStyle = 'dashed';
+    }
+    if (replay) {
+      replay.style.borderTopColor = '#ffd54a';
+      replay.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width + 1)}px`;
+      replay.style.borderTopStyle = 'dashed';
+    }
+    root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
+    root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
+    const packetAnimating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
+    root.querySelector('[data-legend="replay"]')?.classList.toggle('legend-muted', !state.timelineReplayActive);
+    root.querySelector('[data-legend="packet"]')?.classList.toggle('legend-muted', !packetAnimating);
   }
 
   function clearTopologyLines() {
@@ -687,6 +788,8 @@
         <strong>Via</strong><span>${escapeHtml(path)}</span>
       </div>
       <div class="station-popup-actions">
+        ${favoriteStarHtml(s.callsign, false)}
+        <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Mostrar log</button>
         <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}">Enviar mensagem</button>
       </div>
     </div>`;
@@ -751,6 +854,195 @@
       if (state.topologyEnabled) await loadTopology();
     } catch (err) {
       console.warn(err);
+    }
+  }
+
+  function playStationActivitySound() {
+    if (!state.soundOnStationActivity) return;
+    const now = Date.now();
+    if (now - state.lastActivitySoundAt < 700) return;
+    state.lastActivitySoundAt = now;
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!state.activityAudioContext) state.activityAudioContext = new AudioContextClass();
+      const ctx = state.activityAudioContext;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
+      oscillator.connect(gain).connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.18);
+    } catch (_) {}
+  }
+
+  function pulseStation(callsign, options = {}) {
+    const call = normalizedCall(callsign);
+    if (!call || !state.highlightStationActivity) return;
+    const marker = state.markers.get(call);
+    const el = marker?.getElement?.();
+    if (!el) return;
+    el.classList.remove('station-transmitting');
+    void el.offsetWidth;
+    el.classList.add('station-transmitting');
+    setTimeout(() => el.classList.remove('station-transmitting'), Number(options.duration || 1800));
+  }
+
+  function stationActivity(callsign) {
+    const call = normalizedCall(callsign);
+    if (call && state.highlightStationActivity && !state.markers.has(call) && state.map) {
+      loadMapData().then(() => pulseStation(call)).catch(() => {});
+    } else {
+      pulseStation(call);
+    }
+    playStationActivitySound();
+  }
+
+  function clearTrafficReplayLayers() {
+    for (const layer of state.trafficReplayLayers) {
+      try { state.map?.removeLayer(layer); } catch (_) {}
+    }
+    state.trafficReplayLayers.clear();
+    updateMapLegend();
+  }
+
+  function trafficEventDetails(event) {
+    return `<div class="traffic-packet-popup">
+      <strong>${escapeHtml(event.source || ui('Origem desconhecida', 'Unknown source'))}</strong><br>
+      ${escapeHtml(fmtDate(event.timestamp))}<br>
+      <span>${escapeHtml(event.packet_format || '')}</span>
+      ${event.incomplete ? `<div class="traffic-incomplete">${escapeHtml(ui('Caminho incompleto: há nós sem posição conhecida.', 'Incomplete path: some nodes have no known position.'))}</div>` : ''}
+      <pre>${escapeHtml(event.raw || '')}</pre>
+    </div>`;
+  }
+
+  function animateTrafficSegment(segment, event, durationMs) {
+    if (!state.map) return Promise.resolve();
+    const from = [Number(segment.source_lat), Number(segment.source_lon)];
+    const to = [Number(segment.target_lat), Number(segment.target_lon)];
+    if (![...from, ...to].every(Number.isFinite)) return Promise.resolve();
+
+    const particle = L.circleMarker(from, {
+      radius: 6,
+      color: '#ffffff',
+      weight: 1,
+      fillColor: segment.kind === 'igate' ? state.mapConfig.topology_igate_color : '#ffd54a',
+      fillOpacity: .95,
+      opacity: .95,
+      pane: 'markerPane'
+    }).addTo(state.map);
+    particle.bindPopup(trafficEventDetails(event), { maxWidth: 440 });
+    state.trafficReplayLayers.add(particle);
+    updateMapLegend();
+
+    const start = performance.now();
+    return new Promise(resolve => {
+      const tick = now => {
+        const t = Math.min(1, (now - start) / Math.max(120, durationMs));
+        const eased = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+        particle.setLatLng([
+          from[0] + (to[0] - from[0]) * eased,
+          from[1] + (to[1] - from[1]) * eased
+        ]);
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          setTimeout(() => {
+            try { state.map?.removeLayer(particle); } catch (_) {}
+            state.trafficReplayLayers.delete(particle);
+            updateMapLegend();
+          }, 650);
+          resolve();
+        }
+      };
+      requestAnimationFrame(tick);
+    });
+  }
+
+  async function animateTrafficEvent(event) {
+    if (!event) return;
+    stationActivity(event.source);
+    const speed = Math.max(.5, Number(state.trafficSpeed || 1));
+    const duration = Math.max(180, 1150 / speed);
+    // Todos os segmentos observados do mesmo pacote começam juntos para mostrar a propagação multi-link simultânea.
+    await Promise.all((event.segments || []).map(segment => animateTrafficSegment(segment, event, duration)));
+    $('#trafficCurrentTime') && ($('#trafficCurrentTime').textContent = fmtDate(event.timestamp) || '—');
+  }
+
+  function updateTrafficAnimationUi() {
+    const total = state.trafficEvents.length;
+    const played = Math.min(state.trafficIndex, total);
+    const pending = Math.max(0, total - played);
+    if ($('#trafficPlayedCount')) $('#trafficPlayedCount').textContent = played.toLocaleString(currentLocale());
+    if ($('#trafficPendingCount')) $('#trafficPendingCount').textContent = pending.toLocaleString(currentLocale());
+    if ($('#trafficCurrentSpeed')) $('#trafficCurrentSpeed').textContent = `${String(state.trafficSpeed).replace('.', ',')}×`;
+    if ($('#trafficAnimationStatus')) {
+      $('#trafficAnimationStatus').textContent = state.trafficPlaying
+        ? (state.trafficMode === 'live' ? ui('Ao vivo', 'Live') : ui('Reproduzindo', 'Playing'))
+        : ui('Pausado', 'Paused');
+    }
+    if ($('#trafficPlayPauseButton')) $('#trafficPlayPauseButton').textContent = state.trafficPlaying ? '⏸ Pause' : '▶ Play';
+    updateMapLegend();
+  }
+
+  async function loadTrafficHistory(resetIndex = true) {
+    const hours = topologyPeriodValue(state.topologyHours);
+    const data = await api(`/api/traffic/events?hours=${encodeURIComponent(hours)}&limit=5000`);
+    state.trafficEvents = (data.events || []).filter(event => event.source || (event.segments || []).length);
+    if (resetIndex) state.trafficIndex = 0;
+    updateTrafficAnimationUi();
+  }
+
+  function stopTrafficTimer() {
+    if (state.trafficTimer) {
+      clearTimeout(state.trafficTimer);
+      state.trafficTimer = null;
+    }
+  }
+
+  async function playNextTrafficEvent() {
+    stopTrafficTimer();
+    if (!state.trafficPlaying || state.trafficMode !== 'history') return;
+    if (!state.trafficEvents.length) {
+      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); state.trafficPlaying = false; updateTrafficAnimationUi(); return; }
+    }
+    if (state.trafficIndex >= state.trafficEvents.length) {
+      state.trafficPlaying = false;
+      updateTrafficAnimationUi();
+      return;
+    }
+    const event = state.trafficEvents[state.trafficIndex++];
+    updateTrafficAnimationUi();
+    await animateTrafficEvent(event);
+    if (!state.trafficPlaying) return;
+    state.trafficTimer = setTimeout(playNextTrafficEvent, Math.max(60, 500 / Math.max(.5, Number(state.trafficSpeed || 1))));
+  }
+
+  async function pollTrafficEvents() {
+    if (state.trafficPollBusy) return;
+    state.trafficPollBusy = true;
+    try {
+      if (!state.lastTrafficPacketId) {
+        const baseline = await api('/api/traffic/events?bootstrap=1');
+        state.lastTrafficPacketId = Number(baseline.last_id || 0);
+        return;
+      }
+      const data = await api(`/api/traffic/events?after_id=${encodeURIComponent(state.lastTrafficPacketId)}&limit=500`);
+      const events = data.events || [];
+      state.lastTrafficPacketId = Math.max(state.lastTrafficPacketId, Number(data.last_id || 0));
+      for (const event of events) {
+        stationActivity(event.source);
+        if (state.trafficPlaying && state.trafficMode === 'live') animateTrafficEvent(event);
+      }
+    } catch (err) {
+      console.warn(err);
+    } finally {
+      state.trafficPollBusy = false;
     }
   }
 
@@ -926,20 +1218,39 @@
       || /^T#\d{3}(?:,|$)/.test(text);
   }
 
+  function isUnreadPersonalMessage(message) {
+    if (!message || message.direction !== 'in' || message.message_type !== 'message' || message.read_at) return false;
+    const own = normalizedCall(state.ownCallsign);
+    return !own || normalizedCall(message.to_call) === own;
+  }
+
   function visibleMessages() {
-    return state.hideTelemetryMessages
+    let rows = state.hideTelemetryMessages
       ? state.messages.filter(message => !isTelemetryMessage(message))
-      : state.messages;
+      : [...state.messages];
+    if (state.unreadMessagesOnly) rows = rows.filter(isUnreadPersonalMessage);
+    return rows;
   }
 
   function normalizedCall(value) {
     return String(value || '').trim().toUpperCase();
   }
 
+  function isFavorite(callsign) {
+    return state.favoriteCallsigns.has(normalizedCall(callsign));
+  }
+
+  function favoriteStarHtml(callsign, compact = true) {
+    const call = normalizedCall(callsign);
+    if (!call) return '';
+    const favorite = isFavorite(call);
+    return `<button type="button" class="favorite-star${favorite ? ' is-favorite' : ''}${compact ? ' compact-star' : ''}" data-favorite-callsign="${escapeHtml(call)}" aria-pressed="${favorite ? 'true' : 'false'}" title="${escapeHtml(favorite ? ui('Remover dos favoritos', 'Remove from favorites') : ui('Adicionar aos favoritos', 'Add to favorites'))}">${favorite ? '★' : '☆'}</button>`;
+  }
+
   function callsignButtonHtml(callsign, otherCall = '') {
     const call = normalizedCall(callsign);
     if (!call) return '';
-    return `<button type="button" class="callsign-link message-callsign-link" data-callsign="${escapeHtml(call)}" data-other-call="${escapeHtml(normalizedCall(otherCall))}">${escapeHtml(call)}</button>`;
+    return `${favoriteStarHtml(call)}<button type="button" class="callsign-link message-callsign-link" data-callsign="${escapeHtml(call)}" data-other-call="${escapeHtml(normalizedCall(otherCall))}">${escapeHtml(call)}</button>`;
   }
 
   function resolveMessageContact(message) {
@@ -975,7 +1286,6 @@
   }
 
   function conversationItems() {
-    const seen = Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0);
     const conversations = new Map();
 
     for (const message of visibleMessages()) {
@@ -988,7 +1298,7 @@
       const item = conversations.get(contact);
       item.messages.push(message);
       if (!item.last || Number(message.id || 0) > Number(item.last.id || 0)) item.last = message;
-      if (message.direction === 'in' && Number(message.id || 0) > seen) item.unread += 1;
+      if (isUnreadPersonalMessage(message)) item.unread += 1;
     }
 
     const factor = state.conversationSort === 'asc' ? 1 : -1;
@@ -1000,7 +1310,12 @@
           return time || (Number(a.id || 0) - Number(b.id || 0));
         })
       }))
-      .sort((a, b) => a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor);
+      .filter(item => !state.unreadMessagesOnly || item.unread > 0)
+      .sort((a, b) => {
+        const favoriteDelta = Number(isFavorite(b.contact)) - Number(isFavorite(a.contact));
+        if (favoriteDelta) return favoriteDelta;
+        return a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor;
+      });
   }
 
   function renderGroupedMessages() {
@@ -1012,7 +1327,7 @@
     const thread = $('#conversationMessages');
 
     if (!conversations.length) {
-      list.innerHTML = '<div class="conversation-list-empty">Nenhuma conversa individual para os filtros atuais.</div>';
+      list.innerHTML = `<div class="conversation-list-empty">${state.unreadMessagesOnly ? ui('Nenhuma mensagem não lida.', 'No unread messages.') : ui('Nenhuma conversa individual para os filtros atuais.', 'No individual conversations for the current filters.')}</div>`;
       state.selectedConversation = '';
       empty.classList.remove('hidden');
       content.classList.add('hidden');
@@ -1025,16 +1340,16 @@
 
     list.innerHTML = conversations.map(item => {
       const selected = item.contact === state.selectedConversation ? ' selected' : '';
-      return `<button type="button" class="conversation-item${selected}" data-conversation-contact="${escapeHtml(item.contact)}">
+      return `<div class="conversation-item${selected}" data-conversation-contact="${escapeHtml(item.contact)}" role="button" tabindex="0">
         <span class="conversation-item-top">
-          <strong>${escapeHtml(item.contact)}</strong>
+          <strong>${favoriteStarHtml(item.contact)}${escapeHtml(item.contact)}</strong>
           <span>${escapeHtml(fmtDate(item.last?.timestamp))}</span>
         </span>
         <span class="conversation-item-bottom">
           <span>${escapeHtml(item.last?.message || '')}</span>
           ${item.unread ? `<span class="conversation-unread">${item.unread}</span>` : ''}
         </span>
-      </button>`;
+      </div>`;
     }).join('');
 
     const selected = conversations.find(item => item.contact === state.selectedConversation) || conversations[0];
@@ -1072,8 +1387,13 @@
 
     const spec = state.sort.messages;
     const rows = sortedData(visibleMessages(), spec);
+    if (!rows.length) {
+      $('#messagesTable tbody').innerHTML = `<tr class="message-empty"><td colspan="6">${state.unreadMessagesOnly ? escapeHtml(ui('Nenhuma mensagem não lida.', 'No unread messages.')) : escapeHtml(ui('Nenhuma mensagem para os filtros atuais.', 'No messages for the current filters.'))}</td></tr>`;
+      updateSortIndicators('messagesTable', spec);
+      return;
+    }
     $('#messagesTable tbody').innerHTML = rows.map(m => `
-      <tr class="${m.status === 'ACK' ? 'message-row-ack' : m.status === 'REJ' ? 'message-row-rej' : ''}">
+      <tr data-message-id="${Number(m.id || 0)}" class="${m.status === 'ACK' ? 'message-row-ack ' : m.status === 'REJ' ? 'message-row-rej ' : ''}${isUnreadPersonalMessage(m) ? 'message-row-unread' : ''}">
         <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${callsignButtonHtml(m.from_call, m.to_call)}</td>
         <td>${callsignButtonHtml(m.to_call, m.from_call)}</td>
         <td>${messageTypeLabel(m.message_type)}</td>
@@ -1127,7 +1447,8 @@
     if (viewport) viewport.scrollTop = viewport.scrollHeight;
   });
 
-  $('#conversationList')?.addEventListener('click', event => {
+  $('#conversationList')?.addEventListener('click', async event => {
+    if (event.target.closest('.favorite-star')) return;
     const item = event.target.closest('[data-conversation-contact]');
     if (!item) return;
     state.selectedConversation = normalizedCall(item.dataset.conversationContact);
@@ -1135,10 +1456,29 @@
       $('#messageType').value = 'message';
       updateMessageComposerMode();
       $('#messageTo').value = state.selectedConversation;
+      try {
+        await api('/api/messages/conversation/read', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ contact: state.selectedConversation })
+        });
+        const now = new Date().toISOString();
+        state.messages = state.messages.map(m => (
+          isUnreadPersonalMessage(m) && resolveMessageContact(m) === state.selectedConversation
+            ? { ...m, read_at: now }
+            : m
+        ));
+      } catch (_) {}
     }
-    renderGroupedMessages();
+    renderMessages();
+    updateUnread();
     const thread = $('#conversationMessages');
     if (thread) thread.scrollTop = thread.scrollHeight;
+  });
+  $('#conversationList')?.addEventListener('keydown', event => {
+    if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('[data-conversation-contact]') && !event.target.closest('.favorite-star')) {
+      event.preventDefault();
+      event.target.closest('[data-conversation-contact]').click();
+    }
   });
 
   $('#conversationSortButton')?.addEventListener('click', () => {
@@ -1154,7 +1494,8 @@
     selectMessageRecipient(event.currentTarget.dataset.callsign || '');
   });
 
-  $('#messagesTable tbody')?.addEventListener('click', event => {
+  $('#messagesTable tbody')?.addEventListener('click', async event => {
+    if (event.target.closest('.favorite-star')) return;
     const retry = event.target.closest('.message-retry-button');
     if (retry) {
       event.preventDefault();
@@ -1163,10 +1504,23 @@
       return;
     }
     const button = event.target.closest('.message-callsign-link');
-    if (!button) return;
-    event.preventDefault();
-    event.stopPropagation();
-    selectMessageRecipient(button.dataset.callsign || '', button.dataset.otherCall || '');
+    if (button) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectMessageRecipient(button.dataset.callsign || '', button.dataset.otherCall || '');
+      return;
+    }
+    const row = event.target.closest('tr[data-message-id]');
+    if (!row) return;
+    const id = Number(row.dataset.messageId || 0);
+    const message = state.messages.find(m => Number(m.id || 0) === id);
+    if (!isUnreadPersonalMessage(message)) return;
+    try {
+      await api(`/api/messages/${id}/read`, { method:'POST' });
+      message.read_at = new Date().toISOString();
+      renderMessages();
+      updateUnread();
+    } catch (_) {}
   });
 
   $('#conversationMessages')?.addEventListener('click', event => {
@@ -1205,6 +1559,20 @@
     await loadMessages({ scrollToNewest: true });
   });
 
+  function updateUnreadMessagesButton() {
+    const btn = $('#unreadMessagesButton');
+    if (!btn) return;
+    btn.classList.toggle('active-filter', state.unreadMessagesOnly);
+    btn.setAttribute('aria-pressed', state.unreadMessagesOnly ? 'true' : 'false');
+    btn.textContent = state.unreadMessagesOnly ? ui('✓ Não lidas', '✓ Unread') : ui('Não lidas', 'Unread');
+  }
+
+  $('#unreadMessagesButton')?.addEventListener('click', () => {
+    state.unreadMessagesOnly = !state.unreadMessagesOnly;
+    updateUnreadMessagesButton();
+    renderMessages();
+  });
+
   $('#clearMessagesButton')?.addEventListener('click', async () => {
     if (!window.confirm('Apagar TODO o histórico de mensagens e boletins armazenado neste computador? Esta ação não pode ser desfeita.')) return;
     try {
@@ -1224,7 +1592,7 @@
   $('#messageTo').addEventListener('input', debounce(async (ev) => {
     try {
       const list = await api(`/api/callsigns?prefix=${encodeURIComponent(ev.target.value)}`);
-      $('#destinationList').innerHTML = list.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+      $('#destinationList').innerHTML = list.map(call => `<option value="${escapeHtml(call)}" label="${isFavorite(call) ? '★ ' + escapeHtml(ui('Favorita', 'Favorite')) : ''}"></option>`).join('');
     } catch (_) {}
   }, 180));
 
@@ -1244,26 +1612,40 @@
     openMessageComposer(button.dataset.callsign || '');
   });
 
-  function estimateMessageParts(text) {
-    const clean = String(text || '').replace(/\s+/g, ' ').trim();
-    if (!clean) return 0;
-    if (clean.length <= 63) return 1;
-    const limit = 55;
-    let parts = 0;
-    let current = '';
-    for (let word of clean.split(' ')) {
-      if (word.length > limit) {
-        if (current) { parts++; current = ''; }
-        parts += Math.floor(word.length / limit);
-        word = word.slice(Math.floor(word.length / limit) * limit);
-        if (word) current = word;
-        continue;
-      }
-      const candidate = current ? `${current} ${word}` : word;
-      if (candidate.length <= limit) current = candidate;
-      else { parts++; current = word; }
+  document.addEventListener('click', async e => {
+    const button = e.target.closest('.station-log-button');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const callsign = normalizedCall(button.dataset.callsign || '');
+    if (!callsign) return;
+    activateTab('log');
+    const filter = $('#logFilter');
+    if (filter) {
+      filter.value = callsign;
+      filter.classList.add('log-filter-focus');
+      setTimeout(() => filter.classList.remove('log-filter-focus'), 2200);
+      filter.focus();
     }
-    if (current) parts++;
+    await loadLog(true);
+  });
+
+  function estimateMessageParts(text) {
+    let remaining = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!remaining) return 0;
+    const limit = 63;
+    let parts = 0;
+    while (remaining) {
+      if (remaining.length <= limit) {
+        parts++;
+        break;
+      }
+      const windowText = remaining.slice(0, limit + 1);
+      let cut = windowText.lastIndexOf(' ', limit);
+      if (cut <= 0) cut = limit;
+      parts++;
+      remaining = remaining.slice(cut).trimStart();
+    }
     return Math.max(1, parts);
   }
 
@@ -1386,6 +1768,12 @@
         .sort((a, b) => Number(a.id) - Number(b.id));
 
       const latest = incoming.reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
+      const unreadCount = incoming.filter(m => !m.read_at).length;
+      const badge = $('#messageBadge');
+      if (badge) {
+        badge.textContent = unreadCount;
+        badge.classList.toggle('hidden', unreadCount <= 0);
+      }
       if (!state.messageAlertBaselineReady) {
         state.lastAlertedMessageId = latest;
         state.messageAlertBaselineReady = true;
@@ -1406,11 +1794,15 @@
   }
 
   $('#incomingMessageCompactClose')?.addEventListener('click', closeCompactIncomingMessageAlert);
-  $('#incomingMessageCompactReply')?.addEventListener('click', () => {
+  $('#incomingMessageCompactReply')?.addEventListener('click', async () => {
     const message = state.currentAlertMessage;
     if (!message) return;
     const sender = message.from_call || '';
+    if (message.id) {
+      try { await api(`/api/messages/${Number(message.id)}/read`, { method:'POST' }); } catch (_) {}
+    }
     closeCompactIncomingMessageAlert();
+    await loadMessages({ scrollToNewest:false });
     selectMessageRecipient(sender);
   });
 
@@ -1420,6 +1812,13 @@
     const messageId = Number(message.id || 0);
     closeIncomingMessageAlert();
     closeCompactIncomingMessageAlert();
+    if (state.unreadMessagesOnly) {
+      state.unreadMessagesOnly = false;
+      updateUnreadMessagesButton();
+    }
+    if (messageId) {
+      try { await api(`/api/messages/${messageId}/read`, { method:'POST' }); } catch (_) {}
+    }
     activateTab('messages');
     await loadMessages({ scrollToNewest:false });
     if (state.groupMessages && sender) {
@@ -1448,10 +1847,6 @@
         setTimeout(() => row?.classList.remove('message-focus-row'), 2200);
       });
     }
-    if (messageId) {
-      const seen = Math.max(Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0), messageId);
-      localStorage.setItem('pt2vhf_last_seen_msg', String(seen));
-    }
     updateUnread();
   }
 
@@ -1460,30 +1855,27 @@
   $('#incomingMessageModal')?.addEventListener('click', e => {
     if (e.target.id === 'incomingMessageModal') closeIncomingMessageAlert();
   });
-  $('#incomingMessageReply')?.addEventListener('click', () => {
+  $('#incomingMessageReply')?.addEventListener('click', async () => {
     const message = state.currentAlertMessage;
     if (!message) return;
+    if (message.id) {
+      try { await api(`/api/messages/${Number(message.id)}/read`, { method:'POST' }); } catch (_) {}
+    }
     closeIncomingMessageAlert();
+    await loadMessages({ scrollToNewest:false });
     openMessageComposer(message.from_call || '');
   });
 
   function updateUnread() {
-    const incoming = visibleMessages().filter(m => m.direction === 'in');
-    const latest = incoming.reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
-    const seen = Number(localStorage.getItem('pt2vhf_last_seen_msg') || 0);
-    const unread = incoming.filter(m => Number(m.id) > seen).length;
+    const unread = state.messages.filter(isUnreadPersonalMessage).length;
     const badge = $('#messageBadge');
+    if (!badge) return;
     badge.textContent = unread;
-    badge.classList.toggle('hidden', unread <= 0 || state.activeTab === 'messages');
-    if (state.activeTab === 'messages' && latest) {
-      localStorage.setItem('pt2vhf_last_seen_msg', String(latest));
-    }
+    badge.classList.toggle('hidden', unread <= 0);
   }
 
   function markMessagesSeen() {
-    const latest = state.messages.filter(m => m.direction === 'in').reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
-    if (latest) localStorage.setItem('pt2vhf_last_seen_msg', String(latest));
-    $('#messageBadge').classList.add('hidden');
+    updateUnread();
   }
 
   async function loadLog(forceScroll = false) {
@@ -1560,6 +1952,48 @@
     }
   });
 
+  async function loadFavorites() {
+    try {
+      const calls = await api('/api/favorites');
+      state.favoriteCallsigns = new Set((calls || []).map(normalizedCall).filter(Boolean));
+      if (state.stations.length) renderStations();
+      if (state.messages.length) renderMessages();
+      await loadMapData();
+    } catch (err) { console.warn(err); }
+  }
+
+  async function toggleFavorite(callsign) {
+    const call = normalizedCall(callsign);
+    if (!call) return;
+    const favorite = !isFavorite(call);
+    try {
+      await api(`/api/favorites/${encodeURIComponent(call)}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ favorite })
+      });
+      if (favorite) state.favoriteCallsigns.add(call);
+      else state.favoriteCallsigns.delete(call);
+      $$('[data-favorite-callsign]').filter(el => normalizedCall(el.dataset.favoriteCallsign) === call).forEach(el => {
+        el.classList.toggle('is-favorite', favorite);
+        el.textContent = favorite ? '★' : '☆';
+        el.setAttribute('aria-pressed', favorite ? 'true' : 'false');
+      });
+      state.stations = state.stations.map(s => normalizedCall(s.callsign) === call ? { ...s, favorite: favorite ? 1 : 0 } : s);
+      renderStations();
+      renderMessages();
+      await loadMapData();
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  document.addEventListener('click', event => {
+    const star = event.target.closest('.favorite-star');
+    if (!star) return;
+    event.preventDefault();
+    event.stopPropagation();
+    toggleFavorite(star.dataset.favoriteCallsign || '');
+  });
+
   async function loadStations(options = {}) {
     try {
       const viewport = $('.stations-table-wrap');
@@ -1578,10 +2012,12 @@
 
   function renderStations() {
     const spec = state.sort.stations;
-    const rows = sortedData(state.stations, spec);
+    const favoriteRows = state.stations.filter(s => isFavorite(s.callsign) || Number(s.favorite || 0) === 1);
+    const otherRows = state.stations.filter(s => !(isFavorite(s.callsign) || Number(s.favorite || 0) === 1));
+    const rows = [...sortedData(favoriteRows, spec), ...sortedData(otherRows, spec)];
     $('#stationsTable tbody').innerHTML = rows.map(s => `
-      <tr class="station-row" data-callsign="${escapeHtml(s.callsign)}" tabindex="0" title="Abrir esta estação no mapa">
-        <td>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.callsign)}</td>
+      <tr class="station-row${isFavorite(s.callsign) ? ' station-favorite' : ''}" data-callsign="${escapeHtml(s.callsign)}" tabindex="0" title="${escapeHtml(ui('Abrir esta estação no mapa', 'Open this station on the map'))}">
+        <td>${favoriteStarHtml(s.callsign)}${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.callsign)}</td>
         <td class="station-last-heard">${escapeHtml(fmtDate(s.last_heard))}</td>
         <td>${fmtNum(s.distance_km, 1, ' km')}</td>
         <td>${fmtNum(s.speed, 1, ' km/h')}</td>
@@ -1592,7 +2028,10 @@
 
     $$('#stationsTable tbody .station-row').forEach(row => {
       const open = () => focusStationOnMap(row.dataset.callsign);
-      row.addEventListener('click', open);
+      row.addEventListener('click', event => {
+        if (event.target.closest('.favorite-star')) return;
+        open();
+      });
       row.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -1764,6 +2203,8 @@
       const ssid = Number(cfg.ssid || 0);
       state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
       state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
+      state.soundOnStationActivity = !!cfg.sound_on_station_activity;
+      state.highlightStationActivity = !!cfg.highlight_station_activity;
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
       state.language = cfg.language === 'en' ? 'en' : 'pt-BR';
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
@@ -1791,6 +2232,8 @@
     data.connect_on_start = !!form.elements.connect_on_start?.checked;
     data.open_browser_on_start = !!form.elements.open_browser_on_start?.checked;
     data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
+    data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
+    data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
     data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
     data.auto_download_updates = !!form.elements.auto_download_updates?.checked;
     data.install_updates_on_exit = !!form.elements.install_updates_on_exit?.checked;
@@ -2403,7 +2846,46 @@
     'Conectar ao iniciar vem habilitado em novas instalações e pode ser desligado nesta seção.':'Connect at startup is enabled on new installations and can be disabled in this section.',
     'Quando houver atualização, clique no aviso para abrir o painel integrado, consultar as novidades e baixar o pacote compatível.':'When an update is available, click the notice to open the integrated panel, review changes and download the compatible package.',
     'É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.':'Updates can be checked and downloaded automatically and, on supported platforms, installed on exit. Windows Portable keeps a rollback backup.',
-    'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.'
+    'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.',
+    'Análise':'Analysis',
+    'Análise da rede':'Network analysis',
+    'Indicadores da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators with historical comparison and map replay.',
+    'Período':'Period',
+    '1 hora':'1 hour',
+    '6 horas':'6 hours',
+    '24 horas':'24 hours',
+    '7 dias':'7 days',
+    'Enlaces ativos':'Active links',
+    'Pacotes observados':'Observed packets',
+    'Eventos do período':'Period events',
+    'Mostrar log':'Show log',
+    'Completo':'Complete',
+    'Animação do tráfego APRS':'APRS traffic animation',
+    'Simula os pacotes percorrendo os enlaces observados entre estação, digipeaters e IGates.':'Simulates packets moving through observed links between stations, digipeaters and IGates.',
+    'Modo':'Mode',
+    'Histórico':'History',
+    'Ao vivo':'Live',
+    'Velocidade':'Speed',
+    'Início':'Start',
+    'reproduzidos':'played',
+    'pendentes':'pending',
+    'Horário:':'Time:',
+    'Velocidade:':'Speed:',
+    'Pausado':'Paused',
+    'Não lidas':'Unread',
+    'Tocar sinal sonoro quando uma estação transmitir':'Play a sound when a station transmits',
+    'Destacar em vermelho a estação que acabou de transmitir':'Highlight in red the station that just transmitted',
+    'Favorita':'Favorite',
+    'Adicionar aos favoritos':'Add to favorites',
+    'Remover dos favoritos':'Remove from favorites',
+    'Legenda':'Legend',
+    'Tracklog':'Tracklog',
+    'Enlace RF':'RF link',
+    'Via IGate/APRS-IS':'Via IGate/APRS-IS',
+    'Animação temporal':'Timeline replay',
+    'Pacote em movimento':'Moving packet',
+    'Nenhuma mensagem não lida.':'No unread messages.',
+    'Caminho incompleto: há nós sem posição conhecida.':'Incomplete path: some nodes have no known position.'
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
   function translateConnectionState(value) {
@@ -3009,13 +3491,17 @@
     } catch (err) { toast(err.message, 'error'); }
   });
 
-  $('#refreshTopologyStatsButton')?.addEventListener('click', async () => {
+  async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
     if (!box) return;
+    const periodSelect = $('#analysisPeriod');
+    if (periodSelect) periodSelect.value = String(topologyPeriodValue(state.topologyHours));
     box.textContent = ui('Carregando análise…', 'Loading analysis…');
     try {
-      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(state.topologyHours || 24)}`);
-      const list = (items, formatter) => items.length ? '<ol>' + items.map(formatter).join('') + '</ol>' : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
+      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}`);
+      const list = (items, formatter) => items.length
+        ? '<ol>' + items.map(formatter).join('') + '</ol>'
+        : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
       box.innerHTML =
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
         list(data.digipeaters || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
@@ -3023,23 +3509,49 @@
         list(data.igates || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
         '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
         list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>' +
-        '<div class="topology-stat-group"><h4>' + ui('Comparação com período anterior', 'Comparison with previous period') + '</h4>' +
+        '<div class="topology-stat-group"><h4>' + ui(data.complete ? 'Histórico completo' : 'Comparação com período anterior', data.complete ? 'Complete history' : 'Comparison with previous period') + '</h4>' +
         '<div class="hint">' +
-        ui(
-          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
-          `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
-        ) + '</div></div>';
-    } catch (err) { box.textContent = err.message; }
+        (data.complete
+          ? ui(
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos armazenados no histórico disponível.`,
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events stored in the available history.`
+            )
+          : ui(
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
+              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
+            )) + '</div></div>';
+
+      if ($('#analysisMetricPeriod')) $('#analysisMetricPeriod').textContent = topologyPeriodLabel();
+      if ($('#analysisMetricEdges')) $('#analysisMetricEdges').textContent = Number(data.edges || 0).toLocaleString(currentLocale());
+      if ($('#analysisMetricPackets')) $('#analysisMetricPackets').textContent = Number(data.packets || 0).toLocaleString(currentLocale());
+      if ($('#analysisMetricEvents')) $('#analysisMetricEvents').textContent = Number(data.comparison?.current_events || 0).toLocaleString(currentLocale());
+    } catch (err) {
+      box.textContent = err.message;
+    }
+  }
+
+  $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
+  $('#analysisPeriod')?.addEventListener('change', async event => {
+    state.topologyHours = topologyPeriodValue(event.target.value);
+    localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
+    const mapPeriod = $('#topologyHours');
+    if (mapPeriod) mapPeriod.value = String(state.topologyHours);
+    if (state.topologyEnabled) await loadTopology();
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    if (state.trafficMode === 'history') {
+      try { await loadTrafficHistory(true); } catch (_) {}
+    }
+    updateTrafficAnimationUi();
+    await refreshTopologyAnalysis();
   });
 
   $('#animateTopologyButton')?.addEventListener('click', async () => {
-    if (state.configDirty) {
-      toast(ui('Salve ou descarte as alterações da Configuração antes de abrir a animação.', 'Save or discard Settings changes before opening the animation.'), 'error');
-      return;
-    }
     if (!state.map) return;
     try {
-      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(state.topologyHours || 24)}&limit=2500`);
+      state.timelineReplayActive = true;
+      updateMapLegend();
+      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}&limit=5000`);
       if (!events.length) {
         toast(ui('Não há eventos de topologia com posição para animar.', 'There are no positioned topology events to animate.'), 'error');
         return;
@@ -3060,10 +3572,10 @@
           if (!points.flat().every(Number.isFinite)) continue;
           const key = `timeline:${index}:${edge.source}>${edge.target}`;
           const line = L.polyline(points, {
-            color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-            weight: state.mapConfig.topology_width,
-            opacity: .64,
-            dashArray: edge.kind === 'igate' ? '7 5' : null
+            color: '#ffd54a',
+            weight: Math.max(2, state.mapConfig.topology_width + 1),
+            opacity: .78,
+            dashArray: '5 4'
           }).addTo(state.map);
           line.bindPopup(`${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}<br>${escapeHtml(fmtDate(edge.timestamp))}`);
           state.topologyLines.set(key, line);
@@ -3071,10 +3583,93 @@
         index += step;
         if (index >= events.length) {
           clearInterval(timer);
-          setTimeout(() => loadTopology(), 700);
+          setTimeout(() => {
+            state.timelineReplayActive = false;
+            updateMapLegend();
+            loadTopology();
+          }, 700);
         }
       }, 80);
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) {
+      state.timelineReplayActive = false;
+      updateMapLegend();
+      toast(err.message, 'error');
+    }
+  });
+
+  $('#trafficMode')?.addEventListener('change', async event => {
+    state.trafficMode = event.target.value === 'live' ? 'live' : 'history';
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    clearTrafficReplayLayers();
+    if (state.trafficMode === 'history') {
+      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); }
+    } else {
+      state.trafficEvents = [];
+      state.trafficIndex = 0;
+    }
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficSpeed')?.addEventListener('change', event => {
+    state.trafficSpeed = Math.max(.5, Number(event.target.value || 1));
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficPlayPauseButton')?.addEventListener('click', async () => {
+    state.trafficPlaying = !state.trafficPlaying;
+    updateTrafficAnimationUi();
+    if (!state.trafficPlaying) {
+      stopTrafficTimer();
+      return;
+    }
+    activateTab('map');
+    if (state.trafficMode === 'history') await playNextTrafficEvent();
+  });
+
+  $('#trafficResetButton')?.addEventListener('click', async () => {
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.trafficIndex = 0;
+    clearTrafficReplayLayers();
+    if (state.trafficMode === 'history') {
+      try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); }
+    }
+    if ($('#trafficCurrentTime')) $('#trafficCurrentTime').textContent = '—';
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficBackButton')?.addEventListener('click', async () => {
+    if (state.trafficMode !== 'history') {
+      toast(ui('Voltar está disponível no modo Histórico.', 'Back is available in History mode.'), 'error');
+      return;
+    }
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    if (!state.trafficEvents.length) await loadTrafficHistory(true);
+    state.trafficIndex = Math.max(0, state.trafficIndex - 1);
+    const index = Math.max(0, state.trafficIndex - 1);
+    const event = state.trafficEvents[index];
+    activateTab('map');
+    if (event) await animateTrafficEvent(event);
+    updateTrafficAnimationUi();
+  });
+
+  $('#trafficForwardButton')?.addEventListener('click', async () => {
+    if (state.trafficMode !== 'history') {
+      toast(ui('Avançar está disponível no modo Histórico.', 'Forward is available in History mode.'), 'error');
+      return;
+    }
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    if (!state.trafficEvents.length) await loadTrafficHistory(true);
+    const event = state.trafficEvents[state.trafficIndex];
+    if (event) {
+      state.trafficIndex += 1;
+      activateTab('map');
+      await animateTrafficEvent(event);
+    }
+    updateTrafficAnimationUi();
   });
 
   $('#resetConfigButton')?.addEventListener('click', async () => {
@@ -3093,11 +3688,20 @@
   tabSetup();
 
   async function boot() {
+    document.addEventListener('pointerdown', () => {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass && !state.activityAudioContext) state.activityAudioContext = new AudioContextClass();
+        state.activityAudioContext?.resume?.().catch(() => {});
+      } catch (_) {}
+    }, { once:true });
     const startup = await Promise.allSettled([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
     updateMyMessagesButton();
-    await Promise.allSettled([loadMessages(), checkIncomingPersonalMessages()]);
+    updateUnreadMessagesButton();
+    updateTrafficAnimationUi();
+    await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages(), pollTrafficEvents()]);
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
     await refreshPendingUpdateStatus();
@@ -3107,9 +3711,10 @@
 
     setInterval(refreshStatus, 2000);
     setInterval(loadMapData, 5000);
+    setInterval(pollTrafficEvents, 2000);
     setInterval(loadMessages, 3000);
     setInterval(checkIncomingPersonalMessages, 3000);
-    setInterval(() => { if (state.currentConfig?.check_updates_on_start) refreshVersionStatus(false); }, 30 * 60 * 1000);
+    setInterval(() => { if (state.currentConfig?.check_updates_on_start) refreshVersionStatus(false); }, 5 * 60 * 1000);
     setInterval(() => { if (state.activeTab === 'stations') loadStations(); }, 5000);
     setInterval(() => { if (state.activeTab === 'log') loadLog(false); }, 1000);
   }

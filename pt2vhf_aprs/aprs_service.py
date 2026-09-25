@@ -569,46 +569,36 @@ def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group:
 
 
 def split_aprs_message_parts(text: str, single_limit: int = 63) -> list[str]:
-    """Divide texto longo em mensagens APRS normais, numeradas e compatíveis."""
+    """Divide mensagens APRS sem rótulos visíveis, preferindo limites entre palavras."""
     clean = " ".join(str(text or "").replace("\r", " ").replace("\n", " ").split())
     if not clean:
         raise ValueError("Mensagem vazia.")
     if len(clean) <= single_limit:
         return [clean]
 
-    # Reserva 8 caracteres para marcadores até [99/99] + espaço.
-    content_limit = single_limit - 8
-    words = clean.split(" ")
     chunks: list[str] = []
-    current = ""
+    remaining = clean
+    while remaining:
+        if len(remaining) <= single_limit:
+            chunks.append(remaining)
+            break
 
-    for word in words:
-        if len(word) > content_limit:
-            if current:
-                chunks.append(current)
-                current = ""
-            while len(word) > content_limit:
-                chunks.append(word[:content_limit])
-                word = word[content_limit:]
-            if word:
-                current = word
-            continue
+        window = remaining[: single_limit + 1]
+        cut = max(window.rfind(" ", 0, single_limit + 1), window.rfind("\n", 0, single_limit + 1))
+        if cut <= 0:
+            # Último recurso: uma palavra individual ultrapassa o limite APRS.
+            cut = single_limit
 
-        candidate = word if not current else f"{current} {word}"
-        if len(candidate) <= content_limit:
-            current = candidate
-        else:
-            chunks.append(current)
-            current = word
+        chunk = remaining[:cut].rstrip()
+        if not chunk:
+            chunk = remaining[:single_limit]
+            cut = single_limit
+        chunks.append(chunk)
+        remaining = remaining[cut:].lstrip()
 
-    if current:
-        chunks.append(current)
-
-    total = len(chunks)
-    if total > 99:
+    if len(chunks) > 99:
         raise ValueError("Mensagem muito longa; limite de 99 partes APRS.")
-
-    return [f"[{i}/{total}] {chunk}" for i, chunk in enumerate(chunks, start=1)]
+    return chunks
 
 
 def calculate_aprs_passcode(callsign: str) -> int:
