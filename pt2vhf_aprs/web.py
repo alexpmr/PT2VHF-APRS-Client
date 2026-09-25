@@ -273,7 +273,9 @@ def create_app() -> Flask:
         try:
             hours = int(request.args.get("hours", 0))
             bins = int(request.args.get("bins", 120))
-            return jsonify(db.packet_traffic_overview(hours=hours, bins=bins))
+            start = str(request.args.get("start") or "").strip() or None
+            end = str(request.args.get("end") or "").strip() or None
+            return jsonify(db.packet_traffic_overview(hours=hours, bins=bins, start=start, end=end))
         except Exception as exc:
             return jsonify({"first_timestamp": None, "last_timestamp": None, "total": 0, "bins": [], "error": str(exc)}), 400
 
