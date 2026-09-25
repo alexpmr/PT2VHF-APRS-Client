@@ -58,3 +58,19 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - O backend deve suportar busca eficiente por intervalo de tempo e paginação/índice temporal para manter o replay fluido mesmo após meses de histórico.
 - A timeline deve permanecer sincronizada com a animação, avançando conforme os eventos são reproduzidos.
 - A estrutura deve reutilizar a base já existente de **animação Histórico/Ao vivo**, transformando-a em uma experiência de “DVR da rede”.
+
+
+## Som e animação de atividade somente para estações visíveis no mapa
+
+**Objetivo:** limitar os avisos de atividade ao contexto visual atual do usuário, evitando som ou destaque de estações fora da área exibida no zoom corrente.
+
+- O **sinal sonoro de atividade** e a **animação/destaque vermelho do marcador** devem ocorrer somente para estações que estejam **dentro da área atualmente visível do mapa**.
+- Antes de tocar o som ou animar o marcador, verificar se a posição conhecida da estação está contida nos limites atuais do mapa (`map.getBounds()` ou equivalente).
+- Se a estação estiver fora da área visível, **não tocar som** e **não executar a animação visual**.
+- A regra deve considerar o **zoom e o enquadramento atuais** do mapa; ao mover ou alterar o zoom, o conjunto de estações elegíveis muda imediatamente.
+- Não usar distância fixa, estado, cidade ou raio geográfico como critério principal: a referência deve ser exatamente o que está aparecendo na tela naquele momento.
+- Se a estação não tiver coordenadas válidas, não gerar som nem animação de atividade.
+- Aplicar a mesma regra tanto no modo normal quanto durante o modo **Ao vivo** da animação de tráfego.
+- No **Replay da Rede/Histórico**, por padrão animar somente eventos cujo trecho ou estação esteja visível no mapa, evitando efeitos de atividade fora do enquadramento atual.
+- Se um pacote tiver origem fora da tela, mas algum trecho do seu caminho estiver visível, permitir animar apenas os segmentos visíveis, sem provocar som da estação de origem fora da tela.
+- O objetivo é evitar, por exemplo, que o cliente toque aviso de uma estação em outro estado ou região que esteja sendo recebida pelo APRS-IS, mas não esteja visível no zoom atual.
