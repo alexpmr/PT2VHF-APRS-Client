@@ -82,8 +82,10 @@
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
   - Na versão **Portable**, após alguns minutos aberta, a interface aparenta continuar visível, mas as operações que dependem do backend deixam de responder.
   - **Reprodutibilidade confirmada:** ao fechar e abrir novamente, a aplicação volta a funcionar normalmente por algum tempo e depois trava de novo.
+  - **Confirmação pelo navegador:** quando ocorre o travamento, abrir a interface pelo navegador ou tentar atualizar/recarregar a página também não responde. Isso indica indisponibilidade do **servidor HTTP local/backend**, e não apenas travamento do WebView ou da janela portátil.
   - Sintomas observados: **não conecta ao APRS-IS**, **não verifica nova versão**, **não salva Configurações** e outras chamadas da interface ficam sem conclusão.
   - O padrão temporal sugere acúmulo progressivo de requests/threads/conexões, lock persistente, polling sobreposto ou recurso não liberado, e não apenas erro pontual de uma tela.
+  - Priorizar investigação de **esgotamento das 8 threads do Waitress** por requests bloqueados e de contenção SQLite. O uso atual de `PRAGMA journal_mode=WAL` a cada nova conexão deve ser removido do caminho normal das requisições e executado somente na inicialização/migração do banco.
   - Investigar travamento/indisponibilidade do servidor HTTP local, esgotamento ou bloqueio das threads do Waitress, chamadas `fetch` sem timeout, pollings concorrentes, contenção/lock do SQLite e interação com o WebView.
   - Instrumentar watchdog/health-check interno do backend e registrar último request iniciado/concluído, threads ativas, fila de requests, conexões SQLite abertas/tempo de espera e exceções não tratadas.
   - Evitar que uma operação lenta bloqueie as demais rotas da aplicação.
