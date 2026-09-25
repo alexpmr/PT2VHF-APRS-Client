@@ -10,7 +10,15 @@
 - O popup das estações no mapa passa a oferecer **Mostrar log** ao lado de **Enviar mensagem**; a ação abre a aba Log com o indicativo completo da estação aplicado ao filtro.
 - Removido o bloco introdutório **Página única de configuração**, fazendo a tela começar diretamente pela primeira seção.
 - Mantidas as correções da v1.6 para popup **Ler mensagem**, layout vertical de Latitude/Longitude/Altitude, filtros brasileiros, mensagens agrupadas, retry, Log ordenável e atualizador integrado.
-- README, manual e guia Linux atualizados para a série v1.6.1.
+- O período **Completo** passa a ser o padrão da Topologia observada, mantendo as janelas de 1 h, 6 h, 24 h e 7 dias.
+- Adicionada legenda dinâmica no Mapa para tracklog, enlace RF, IGate/APRS-IS, replay temporal e pacotes em movimento.
+- Adicionada animação de tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, controle de velocidade, timestamp e contadores.
+- Pacotes com múltiplos enlaces observados podem animar os vários segmentos simultaneamente.
+- Adicionado aviso de atividade: som curto e pulso vermelho no marcador da estação transmissora, com controles independentes em Configuração.
+- Estações favoritas passam a usar **estrela amarela**, persistem no banco, ficam fixadas no topo da lista de Estações e são priorizadas nas conversas/sugestões de mensagem.
+- Adicionado botão **Não lidas** em Mensagens, com estado lida/não lida persistido e suporte à visualização agrupada.
+- A consulta automática por novas versões passa a ocorrer a cada **5 minutos**, com proteção contra verificações sobrepostas e cache alinhado à mesma cadência.
+- README, manual, ajuda interna e guia Linux atualizados para a série v1.6.1.
 
 ## v1.6 - 2026-09-24
 
