@@ -67,6 +67,18 @@
             <span id="trafficTimelineEnd">—</span>
           </div>
         </div>
+        <div class="traffic-replay-range">
+          <label class="field compact">
+            <span>De</span>
+            <input id="trafficRangeStart" type="datetime-local" step="1">
+          </label>
+          <label class="field compact">
+            <span>Até</span>
+            <input id="trafficRangeEnd" type="datetime-local" step="1">
+          </label>
+          <button id="trafficApplyRangeButton" type="button" class="btn secondary">Aplicar intervalo</button>
+          <button id="trafficClearRangeButton" type="button" class="btn secondary">Usar período da Análise</button>
+        </div>
         <div class="traffic-animation-controls">
           <label class="field compact">
             <span>Modo</span>
