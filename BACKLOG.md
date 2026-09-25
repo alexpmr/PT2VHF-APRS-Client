@@ -168,3 +168,24 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Atualizar imediatamente a listagem para mostrar os registros relacionados à estação.
 - Dar foco visual ao campo de filtro para deixar claro qual estação está sendo analisada.
 - Esta demanda substitui a nomenclatura anterior **Mostrar log**; manter apenas **Ver logs** na interface.
+
+
+## Corrigir verificação de nova versão que fica presa em “Verificando”
+
+**Objetivo:** tornar a checagem de versão confiável e impedir que a interface fique indefinidamente tentando consultar a Release mais recente.
+
+- Corrigir o caso em que o indicador de versão fica preso em **Verificando versão...** e não atualiza o resultado.
+- Garantir que toda tentativa de consulta termine sempre em um estado final:
+  - **Última versão**;
+  - **Nova versão disponível**;
+  - **Falha temporária na verificação**.
+- Implementar **timeout explícito** para a consulta da Release e cancelar/encerrar corretamente a tentativa quando o limite for atingido.
+- Garantir que a flag interna de verificação em andamento seja sempre liberada em sucesso, erro, timeout ou exceção.
+- Impedir que uma tentativa travada bloqueie todas as verificações seguintes.
+- Se uma consulta anterior exceder o tempo máximo, permitir que o próximo ciclo periódico tente novamente normalmente.
+- Evitar requisições simultâneas ou sobrepostas, mas sem deixar o cliente permanentemente preso no estado de bloqueio.
+- Exibir uma mensagem discreta como **Não foi possível verificar agora; nova tentativa será feita automaticamente** quando houver falha temporária.
+- Manter a versão atualmente instalada visível mesmo quando a consulta externa falhar.
+- Registrar no Log/console técnico a causa da falha da consulta para facilitar diagnóstico, sem exibir detalhes excessivamente técnicos ao usuário comum.
+- Revisar também o cache da verificação para evitar que uma resposta incompleta/erro fique sendo reutilizada como se fosse uma consulta válida.
+- Como o auto-update será removido na próxima versão, esta rotina deve ficar responsável somente por **detectar e informar** que existe uma nova versão.
