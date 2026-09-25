@@ -3696,78 +3696,44 @@
     await refreshTopologyAnalysis();
   });
 
-  $('#animateTopologyButton')?.addEventListener('click', async () => {
-    if (!state.map) return;
-    try {
-      state.timelineReplayActive = true;
-      updateMapLegend();
-      const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}&limit=5000`);
-      if (!events.length) {
-        toast(ui('Não há eventos de topologia com posição para animar.', 'There are no positioned topology events to animate.'), 'error');
-        return;
-      }
-      activateTab('map');
-      clearTopologyLines();
-      state.topologyEnabled = true;
-      localStorage.setItem('pt2vhf_topology_enabled', '1');
-      const step = Math.max(1, Math.ceil(events.length / 180));
-      let index = 0;
-      const timer = setInterval(() => {
-        const slice = events.slice(index, index + step);
-        for (const edge of slice) {
-          const points = [
-            [Number(edge.source_lat), Number(edge.source_lon)],
-            [Number(edge.target_lat), Number(edge.target_lon)]
-          ];
-          if (!points.flat().every(Number.isFinite)) continue;
-          const key = `timeline:${index}:${edge.source}>${edge.target}`;
-          const line = L.polyline(points, {
-            color: '#ffd54a',
-            weight: Math.max(2, state.mapConfig.topology_width + 1),
-            opacity: .78,
-            dashArray: '5 4'
-          }).addTo(state.map);
-          line.bindPopup(`${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}<br>${escapeHtml(fmtDate(edge.timestamp))}`);
-          state.topologyLines.set(key, line);
-        }
-        index += step;
-        if (index >= events.length) {
-          clearInterval(timer);
-          setTimeout(() => {
-            state.timelineReplayActive = false;
-            updateMapLegend();
-            loadTopology();
-          }, 700);
-        }
-      }, 80);
-    } catch (err) {
-      state.timelineReplayActive = false;
-      updateMapLegend();
-      toast(err.message, 'error');
-    }
-  });
-
   $('#trafficMode')?.addEventListener('change', async event => {
     state.trafficMode = event.target.value === 'live' ? 'live' : 'history';
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = false;
     clearTrafficReplayLayers();
     if (state.trafficMode === 'history') {
       try { await loadTrafficHistory(true); } catch (err) { toast(err.message, 'error'); }
     } else {
       state.trafficEvents = [];
       state.trafficIndex = 0;
+      const overview = state.trafficOverview || await loadTrafficOverview().catch(() => null);
+      if (overview?.last_timestamp) syncTrafficTimeline(overview.last_timestamp);
     }
     updateTrafficAnimationUi();
   });
 
   $('#trafficSpeed')?.addEventListener('change', event => {
-    state.trafficSpeed = Math.max(.5, Number(event.target.value || 1));
+    state.trafficSpeed = Math.max(.25, Number(event.target.value || 1));
     updateTrafficAnimationUi();
+  });
+
+  $('#trafficTimeline')?.addEventListener('input', event => {
+    state.replaySeeking = true;
+    const target = trafficTimelineTimestamp(event.target.value);
+    if (target && $('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(target);
+  });
+  $('#trafficTimeline')?.addEventListener('change', async event => {
+    if (state.trafficMode !== 'history') {
+      state.trafficMode = 'history';
+      if ($('#trafficMode')) $('#trafficMode').value = 'history';
+    }
+    await seekTrafficTimeline(event.target.value);
   });
 
   $('#trafficPlayPauseButton')?.addEventListener('click', async () => {
     state.trafficPlaying = !state.trafficPlaying;
+    state.timelineReplayActive = state.trafficPlaying && state.trafficMode === 'history';
     updateTrafficAnimationUi();
     if (!state.trafficPlaying) {
       stopTrafficTimer();
@@ -3777,9 +3743,28 @@
     if (state.trafficMode === 'history') await playNextTrafficEvent();
   });
 
+  $('#trafficLiveButton')?.addEventListener('click', async () => {
+    stopTrafficTimer();
+    clearTrafficReplayLayers();
+    state.trafficMode = 'live';
+    state.trafficPlaying = true;
+    state.timelineReplayActive = false;
+    state.trafficEvents = [];
+    state.trafficIndex = 0;
+    if ($('#trafficMode')) $('#trafficMode').value = 'live';
+    try {
+      const overview = await loadTrafficOverview();
+      if (overview?.last_timestamp) syncTrafficTimeline(overview.last_timestamp);
+      const baseline = await api('/api/traffic/events?bootstrap=1');
+      state.lastTrafficPacketId = Number(baseline.last_id || state.lastTrafficPacketId || 0);
+    } catch (_) {}
+    updateTrafficAnimationUi();
+  });
+
   $('#trafficResetButton')?.addEventListener('click', async () => {
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = false;
     state.trafficIndex = 0;
     clearTrafficReplayLayers();
     if (state.trafficMode === 'history') {
@@ -3796,11 +3781,13 @@
     }
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = true;
     if (!state.trafficEvents.length) await loadTrafficHistory(true);
     state.trafficIndex = Math.max(0, state.trafficIndex - 1);
     const index = Math.max(0, state.trafficIndex - 1);
     const event = state.trafficEvents[index];
     activateTab('map');
+    clearTrafficReplayLayers();
     if (event) await animateTrafficEvent(event);
     updateTrafficAnimationUi();
   });
@@ -3812,11 +3799,16 @@
     }
     stopTrafficTimer();
     state.trafficPlaying = false;
+    state.timelineReplayActive = true;
     if (!state.trafficEvents.length) await loadTrafficHistory(true);
+    if (state.trafficIndex >= state.trafficEvents.length && state.trafficHasMore) {
+      try { await appendNextTrafficChunk(); } catch (_) {}
+    }
     const event = state.trafficEvents[state.trafficIndex];
     if (event) {
       state.trafficIndex += 1;
       activateTab('map');
+      clearTrafficReplayLayers();
       await animateTrafficEvent(event);
     }
     updateTrafficAnimationUi();
