@@ -18,7 +18,20 @@
     trackLines: new Map(),
     topologyLines: new Map(),
     topologyEnabled: false,
-    topologyHours: 24,
+    topologyHours: 0,
+    mapLegendElement: null,
+    trafficReplayLayers: new Set(),
+    trafficEvents: [],
+    trafficIndex: 0,
+    trafficPlaying: false,
+    trafficMode: 'history',
+    trafficSpeed: 1,
+    trafficTimer: null,
+    lastTrafficPacketId: 0,
+    trafficPollBusy: false,
+    lastActivitySoundAt: 0,
+    activityAudioContext: null,
+    favoriteCallsigns: new Set(),
     userLocationMarker: null,
     userLocationAccuracy: null,
     messages: [],
@@ -54,6 +67,7 @@
     pendingTab: '',
     updateInfo: null,
     updateDownloading: false,
+    versionCheckInProgress: false,
   };
 
   const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
@@ -97,6 +111,7 @@
   }
 
   async function refreshVersionStatus(force = false) {
+    if (state.versionCheckInProgress) return;
     const el = $('#versionStatus');
     const textEl = $('#versionStatusText');
     if (!el || !textEl) return;
@@ -107,6 +122,7 @@
       return;
     }
 
+    state.versionCheckInProgress = true;
     el.classList.remove('latest', 'update', 'error', 'ahead');
     el.classList.add('checking');
     textEl.textContent = ui('Verificando versão…', 'Checking version…');
@@ -145,6 +161,8 @@
       el.classList.add('error');
       textEl.textContent = ui('Versão não verificada', 'Version not verified');
       el.title = ui('Não foi possível consultar a release mais recente no GitHub.', 'Could not check the latest GitHub release.');
+    } finally {
+      state.versionCheckInProgress = false;
     }
   }
 
