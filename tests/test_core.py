@@ -244,6 +244,8 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["topology_igate_color"] == "#b06cff"
             assert cfg["topology_width"] == 2
             assert cfg["message_popup_seconds"] == 5
+            assert cfg["sound_on_station_activity"] == 1
+            assert cfg["highlight_station_activity"] == 1
             assert cfg["connect_on_start"] == 1
             assert cfg["open_browser_on_start"] == 0
             assert cfg["check_updates_on_start"] == 1
@@ -434,8 +436,16 @@ def test_v161_analysis_tab_and_ota_defaults_in_ui():
     assert "Página única de configuração" not in html
     assert 'name="auto_download_updates" type="checkbox" checked' in html
     assert 'name="install_updates_on_exit" type="checkbox" checked' in html
+    assert 'id="unreadMessagesButton"' in html
+    assert '<option value="0" selected>Completo</option>' in html
+    assert 'id="trafficPlayPauseButton"' in html
+    assert 'name="sound_on_station_activity" type="checkbox" checked' in html
+    assert 'name="highlight_station_activity" type="checkbox" checked' in html
     assert "station-log-button" in js
+    assert "favorite-star" in js
+    assert "map-line-legend" in js
     assert "analysisPeriod" in js
+    assert "5 * 60 * 1000" in js
 
 
 def test_frontend_collection_selectors_use_query_selector_all():
@@ -512,6 +522,89 @@ def test_topology_timeline_and_period_comparison():
             assert comparison["current_events"] >= 1
     finally:
         db.DB_PATH = original
+
+
+def test_complete_topology_favorites_and_packet_traffic():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            for call, lat, lon in [
+                ("PY2ABC-9", -15.81, -47.91),
+                ("PT2DGI", -15.82, -47.92),
+                ("PT2IGT", -15.83, -47.93),
+            ]:
+                db.upsert_station({
+                    "from": call, "format": "uncompressed", "latitude": lat, "longitude": lon,
+                    "speed": 0, "course": 0, "altitude": 1000,
+                    "symbol_table": "/", "symbol": ">", "comment": "Teste", "path": [], "raw": "x",
+                })
+
+            raw = "PY2ABC-9>APRS,PT2DGI*,WIDE2-1,qAR,PT2IGT:>teste"
+            db.record_packet(raw, "PY2ABC-9", "status")
+            db.record_topology_from_raw(raw)
+
+            complete = db.list_topology_edges(0)
+            assert {("PY2ABC-9", "PT2DGI", "rf"), ("PT2DGI", "PT2IGT", "igate")} <= {
+                (e["source"], e["target"], e["kind"]) for e in complete
+            }
+            stats = db.topology_stats(0)
+            assert stats["complete"] is True
+            assert stats["edges"] >= 2
+            assert db.topology_timeline(0)
+            assert db.topology_period_comparison(0)["complete"] is True
+
+            traffic = db.packet_traffic_events(hours=0, limit=20)
+            assert traffic["events"]
+            event = traffic["events"][-1]
+            assert event["source"] == "PY2ABC-9"
+            assert len(event["segments"]) >= 2
+
+            assert db.set_favorite("PY2ABC-9", True) is True
+            assert "PY2ABC-9" in db.list_favorites()
+            station = next(s for s in db.list_stations() if s["callsign"] == "PY2ABC-9")
+            assert station["favorite"] == 1
+            db.clear_stations()
+            assert "PY2ABC-9" in db.list_favorites()
+            assert db.set_favorite("PY2ABC-9", False) is False
+            assert "PY2ABC-9" not in db.list_favorites()
+    finally:
+        db.DB_PATH = original
+
+
+def test_incoming_message_read_state():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            row_id = db.add_message(
+                "in", "PY2ABC", "PT2VHF", "Mensagem nova",
+                msg_id="321", status="Recebida", message_type="message",
+            )
+            row = db.get_message(row_id)
+            assert row["read_at"] is None
+            assert db.mark_message_read(row_id) == 1
+            assert db.get_message(row_id)["read_at"]
+
+            second = db.add_message(
+                "in", "PY2ABC", "PT2VHF", "Outra",
+                msg_id="322", status="Recebida", message_type="message",
+            )
+            assert db.get_message(second)["read_at"] is None
+            assert db.mark_conversation_read("PY2ABC", "PT2VHF") >= 1
+            assert db.get_message(second)["read_at"]
+    finally:
+        db.DB_PATH = original
+
+
+def test_update_check_cache_is_five_minutes():
+    root = Path(__file__).resolve().parent.parent
+    web_source = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+    js_source = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    assert "UPDATE_CACHE_SECONDS = 5 * 60" in web_source
+    assert "5 * 60 * 1000" in js_source
 
 
 def test_updater_asset_name_contains_version():
