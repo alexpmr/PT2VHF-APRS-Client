@@ -80,6 +80,7 @@
 ## Pendências para próximas versões
 
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
+  - **Teste v1.6.12 diagnóstico:** instrumentação adicionada para registrar requests ativos, duração/endpoint/thread, operações SQLite lentas, health-check interno e dump automático de threads quando o servidor local parar de responder. O log fica em `diagnostics.log` na pasta de dados.
   - **Teste v1.6.11:** preparada correção experimental para reduzir contenção SQLite, impedir pollings sobrepostos, limitar chamadas HTTP a 10 s e gravar mensagens multipartes em uma única transação. Manter este item aberto até validação em uso real.
   - **Resultado do teste v1.6.11:** ocorreu a mensagem **“O backend local não respondeu em 10 segundos.”**. Portanto, o timeout do frontend funcionou, mas a causa raiz permanece: o servidor HTTP local fica indisponível por mais de 10 s.
   - **Configuração também afetada na v1.6.11:** o botão **Salvar configuração** não conclui a gravação quando o backend entra nesse estado. Isso confirma que a falha não está restrita a Mensagens; a rota `POST /api/config` também fica sem atendimento.

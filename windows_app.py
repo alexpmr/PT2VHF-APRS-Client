@@ -15,7 +15,9 @@ import pystray
 from pystray import MenuItem as Item
 from waitress import serve
 
+from pt2vhf_aprs import __version__
 from pt2vhf_aprs import database as db
+from pt2vhf_aprs import diagnostics as diag
 from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.web import create_app
 
@@ -145,6 +147,8 @@ def _show_native_window(*_args) -> None:
 
 def _shutdown_components(icon: pystray.Icon | None = None) -> None:
     """Encerra os componentes de fundo antes de finalizar o processo."""
+    diag.log_event("app_shutdown_requested")
+    diag.stop_watchdog()
     try:
         service.shutdown()
     except Exception:
@@ -313,6 +317,8 @@ def main() -> int:
             _open_browser()
         return 0
 
+    diag.configure(db.DB_PATH.parent)
+    diag.log_event("app_start", version=__version__, portable=True)
     db.init_db()
     app = create_app()
     service.start_if_configured()
@@ -325,6 +331,7 @@ def main() -> int:
     server_thread.start()
 
     if not _wait_for_server():
+        diag.dump_threads("local_server_start_timeout")
         if os.name == "nt":
             try:
                 ctypes.windll.user32.MessageBoxW(
@@ -336,6 +343,8 @@ def main() -> int:
             except Exception:
                 pass
         return 2
+
+    diag.start_watchdog(URL)
 
     if not _browser_mode:
         try:

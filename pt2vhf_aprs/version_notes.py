@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.12": {
+        "title": "Portable de diagnóstico do travamento",
+        "items": [
+            "Instrumenta cada request do backend local com endpoint, thread, duração e quantidade de requests ativos.",
+            "Watchdog interno testa o servidor local e gera dump de todas as threads após falhas consecutivas ou saturação.",
+            "Operações SQLite acima de 750 ms e erros de banco passam a ser registrados no diagnóstico.",
+            "O log persistente fica na pasta de dados como diagnostics.log e pode ser baixado por /api/diagnostics/log.",
+            "A mensagem de timeout informa qual endpoint deixou de responder.",
+            "Release de diagnóstico somente Windows x64 Portable, sem instalador e sem documentação.",
+        ],
+    },
     "1.6.11": {
         "title": "Teste de estabilidade do Portable",
         "items": [

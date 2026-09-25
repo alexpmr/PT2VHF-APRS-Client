@@ -6,10 +6,13 @@ import os
 import re
 import sqlite3
 import sys
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Iterable
+
+from . import diagnostics as diag
 
 def _default_data_dir() -> Path:
     override = os.getenv("PT2VHF_DATA_DIR")
@@ -104,15 +107,25 @@ def _configure_database_runtime() -> None:
 @contextmanager
 def connection():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, timeout=5, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("PRAGMA busy_timeout=5000")
+    started = time.monotonic()
+    conn = None
+    error_text = None
     try:
+        conn = sqlite3.connect(DB_PATH, timeout=5, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.execute("PRAGMA busy_timeout=5000")
         yield conn
         conn.commit()
+    except Exception as exc:
+        error_text = f"{type(exc).__name__}: {exc}"
+        raise
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
+        duration_ms = (time.monotonic() - started) * 1000
+        if duration_ms >= 750 or error_text:
+            diag.log_sqlite_slow(duration_ms, error=error_text)
 
 
 def init_db() -> None:

@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.12 - 2026-09-25
+
+- Release de diagnóstico somente **Windows x64 Portable**, sem instalador e sem manual.
+- Adicionado rastreamento de requests do servidor HTTP local com endpoint, thread, duração e quantidade de requests simultâneos.
+- Adicionado watchdog interno que consulta o backend e gera **thread dump** quando houver falhas consecutivas, request acima de 8 s ou saturação das threads do Waitress.
+- Operações SQLite lentas (>= 750 ms) e erros de banco passam a ser registradas no arquivo de diagnóstico.
+- O arquivo persistente `diagnostics.log` fica na pasta de dados e também pode ser obtido por `/api/diagnostics/log`.
+- O aviso de timeout passa a mostrar o endpoint que deixou de responder.
+
+
 ## v1.6.10 - 2026-09-25
 
 - Release completa multiplataforma com **Windows x64 Setup + Portable**, **Linux x86_64 TAR.GZ + AppImage + DEB**, **macOS ARM64 + Intel DMG** e **Manual PDF**.

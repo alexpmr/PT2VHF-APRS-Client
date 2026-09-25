@@ -9,10 +9,11 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import Flask, g, jsonify, render_template, request, send_file
 
 from . import __version__
 from . import database as db
+from . import diagnostics as diag
 from .aprs_service import full_callsign, service
 from .version_notes import notes_for
 
@@ -108,6 +109,47 @@ def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["JSON_SORT_KEYS"] = False
     db.init_db()
+    diag.configure(db.DB_PATH.parent)
+    diag.log_event("flask_app_created", version=__version__)
+
+    @app.before_request
+    def diagnostics_request_start():
+        g._pt2vhf_diag_request = diag.begin_request(request.method, request.path)
+
+    @app.after_request
+    def diagnostics_request_end(response):
+        token = getattr(g, "_pt2vhf_diag_request", None)
+        diag.end_request(token, status=int(response.status_code))
+        g._pt2vhf_diag_request = None
+        return response
+
+    @app.teardown_request
+    def diagnostics_request_teardown(exc):
+        token = getattr(g, "_pt2vhf_diag_request", None)
+        if token:
+            diag.end_request(token, status=500 if exc else None, error=f"{type(exc).__name__}: {exc}" if exc else None)
+            g._pt2vhf_diag_request = None
+
+    @app.get("/api/diagnostics/ping")
+    def api_diagnostics_ping():
+        return jsonify({"ok": True, "version": __version__, "active_requests": len(diag.active_requests())})
+
+    @app.get("/api/diagnostics/status")
+    def api_diagnostics_status():
+        return jsonify({
+            "ok": True,
+            "version": __version__,
+            "active_requests": diag.active_requests(),
+            "log_path": str(diag.log_path()),
+            "threads": [{"name": t.name, "ident": t.ident, "daemon": t.daemon} for t in threading.enumerate()],
+        })
+
+    @app.get("/api/diagnostics/log")
+    def api_diagnostics_log():
+        path = diag.log_path()
+        if not path.exists():
+            diag.log_event("diagnostics_log_requested")
+        return send_file(path, as_attachment=True, download_name=f"PT2VHF_APRS_Client_diagnostics_v{__version__}.log", mimetype="text/plain")
 
     @app.get("/")
     def index():

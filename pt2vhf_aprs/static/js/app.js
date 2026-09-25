@@ -135,8 +135,8 @@
     } catch (err) {
       if (err?.name === 'AbortError') {
         throw new Error(ui(
-          'O backend local não respondeu em 10 segundos.',
-          'The local backend did not respond within 10 seconds.'
+          `O backend local não respondeu em 10 segundos (${url}).`,
+          `The local backend did not respond within 10 seconds (${url}).`
         ));
       }
       throw err;

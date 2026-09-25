@@ -54,6 +54,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_11.py
 
+      - name: Apply v1.6.12 diagnostic instrumentation
+        shell: pwsh
+        run: python tools\apply_release_1_6_12.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -185,6 +189,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_11.py
 
+      - name: Apply v1.6.12 diagnostic instrumentation
+        shell: pwsh
+        run: python tools\apply_release_1_6_12.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -264,6 +272,7 @@ jobs:
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
           python tools/apply_release_1_6_11.py
+          python tools/apply_release_1_6_12.py
 
       - name: Build Linux packages
         shell: bash
@@ -338,6 +347,7 @@ jobs:
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
           python tools/apply_release_1_6_11.py
+          python tools/apply_release_1_6_12.py
 
       - name: Core smoke tests
         shell: bash
@@ -380,6 +390,7 @@ jobs:
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
           python tools/apply_release_1_6_11.py
+          python tools/apply_release_1_6_12.py
 
       - name: Build macOS DMG
         shell: bash
@@ -444,6 +455,7 @@ jobs:
           python tools/apply_release_1_6_9.py
           python tools/apply_release_1_6_10.py
           python tools/apply_release_1_6_11.py
+          python tools/apply_release_1_6_12.py
 
       - name: Generate versioned PDF manual
         shell: bash
