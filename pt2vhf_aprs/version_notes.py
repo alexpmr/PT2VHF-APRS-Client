@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.14": {
+        "title": "RX em transação única",
+        "items": [
+            "Consolida o processamento de cada pacote APRS recebido em uma única transação SQLite.",
+            "Log RX, histórico de pacotes, topologia e estação/track deixam de abrir conexões e commits independentes por pacote.",
+            "Mantém o housekeeping em lotes introduzido na v1.6.13.",
+            "Registra transações RX lentas no diagnóstico para identificar gargalos residuais.",
+            "Objetivo principal: reduzir CPU, contenção do banco e starvation das rotas HTTP.",
+            "Release de teste somente Windows x64 Portable, sem instalador e sem documentação.",
+        ],
+    },
     "1.6.13": {
         "title": "Redução de CPU e housekeeping SQLite",
         "items": [

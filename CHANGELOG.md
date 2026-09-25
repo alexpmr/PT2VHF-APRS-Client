@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.14 - 2026-09-25
+
+- Release de teste somente **Windows x64 Portable**.
+- O pipeline de recepção APRS foi consolidado em **uma única conexão/transação SQLite por pacote**.
+- `aprs_log`, `packets`, `topology_edges/events` e `stations/tracks` deixam de abrir e confirmar transações independentes para o mesmo RX.
+- Mantido o housekeeping periódico da v1.6.13, sem varreduras completas a cada pacote.
+- Transações RX acima de 250 ms passam a ser registradas em `diagnostics.log`.
+- Objetivo: reduzir amplificação de escrita, CPU e indisponibilidade do backend local.
+
+
 ## v1.6.13 - 2026-09-25
 
 - Release de teste somente **Windows x64 Portable**.

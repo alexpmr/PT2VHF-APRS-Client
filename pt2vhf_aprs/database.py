@@ -626,19 +626,25 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+
+def _record_packet_conn(conn: sqlite3.Connection, raw: str, from_call: str | None = None,
+                        packet_format: str | None = None) -> None:
+    conn.execute(
+        "INSERT INTO packets(timestamp, from_call, packet_format, raw) VALUES (?, ?, ?, ?)",
+        (utc_now_iso(), from_call, packet_format, raw),
+    )
+    if _retention_due("packets"):
+        deleted = _trim_history_table(conn, "packets", PACKET_RETENTION)
+        if deleted:
+            diag.log_event("retention_sweep", table="packets", deleted=deleted)
+
+
 def record_packet(raw: str, from_call: str | None = None, packet_format: str | None = None) -> None:
     with connection() as conn:
-        conn.execute(
-            "INSERT INTO packets(timestamp, from_call, packet_format, raw) VALUES (?, ?, ?, ?)",
-            (utc_now_iso(), from_call, packet_format, raw),
-        )
-        if _retention_due("packets"):
-            deleted = _trim_history_table(conn, "packets", PACKET_RETENTION)
-            if deleted:
-                diag.log_event("retention_sweep", table="packets", deleted=deleted)
+        _record_packet_conn(conn, raw, from_call, packet_format)
 
 
-def upsert_station(packet: dict[str, Any]) -> None:
+def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> None:
     callsign = str(packet.get("from") or "").upper().strip()
     if not callsign:
         return
@@ -649,66 +655,73 @@ def upsert_station(packet: dict[str, Any]) -> None:
     is_object = fmt in {"object", "item"}
     path = json.dumps(packet.get("path") or [], ensure_ascii=False)
 
+    previous = conn.execute(
+        "SELECT latitude, longitude FROM stations WHERE callsign=?", (callsign,)
+    ).fetchone()
+    current = conn.execute("SELECT * FROM stations WHERE callsign=?", (callsign,)).fetchone()
+
+    def choose(key: str, fallback=None):
+        value = None if is_object and key in {
+            "latitude", "longitude", "speed", "course", "altitude", "symbol_table", "symbol"
+        } else packet.get(key, None)
+        if value is None and current is not None:
+            return current[key]
+        return fallback if value is None else value
+
+    values = {
+        "name": name or callsign,
+        "last_heard": now,
+        "latitude": choose("latitude"),
+        "longitude": choose("longitude"),
+        "speed": choose("speed"),
+        "course": choose("course"),
+        "altitude": choose("altitude"),
+        "info": info if info else (current["info"] if current else ""),
+        "symbol_table": choose("symbol_table"),
+        "symbol": choose("symbol"),
+        "message_capable": 1 if packet.get("messagecapable") else (current["message_capable"] if current else 0),
+        "path": path,
+        "packet_format": fmt,
+        "raw": str(packet.get("raw") or ""),
+    }
+
+    conn.execute(
+        """
+        INSERT INTO stations(callsign,name,last_heard,latitude,longitude,speed,course,altitude,info,
+                             symbol_table,symbol,message_capable,path,packet_format,raw)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(callsign) DO UPDATE SET
+            name=excluded.name,last_heard=excluded.last_heard,latitude=excluded.latitude,
+            longitude=excluded.longitude,speed=excluded.speed,course=excluded.course,
+            altitude=excluded.altitude,info=excluded.info,symbol_table=excluded.symbol_table,
+            symbol=excluded.symbol,message_capable=excluded.message_capable,path=excluded.path,
+            packet_format=excluded.packet_format,raw=excluded.raw
+        """,
+        (
+            callsign, values["name"], values["last_heard"], values["latitude"], values["longitude"],
+            values["speed"], values["course"], values["altitude"], values["info"],
+            values["symbol_table"], values["symbol"], values["message_capable"], values["path"],
+            values["packet_format"], values["raw"],
+        ),
+    )
+
+    lat, lon = packet.get("latitude"), packet.get("longitude")
+    if not is_object and lat is not None and lon is not None:
+        should_add = True
+        if previous and previous["latitude"] is not None and previous["longitude"] is not None:
+            should_add = haversine_km(
+                previous["latitude"], previous["longitude"], float(lat), float(lon)
+            ) >= 0.01
+        if should_add or previous is None:
+            conn.execute(
+                "INSERT INTO tracks(callsign,timestamp,latitude,longitude,speed,course,altitude) VALUES(?,?,?,?,?,?,?)",
+                (callsign, now, float(lat), float(lon), packet.get("speed"), packet.get("course"), packet.get("altitude")),
+            )
+
+
+def upsert_station(packet: dict[str, Any]) -> None:
     with connection() as conn:
-        previous = conn.execute(
-            "SELECT latitude, longitude FROM stations WHERE callsign=?", (callsign,)
-        ).fetchone()
-        current = conn.execute("SELECT * FROM stations WHERE callsign=?", (callsign,)).fetchone()
-
-        def choose(key: str, fallback=None):
-            value = None if is_object and key in {"latitude", "longitude", "speed", "course", "altitude", "symbol_table", "symbol"} else packet.get(key, None)
-            if value is None and current is not None:
-                return current[key]
-            return fallback if value is None else value
-
-        values = {
-            "name": name or callsign,
-            "last_heard": now,
-            "latitude": choose("latitude"),
-            "longitude": choose("longitude"),
-            "speed": choose("speed"),
-            "course": choose("course"),
-            "altitude": choose("altitude"),
-            "info": info if info else (current["info"] if current else ""),
-            "symbol_table": choose("symbol_table"),
-            "symbol": choose("symbol"),
-            "message_capable": 1 if packet.get("messagecapable") else (current["message_capable"] if current else 0),
-            "path": path,
-            "packet_format": fmt,
-            "raw": str(packet.get("raw") or ""),
-        }
-
-        conn.execute(
-            """
-            INSERT INTO stations(callsign,name,last_heard,latitude,longitude,speed,course,altitude,info,
-                                 symbol_table,symbol,message_capable,path,packet_format,raw)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            ON CONFLICT(callsign) DO UPDATE SET
-                name=excluded.name,last_heard=excluded.last_heard,latitude=excluded.latitude,
-                longitude=excluded.longitude,speed=excluded.speed,course=excluded.course,
-                altitude=excluded.altitude,info=excluded.info,symbol_table=excluded.symbol_table,
-                symbol=excluded.symbol,message_capable=excluded.message_capable,path=excluded.path,
-                packet_format=excluded.packet_format,raw=excluded.raw
-            """,
-            (
-                callsign, values["name"], values["last_heard"], values["latitude"], values["longitude"],
-                values["speed"], values["course"], values["altitude"], values["info"],
-                values["symbol_table"], values["symbol"], values["message_capable"], values["path"],
-                values["packet_format"], values["raw"],
-            ),
-        )
-
-        lat, lon = packet.get("latitude"), packet.get("longitude")
-        if not is_object and lat is not None and lon is not None:
-            should_add = True
-            if previous and previous["latitude"] is not None and previous["longitude"] is not None:
-                should_add = haversine_km(previous["latitude"], previous["longitude"], float(lat), float(lon)) >= 0.01
-            if should_add or previous is None:
-                conn.execute(
-                    "INSERT INTO tracks(callsign,timestamp,latitude,longitude,speed,course,altitude) VALUES(?,?,?,?,?,?,?)",
-                    (callsign, now, float(lat), float(lon), packet.get("speed"), packet.get("course"), packet.get("altitude")),
-                )
-
+        _upsert_station_conn(conn, packet)
 
 def _extract_info(packet: dict[str, Any]) -> str:
     for key in ("comment", "status"):
@@ -803,35 +816,40 @@ def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, s
     return source, edges
 
 
-def record_topology_from_raw(raw: str) -> None:
-    """Registra somente relações observáveis no path APRS/TNC2."""
+
+def _record_topology_from_raw_conn(conn: sqlite3.Connection, raw: str) -> None:
+    """Registra relações observáveis usando a transação já aberta."""
     _source, edges = _observed_topology_edges(raw)
     if not edges:
         return
     now = utc_now_iso()
 
-    with connection() as conn:
-        for edge_source, target, kind, edge_igate in edges:
-            conn.execute(
-                """
-                INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
-                VALUES(?,?,?,1,?,?,?)
-                ON CONFLICT(source,target,kind) DO UPDATE SET
-                    packet_count=topology_edges.packet_count+1,
-                    last_seen=excluded.last_seen,
-                    igate=COALESCE(excluded.igate, topology_edges.igate)
-                """,
-                (edge_source, target, kind, now, now, edge_igate),
-            )
-            conn.execute(
-                "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
-                (now, edge_source, target, kind),
-            )
-        if _retention_due("topology_events", len(edges)):
-            deleted = _trim_history_table(conn, "topology_events", TOPOLOGY_EVENT_RETENTION)
-            if deleted:
-                diag.log_event("retention_sweep", table="topology_events", deleted=deleted)
+    for edge_source, target, kind, edge_igate in edges:
+        conn.execute(
+            """
+            INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
+            VALUES(?,?,?,1,?,?,?)
+            ON CONFLICT(source,target,kind) DO UPDATE SET
+                packet_count=topology_edges.packet_count+1,
+                last_seen=excluded.last_seen,
+                igate=COALESCE(excluded.igate, topology_edges.igate)
+            """,
+            (edge_source, target, kind, now, now, edge_igate),
+        )
+        conn.execute(
+            "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
+            (now, edge_source, target, kind),
+        )
+    if _retention_due("topology_events", len(edges)):
+        deleted = _trim_history_table(conn, "topology_events", TOPOLOGY_EVENT_RETENTION)
+        if deleted:
+            diag.log_event("retention_sweep", table="topology_events", deleted=deleted)
 
+
+def record_topology_from_raw(raw: str) -> None:
+    """Registra somente relações observáveis no path APRS/TNC2."""
+    with connection() as conn:
+        _record_topology_from_raw_conn(conn, raw)
 
 def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
     hours = int(hours or 0)
@@ -1426,21 +1444,49 @@ def callsign_suggestions(prefix: str = "", limit: int = 30) -> list[str]:
     return [r[0] for r in rows if r[0]]
 
 
-def add_aprs_log(direction: str, raw: str) -> int:
+
+def _add_aprs_log_conn(conn: sqlite3.Connection, direction: str, raw: str) -> int:
     direction = str(direction or "").upper().strip()
     if direction not in {"RX", "TX"}:
         raise ValueError("Direção do log APRS-IS deve ser RX ou TX.")
-    with connection() as conn:
-        cur = conn.execute(
-            "INSERT INTO aprs_log(timestamp, direction, raw) VALUES (?, ?, ?)",
-            (utc_now_iso(), direction, str(raw)),
-        )
-        if _retention_due("aprs_log"):
-            deleted = _trim_history_table(conn, "aprs_log", APRS_LOG_RETENTION)
-            if deleted:
-                diag.log_event("retention_sweep", table="aprs_log", deleted=deleted)
-        return int(cur.lastrowid)
+    cur = conn.execute(
+        "INSERT INTO aprs_log(timestamp, direction, raw) VALUES (?, ?, ?)",
+        (utc_now_iso(), direction, str(raw)),
+    )
+    if _retention_due("aprs_log"):
+        deleted = _trim_history_table(conn, "aprs_log", APRS_LOG_RETENTION)
+        if deleted:
+            diag.log_event("retention_sweep", table="aprs_log", deleted=deleted)
+    return int(cur.lastrowid)
 
+
+def add_aprs_log(direction: str, raw: str) -> int:
+    with connection() as conn:
+        return _add_aprs_log_conn(conn, direction, raw)
+
+
+def process_received_packet(
+    raw: str,
+    parsed: dict[str, Any],
+    from_call: str | None = None,
+    packet_format: str | None = None,
+) -> None:
+    """Persiste o pipeline RX principal em uma única conexão/transação SQLite."""
+    started = time.monotonic()
+    with connection() as conn:
+        _add_aprs_log_conn(conn, "RX", raw)
+        _record_packet_conn(conn, raw, from_call, packet_format)
+        _record_topology_from_raw_conn(conn, raw)
+        if parsed and parsed.get("from"):
+            _upsert_station_conn(conn, parsed)
+    elapsed_ms = (time.monotonic() - started) * 1000
+    if elapsed_ms >= 250:
+        diag.log_event(
+            "rx_transaction_slow",
+            duration_ms=round(elapsed_ms, 1),
+            from_call=from_call or "",
+            packet_format=packet_format or "",
+        )
 
 def list_aprs_log(filter_text: str = "", direction: str = "ALL", limit: int = 1000) -> list[dict[str, Any]]:
     direction = str(direction or "ALL").upper().strip()

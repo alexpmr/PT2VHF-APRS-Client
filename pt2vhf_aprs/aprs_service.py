@@ -338,11 +338,15 @@ class APRSService:
         self._close_socket()
         self._set_status(connected=False, verified=False, state="Desconectado", connected_since="")
 
+
     def _handle_line(self, line: str) -> None:
         if not line:
             return
-        db.add_aprs_log("RX", line)
+
+        # Linhas de controle do servidor não passam pelo pipeline de pacote,
+        # mas continuam registradas no log APRS.
         if line.startswith("#"):
+            db.add_aprs_log("RX", line)
             verified = "verified" in line.lower() and "unverified" not in line.lower()
             if "logresp" in line.lower():
                 self._set_status(
@@ -363,19 +367,18 @@ class APRSService:
         try:
             parsed = aprslib.parse(line) if aprslib else {}
         except Exception:
-            # Pacote desconhecido continua no histórico bruto.
             parsed = {"raw": line}
+
         fmt = str(parsed.get("format") or "")
         from_call = str(parsed.get("from") or extract_source(line) or "")
-        db.record_packet(line, from_call, fmt)
-        db.record_topology_from_raw(line)
+
+        # v1.6.14: log, pacote, topologia e estação/track são gravados juntos.
+        # Evita 3-4 conexões e commits SQLite independentes para cada RX.
+        db.process_received_packet(line, parsed, from_call, fmt)
 
         msg = parse_message_line(line, parsed)
         if msg:
             self._handle_message(msg, line)
-
-        if parsed and parsed.get("from"):
-            db.upsert_station(parsed)
 
     def _handle_message(self, msg: dict[str, str], raw: str) -> None:
         text = msg["text"].strip()

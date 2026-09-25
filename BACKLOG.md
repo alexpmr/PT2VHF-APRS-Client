@@ -90,6 +90,7 @@
 
 
 - **Portátil — aplicação deixa de responder após alguns minutos (prioridade alta)**
+  - **Teste v1.6.14 transação única RX:** o pipeline normal de recepção foi consolidado em uma única transação SQLite por pacote, agrupando log RX, histórico de pacotes, topologia e atualização de estação/track. Objetivo: reduzir a amplificação de escrita e impedir que o tráfego APRS monopolize CPU/banco e faça as rotas HTTP deixarem de responder. Manter o item aberto até teste prolongado em uso real.
   - **Teste v1.6.13 CPU/SQLite:** removido o housekeeping pesado executado em cada pacote APRS. A retenção de `packets`, `aprs_log` e `topology_events` agora roda em lotes e usa corte pela chave primária. Pollings pesados também foram reduzidos/condicionados à aba ativa. Validar consumo de CPU e estabilidade prolongada antes de considerar o problema encerrado.
   - **Resultado parcial da v1.6.13:** durante teste de envio de mensagem, a interface exibiu **“O backend local não respondeu em 10 segundos (/api/messages/send)”**. Portanto, a otimização de CPU/housekeeping não eliminou o travamento do envio. Preservar e analisar o `diagnostics.log` desta execução para identificar a thread/request bloqueado no momento do timeout.
   - **Configuração também continua afetada na v1.6.13:** o usuário não consegue concluir **Salvar configuração**. Tratar como evidência de indisponibilidade geral do backend, não apenas falha da rota de mensagens; verificar no diagnóstico se `POST /api/config` também permanece ativo/bloqueado durante o travamento.
