@@ -31,11 +31,24 @@ cp dist-linux/THIRD_PARTY_LICENSES_Linux.txt dist-linux/package/THIRD_PARTY_LICE
 tar -czf "dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v${version}.tar.gz" -C dist-linux/package .
 
 appdir="dist-linux/AppDir"
-mkdir -p "$appdir/usr/bin" "$appdir/usr/share/applications" "$appdir/usr/share/icons/hicolor/scalable/apps"
+mkdir -p "$appdir/usr/bin" "$appdir/usr/share/applications" "$appdir/usr/share/icons/hicolor/256x256/apps"
 cp dist/PT2VHF_APRS_Client_Linux_x86_64 "$appdir/usr/bin/pt2vhf-aprs-client"
 chmod 0755 "$appdir/usr/bin/pt2vhf-aprs-client"
-cp pt2vhf_aprs/static/img/app_logo.svg "$appdir/usr/share/icons/hicolor/scalable/apps/pt2vhf-aprs-client.svg"
-cp pt2vhf_aprs/static/img/app_logo.svg "$appdir/pt2vhf-aprs-client.svg"
+
+# Ícone Linux derivado da logo APRS oficial.
+"$VENV/bin/python" - <<'PY'
+from pathlib import Path
+from PIL import Image, ImageOps
+src = Path("pt2vhf_aprs/static/img/aprs_logo_official.jpg")
+dst = Path("dist-linux/pt2vhf-aprs-client.png")
+img = Image.open(src).convert("RGBA")
+canvas = Image.new("RGBA", (256, 256), "white")
+fit = ImageOps.contain(img, (248, 248), method=Image.Resampling.LANCZOS)
+canvas.alpha_composite(fit, ((256-fit.width)//2, (256-fit.height)//2))
+canvas.save(dst)
+PY
+cp dist-linux/pt2vhf-aprs-client.png "$appdir/usr/share/icons/hicolor/256x256/apps/pt2vhf-aprs-client.png"
+cp dist-linux/pt2vhf-aprs-client.png "$appdir/pt2vhf-aprs-client.png"
 cat > "$appdir/AppRun" <<'EOF'
 #!/usr/bin/env bash
 HERE="$(dirname "$(readlink -f "$0")")"
@@ -64,11 +77,12 @@ fi
 
 if command -v dpkg-deb >/dev/null 2>&1; then
   root="dist-linux/deb-root"
-  mkdir -p "$root/DEBIAN" "$root/usr/local/bin" "$root/usr/share/applications" "$root/usr/share/doc/pt2vhf-aprs-client"
+  mkdir -p "$root/DEBIAN" "$root/usr/local/bin" "$root/usr/share/applications" "$root/usr/share/doc/pt2vhf-aprs-client" "$root/usr/share/icons/hicolor/256x256/apps"
   cp dist/PT2VHF_APRS_Client_Linux_x86_64 "$root/usr/local/bin/pt2vhf-aprs-client"
   chmod 0755 "$root/usr/local/bin/pt2vhf-aprs-client"
   cp docs/INSTALL_LINUX.md "$root/usr/share/doc/pt2vhf-aprs-client/INSTALL_LINUX.md"
   cp LICENSE "$root/usr/share/doc/pt2vhf-aprs-client/LICENSE"
+  cp dist-linux/pt2vhf-aprs-client.png "$root/usr/share/icons/hicolor/256x256/apps/pt2vhf-aprs-client.png"
   cat > "$root/DEBIAN/control" <<EOF
 Package: pt2vhf-aprs-client
 Version: ${version}
@@ -86,6 +100,7 @@ Type=Application
 Name=PT2VHF APRS Client
 Comment=Cliente APRS-IS
 Exec=/usr/local/bin/pt2vhf-aprs-client
+Icon=pt2vhf-aprs-client
 Terminal=false
 Categories=Network;HamRadio;
 EOF

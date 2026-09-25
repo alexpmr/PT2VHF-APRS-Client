@@ -43,6 +43,14 @@
 - Incluído teste de regressão para impedir que o replay volte a exibir apenas o *highlight* das estações.
 - Release somente **Windows x64 Portable**, sem instalador e sem PDF.
 
+## Concluído na v1.6.7
+
+- Gerada versão **Linux x86_64** nos formatos **TAR.GZ, AppImage e DEB**.
+- Aplicadas ao build Linux as correções acumuladas das versões 1.6.4 a 1.6.6.
+- Corrigida a aplicação da **logo APRS oficial** na interface e no ícone Linux.
+- Adicionados smoke tests em **Ubuntu 22.04** e **Ubuntu 24.04**.
+- Release somente Linux, sem Windows, macOS ou PDF.
+
 ## Pendências para próximas versões
 
 Nenhum item pendente registrado neste momento.

@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.7": {
+        "title": "Primeira release Linux atualizada",
+        "items": [
+            "Build Linux x86_64 com pacote TAR.GZ, AppImage e DEB.",
+            "Aplicadas no Linux as correções acumuladas das versões 1.6.4 a 1.6.6.",
+            "A logo APRS oficial é usada na interface e no ícone dos pacotes Linux.",
+            "Incluídos testes smoke em Ubuntu 22.04 e 24.04.",
+            "Release somente Linux, sem Windows, macOS ou PDF.",
+        ],
+    },
     "1.6.6": {
         "title": "Configuração, manutenção e identidade visual",
         "items": [
