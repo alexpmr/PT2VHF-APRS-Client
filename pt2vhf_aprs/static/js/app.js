@@ -1048,10 +1048,30 @@
     if ($('#trafficTimelineCursor')) $('#trafficTimelineCursor').textContent = fmtDate(timestamp) || '—';
   }
 
+  function isoToDatetimeLocal(value) {
+    const d = new Date(value || '');
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
+  function datetimeLocalToIso(value) {
+    const d = new Date(String(value || ''));
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+
   async function loadTrafficOverview() {
     const hours = topologyPeriodValue(state.topologyHours);
-    const data = await api(`/api/traffic/overview?hours=${encodeURIComponent(hours)}&bins=140`);
+    const params = new URLSearchParams({ bins: '140' });
+    if (state.replayWindowStart) params.set('start', state.replayWindowStart);
+    if (state.replayWindowEnd) params.set('end', state.replayWindowEnd);
+    if (!state.replayWindowStart && !state.replayWindowEnd) params.set('hours', String(hours));
+    const data = await api(`/api/traffic/overview?${params.toString()}`);
     state.trafficOverview = data;
+    const startInput = $('#trafficRangeStart');
+    const endInput = $('#trafficRangeEnd');
+    if (startInput) startInput.value = state.replayWindowStart ? isoToDatetimeLocal(state.replayWindowStart) : '';
+    if (endInput) endInput.value = state.replayWindowEnd ? isoToDatetimeLocal(state.replayWindowEnd) : '';
     if ($('#trafficTimelineStart')) $('#trafficTimelineStart').textContent = fmtDate(data.first_timestamp) || '—';
     if ($('#trafficTimelineEnd')) $('#trafficTimelineEnd').textContent = fmtDate(data.last_timestamp) || '—';
     const slider = $('#trafficTimeline');
@@ -1101,10 +1121,11 @@
     if (resetIndex || !state.trafficOverview) await loadTrafficOverview();
     const first = startTimestamp || state.trafficOverview?.first_timestamp || '';
     const hours = topologyPeriodValue(state.topologyHours);
-    let url = '/api/traffic/events?limit=5000';
-    if (first) url += `&start=${encodeURIComponent(first)}`;
-    else if (hours) url += `&hours=${encodeURIComponent(hours)}`;
-    const data = await api(url);
+    const params = new URLSearchParams({ limit: '5000' });
+    if (first) params.set('start', first);
+    else if (hours) params.set('hours', String(hours));
+    if (state.replayWindowEnd) params.set('end', state.replayWindowEnd);
+    const data = await api(`/api/traffic/events?${params.toString()}`);
     state.trafficEvents = (data.events || []).filter(event => event.source || (event.segments || []).length);
     state.trafficHasMore = !!data.has_more;
     state.trafficChunkLastId = Number(data.last_id || 0);
@@ -1115,7 +1136,9 @@
 
   async function appendNextTrafficChunk() {
     if (!state.trafficHasMore || !state.trafficChunkLastId) return false;
-    const data = await api(`/api/traffic/events?after_id=${encodeURIComponent(state.trafficChunkLastId)}&limit=5000`);
+    const params = new URLSearchParams({ after_id: String(state.trafficChunkLastId), limit: '5000' });
+    if (state.replayWindowEnd) params.set('end', state.replayWindowEnd);
+    const data = await api(`/api/traffic/events?${params.toString()}`);
     const next = (data.events || []).filter(event => event.source || (event.segments || []).length);
     if (!next.length) {
       state.trafficHasMore = false;
@@ -3773,6 +3796,8 @@
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
   $('#analysisPeriod')?.addEventListener('change', async event => {
     state.topologyHours = topologyPeriodValue(event.target.value);
+    state.replayWindowStart = null;
+    state.replayWindowEnd = null;
     localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
     const mapPeriod = $('#topologyHours');
     if (mapPeriod) mapPeriod.value = String(state.topologyHours);
@@ -3784,6 +3809,46 @@
     }
     updateTrafficAnimationUi();
     await refreshTopologyAnalysis();
+  });
+
+  $('#trafficApplyRangeButton')?.addEventListener('click', async () => {
+    const start = datetimeLocalToIso($('#trafficRangeStart')?.value);
+    const end = datetimeLocalToIso($('#trafficRangeEnd')?.value);
+    if (!start || !end) {
+      toast(ui('Informe início e fim do intervalo.', 'Enter both interval start and end.'), 'error');
+      return;
+    }
+    if (new Date(start).getTime() >= new Date(end).getTime()) {
+      toast(ui('O início precisa ser anterior ao fim.', 'The start must be before the end.'), 'error');
+      return;
+    }
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.trafficMode = 'history';
+    state.replayWindowStart = start;
+    state.replayWindowEnd = end;
+    if ($('#trafficMode')) $('#trafficMode').value = 'history';
+    clearTrafficReplayLayers();
+    try {
+      await loadTrafficHistory(true, start);
+      toast(ui('Intervalo aplicado ao Replay da Rede.', 'Replay interval applied.'), 'ok');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
+
+  $('#trafficClearRangeButton')?.addEventListener('click', async () => {
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    state.replayWindowStart = null;
+    state.replayWindowEnd = null;
+    clearTrafficReplayLayers();
+    try {
+      await loadTrafficHistory(true);
+      toast(ui('Replay sincronizado com o período da Análise.', 'Replay synced with the Analysis period.'), 'ok');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
   });
 
   $('#trafficMode')?.addEventListener('change', async event => {
