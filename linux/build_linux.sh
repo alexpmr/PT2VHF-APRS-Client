@@ -39,7 +39,7 @@ chmod 0755 "$appdir/usr/bin/pt2vhf-aprs-client"
 "$VENV/bin/python" - <<'PY'
 from pathlib import Path
 from PIL import Image, ImageOps
-src = Path("pt2vhf_aprs/static/img/aprs_logo_official.jpg")
+src = Path("pt2vhf_aprs/static/img/app_logo.png")
 dst = Path("dist-linux/pt2vhf-aprs-client.png")
 img = Image.open(src).convert("RGBA")
 canvas = Image.new("RGBA", (256, 256), "white")
