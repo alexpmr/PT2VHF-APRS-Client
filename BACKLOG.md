@@ -37,6 +37,9 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 
 - Adicionar um modo de **animação de tráfego no Mapa**, usando o histórico de pacotes/topologia já registrado pelo cliente.
 - Representar cada pacote como um **pulso/partícula em movimento** ao longo do caminho observado entre os nós envolvidos.
+- Quando o path tiver múltiplos saltos, permitir que a animação mostre o pacote **percorrendo mais de um enlace simultaneamente**, em vez de obrigatoriamente esperar um trecho terminar para iniciar o seguinte.
+- O efeito deve permitir visualizar a propagação do mesmo pacote por vários segmentos do caminho quase ao mesmo tempo, reproduzindo melhor a sensação de tráfego se espalhando pela rede.
+- Quando houver múltiplas cópias/encaminhamentos observados do mesmo pacote, animar os caminhos concorrentes de forma sincronizada quando os timestamps permitirem essa correlação.
 - Diferenciar visualmente os trechos:
   - **Estação → Digipeater**;
   - **Digipeater → Digipeater**;
@@ -65,3 +68,22 @@ Novas demandas serão adicionadas abaixo deste ponto para as próximas versões 
 - Manter a animação independente das linhas estáticas de topologia: o usuário deve poder ver somente a animação, somente a topologia ou ambas.
 - A nova legenda de tipos de linhas do mapa deve incluir também o elemento visual usado para representar **pacotes em movimento**.
 - Projetar a estrutura para funcionar bem com grande volume de tráfego, usando fila limitada, agregação/descartes controlados e sem travar a interface.
+
+
+## Aviso sonoro e destaque visual de estação transmitindo
+
+**Objetivo:** identificar imediatamente, no mapa, qual estação acabou de transmitir um pacote APRS.
+
+- Ao receber um novo pacote de uma estação conhecida, emitir um **sinal sonoro curto** indicando atividade.
+- Ao mesmo tempo, destacar temporariamente o **ícone da estação transmissora no mapa**.
+- Durante o destaque, o marcador deve:
+  - mudar temporariamente para **vermelho** ou receber um halo/contorno vermelho;
+  - executar uma **animação curta de pulso/piscar**;
+  - retornar automaticamente ao estilo normal após alguns segundos.
+- A animação deve ocorrer exatamente no marcador da estação que originou o pacote, facilitando identificar visualmente quem transmitiu.
+- Se várias estações transmitirem em sequência, cada marcador deve poder animar de forma independente.
+- O destaque não deve alterar permanentemente o símbolo APRS original da estação.
+- Adicionar em Configuração uma opção para **ativar/desativar o sinal sonoro de atividade da rede**, separada do alerta sonoro de mensagem pessoal.
+- Adicionar uma opção para **ativar/desativar o destaque visual de transmissão**, permitindo usar apenas som, apenas animação ou ambos.
+- Evitar reprodução excessiva de áudio em períodos de tráfego intenso, aplicando um pequeno cooldown/agregação sonora quando necessário.
+- Integrar esse efeito à futura animação de tráfego: quando um pacote iniciar sua animação, o marcador da estação de origem deve pulsar em vermelho no mesmo instante.
