@@ -458,6 +458,7 @@
       }
 
       if (state.topologyEnabled) loadTopology();
+      updateMapLegend();
     }
   }
 
@@ -483,6 +484,7 @@
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
     addTopologyControl(state.map);
+    addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
   }
@@ -509,23 +511,35 @@
     new LocationControl().addTo(map);
   }
 
+  function topologyPeriodValue(value) {
+    const parsed = Number(value);
+    return [0, 1, 6, 24, 168].includes(parsed) ? parsed : 0;
+  }
+
+  function topologyPeriodLabel(hours = state.topologyHours) {
+    if (Number(hours) === 0) return ui('Completo', 'Complete');
+    if (Number(hours) === 168) return ui('7 dias', '7 days');
+    return `${Number(hours)} h`;
+  }
+
   function addTopologyControl(map) {
     const savedEnabled = localStorage.getItem('pt2vhf_topology_enabled');
-    const savedHours = Number(localStorage.getItem('pt2vhf_topology_hours') || 24);
+    const savedHoursRaw = localStorage.getItem('pt2vhf_topology_hours');
     state.topologyEnabled = savedEnabled === '1';
-    state.topologyHours = [1, 6, 24, 168].includes(savedHours) ? savedHours : 24;
+    state.topologyHours = savedHoursRaw === null ? 0 : topologyPeriodValue(savedHoursRaw);
 
     const TopologyControl = L.Control.extend({
       options: { position: 'topright' },
       onAdd() {
         const wrapper = L.DomUtil.create('div', 'leaflet-control topology-control');
         wrapper.innerHTML = `
-          <label><input id="topologyToggle" type="checkbox" ${state.topologyEnabled ? 'checked' : ''}> Topologia observada</label>
-          <select id="topologyHours" title="Período da topologia">
+          <label><input id="topologyToggle" type="checkbox" ${state.topologyEnabled ? 'checked' : ''}> ${ui('Topologia observada', 'Observed topology')}</label>
+          <select id="topologyHours" title="${ui('Período da topologia', 'Topology period')}">
+            <option value="0">${ui('Completo', 'Complete')}</option>
             <option value="1">1 h</option>
             <option value="6">6 h</option>
             <option value="24">24 h</option>
-            <option value="168">7 dias</option>
+            <option value="168">${ui('7 dias', '7 days')}</option>
           </select>`;
         L.DomEvent.disableClickPropagation(wrapper);
         L.DomEvent.disableScrollPropagation(wrapper);
@@ -539,18 +553,82 @@
             localStorage.setItem('pt2vhf_topology_enabled', state.topologyEnabled ? '1' : '0');
             if (state.topologyEnabled) await loadTopology();
             else clearTopologyLines();
+            updateMapLegend();
           });
           select.addEventListener('change', async () => {
-            state.topologyHours = Number(select.value) || 24;
+            state.topologyHours = topologyPeriodValue(select.value);
             localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
             if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.topologyHours);
             if (state.topologyEnabled) await loadTopology();
+            if (state.activeTab === 'analysis') await refreshTopologyAnalysis();
           });
         }, 0);
         return wrapper;
       }
     });
     new TopologyControl().addTo(map);
+  }
+
+  function addMapLegendControl(map) {
+    const LegendControl = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd() {
+        const wrapper = L.DomUtil.create('div', 'leaflet-control map-line-legend');
+        wrapper.innerHTML = `
+          <button type="button" class="map-legend-toggle" aria-expanded="true">${ui('Legenda', 'Legend')} ▾</button>
+          <div class="map-legend-body">
+            <div class="map-legend-item" data-legend="track"><span class="legend-line"></span><span>${ui('Tracklog', 'Tracklog')}</span></div>
+            <div class="map-legend-item" data-legend="rf"><span class="legend-line"></span><span>${ui('Enlace RF', 'RF link')}</span></div>
+            <div class="map-legend-item" data-legend="igate"><span class="legend-line"></span><span>${ui('Via IGate/APRS-IS', 'Via IGate/APRS-IS')}</span></div>
+            <div class="map-legend-item" data-legend="replay"><span class="legend-line"></span><span>${ui('Animação temporal', 'Timeline replay')}</span></div>
+            <div class="map-legend-item" data-legend="packet"><span class="legend-packet"></span><span>${ui('Pacote em movimento', 'Moving packet')}</span></div>
+          </div>`;
+        L.DomEvent.disableClickPropagation(wrapper);
+        L.DomEvent.disableScrollPropagation(wrapper);
+        wrapper.querySelector('.map-legend-toggle')?.addEventListener('click', event => {
+          const body = wrapper.querySelector('.map-legend-body');
+          const expanded = !body.classList.toggle('hidden');
+          event.currentTarget.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          event.currentTarget.textContent = expanded ? `${ui('Legenda', 'Legend')} ▾` : `${ui('Legenda', 'Legend')} ▸`;
+        });
+        state.mapLegendElement = wrapper;
+        setTimeout(updateMapLegend, 0);
+        return wrapper;
+      }
+    });
+    new LegendControl().addTo(map);
+  }
+
+  function updateMapLegend() {
+    const root = state.mapLegendElement;
+    if (!root) return;
+    const track = root.querySelector('[data-legend="track"] .legend-line');
+    const rf = root.querySelector('[data-legend="rf"] .legend-line');
+    const igate = root.querySelector('[data-legend="igate"] .legend-line');
+    const replay = root.querySelector('[data-legend="replay"] .legend-line');
+    if (track) {
+      track.style.borderTopColor = state.mapConfig.track_color;
+      track.style.borderTopWidth = `${Math.max(2, state.mapConfig.track_width)}px`;
+    }
+    if (rf) {
+      rf.style.borderTopColor = state.mapConfig.topology_rf_color;
+      rf.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width)}px`;
+    }
+    if (igate) {
+      igate.style.borderTopColor = state.mapConfig.topology_igate_color;
+      igate.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width)}px`;
+      igate.style.borderTopStyle = 'dashed';
+    }
+    if (replay) {
+      replay.style.borderTopColor = '#ffd54a';
+      replay.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width + 1)}px`;
+      replay.style.borderTopStyle = 'dashed';
+    }
+    root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
+    root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
+    const animating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
+    root.querySelector('[data-legend="replay"]')?.classList.toggle('legend-muted', !animating);
+    root.querySelector('[data-legend="packet"]')?.classList.toggle('legend-muted', !animating);
   }
 
   function clearTopologyLines() {
