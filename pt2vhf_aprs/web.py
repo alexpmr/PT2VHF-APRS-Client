@@ -367,7 +367,7 @@ def create_app() -> Flask:
             message_type = str(data.get("type") or "message").lower()
 
             if message_type == "message":
-                result = service.send_message_parts(data.get("to", ""), data.get("message", ""))
+                result = service.queue_message_parts(data.get("to", ""), data.get("message", ""))
             elif message_type in {"bulletin", "group_bulletin"}:
                 group = data.get("group", "") if message_type == "group_bulletin" else ""
                 row_id = service.send_bulletin(
@@ -384,6 +384,8 @@ def create_app() -> Flask:
                     "ids": result["row_ids"],
                     "message_ids": result["message_ids"],
                     "part_count": result["part_count"],
+                    "queued": bool(result.get("queued")),
+                    "duplicate": bool(result.get("duplicate")),
                     "type": message_type,
                 })
             return jsonify({"ok": True, "id": row_id, "type": message_type})
