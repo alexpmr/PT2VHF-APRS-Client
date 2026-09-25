@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-VERSION_NOTES: dict[str, dict[str, Any]] = {
+VERSION_NOTES: dict[str, dict[str, Any]] = {\n    "1.6.3": {\n        "title": "Replay móvel e seleção rápida de período",\n        "items": [\n            "Seleção rápida do replay: 1 h, 12 h, 24 h, 7 dias ou todo o histórico.",\n            "Removidos os campos manuais De/Até e compactada a área de período.",\n            "Estações móveis agora se deslocam durante o replay e deixam o tracklog progressivamente.",\n            "Build desta versão restrito ao Windows x64, sem geração de PDF.",\n        ],\n    },
     "1.6.2": {
         "title": "Replay da Rede e melhorias de estabilidade",
         "items": [
