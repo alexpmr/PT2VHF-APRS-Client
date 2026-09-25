@@ -21,6 +21,7 @@
     topologyHours: 0,
     mapLegendElement: null,
     trafficReplayLayers: new Set(),
+    timelineReplayActive: false,
     trafficEvents: [],
     trafficIndex: 0,
     trafficPlaying: false,
@@ -628,9 +629,9 @@
     }
     root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
     root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
-    const animating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
-    root.querySelector('[data-legend="replay"]')?.classList.toggle('legend-muted', !animating);
-    root.querySelector('[data-legend="packet"]')?.classList.toggle('legend-muted', !animating);
+    const packetAnimating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
+    root.querySelector('[data-legend="replay"]')?.classList.toggle('legend-muted', !state.timelineReplayActive);
+    root.querySelector('[data-legend="packet"]')?.classList.toggle('legend-muted', !packetAnimating);
   }
 
   function clearTopologyLines() {
@@ -1386,6 +1387,11 @@
 
     const spec = state.sort.messages;
     const rows = sortedData(visibleMessages(), spec);
+    if (!rows.length) {
+      $('#messagesTable tbody').innerHTML = `<tr class="message-empty"><td colspan="6">${state.unreadMessagesOnly ? escapeHtml(ui('Nenhuma mensagem não lida.', 'No unread messages.')) : escapeHtml(ui('Nenhuma mensagem para os filtros atuais.', 'No messages for the current filters.'))}</td></tr>`;
+      updateSortIndicators('messagesTable', spec);
+      return;
+    }
     $('#messagesTable tbody').innerHTML = rows.map(m => `
       <tr data-message-id="${Number(m.id || 0)}" class="${m.status === 'ACK' ? 'message-row-ack ' : m.status === 'REJ' ? 'message-row-rej ' : ''}${isUnreadPersonalMessage(m) ? 'message-row-unread' : ''}">
         <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${callsignButtonHtml(m.from_call, m.to_call)}</td>
@@ -1806,6 +1812,10 @@
     const messageId = Number(message.id || 0);
     closeIncomingMessageAlert();
     closeCompactIncomingMessageAlert();
+    if (state.unreadMessagesOnly) {
+      state.unreadMessagesOnly = false;
+      updateUnreadMessagesButton();
+    }
     if (messageId) {
       try { await api(`/api/messages/${messageId}/read`, { method:'POST' }); } catch (_) {}
     }
@@ -3527,12 +3537,20 @@
     const mapPeriod = $('#topologyHours');
     if (mapPeriod) mapPeriod.value = String(state.topologyHours);
     if (state.topologyEnabled) await loadTopology();
+    stopTrafficTimer();
+    state.trafficPlaying = false;
+    if (state.trafficMode === 'history') {
+      try { await loadTrafficHistory(true); } catch (_) {}
+    }
+    updateTrafficAnimationUi();
     await refreshTopologyAnalysis();
   });
 
   $('#animateTopologyButton')?.addEventListener('click', async () => {
     if (!state.map) return;
     try {
+      state.timelineReplayActive = true;
+      updateMapLegend();
       const events = await api(`/api/topology/timeline?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}&limit=5000`);
       if (!events.length) {
         toast(ui('Não há eventos de topologia com posição para animar.', 'There are no positioned topology events to animate.'), 'error');
@@ -3565,10 +3583,18 @@
         index += step;
         if (index >= events.length) {
           clearInterval(timer);
-          setTimeout(() => loadTopology(), 700);
+          setTimeout(() => {
+            state.timelineReplayActive = false;
+            updateMapLegend();
+            loadTopology();
+          }, 700);
         }
       }, 80);
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) {
+      state.timelineReplayActive = false;
+      updateMapLegend();
+      toast(err.message, 'error');
+    }
   });
 
   $('#trafficMode')?.addEventListener('change', async event => {
@@ -3662,6 +3688,13 @@
   tabSetup();
 
   async function boot() {
+    document.addEventListener('pointerdown', () => {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass && !state.activityAudioContext) state.activityAudioContext = new AudioContextClass();
+        state.activityAudioContext?.resume?.().catch(() => {});
+      } catch (_) {}
+    }, { once:true });
     const startup = await Promise.allSettled([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
