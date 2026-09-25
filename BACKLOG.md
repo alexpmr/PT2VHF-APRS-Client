@@ -79,13 +79,13 @@
 
 ## Pendências para próximas versões
 
-- **Configurações — salvamento não responde**
-  - Ao alterar qualquer opção em **Configurações**, o botão **Salvar configuração** não efetiva o salvamento.
-  - Ao tentar sair da tela com alterações pendentes, aparece a confirmação perguntando se deseja salvar.
-  - Ao escolher **Sim / Salvar e sair**, nada acontece: a configuração não é gravada e a navegação não prossegue.
-  - Revisar tanto o handler direto do botão `saveConfigFooterButton` quanto o fluxo do modal de alterações não salvas.
-  - Garantir feedback visual de sucesso/erro e impedir falhas silenciosas.
-  - Adicionar teste de regressão cobrindo: alterar configuração → salvar; alterar configuração → sair → confirmar salvamento → persistir e navegar.
+- **Configurações — falha de salvamento com banco antigo/inconsistente**
+  - O problema desapareceu após apagar o banco local e iniciar com um banco novo.
+  - Isso indica possível incompatibilidade de migração, esquema antigo, registro de configuração inconsistente ou dado legado inválido, e não necessariamente falha do botão de salvar em uma instalação limpa.
+  - Investigar a abertura de bancos existentes após upgrade e validar/migrar automaticamente a tabela de configuração.
+  - Se houver dado inválido ou coluna ausente, corrigir/migrar sem exigir que o usuário apague todo o banco.
+  - Revisar também o fluxo do `saveConfigFooterButton` e do modal **Salvar e sair** para sempre exibir erro explícito caso a persistência falhe.
+  - Adicionar teste de regressão cobrindo upgrade com banco de versão anterior → alterar configuração → salvar → persistir e navegar.
 
 
 - **Logo APRS oficial ainda não aplicada corretamente**
