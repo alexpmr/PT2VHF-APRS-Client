@@ -326,6 +326,17 @@ def create_app() -> Flask:
             station_filter=station,
         ))
 
+    @app.post("/api/messages/<int:row_id>/read")
+    def api_mark_message_read(row_id: int):
+        return jsonify({"ok": True, "updated": db.mark_message_read(row_id)})
+
+    @app.post("/api/messages/conversation/read")
+    def api_mark_conversation_read():
+        data = request.get_json(silent=True) or {}
+        contact = str(data.get("contact") or "").upper().strip()
+        own = full_callsign(db.get_config())
+        return jsonify({"ok": True, "updated": db.mark_conversation_read(contact, own)})
+
     @app.post("/api/messages/<int:row_id>/retry")
     def api_retry_message(row_id: int):
         try:
