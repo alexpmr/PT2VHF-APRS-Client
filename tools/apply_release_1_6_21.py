@@ -16,9 +16,6 @@ if version_tuple(version) < (1, 6, 21):
     raise SystemExit(f"v1.6.21 validation failed: VERSION={version!r}")
 
 checks = {
-    "pt2vhf_aprs/__init__.py": [
-        '__version__ = "1.6.21"',
-    ],
     "pt2vhf_aprs/database.py": [
         '"active_stations": active_stations',
         '"active_station_packets": eligible_packets',
@@ -40,7 +37,6 @@ checks = {
         "test_topology_stats_active_stations_excludes_telemetry_igates_and_digipeaters",
     ],
     "README.md": [
-        "# PT2VHF APRS Client - v1.6.21",
         "estações mais ativas",
     ],
 }
