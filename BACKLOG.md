@@ -79,6 +79,15 @@
 
 ## Pendências para próximas versões
 
+- **Atualização/instalação — fechar versão anterior antes de instalar**
+  - Ao iniciar a instalação de uma nova versão, detectar se o **PT2VHF APRS Client** anterior ainda está em execução.
+  - Se estiver aberto, solicitar/forçar o encerramento controlado da aplicação antes de substituir arquivos, evitando falha de instalação por arquivo em uso.
+  - Preferir encerramento gracioso primeiro, permitindo fechar conexão APRS-IS, workers, filas e banco SQLite corretamente; se não encerrar dentro de um timeout curto, oferecer/usar encerramento forçado.
+  - Após a instalação concluir com sucesso, **abrir automaticamente a nova versão**.
+  - No Windows Setup, integrar esse comportamento ao instalador; aplicar equivalente nas plataformas em que o empacotador permitir comportamento semelhante.
+  - Não encerrar processos que não pertençam ao PT2VHF APRS Client; identificar a instância com segurança por executável/processo.
+
+
 - **Atualizações — download direto da versão correta pela caixa de versão**
   - Quando houver uma versão nova disponível, tornar a **caixa/indicador de versão na barra superior clicável** para iniciar o download diretamente da Release oficial no GitHub.
   - Detectar automaticamente a **plataforma e arquitetura em uso** e escolher o artefato correspondente: **Windows x64**, **Linux x86_64** ou **macOS ARM64/Intel x86_64**.
