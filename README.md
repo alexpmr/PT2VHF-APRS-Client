@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.6.20
+# PT2VHF APRS Client - v1.6.21
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.20** é uma release completa multiplataforma com nomes amigáveis para clientes APRS, acompanhamento da posição do próprio PT2VHF APRS Client, seletor compacto de idioma e correção da classificação RF/IGate na topologia.
+A **v1.6.21** é uma release de teste para **Windows x64 Portable** que renomeia a aba Análise para **Estatísticas** e adiciona o ranking de **estações mais ativas**, excluindo telemetria, iGates e digipeaters.
 
 ## Downloads
 
@@ -36,7 +36,7 @@ Cada Release completa publica:
 
 ### Identificação do próprio cliente
 - As transmissões geradas pelo aplicativo usam o TOCALL experimental **APZVHF**, reservado aqui para identificar o **PT2VHF APRS Client** enquanto não houver uma alocação oficial específica.
-- Isso permite que o ranking da aba Análise acompanhe a quantidade de instalações observadas do próprio cliente.
+- Isso permite que o ranking da aba Estatísticas acompanhe a quantidade de instalações observadas do próprio cliente.
 
 ### APRS-IS e filtros
 - Servidor padrão do aplicativo: `soam.aprs2.net:14580`, com tentativa alternativa por `rotate.aprs2.net` quando aplicável.
@@ -69,12 +69,12 @@ Cada Release completa publica:
 - Clique em **Hora** para alternar entre mais antigos → mais recentes e mais recentes → mais antigos.
 - Colunas e cabeçalhos usam alinhamento consistente.
 
-### Mapa, Log e Análise
+### Mapa, Log e Estatísticas
 - OpenStreetMap, OpenTopoMap e Esri World Imagery.
 - Tracklogs automáticos de estações móveis.
 - O popup da estação oferece **Mostrar log**, abrindo o Log já filtrado pelo indicativo/SSID.
-- A análise da rede foi movida para a nova aba **Análise**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.
-- Ranking de digipeaters e IGates, enlaces que deixaram de aparecer, comparação com o período anterior e métricas agregadas.
+- As estatísticas da rede ficam na aba **Estatísticas**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.
+- Ranking de **estações mais ativas** por tráfego útil, excluindo telemetria, iGates e digipeaters; rankings dedicados de digipeaters e iGates, enlaces que deixaram de aparecer, comparação com o período anterior e métricas agregadas.
 - **Ranking de software/dispositivos APRS** com nome amigável resolvido pela base APRS Device Identification, TOCALL de referência, quantidade e percentual. O painel mostra Top 20 e destaca a posição real do PT2VHF APRS Client quando ele estiver fora do corte.
 - O Mapa ganhou **legenda dos tipos de linhas**: tracklog, enlace RF, IGate/APRS-IS, replay temporal e pacote em movimento. Em qAR/qAO, o salto físico até o IGate é tratado como RF; o papel de IGate é mantido como metadado, não como meio do enlace.
 - Nova animação do tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, velocidades 0,5x/1x/2x/5x/10x, timestamp e contadores.
