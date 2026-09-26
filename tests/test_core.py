@@ -787,12 +787,23 @@ def test_incoming_message_read_state():
         db.DB_PATH = original
 
 
-def test_auto_update_is_disabled_but_version_detection_remains():
+def test_auto_update_flow_is_enabled_and_platform_launchers_register_exit():
     root = Path(__file__).resolve().parent.parent
     web_source = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+    js_source = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
     windows_source = (root / "windows_app.py").read_text(encoding="utf-8")
-    assert "Atualização automática desativada" in web_source
-    assert "launch_pending_update" not in windows_source
+    linux_source = (root / "linux_app.py").read_text(encoding="utf-8")
+    macos_source = (root / "macos_app.py").read_text(encoding="utf-8")
+    updater_source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")
+    assert '@app.post("/api/update/install")' in web_source
+    assert "download_and_install" in web_source
+    assert "installLatestUpdate" in js_source
+    assert "register_exit_handler(_exit_for_update)" in windows_source
+    assert "register_exit_handler(_exit_for_update)" in linux_source
+    assert "register_exit_handler(_exit_for_update)" in macos_source
+    assert "UPDATE_LOCK_FILE" in updater_source
+    assert "Stop-Process -Id $pidToWait -Force" in updater_source
+    assert "kill -KILL" in updater_source
     assert "GITHUB_LATEST_RELEASE_API" in web_source
 
 
@@ -808,6 +819,29 @@ def test_updater_asset_name_contains_version():
     name = updater.desired_asset_name("1.6")
     assert "1.6" in name
     assert name
+
+
+def test_updater_select_asset_matches_exact_platform_asset(monkeypatch):
+    wanted = "PT2VHF_TEST_v1.6.22.bin"
+    monkeypatch.setattr(updater, "desired_asset_name", lambda version: wanted)
+    release = {
+        "assets": [
+            {"name": "other.bin", "browser_download_url": "https://github.com/x/other", "size": 1},
+            {
+                "name": wanted,
+                "browser_download_url": "https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.6.22/test.bin",
+                "size": 123,
+                "digest": "sha256:abc",
+            },
+        ]
+    }
+    asset = updater.select_asset(release, "1.6.22")
+    assert asset == {
+        "name": wanted,
+        "url": "https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.6.22/test.bin",
+        "size": 123,
+        "digest": "sha256:abc",
+    }
 
 def test_topology_stats_active_stations_excludes_telemetry_igates_and_digipeaters():
     original = db.DB_PATH
