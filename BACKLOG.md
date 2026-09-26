@@ -282,3 +282,14 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - **Mapa / histórico:** botão para visualizar o histórico de queries daquela estação e restauração da última resposta ao reabrir o popup.
 - **Idiomas:** restaurado o controle de idioma na barra superior, com Português/Brasil e English/Inglaterra, persistindo a escolha.
 - **Queries de posição:** resposta exibida passa a incluir latitude e longitude recebidas.
+
+## Próximas melhorias
+
+- **Mapa / Topologia — não classificar enlace RF como IGate/MQTT:** corrigir a lógica que está desenhando como **tracejado/IGate** enlaces que são sabidamente **RF**.
+  - Quando houver evidência explícita de recepção/transporte por **RF**, esse enlace deve prevalecer visualmente como RF, mesmo que algum dos nós envolvidos também tenha presença em APRS-IS/IGate.
+  - Não inferir que o enlace foi via IGate apenas porque o pacote apareceu no APRS-IS ou porque o nó de origem/destino é um IGate.
+  - Separar claramente **origem do pacote**, **meio do enlace observado** e **ponto de entrada/saída no APRS-IS**.
+  - Preservar como tracejado somente enlaces cuja evidência indique efetivamente transporte por **IGate/APRS-IS**.
+  - Se houver ambiguidade entre RF e APRS-IS, marcar como **indeterminado/misto** em vez de classificar automaticamente como IGate.
+  - Revisar também a legenda e as regras de estilo para garantir que **RF = linha contínua** e **IGate/APRS-IS = linha tracejada** de forma consistente.
+
