@@ -17,7 +17,6 @@ if version_tuple(version) < (1, 6, 20):
 
 checks = {
     "pt2vhf_aprs/__init__.py": [
-        '__version__ = "1.6.20"',
         'APP_TOCALL = "APZVHF"',
     ],
     "pt2vhf_aprs/database.py": [
