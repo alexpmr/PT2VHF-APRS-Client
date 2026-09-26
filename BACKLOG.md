@@ -79,6 +79,15 @@
 
 ## Pendências para próximas versões
 
+- **Aba Análise — ranking de versões dos clientes APRS**
+  - Adicionar um painel mostrando as **versões dos clientes/aplicativos APRS detectados nas estações recebidas**.
+  - Agrupar por **cliente + versão** e exibir a quantidade de estações únicas usando cada versão.
+  - Ordenar da **versão/cliente mais usada para a menos usada**.
+  - Exibir também o **percentual** sobre o total de estações em que foi possível identificar o software/versão.
+  - Manter uma categoria **Não identificado** para estações sem informação suficiente, separada do ranking principal.
+  - Evitar contar repetidamente a mesma estação; considerar a versão mais recente observada por indicativo.
+
+
 - **Barra superior — indicadores de CPU e memória em tempo real**
   - Adicionar na barra superior indicadores compactos do consumo do processo do **PT2VHF APRS Client**.
   - Exibir **CPU (%)** em tempo real.
