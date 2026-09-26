@@ -2425,3 +2425,59 @@ html[data-theme="light"] .config-save-footer {
 .traffic-replay-range input[type="datetime-local"] {
   min-height: 34px;
 }
+
+
+/* v1.6.18 - diagnóstico e queries APRS no popup do mapa */
+.station-query-actions {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+.station-query-title {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.station-query-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.station-query-button {
+  min-height: 29px;
+  padding: 5px 8px;
+  font-size: 10px;
+}
+.station-query-status {
+  min-height: 16px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.station-query-status.query-ok { color: var(--ok); }
+.station-query-status.query-error { color: var(--warn); }
+.query-trace-node {
+  background: transparent;
+  border: 0;
+}
+.query-trace-node > span {
+  display: grid;
+  place-items: center;
+  min-width: 27px;
+  height: 27px;
+  padding: 0 5px;
+  border: 2px solid #ffb347;
+  border-radius: 999px;
+  background: rgba(20,27,34,.94);
+  color: #ffe0a8;
+  font: 700 9px/1 sans-serif;
+  box-shadow: 0 0 10px rgba(255,179,71,.45);
+}
+html[data-theme="light"] .query-trace-node > span {
+  background: rgba(255,255,255,.96);
+  color: #8b4d00;
+}

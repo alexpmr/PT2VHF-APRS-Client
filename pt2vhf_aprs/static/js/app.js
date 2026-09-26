@@ -25,6 +25,8 @@
     topologyLoadBusy: false,
     mapLegendElement: null,
     trafficReplayLayers: new Set(),
+    queryTraceLayers: new Set(),
+    queryPollers: new Map(),
     timelineReplayActive: false,
     trafficEvents: [],
     trafficIndex: 0,
@@ -839,6 +841,17 @@
         <strong>Informação</strong><span>${escapeHtml(s.info || '')}</span>
         <strong>Via</strong><span>${escapeHtml(path)}</span>
       </div>
+      <div class="station-query-actions">
+        <div class="station-query-title">Diagnóstico / Queries APRS</div>
+        <div class="station-query-buttons">
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRSP" data-callsign="${escapeHtml(s.callsign)}">Posição</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRSS" data-callsign="${escapeHtml(s.callsign)}">Status</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRSD" data-callsign="${escapeHtml(s.callsign)}">Ouvidos</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="PINGACK" data-callsign="${escapeHtml(s.callsign)}">Ping/ACK</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRST" data-callsign="${escapeHtml(s.callsign)}">Trace</button>
+        </div>
+        <div class="station-query-status" data-query-status="${escapeHtml(s.callsign)}"></div>
+      </div>
       <div class="station-popup-actions">
         ${favoriteStarHtml(s.callsign, false)}
         <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Ver logs</button>
@@ -871,7 +884,7 @@
         } else {
           marker.setLatLng(latlng).setIcon(markerIcon(s));
         }
-        marker.bindPopup(popupHtml(s), { maxWidth: 420 });
+        marker.bindPopup(popupHtml(s), { maxWidth: 520 });
       }
 
       const grouped = new Map();
@@ -1913,6 +1926,144 @@
     } catch (_) {}
   }, 180));
 
+  function queryStatusElement(callsign) {
+    const call = normalizedCall(callsign);
+    return [...document.querySelectorAll('.station-query-status')].find(el => normalizedCall(el.dataset.queryStatus || '') === call) || null;
+  }
+
+  function setQueryStatus(callsign, text, level = '') {
+    const el = queryStatusElement(callsign);
+    if (!el) return;
+    el.textContent = text || '';
+    el.classList.toggle('query-ok', level === 'ok');
+    el.classList.toggle('query-error', level === 'error');
+  }
+
+  function clearQueryTrace() {
+    for (const layer of state.queryTraceLayers) {
+      try { state.map?.removeLayer(layer); } catch (_) {}
+    }
+    state.queryTraceLayers.clear();
+  }
+
+  function drawQueryTrace(query) {
+    if (!state.map) return;
+    clearQueryTrace();
+    const nodes = Array.isArray(query?.trace_nodes) ? query.trace_nodes : [];
+    const known = nodes.filter(n => n.known && Number.isFinite(Number(n.latitude)) && Number.isFinite(Number(n.longitude)));
+    if (!known.length) return;
+
+    for (const node of known) {
+      const point = [Number(node.latitude), Number(node.longitude)];
+      const marker = L.marker(point, {
+        icon: L.divIcon({
+          className: 'query-trace-node',
+          html: '<span>' + escapeHtml(node.callsign) + '</span>',
+          iconSize: [62, 27],
+          iconAnchor: [31, 13]
+        }),
+        interactive: true,
+        title: node.callsign
+      }).addTo(state.map);
+      marker.bindTooltip(node.callsign, { direction: 'top' });
+      state.queryTraceLayers.add(marker);
+    }
+
+    for (let i = 0; i + 1 < nodes.length; i++) {
+      const a = nodes[i], b = nodes[i + 1];
+      if (!a?.known || !b?.known) continue;
+      const points = [
+        [Number(a.latitude), Number(a.longitude)],
+        [Number(b.latitude), Number(b.longitude)]
+      ];
+      if (!points.flat().every(Number.isFinite)) continue;
+      const line = L.polyline(points, {
+        color: '#ffb347',
+        weight: 4,
+        opacity: .92,
+        dashArray: '8 6'
+      }).addTo(state.map);
+      state.queryTraceLayers.add(line);
+    }
+
+    const bounds = L.latLngBounds(known.map(n => [Number(n.latitude), Number(n.longitude)]));
+    if (bounds.isValid()) state.map.fitBounds(bounds.pad(.18), { maxZoom: 13 });
+  }
+
+  function queryResultText(query) {
+    const type = String(query?.query_type || '');
+    const status = String(query?.status || '');
+    if (status === 'Aguardando resposta') return ui('Query enviada; aguardando resposta…', 'Query sent; waiting for response…');
+    if (status === 'Respondida') {
+      const rtt = Number(query?.rtt_ms);
+      const time = Number.isFinite(rtt) ? ' · ' + Math.round(rtt) + ' ms' : '';
+      if (type === 'PINGACK') return ui('ACK recebido' + time, 'ACK received' + time);
+      if (type === 'APRST' || type === 'PING') {
+        const total = Array.isArray(query?.trace_path_list) ? query.trace_path_list.length : 0;
+        const located = Array.isArray(query?.trace_nodes) ? query.trace_nodes.filter(n => n.known).length : 0;
+        return ui('Trace recebido' + time + ' · ' + located + '/' + total + ' hops localizados', 'Trace received' + time + ' · ' + located + '/' + total + ' located hops');
+      }
+      return ui('Resposta recebida' + time + ': ' + (query?.response_text || ''), 'Response received' + time + ': ' + (query?.response_text || ''));
+    }
+    return status || ui('Sem resposta.', 'No response.');
+  }
+
+  async function pollQueryResult(queryId, callsign) {
+    const key = Number(queryId);
+    if (!key) return;
+    const previous = state.queryPollers.get(key);
+    if (previous) clearTimeout(previous);
+
+    try {
+      const query = await api('/api/queries/' + key);
+      const waiting = query?.status === 'Aguardando resposta';
+      setQueryStatus(callsign, queryResultText(query), query?.status === 'Respondida' ? 'ok' : (waiting ? '' : 'error'));
+      if (query?.status === 'Respondida' && ['APRST','PING'].includes(String(query.query_type || ''))) {
+        drawQueryTrace(query);
+      }
+      if (waiting) {
+        const timer = setTimeout(() => void pollQueryResult(key, callsign), 1000);
+        state.queryPollers.set(key, timer);
+      } else {
+        state.queryPollers.delete(key);
+      }
+    } catch (err) {
+      state.queryPollers.delete(key);
+      setQueryStatus(callsign, err.message, 'error');
+    }
+  }
+
+  async function sendStationQuery(button) {
+    const callsign = normalizedCall(button?.dataset?.callsign || '');
+    const queryType = String(button?.dataset?.queryType || '').toUpperCase();
+    if (!callsign || !queryType) return;
+    button.disabled = true;
+    setQueryStatus(callsign, ui('Enviando query…', 'Sending query…'));
+    try {
+      const result = await api('/api/queries/send', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ to: callsign, query_type: queryType })
+      });
+      setQueryStatus(callsign, ui('Query enviada; aguardando resposta…', 'Query sent; waiting for response…'));
+      toast(ui('Query ' + queryType + ' enviada para ' + callsign + '.', 'Query ' + queryType + ' sent to ' + callsign + '.'), 'ok');
+      void pollQueryResult(result.id, callsign);
+    } catch (err) {
+      setQueryStatus(callsign, err.message, 'error');
+      toast(err.message, 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  document.addEventListener('click', e => {
+    const button = e.target.closest('.station-query-button');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    void sendStationQuery(button);
+  });
+
   function openMessageComposer(destination = '') {
     $('.tab[data-tab="messages"]')?.click();
     $('#messageType').value = 'message';
@@ -2585,6 +2736,7 @@
     data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
     data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
     data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
+    data.respond_to_queries = !!form.elements.respond_to_queries?.checked;
     data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
     data.auto_download_updates = false;
     data.install_updates_on_exit = false;

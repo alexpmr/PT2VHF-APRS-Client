@@ -493,6 +493,7 @@
           </div>
           <label class="field"><span>Beacon (minutos)</span><input name="beacon_minutes" type="number" min="1" value="10"></label>
           <label class="check-field"><input name="connect_on_start" type="checkbox" checked><span>Conectar ao iniciar</span></label>
+          <label class="check-field"><input name="respond_to_queries" type="checkbox"><span>Responder automaticamente a queries APRS de posição, status e trace</span></label>
           <label class="field"><span>Retry de mensagem após (segundos)</span><input name="message_retry_seconds" type="number" min="15" max="3600" value="60"></label>
           <label class="field"><span>Máximo de retries por parte</span><input name="message_retry_attempts" type="number" min="0" max="10" value="2"></label>
         </div>
@@ -753,6 +754,7 @@
           <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
           <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
           <p>Clique em uma estação para abrir os detalhes. Use <strong>Enviar mensagem</strong>, <strong>Ver logs</strong> ou a <strong>estrela amarela</strong> para favoritar a estação.</p>
+          <p><strong>Queries APRS:</strong> o popup da estação inclui atalhos para consultar <strong>Posição</strong>, <strong>Status</strong>, <strong>Ouvidos</strong>, executar <strong>Ping/ACK</strong> e solicitar <strong>Trace</strong>. Quando o trace retornar um caminho e houver posições conhecidas, os hops são destacados temporariamente no mapa; hops sem posição continuam indicados na resposta sem localização inventada.</p>
           <p>A topologia oferece período <strong>Completo</strong> por padrão, além de janelas em horas/dias, legenda dos tipos de linhas e animação de tráfego no mapa.</p>
           <p>Na primeira execução, quando a permissão é concedida, o mapa é centralizado na localização atual do usuário. Depois disso, a posição e o zoom escolhidos manualmente ficam salvos localmente e não são recentralizados continuamente.</p>
         </article>

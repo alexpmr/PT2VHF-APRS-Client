@@ -109,6 +109,7 @@ DEFAULT_CONFIG = {
     "install_updates_on_exit": 0,
     "message_retry_seconds": 60,
     "message_retry_attempts": 2,
+    "respond_to_queries": 0,
     "language": "pt-BR",
     "map_type": "osm",
     "track_color": "#3ba6ff",
@@ -207,6 +208,7 @@ def init_db() -> None:
                 install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
                 message_retry_attempts INTEGER NOT NULL DEFAULT 2,
+                respond_to_queries INTEGER NOT NULL DEFAULT 0,
                 language TEXT NOT NULL DEFAULT 'pt-BR',
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
@@ -299,6 +301,25 @@ def init_db() -> None:
             );
             CREATE INDEX IF NOT EXISTS idx_messages_time ON messages(timestamp DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_from ON messages(from_call);
+
+            CREATE TABLE IF NOT EXISTS aprs_queries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                direction TEXT NOT NULL CHECK(direction IN ('in','out')),
+                peer TEXT NOT NULL,
+                query_type TEXT NOT NULL,
+                query_payload TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT '',
+                sent_at TEXT NOT NULL,
+                response_at TEXT,
+                rtt_ms REAL,
+                response_text TEXT,
+                response_raw TEXT,
+                trace_path TEXT,
+                message_id TEXT,
+                raw TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_aprs_queries_peer_time ON aprs_queries(peer, id DESC);
+            CREATE INDEX IF NOT EXISTS idx_aprs_queries_pending ON aprs_queries(direction, status, peer, query_type);
 
             CREATE TABLE IF NOT EXISTS packets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -408,6 +429,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN message_retry_seconds INTEGER NOT NULL DEFAULT 60")
         if "message_retry_attempts" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN message_retry_attempts INTEGER NOT NULL DEFAULT 2")
+        if "respond_to_queries" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN respond_to_queries INTEGER NOT NULL DEFAULT 0")
 
         # Corrige o antigo padrão v1.2, que combinava brazil.aprs2.net com 14580.
         # Mantém configurações personalizadas intactas.
@@ -495,6 +518,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["install_updates_on_exit"] = 0
     merged["message_retry_seconds"] = max(15, min(3600, int(merged["message_retry_seconds"] or 60)))
     merged["message_retry_attempts"] = max(0, min(10, int(merged["message_retry_attempts"] or 0)))
+    merged["respond_to_queries"] = 1 if bool(merged["respond_to_queries"]) else 0
     merged["language"] = str(merged["language"] or "pt-BR").strip()
     merged["aprs_filter"] = str(merged["aprs_filter"] or "").strip()
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
@@ -1322,6 +1346,197 @@ def map_data() -> dict[str, Any]:
         ).fetchall()]
     tracks.reverse()
     return {"stations": stations, "tracks": tracks}
+
+
+def add_aprs_query(
+    direction: str,
+    peer: str,
+    query_type: str,
+    query_payload: str,
+    status: str = "Aguardando resposta",
+    raw: str | None = None,
+    message_id: str | None = None,
+) -> int:
+    direction = str(direction or "").lower().strip()
+    if direction not in {"in", "out"}:
+        raise ValueError("Direção de query APRS inválida.")
+    peer = str(peer or "").upper().strip()
+    query_type = str(query_type or "").upper().strip()
+    with connection() as conn:
+        cur = conn.execute(
+            """INSERT INTO aprs_queries(direction,peer,query_type,query_payload,status,sent_at,message_id,raw)
+               VALUES(?,?,?,?,?,?,?,?)""",
+            (direction, peer, query_type, str(query_payload or ""), str(status or ""), utc_now_iso(), message_id, raw),
+        )
+        return int(cur.lastrowid)
+
+
+def update_aprs_query_result(
+    query_id: int,
+    status: str,
+    response_text: str | None = None,
+    response_raw: str | None = None,
+    trace_path: list[str] | None = None,
+) -> dict[str, Any] | None:
+    with connection() as conn:
+        row = conn.execute("SELECT * FROM aprs_queries WHERE id=?", (int(query_id),)).fetchone()
+        if not row:
+            return None
+        sent = datetime.fromisoformat(str(row["sent_at"]))
+        now = datetime.now(timezone.utc)
+        rtt_ms = max(0.0, (now - sent).total_seconds() * 1000.0)
+        conn.execute(
+            """UPDATE aprs_queries
+               SET status=?, response_at=?, rtt_ms=?, response_text=?, response_raw=?, trace_path=?
+               WHERE id=?""",
+            (
+                str(status or ""),
+                now.isoformat(timespec="seconds"),
+                rtt_ms,
+                response_text,
+                response_raw,
+                json.dumps(trace_path or [], ensure_ascii=False) if trace_path is not None else row["trace_path"],
+                int(query_id),
+            ),
+        )
+    return get_aprs_query(query_id)
+
+
+def resolve_aprs_query_response(
+    peer: str,
+    query_types: Iterable[str],
+    response_text: str,
+    response_raw: str,
+    trace_path: list[str] | None = None,
+) -> dict[str, Any] | None:
+    peer = str(peer or "").upper().strip()
+    types = [str(item or "").upper().strip() for item in query_types if str(item or "").strip()]
+    if not peer or not types:
+        return None
+    placeholders = ",".join("?" for _ in types)
+    with connection() as conn:
+        row = conn.execute(
+            f"""SELECT id FROM aprs_queries
+                WHERE direction='out' AND UPPER(peer)=UPPER(?)
+                  AND query_type IN ({placeholders})
+                  AND status='Aguardando resposta'
+                ORDER BY id DESC LIMIT 1""",
+            [peer, *types],
+        ).fetchone()
+    if not row:
+        return None
+    return update_aprs_query_result(
+        int(row["id"]),
+        "Respondida",
+        response_text=response_text,
+        response_raw=response_raw,
+        trace_path=trace_path,
+    )
+
+
+def resolve_ping_ack(msg_id: str, peer: str) -> dict[str, Any] | None:
+    msg_id = str(msg_id or "").strip()
+    peer = str(peer or "").upper().strip()
+    if not msg_id or not peer:
+        return None
+    with connection() as conn:
+        row = conn.execute(
+            """SELECT id FROM aprs_queries
+               WHERE direction='out' AND query_type='PINGACK'
+                 AND status='Aguardando resposta'
+                 AND message_id=? AND UPPER(peer)=UPPER(?)
+               ORDER BY id DESC LIMIT 1""",
+            (msg_id, peer),
+        ).fetchone()
+    if not row:
+        return None
+    return update_aprs_query_result(
+        int(row["id"]),
+        "Respondida",
+        response_text=f"ACK {msg_id}",
+        response_raw=f"ack{msg_id}",
+    )
+
+
+def expire_aprs_queries(timeout_seconds: int = 30) -> int:
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=max(5, int(timeout_seconds or 30)))).isoformat(timespec="seconds")
+    with connection() as conn:
+        cur = conn.execute(
+            """UPDATE aprs_queries SET status='Sem resposta / timeout'
+               WHERE direction='out' AND status='Aguardando resposta' AND sent_at < ?""",
+            (cutoff,),
+        )
+        return max(0, int(cur.rowcount or 0))
+
+
+def list_aprs_queries(peer: str = "", limit: int = 100) -> list[dict[str, Any]]:
+    expire_aprs_queries()
+    peer = str(peer or "").upper().strip()
+    limit = max(1, min(int(limit or 100), 1000))
+    with connection() as conn:
+        if peer:
+            rows = conn.execute(
+                "SELECT * FROM aprs_queries WHERE UPPER(peer)=UPPER(?) ORDER BY id DESC LIMIT ?",
+                (peer, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM aprs_queries ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_aprs_query(query_id: int) -> dict[str, Any] | None:
+    expire_aprs_queries()
+    with connection() as conn:
+        row = conn.execute("SELECT * FROM aprs_queries WHERE id=?", (int(query_id),)).fetchone()
+    return dict(row) if row else None
+
+
+def aprs_query_detail(query_id: int) -> dict[str, Any] | None:
+    row = get_aprs_query(query_id)
+    if not row:
+        return None
+    try:
+        trace = json.loads(row.get("trace_path") or "[]")
+    except Exception:
+        trace = []
+    trace = [str(call or "").upper().strip().rstrip("*") for call in trace if str(call or "").strip()]
+    positions: dict[str, dict[str, Any]] = {}
+    if trace:
+        placeholders = ",".join("?" for _ in trace)
+        with connection() as conn:
+            rows = conn.execute(
+                f"""SELECT callsign,latitude,longitude,last_heard
+                    FROM stations
+                    WHERE UPPER(callsign) IN ({placeholders})""",
+                [call.upper() for call in trace],
+            ).fetchall()
+        positions = {str(item["callsign"]).upper(): dict(item) for item in rows}
+
+    cfg = get_config()
+    own = str(cfg.get("callsign") or "").upper().strip()
+    ssid = int(cfg.get("ssid") or 0)
+    own = f"{own}-{ssid}" if own and ssid else own
+
+    nodes = []
+    for call in trace:
+        item = positions.get(call.upper(), {})
+        lat = item.get("latitude")
+        lon = item.get("longitude")
+        if call.upper() == own.upper() and (lat is None or lon is None):
+            lat, lon = cfg.get("latitude"), cfg.get("longitude")
+        nodes.append({
+            "callsign": call,
+            "latitude": lat,
+            "longitude": lon,
+            "known": lat is not None and lon is not None,
+            "last_heard": item.get("last_heard"),
+        })
+    row["trace_nodes"] = nodes
+    row["trace_path_list"] = trace
+    return row
 
 
 def add_message(direction: str, from_call: str, to_call: str, message: str, msg_id: str | None = None,

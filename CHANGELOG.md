@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.18 - 2026-09-25
+
+- Adicionadas **Directed Station Queries APRS** no popup das estações do Mapa: Posição (`?APRSP`), Status (`?APRSS`), Ouvidos (`?APRSD`) e Trace (`?APRST`).
+- Adicionado **Ping/ACK** com mensagem APRS identificada, medição de RTT e indicação de timeout.
+- Queries são enviadas no formato APRS de mensagem direcionada **sem message ID**, exceto o Ping/ACK que usa ID para medir a confirmação.
+- Adicionado histórico SQLite próprio para queries, respostas, RTT e caminho de trace.
+- Respostas de posição/status/objetos e mensagens de trace são correlacionadas automaticamente com a query pendente.
+- O **Trace** recebido é interpretado e exibido no Mapa: hops com posição conhecida ganham marcadores e enlaces; hops sem posição permanecem identificados no resultado sem localização inventada.
+- Adicionada opção **Responder automaticamente a queries APRS de posição, status e trace**, desativada por padrão, com rate-limit de 30 s por origem/tipo.
+- O cliente passa a responder `?APRSP`, `?APRSS`, `?APRST` e `?PING?` quando a opção estiver habilitada e a sessão APRS-IS estiver verificada.
+- Release completa multiplataforma com Windows x64, Linux x86_64, macOS ARM64/Intel e Manual PDF atualizado.
+
+
 ## v1.6.17 - 2026-09-25
 
 - Release completa multiplataforma consolidando as correções de estabilidade testadas na série 1.6.13-1.6.16.

@@ -4,7 +4,7 @@ import tempfile
 
 from pt2vhf_aprs import database as db
 from pt2vhf_aprs import updater
-from pt2vhf_aprs.aprs_service import build_beacon_packet, build_bulletin_packet, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, split_message_id, split_aprs_message_parts
+from pt2vhf_aprs.aprs_service import APRSService, build_beacon_packet, build_bulletin_packet, build_query_payload, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, parse_query_text, parse_trace_nodes, split_message_id, split_aprs_message_parts
 from pt2vhf_aprs.web import version_tuple
 
 
@@ -32,6 +32,93 @@ def test_message_parser_with_id():
     assert text == "Teste de mensagem"
     assert mid == "123"
 
+
+
+def test_aprs_query_helpers():
+    assert parse_query_text("?APRSP") == ("APRSP", "")
+    assert parse_query_text("?APRSS") == ("APRSS", "")
+    assert parse_query_text("?PING?") == ("PING", "")
+    assert parse_query_text("?APRSH PY2ABC-9") == ("APRSH", "PY2ABC-9")
+    assert build_query_payload("APRST") == "?APRST"
+    assert build_query_payload("PING") == "?PING?"
+    assert build_query_payload("APRSH", "PY2ABC-9").startswith("?APRSH PY2ABC-9")
+    assert parse_trace_nodes("PT2VHF>APRS,PT2DIGI*,WIDE2-1:") == ["PT2VHF", "PT2DIGI", "WIDE2-1"]
+
+
+def test_aprs_query_database_lifecycle():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({
+                "callsign": "PT2VHF", "ssid": 0,
+                "latitude": -15.8, "longitude": -47.9, "altitude": 1000,
+                "respond_to_queries": True,
+            })
+            qid = db.add_aprs_query("out", "PY2ABC-9", "APRST", "?APRST")
+            assert db.get_aprs_query(qid)["status"] == "Aguardando resposta"
+            resolved = db.resolve_aprs_query_response(
+                "PY2ABC-9", ["APRST"],
+                "PT2VHF>APRS,PT2DIGI*:",
+                "PY2ABC-9>APRS::PT2VHF  :PT2VHF>APRS,PT2DIGI*:",
+                trace_path=["PT2VHF", "PT2DIGI"],
+            )
+            assert resolved and resolved["status"] == "Respondida"
+            assert resolved["rtt_ms"] is not None
+            detail = db.aprs_query_detail(qid)
+            assert detail["trace_path_list"] == ["PT2VHF", "PT2DIGI"]
+    finally:
+        db.DB_PATH = original
+
+
+def test_aprs_service_sends_standard_query_without_message_id(monkeypatch):
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({
+                "callsign": "PT2VHF", "ssid": 0,
+                "latitude": -15.8, "longitude": -47.9, "altitude": 1000,
+            })
+            service = APRSService()
+            service._set_status(connected=True, verified=True)
+            sent = []
+            monkeypatch.setattr(service, "_send_raw", sent.append)
+            result = service.send_query("PY2ABC-9", "APRSP")
+            assert result["query_type"] == "APRSP"
+            assert sent == ["PT2VHF>APRS,TCPIP*::PY2ABC-9:?APRSP"]
+            assert "{" not in sent[0]
+    finally:
+        db.DB_PATH = original
+
+
+def test_aprs_service_auto_responds_to_position_query(monkeypatch):
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({
+                "callsign": "PT2VHF", "ssid": 0,
+                "latitude": -15.8, "longitude": -47.9, "altitude": 1000,
+                "respond_to_queries": True,
+            })
+            service = APRSService()
+            service._set_status(connected=True, verified=True)
+            sent = []
+            monkeypatch.setattr(service, "_send_raw", sent.append)
+            service._handle_message(
+                {"from": "PY2ABC-9", "to": "PT2VHF", "text": "?APRSP"},
+                "PY2ABC-9>APRS,TCPIP*::PT2VHF   :?APRSP",
+            )
+            assert sent and sent[0].startswith("PT2VHF>APRS,TCPIP*:=")
+            incoming = db.list_aprs_queries("PY2ABC-9", 10)
+            assert incoming[0]["direction"] == "in"
+            assert incoming[0]["status"] == "Respondida"
+    finally:
+        db.DB_PATH = original
 
 def test_database_config_and_station():
     original = db.DB_PATH

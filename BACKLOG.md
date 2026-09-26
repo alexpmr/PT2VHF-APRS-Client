@@ -232,3 +232,12 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - CPU inicial observada em torno de 1% após a correção da consulta de topologia, contra aproximadamente 55% na v1.6.15.
 - Mantida a instrumentação diagnóstica e os gauges de CPU/RAM para acompanhar estabilidade em uso real.
 - Publicação prevista para Windows, Linux, macOS e Manual PDF.
+
+
+## Concluído na v1.6.18
+
+- Queries APRS direcionadas pelo popup da estação: posição, status, ouvidos e trace.
+- Ping/ACK com RTT e timeout.
+- Trace visual no mapa com hops conhecidos, sem inventar posição para hops desconhecidos.
+- Histórico local das queries e respostas.
+- Estrutura de resposta automática a APRSP/APRSS/APRST/PING com configuração e rate-limit.

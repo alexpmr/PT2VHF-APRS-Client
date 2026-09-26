@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.18": {
+        "title": "Queries APRS, Ping/ACK e Trace no mapa",
+        "items": [
+            "Adiciona consultas APRS direcionadas de posição, status, estações ouvidas e trace diretamente pelo popup do mapa.",
+            "Adiciona Ping/ACK com medição de RTT e timeout.",
+            "O Trace recebido é interpretado e desenhado no mapa somente nos hops com posição conhecida, sem inventar localização para nós desconhecidos.",
+            "Adiciona histórico local das queries, respostas e tempos de resposta.",
+            "Prepara o cliente para responder automaticamente a queries APRS de posição, status e trace, com opção em Configurações e rate-limit.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.6.17": {
         "title": "Release completa multiplataforma com correções de estabilidade",
         "items": [

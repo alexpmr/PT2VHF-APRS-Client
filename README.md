@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.6.17
+# PT2VHF APRS Client - v1.6.18
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.17** é uma release completa multiplataforma que consolida as correções de estabilidade, desempenho de CPU, topologia observada e disponibilidade do backend, com artefatos para Windows, Linux, macOS e manual PDF.
+A **v1.6.18** é uma release completa multiplataforma que acrescenta diagnóstico interativo por queries APRS, Ping/ACK e Trace visual no mapa, mantendo as correções de estabilidade e desempenho da série 1.6.
 
 ## Downloads
 
@@ -76,6 +76,13 @@ Cada Release completa publica:
 - Em pacotes com múltiplos enlaces observados, os segmentos podem ser animados simultaneamente, reproduzindo a propagação multi-hop.
 - Cada transmissão recebida pode gerar som curto e destacar temporariamente em vermelho o marcador da estação de origem; som e destaque são configuráveis separadamente.
 - Estações favoritas são persistidas e ficam fixadas no topo da aba Estações; a estrela também aparece no popup do mapa e na área de Mensagens.
+
+### Queries APRS e diagnóstico
+- No popup de cada estação no Mapa há botões para **Posição**, **Status**, **Ouvidos**, **Ping/ACK** e **Trace**.
+- O Ping/ACK mede o tempo até a confirmação APRS e registra RTT/timeout.
+- O Trace usa somente o caminho efetivamente recebido. Hops com posição conhecida são desenhados no mapa; os demais continuam listados como não localizados.
+- Em Configuração é possível habilitar respostas automáticas a queries de posição, status e trace. O padrão é desligado para evitar transmissões inesperadas.
+- O histórico de queries e respostas fica no banco local e é usado pelo diagnóstico do popup.
 
 ### Atualização integrada
 - **Verificar atualizações automaticamente** — habilitado por padrão e executado na abertura e depois a cada **5 minutos**.

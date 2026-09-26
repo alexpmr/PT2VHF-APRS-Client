@@ -126,6 +126,7 @@ class APRSService:
         self._stop_event = threading.Event()
         self._msg_counter = int(time.time()) % 1000
         self._last_beacon = 0.0
+        self._query_response_last: dict[tuple[str, str], float] = {}
 
     def status(self) -> dict[str, Any]:
         with self._status_lock:
@@ -375,10 +376,135 @@ class APRSService:
         # v1.6.14: log, pacote, topologia e estação/track são gravados juntos.
         # Evita 3-4 conexões e commits SQLite independentes para cada RX.
         db.process_received_packet(line, parsed, from_call, fmt)
+        self._maybe_resolve_nonmessage_query_response(from_call, parsed, line)
 
         msg = parse_message_line(line, parsed)
         if msg:
             self._handle_message(msg, line)
+
+    def _maybe_resolve_nonmessage_query_response(self, from_call: str, parsed: dict[str, Any], raw: str) -> None:
+        peer = str(from_call or "").upper().strip()
+        if not peer:
+            return
+        fmt = str(parsed.get("format") or "").lower()
+        if parsed.get("latitude") is not None and parsed.get("longitude") is not None:
+            db.resolve_aprs_query_response(peer, ["APRSP"], "Posição recebida", raw)
+            return
+        payload = raw.split(":", 1)[1] if ":" in raw else ""
+        if fmt == "status" or payload.startswith(">"):
+            db.resolve_aprs_query_response(peer, ["APRSS"], payload[:180], raw)
+            return
+        if fmt in {"object", "item"} or payload.startswith(";"):
+            db.resolve_aprs_query_response(peer, ["APRSO"], payload[:180], raw)
+
+    def _handle_directed_query(self, from_call: str, query_text: str, raw: str) -> None:
+        query_type, _arg = parse_query_text(query_text)
+        qid = db.add_aprs_query(
+            "in",
+            from_call,
+            query_type or "UNKNOWN",
+            query_text,
+            status="Recebida",
+            raw=raw,
+        )
+        cfg = db.get_config()
+        own = full_callsign(cfg).upper()
+        if not query_type:
+            db.update_aprs_query_result(qid, "Não suportada", response_text="Query desconhecida")
+            return
+        if not bool(cfg.get("respond_to_queries", 0)):
+            db.update_aprs_query_result(qid, "Ignorada", response_text="Respostas automáticas desativadas")
+            return
+        if not self.status().get("verified"):
+            db.update_aprs_query_result(qid, "Ignorada", response_text="APRS-IS não verificado")
+            return
+
+        supported = {"APRSP", "APRSS", "APRST", "PING"}
+        if query_type not in supported:
+            db.update_aprs_query_result(qid, "Não suportada", response_text=f"{query_type} não implementada para resposta automática")
+            return
+
+        key = (str(from_call or "").upper().strip(), query_type)
+        now = time.monotonic()
+        last = float(self._query_response_last.get(key) or 0.0)
+        if now - last < 30.0:
+            db.update_aprs_query_result(qid, "Rate-limit", response_text="Query repetida em menos de 30 s")
+            return
+        self._query_response_last[key] = now
+
+        source = own
+        if query_type == "APRSP":
+            if cfg.get("latitude") is None or cfg.get("longitude") is None:
+                db.update_aprs_query_result(qid, "Sem dados", response_text="Posição local não configurada")
+                return
+            packet = build_beacon_packet(cfg)
+        elif query_type == "APRSS":
+            status_text = " ".join(str(cfg.get("comment") or "PT2VHF APRS Client").split())[:62]
+            packet = f"{source}>APRS,TCPIP*:>{status_text}"
+        else:
+            received_header = raw.split(":", 1)[0].strip()
+            response_text = f"{received_header}:"
+            packet = f"{source}>APRS,TCPIP*::{str(from_call).upper():<9}:{response_text}"
+
+        try:
+            self._send_raw(packet)
+            db.update_aprs_query_result(qid, "Respondida", response_text=packet, response_raw=packet)
+        except Exception as exc:
+            db.update_aprs_query_result(qid, "Falhou", response_text=str(exc))
+
+    def send_query(self, destination: str, query_type: str, heard_callsign: str = "") -> dict[str, Any]:
+        status = self.status()
+        if not status["connected"]:
+            raise ConnectionError("Cliente APRS-IS desconectado.")
+        if not status["verified"]:
+            raise PermissionError("Conexão APRS-IS não verificada; não é possível transmitir queries.")
+
+        destination = str(destination or "").upper().strip()
+        if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", destination):
+            raise ValueError("Indicativo de destino inválido.")
+
+        query_type = str(query_type or "").upper().strip()
+        if query_type == "PINGACK":
+            return self.send_ping_ack(destination)
+
+        payload = build_query_payload(query_type, heard_callsign)
+        cfg = db.get_config()
+        source = full_callsign(cfg)
+        packet = f"{source}>APRS,TCPIP*::{destination:<9}:{payload}"
+        self._send_raw(packet)
+        query_id = db.add_aprs_query(
+            "out",
+            destination,
+            query_type,
+            payload,
+            status="Aguardando resposta",
+            raw=packet,
+        )
+        return {"id": query_id, "to": destination, "query_type": query_type, "payload": payload, "status": "Aguardando resposta"}
+
+    def send_ping_ack(self, destination: str) -> dict[str, Any]:
+        status = self.status()
+        if not status["connected"] or not status["verified"]:
+            raise ConnectionError("Ping/ACK exige APRS-IS conectado e verificado.")
+        destination = str(destination or "").upper().strip()
+        if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", destination):
+            raise ValueError("Indicativo de destino inválido.")
+        cfg = db.get_config()
+        source = full_callsign(cfg)
+        self._msg_counter = (self._msg_counter + 1) % 1000
+        msg_id = f"{self._msg_counter:03d}"
+        packet = f"{source}>APRS,TCPIP*::{destination:<9}:PING{{{msg_id}"
+        self._send_raw(packet)
+        query_id = db.add_aprs_query(
+            "out",
+            destination,
+            "PINGACK",
+            "PING",
+            status="Aguardando resposta",
+            raw=packet,
+            message_id=msg_id,
+        )
+        return {"id": query_id, "to": destination, "query_type": "PINGACK", "payload": "PING", "message_id": msg_id, "status": "Aguardando resposta"}
 
     def _handle_message(self, msg: dict[str, str], raw: str) -> None:
         text = msg["text"].strip()
@@ -388,12 +514,34 @@ class APRSService:
         rej = re.fullmatch(r"rej([A-Za-z0-9]{1,5})", text, re.IGNORECASE)
         if ack:
             db.mark_message_status(ack.group(1), "ACK", from_call)
+            db.resolve_ping_ack(ack.group(1), from_call)
             return
         if rej:
             db.mark_message_status(rej.group(1), "REJ", from_call)
             return
 
         message_text, msg_id = split_message_id(text)
+        cfg = db.get_config()
+        own_call = full_callsign(cfg).upper()
+        is_personal_message = classify_message_type(to_call) == "message" and to_call == own_call
+
+        if is_personal_message and not msg_id and message_text.strip().startswith("?"):
+            self._handle_directed_query(from_call, message_text.strip(), raw)
+            return
+
+        upper_text = message_text.strip().upper()
+        if to_call == own_call:
+            if re.match(r"^[A-Z0-9-]+>[^:]+:$", upper_text):
+                trace = parse_trace_nodes(message_text)
+                if db.resolve_aprs_query_response(from_call, ["APRST", "PING"], message_text, raw, trace_path=trace):
+                    return
+            if upper_text.startswith("DIRECTS="):
+                if db.resolve_aprs_query_response(from_call, ["APRSD"], message_text, raw):
+                    return
+            if "_HEARD:" in upper_text or " HEARD:" in upper_text:
+                if db.resolve_aprs_query_response(from_call, ["APRSH"], message_text, raw):
+                    return
+
         message_type = classify_message_type(to_call)
         db.add_message(
             "in", from_call, to_call, message_text,
@@ -404,8 +552,7 @@ class APRSService:
         )
 
         # Alerta e ACK somente para mensagem individual endereçada exatamente a esta estação.
-        cfg = db.get_config()
-        is_personal_message = message_type == "message" and to_call == full_callsign(cfg).upper()
+        is_personal_message = message_type == "message" and to_call == own_call
 
         if is_personal_message and bool(cfg.get("sound_on_personal_message", 1)):
             _notify_personal_message(from_call, message_text)
@@ -782,6 +929,60 @@ def parse_message_line(line: str, parsed: dict[str, Any] | None = None) -> dict[
 def split_message_id(text: str) -> tuple[str, str | None]:
     m = re.match(r"^(.*)\{([A-Za-z0-9]{1,5})$", text)
     return (m.group(1), m.group(2)) if m else (text, None)
+
+QUERY_TYPES = {"APRSP", "APRSS", "APRSD", "APRSH", "APRSO", "APRST", "PING", "PINGACK"}
+
+
+def parse_query_text(text: str) -> tuple[str, str]:
+    value = str(text or "").strip()
+    upper = value.upper()
+    if upper == "?PING?":
+        return "PING", ""
+    match = re.match(r"^\?(APRSP|APRSS|APRSD|APRSM|APRSO|APRST)(?:\s+.*)?$", upper)
+    if match:
+        return match.group(1), ""
+    match = re.match(r"^\?APRSH(?:\s+)?([A-Z0-9-]{1,9})?", upper)
+    if match:
+        return "APRSH", str(match.group(1) or "").strip()
+    return "", ""
+
+
+def build_query_payload(query_type: str, heard_callsign: str = "") -> str:
+    query_type = str(query_type or "").upper().strip()
+    if query_type == "PING":
+        return "?PING?"
+    if query_type == "APRSH":
+        heard = str(heard_callsign or "").upper().strip()
+        if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", heard):
+            raise ValueError("Informe um indicativo válido para a query APRSH.")
+        return f"?APRSH {heard:<9}"
+    if query_type in {"APRSP", "APRSS", "APRSD", "APRSO", "APRST"}:
+        return f"?{query_type}"
+    raise ValueError("Tipo de query APRS não suportado.")
+
+
+def parse_trace_nodes(text: str) -> list[str]:
+    value = str(text or "").strip()
+    if value.endswith(":"):
+        value = value[:-1]
+    if ">" not in value:
+        return []
+    source, route = value.split(">", 1)
+    nodes = [source.strip().upper().rstrip("*")]
+    parts = [part.strip().upper() for part in route.split(",") if part.strip()]
+    if parts and parts[0] in {"APRS", "APRS1", "BEACON"}:
+        parts = parts[1:]
+    for part in parts:
+        clean = part.rstrip("*")
+        if not clean or clean in {"TCPIP", "TCPXX"} or re.fullmatch(r"QA[A-Z]", clean):
+            continue
+        nodes.append(clean)
+    result: list[str] = []
+    for call in nodes:
+        if call and (not result or result[-1] != call):
+            result.append(call)
+    return result
+
 
 
 def _lat_aprs(value: float) -> str:

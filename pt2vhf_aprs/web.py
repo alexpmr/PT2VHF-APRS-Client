@@ -293,6 +293,35 @@ def create_app() -> Flask:
     def api_map_data():
         return jsonify(db.map_data())
 
+    @app.post("/api/queries/send")
+    def api_send_query():
+        try:
+            data = request.get_json(force=True) or {}
+            result = service.send_query(
+                data.get("to", ""),
+                data.get("query_type", ""),
+                data.get("heard_callsign", ""),
+            )
+            return jsonify({"ok": True, **result})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/queries")
+    def api_queries():
+        try:
+            peer = str(request.args.get("station") or "").upper().strip()
+            limit = int(request.args.get("limit", 100))
+            return jsonify(db.list_aprs_queries(peer, limit))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.get("/api/queries/<int:query_id>")
+    def api_query_detail(query_id: int):
+        payload = db.aprs_query_detail(query_id)
+        if not payload:
+            return jsonify({"error": "Query APRS não encontrada."}), 404
+        return jsonify(payload)
+
     @app.get("/api/topology")
     def api_topology():
         try:
