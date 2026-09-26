@@ -79,6 +79,17 @@
 
 ## Pendências para próximas versões
 
+- **Atualizações — download direto da versão correta pela caixa de versão**
+  - Quando houver uma versão nova disponível, tornar a **caixa/indicador de versão na barra superior clicável** para iniciar o download diretamente da Release oficial no GitHub.
+  - Detectar automaticamente a **plataforma e arquitetura em uso** e escolher o artefato correspondente: **Windows x64**, **Linux x86_64** ou **macOS ARM64/Intel x86_64**.
+  - No Windows, preservar também o tipo de distribuição quando possível: **Portable baixa Portable** e **instalação via Setup baixa o Setup**.
+  - No Linux, selecionar o formato apropriado da instalação atual quando identificável (**AppImage, DEB ou TAR.GZ**); se não for possível determinar com segurança, apresentar as opções Linux disponíveis sem escolher arbitrariamente.
+  - No macOS, selecionar automaticamente o DMG compatível com a arquitetura (**Apple Silicon ARM64** ou **Intel x86_64**).
+  - O download deve apontar diretamente para o **asset da versão mais recente publicada no GitHub Releases**, sem exigir que o usuário navegue manualmente pela página da Release.
+  - Manter o comportamento de **somente baixar/avisar**, sem instalação automática silenciosa; a instalação continua sob controle do usuário.
+  - Exibir estado de download/progresso e mensagem clara em caso de falha, asset ausente ou incompatibilidade detectada.
+
+
 - **Aba Análise — ranking das estações que mais conversaram**
   - Adicionar um painel com o ranking das **estações com maior volume de conversas/mensagens** registradas pelo cliente.
   - Ordenar em ordem decrescente, da estação com mais interações para a com menos.
