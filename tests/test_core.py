@@ -88,7 +88,7 @@ def test_aprs_service_sends_standard_query_without_message_id(monkeypatch):
             monkeypatch.setattr(service, "_send_raw", sent.append)
             result = service.send_query("PY2ABC-9", "APRSP")
             assert result["query_type"] == "APRSP"
-            assert sent == ["PT2VHF>APRS,TCPIP*::PY2ABC-9:?APRSP"]
+            assert sent == ["PT2VHF>APRS,TCPIP*::PY2ABC-9 :?APRSP"]
             assert "{" not in sent[0]
     finally:
         db.DB_PATH = original
