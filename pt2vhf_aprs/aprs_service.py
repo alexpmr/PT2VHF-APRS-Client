@@ -17,6 +17,7 @@ except ImportError:  # Permite importar o módulo durante validações sem depen
     aprslib = None
 
 from . import __version__
+from . import APP_TOCALL
 from . import database as db
 
 VERSION = __version__
@@ -447,11 +448,11 @@ class APRSService:
             packet = build_beacon_packet(cfg)
         elif query_type == "APRSS":
             status_text = " ".join(str(cfg.get("comment") or "PT2VHF APRS Client").split())[:62]
-            packet = f"{source}>APRS,TCPIP*:>{status_text}"
+            packet = f"{source}>{APP_TOCALL},TCPIP*:>{status_text}"
         else:
             received_header = raw.split(":", 1)[0].strip()
             response_text = f"{received_header}:"
-            packet = f"{source}>APRS,TCPIP*::{str(from_call).upper():<9}:{response_text}"
+            packet = f"{source}>{APP_TOCALL},TCPIP*::{str(from_call).upper():<9}:{response_text}"
 
         try:
             self._send_raw(packet)
@@ -477,7 +478,7 @@ class APRSService:
         payload = build_query_payload(query_type, heard_callsign)
         cfg = db.get_config()
         source = full_callsign(cfg)
-        packet = f"{source}>APRS,TCPIP*::{destination:<9}:{payload}"
+        packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{payload}"
         self._send_raw(packet)
         query_id = db.add_aprs_query(
             "out",
@@ -500,7 +501,7 @@ class APRSService:
         source = full_callsign(cfg)
         self._msg_counter = (self._msg_counter + 1) % 1000
         msg_id = f"{self._msg_counter:03d}"
-        packet = f"{source}>APRS,TCPIP*::{destination:<9}:PING{{{msg_id}"
+        packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:PING{{{msg_id}"
         self._send_raw(packet)
         query_id = db.add_aprs_query(
             "out",
@@ -622,7 +623,7 @@ class APRSService:
             for index, part in enumerate(parts):
                 self._msg_counter = (self._msg_counter + 1) % 1000
                 msg_id = f"{self._msg_counter:03d}"
-                packet = f"{source}>APRS,TCPIP*::{destination:<9}:{part}{{{msg_id}"
+                packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
                 message_ids.append(msg_id)
                 packets.append({"packet": packet, "msg_id": msg_id})
                 pending_rows.append({
@@ -671,7 +672,7 @@ class APRSService:
         for index, part in enumerate(parts):
             self._msg_counter = (self._msg_counter + 1) % 1000
             msg_id = f"{self._msg_counter:03d}"
-            packet = f"{source}>APRS,TCPIP*::{destination:<9}:{part}{{{msg_id}"
+            packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
             self._send_raw(packet)
             row_ids.append(
                 db.add_message(
@@ -715,7 +716,7 @@ class APRSService:
         part = str(original.get("message") or "")
         self._msg_counter = (self._msg_counter + 1) % 1000
         msg_id = f"{self._msg_counter:03d}"
-        packet = f"{source}>APRS,TCPIP*::{destination:<9}:{part}{{{msg_id}"
+        packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
         self._send_raw(packet)
         db.mark_message_retried(int(original["id"]))
         new_row = db.add_message(
@@ -760,7 +761,7 @@ class APRSService:
     def send_ack(self, destination: str, msg_id: str) -> None:
         cfg = db.get_config()
         source = full_callsign(cfg)
-        packet = f"{source}>APRS,TCPIP*::{destination:<9}:ack{msg_id}"
+        packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:ack{msg_id}"
         self._send_raw(packet)
 
     def send_beacon(self) -> None:
@@ -846,7 +847,7 @@ def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group:
 
     message_type = "group_bulletin" if group else "bulletin"
     addressee = f"BLN{bulletin_id}{group:<5}" if group else f"BLN{bulletin_id}{'':<5}"
-    packet = f"{source}>APRS,TCPIP*::{addressee}:{clean}"
+    packet = f"{source}>{APP_TOCALL},TCPIP*::{addressee}:{clean}"
     return packet, addressee.rstrip(), message_type, clean
 
 
@@ -1020,4 +1021,4 @@ def build_beacon_packet(cfg: dict[str, Any]) -> str:
         feet = max(0, min(999999, int(round(float(cfg["altitude"]) * 3.28084))))
         altitude = f" /A={feet:06d}"
     payload = f"={_lat_aprs(float(cfg['latitude']))}{table}{_lon_aprs(float(cfg['longitude']))}{symbol}{comment}{altitude}"
-    return f"{source}>APRS,TCPIP*:{payload}"
+    return f"{source}>{APP_TOCALL},TCPIP*:{payload}"

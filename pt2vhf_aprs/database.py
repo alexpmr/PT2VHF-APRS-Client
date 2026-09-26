@@ -13,6 +13,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Iterable
 
+from . import APP_TOCALL
 from . import diagnostics as diag
 
 def _default_data_dir() -> Path:
@@ -55,6 +56,10 @@ _topology_cache_lock = threading.Lock()
 _topology_cache: dict[int, tuple[float, list[dict[str, Any]]]] = {}
 TOPOLOGY_CACHE_SECONDS = 2.0
 TOPOLOGY_QUERY_MAX_SECONDS = 2.5
+
+APRS_DEVICE_ID_PATH = Path(__file__).resolve().parent / "data" / "aprs_device_ids.json"
+_aprs_device_id_lock = threading.Lock()
+_aprs_device_id_entries: list[dict[str, Any]] | None = None
 
 
 def _retention_due(name: str, added: int = 1) -> bool:
@@ -364,6 +369,36 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_topology_events_source_target ON topology_events(source, target);
             """
         )
+        # Migração v1.6.20: enlaces até o IGate observados por qAR/qAO são RF.
+        # Versões anteriores gravavam esses últimos saltos como kind='igate',
+        # o que fazia o mapa desenhá-los tracejados mesmo sendo recepção de rádio.
+        old_igate_rows = conn.execute(
+            """SELECT source,target,packet_count,first_seen,last_seen,igate
+               FROM topology_edges
+               WHERE kind='igate' AND igate IS NOT NULL"""
+        ).fetchall()
+        for old_edge in old_igate_rows:
+            conn.execute(
+                """INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
+                   VALUES(?,?, 'rf', ?,?,?,?)
+                   ON CONFLICT(source,target,kind) DO UPDATE SET
+                     packet_count=topology_edges.packet_count + excluded.packet_count,
+                     first_seen=MIN(topology_edges.first_seen, excluded.first_seen),
+                     last_seen=MAX(topology_edges.last_seen, excluded.last_seen),
+                     igate=COALESCE(excluded.igate, topology_edges.igate)""",
+                (
+                    old_edge["source"],
+                    old_edge["target"],
+                    int(old_edge["packet_count"] or 0),
+                    old_edge["first_seen"],
+                    old_edge["last_seen"],
+                    old_edge["igate"],
+                ),
+            )
+        if old_igate_rows:
+            conn.execute("DELETE FROM topology_edges WHERE kind='igate' AND igate IS NOT NULL")
+            conn.execute("UPDATE topology_events SET kind='rf' WHERE kind='igate'")
+
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
         if "open_browser_on_start" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN open_browser_on_start INTEGER NOT NULL DEFAULT 0")
@@ -844,7 +879,10 @@ def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, s
         if token in {"QAR", "QAO"} and i + 1 < len(path):
             candidate = path[i + 1].rstrip("*")
             if _is_topology_callsign(candidate) and candidate != previous:
-                edges.append((previous, candidate, "igate", candidate))
+                # qAR/qAO identifica o IGate que recebeu o pacote da malha RF.
+                # O enlace físico até esse IGate continua sendo RF; guardamos
+                # o indicativo do IGate em metadata sem trocar o meio do enlace.
+                edges.append((previous, candidate, "rf", candidate))
             break
     return source, edges
 
@@ -978,18 +1016,110 @@ def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
 
 
 def _aprs_tocall_from_raw(raw: str) -> str:
-    """Extrai o destination/TOCALL do cabeçalho TNC2 sem inferir software."""
+    """Extrai o destination/TOCALL do cabeçalho TNC2."""
     match = re.match(r"^[^>\r\n]+>([^,:>\r\n]+)", str(raw or "").strip())
     return str(match.group(1) if match else "").upper().strip()
 
 
-def client_version_stats(hours: int = 0) -> dict[str, Any]:
-    """Distribuição do identificador de cliente/versão pelo último pacote de cada estação.
+def _load_aprs_device_ids() -> list[dict[str, Any]]:
+    global _aprs_device_id_entries
+    if _aprs_device_id_entries is not None:
+        return _aprs_device_id_entries
+    with _aprs_device_id_lock:
+        if _aprs_device_id_entries is not None:
+            return _aprs_device_id_entries
+        try:
+            payload = json.loads(APRS_DEVICE_ID_PATH.read_text(encoding="utf-8"))
+            entries = payload.get("entries", []) if isinstance(payload, dict) else []
+            _aprs_device_id_entries = [dict(item) for item in entries if isinstance(item, dict) and item.get("tocall")]
+        except Exception as exc:
+            diag.log_event("aprs_device_id_load_failed", error=str(exc))
+            _aprs_device_id_entries = []
+    return _aprs_device_id_entries
 
-    O APRS não garante que todo TOCALL identifique software/versão. Para não inventar
-    informação, só consideramos identificado um destination começando por AP e
-    diferente do genérico APRS. O valor exato do TOCALL é preservado.
-    """
+
+def _tocall_pattern_regex(pattern: str) -> str:
+    out: list[str] = []
+    for char in str(pattern or ""):
+        if char == "?":
+            out.append(".")
+        elif char == "*":
+            out.append(".*")
+        elif char == "n":
+            out.append("[0-9]")
+        else:
+            out.append(re.escape(char.upper()))
+    return "^" + "".join(out) + "$"
+
+
+def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
+    """Resolve TOCALL pelo snapshot oficial aprs-deviceid, preferindo padrões específicos."""
+    code = str(tocall or "").upper().strip()
+    if not code:
+        return {"identifier": "", "friendly_name": "Não identificado", "identified": False}
+
+    best: dict[str, Any] | None = None
+    best_score: tuple[int, int, int] = (-1, -1, -999)
+    for item in _load_aprs_device_ids():
+        raw_pattern = str(item.get("tocall") or "").strip()
+        pattern = raw_pattern.upper()
+        if not raw_pattern:
+            continue
+        try:
+            if not re.fullmatch(_tocall_pattern_regex(raw_pattern), code):
+                continue
+        except re.error:
+            continue
+        wildcard_count = raw_pattern.count("?") + raw_pattern.count("*") + raw_pattern.count("n")
+        literal_count = len(raw_pattern) - wildcard_count
+        exact = 1 if wildcard_count == 0 and pattern == code else 0
+        score = (exact, literal_count, -wildcard_count)
+        if score > best_score:
+            best = item
+            best_score = score
+
+    if not best:
+        return {
+            "identifier": code,
+            "friendly_name": "Não identificado",
+            "identified": False,
+            "vendor": "",
+            "model": "",
+            "class": "",
+            "os": "",
+            "pattern": "",
+        }
+
+    model = str(best.get("model") or "").strip()
+    vendor = str(best.get("vendor") or "").strip()
+    pattern = str(best.get("tocall") or "").upper().strip()
+    friendly = model or vendor or ("Experimental" if pattern.startswith("APZ") else "Não identificado")
+
+    # Dire Wolf codifica a versão nos dois dígitos finais de APDWxx.
+    if model.lower() == "direwolf" and re.fullmatch(r"APDW[0-9]{2}", code):
+        suffix = code[-2:]
+        friendly = f"Dire Wolf {suffix[0]}.{suffix[1]}"
+    elif model.lower() == "direwolf":
+        friendly = "Dire Wolf"
+
+    if pattern.startswith("APZ") and not bool(best.get("local_override")) and not model and not vendor:
+        friendly = "Experimental"
+
+    return {
+        "identifier": code,
+        "friendly_name": friendly,
+        "identified": friendly not in {"Não identificado", ""},
+        "vendor": vendor,
+        "model": model,
+        "class": str(best.get("class") or ""),
+        "os": str(best.get("os") or ""),
+        "pattern": pattern,
+        "local_override": bool(best.get("local_override")),
+    }
+
+
+def client_version_stats(hours: int = 0) -> dict[str, Any]:
+    """Distribuição de software/dispositivo APRS pelo último pacote de cada estação."""
     hours = int(hours or 0)
     params: list[Any] = []
     where = ""
@@ -1007,28 +1137,63 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
 
     counts: dict[str, int] = {}
     unidentified = 0
+    metadata: dict[str, dict[str, Any]] = {}
     for row in rows:
         tocall = _aprs_tocall_from_raw(row["raw"])
-        if tocall.startswith("AP") and tocall != "APRS" and re.fullmatch(r"AP[A-Z0-9]{2,7}", tocall):
-            counts[tocall] = counts.get(tocall, 0) + 1
-        else:
+        if not tocall or tocall == "APRS":
             unidentified += 1
+            continue
+        resolved = resolve_aprs_device_id(tocall)
+        if not resolved.get("identified"):
+            unidentified += 1
+            continue
+        counts[tocall] = counts.get(tocall, 0) + 1
+        metadata[tocall] = resolved
 
     identified_total = sum(counts.values())
-    items = [
-        {
+    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    items: list[dict[str, Any]] = []
+    for rank, (identifier, count) in enumerate(ranked, start=1):
+        meta = metadata.get(identifier) or resolve_aprs_device_id(identifier)
+        items.append({
+            "rank": rank,
             "identifier": identifier,
+            "friendly_name": meta.get("friendly_name") or identifier,
+            "vendor": meta.get("vendor") or "",
+            "model": meta.get("model") or "",
+            "class": meta.get("class") or "",
+            "os": meta.get("os") or "",
             "stations": count,
             "percent": round((count / identified_total) * 100.0, 1) if identified_total else 0.0,
+            "is_own_client": identifier == APP_TOCALL,
+        })
+
+    own_client = next((dict(item) for item in items if item["identifier"] == APP_TOCALL), None)
+    if own_client is None:
+        own_meta = resolve_aprs_device_id(APP_TOCALL)
+        own_client = {
+            "rank": None,
+            "identifier": APP_TOCALL,
+            "friendly_name": own_meta.get("friendly_name") or "PT2VHF APRS Client",
+            "vendor": own_meta.get("vendor") or "PT2VHF",
+            "model": own_meta.get("model") or "PT2VHF APRS Client",
+            "class": own_meta.get("class") or "software",
+            "os": own_meta.get("os") or "",
+            "stations": 0,
+            "percent": 0.0,
+            "is_own_client": True,
         }
-        for identifier, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
-    ]
+
     return {
         "hours": 0 if hours <= 0 else hours,
         "total_stations": len(rows),
         "identified_stations": identified_total,
         "unidentified_stations": unidentified,
+        "top_limit": 20,
+        "own_identifier": APP_TOCALL,
+        "own_client": own_client,
         "items": items,
+        "device_id_source": "aprsorg/aprs-deviceid (CC BY-SA 2.0)",
     }
 
 
@@ -1049,16 +1214,16 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
             f"""
             SELECT target AS callsign, SUM(packet_count) AS packets, MAX(last_seen) AS last_seen
             FROM topology_edges
-            WHERE kind='rf' {time_filter}
+            WHERE kind='rf' AND igate IS NULL {time_filter}
             GROUP BY target ORDER BY packets DESC, callsign LIMIT 20
             """, params
         ).fetchall()]
         igates = [dict(r) for r in conn.execute(
             f"""
-            SELECT COALESCE(igate,target) AS callsign, SUM(packet_count) AS packets, MAX(last_seen) AS last_seen
+            SELECT igate AS callsign, SUM(packet_count) AS packets, MAX(last_seen) AS last_seen
             FROM topology_edges
-            WHERE kind='igate' {time_filter}
-            GROUP BY COALESCE(igate,target) ORDER BY packets DESC, callsign LIMIT 20
+            WHERE igate IS NOT NULL {time_filter}
+            GROUP BY igate ORDER BY packets DESC, callsign LIMIT 20
             """, params
         ).fetchall()]
         stale = [dict(r) for r in conn.execute(

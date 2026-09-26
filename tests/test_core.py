@@ -14,7 +14,7 @@ def test_beacon_packet():
         "altitude": 1000, "symbol_table": "/", "symbol": ">", "comment": "Teste"
     }
     packet = build_beacon_packet(cfg)
-    assert packet.startswith("PT2VHF-15>APRS,TCPIP*:=1548.00S/04754.00W>")
+    assert packet.startswith("PT2VHF-15>APZVHF,TCPIP*:=1548.00S/04754.00W>")
     assert "/A=003281" in packet
 
 
@@ -88,7 +88,7 @@ def test_aprs_service_sends_standard_query_without_message_id(monkeypatch):
             monkeypatch.setattr(service, "_send_raw", sent.append)
             result = service.send_query("PY2ABC-9", "APRSP")
             assert result["query_type"] == "APRSP"
-            assert sent == ["PT2VHF>APRS,TCPIP*::PY2ABC-9 :?APRSP"]
+            assert sent == ["PT2VHF>APZVHF,TCPIP*::PY2ABC-9 :?APRSP"]
             assert "{" not in sent[0]
     finally:
         db.DB_PATH = original
@@ -113,7 +113,7 @@ def test_aprs_service_auto_responds_to_position_query(monkeypatch):
                 {"from": "PY2ABC-9", "to": "PT2VHF", "text": "?APRSP"},
                 "PY2ABC-9>APRS,TCPIP*::PT2VHF   :?APRSP",
             )
-            assert sent and sent[0].startswith("PT2VHF>APRS,TCPIP*:=")
+            assert sent and sent[0].startswith("PT2VHF>APZVHF,TCPIP*:=")
             incoming = db.list_aprs_queries("PY2ABC-9", 10)
             assert incoming[0]["direction"] == "in"
             assert incoming[0]["status"] == "Respondida"
@@ -173,7 +173,7 @@ def test_bulletin_packets():
         text="Boletim geral de teste",
         bulletin_id="1",
     )
-    assert packet == "PT2VHF-9>APRS,TCPIP*::BLN1     :Boletim geral de teste"
+    assert packet == "PT2VHF-9>APZVHF,TCPIP*::BLN1     :Boletim geral de teste"
     assert addressee == "BLN1"
     assert message_type == "bulletin"
     assert "{" not in packet
@@ -184,7 +184,7 @@ def test_bulletin_packets():
         bulletin_id="2",
         group="DF",
     )
-    assert group_packet == "PT2VHF-9>APRS,TCPIP*::BLN2DF   :Boletim do grupo DF"
+    assert group_packet == "PT2VHF-9>APZVHF,TCPIP*::BLN2DF   :Boletim do grupo DF"
     assert group_to == "BLN2DF"
     assert group_type == "group_bulletin"
     assert classify_message_type("BLN2DF") == "group_bulletin"
@@ -635,11 +635,38 @@ def test_client_version_stats_by_latest_station_tocall():
             assert stats["identified_stations"] == 3
             assert stats["unidentified_stations"] == 1
             assert stats["items"][0]["identifier"] == "APDW17"
+            assert stats["items"][0]["friendly_name"] == "Dire Wolf 1.7"
+            assert stats["items"][0]["rank"] == 1
             assert stats["items"][0]["stations"] == 2
             assert stats["items"][1]["identifier"] == "APDR16"
+            assert stats["items"][1]["friendly_name"] == "APRSdroid"
+            assert stats["items"][1]["rank"] == 2
             assert stats["items"][1]["stations"] == 1
+            assert stats["own_client"]["identifier"] == "APZVHF"
     finally:
         db.DB_PATH = original
+
+
+def test_aprs_device_friendly_names_and_own_client_identifier():
+    direwolf = db.resolve_aprs_device_id("APDW18")
+    assert direwolf["friendly_name"] == "Dire Wolf 1.8"
+    assert direwolf["model"] == "DireWolf"
+
+    aprsdroid = db.resolve_aprs_device_id("APDR16")
+    assert aprsdroid["friendly_name"] == "APRSdroid"
+
+    own = db.resolve_aprs_device_id("APZVHF")
+    assert own["friendly_name"] == "PT2VHF APRS Client"
+    assert own["local_override"] is True
+
+
+def test_qarray_igate_reception_is_rf_link():
+    source, edges = db._observed_topology_edges("PY2ABC-9>APRS,PT2DGI*,WIDE2-1,qAR,PT2IGT:>teste")
+    assert source == "PY2ABC-9"
+    assert ("PY2ABC-9", "PT2DGI", "rf", None) in edges
+    assert ("PT2DGI", "PT2IGT", "rf", "PT2IGT") in edges
+    assert not any(kind == "igate" for _a, _b, kind, _igate in edges)
+
 
 def test_topology_timeline_and_period_comparison():
     original = db.DB_PATH
@@ -688,9 +715,11 @@ def test_complete_topology_favorites_and_packet_traffic():
             db.record_topology_from_raw(raw)
 
             complete = db.list_topology_edges(0)
-            assert {("PY2ABC-9", "PT2DGI", "rf"), ("PT2DGI", "PT2IGT", "igate")} <= {
+            assert {("PY2ABC-9", "PT2DGI", "rf"), ("PT2DGI", "PT2IGT", "rf")} <= {
                 (e["source"], e["target"], e["kind"]) for e in complete
             }
+            igate_edge = next(e for e in complete if e["source"] == "PT2DGI" and e["target"] == "PT2IGT")
+            assert igate_edge["igate"] == "PT2IGT"
             stats = db.topology_stats(0)
             assert stats["complete"] is True
             assert stats["edges"] >= 2

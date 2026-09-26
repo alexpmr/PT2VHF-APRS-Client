@@ -303,3 +303,12 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
   - Se houver ambiguidade entre RF e APRS-IS, marcar como **indeterminado/misto** em vez de classificar automaticamente como IGate.
   - Revisar também a legenda e as regras de estilo para garantir que **RF = linha contínua** e **IGate/APRS-IS = linha tracejada** de forma consistente.
 
+
+
+## Concluído na v1.6.20
+
+- **Análise / clientes:** nomes amigáveis de software/dispositivo pelo snapshot local da base APRS Device Identification, mantendo o TOCALL como referência.
+- **Análise / adoção:** Top 20 + linha adicional destacada com a posição real do PT2VHF APRS Client quando estiver fora do corte.
+- **Identificação do cliente:** transmissões do aplicativo passam a usar o TOCALL experimental **APZVHF**, permitindo contabilizar instalações observadas.
+- **Idioma no topo:** controle compacto mostra somente o idioma atual e abre as duas opções ao clicar; English usa a bandeira da Inglaterra.
+- **Mapa / topologia:** qAR/qAO até o IGate passa a ser classificado como RF e desenhado em linha contínua; bancos existentes são migrados automaticamente.

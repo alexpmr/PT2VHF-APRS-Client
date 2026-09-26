@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.20": {
+        "title": "Nomes amigáveis APRS, ranking do cliente, idioma compacto e RF correto",
+        "items": [
+            "A aba Análise passa a resolver TOCALLs para nomes amigáveis de software/dispositivo usando um snapshot local da base APRS Device Identification.",
+            "O ranking mostra os Top 20 e, se o PT2VHF APRS Client estiver fora do corte, acrescenta sua posição real, quantidade e percentual em uma linha destacada.",
+            "O PT2VHF APRS Client passa a transmitir o identificador experimental APZVHF para permitir medir sua adoção sem depender do TOCALL genérico APRS.",
+            "O seletor de idioma no topo passa a mostrar somente o idioma atual e abre um menu com Português/Brasil e English/Inglaterra.",
+            "Corrige enlaces qAR/qAO até o IGate: quando o caminho é RF, a linha permanece contínua e o IGate fica apenas como metadado do enlace.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.6.19": {
         "title": "Análise de clientes, respostas de queries e idioma no topo",
         "items": [

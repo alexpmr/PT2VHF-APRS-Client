@@ -14,6 +14,7 @@ a = Analysis(
     datas=[
         (str(ROOT / 'pt2vhf_aprs' / 'templates'), 'pt2vhf_aprs/templates'),
         (str(ROOT / 'pt2vhf_aprs' / 'static'), 'pt2vhf_aprs/static'),
+        (str(ROOT / 'pt2vhf_aprs' / 'data'), 'pt2vhf_aprs/data'),
         (str(ROOT / 'VERSION'), '.'),
         *webview_datas,
     ],

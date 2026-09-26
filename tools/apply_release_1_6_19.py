@@ -2,7 +2,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-if version != "1.6.19":
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    parts = []
+    for piece in str(value or "").strip().lstrip("vV").split("."):
+        try:
+            parts.append(int(piece))
+        except ValueError:
+            break
+    return tuple(parts or [0])
+
+if version_tuple(version) < (1, 6, 19):
     raise SystemExit(f"v1.6.19 validation failed: VERSION={version!r}")
 
 checks = {
@@ -27,7 +37,6 @@ checks = {
         'id="languageQuickSwitch"',
         'id="languageFlag"',
         'id="clientVersionStatsContent"',
-        "language-flag-england",
     ],
     "pt2vhf_aprs/static/css/app.css": [
         ".station-query-result",

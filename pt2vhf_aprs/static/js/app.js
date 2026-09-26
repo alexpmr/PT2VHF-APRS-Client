@@ -3503,10 +3503,12 @@
     'É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.':'Updates can be checked and downloaded automatically and, on supported platforms, installed on exit. Windows Portable keeps a rollback backup.',
     'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.',
     '🇧🇷 Português - padrão':'🇧🇷 Portuguese - default',
+    'Trocar idioma':'Change language',
     '🏴 English':'🏴 English',
     'Análise':'Analysis',
     'Análise da rede':'Network analysis',
     'Clientes / versões APRS':'APRS clients / versions',
+    'Software / dispositivos APRS':'APRS software / devices',
     'Distribuição pelo identificador TOCALL do último pacote de cada estação. Quando o software/versão não puder ser determinado com segurança, ele fica como Não identificado.':'Distribution based on the TOCALL identifier in each station\'s latest packet. When software/version cannot be determined reliably, it remains Unidentified.',
     'Indicadores da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators with historical comparison and map replay.',
     'Período':'Period',
@@ -3602,13 +3604,29 @@
   }
 
   function syncQuickLanguageButtons() {
-    $$('.language-quick-button').forEach(button => {
+    const english = state.language === 'en';
+    const currentFlag = $('#languageQuickCurrentFlag');
+    const currentLabel = $('#languageQuickCurrentLabel');
+    if (currentFlag) {
+      currentFlag.src = english ? '/static/img/flag_england.svg' : '/static/img/flag_br.svg';
+      currentFlag.alt = english ? 'Inglaterra' : 'Brasil';
+    }
+    if (currentLabel) currentLabel.textContent = english ? 'English' : 'Português';
+    $$('.language-quick-option').forEach(button => {
       const active = button.dataset.language === state.language;
       button.classList.toggle('active', active);
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      button.setAttribute('aria-checked', active ? 'true' : 'false');
     });
     const configLanguage = $('#configForm')?.elements.namedItem('language');
     if (configLanguage && configLanguage.value !== state.language) configLanguage.value = state.language;
+  }
+
+  function setLanguageMenuOpen(open) {
+    const menu = $('#languageQuickMenu');
+    const current = $('#languageQuickCurrent');
+    if (!menu || !current) return;
+    menu.classList.toggle('hidden', !open);
+    current.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
   function applyLanguage(language) {
@@ -3625,6 +3643,7 @@
   async function setQuickLanguage(language) {
     const next = language === 'en' ? 'en' : 'pt-BR';
     applyLanguage(next);
+    setLanguageMenuOpen(false);
     try {
       const result = await api('/api/config', {
         method: 'POST',
@@ -3648,11 +3667,26 @@
     }
   }
 
-  document.addEventListener('click', e => {
-    const button = e.target.closest('.language-quick-button');
-    if (!button) return;
+  $('#languageQuickCurrent')?.addEventListener('click', e => {
     e.preventDefault();
-    void setQuickLanguage(button.dataset.language || 'pt-BR');
+    e.stopPropagation();
+    const open = $('#languageQuickCurrent')?.getAttribute('aria-expanded') === 'true';
+    setLanguageMenuOpen(!open);
+  });
+
+  document.addEventListener('click', e => {
+    const option = e.target.closest('.language-quick-option');
+    if (option) {
+      e.preventDefault();
+      e.stopPropagation();
+      void setQuickLanguage(option.dataset.language || 'pt-BR');
+      return;
+    }
+    if (!e.target.closest('#languageQuickSwitch')) setLanguageMenuOpen(false);
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') setLanguageMenuOpen(false);
   });
 
   const languageObserver = new MutationObserver(records => {
@@ -4211,12 +4245,18 @@
     const identified = Number(data.identified_stations || 0);
     const unidentified = Number(data.unidentified_stations || 0);
     const total = Number(data.total_stations || 0);
+    const topLimit = Math.max(1, Number(data.top_limit || 20));
+    const topItems = items.slice(0, topLimit);
+    const own = data.own_client || null;
+    const ownInTop = !!own && topItems.some(item => item.identifier === own.identifier);
+    const visibleItems = [...topItems];
+    if (own && !ownInTop && Number(own.stations || 0) > 0) visibleItems.push({ ...own, force_own_row: true });
 
     if (!items.length) {
       box.innerHTML = '<span class="hint">' +
         escapeHtml(ui(
-          total ? 'Nenhum cliente/versão pôde ser identificado com segurança neste período.' : 'Sem estações no período selecionado.',
-          total ? 'No client/version could be identified reliably in this period.' : 'No stations in the selected period.'
+          total ? 'Nenhum software/dispositivo pôde ser identificado com segurança neste período.' : 'Sem estações no período selecionado.',
+          total ? 'No software/device could be identified reliably in this period.' : 'No stations in the selected period.'
         )) + '</span>' +
         (unidentified ? '<div class="client-version-unidentified">' +
           escapeHtml(ui('Não identificado: ', 'Unidentified: ')) +
@@ -4224,15 +4264,28 @@
       return;
     }
 
+    const rowHtml = item => {
+      const rank = item.rank ? String(item.rank) + 'º' : '—';
+      const name = item.friendly_name || item.identifier || ui('Não identificado', 'Unidentified');
+      const ownClass = item.is_own_client || item.force_own_row ? ' class="client-version-own-row"' : '';
+      return '<tr' + ownClass + '><td><strong>' + escapeHtml(rank) + '</strong></td><td>' +
+        '<span class="client-version-name">' + escapeHtml(name) + '</span>' +
+        '<span class="client-version-tocall">' + escapeHtml(item.identifier || '') + '</span></td><td>' +
+        Number(item.stations || 0).toLocaleString(currentLocale()) + '</td><td>' +
+        Number(item.percent || 0).toLocaleString(currentLocale(), {maximumFractionDigits:1}) + '%</td></tr>';
+    };
+
     box.innerHTML =
-      '<table class="client-version-table"><thead><tr><th>' +
-      escapeHtml(ui('Cliente / versão (TOCALL)', 'Client / version (TOCALL)')) +
+      '<table class="client-version-table"><thead><tr><th>#</th><th>' +
+      escapeHtml(ui('Software / dispositivo', 'Software / device')) +
       '</th><th>' + escapeHtml(ui('Estações', 'Stations')) +
       '</th><th>%</th></tr></thead><tbody>' +
-      items.map(item => '<tr><td><strong>' + escapeHtml(item.identifier || '') +
-        '</strong></td><td>' + Number(item.stations || 0).toLocaleString(currentLocale()) +
-        '</td><td>' + Number(item.percent || 0).toLocaleString(currentLocale(), {maximumFractionDigits:1}) + '%</td></tr>').join('') +
+      visibleItems.map(rowHtml).join('') +
       '</tbody></table>' +
+      (own && !ownInTop && Number(own.stations || 0) <= 0
+        ? '<div class="client-version-unidentified">' +
+          escapeHtml(ui('PT2VHF APRS Client ainda não foi observado neste período.', 'PT2VHF APRS Client has not been observed in this period yet.')) +
+          '</div>' : '') +
       '<div class="client-version-unidentified">' +
       escapeHtml(ui(
         'Identificadas: ' + identified.toLocaleString(currentLocale()) +
@@ -4242,8 +4295,12 @@
           ' · Unidentified: ' + unidentified.toLocaleString(currentLocale()) +
           ' · Total: ' + total.toLocaleString(currentLocale())
       )) +
-      '</div>';
+      '<br><span>' + escapeHtml(ui(
+        'Identificação: APRS Device Identification (aprsorg/aprs-deviceid).',
+        'Identification: APRS Device Identification (aprsorg/aprs-deviceid).'
+      )) + '</span></div>';
   }
+
 
   async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');

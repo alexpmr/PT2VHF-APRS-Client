@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.20 - 2026-09-26
+
+- O bloco **Software / dispositivos APRS** passa a mostrar nomes amigáveis derivados da base oficial **APRS Device Identification (aprsorg/aprs-deviceid)**, mantendo o TOCALL em texto secundário.
+- A base é embarcada localmente para funcionamento offline; o projeto inclui atribuição à fonte **CC BY-SA 2.0**.
+- O ranking mostra os **Top 20** e acrescenta uma linha destacada do **PT2VHF APRS Client** caso ele esteja fora do corte, preservando sua posição real, quantidade de estações e percentual.
+- O cliente passa a usar o TOCALL experimental **APZVHF** nas transmissões geradas pelo aplicativo, permitindo reconhecer instalações do PT2VHF APRS Client no tráfego observado.
+- O seletor de idioma na barra superior passa a mostrar apenas o idioma corrente; ao clicar, abre um menu com **Brasil / Português** e **Inglaterra / English**.
+- Corrigida a bandeira de English para usar especificamente a **bandeira da Inglaterra (Cruz de São Jorge)**.
+- Corrigida a classificação dos enlaces de topologia em pacotes **qAR/qAO**: o salto recebido pelo IGate continua sendo classificado como **RF** e desenhado com linha contínua; o IGate fica registrado separadamente como ponto de entrada no APRS-IS.
+- Bancos existentes migram automaticamente os antigos enlaces qAR/qAO gravados como `igate` para `rf`.
+- Release completa multiplataforma com Windows x64, Linux x86_64, macOS ARM64/Intel e Manual PDF atualizado.
+
+
 ## v1.6.19 - 2026-09-26
 
 - A aba **Análise** recebe um bloco de **clientes/versões APRS** baseado no TOCALL do último pacote de cada estação, contabilizando cada indicativo uma única vez e ordenando do mais usado para o menos usado.

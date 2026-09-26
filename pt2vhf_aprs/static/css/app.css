@@ -1748,76 +1748,83 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
   font-size: 15px;
 }
 .language-quick-switch {
+  position: relative;
+  display: inline-block;
+}
+.language-quick-current {
   display: inline-flex;
   align-items: center;
-  overflow: hidden;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel-2);
-}
-.language-quick-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 32px;
-  padding: 5px 8px;
-  border: 0;
-  border-right: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
+  color: var(--text);
   cursor: pointer;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   white-space: nowrap;
 }
-.language-quick-button:last-child { border-right: 0; }
-.language-quick-button:hover { color: var(--text); background: rgba(59,166,255,.08); }
-.language-quick-button.active,
-.language-quick-button[aria-pressed="true"] {
-  color: var(--text);
-  background: rgba(59,166,255,.14);
+.language-quick-current:hover,
+.language-quick-current[aria-expanded="true"] {
+  background: rgba(59,166,255,.12);
+  border-color: rgba(59,166,255,.45);
 }
-.quick-language-flag {
-  position: relative;
-  display: inline-block;
-  width: 17px;
-  height: 11px;
-  overflow: hidden;
+.language-quick-caret {
+  color: var(--muted);
+  font-size: 9px;
+  transition: transform .15s ease;
+}
+.language-quick-current[aria-expanded="true"] .language-quick-caret {
+  transform: rotate(180deg);
+}
+.language-quick-img {
+  width: 18px;
+  height: 12px;
+  object-fit: cover;
   flex: 0 0 auto;
-  border: 1px solid rgba(255,255,255,.32);
+  border: 1px solid rgba(255,255,255,.30);
   border-radius: 2px;
   box-shadow: 0 1px 2px rgba(0,0,0,.25);
 }
-.quick-language-flag-br { background: #009b3a; }
-.quick-language-flag-br::before {
-  content: "";
+.language-quick-menu {
   position: absolute;
-  width: 9px;
-  height: 9px;
-  left: 3px;
-  top: 0;
-  background: #ffdf00;
-  transform: rotate(45deg) scale(.72);
+  z-index: 5000;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 150px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  box-shadow: 0 10px 30px rgba(0,0,0,.28);
 }
-.quick-language-flag-br::after {
-  content: "";
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  left: 5px;
-  top: 2px;
-  border-radius: 50%;
-  background: #002776;
+.language-quick-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
 }
-.quick-language-flag-england {
-  background:
-    linear-gradient(to bottom, transparent 0 37%, #ce1126 37% 63%, transparent 63% 100%),
-    linear-gradient(to right, #fff 0 39%, #ce1126 39% 61%, #fff 61% 100%);
+.language-quick-option:hover,
+.language-quick-option[aria-checked="true"] {
+  background: rgba(59,166,255,.13);
 }
 @media (max-width: 1180px) {
-  .language-quick-button span:last-child { display: none; }
-  .language-quick-button { padding: 5px 7px; }
+  #languageQuickCurrentLabel { display: none; }
+  .language-quick-current { padding: 5px 7px; }
 }
+
 .config-page-intro {
   display: flex;
   flex-direction: column;
@@ -2652,4 +2659,32 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   margin-top: 9px;
   color: var(--muted);
   font-size: 11px;
+}
+
+/* v1.6.20 - ranking amigável de clientes APRS */
+.client-version-table th:first-child,
+.client-version-table td:first-child {
+  width: 52px;
+  text-align: center;
+}
+.client-version-name {
+  display: block;
+  color: var(--text);
+  font-weight: 800;
+}
+.client-version-tocall {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.client-version-own-row td {
+  border-top: 2px solid var(--accent);
+  background: rgba(59,166,255,.10);
+}
+.client-version-own-row .client-version-name::after {
+  content: "  • PT2VHF";
+  color: var(--accent);
+  font-size: 9px;
+  letter-spacing: .03em;
 }

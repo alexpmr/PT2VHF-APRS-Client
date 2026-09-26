@@ -24,6 +24,7 @@ The project's own MIT-licensed source remains MIT-licensed; GPL-covered third-pa
 | PyInstaller | Windows packaging tool | GPLv2 with bootloader/bundling exception |
 | Leaflet | Interactive map client | BSD-2-Clause |
 | OpenStreetMap | Map data / tile service | See OpenStreetMap attribution and service terms |
+| APRS Device Identification (`aprsorg/aprs-deviceid`) | TOCALL-to-software/device identification database | CC BY-SA 2.0 |
 
 This list focuses on principal direct dependencies. Transitive Python dependencies retain their own licenses.
 
@@ -36,3 +37,12 @@ https://github.com/alexpmr/PT2VHF-APRS-Client
 Third-party source code and license texts are available from the respective upstream projects.
 
 Before each public binary release, dependency changes should be reviewed so this notice remains accurate.
+
+
+## APRS Device Identification database
+
+The application includes an offline snapshot derived from the **APRS Device Identification** database maintained at:
+
+https://github.com/aprsorg/aprs-deviceid
+
+The database is licensed under **Creative Commons Attribution-ShareAlike 2.0 (CC BY-SA 2.0)**. The bundled snapshot is used only to resolve APRS TOCALL identifiers to friendly software/device names. The local experimental identifier `APZVHF` for PT2VHF APRS Client is a project-specific override and is not represented as an official upstream allocation.
