@@ -26,7 +26,6 @@ checks = {
     "pt2vhf_aprs/templates/index.html": [
         'id="languageQuickSwitch"',
         'id="languageFlag"',
-        "flag_england.svg",
         'id="clientVersionStatsContent"',
         "language-flag-england",
     ],
@@ -36,6 +35,10 @@ checks = {
         ".language-quick-switch",
     ],
 }
+flag_path = ROOT / "pt2vhf_aprs" / "static" / "img" / "flag_england.svg"
+if not flag_path.exists():
+    raise SystemExit("v1.6.19 validation failed: England flag asset missing")
+
 for rel, needles in checks.items():
     text = (ROOT / rel).read_text(encoding="utf-8")
     for needle in needles:
