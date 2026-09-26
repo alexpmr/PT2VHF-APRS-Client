@@ -117,26 +117,6 @@
   - Não confundir **ACK de mensagem** com query APRS: manter o ACK existente e tratar queries em um caminho próprio do parser/serviço.
 
 
-- **Atualização/instalação — fechar versão anterior antes de instalar**
-  - Ao iniciar a instalação de uma nova versão, detectar se o **PT2VHF APRS Client** anterior ainda está em execução.
-  - Se estiver aberto, solicitar/forçar o encerramento controlado da aplicação antes de substituir arquivos, evitando falha de instalação por arquivo em uso.
-  - Preferir encerramento gracioso primeiro, permitindo fechar conexão APRS-IS, workers, filas e banco SQLite corretamente; se não encerrar dentro de um timeout curto, oferecer/usar encerramento forçado.
-  - Após a instalação concluir com sucesso, **abrir automaticamente a nova versão**.
-  - No Windows Setup, integrar esse comportamento ao instalador; aplicar equivalente nas plataformas em que o empacotador permitir comportamento semelhante.
-  - Não encerrar processos que não pertençam ao PT2VHF APRS Client; identificar a instância com segurança por executável/processo.
-
-
-- **Atualizações — download direto da versão correta pela caixa de versão**
-  - Quando houver uma versão nova disponível, tornar a **caixa/indicador de versão na barra superior clicável** para iniciar o download diretamente da Release oficial no GitHub.
-  - Detectar automaticamente a **plataforma e arquitetura em uso** e escolher o artefato correspondente: **Windows x64**, **Linux x86_64** ou **macOS ARM64/Intel x86_64**.
-  - No Windows, preservar também o tipo de distribuição quando possível: **Portable baixa Portable** e **instalação via Setup baixa o Setup**.
-  - No Linux, selecionar o formato apropriado da instalação atual quando identificável (**AppImage, DEB ou TAR.GZ**); se não for possível determinar com segurança, apresentar as opções Linux disponíveis sem escolher arbitrariamente.
-  - No macOS, selecionar automaticamente o DMG compatível com a arquitetura (**Apple Silicon ARM64** ou **Intel x86_64**).
-  - O download deve apontar diretamente para o **asset da versão mais recente publicada no GitHub Releases**, sem exigir que o usuário navegue manualmente pela página da Release.
-  - Manter o comportamento de **somente baixar/avisar**, sem instalação automática silenciosa; a instalação continua sob controle do usuário.
-  - Exibir estado de download/progresso e mensagem clara em caso de falha, asset ausente ou incompatibilidade detectada.
-
-
 - **Aba Análise — ranking das estações que mais conversaram**
   - Adicionar um painel com o ranking das **estações com maior volume de conversas/mensagens** registradas pelo cliente.
   - Ordenar em ordem decrescente, da estação com mais interações para a com menos.
@@ -320,19 +300,12 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - Exibe posição, indicativo, pacotes válidos e percentual sobre o total elegível.
 - Incluído teste automatizado cobrindo ordenação e exclusões.
 
-## Próximas melhorias — Atualização automática
+## Concluído na v1.6.22
 
-- **Atualização in-place por plataforma ao clicar em nova versão**
-  - Quando houver uma nova versão disponível, ao clicar no aviso/botão de atualização, o aplicativo deverá identificar automaticamente a **plataforma e arquitetura em execução** e baixar o pacote correspondente àquele ambiente.
-  - O download deve ser feito a partir da **Release oficial** e validado antes da instalação, incluindo **SHA-256** quando disponível.
-  - Após o download e a validação, iniciar um **updater auxiliar separado do processo principal** para conduzir a troca de versão sem depender da aplicação que será encerrada.
-  - Se a versão anterior ainda estiver aberta, o updater deverá solicitar encerramento limpo e, se necessário após timeout, **encerrar o processo da aplicação em execução** antes de substituir/instalar os arquivos.
-  - Instalar/substituir automaticamente a versão anterior preservando **configurações, banco SQLite, mensagens, estações, logs e demais dados do usuário**.
-  - Ao concluir a atualização, iniciar automaticamente a **nova versão**.
-  - Windows Portable: substituir o executável/pacote preservando um **backup para rollback**.
-  - Windows Setup: executar o instalador correspondente e relançar a aplicação após a conclusão.
-  - Linux e macOS: usar o pacote apropriado à distribuição/formato suportado e somente automatizar a instalação quando houver um método seguro e compatível com as permissões do sistema.
-  - Em caso de falha no download, validação, encerramento da instância anterior ou instalação, **não remover a versão funcional existente** e apresentar diagnóstico claro ao usuário.
-  - Impedir duas atualizações simultâneas e impedir que duas instâncias da aplicação executem o processo de atualização ao mesmo tempo.
-  - Registrar no log as etapas: versão atual, versão alvo, asset selecionado, download, hash, encerramento da versão anterior, instalação/substituição, relançamento e eventual rollback.
-
+- **Atualização integrada por plataforma:** clicar no aviso de nova versão baixa o asset correspondente ao ambiente em execução e inicia a instalação.
+- Download restrito à Release oficial, com conferência de tamanho, SHA-256 calculado localmente e validação do digest do GitHub quando disponível.
+- Updater auxiliar separado do processo principal, encerramento limpo primeiro e encerramento forçado por PID após timeout somente se necessário.
+- Nova versão relançada automaticamente após instalação bem-sucedida.
+- Windows Portable com backup/rollback; Windows Setup com instalador; Linux AppImage/DEB/TAR.GZ e macOS DMG com fluxos próprios.
+- Lock em arquivo com PID para impedir duas atualizações concorrentes e recuperar locks obsoletos.
+- Configuração, banco SQLite, mensagens, estações, logs e demais dados permanecem preservados fora dos binários.
