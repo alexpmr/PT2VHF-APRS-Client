@@ -23,6 +23,7 @@ from . import diagnostics as diag
 UPDATE_DIR = db.DB_PATH.parent / "updates"
 PENDING_FILE = UPDATE_DIR / "pending_update.json"
 APPLY_LOG = UPDATE_DIR / "update_apply.log"
+UPDATE_LOCK_FILE = UPDATE_DIR / "update.lock"
 
 _update_operation_lock = threading.Lock()
 _exit_handler_lock = threading.Lock()
@@ -139,6 +140,44 @@ def _current_macos_bundle() -> Path | None:
         if parent.suffix.lower() == ".app":
             return parent
     return None
+
+
+def _pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+
+
+def _acquire_update_lock_file() -> None:
+    UPDATE_DIR.mkdir(parents=True, exist_ok=True)
+    for _ in range(2):
+        try:
+            fd = os.open(str(UPDATE_LOCK_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(str(os.getpid()))
+            return
+        except FileExistsError:
+            try:
+                existing_pid = int(UPDATE_LOCK_FILE.read_text(encoding="utf-8").strip() or "0")
+            except Exception:
+                existing_pid = 0
+            if existing_pid and _pid_alive(existing_pid):
+                raise RuntimeError("Já existe uma atualização em andamento em outra instância.")
+            UPDATE_LOCK_FILE.unlink(missing_ok=True)
+    raise RuntimeError("Não foi possível adquirir o lock da atualização.")
+
+
+def _release_update_lock_file() -> None:
+    try:
+        UPDATE_LOCK_FILE.unlink(missing_ok=True)
+    except Exception:
+        pass
 
 
 def register_exit_handler(handler: Callable[[], None] | None) -> None:
@@ -266,6 +305,7 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
     script = UPDATE_DIR / "apply_update.ps1"
     log = APPLY_LOG.resolve()
     pending_path = PENDING_FILE.resolve()
+    lock_path = UPDATE_LOCK_FILE.resolve()
 
     common = (
         "$ErrorActionPreference='Stop'\\n"
@@ -273,6 +313,7 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
         f"$downloaded={_ps_quote(path)}\\n"
         f"$current={_ps_quote(current)}\\n"
         f"$pendingFile={_ps_quote(pending_path)}\\n"
+        f"$lockFile={_ps_quote(lock_path)}\\n"
         f"$logFile={_ps_quote(log)}\\n"
         "function Log([string]$m) { Add-Content -LiteralPath $logFile -Value ((Get-Date).ToString('o') + ' ' + $m) -Encoding UTF8 }\\n"
         "Log 'updater helper started'\\n"
@@ -294,6 +335,7 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
             + "  if (($current -ne $destination) -and (Test-Path -LiteralPath $current)) { Remove-Item -LiteralPath $current -Force }\\n"
             + "  Move-Item -LiteralPath $downloaded -Destination $destination -Force\\n"
             + "  Remove-Item -LiteralPath $pendingFile -Force -ErrorAction SilentlyContinue\\n"
+            + "  Remove-Item -LiteralPath $lockFile -Force -ErrorAction SilentlyContinue\\n"
             + "  Log 'portable update installed'\\n"
             + "  Start-Process -FilePath $destination\\n"
             + "} catch { Log ('update failed: ' + $_.Exception.Message); throw }\\n"
@@ -306,6 +348,7 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
             + "  $p=Start-Process -FilePath $downloaded -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' -Verb RunAs -PassThru -Wait\\n"
             + "  if ($p.ExitCode -ne 0) { throw ('installer exit code ' + $p.ExitCode) }\\n"
             + "  Remove-Item -LiteralPath $pendingFile -Force -ErrorAction SilentlyContinue\\n"
+            + "  Remove-Item -LiteralPath $lockFile -Force -ErrorAction SilentlyContinue\\n"
             + "  Log 'installer completed'\\n"
             + "  if (Test-Path -LiteralPath $current) { Start-Process -FilePath $current }\\n"
             + "} catch { Log ('update failed: ' + $_.Exception.Message); throw }\\n"
@@ -338,6 +381,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
     pid = int(pending.get("pid") or os.getpid())
     script = UPDATE_DIR / "apply_update.sh"
     pending_file = PENDING_FILE.resolve()
+    lock_file = UPDATE_LOCK_FILE.resolve()
     log = APPLY_LOG.resolve()
 
     q = shlex.quote
@@ -347,6 +391,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
         f"pid={pid}",
         f"log={q(str(log))}",
         f"pending={q(str(pending_file))}",
+        f"lockfile={q(str(lock_file))}",
         "logmsg(){ printf '%s %s\\\\n' \"$(date -Iseconds)\" \"$1\" >> \"$log\"; }",
         "logmsg 'updater helper started'",
         "for _ in $(seq 1 32); do",
@@ -370,7 +415,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
             'if [ "$current" != "$destination" ]; then rm -f "$current"; fi',
             'mv -f "$downloaded" "$destination"',
             'chmod +x "$destination"',
-            'rm -f "$pending"',
+            'rm -f "$pending" "$lockfile"',
             "logmsg 'AppImage update installed'",
             'nohup "$destination" >/dev/null 2>&1 &',
         ]
@@ -383,7 +428,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
         lines += [
             f"downloaded={q(str(downloaded))}",
             install_cmd,
-            'rm -f "$pending"',
+            'rm -f "$pending" "$lockfile"',
             "logmsg 'DEB update installed'",
             f"nohup {q(relaunch)} >/dev/null 2>&1 &",
         ]
@@ -400,7 +445,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
             'if [ "$current" != "$destination" ]; then rm -f "$current"; fi',
             'mv -f "$staged" "$destination"',
             'chmod +x "$destination"',
-            'rm -f "$pending"',
+            'rm -f "$pending" "$lockfile"',
             "logmsg 'Linux TAR update installed'",
             'nohup "$destination" >/dev/null 2>&1 &',
         ]
@@ -428,7 +473,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
             'rm -rf "$dest"',
             '/usr/bin/ditto "$source_app" "$dest"',
             'hdiutil detach "$mount" >/dev/null 2>&1 || true',
-            'rm -f "$pending"',
+            'rm -f "$pending" "$lockfile"',
             "logmsg 'macOS update installed'",
             'open "$dest"',
         ]
@@ -484,13 +529,18 @@ def launch_pending_update(force: bool = False) -> bool:
 def download_and_install(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     if not _update_operation_lock.acquire(blocking=False):
         raise RuntimeError("Já existe uma atualização em andamento.")
+    lock_acquired = False
+    helper_started = False
     try:
+        _acquire_update_lock_file()
+        lock_acquired = True
         mode = current_update_mode()
         if not install_supported(mode):
             raise ValueError("A instalação automática não é suportada nesta execução/plataforma.")
         payload = download_asset(version, asset)
         if not launch_pending_update(force=True):
             raise RuntimeError("Não foi possível iniciar o instalador auxiliar.")
+        helper_started = True
         _request_exit_after()
         return {
             "ok": True,
@@ -502,6 +552,8 @@ def download_and_install(version: str, asset: dict[str, Any]) -> dict[str, Any]:
         }
     except Exception as exc:
         diag.log_event("update_install_failed", target_version=version, error=str(exc))
+        if lock_acquired and not helper_started:
+            _release_update_lock_file()
         raise
     finally:
         _update_operation_lock.release()
