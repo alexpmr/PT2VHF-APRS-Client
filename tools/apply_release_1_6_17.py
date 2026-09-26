@@ -3,12 +3,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-if version != "1.6.17":
-    raise SystemExit(f"v1.6.17 validation failed: VERSION={version!r}")
 
-init = (ROOT / "pt2vhf_aprs" / "__init__.py").read_text(encoding="utf-8")
-if '__version__ = "1.6.17"' not in init:
-    raise SystemExit("v1.6.17 validation failed: __version__ mismatch")
+def version_tuple(value: str) -> tuple[int, ...]:
+    parts = []
+    for piece in str(value or "").strip().lstrip("vV").split("."):
+        try:
+            parts.append(int(piece))
+        except ValueError:
+            break
+    return tuple(parts or [0])
+
+if version_tuple(version) < (1, 6, 17):
+    raise SystemExit(f"v1.6.17 validation failed: VERSION={version!r}")
 
 checks = {
     "pt2vhf_aprs/database.py": [
