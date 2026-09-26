@@ -1777,7 +1777,7 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
   color: var(--text);
   background: rgba(59,166,255,.14);
 }
-.language-flag {
+.quick-language-flag {
   position: relative;
   display: inline-block;
   width: 17px;
@@ -1788,8 +1788,8 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
   border-radius: 2px;
   box-shadow: 0 1px 2px rgba(0,0,0,.25);
 }
-.language-flag-br { background: #009b3a; }
-.language-flag-br::before {
+.quick-language-flag-br { background: #009b3a; }
+.quick-language-flag-br::before {
   content: "";
   position: absolute;
   width: 9px;
@@ -1799,7 +1799,7 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
   background: #ffdf00;
   transform: rotate(45deg) scale(.72);
 }
-.language-flag-br::after {
+.quick-language-flag-br::after {
   content: "";
   position: absolute;
   width: 5px;
@@ -1809,7 +1809,7 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
   border-radius: 50%;
   background: #002776;
 }
-.language-flag-england {
+.quick-language-flag-england {
   background:
     linear-gradient(to bottom, transparent 0 37%, #ce1126 37% 63%, transparent 63% 100%),
     linear-gradient(to right, #fff 0 39%, #ce1126 39% 61%, #fff 61% 100%);

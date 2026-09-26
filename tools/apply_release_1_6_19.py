@@ -21,9 +21,12 @@ checks = {
         "Ver histórico de queries",
         "function renderClientVersionStats(stats)",
         "function setQuickLanguage(language)",
+        "function syncLanguageFlag()",
     ],
     "pt2vhf_aprs/templates/index.html": [
         'id="languageQuickSwitch"',
+        'id="languageFlag"',
+        "flag_england.svg",
         'id="clientVersionStatsContent"',
         "language-flag-england",
     ],

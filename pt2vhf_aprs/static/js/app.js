@@ -3593,6 +3593,14 @@
     }
   }
 
+  function syncLanguageFlag() {
+    const flag = $('#languageFlag');
+    if (!flag) return;
+    const english = state.language === 'en';
+    flag.src = english ? '/static/img/flag_england.svg' : '/static/img/flag_br.svg';
+    flag.alt = english ? 'England' : 'Brasil';
+  }
+
   function syncQuickLanguageButtons() {
     $('.language-quick-button').forEach(button => {
       const active = button.dataset.language === state.language;
@@ -3608,6 +3616,7 @@
     document.documentElement.lang = state.language === 'en' ? 'en' : 'pt-BR';
     translateDom(document.body);
     syncQuickLanguageButtons();
+    syncLanguageFlag();
     refreshStatus();
     if (state.messages.length) renderMessages();
     if (state.stations.length) renderStations();

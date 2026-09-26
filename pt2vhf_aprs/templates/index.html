@@ -25,10 +25,10 @@
     <button id="themeQuickToggle" type="button" class="btn secondary theme-quick-toggle" title="Alternar tema">☀/☾</button>
     <div id="languageQuickSwitch" class="language-quick-switch" aria-label="Idioma / Language">
       <button type="button" class="language-quick-button" data-language="pt-BR" aria-pressed="true" title="Português">
-        <span class="language-flag language-flag-br" aria-hidden="true"></span><span>Português</span>
+        <span class="quick-language-flag quick-language-flag-br" aria-hidden="true"></span><span>Português</span>
       </button>
       <button type="button" class="language-quick-button" data-language="en" aria-pressed="false" title="English">
-        <span class="language-flag language-flag-england" aria-hidden="true"></span><span>English</span>
+        <span class="quick-language-flag quick-language-flag-england" aria-hidden="true"></span><span>English</span>
       </button>
     </div>
     <div id="trafficActivityIndicator" class="traffic-activity-indicator" title="Sem tráfego APRS nesta sessão" aria-label="Atividade de tráfego APRS">
@@ -594,10 +594,13 @@
           </label>
           <label class="field theme-field">
             <span>Idioma / Language</span>
-            <select name="language" id="appLanguage">
-              <option value="pt-BR">🇧🇷 Português - padrão</option>
-              <option value="en">🏴 English</option>
-            </select>
+            <div class="language-select-wrap">
+              <img id="languageFlag" class="language-flag" src="{{ url_for('static', filename='img/flag_br.svg') }}" alt="Brasil">
+              <select name="language" id="appLanguage">
+                <option value="pt-BR">Português - padrão</option>
+                <option value="en">English</option>
+              </select>
+            </div>
             <small>O idioma é aplicado imediatamente à interface.</small>
           </label>
           <label class="check-field app-browser-check">
