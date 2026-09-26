@@ -243,6 +243,14 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - Estrutura de resposta automática a APRSP/APRSS/APRST/PING com configuração e rate-limit.
 ## Próximas melhorias — Análise e idioma
 
+- **Análise — nome amigável para TOCALL/cliente APRS:** no bloco de estatísticas de clientes/versões, substituir o TOCALL bruto como identificação principal pelo **nome amigável do software/dispositivo** usando a base oficial **APRS Device Identification / aprs-deviceid**.
+  - Exibir o nome amigável como texto principal e manter o **TOCALL entre parênteses** ou em texto secundário para referência técnica, por exemplo: **Dire Wolf 1.8 (APDW18)**, **APRSdroid (APDR16)**, **ircDDB Gateway (APDG03)**.
+  - Quando o padrão oficial identificar apenas a família do software e o sufixo não representar versão com segurança, não inventar número de versão; exibir somente o nome suportado pela base oficial + TOCALL.
+  - Para TOCALLs experimentais/customizados sem identificação confiável, mostrar **Experimental/Não identificado (APZ...)** ou equivalente, preservando o código original.
+  - Preferir uma tabela local/cache da base oficial para não depender de consulta externa em tempo real; permitir atualização futura da base sem alterar a lógica do painel.
+  - Manter a ordenação do mais usado para o menos usado, quantidade de estações e percentual.
+
+
 - **Seletor de idioma no topo — menu compacto com idioma atual:** mostrar na barra superior apenas o **idioma atualmente selecionado**, acompanhado de sua bandeira. Ao clicar nesse controle, abrir um pequeno menu/dropdown com as duas opções disponíveis, em vez de manter **Português** e **English** lado a lado o tempo todo.
   - O controle fechado deve exibir somente o idioma corrente.
   - Ao clicar, mostrar as opções **🇧🇷 Português** e **English com a bandeira da Inglaterra**.
