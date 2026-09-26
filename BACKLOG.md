@@ -79,6 +79,14 @@
 
 ## Pendências para próximas versões
 
+- **Aba Análise — ranking das estações que mais conversaram**
+  - Adicionar um painel com o ranking das **estações com maior volume de conversas/mensagens** registradas pelo cliente.
+  - Ordenar em ordem decrescente, da estação com mais interações para a com menos.
+  - Exibir pelo menos **Indicativo**, **quantidade de mensagens/interações** e **percentual sobre o total de conversas registradas**.
+  - Contabilizar as interações por estação usando as mensagens armazenadas no banco local.
+  - Permitir diferenciar, quando útil, **mensagens enviadas**, **recebidas** e **total de interações**.
+
+
 - **Aba Análise — ranking de versões dos clientes APRS**
   - Adicionar um painel mostrando as **versões dos clientes/aplicativos APRS detectados nas estações recebidas**.
   - Agrupar por **cliente + versão** e exibir a quantidade de estações únicas usando cada versão.
