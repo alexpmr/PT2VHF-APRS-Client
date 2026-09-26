@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.21": {
+        "title": "Estatísticas da rede e ranking de estações ativas",
+        "items": [
+            "A aba Análise passa a se chamar Estatísticas em toda a interface e documentação.",
+            "A nova seção Estações mais ativas ordena o tráfego útil por indicativo no período selecionado.",
+            "Pacotes de telemetria são excluídos do ranking para evitar distorção por transmissões automáticas frequentes.",
+            "iGates e digipeaters também são excluídos do ranking principal e permanecem nas estatísticas dedicadas.",
+            "O ranking exibe posição, indicativo, pacotes válidos e percentual sobre o total considerado.",
+            "Release de teste somente Windows x64 Portable.",
+        ],
+    },
     "1.6.20": {
         "title": "Nomes amigáveis APRS, ranking do cliente, idioma compacto e RF correto",
         "items": [
