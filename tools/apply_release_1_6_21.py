@@ -29,12 +29,12 @@ checks = {
         "data.active_stations || []",
         "ui('Estações mais ativas', 'Most active stations')",
         "Carregando estatísticas",
-        "Replay sincronizado com o período das Estatísticas.",
     ],
     "pt2vhf_aprs/templates/index.html": [
         '>Estatísticas</button>',
         '<h2>Estatísticas da rede</h2>',
         'Atualizar estatísticas',
+        'id="trafficQuickRange"',
     ],
     "tests/test_core.py": [
         "test_topology_stats_active_stations_excludes_telemetry_igates_and_digipeaters",
@@ -49,5 +49,11 @@ for rel, needles in checks.items():
     for needle in needles:
         if needle not in text:
             raise SystemExit(f"v1.6.21 validation failed: {needle!r} missing from {rel}")
+
+html = (ROOT / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+if 'id="trafficRangeStart"' in html or 'id="trafficRangeEnd"' in html:
+    raise SystemExit("v1.6.21 validation failed: legacy manual replay range fields remain after release patches")
+if '>Análise</button>' in html:
+    raise SystemExit("v1.6.21 validation failed: old Analysis tab label remains visible")
 
 print("v1.6.21 statistics/active-stations validation OK")

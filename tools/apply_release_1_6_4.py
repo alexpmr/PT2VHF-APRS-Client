@@ -17,7 +17,7 @@ old = """        <div class="traffic-replay-range">
             <input id="trafficRangeEnd" type="datetime-local" step="1">
           </label>
           <button id="trafficApplyRangeButton" type="button" class="btn secondary">Aplicar intervalo</button>
-          <button id="trafficClearRangeButton" type="button" class="btn secondary">Usar período da Análise</button>
+          <button id="trafficClearRangeButton" type="button" class="btn secondary">Usar período das Estatísticas</button>
         </div>"""
 new = """        <div class="traffic-replay-range traffic-quick-range">
           <label class="field compact">
