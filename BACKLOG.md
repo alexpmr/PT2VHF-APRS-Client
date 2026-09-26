@@ -243,6 +243,15 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - Estrutura de resposta automática a APRSP/APRSS/APRST/PING com configuração e rate-limit.
 ## Próximas melhorias — Análise e idioma
 
+- **Mapa — resultado visível das queries no popup da estação:** ao selecionar uma estação e executar uma ação como **Ping/ACK, Posição, Status, Ouvidos ou Trace**, deixar claramente visível **onde a resposta apareceu**.
+  - Exibir no próprio popup uma área persistente de **Resultado da última query**, com estado: enviada, aguardando, respondida, timeout ou não suportada.
+  - Mostrar o conteúdo retornado pela estação de forma legível, incluindo RTT no Ping/ACK, dados de posição/status e sequência de hops no Trace.
+  - Para Trace, além de desenhar o caminho no mapa, mostrar também a sequência textual dos indicativos e quantos hops tiveram posição conhecida.
+  - Se o popup for fechado e aberto novamente, manter visível a última resposta recente daquela estação durante a sessão.
+  - Adicionar ação **Ver histórico de queries** para abrir as consultas/respostas anteriores daquele indicativo.
+  - Em caso de timeout ou ausência de suporte, mostrar mensagem explícita no popup em vez de apenas desaparecer o estado da consulta.
+
+
 - **Idiomas — bandeiras no seletor:** no seletor de idioma, exibir uma pequena **bandeira do Brasil antes de “Português”** e uma pequena **bandeira da Inglaterra antes de “English”**, mantendo o controle compacto e legível tanto no tema claro quanto no escuro.
 
 - **Aba Análise — estatísticas de versões de clientes APRS:** adicionar um bloco com a distribuição das versões/clientes observados, ordenado do **mais usado para o menos usado**. Exibir pelo menos nome do cliente/versão e quantidade de ocorrências; quando houver base suficiente, mostrar também percentual sobre o total identificado. Manter uma categoria separada para tráfego em que o cliente/versão não puder ser determinado, sem inferir dados ausentes.
