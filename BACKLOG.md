@@ -243,6 +243,14 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - Estrutura de resposta automática a APRSP/APRSS/APRST/PING com configuração e rate-limit.
 ## Próximas melhorias — Análise e idioma
 
+- **Seletor de idioma no topo — menu compacto com idioma atual:** mostrar na barra superior apenas o **idioma atualmente selecionado**, acompanhado de sua bandeira. Ao clicar nesse controle, abrir um pequeno menu/dropdown com as duas opções disponíveis, em vez de manter **Português** e **English** lado a lado o tempo todo.
+  - O controle fechado deve exibir somente o idioma corrente.
+  - Ao clicar, mostrar as opções **🇧🇷 Português** e **English com a bandeira da Inglaterra**.
+  - Corrigir a bandeira de **English** para usar especificamente a **bandeira da Inglaterra (Cruz de São Jorge)**, e não bandeira dos Estados Unidos, Reino Unido ou outro símbolo.
+  - Ao escolher outro idioma, aplicar imediatamente, fechar o menu e atualizar o controle para mostrar a nova seleção.
+  - Preservar a escolha do usuário nas próximas execuções e manter boa legibilidade nos temas claro e escuro.
+
+
 - **Mapa — resultado visível das queries no popup da estação:** ao selecionar uma estação e executar uma ação como **Ping/ACK, Posição, Status, Ouvidos ou Trace**, deixar claramente visível **onde a resposta apareceu**.
   - Exibir no próprio popup uma área persistente de **Resultado da última query**, com estado: enviada, aguardando, respondida, timeout ou não suportada.
   - Mostrar o conteúdo retornado pela estação de forma legível, incluindo RTT no Ping/ACK, dados de posição/status e sequência de hops no Trace.
