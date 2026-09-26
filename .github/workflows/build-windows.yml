@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - 'release/**'
     tags:
       - 'v*'
 
@@ -93,6 +94,10 @@ jobs:
       - name: Apply v1.6.21 statistics/active-stations
         shell: pwsh
         run: python tools\apply_release_1_6_21.py
+
+      - name: Apply v1.6.22 automatic updater
+        shell: pwsh
+        run: python tools\apply_release_1_6_22.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -265,6 +270,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_21.py
 
+      - name: Apply v1.6.22 automatic updater
+        shell: pwsh
+        run: python tools\apply_release_1_6_22.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -354,6 +363,7 @@ jobs:
           python tools/apply_release_1_6_19.py
           python tools/apply_release_1_6_20.py
           python tools/apply_release_1_6_21.py
+          python tools/apply_release_1_6_22.py
 
       - name: Build Linux packages
         shell: bash
@@ -438,6 +448,7 @@ jobs:
           python tools/apply_release_1_6_19.py
           python tools/apply_release_1_6_20.py
           python tools/apply_release_1_6_21.py
+          python tools/apply_release_1_6_22.py
 
       - name: Core smoke tests
         shell: bash
@@ -490,6 +501,7 @@ jobs:
           python tools/apply_release_1_6_19.py
           python tools/apply_release_1_6_20.py
           python tools/apply_release_1_6_21.py
+          python tools/apply_release_1_6_22.py
 
       - name: Build macOS DMG
         shell: bash
@@ -564,6 +576,7 @@ jobs:
           python tools/apply_release_1_6_19.py
           python tools/apply_release_1_6_20.py
           python tools/apply_release_1_6_21.py
+          python tools/apply_release_1_6_22.py
 
       - name: Generate versioned PDF manual
         shell: bash

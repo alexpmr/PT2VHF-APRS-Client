@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.22": {
+        "title": "Atualização integrada por plataforma",
+        "items": [
+            "Clicar em Nova versão passa a baixar e instalar automaticamente o pacote correto da plataforma e arquitetura em uso.",
+            "O download é feito somente da Release oficial e é validado por tamanho e SHA-256 antes da instalação.",
+            "Um updater auxiliar encerra a instância anterior, força somente o PID correto após timeout quando necessário, instala/substitui e abre a nova versão.",
+            "Windows Portable mantém backup para rollback; Windows Setup executa o instalador correspondente.",
+            "Linux AppImage/DEB/TAR.GZ e macOS DMG recebem fluxos próprios de atualização e relançamento.",
+            "Um lock com PID impede atualizações concorrentes entre instâncias e se recupera de locks obsoletos após crash.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.6.21": {
         "title": "Estatísticas da rede e ranking de estações ativas",
         "items": [

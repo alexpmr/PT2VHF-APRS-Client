@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.6.21
+# PT2VHF APRS Client - v1.6.22
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.21** é uma release de teste para **Windows x64 Portable** que renomeia a aba Análise para **Estatísticas** e adiciona o ranking de **estações mais ativas**, excluindo telemetria, iGates e digipeaters.
+A **v1.6.22** é uma release completa multiplataforma que ativa a **atualização integrada por clique**: o cliente baixa e valida o pacote da plataforma em execução, inicia um updater auxiliar, encerra a versão anterior, instala/substitui os binários e abre automaticamente a nova versão.
 
 ## Downloads
 
@@ -92,15 +92,15 @@ Cada Release completa publica:
 
 ### Atualização integrada
 - **Verificar atualizações automaticamente** — habilitado por padrão e executado na abertura e depois a cada **5 minutos**.
-- **Baixar atualização automaticamente** — habilitado por padrão em novas instalações.
-- **Instalar atualização automaticamente ao fechar** — habilitado por padrão em novas instalações.
-- Botão **Verificar atualização agora**.
-- O cliente seleciona o asset correspondente à plataforma, baixa apenas da Release oficial do repositório e calcula **SHA-256**; quando o GitHub fornece digest SHA-256, o valor é conferido.
-- **Windows Portable:** aplica a nova versão ao fechar e mantém uma cópia para rollback.
-- **Windows Setup:** pode iniciar o instalador silencioso.
-- **macOS:** pode baixar e abrir o DMG.
-- **Linux AppImage:** pode baixar/iniciar o novo AppImage.
-- **Linux .deb/.tar.gz:** continuam com instalação manual, pois a atualização do sistema pode exigir privilégios.
+- Quando aparece **Nova versão**, clicar no indicador ou em **Baixar e instalar nova versão** inicia o fluxo automático.
+- O cliente identifica **plataforma, arquitetura e formato em execução**, seleciona o asset exato da Release oficial, confere o tamanho e calcula **SHA-256**; quando o GitHub fornece digest SHA-256, o valor também é validado.
+- Um **updater auxiliar separado** é iniciado antes do encerramento do processo atual. A aplicação tenta encerrar seus componentes de forma limpa; se a instância anterior permanecer viva após o timeout, o helper encerra somente o PID daquela instância antes de instalar.
+- Um lock em arquivo com PID impede duas instâncias de iniciarem atualizações concorrentes e permite recuperar lock obsoleto após crash.
+- **Windows Portable:** mantém backup para rollback, troca o executável pelo asset Portable e abre a nova versão.
+- **Windows Setup:** executa o instalador correspondente com elevação/UAC quando necessária e relança a aplicação.
+- **Linux:** AppImage e TAR.GZ são substituídos pelo novo binário; instalações DEB usam dpkg/pkexec quando disponível; a nova versão é relançada.
+- **macOS:** o DMG é montado pelo updater, o bundle é substituído quando o local é gravável ou instalado em ~/Applications como fallback, e a nova versão é aberta.
+- Configurações e banco SQLite ficam fora dos binários e são preservados. Em caso de falha antes da substituição, a versão funcional existente não é removida.
 
 ## Conexão e identificação
 

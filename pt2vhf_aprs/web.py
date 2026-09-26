@@ -14,6 +14,7 @@ from flask import Flask, g, jsonify, render_template, request, send_file
 from . import __version__
 from . import database as db
 from . import diagnostics as diag
+from . import updater
 from .aprs_service import full_callsign, service
 from .version_notes import notes_for
 
@@ -55,8 +56,9 @@ def get_update_status(force: bool = False) -> dict:
         "asset_url": None,
         "asset_size": 0,
         "asset_digest": None,
-        "update_mode": "manual",
-        "install_supported": False,
+        "asset_ready": False,
+        "update_mode": updater.current_update_mode(),
+        "install_supported": updater.install_supported(),
         "downloaded": False,
         "status": "unknown",
         "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -86,8 +88,25 @@ def get_update_status(force: bool = False) -> dict:
         payload["release_url"] = release_url
         payload["release_notes"] = str(release.get("body") or "")
         payload["update_available"] = latest_v > current_v
+
+        asset = updater.select_asset(release, latest)
+        if asset:
+            payload["asset_name"] = asset["name"]
+            payload["asset_url"] = asset["url"]
+            payload["asset_size"] = asset["size"]
+            payload["asset_digest"] = asset["digest"] or None
+            payload["asset_ready"] = bool(asset["url"])
+        pending = updater.pending_update()
+        payload["downloaded"] = bool(
+            pending
+            and str(pending.get("version") or "") == latest
+            and str(pending.get("asset_name") or "") == str(payload.get("asset_name") or "")
+        )
+
         if latest_v > current_v:
             payload["status"] = "update_available"
+            if not asset:
+                payload["error"] = "A nova Release existe, mas o pacote desta plataforma ainda não foi publicado."
         elif latest_v == current_v:
             payload["status"] = "latest"
         else:
@@ -188,23 +207,67 @@ def create_app() -> Flask:
         force = str(request.args.get("force", "")).lower() in {"1", "true", "yes"}
         return jsonify(get_update_status(force=force))
 
+    def _install_latest_update():
+        try:
+            status = get_update_status(force=True)
+            if not status.get("update_available"):
+                return jsonify({"ok": False, "error": "Não há uma versão mais recente disponível."}), 409
+            if not status.get("asset_ready") or not status.get("asset_url") or not status.get("asset_name"):
+                return jsonify({
+                    "ok": False,
+                    "error": status.get("error") or "O pacote compatível com esta plataforma ainda não está disponível.",
+                }), 409
+            if not status.get("install_supported"):
+                return jsonify({
+                    "ok": False,
+                    "error": "Esta execução não permite instalação automática. Use a página oficial da Release.",
+                    "release_url": status.get("release_url"),
+                }), 409
+
+            result = updater.download_and_install(
+                str(status["latest_version"]),
+                {
+                    "name": status["asset_name"],
+                    "url": status["asset_url"],
+                    "size": status.get("asset_size") or 0,
+                    "digest": status.get("asset_digest") or "",
+                },
+            )
+            return jsonify(result)
+        except RuntimeError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 409
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
+
+    @app.post("/api/update/install")
+    def api_update_install():
+        return _install_latest_update()
+
     @app.post("/api/update/download")
     def api_update_download():
-        return jsonify({
-            "ok": False,
-            "error": "Atualização automática desativada. Abra a página oficial da Release para baixar manualmente.",
-        }), 410
+        # Compatibilidade com versões que ainda chamam a rota antiga.
+        return _install_latest_update()
 
     @app.get("/api/update/pending")
     def api_update_pending():
-        return jsonify({"pending": None, "rollback": None, "auto_update": False})
+        return jsonify({
+            "pending": updater.pending_update(),
+            "rollback": updater.rollback_available(),
+            "auto_update": True,
+            "mode": updater.current_update_mode(),
+            "install_supported": updater.install_supported(),
+        })
 
     @app.post("/api/update/rollback")
     def api_update_rollback():
-        return jsonify({
-            "ok": False,
-            "error": "Rollback automático desativado junto com o auto-update.",
-        }), 410
+        try:
+            if not updater.rollback_available():
+                return jsonify({"ok": False, "error": "Não existe backup portátil disponível para restauração."}), 404
+            if not updater.restore_windows_portable_backup():
+                return jsonify({"ok": False, "error": "Não foi possível iniciar o rollback."}), 500
+            return jsonify({"ok": True, "message": "Rollback iniciado. A aplicação será reiniciada."})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
 
     @app.post("/api/connect")
     def api_connect():
