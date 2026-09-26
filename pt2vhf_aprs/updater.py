@@ -51,8 +51,19 @@ def current_update_mode() -> str:
         return "macos-dmg"
     if os.getenv("APPIMAGE"):
         return "linux-appimage"
-    if str(exe).startswith(("/usr/bin/", "/usr/local/bin/")):
-        return "linux-deb"
+    if shutil.which("dpkg-query"):
+        try:
+            result = subprocess.run(
+                ["dpkg-query", "-W", "-f=${Status}", "pt2vhf-aprs-client"],
+                capture_output=True,
+                text=True,
+                timeout=2,
+                check=False,
+            )
+            if result.returncode == 0 and "install ok installed" in result.stdout.lower():
+                return "linux-deb"
+        except Exception:
+            pass
     return "linux-tar"
 
 
