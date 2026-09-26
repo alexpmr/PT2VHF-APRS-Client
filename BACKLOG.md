@@ -243,6 +243,8 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - Estrutura de resposta automática a APRSP/APRSS/APRST/PING com configuração e rate-limit.
 ## Próximas melhorias — Análise e idioma
 
+- **Idiomas — bandeiras no seletor:** no seletor de idioma, exibir uma pequena **bandeira do Brasil antes de “Português”** e uma pequena **bandeira da Inglaterra antes de “English”**, mantendo o controle compacto e legível tanto no tema claro quanto no escuro.
+
 - **Aba Análise — estatísticas de versões de clientes APRS:** adicionar um bloco com a distribuição das versões/clientes observados, ordenado do **mais usado para o menos usado**. Exibir pelo menos nome do cliente/versão e quantidade de ocorrências; quando houver base suficiente, mostrar também percentual sobre o total identificado. Manter uma categoria separada para tráfego em que o cliente/versão não puder ser determinado, sem inferir dados ausentes.
 - **Seletor de idioma no topo:** corrigir a regressão em que a opção de troca de idioma deixou de aparecer na barra superior. Restaurar o seletor **PT/EN com bandeiras**, mantendo **PT-BR como padrão** e preservando a seleção do usuário.
 
