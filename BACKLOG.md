@@ -320,3 +320,19 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - Exibe posição, indicativo, pacotes válidos e percentual sobre o total elegível.
 - Incluído teste automatizado cobrindo ordenação e exclusões.
 
+## Próximas melhorias — Atualização automática
+
+- **Atualização in-place por plataforma ao clicar em nova versão**
+  - Quando houver uma nova versão disponível, ao clicar no aviso/botão de atualização, o aplicativo deverá identificar automaticamente a **plataforma e arquitetura em execução** e baixar o pacote correspondente àquele ambiente.
+  - O download deve ser feito a partir da **Release oficial** e validado antes da instalação, incluindo **SHA-256** quando disponível.
+  - Após o download e a validação, iniciar um **updater auxiliar separado do processo principal** para conduzir a troca de versão sem depender da aplicação que será encerrada.
+  - Se a versão anterior ainda estiver aberta, o updater deverá solicitar encerramento limpo e, se necessário após timeout, **encerrar o processo da aplicação em execução** antes de substituir/instalar os arquivos.
+  - Instalar/substituir automaticamente a versão anterior preservando **configurações, banco SQLite, mensagens, estações, logs e demais dados do usuário**.
+  - Ao concluir a atualização, iniciar automaticamente a **nova versão**.
+  - Windows Portable: substituir o executável/pacote preservando um **backup para rollback**.
+  - Windows Setup: executar o instalador correspondente e relançar a aplicação após a conclusão.
+  - Linux e macOS: usar o pacote apropriado à distribuição/formato suportado e somente automatizar a instalação quando houver um método seguro e compatível com as permissões do sistema.
+  - Em caso de falha no download, validação, encerramento da instância anterior ou instalação, **não remover a versão funcional existente** e apresentar diagnóstico claro ao usuário.
+  - Impedir duas atualizações simultâneas e impedir que duas instâncias da aplicação executem o processo de atualização ao mesmo tempo.
+  - Registrar no log as etapas: versão atual, versão alvo, asset selecionado, download, hash, encerramento da versão anterior, instalação/substituição, relançamento e eventual rollback.
+
