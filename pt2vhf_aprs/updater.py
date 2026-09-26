@@ -365,7 +365,7 @@ def _prepare_linux_tar(pending: dict[str, Any]) -> Path:
         shutil.rmtree(stage, ignore_errors=True)
     stage.mkdir(parents=True, exist_ok=True)
     with tarfile.open(source, "r:gz") as archive:
-        archive.extractall(stage)
+        archive.extractall(stage, filter="data")
     candidates = sorted(stage.glob("PT2VHF_APRS_Client_Linux_x86_64_v*"))
     if not candidates:
         raise ValueError("O pacote Linux TAR.GZ não contém o executável esperado.")
