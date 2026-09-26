@@ -482,11 +482,12 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     section(story, st, "14. Backup, atualização e banco local", [
         "A exportação JSON salva a configuração. O arquivo pode conter o passcode APRS-IS em texto legível; armazene-o em local seguro.",
         "O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.",
-        "O atualizador consulta a Release oficial, escolhe o pacote da plataforma, baixa para a pasta local de atualizações e calcula SHA-256; quando a Release fornece digest SHA-256, ele é conferido antes da instalação.",
-        "As opções Verificar atualizações automaticamente, Baixar atualização automaticamente e Instalar atualização automaticamente ao fechar são independentes e vêm habilitadas por padrão em novas instalações. Preferências já salvas são preservadas em atualizações.",
-        "Com a verificação automática habilitada, a consulta é feita na abertura e novamente a cada 5 minutos. Falhas de rede não bloqueiam o cliente e a próxima tentativa ocorre no ciclo seguinte.",
-        "No Windows Portable, a atualização pode ser aplicada ao fechar e uma cópia anterior é mantida para rollback. No Windows instalado, o Setup pode ser iniciado silenciosamente. No macOS, o DMG baixado é aberto ao fechar; no Linux AppImage, o novo AppImage pode ser iniciado. Pacotes .deb e .tar.gz continuam exigindo instalação manual pelo sistema.",
-        "As atualizações preservam o banco local. Antes de mudanças importantes, é recomendável fazer backup do arquivo SQLite."
+        "O atualizador consulta a Release oficial, identifica plataforma/arquitetura/formato em execução, seleciona o asset exato, confere o tamanho, calcula SHA-256 e valida o digest publicado pelo GitHub quando disponível.",
+        "Com a verificação automática habilitada, a consulta é feita na abertura e novamente a cada 5 minutos. Ao aparecer Nova versão, clicar no aviso ou em Baixar e instalar nova versão inicia o fluxo de atualização.",
+        "Antes de encerrar a aplicação, um updater auxiliar separado é iniciado. O cliente encerra APRS-IS e componentes de fundo de forma limpa; se a instância antiga permanecer viva após o timeout, o helper encerra somente aquele PID e continua a instalação.",
+        "Windows Portable mantém backup para rollback; Windows Setup usa o instalador correspondente. Linux AppImage/TAR.GZ substituem o binário e DEB usa dpkg/pkexec quando disponível. No macOS, o updater monta o DMG, substitui o bundle quando possível ou usa ~/Applications como fallback.",
+        "Um lock em arquivo com PID evita atualizações concorrentes entre instâncias e permite recuperar automaticamente um lock deixado por processo encerrado.",
+        "Após instalação bem-sucedida, a nova versão é aberta automaticamente. Configurações, banco SQLite, mensagens, estações, logs e demais dados permanecem preservados fora dos binários."
     ])
     story.append(Paragraph("Locais do banco", st["h2"]))
     story.append(Paragraph(
