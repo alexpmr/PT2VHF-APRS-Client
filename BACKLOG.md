@@ -285,6 +285,16 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 
 ## Próximas melhorias
 
+- **Análise — destacar a posição do próprio PT2VHF APRS Client no ranking de clientes:** no bloco de clientes/versões, quando o ranking principal exibir apenas os primeiros colocados (por exemplo, Top 20), garantir que o **PT2VHF APRS Client** também apareça mesmo se estiver fora desse corte.
+  - Exibir normalmente os **Top N** clientes mais usados.
+  - Se o **PT2VHF APRS Client** estiver fora do Top N, adicionar uma linha extra logo abaixo do ranking mostrando sua **posição real**, **nome amigável**, **TOCALL/identificador**, **quantidade de estações/instâncias observadas** e **percentual**.
+  - Exemplo: após as 20 primeiras linhas, mostrar algo como **43º — PT2VHF APRS Client — 7 estações — 0,4%**.
+  - A posição deve ser calculada sobre o ranking completo, não apenas sobre os itens visíveis.
+  - Se o PT2VHF APRS Client já estiver dentro do Top N, não duplicar a linha.
+  - Destacar visualmente essa linha para facilitar o acompanhamento de **uso, adoção e aceitação** da aplicação ao longo do tempo.
+  - Manter o mesmo critério de contagem por estação/indicativo usado no restante do ranking, evitando duplicidade por múltiplos pacotes da mesma estação.
+
+
 - **Mapa / Topologia — não classificar enlace RF como IGate/MQTT:** corrigir a lógica que está desenhando como **tracejado/IGate** enlaces que são sabidamente **RF**.
   - Quando houver evidência explícita de recepção/transporte por **RF**, esse enlace deve prevalecer visualmente como RF, mesmo que algum dos nós envolvidos também tenha presença em APRS-IS/IGate.
   - Não inferir que o enlace foi via IGate apenas porque o pacote apareceu no APRS-IS ou porque o nó de origem/destino é um IGate.
