@@ -68,7 +68,7 @@
   <button class="tab" data-tab="messages">Mensagens <span id="messageBadge" class="badge hidden">0</span></button>
   <button class="tab" data-tab="stations">Estações</button>
   <button class="tab" data-tab="log">Log</button>
-  <button class="tab" data-tab="analysis">Análise</button>
+  <button class="tab" data-tab="analysis">Estatísticas</button>
   <button class="tab" data-tab="config">Configuração</button>
   <button class="tab" data-tab="help">Ajuda</button>
 </nav>
@@ -104,7 +104,7 @@
             <input id="trafficRangeEnd" type="datetime-local" step="1">
           </label>
           <button id="trafficApplyRangeButton" type="button" class="btn secondary">Aplicar intervalo</button>
-          <button id="trafficClearRangeButton" type="button" class="btn secondary">Usar período da Análise</button>
+          <button id="trafficClearRangeButton" type="button" class="btn secondary">Usar período das Estatísticas</button>
         </div>
         <div class="traffic-animation-controls">
           <label class="field compact">
@@ -321,8 +321,8 @@
   <section id="tab-analysis" class="tab-panel">
     <div class="panel-header analysis-header">
       <div>
-        <h2>Análise da rede</h2>
-        <p>Indicadores da topologia observada no APRS-IS, com comparação histórica e replay no mapa.</p>
+        <h2>Estatísticas da rede</h2>
+        <p>Indicadores e estatísticas da topologia observada no APRS-IS, com comparação histórica e replay no mapa.</p>
       </div>
       <div class="analysis-controls">
         <label class="field compact">
@@ -335,7 +335,7 @@
             <option value="168">7 dias</option>
           </select>
         </label>
-        <button id="refreshTopologyStatsButton" type="button" class="btn secondary">Atualizar análise</button>
+        <button id="refreshTopologyStatsButton" type="button" class="btn secondary">Atualizar estatísticas</button>
       </div>
     </div>
     <div class="analysis-content">
@@ -345,7 +345,7 @@
         <div class="analysis-metric"><span>Pacotes observados</span><strong id="analysisMetricPackets">0</strong></div>
         <div class="analysis-metric"><span>Eventos do período</span><strong id="analysisMetricEvents">0</strong></div>
       </div>
-      <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Atualizar análise.</div>
+      <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Atualizar estatísticas.</div>
       <div class="analysis-client-version-panel">
         <div class="analysis-client-version-heading">
           <div>
@@ -353,7 +353,7 @@
             <p id="clientVersionStatsHint">Distribuição pelo software/dispositivo identificado no TOCALL do último pacote de cada estação, usando a base APRS Device Identification. O TOCALL permanece visível como referência técnica.</p>
           </div>
         </div>
-        <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Atualizar análise.</span></div>
+        <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Atualizar estatísticas.</span></div>
       </div>
 
     </div>
