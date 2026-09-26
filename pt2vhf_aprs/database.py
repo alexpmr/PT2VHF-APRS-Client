@@ -1203,6 +1203,7 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
     complete = hours <= 0
     params: list[Any] = []
     time_filter = ""
+    cutoff: str | None = None
     if not complete:
         hours = max(1, min(hours, 24 * 30))
         cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
@@ -1226,6 +1227,64 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
             GROUP BY igate ORDER BY packets DESC, callsign LIMIT 20
             """, params
         ).fetchall()]
+
+        # Exclui qualquer indicativo já observado como infraestrutura, mesmo que
+        # a função de digi/IGate não tenha aparecido novamente no período atual.
+        infrastructure_rows = conn.execute(
+            """
+            SELECT DISTINCT callsign
+            FROM (
+                SELECT UPPER(TRIM(target)) AS callsign
+                FROM topology_edges
+                WHERE kind='rf' AND igate IS NULL
+                UNION
+                SELECT UPPER(TRIM(igate)) AS callsign
+                FROM topology_edges
+                WHERE igate IS NOT NULL
+            )
+            WHERE callsign IS NOT NULL AND callsign <> ''
+            """
+        ).fetchall()
+        excluded_calls = sorted({str(r["callsign"] or "").upper().strip() for r in infrastructure_rows if r["callsign"]})
+
+        active_clauses = [
+            "p.from_call IS NOT NULL",
+            "TRIM(p.from_call) <> ''",
+            "LOWER(COALESCE(p.packet_format,'')) NOT LIKE 'telemetry%'",
+        ]
+        active_params: list[Any] = []
+        if cutoff:
+            active_clauses.append("p.timestamp >= ?")
+            active_params.append(cutoff)
+        if excluded_calls:
+            placeholders = ",".join("?" for _ in excluded_calls)
+            active_clauses.append(f"UPPER(TRIM(p.from_call)) NOT IN ({placeholders})")
+            active_params.extend(excluded_calls)
+
+        active_rows = conn.execute(
+            f"""
+            SELECT UPPER(TRIM(p.from_call)) AS callsign,
+                   COUNT(*) AS packets,
+                   MAX(p.timestamp) AS last_seen
+            FROM packets p
+            WHERE {" AND ".join(active_clauses)}
+            GROUP BY UPPER(TRIM(p.from_call))
+            ORDER BY packets DESC, callsign
+            """,
+            active_params,
+        ).fetchall()
+        eligible_packets = sum(int(r["packets"] or 0) for r in active_rows)
+        active_stations = []
+        for rank, row in enumerate(active_rows[:20], start=1):
+            packet_count = int(row["packets"] or 0)
+            active_stations.append({
+                "rank": rank,
+                "callsign": row["callsign"],
+                "packets": packet_count,
+                "percent": round((packet_count * 100.0 / eligible_packets), 1) if eligible_packets else 0.0,
+                "last_seen": row["last_seen"],
+            })
+
         stale = [dict(r) for r in conn.execute(
             """
             SELECT source,target,kind,packet_count,last_seen
@@ -1243,6 +1302,8 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "complete": complete,
         "edges": int(totals["edges"] or 0),
         "packets": int(totals["packets"] or 0),
+        "active_stations": active_stations,
+        "active_station_packets": eligible_packets,
         "digipeaters": digis,
         "igates": igates,
         "recently_disappeared": stale,
