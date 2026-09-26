@@ -19,6 +19,7 @@ checks = {
         "kill -KILL",
         "hdiutil attach",
         "pkexec dpkg -i",
+        'archive.extractall(stage, filter="data")',
     ],
     "pt2vhf_aprs/web.py": [
         '@app.post("/api/update/install")',
