@@ -18,6 +18,7 @@ checks = {
         "queryLastByStation: new Map()",
         "function queryResultMarkup(query)",
         "function loadStationQueryHistory(",
+        "Ver histórico de queries",
         "function renderClientVersionStats(stats)",
         "function setQuickLanguage(language)",
     ],
@@ -25,7 +26,6 @@ checks = {
         'id="languageQuickSwitch"',
         'id="clientVersionStatsContent"',
         "language-flag-england",
-        "Ver histórico de queries",
     ],
     "pt2vhf_aprs/static/css/app.css": [
         ".station-query-result",
