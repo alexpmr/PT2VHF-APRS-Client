@@ -182,7 +182,7 @@
       if (data.status === 'update_available') {
         el.classList.add('update');
         textEl.textContent = ui(`Nova versão ${latest}`, `New version ${latest}`);
-        el.title = ui(`Instalada ${current}. Clique para ver a Release e baixar manualmente.`, `Installed ${current}. Click to open the Release and download manually.`);
+        el.title = ui(`Instalada ${current}. Clique para baixar e instalar ${latest}.`, `Installed ${current}. Click to download and install ${latest}.`);
       } else if (data.status === 'latest') {
         el.classList.add('latest');
         textEl.textContent = ui('Última versão', 'Latest version');
@@ -222,11 +222,20 @@
     const data = state.updateInfo;
     if (!data || data.status !== 'update_available') return;
     $('#updateModalTitle').textContent = ui(`Nova versão v${data.latest_version} disponível`, `New version v${data.latest_version} available`);
-    $('#updateModalSummary').textContent = ui(
-      `Instalada v${data.current_version}. O download e a instalação são manuais.`,
-      `Installed v${data.current_version}. Download and installation are manual.`
-    );
+    const ready = !!data.asset_ready && !!data.install_supported;
+    $('#updateModalSummary').textContent = ready
+      ? ui(
+          `Instalada v${data.current_version}. O pacote ${data.asset_name} será baixado, validado e instalado automaticamente.`,
+          `Installed v${data.current_version}. Package ${data.asset_name} will be downloaded, verified and installed automatically.`
+        )
+      : ui(
+          data.error || 'A instalação automática não está disponível nesta execução. Use a página da Release.',
+          data.error || 'Automatic installation is not available in this build. Use the Release page.'
+        );
     $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
+    const installButton = $('#updateInstallNow');
+    if (installButton) installButton.disabled = !ready;
+    $('#updateDownloadProgress').textContent = '';
     $('#updateModal').classList.remove('hidden');
   }
 
@@ -234,10 +243,16 @@
     const status = $('#updateSettingsStatus');
     if (!status) return;
     if (state.updateInfo?.status === 'update_available') {
-      status.textContent = ui(
-        `Nova versão v${state.updateInfo.latest_version} disponível. Instalação manual.`,
-        `New version v${state.updateInfo.latest_version} available. Manual installation.`
-      );
+      const ready = !!state.updateInfo.asset_ready && !!state.updateInfo.install_supported;
+      status.textContent = ready
+        ? ui(
+            `Nova versão v${state.updateInfo.latest_version} disponível para instalação automática.`,
+            `New version v${state.updateInfo.latest_version} is ready for automatic installation.`
+          )
+        : ui(
+            state.updateInfo.error || `Nova versão v${state.updateInfo.latest_version} disponível; pacote automático indisponível.`,
+            state.updateInfo.error || `New version v${state.updateInfo.latest_version} is available; automatic package unavailable.`
+          );
     } else if (state.updateInfo?.status === 'latest') {
       status.textContent = ui('Você está usando a última versão.', 'You are using the latest version.');
     } else if (!state.versionCheckInProgress) {
@@ -247,7 +262,11 @@
 
   function updateUpdateSettingsUi() {
     const btn = $('#openLatestReleaseButton');
-    if (btn) btn.classList.toggle('hidden', state.updateInfo?.status !== 'update_available' || !state.updateInfo?.release_url);
+    if (btn) {
+      const ready = state.updateInfo?.status === 'update_available' && state.updateInfo?.asset_ready && state.updateInfo?.install_supported;
+      btn.classList.toggle('hidden', !ready);
+      btn.disabled = !!state.updateDownloading;
+    }
     refreshPendingUpdateStatus();
   }
 
@@ -259,9 +278,57 @@
     else window.open(url, '_blank', 'noopener');
   }
 
+  async function installLatestUpdate() {
+    const data = state.updateInfo;
+    if (!data || data.status !== 'update_available') {
+      await refreshVersionStatus(true);
+      return;
+    }
+    if (state.updateDownloading) return;
+    if (!data.asset_ready || !data.install_supported) {
+      showUpdateModal();
+      return;
+    }
+
+    state.updateDownloading = true;
+    updateUpdateSettingsUi();
+    const progress = $('#updateDownloadProgress');
+    const installButton = $('#updateInstallNow');
+    if (installButton) installButton.disabled = true;
+    if (progress) {
+      progress.textContent = ui(
+        `Baixando e validando ${data.asset_name}…`,
+        `Downloading and verifying ${data.asset_name}…`
+      );
+    }
+    $('#updateModal')?.classList.remove('hidden');
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 180000);
+    try {
+      const result = await api('/api/update/install', { method:'POST', signal:controller.signal });
+      if (progress) progress.textContent = String(result.message || ui(
+        'Atualização pronta. Encerrando a versão atual…',
+        'Update ready. Closing the current version…'
+      ));
+      toast(ui(
+        `v${result.version} validada. A aplicação será reiniciada.`,
+        `v${result.version} verified. The application will restart.`
+      ), 'ok');
+    } catch (err) {
+      if (progress) progress.textContent = err.message;
+      toast(err.message, 'error');
+      state.updateDownloading = false;
+      if (installButton) installButton.disabled = false;
+      updateUpdateSettingsUi();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   $('#versionStatus')?.addEventListener('click', e => {
     e.preventDefault();
-    if (state.updateInfo?.status === 'update_available') showUpdateModal();
+    if (state.updateInfo?.status === 'update_available') void installLatestUpdate();
     else refreshVersionStatus(true);
   });
   $('#updateModalClose')?.addEventListener('click', () => $('#updateModal')?.classList.add('hidden'));
@@ -270,8 +337,9 @@
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
     else if (state.updateInfo?.status === 'latest') toast(ui('Verificação concluída: última versão.', 'Check complete: latest version.'), 'ok');
   });
+  $('#updateInstallNow')?.addEventListener('click', () => void installLatestUpdate());
   $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
-  $('#openLatestReleaseButton')?.addEventListener('click', openLatestRelease);
+  $('#openLatestReleaseButton')?.addEventListener('click', () => void installLatestUpdate());
 
   async function showWhatsNewAfterUpdate() {
     try {
