@@ -507,7 +507,12 @@ def test_observed_topology_from_aprs_path():
             edges = db.list_topology_edges(24)
             keys = {(e["source"], e["target"], e["kind"]) for e in edges}
             assert ("PY2ABC-9", "PT2DGI", "rf") in keys
-            assert ("PT2DGI", "PT2IGT", "igate") in keys
+            assert ("PT2DGI", "PT2IGT", "rf") in keys
+            igate_edge = next(
+                e for e in edges
+                if e["source"] == "PT2DGI" and e["target"] == "PT2IGT"
+            )
+            assert igate_edge["igate"] == "PT2IGT"
     finally:
         db.DB_PATH = original
 
