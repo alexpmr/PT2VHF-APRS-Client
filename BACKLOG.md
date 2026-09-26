@@ -85,9 +85,15 @@
   - Implementar visualização de **APRS Trace** no mapa quando a resposta/caminho permitir identificar os digipeaters/IGates observados, mostrando origem, intermediários e destino sem inventar hops não presentes no pacote.
   - Adicionar ação **“Diagnosticar estação”** no popup/menu contextual, reunindo Ping/ACK, consultas APRS e trace em uma interface única.
   - Registrar as queries e respostas no Log/Análise para permitir histórico de diagnóstico e estatísticas de tempo de resposta.
-  - **Responder queries recebidas:** implementar tratamento explícito de queries APRS endereçadas ao próprio indicativo. Responder apenas às queries suportadas e com dados locais válidos, respeitando conexão verificada e configuração da estação.
-  - Incluir pelo menos respostas de **posição** e **status**; avaliar respostas de **estações ouvidas diretamente/últimos heard** e trace conforme o que for semanticamente correto para um cliente APRS-IS.
-  - Adicionar opção em Configurações para **habilitar/desabilitar respostas automáticas a queries**, com padrão conservador e rate-limit por origem para evitar loops, flood ou abuso.
+  - **Responder queries recebidas:** preparar o cliente para reconhecer queries APRS endereçadas ao próprio indicativo e despachá-las por um handler dedicado, separado do fluxo de mensagens/ACK.
+  - Criar uma camada de **query dispatcher** extensível, mapeando cada comando suportado para sua função de resposta, de forma que novas queries possam ser adicionadas sem alterar o parser principal.
+  - Incluir inicialmente suporte de resposta para **posição** e **status**, usando os dados já configurados da estação; preparar interfaces para **direct heard/últimos ouvidos**, trace e outras queries padronizadas.
+  - Validar destino pelo **indicativo completo com SSID** e aceitar apenas queries destinadas à própria estação, evitando responder a tráfego genérico ou de terceiros.
+  - Gerar respostas APRS no formato correto para cada query e transmitir pelo mesmo pipeline TX controlado do cliente, com registro no Log como resposta automática.
+  - Adicionar **rate-limit por origem e por tipo de query**, deduplicação de requests repetidos e proteção contra loops/flood.
+  - Adicionar opção em Configurações para **habilitar/desabilitar respostas automáticas a queries**, com padrão conservador, além de opção futura para habilitar individualmente cada tipo de resposta.
+  - Registrar no diagnóstico: query recebida, origem, tipo reconhecido, resposta enviada, ignorada ou rejeitada e motivo.
+  - Adicionar testes automatizados cobrindo parsing da query, validação do destinatário, resposta correta, rate-limit, query desconhecida e ausência de transmissão quando desconectado/não verificado.
   - Não confundir **ACK de mensagem** com query APRS: manter o ACK existente e tratar queries em um caminho próprio do parser/serviço.
 
 
