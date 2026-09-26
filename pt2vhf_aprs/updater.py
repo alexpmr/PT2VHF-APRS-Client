@@ -60,17 +60,17 @@ def desired_asset_name(version: str) -> str:
     mode = current_update_mode()
     machine = _machine()
     if mode == "windows-portable":
-        return f"PT2VHF_APRS_Client_Portable_x64_v${version}.exe"
+        return f"PT2VHF_APRS_Client_Portable_x64_v{version}.exe"
     if mode == "windows-installer":
-        return f"PT2VHF_APRS_Client_Setup_x64_v${version}.exe"
+        return f"PT2VHF_APRS_Client_Setup_x64_v{version}.exe"
     if mode == "macos-dmg":
         arch = "arm64" if machine == "arm64" else "x86_64"
-        return f"PT2VHF_APRS_Client_macOS_${arch}_v${version}.dmg"
+        return f"PT2VHF_APRS_Client_macOS_{arch}_v{version}.dmg"
     if mode == "linux-appimage":
-        return f"PT2VHF_APRS_Client_x86_64_v${version}.AppImage"
+        return f"PT2VHF_APRS_Client_x86_64_v{version}.AppImage"
     if mode == "linux-deb":
-        return f"pt2vhf-aprs-client_${version}_amd64.deb"
-    return f"PT2VHF_APRS_Client_Linux_x86_64_v${version}.tar.gz"
+        return f"pt2vhf-aprs-client_{version}_amd64.deb"
+    return f"PT2VHF_APRS_Client_Linux_x86_64_v{version}.tar.gz"
 
 
 def install_supported(mode: str | None = None) -> bool:
@@ -188,7 +188,7 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     try:
         req = urllib.request.Request(
             url,
-            headers={"User-Agent": f"PT2VHF-APRS-Client/${__version__}"},
+            headers={"User-Agent": f"PT2VHF-APRS-Client/{__version__}"},
         )
         with urllib.request.urlopen(req, timeout=45) as response, temp.open("wb") as out:
             while True:
@@ -201,7 +201,7 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
         actual_size = temp.stat().st_size
         if expected_size > 0 and actual_size != expected_size:
             raise ValueError(
-                f"Tamanho inesperado da atualização: recebido ${actual_size} bytes; esperado ${expected_size}."
+                f"Tamanho inesperado da atualização: recebido {actual_size} bytes; esperado {expected_size}."
             )
 
         sha256 = digest.hexdigest()
@@ -269,11 +269,11 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
 
     common = (
         "$ErrorActionPreference='Stop'\\n"
-        f"$pidToWait=${pid}\\n"
-        f"$downloaded=${_ps_quote(path)}\\n"
-        f"$current=${_ps_quote(current)}\\n"
-        f"$pendingFile=${_ps_quote(pending_path)}\\n"
-        f"$logFile=${_ps_quote(log)}\\n"
+        f"$pidToWait={pid}\\n"
+        f"$downloaded={_ps_quote(path)}\\n"
+        f"$current={_ps_quote(current)}\\n"
+        f"$pendingFile={_ps_quote(pending_path)}\\n"
+        f"$logFile={_ps_quote(log)}\\n"
         "function Log([string]$m) { Add-Content -LiteralPath $logFile -Value ((Get-Date).ToString('o') + ' ' + $m) -Encoding UTF8 }\\n"
         "Log 'updater helper started'\\n"
         "$deadline=(Get-Date).AddSeconds(8)\\n"
@@ -287,8 +287,8 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
         backup = _portable_backup_path(current)
         body = (
             common
-            + f"$destination=${_ps_quote(destination)}\\n"
-            + f"$backup=${_ps_quote(backup)}\\n"
+            + f"$destination={_ps_quote(destination)}\\n"
+            + f"$backup={_ps_quote(backup)}\\n"
             + "try {\\n"
             + "  if (Test-Path -LiteralPath $current) { Copy-Item -LiteralPath $current -Destination $backup -Force; Log 'backup created' }\\n"
             + "  if (($current -ne $destination) -and (Test-Path -LiteralPath $current)) { Remove-Item -LiteralPath $current -Force }\\n"
@@ -317,7 +317,7 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
 
 def _prepare_linux_tar(pending: dict[str, Any]) -> Path:
     source = Path(str(pending["path"])).resolve()
-    stage = UPDATE_DIR / f"stage-${pending['version']}"
+    stage = UPDATE_DIR / f"stage-{pending['version']}"
     if stage.exists():
         shutil.rmtree(stage, ignore_errors=True)
     stage.mkdir(parents=True, exist_ok=True)
@@ -344,9 +344,9 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
     lines = [
         "#!/usr/bin/env bash",
         "set -e",
-        f"pid=${pid}",
-        f"log=${q(str(log))}",
-        f"pending=${q(str(pending_file))}",
+        f"pid={pid}",
+        f"log={q(str(log))}",
+        f"pending={q(str(pending_file))}",
         "logmsg(){ printf '%s %s\\\\n' \"$(date -Iseconds)\" \"$1\" >> \"$log\"; }",
         "logmsg 'updater helper started'",
         "for _ in $(seq 1 32); do",
@@ -362,10 +362,10 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
         destination = current.parent / downloaded.name
         backup = current.parent / "PT2VHF_APRS_Client_previous.AppImage"
         lines += [
-            f"current=${q(str(current))}",
-            f"downloaded=${q(str(downloaded))}",
-            f"destination=${q(str(destination))}",
-            f"backup=${q(str(backup))}",
+            f"current={q(str(current))}",
+            f"downloaded={q(str(downloaded))}",
+            f"destination={q(str(destination))}",
+            f"backup={q(str(backup))}",
             'if [ -f "$current" ]; then cp -f "$current" "$backup"; fi',
             'if [ "$current" != "$destination" ]; then rm -f "$current"; fi',
             'mv -f "$downloaded" "$destination"',
@@ -377,25 +377,25 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
     elif mode == "linux-deb":
         relaunch = "/usr/local/bin/pt2vhf-aprs-client"
         if hasattr(os, "geteuid") and os.geteuid() == 0:
-            install_cmd = f"dpkg -i ${q(str(downloaded))}"
+            install_cmd = f"dpkg -i {q(str(downloaded))}"
         else:
-            install_cmd = f"pkexec dpkg -i ${q(str(downloaded))}"
+            install_cmd = f"pkexec dpkg -i {q(str(downloaded))}"
         lines += [
-            f"downloaded=${q(str(downloaded))}",
+            f"downloaded={q(str(downloaded))}",
             install_cmd,
             'rm -f "$pending"',
             "logmsg 'DEB update installed'",
-            f"nohup ${q(relaunch)} >/dev/null 2>&1 &",
+            f"nohup {q(relaunch)} >/dev/null 2>&1 &",
         ]
     elif mode == "linux-tar":
         staged = _prepare_linux_tar(pending)
         destination = current.parent / staged.name
         backup = current.parent / "PT2VHF_APRS_Client_Linux_previous"
         lines += [
-            f"current=${q(str(current))}",
-            f"staged=${q(str(staged))}",
-            f"destination=${q(str(destination))}",
-            f"backup=${q(str(backup))}",
+            f"current={q(str(current))}",
+            f"staged={q(str(staged))}",
+            f"destination={q(str(destination))}",
+            f"backup={q(str(backup))}",
             'if [ -f "$current" ]; then cp -f "$current" "$backup"; fi',
             'if [ "$current" != "$destination" ]; then rm -f "$current"; fi',
             'mv -f "$staged" "$destination"',
@@ -410,12 +410,12 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
             raise ValueError("Não foi possível localizar o aplicativo .app atual para atualização.")
         target = Path(bundle_text).resolve()
         user_target = Path.home() / "Applications" / target.name
-        mount = UPDATE_DIR / f"mount-${pending['version']}"
+        mount = UPDATE_DIR / f"mount-{pending['version']}"
         lines += [
-            f"dmg=${q(str(downloaded))}",
-            f"target=${q(str(target))}",
-            f"user_target=${q(str(user_target))}",
-            f"mount=${q(str(mount))}",
+            f"dmg={q(str(downloaded))}",
+            f"target={q(str(target))}",
+            f"user_target={q(str(user_target))}",
+            f"mount={q(str(mount))}",
             'rm -rf "$mount"; mkdir -p "$mount"',
             'hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount" >/dev/null',
             'source_app="$(find "$mount" -maxdepth 1 -name \\'*.app\\' -print -quit)"',
@@ -433,7 +433,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
             'open "$dest"',
         ]
     else:
-        raise ValueError(f"Modo de atualização não suportado: ${mode}")
+        raise ValueError(f"Modo de atualização não suportado: {mode}")
 
     script.write_text("\\n".join(lines) + "\\n", encoding="utf-8")
     script.chmod(0o700)
@@ -518,9 +518,9 @@ def restore_windows_portable_backup() -> bool:
     pid = os.getpid()
     rollback.write_text(
         "$ErrorActionPreference='Stop'\\n"
-        f"$pidToWait=${pid}\\n"
-        f"$current=${_ps_quote(exe)}\\n"
-        f"$backup=${_ps_quote(backup)}\\n"
+        f"$pidToWait={pid}\\n"
+        f"$current={_ps_quote(exe)}\\n"
+        f"$backup={_ps_quote(backup)}\\n"
         "$deadline=(Get-Date).AddSeconds(8)\\n"
         "while ((Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }\\n"
         "if (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) { Stop-Process -Id $pidToWait -Force -ErrorAction SilentlyContinue }\\n"
