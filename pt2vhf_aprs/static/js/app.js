@@ -3602,7 +3602,7 @@
   }
 
   function syncQuickLanguageButtons() {
-    $('.language-quick-button').forEach(button => {
+    $$('.language-quick-button').forEach(button => {
       const active = button.dataset.language === state.language;
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
