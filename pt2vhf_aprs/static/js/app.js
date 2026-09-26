@@ -27,6 +27,7 @@
     trafficReplayLayers: new Set(),
     queryTraceLayers: new Set(),
     queryPollers: new Map(),
+    queryLastByStation: new Map(),
     timelineReplayActive: false,
     trafficEvents: [],
     trafficIndex: 0,
@@ -850,7 +851,9 @@
           <button type="button" class="btn secondary station-query-button" data-query-type="PINGACK" data-callsign="${escapeHtml(s.callsign)}">Ping/ACK</button>
           <button type="button" class="btn secondary station-query-button" data-query-type="APRST" data-callsign="${escapeHtml(s.callsign)}">Trace</button>
         </div>
-        <div class="station-query-status" data-query-status="${escapeHtml(s.callsign)}"></div>
+        <div class="station-query-result" data-query-result="${escapeHtml(s.callsign)}">${queryResultMarkup(state.queryLastByStation.get(normalizedCall(s.callsign)) || null)}</div>
+        <button type="button" class="btn secondary station-query-history-button" data-callsign="${escapeHtml(s.callsign)}">Ver histórico de queries</button>
+        <div class="station-query-history hidden" data-query-history="${escapeHtml(s.callsign)}"></div>
       </div>
       <div class="station-popup-actions">
         ${favoriteStarHtml(s.callsign, false)}
@@ -885,6 +888,11 @@
           marker.setLatLng(latlng).setIcon(markerIcon(s));
         }
         marker.bindPopup(popupHtml(s), { maxWidth: 520 });
+        if (marker._pt2vhfQueryPopupHandler) {
+          marker.off('popupopen', marker._pt2vhfQueryPopupHandler);
+        }
+        marker._pt2vhfQueryPopupHandler = () => { void loadStationQueryHistory(s.callsign, false); };
+        marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
       const grouped = new Map();
@@ -1926,24 +1934,126 @@
     } catch (_) {}
   }, 180));
 
-  function queryStatusElement(callsign) {
-    const call = normalizedCall(callsign);
-    return [...document.querySelectorAll('.station-query-status')].find(el => normalizedCall(el.dataset.queryStatus || '') === call) || null;
+  function queryTypeLabel(type) {
+    const labels = {
+      APRSP: ui('Posição', 'Position'),
+      APRSS: ui('Status', 'Status'),
+      APRSD: ui('Ouvidos', 'Direct heard'),
+      APRSH: ui('Heard', 'Heard'),
+      APRSO: ui('Objetos', 'Objects'),
+      APRST: ui('Trace', 'Trace'),
+      PING: ui('Trace/PING?', 'Trace/PING?'),
+      PINGACK: ui('Ping/ACK', 'Ping/ACK')
+    };
+    return labels[String(type || '').toUpperCase()] || String(type || ui('Query', 'Query'));
   }
 
-  function setQueryStatus(callsign, text, level = '') {
-    const el = queryStatusElement(callsign);
-    if (!el) return;
-    el.textContent = text || '';
-    el.classList.toggle('query-ok', level === 'ok');
-    el.classList.toggle('query-error', level === 'error');
-  }
-
-  function clearQueryTrace() {
-    for (const layer of state.queryTraceLayers) {
-      try { state.map?.removeLayer(layer); } catch (_) {}
+  function queryResultMarkup(query) {
+    if (!query) {
+      return '<div class="station-query-result-title"><span>' +
+        escapeHtml(ui('Resultado da última query', 'Latest query result')) +
+        '</span></div><div class="hint">' +
+        escapeHtml(ui('Nenhuma query executada recentemente para esta estação.', 'No recent query has been run for this station.')) +
+        '</div>';
     }
-    state.queryTraceLayers.clear();
+
+    const status = String(query.status || '');
+    const rtt = Number(query.rtt_ms);
+    const rttText = Number.isFinite(rtt) ? Math.round(rtt).toLocaleString(currentLocale()) + ' ms' : '';
+    const response = String(query.response_text || '').trim();
+    const trace = Array.isArray(query.trace_path_list)
+      ? query.trace_path_list
+      : (() => {
+          try { return JSON.parse(query.trace_path || '[]'); } catch (_) { return []; }
+        })();
+    const traceNodes = Array.isArray(query.trace_nodes) ? query.trace_nodes : [];
+    const located = traceNodes.filter(node => node?.known).length;
+    const statusClass = status === 'Respondida' ? 'query-status-ok'
+      : (status === 'Aguardando resposta' || status === 'Enviando' ? '' : 'query-status-error');
+    const sentAt = query.sent_at ? fmtDate(query.sent_at) : '';
+    const traceText = trace.length ? trace.join(' → ') : '';
+    const traceSummary = trace.length
+      ? '<div class="station-query-response"><strong>' +
+        escapeHtml(ui('Caminho:', 'Path:')) + '</strong> ' + escapeHtml(traceText) +
+        (traceNodes.length ? '<br><span class="hint">' +
+          escapeHtml(ui(
+            located + '/' + traceNodes.length + ' hops com posição conhecida.',
+            located + '/' + traceNodes.length + ' hops with known position.'
+          )) + '</span>' : '') + '</div>'
+      : '';
+
+    return '<div class="station-query-result-title"><span>' +
+      escapeHtml(ui('Resultado da última query', 'Latest query result')) +
+      '</span><span class="' + statusClass + '">' + escapeHtml(status || ui('Sem estado', 'No status')) + '</span></div>' +
+      '<div class="station-query-result-grid">' +
+      '<strong>' + escapeHtml(ui('Query', 'Query')) + '</strong><span>' + escapeHtml(queryTypeLabel(query.query_type)) + '</span>' +
+      (sentAt ? '<strong>' + escapeHtml(ui('Enviada', 'Sent')) + '</strong><span>' + escapeHtml(sentAt) + '</span>' : '') +
+      (rttText ? '<strong>RTT</strong><span>' + escapeHtml(rttText) + '</span>' : '') +
+      '</div>' +
+      (response ? '<div class="station-query-response">' + escapeHtml(response) + '</div>' : '') +
+      traceSummary;
+  }
+
+  function queryResultElement(callsign) {
+    const call = normalizedCall(callsign);
+    return [...document.querySelectorAll('.station-query-result')].find(
+      el => normalizedCall(el.dataset.queryResult || '') === call
+    ) || null;
+  }
+
+  function queryHistoryElement(callsign) {
+    const call = normalizedCall(callsign);
+    return [...document.querySelectorAll('.station-query-history')].find(
+      el => normalizedCall(el.dataset.queryHistory || '') === call
+    ) || null;
+  }
+
+  function setStationQueryResult(callsign, query) {
+    const call = normalizedCall(callsign);
+    if (!call) return;
+    if (query) state.queryLastByStation.set(call, query);
+    const el = queryResultElement(call);
+    if (el) el.innerHTML = queryResultMarkup(query || state.queryLastByStation.get(call) || null);
+  }
+
+  function renderStationQueryHistory(callsign, rows) {
+    const el = queryHistoryElement(callsign);
+    if (!el) return;
+    const items = Array.isArray(rows) ? rows : [];
+    if (!items.length) {
+      el.innerHTML = '<div class="hint">' + escapeHtml(ui('Nenhuma query registrada para esta estação.', 'No queries recorded for this station.')) + '</div>';
+      return;
+    }
+    el.innerHTML = items.map(item => {
+      const rtt = Number(item.rtt_ms);
+      const rttText = Number.isFinite(rtt) ? ' · ' + Math.round(rtt).toLocaleString(currentLocale()) + ' ms' : '';
+      return '<div class="station-query-history-item"><strong>' +
+        escapeHtml(queryTypeLabel(item.query_type)) + '</strong> · ' +
+        escapeHtml(String(item.status || '')) + rttText +
+        '<br><span>' + escapeHtml(fmtDate(item.sent_at)) + '</span></div>';
+    }).join('');
+  }
+
+  async function loadStationQueryHistory(callsign, showHistory = false) {
+    const call = normalizedCall(callsign);
+    if (!call) return [];
+    try {
+      const rows = await api('/api/queries?station=' + encodeURIComponent(call) + '&limit=12');
+      let latest = Array.isArray(rows) && rows.length ? rows[0] : null;
+      if (latest && ['APRST','PING'].includes(String(latest.query_type || '').toUpperCase())) {
+        try { latest = await api('/api/queries/' + Number(latest.id)); } catch (_) {}
+      }
+      if (latest) setStationQueryResult(call, latest);
+      else setStationQueryResult(call, null);
+      if (showHistory) renderStationQueryHistory(call, rows);
+      return rows || [];
+    } catch (err) {
+      if (showHistory) {
+        const el = queryHistoryElement(call);
+        if (el) el.innerHTML = '<div class="query-status-error">' + escapeHtml(err.message) + '</div>';
+      }
+      return [];
+    }
   }
 
   function drawQueryTrace(query) {
@@ -1990,24 +2100,6 @@
     if (bounds.isValid()) state.map.fitBounds(bounds.pad(.18), { maxZoom: 13 });
   }
 
-  function queryResultText(query) {
-    const type = String(query?.query_type || '');
-    const status = String(query?.status || '');
-    if (status === 'Aguardando resposta') return ui('Query enviada; aguardando resposta…', 'Query sent; waiting for response…');
-    if (status === 'Respondida') {
-      const rtt = Number(query?.rtt_ms);
-      const time = Number.isFinite(rtt) ? ' · ' + Math.round(rtt) + ' ms' : '';
-      if (type === 'PINGACK') return ui('ACK recebido' + time, 'ACK received' + time);
-      if (type === 'APRST' || type === 'PING') {
-        const total = Array.isArray(query?.trace_path_list) ? query.trace_path_list.length : 0;
-        const located = Array.isArray(query?.trace_nodes) ? query.trace_nodes.filter(n => n.known).length : 0;
-        return ui('Trace recebido' + time + ' · ' + located + '/' + total + ' hops localizados', 'Trace received' + time + ' · ' + located + '/' + total + ' located hops');
-      }
-      return ui('Resposta recebida' + time + ': ' + (query?.response_text || ''), 'Response received' + time + ': ' + (query?.response_text || ''));
-    }
-    return status || ui('Sem resposta.', 'No response.');
-  }
-
   async function pollQueryResult(queryId, callsign) {
     const key = Number(queryId);
     if (!key) return;
@@ -2017,7 +2109,7 @@
     try {
       const query = await api('/api/queries/' + key);
       const waiting = query?.status === 'Aguardando resposta';
-      setQueryStatus(callsign, queryResultText(query), query?.status === 'Respondida' ? 'ok' : (waiting ? '' : 'error'));
+      setStationQueryResult(callsign, query);
       if (query?.status === 'Respondida' && ['APRST','PING'].includes(String(query.query_type || ''))) {
         drawQueryTrace(query);
       }
@@ -2029,7 +2121,12 @@
       }
     } catch (err) {
       state.queryPollers.delete(key);
-      setQueryStatus(callsign, err.message, 'error');
+      setStationQueryResult(callsign, {
+        query_type: state.queryLastByStation.get(normalizedCall(callsign))?.query_type || 'QUERY',
+        status: ui('Falha ao consultar resultado', 'Failed to check result'),
+        response_text: err.message,
+        sent_at: new Date().toISOString()
+      });
     }
   }
 
@@ -2038,18 +2135,31 @@
     const queryType = String(button?.dataset?.queryType || '').toUpperCase();
     if (!callsign || !queryType) return;
     button.disabled = true;
-    setQueryStatus(callsign, ui('Enviando query…', 'Sending query…'));
+    setStationQueryResult(callsign, {
+      query_type: queryType,
+      status: ui('Enviando', 'Sending'),
+      sent_at: new Date().toISOString()
+    });
     try {
       const result = await api('/api/queries/send', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ to: callsign, query_type: queryType })
       });
-      setQueryStatus(callsign, ui('Query enviada; aguardando resposta…', 'Query sent; waiting for response…'));
+      setStationQueryResult(callsign, {
+        ...result,
+        status: result.status || 'Aguardando resposta',
+        sent_at: new Date().toISOString()
+      });
       toast(ui('Query ' + queryType + ' enviada para ' + callsign + '.', 'Query ' + queryType + ' sent to ' + callsign + '.'), 'ok');
       void pollQueryResult(result.id, callsign);
     } catch (err) {
-      setQueryStatus(callsign, err.message, 'error');
+      setStationQueryResult(callsign, {
+        query_type: queryType,
+        status: ui('Falhou', 'Failed'),
+        response_text: err.message,
+        sent_at: new Date().toISOString()
+      });
       toast(err.message, 'error');
     } finally {
       button.disabled = false;
@@ -2062,6 +2172,20 @@
     e.preventDefault();
     e.stopPropagation();
     void sendStationQuery(button);
+  });
+
+  document.addEventListener('click', async e => {
+    const button = e.target.closest('.station-query-history-button');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const callsign = normalizedCall(button.dataset.callsign || '');
+    const history = queryHistoryElement(callsign);
+    if (!history) return;
+    const opening = history.classList.contains('hidden');
+    history.classList.toggle('hidden', !opening);
+    button.textContent = opening ? ui('Ocultar histórico', 'Hide history') : ui('Ver histórico de queries', 'View query history');
+    if (opening) await loadStationQueryHistory(callsign, true);
   });
 
   function openMessageComposer(destination = '') {
@@ -3378,8 +3502,12 @@
     'Quando houver atualização, clique no aviso para abrir o painel integrado, consultar as novidades e baixar o pacote compatível.':'When an update is available, click the notice to open the integrated panel, review changes and download the compatible package.',
     'É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.':'Updates can be checked and downloaded automatically and, on supported platforms, installed on exit. Windows Portable keeps a rollback backup.',
     'O botão Restaurar configuração padrão redefine preferências e dados de configuração, sem apagar mensagens, estações, logs ou tracklogs.':'Restore default settings resets preferences and configuration data without deleting messages, stations, logs or tracklogs.',
+    '🇧🇷 Português - padrão':'🇧🇷 Portuguese - default',
+    '🏴 English':'🏴 English',
     'Análise':'Analysis',
     'Análise da rede':'Network analysis',
+    'Clientes / versões APRS':'APRS clients / versions',
+    'Distribuição pelo identificador TOCALL do último pacote de cada estação. Quando o software/versão não puder ser determinado com segurança, ele fica como Não identificado.':'Distribution based on the TOCALL identifier in each station\'s latest packet. When software/version cannot be determined reliably, it remains Unidentified.',
     'Indicadores da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators with historical comparison and map replay.',
     'Período':'Period',
     '1 hora':'1 hour',
@@ -3465,14 +3593,58 @@
     }
   }
 
+  function syncQuickLanguageButtons() {
+    $('.language-quick-button').forEach(button => {
+      const active = button.dataset.language === state.language;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    const configLanguage = $('#configForm')?.elements.namedItem('language');
+    if (configLanguage && configLanguage.value !== state.language) configLanguage.value = state.language;
+  }
+
   function applyLanguage(language) {
     state.language = language === 'en' ? 'en' : 'pt-BR';
     document.documentElement.lang = state.language === 'en' ? 'en' : 'pt-BR';
     translateDom(document.body);
+    syncQuickLanguageButtons();
     refreshStatus();
     if (state.messages.length) renderMessages();
     if (state.stations.length) renderStations();
   }
+
+  async function setQuickLanguage(language) {
+    const next = language === 'en' ? 'en' : 'pt-BR';
+    applyLanguage(next);
+    try {
+      const result = await api('/api/config', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ language: next })
+      });
+      state.currentConfig = result.config || { ...(state.currentConfig || {}), language: next };
+      const input = $('#configForm')?.elements.namedItem('language');
+      if (input) input.value = next;
+      if (state.configLoaded) {
+        state.configBaseline = configFormSnapshot();
+        state.configDirty = false;
+        const status = $('#configSaveStatus');
+        if (status) {
+          status.textContent = ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
+          status.classList.remove('unsaved');
+        }
+      }
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  document.addEventListener('click', e => {
+    const button = e.target.closest('.language-quick-button');
+    if (!button) return;
+    e.preventDefault();
+    void setQuickLanguage(button.dataset.language || 'pt-BR');
+  });
 
   const languageObserver = new MutationObserver(records => {
     if (state.language !== 'en') return;
@@ -4022,6 +4194,48 @@
     } catch (err) { toast(err.message, 'error'); }
   });
 
+  function renderClientVersionStats(stats) {
+    const box = $('#clientVersionStatsContent');
+    if (!box) return;
+    const data = stats || {};
+    const items = Array.isArray(data.items) ? data.items : [];
+    const identified = Number(data.identified_stations || 0);
+    const unidentified = Number(data.unidentified_stations || 0);
+    const total = Number(data.total_stations || 0);
+
+    if (!items.length) {
+      box.innerHTML = '<span class="hint">' +
+        escapeHtml(ui(
+          total ? 'Nenhum cliente/versão pôde ser identificado com segurança neste período.' : 'Sem estações no período selecionado.',
+          total ? 'No client/version could be identified reliably in this period.' : 'No stations in the selected period.'
+        )) + '</span>' +
+        (unidentified ? '<div class="client-version-unidentified">' +
+          escapeHtml(ui('Não identificado: ', 'Unidentified: ')) +
+          unidentified.toLocaleString(currentLocale()) + '</div>' : '');
+      return;
+    }
+
+    box.innerHTML =
+      '<table class="client-version-table"><thead><tr><th>' +
+      escapeHtml(ui('Cliente / versão (TOCALL)', 'Client / version (TOCALL)')) +
+      '</th><th>' + escapeHtml(ui('Estações', 'Stations')) +
+      '</th><th>%</th></tr></thead><tbody>' +
+      items.map(item => '<tr><td><strong>' + escapeHtml(item.identifier || '') +
+        '</strong></td><td>' + Number(item.stations || 0).toLocaleString(currentLocale()) +
+        '</td><td>' + Number(item.percent || 0).toLocaleString(currentLocale(), {maximumFractionDigits:1}) + '%</td></tr>').join('') +
+      '</tbody></table>' +
+      '<div class="client-version-unidentified">' +
+      escapeHtml(ui(
+        'Identificadas: ' + identified.toLocaleString(currentLocale()) +
+          ' · Não identificado: ' + unidentified.toLocaleString(currentLocale()) +
+          ' · Total: ' + total.toLocaleString(currentLocale()),
+        'Identified: ' + identified.toLocaleString(currentLocale()) +
+          ' · Unidentified: ' + unidentified.toLocaleString(currentLocale()) +
+          ' · Total: ' + total.toLocaleString(currentLocale())
+      )) +
+      '</div>';
+  }
+
   async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
     if (!box) return;
@@ -4056,6 +4270,7 @@
       if ($('#analysisMetricEdges')) $('#analysisMetricEdges').textContent = Number(data.edges || 0).toLocaleString(currentLocale());
       if ($('#analysisMetricPackets')) $('#analysisMetricPackets').textContent = Number(data.packets || 0).toLocaleString(currentLocale());
       if ($('#analysisMetricEvents')) $('#analysisMetricEvents').textContent = Number(data.comparison?.current_events || 0).toLocaleString(currentLocale());
+      renderClientVersionStats(data.client_versions);
     } catch (err) {
       box.textContent = err.message;
     }

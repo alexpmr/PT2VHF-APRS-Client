@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.6.18
+# PT2VHF APRS Client - v1.6.19
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.18** é uma release completa multiplataforma que acrescenta diagnóstico interativo por queries APRS, Ping/ACK e Trace visual no mapa, mantendo as correções de estabilidade e desempenho da série 1.6.
+A **v1.6.19** é uma release completa multiplataforma focada em visibilidade das queries APRS, estatísticas de clientes/versões na Análise e restauração do seletor rápido de idioma.
 
 ## Downloads
 
@@ -32,7 +32,7 @@ Cada Release completa publica:
 - Se houver alterações não salvas e o usuário tentar mudar de aba, o cliente oferece **Salvar e sair**, **Descartar alterações** ou **Cancelar**.
 - Botão **Restaurar configuração padrão** sem apagar mensagens, estações, logs ou tracklogs.
 - Chaveamento rápido de tema no cabeçalho.
-- Idiomas **🇧🇷 Português** (padrão) e **🇺🇸 English**.
+- Idiomas **🇧🇷 Português** (padrão) e **English com bandeira da Inglaterra**, com troca rápida também na barra superior.
 
 ### APRS-IS e filtros
 - Servidor padrão do aplicativo: `soam.aprs2.net:14580`, com tentativa alternativa por `rotate.aprs2.net` quando aplicável.
@@ -71,6 +71,7 @@ Cada Release completa publica:
 - O popup da estação oferece **Mostrar log**, abrindo o Log já filtrado pelo indicativo/SSID.
 - A análise da rede foi movida para a nova aba **Análise**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.
 - Ranking de digipeaters e IGates, enlaces que deixaram de aparecer, comparação com o período anterior e métricas agregadas.
+- **Ranking de clientes/versões APRS** pelo TOCALL mais recente de cada estação, em ordem decrescente de uso, com percentual e categoria Não identificado.
 - O Mapa ganhou **legenda dos tipos de linhas**: tracklog, enlace RF, IGate/APRS-IS, replay temporal e pacote em movimento.
 - Nova animação do tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, velocidades 0,5x/1x/2x/5x/10x, timestamp e contadores.
 - Em pacotes com múltiplos enlaces observados, os segmentos podem ser animados simultaneamente, reproduzindo a propagação multi-hop.
@@ -83,6 +84,7 @@ Cada Release completa publica:
 - O Trace usa somente o caminho efetivamente recebido. Hops com posição conhecida são desenhados no mapa; os demais continuam listados como não localizados.
 - Em Configuração é possível habilitar respostas automáticas a queries de posição, status e trace. O padrão é desligado para evitar transmissões inesperadas.
 - O histórico de queries e respostas fica no banco local e é usado pelo diagnóstico do popup.
+- O popup exibe uma área **Resultado da última query** com status, resposta, RTT e caminho do Trace, além do botão **Ver histórico de queries**.
 
 ### Atualização integrada
 - **Verificar atualizações automaticamente** — habilitado por padrão e executado na abertura e depois a cada **5 minutos**.

@@ -388,7 +388,14 @@ class APRSService:
             return
         fmt = str(parsed.get("format") or "").lower()
         if parsed.get("latitude") is not None and parsed.get("longitude") is not None:
-            db.resolve_aprs_query_response(peer, ["APRSP"], "Posição recebida", raw)
+            lat = float(parsed.get("latitude"))
+            lon = float(parsed.get("longitude"))
+            db.resolve_aprs_query_response(
+                peer,
+                ["APRSP"],
+                f"Posição: {lat:.6f}, {lon:.6f}",
+                raw,
+            )
             return
         payload = raw.split(":", 1)[1] if ":" in raw else ""
         if fmt == "status" or payload.startswith(">"):

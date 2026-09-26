@@ -601,6 +601,46 @@ def test_message_group_metadata_and_retry_candidates():
         db.DB_PATH = original
 
 
+
+def test_client_version_stats_by_latest_station_tocall():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            packets = [
+                ("PY2AAA-9", "APDW17"),
+                ("PY2BBB-9", "APDW17"),
+                ("PY2CCC-9", "APDR16"),
+                ("PY2DDD-9", "APRS"),
+            ]
+            for idx, (call, tocall) in enumerate(packets):
+                db.upsert_station({
+                    "from": call,
+                    "format": "status",
+                    "latitude": -15.80 - idx * 0.01,
+                    "longitude": -47.90 - idx * 0.01,
+                    "speed": 0,
+                    "course": 0,
+                    "altitude": 1000,
+                    "symbol_table": "/",
+                    "symbol": ">",
+                    "comment": "Teste",
+                    "path": [],
+                    "raw": f"{call}>{tocall},TCPIP*:>teste",
+                })
+
+            stats = db.client_version_stats(0)
+            assert stats["total_stations"] == 4
+            assert stats["identified_stations"] == 3
+            assert stats["unidentified_stations"] == 1
+            assert stats["items"][0]["identifier"] == "APDW17"
+            assert stats["items"][0]["stations"] == 2
+            assert stats["items"][1]["identifier"] == "APDR16"
+            assert stats["items"][1]["stations"] == 1
+    finally:
+        db.DB_PATH = original
+
 def test_topology_timeline_and_period_comparison():
     original = db.DB_PATH
     try:

@@ -257,3 +257,12 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - **Aba Análise — estatísticas de versões de clientes APRS:** adicionar um bloco com a distribuição das versões/clientes observados, ordenado do **mais usado para o menos usado**. Exibir pelo menos nome do cliente/versão e quantidade de ocorrências; quando houver base suficiente, mostrar também percentual sobre o total identificado. Manter uma categoria separada para tráfego em que o cliente/versão não puder ser determinado, sem inferir dados ausentes.
 - **Seletor de idioma no topo:** corrigir a regressão em que a opção de troca de idioma deixou de aparecer na barra superior. Restaurar o seletor **PT/EN com bandeiras**, mantendo **PT-BR como padrão** e preservando a seleção do usuário.
 
+
+
+## Concluído na v1.6.19
+
+- **Aba Análise:** bloco de clientes/versões APRS por TOCALL mais recente de cada estação, ordenado do mais usado para o menos usado, com quantidade, percentual e Não identificado.
+- **Mapa / queries:** resultado da última query passa a ficar claramente visível no popup, com status, RTT, resposta, Trace textual e indicação de hops localizados.
+- **Mapa / histórico:** botão para visualizar o histórico de queries daquela estação e restauração da última resposta ao reabrir o popup.
+- **Idiomas:** restaurado o controle de idioma na barra superior, com Português/Brasil e English/Inglaterra, persistindo a escolha.
+- **Queries de posição:** resposta exibida passa a incluir latitude e longitude recebidas.

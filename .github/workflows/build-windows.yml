@@ -82,6 +82,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_18.py
 
+      - name: Apply v1.6.19 analysis/query/language UX
+        shell: pwsh
+        run: python tools\apply_release_1_6_19.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -241,6 +245,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_6_18.py
 
+      - name: Apply v1.6.19 analysis/query/language UX
+        shell: pwsh
+        run: python tools\apply_release_1_6_19.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -327,6 +335,7 @@ jobs:
           python tools/apply_release_1_6_16.py
           python tools/apply_release_1_6_17.py
           python tools/apply_release_1_6_18.py
+          python tools/apply_release_1_6_19.py
 
       - name: Build Linux packages
         shell: bash
@@ -408,6 +417,7 @@ jobs:
           python tools/apply_release_1_6_16.py
           python tools/apply_release_1_6_17.py
           python tools/apply_release_1_6_18.py
+          python tools/apply_release_1_6_19.py
 
       - name: Core smoke tests
         shell: bash
@@ -457,6 +467,7 @@ jobs:
           python tools/apply_release_1_6_16.py
           python tools/apply_release_1_6_17.py
           python tools/apply_release_1_6_18.py
+          python tools/apply_release_1_6_19.py
 
       - name: Build macOS DMG
         shell: bash
@@ -528,6 +539,7 @@ jobs:
           python tools/apply_release_1_6_16.py
           python tools/apply_release_1_6_17.py
           python tools/apply_release_1_6_18.py
+          python tools/apply_release_1_6_19.py
 
       - name: Generate versioned PDF manual
         shell: bash

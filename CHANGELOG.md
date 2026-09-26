@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.6.19 - 2026-09-26
+
+- A aba **Análise** recebe um bloco de **clientes/versões APRS** baseado no TOCALL do último pacote de cada estação, contabilizando cada indicativo uma única vez e ordenando do mais usado para o menos usado.
+- O ranking mostra quantidade de estações, percentual entre os clientes identificados e uma contagem separada de **Não identificado**, sem inferir software quando o pacote não oferece informação suficiente.
+- O popup da estação no **Mapa** passa a mostrar uma área explícita de **Resultado da última query**, com tipo de query, estado, horário, RTT, resposta recebida e caminho textual do Trace.
+- A última resposta fica disponível ao reabrir o popup e pode ser recuperada do histórico SQLite daquela estação.
+- Adicionado botão **Ver histórico de queries** no popup, mostrando consultas anteriores, status e RTT.
+- Respostas de posição agora registram latitude/longitude no texto do resultado.
+- Restaurado o seletor rápido de idioma na barra superior, com **Brasil / Português** e **Inglaterra / English**, e persistência imediata da escolha.
+- Release completa multiplataforma com Windows x64, Linux x86_64, macOS ARM64/Intel e Manual PDF atualizado.
+
+
 ## v1.6.18 - 2026-09-25
 
 - Adicionadas **Directed Station Queries APRS** no popup das estações do Mapa: Posição (`?APRSP`), Status (`?APRSS`), Ouvidos (`?APRSD`) e Trace (`?APRST`).

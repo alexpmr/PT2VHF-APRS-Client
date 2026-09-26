@@ -1747,6 +1747,77 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
   padding: 7px 9px;
   font-size: 15px;
 }
+.language-quick-switch {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+.language-quick-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.language-quick-button:last-child { border-right: 0; }
+.language-quick-button:hover { color: var(--text); background: rgba(59,166,255,.08); }
+.language-quick-button.active,
+.language-quick-button[aria-pressed="true"] {
+  color: var(--text);
+  background: rgba(59,166,255,.14);
+}
+.language-flag {
+  position: relative;
+  display: inline-block;
+  width: 17px;
+  height: 11px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,.32);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+.language-flag-br { background: #009b3a; }
+.language-flag-br::before {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  left: 3px;
+  top: 0;
+  background: #ffdf00;
+  transform: rotate(45deg) scale(.72);
+}
+.language-flag-br::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  left: 5px;
+  top: 2px;
+  border-radius: 50%;
+  background: #002776;
+}
+.language-flag-england {
+  background:
+    linear-gradient(to bottom, transparent 0 37%, #ce1126 37% 63%, transparent 63% 100%),
+    linear-gradient(to right, #fff 0 39%, #ce1126 39% 61%, #fff 61% 100%);
+}
+@media (max-width: 1180px) {
+  .language-quick-button span:last-child { display: none; }
+  .language-quick-button { padding: 5px 7px; }
+}
 .config-page-intro {
   display: flex;
   flex-direction: column;
@@ -2480,4 +2551,105 @@ html[data-theme="light"] .config-save-footer {
 html[data-theme="light"] .query-trace-node > span {
   background: rgba(255,255,255,.96);
   color: #8b4d00;
+}
+
+
+/* v1.6.19 - respostas visíveis das queries APRS */
+.station-query-result {
+  margin-top: 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(59,166,255,.045);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.station-query-result-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+  color: var(--text);
+  font-weight: 800;
+}
+.station-query-result-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr);
+  gap: 3px 7px;
+}
+.station-query-result-grid strong { color: var(--muted); }
+.station-query-response {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.station-query-history {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--line);
+  max-height: 150px;
+  overflow: auto;
+}
+.station-query-history-item {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(128,146,160,.16);
+  color: var(--muted);
+}
+.station-query-history-item:last-child { border-bottom: 0; }
+.station-query-history-button {
+  margin-top: 6px;
+  padding: 4px 7px;
+  min-height: 27px;
+  font-size: 10px;
+}
+.query-status-ok { color: var(--ok); }
+.query-status-error { color: var(--warn); }
+html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.045); }
+
+/* v1.6.19 - estatísticas de clientes/versões APRS */
+.analysis-client-version-panel {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.analysis-client-version-heading h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.analysis-client-version-heading p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.client-version-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.client-version-table th,
+.client-version-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.client-version-table th {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.client-version-table td:nth-child(2),
+.client-version-table td:nth-child(3) {
+  width: 120px;
+  text-align: right;
+}
+.client-version-unidentified {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 11px;
 }

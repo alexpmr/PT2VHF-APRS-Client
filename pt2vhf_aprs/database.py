@@ -976,6 +976,62 @@ def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
     finally:
         _topology_query_lock.release()
 
+
+def _aprs_tocall_from_raw(raw: str) -> str:
+    """Extrai o destination/TOCALL do cabeçalho TNC2 sem inferir software."""
+    match = re.match(r"^[^>\r\n]+>([^,:>\r\n]+)", str(raw or "").strip())
+    return str(match.group(1) if match else "").upper().strip()
+
+
+def client_version_stats(hours: int = 0) -> dict[str, Any]:
+    """Distribuição do identificador de cliente/versão pelo último pacote de cada estação.
+
+    O APRS não garante que todo TOCALL identifique software/versão. Para não inventar
+    informação, só consideramos identificado um destination começando por AP e
+    diferente do genérico APRS. O valor exato do TOCALL é preservado.
+    """
+    hours = int(hours or 0)
+    params: list[Any] = []
+    where = ""
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        where = "WHERE last_heard >= ?"
+        params.append(cutoff)
+
+    with connection() as conn:
+        rows = conn.execute(
+            f"SELECT callsign, raw FROM stations {where} ORDER BY last_heard DESC",
+            params,
+        ).fetchall()
+
+    counts: dict[str, int] = {}
+    unidentified = 0
+    for row in rows:
+        tocall = _aprs_tocall_from_raw(row["raw"])
+        if tocall.startswith("AP") and tocall != "APRS" and re.fullmatch(r"AP[A-Z0-9]{2,7}", tocall):
+            counts[tocall] = counts.get(tocall, 0) + 1
+        else:
+            unidentified += 1
+
+    identified_total = sum(counts.values())
+    items = [
+        {
+            "identifier": identifier,
+            "stations": count,
+            "percent": round((count / identified_total) * 100.0, 1) if identified_total else 0.0,
+        }
+        for identifier, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    ]
+    return {
+        "hours": 0 if hours <= 0 else hours,
+        "total_stations": len(rows),
+        "identified_stations": identified_total,
+        "unidentified_stations": unidentified,
+        "items": items,
+    }
+
+
 def topology_stats(hours: int = 0) -> dict[str, Any]:
     """Resumo agregado da topologia observada para diagnóstico rápido."""
     hours = int(hours or 0)
@@ -1025,6 +1081,7 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "digipeaters": digis,
         "igates": igates,
         "recently_disappeared": stale,
+        "client_versions": client_version_stats(0 if complete else hours),
     }
 
 

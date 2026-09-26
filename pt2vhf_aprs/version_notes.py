@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.19": {
+        "title": "Análise de clientes, respostas de queries e idioma no topo",
+        "items": [
+            "A aba Análise passa a mostrar clientes/versões APRS detectados pelo TOCALL do último pacote de cada estação, em ordem do mais usado para o menos usado.",
+            "O popup da estação passa a exibir uma área clara e persistente com o resultado da última query, incluindo status, RTT, resposta e caminho do Trace quando disponível.",
+            "Adiciona histórico de queries por estação diretamente no popup do Mapa.",
+            "Ao reabrir o popup, a última query registrada daquela estação é recuperada do banco local.",
+            "Restaura o controle rápido de idioma no topo, com Português/Brasil e English/Inglaterra, preservando a escolha do usuário.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.6.18": {
         "title": "Queries APRS, Ping/ACK e Trace no mapa",
         "items": [

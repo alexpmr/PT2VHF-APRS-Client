@@ -23,6 +23,14 @@
   </div>
   <div class="connection-box">
     <button id="themeQuickToggle" type="button" class="btn secondary theme-quick-toggle" title="Alternar tema">☀/☾</button>
+    <div id="languageQuickSwitch" class="language-quick-switch" aria-label="Idioma / Language">
+      <button type="button" class="language-quick-button" data-language="pt-BR" aria-pressed="true" title="Português">
+        <span class="language-flag language-flag-br" aria-hidden="true"></span><span>Português</span>
+      </button>
+      <button type="button" class="language-quick-button" data-language="en" aria-pressed="false" title="English">
+        <span class="language-flag language-flag-england" aria-hidden="true"></span><span>English</span>
+      </button>
+    </div>
     <div id="trafficActivityIndicator" class="traffic-activity-indicator" title="Sem tráfego APRS nesta sessão" aria-label="Atividade de tráfego APRS">
       <span class="traffic-arrow traffic-rx" aria-hidden="true">↓</span>
       <span class="traffic-arrow traffic-tx" aria-hidden="true">↑</span>
@@ -329,7 +337,15 @@
         <div class="analysis-metric"><span>Eventos do período</span><strong id="analysisMetricEvents">0</strong></div>
       </div>
       <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Atualizar análise.</div>
-
+      <div class="analysis-client-version-panel">
+        <div class="analysis-client-version-heading">
+          <div>
+            <h3>Clientes / versões APRS</h3>
+            <p id="clientVersionStatsHint">Distribuição pelo identificador TOCALL do último pacote de cada estação. Quando o software/versão não puder ser determinado com segurança, ele fica como Não identificado.</p>
+          </div>
+        </div>
+        <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Atualizar análise.</span></div>
+      </div>
 
     </div>
   </section>
@@ -580,7 +596,7 @@
             <span>Idioma / Language</span>
             <select name="language" id="appLanguage">
               <option value="pt-BR">🇧🇷 Português - padrão</option>
-              <option value="en">🇺🇸 English</option>
+              <option value="en">🏴 English</option>
             </select>
             <small>O idioma é aplicado imediatamente à interface.</small>
           </label>

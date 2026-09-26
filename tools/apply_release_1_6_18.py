@@ -2,7 +2,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-if version != "1.6.18":
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    parts = []
+    for piece in str(value or "").strip().lstrip("vV").split("."):
+        try:
+            parts.append(int(piece))
+        except ValueError:
+            break
+    return tuple(parts or [0])
+
+if version_tuple(version) < (1, 6, 18):
     raise SystemExit(f"v1.6.18 validation failed: VERSION={version!r}")
 
 checks = {
