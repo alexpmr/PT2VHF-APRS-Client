@@ -79,6 +79,17 @@
 
 ## Pendências para próximas versões
 
+- **Renomear aba Análise para Estatísticas e incluir ranking de estações mais ativas**
+  - Trocar o nome da aba superior **Análise** para **Estatísticas** em toda a interface, traduções, ajuda e documentação.
+  - Na aba **Estatísticas**, adicionar uma seção **Estações mais ativas**, ordenada da maior para a menor atividade.
+  - Calcular a atividade pelo volume de pacotes/eventos efetivamente recebidos por estação no período selecionado, mantendo o mesmo seletor de período da aba.
+  - **Excluir tráfego de telemetria** desse ranking para não inflar artificialmente a atividade de estações que enviam telemetria com alta frequência.
+  - **Excluir IGates e digipeaters** desse ranking, pois a atividade dessas infraestruturas já é apresentada separadamente nas seções dedicadas de **IGates mais ativos** e **Digipeaters mais utilizados**.
+  - Exibir pelo menos **posição, indicativo, quantidade de pacotes válidos e percentual sobre o total considerado**.
+  - Contabilizar somente o tráfego atribuído à própria estação de origem; não somar a ela os pacotes apenas repetidos/encaminhados como IGate ou digipeater.
+  - Quando uma estação tiver múltiplos tipos de pacote, considerar apenas os tipos elegíveis e ignorar especificamente os pacotes classificados como telemetria.
+
+
 - **Mapa — botões de queries no popup da estação**
   - Ao clicar em uma estação no Mapa, incluir no popup uma área **Diagnóstico / Queries APRS**.
   - Adicionar botões de ação rápida para, no mínimo: **Posição**, **Status**, **Ouvidos**, **Ping/ACK** e **Trace**.
