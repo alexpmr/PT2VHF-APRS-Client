@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.6.22 - 2026-09-26
+
+- O aviso de **nova versão** passa a iniciar diretamente o download e a instalação do pacote compatível com a plataforma/arquitetura em execução.
+- Reativado e ampliado o atualizador integrado com seleção exata de asset para Windows Setup/Portable, Linux AppImage/DEB/TAR.GZ e macOS ARM64/Intel.
+- O download é restrito à Release oficial, confere o tamanho do asset, calcula **SHA-256** e valida o digest publicado pelo GitHub quando disponível.
+- A instalação é conduzida por um **updater auxiliar separado**, iniciado antes do encerramento da aplicação atual.
+- A aplicação solicita encerramento limpo de APRS-IS, manutenção e componentes de fundo; após timeout, o helper pode encerrar somente o PID da instância anterior antes de substituir os binários.
+- A nova versão é aberta automaticamente após instalação bem-sucedida.
+- Windows Portable mantém backup para rollback; Windows Setup usa o instalador com elevação quando necessária.
+- Linux AppImage/TAR.GZ são atualizados in-place; DEB usa dpkg/pkexec quando disponível. macOS monta o DMG, substitui o bundle ou usa ~/Applications como fallback.
+- Adicionado lock de atualização com PID para impedir atualização concorrente entre instâncias e recuperar locks obsoletos.
+- Dados do usuário permanecem fora dos binários e são preservados.
+- Release completa: **Windows x64 Setup + Portable**, **Linux x86_64 TAR.GZ + AppImage + DEB**, **macOS ARM64 + Intel DMG** e **Manual PDF**.
+
 ## v1.6.21 - 2026-09-26
 
 - A aba **Análise** passa a se chamar **Estatísticas** em toda a interface e documentação.
