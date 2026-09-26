@@ -714,9 +714,9 @@
         </div>
         <div class="config-actions">
           <button id="checkUpdatesNowButton" type="button" class="btn secondary">Verificar atualização agora</button>
-          <button id="openLatestReleaseButton" type="button" class="btn primary hidden">Abrir página da nova versão</button>
+          <button id="openLatestReleaseButton" type="button" class="btn primary hidden">Baixar e instalar nova versão</button>
         </div>
-        <div class="hint">O cliente apenas informa quando existe uma nova versão. Download e instalação são sempre manuais para preservar a estabilidade da aplicação.</div>
+        <div class="hint">Quando houver nova versão, o cliente seleciona o pacote compatível com a plataforma, valida o download e usa um updater auxiliar para encerrar a versão atual, instalar e abrir a nova versão.</div>
       </div>
 
       <div class="config-card full-card config-section config-section-app">
@@ -820,8 +820,8 @@
         <article class="help-card">
           <h3>7. Atualizações</h3>
           <p>O cabeçalho informa se você está usando a <strong>última versão</strong> ou se existe uma <strong>nova versão</strong> publicada.</p>
-          <p>Quando houver atualização, clique no aviso para abrir o painel integrado, consultar as novidades e baixar o pacote compatível.</p>
-          <p>É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.</p>
+          <p>Quando houver atualização, clicar no aviso inicia o download do pacote compatível com a plataforma. O arquivo é validado antes da instalação.</p>
+          <p>Um updater auxiliar encerra a versão em execução, força o encerramento após timeout se necessário, instala/substitui a aplicação e abre automaticamente a nova versão. O Windows Portable mantém backup para rollback.</p>
         </article>
 
         <article class="help-card">
@@ -957,10 +957,11 @@
     <div class="message-alert-content">
       <div class="message-alert-eyebrow">Atualização do aplicativo</div>
       <h3 id="updateModalTitle">Nova versão disponível</h3>
-      <p id="updateModalSummary">Baixe e instale manualmente pela página oficial da Release.</p>
+      <p id="updateModalSummary">O pacote compatível será baixado, validado e instalado automaticamente.</p>
       <pre id="updateReleaseNotes" class="update-release-notes"></pre>
       <div id="updateDownloadProgress" class="hint"></div>
       <div class="message-alert-actions">
+        <button id="updateInstallNow" type="button" class="btn primary">Baixar e instalar</button>
         <button id="updateOpenRelease" type="button" class="btn secondary">Ver Release</button>
         <button id="updateModalClose" type="button" class="btn secondary">Depois</button>
       </div>
