@@ -18,6 +18,7 @@ from waitress import serve
 from pt2vhf_aprs import __version__
 from pt2vhf_aprs import database as db
 from pt2vhf_aprs import diagnostics as diag
+from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.web import create_app
 
@@ -164,6 +165,14 @@ def _shutdown_components(icon: pystray.Icon | None = None) -> None:
             tray.stop()
     except Exception:
         pass
+
+
+def _exit_for_update() -> None:
+    """Encerra sem confirmação depois que o helper de atualização já foi iniciado."""
+    global _quitting
+    _quitting = True
+    _shutdown_components()
+    os._exit(0)
 
 
 def _exit_app(icon: pystray.Icon | None = None, *_args) -> None:
@@ -319,6 +328,7 @@ def main() -> int:
 
     diag.configure(db.DB_PATH.parent)
     diag.log_event("app_start", version=__version__, portable=True)
+    updater.register_exit_handler(_exit_for_update)
     db.init_db()
     app = create_app()
     service.start_if_configured()
