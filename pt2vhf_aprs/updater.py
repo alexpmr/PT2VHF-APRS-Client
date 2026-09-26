@@ -463,7 +463,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
             f"mount={q(str(mount))}",
             'rm -rf "$mount"; mkdir -p "$mount"',
             'hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount" >/dev/null',
-            'source_app="$(find "$mount" -maxdepth 1 -name \\'*.app\\' -print -quit)"',
+            "source_app=\"$(find \"$mount\" -maxdepth 1 -name '*.app' -print -quit)\"",
             'if [ -z "$source_app" ]; then hdiutil detach "$mount" >/dev/null 2>&1 || true; logmsg "DMG has no app bundle"; exit 3; fi',
             'dest="$target"',
             'if [ ! -w "$(dirname "$target")" ]; then mkdir -p "$(dirname "$user_target")"; dest="$user_target"; fi',
