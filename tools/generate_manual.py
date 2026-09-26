@@ -426,16 +426,16 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Tracklogs: cor e espessura configuráveis.",
         "Topologia observada: pode ser ligada/desligada e usa Completo como período padrão, além de 1 h, 6 h, 24 h e 7 dias.",
         "Enlaces RF e via IGate possuem cores independentes e espessura configurável.",
-        "A análise da rede fica na aba superior Análise, separada das preferências visuais de Configuração.",
-        "A aba Análise oferece período, métricas agregadas, ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
+        "A estatísticas da rede fica na aba superior Estatísticas, separada das preferências visuais de Configuração.",
+        "A aba Estatísticas oferece período, métricas agregadas, ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
         "Os eventos observados são mantidos em histórico limitado e podem ser reproduzidos no mapa com a função Animar período.",
         "O Mapa possui legenda dinâmica para tracklog, enlaces RF, IGate/APRS-IS, replay temporal e pacotes em movimento.",
-        "A aba Análise inclui animação de tráfego APRS em modos Histórico e Ao vivo, com Play/Pausa, início, avanço/recuo, velocidades de 0,5x a 10x, timestamp e contadores. Em paths multi-hop, vários segmentos do mesmo pacote podem ser animados ao mesmo tempo.",
+        "A aba Estatísticas inclui animação de tráfego APRS em modos Histórico e Ao vivo, com Play/Pausa, início, avanço/recuo, velocidades de 0,5x a 10x, timestamp e contadores. Em paths multi-hop, vários segmentos do mesmo pacote podem ser animados ao mesmo tempo.",
         "Quando habilitado em Configuração, cada pacote recebido pode gerar um sinal sonoro curto e um pulso vermelho temporário no marcador da estação transmissora.",
         "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px."
     ])
 
-    add_screenshot(story, st, screenshots_dir, "analysis.png", "Aba Análise com métricas da topologia observada e comparação histórica.")
+    add_screenshot(story, st, screenshots_dir, "analysis.png", "Aba Estatísticas com métricas da topologia observada e comparação histórica.")
     add_screenshot(story, st, screenshots_dir, "config-aprs.png", "Configuração APRS/Estação com coordenadas e parâmetros APRS-IS.")
     add_screenshot(story, st, screenshots_dir, "filter-editor.png", "Editor gráfico de filtro APRS-IS, mantendo a string manual editável.")
     section(story, st, "11. Mensagens", [
