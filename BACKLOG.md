@@ -79,6 +79,18 @@
 
 ## Pendências para próximas versões
 
+- **Diagnóstico APRS — queries, Ping/Trace e respostas automáticas**
+  - Adicionar ferramentas para enviar **queries APRS padronizadas** a uma estação a partir do mapa/Estações/Análise, incluindo consulta de **posição**, **status**, **estações ouvidas diretamente** e recursos equivalentes a **trace/ping** quando suportados pelo equipamento remoto.
+  - Implementar um **Ping por mensagem APRS com ACK**, medindo o tempo entre envio e confirmação e exibindo RTT, timeout/perda e histórico recente por indicativo.
+  - Implementar visualização de **APRS Trace** no mapa quando a resposta/caminho permitir identificar os digipeaters/IGates observados, mostrando origem, intermediários e destino sem inventar hops não presentes no pacote.
+  - Adicionar ação **“Diagnosticar estação”** no popup/menu contextual, reunindo Ping/ACK, consultas APRS e trace em uma interface única.
+  - Registrar as queries e respostas no Log/Análise para permitir histórico de diagnóstico e estatísticas de tempo de resposta.
+  - **Responder queries recebidas:** implementar tratamento explícito de queries APRS endereçadas ao próprio indicativo. Responder apenas às queries suportadas e com dados locais válidos, respeitando conexão verificada e configuração da estação.
+  - Incluir pelo menos respostas de **posição** e **status**; avaliar respostas de **estações ouvidas diretamente/últimos heard** e trace conforme o que for semanticamente correto para um cliente APRS-IS.
+  - Adicionar opção em Configurações para **habilitar/desabilitar respostas automáticas a queries**, com padrão conservador e rate-limit por origem para evitar loops, flood ou abuso.
+  - Não confundir **ACK de mensagem** com query APRS: manter o ACK existente e tratar queries em um caminho próprio do parser/serviço.
+
+
 - **Atualização/instalação — fechar versão anterior antes de instalar**
   - Ao iniciar a instalação de uma nova versão, detectar se o **PT2VHF APRS Client** anterior ainda está em execução.
   - Se estiver aberto, solicitar/forçar o encerramento controlado da aplicação antes de substituir arquivos, evitando falha de instalação por arquivo em uso.
