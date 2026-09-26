@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.21 - 2026-09-26
+
+- A aba **Análise** passa a se chamar **Estatísticas** em toda a interface e documentação.
+- Adicionada a seção **Estações mais ativas**, ordenada por quantidade de pacotes válidos no período selecionado.
+- O ranking exclui pacotes de **telemetria** para evitar distorção causada por transmissões automáticas frequentes.
+- **iGates e digipeaters** são excluídos do ranking principal e permanecem nas estatísticas dedicadas.
+- Cada linha mostra posição, indicativo, quantidade de pacotes válidos e percentual sobre o total elegível.
+- Adicionado teste automatizado para impedir regressões nos filtros do ranking.
+- Release de teste somente **Windows x64 Portable**.
+
 ## v1.6.20 - 2026-09-26
 
 - O bloco **Software / dispositivos APRS** passa a mostrar nomes amigáveis derivados da base oficial **APRS Device Identification (aprsorg/aprs-deviceid)**, mantendo o TOCALL em texto secundário.

@@ -3470,9 +3470,11 @@
     'Restaurar filtro Brasil':'Restore Brazil filter',
     'Retry de mensagem após (segundos)':'Retry message after (seconds)',
     'Máximo de retries por parte':'Maximum retries per part',
-    'Análise da topologia observada':'Observed topology analysis',
-    'Rankings de digipeaters/IGates e enlaces que deixaram de aparecer no período.':'Digipeater/IGate rankings and links no longer seen in the period.',
-    'Atualizar análise':'Refresh analysis',
+    'Estatísticas da topologia observada':'Observed topology statistics',
+    'Ranking de estações ativas, digipeaters/IGates e enlaces que deixaram de aparecer no período.':'Active-station and digipeater/IGate rankings plus links no longer seen in the period.',
+    'Atualizar estatísticas':'Refresh statistics',
+    'Clique em Atualizar estatísticas.':'Click Refresh statistics.',
+    'Usar período das Estatísticas':'Use Statistics period',
     'Animar período':'Animate period',
     'Atualizações':'Updates',
     'Verificar atualizações automaticamente':'Check for updates automatically',
@@ -3505,12 +3507,12 @@
     '🇧🇷 Português - padrão':'🇧🇷 Portuguese - default',
     'Trocar idioma':'Change language',
     '🏴 English':'🏴 English',
-    'Análise':'Analysis',
-    'Análise da rede':'Network analysis',
+    'Estatísticas':'Statistics',
+    'Estatísticas da rede':'Network statistics',
     'Clientes / versões APRS':'APRS clients / versions',
     'Software / dispositivos APRS':'APRS software / devices',
     'Distribuição pelo identificador TOCALL do último pacote de cada estação. Quando o software/versão não puder ser determinado com segurança, ele fica como Não identificado.':'Distribution based on the TOCALL identifier in each station\'s latest packet. When software/version cannot be determined reliably, it remains Unidentified.',
-    'Indicadores da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators with historical comparison and map replay.',
+    'Indicadores e estatísticas da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators and statistics with historical comparison and map replay.',
     'Período':'Period',
     '1 hora':'1 hour',
     '6 horas':'6 hours',
@@ -4307,13 +4309,16 @@
     if (!box) return;
     const periodSelect = $('#analysisPeriod');
     if (periodSelect) periodSelect.value = String(topologyPeriodValue(state.topologyHours));
-    box.textContent = ui('Carregando análise…', 'Loading analysis…');
+    box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');
     try {
       const data = await api(`/api/topology/stats?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}`);
       const list = (items, formatter) => items.length
         ? '<ol>' + items.map(formatter).join('') + '</ol>'
         : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
       box.innerHTML =
+        '<div class="topology-stat-group"><h4>' + ui('Estações mais ativas', 'Most active stations') + '</h4>' +
+        '<div class="hint">' + ui('Tráfego útil por estação; telemetria, iGates e digipeaters não entram neste ranking.', 'Useful traffic by station; telemetry, iGates and digipeaters are excluded from this ranking.') + '</div>' +
+        list(data.active_stations || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
         list(data.digipeaters || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
         '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
@@ -4394,7 +4399,7 @@
     clearTrafficReplayLayers();
     try {
       await loadTrafficHistory(true);
-      toast(ui('Replay sincronizado com o período da Análise.', 'Replay synced with the Analysis period.'), 'ok');
+      toast(ui('Replay sincronizado com o período das Estatísticas.', 'Replay synced with the Statistics period.'), 'ok');
     } catch (err) {
       toast(err.message, 'error');
     }
