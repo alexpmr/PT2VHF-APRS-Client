@@ -79,6 +79,26 @@
 
 ## Pendências para próximas versões
 
+- **Mapa — botões de queries no popup da estação**
+  - Ao clicar em uma estação no Mapa, incluir no popup uma área **Diagnóstico / Queries APRS**.
+  - Adicionar botões de ação rápida para, no mínimo: **Posição**, **Status**, **Ouvidos**, **Ping/ACK** e **Trace**.
+  - As ações devem usar automaticamente o indicativo/SSID da estação selecionada como destino.
+  - Mostrar no próprio popup ou em painel associado o andamento da consulta e a última resposta recebida.
+  - O botão **Trace** deverá integrar o resultado à visualização do Mapa, destacando os hops/digipeaters identificados quando houver dados suficientes.
+  - O botão **Ping/ACK** deverá mostrar RTT e timeout/perda sem confundir esse recurso com a query `PING?`/trace definida pelo APRS.
+  - Se uma query não for suportada ou não houver resposta, indicar isso de forma explícita sem bloquear o restante da interface.
+
+
+- **Uso de queries APRS em outras estações**
+  - Permitir enviar queries APRS para qualquer estação selecionada, sem exigir que o usuário escreva manualmente o pacote TNC2.
+  - Oferecer ações prontas para **Consultar posição**, **Consultar status**, **Ouvidos diretamente**, **Verificar se ouviu outra estação**, **Objetos**, **Trace** e demais queries suportadas.
+  - Exibir o estado da operação como **Query enviada**, **Resposta recebida**, **Sem resposta/timeout** ou **Não suportada**, quando isso puder ser determinado.
+  - Medir e exibir o tempo entre envio e resposta quando aplicável.
+  - Manter histórico por indicativo com data/hora, query enviada, resposta recebida e tempo de resposta.
+  - Para **Ping**, diferenciar claramente o trace/query APRS de um **Ping por mensagem com ACK**, permitindo medir RTT e perda de confirmações.
+  - Ao consultar uma estação via APRS-IS, informar que a entrega até RF depende de IGate/roteamento e que nem toda estação implementa todas as queries.
+
+
 - **Diagnóstico APRS — queries, Ping/Trace e respostas automáticas**
   - Adicionar ferramentas para enviar **queries APRS padronizadas** a uma estação a partir do mapa/Estações/Análise, incluindo consulta de **posição**, **status**, **estações ouvidas diretamente** e recursos equivalentes a **trace/ping** quando suportados pelo equipamento remoto.
   - Implementar um **Ping por mensagem APRS com ACK**, medindo o tempo entre envio e confirmação e exibindo RTT, timeout/perda e histórico recente por indicativo.
