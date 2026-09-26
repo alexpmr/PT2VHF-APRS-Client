@@ -803,3 +803,37 @@ def test_updater_asset_name_contains_version():
     name = updater.desired_asset_name("1.6")
     assert "1.6" in name
     assert name
+
+def test_topology_stats_active_stations_excludes_telemetry_igates_and_digipeaters():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+
+            for _ in range(3):
+                db.record_packet("PY2AAA-9>APRS:>teste", "PY2AAA-9", "status")
+            for _ in range(2):
+                db.record_packet("PY2BBB-9>APRS:!1234.56S/04712.34W>teste", "PY2BBB-9", "position")
+            for _ in range(10):
+                db.record_packet("PY2TEL>APRS:T#001,001,002,003,004,005,00000000", "PY2TEL", "telemetry")
+
+            db.record_topology_from_raw("PY2SRC>APRS,PT2DGI*,WIDE2-1,qAR,PT2IGT:>teste")
+            for _ in range(8):
+                db.record_packet("PT2DGI>APRS:>digi", "PT2DGI", "status")
+            for _ in range(7):
+                db.record_packet("PT2IGT>APRS:>igate", "PT2IGT", "status")
+
+            stats = db.topology_stats(0)
+            active = stats["active_stations"]
+            assert [(row["callsign"], row["packets"]) for row in active] == [
+                ("PY2AAA-9", 3),
+                ("PY2BBB-9", 2),
+            ]
+            assert active[0]["rank"] == 1
+            assert active[0]["percent"] == 60.0
+            assert active[1]["percent"] == 40.0
+            assert stats["active_station_packets"] == 5
+    finally:
+        db.DB_PATH = original
+
