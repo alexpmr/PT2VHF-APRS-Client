@@ -104,6 +104,8 @@
   - Manter a aba visualmente consistente com a identidade oficial da aplicação e exibir a logo APRS oficial do projeto.
   - Todo o conteúdo textual da aba **Sobre** deve acompanhar o **idioma corrente da aplicação** (**Português, English, Español ou Français**), incluindo títulos, descrição do autor/projeto, contatos, instruções, botões, avisos, confirmação e mensagens de status.
   - O texto sugerido para o **Announcement/Bulletin APRS** de divulgação também deve ser gerado no **idioma corrente**, mantendo **tiny.cc/aprs** inalterado.
+  - Para **Português**, usar como texto padrão de divulgação: **PT2VHF APRS Client v1.7 - Download: tiny.cc/aprs**.
+  - Nas demais línguas, manter a mesma estrutura semântica, traduzindo apenas o texto descritivo e preservando **PT2VHF APRS Client**, a versão e **tiny.cc/aprs**.
   - Ao trocar o idioma da aplicação, a aba **Sobre** e o texto padrão de divulgação devem ser atualizados imediatamente, sem exigir reinicialização.
 
 - **Mapa — substituir Atividade por controles independentes de Topologia, Tracklog e Estações**
