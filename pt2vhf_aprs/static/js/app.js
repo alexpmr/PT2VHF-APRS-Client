@@ -7,6 +7,10 @@
     baseLayer: null,
     mapLoadBusy: false,
     mapLoadLastAt: 0,
+    mapLoadQueued: false,
+    mapStationAgeFilter: 'all',
+    mapKnownCallsigns: new Set(),
+    mapVisibleCallsigns: new Set(),
     systemMetricsBusy: false,
     mapConfig: {
       map_type: 'osm',
@@ -767,6 +771,13 @@
       const active = new Set();
 
       for (const edge of edges) {
+        if ((state.mapStationAgeFilter || 'all') !== 'all') {
+          const source = normalizedCall(edge.source);
+          const target = normalizedCall(edge.target);
+          const sourceHidden = state.mapKnownCallsigns.has(source) && !state.mapVisibleCallsigns.has(source);
+          const targetHidden = state.mapKnownCallsigns.has(target) && !state.mapVisibleCallsigns.has(target);
+          if (sourceHidden || targetHidden) continue;
+        }
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
         const points = [
@@ -931,13 +942,56 @@
     </div>`;
   }
 
+  function stationLastHeardMs(station) {
+    const raw = station?.last_heard;
+    if (raw === null || raw === undefined || raw === '') return null;
+    if (typeof raw === 'number' && Number.isFinite(raw)) return raw < 100000000000 ? raw * 1000 : raw;
+    const text = String(raw).trim();
+    if (/^\d+(?:\.\d+)?$/.test(text)) {
+      const n = Number(text);
+      return Number.isFinite(n) ? (n < 100000000000 ? n * 1000 : n) : null;
+    }
+    const normalized = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(text) ? text.replace(' ', 'T') : text;
+    const ms = Date.parse(normalized);
+    return Number.isFinite(ms) ? ms : null;
+  }
+
+  function mapStationMatchesAge(station) {
+    const mode = state.mapStationAgeFilter || 'all';
+    if (mode === 'all') return true;
+    const heard = stationLastHeardMs(station);
+    if (!Number.isFinite(heard)) return false;
+    const age = Math.max(0, Date.now() - heard);
+    const h2 = 2 * 60 * 60 * 1000;
+    const h24 = 24 * 60 * 60 * 1000;
+    if (mode === 'lt2') return age < h2;
+    if (mode === '2to24') return age >= h2 && age < h24;
+    if (mode === 'gt24') return age >= h24;
+    return true;
+  }
+
+  function updateMapStationAgeCount(visible, total) {
+    const el = $('#mapStationAgeCount');
+    if (!el) return;
+    if ((state.mapStationAgeFilter || 'all') === 'all') {
+      el.textContent = ui(`${total} estações`, `${total} stations`);
+    } else {
+      el.textContent = ui(`${visible} de ${total} estações`, `${visible} of ${total} stations`);
+    }
+  }
+
   async function loadMapData() {
     if (!state.map || state.activeTab !== 'map') return;
     if (state.mapLoadBusy) return;
     state.mapLoadBusy = true;
     try {
       const data = await api('/api/map-data');
-      const activeStations = new Set(data.stations.map(s => s.callsign));
+      const allStations = Array.isArray(data.stations) ? data.stations : [];
+      const visibleStations = allStations.filter(mapStationMatchesAge);
+      state.mapKnownCallsigns = new Set(allStations.map(s => normalizedCall(s.callsign)).filter(Boolean));
+      state.mapVisibleCallsigns = new Set(visibleStations.map(s => normalizedCall(s.callsign)).filter(Boolean));
+      updateMapStationAgeCount(visibleStations.length, allStations.length);
+      const activeStations = new Set(visibleStations.map(s => s.callsign));
       for (const [call, marker] of state.markers) {
         if (!activeStations.has(call)) {
           state.map.removeLayer(marker);
@@ -945,7 +999,7 @@
         }
       }
 
-      for (const s of data.stations) {
+      for (const s of visibleStations) {
         const latlng = [Number(s.latitude), Number(s.longitude)];
         if (!Number.isFinite(latlng[0]) || !Number.isFinite(latlng[1])) continue;
         let marker = state.markers.get(s.callsign);
@@ -965,6 +1019,7 @@
 
       const grouped = new Map();
       for (const t of data.tracks) {
+        if (!state.mapVisibleCallsigns.has(normalizedCall(t.callsign))) continue;
         if (!grouped.has(t.callsign)) grouped.set(t.callsign, []);
         grouped.get(t.callsign).push([Number(t.latitude), Number(t.longitude)]);
       }
@@ -1000,6 +1055,10 @@
     } finally {
       state.mapLoadBusy = false;
       state.mapLoadLastAt = Date.now();
+      if (state.mapLoadQueued) {
+        state.mapLoadQueued = false;
+        setTimeout(() => { void loadMapData(); }, 0);
+      }
     }
   }
 
@@ -3591,6 +3650,13 @@
     'Eventos do período':'Period events',
     'Mostrar log':'Show log',
     'Completo':'Complete',
+    'Atividade':'Activity',
+    'Tudo':'All',
+    'menos de 2 h':'under 2 h',
+    '2 a 24 h':'2 to 24 h',
+    'mais de 24 h':'over 24 h',
+    'Filtrar estações no mapa pela última interação':'Filter map stations by last interaction',
+    'Todas as estações':'All stations',
     'Animação do tráfego APRS':'APRS traffic animation',
     'Simula os pacotes percorrendo os enlaces observados entre estação, digipeaters e IGates.':'Simulates packets moving through observed links between stations, digipeaters and IGates.',
     'Modo':'Mode',
@@ -4599,6 +4665,16 @@
       await loadConfig();
       toast(ui('Configuração padrão restaurada.', 'Default configuration restored.'), 'ok');
     } catch (err) { toast(err.message, 'error'); }
+  });
+
+  $('#mapStationAgeFilter')?.addEventListener('change', async event => {
+    const value = String(event.target.value || 'all');
+    state.mapStationAgeFilter = ['lt2','2to24','gt24'].includes(value) ? value : 'all';
+    if (state.mapLoadBusy) {
+      state.mapLoadQueued = true;
+      return;
+    }
+    await loadMapData();
   });
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
