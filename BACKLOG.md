@@ -198,11 +198,6 @@
   - Adicionar teste de regressão cobrindo upgrade com banco de versão anterior → alterar configuração → salvar → persistir e navegar.
 
 
-- **Logo APRS oficial ainda não aplicada corretamente**
-  - A imagem enviada pelo usuário ainda precisa ser incorporada com um arquivo de imagem válido no repositório.
-  - Atualizar cabeçalho/interface, favicon, ícones Windows/Linux e demais pontos visuais sem quebrar o build.
-  - Adicionar validação de integridade da imagem no pipeline para evitar novos empacotamentos com arquivo corrompido.
-
 Novas demandas devem continuar na série **1.6.x** até indicação explícita para avançar para **1.7**.
 
 
@@ -309,3 +304,12 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - Windows Portable com backup/rollback; Windows Setup com instalador; Linux AppImage/DEB/TAR.GZ e macOS DMG com fluxos próprios.
 - Lock em arquivo com PID para impedir duas atualizações concorrentes e recuperar locks obsoletos.
 - Configuração, banco SQLite, mensagens, estações, logs e demais dados permanecem preservados fora dos binários.
+
+## Concluído na v1.6.23
+
+- **Identidade visual:** logo oficial aplicada ao cabeçalho, favicon, ícones Windows/Linux/macOS, bandeja do Windows e Manual PDF.
+- **Mapa — filtro por última interação:** adicionadas as opções **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**.
+- O filtro atua sobre os marcadores e tracklogs; enlaces de topologia associados a estações conhecidas filtradas também deixam de ser exibidos.
+- O Mapa informa quantas estações permanecem visíveis em relação ao total.
+- A opção **Tudo** permanece selecionada por padrão em cada abertura da aplicação.
+
