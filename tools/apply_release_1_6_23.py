@@ -23,10 +23,13 @@ checks = {
         "function updateMapStationAgeCount(visible, total)",
         "state.mapVisibleCallsigns",
         "state.mapKnownCallsigns",
+        "mapLegendCollapsed: localStorage.getItem(",
+        "function syncMapLegendCollapsed()",
     ],
     "pt2vhf_aprs/static/css/app.css": [
         ".map-station-age-filter",
         ".map-station-age-count",
+        ".map-legend-toggle",
     ],
     "windows/make_icon.py": [
         "aprs_logo_official.jpg",
