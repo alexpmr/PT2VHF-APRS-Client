@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.6.24 - 2026-09-27
+
+- A **logo APRS fornecida pelo projeto** passa a ser a fonte visual única da aplicação.
+- Cabeçalho e favicon passam a usar diretamente `app_logo.png`, derivado da imagem oficial enviada.
+- Ícones de Windows, Linux e macOS, bandeja do Windows e capa do Manual PDF passam a ser gerados a partir da mesma logo.
+- O gerador do ícone macOS deixa de desenhar uma identidade alternativa e passa a derivar o `.icns` diretamente da logo oficial.
+- O pipeline deixa de converter uma logo SVG separada para o manual, evitando divergência visual entre builds.
+- Adicionadas notas internas da v1.6.23 que estavam ausentes do histórico de novidades do aplicativo.
+- Backlog consolidado: itens de queries APRS, estatísticas de clientes e gauges CPU/RAM já implementados são retirados das pendências; permanecem abertas as validações reais de estabilidade e compatibilidade de banco.
+- Adicionados testes/validação de release para impedir regressão para logos antigas ou geradas separadamente.
+- Release completa multiplataforma: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.6.23 - 2026-09-27
 
 - A identidade visual do **PT2VHF APRS Client** é padronizada com a mesma logo vetorial/raster no cabeçalho e favicon da interface.

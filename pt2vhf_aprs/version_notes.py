@@ -3,6 +3,28 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.6.24": {
+        "title": "Logo APRS oficial única e consolidação visual",
+        "items": [
+            "A logo APRS enviada pelo projeto passa a ser a fonte visual única da aplicação.",
+            "Cabeçalho, favicon, bandeja do Windows, ícones Windows/Linux/macOS e capa do Manual PDF passam a derivar do mesmo arquivo PNG oficial.",
+            "O ícone do macOS deixa de ser desenhado por código e passa a ser gerado diretamente da logo oficial.",
+            "As notas internas da v1.6.23 são incorporadas para manter o histórico de novidades coerente.",
+            "O backlog é consolidado, removendo itens já concluídos e mantendo abertas somente as validações e melhorias ainda pendentes.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
+    "1.6.23": {
+        "title": "Identidade visual, filtro de atividade e legenda do mapa",
+        "items": [
+            "Padroniza a identidade visual da aplicação nos artefatos e documentação existentes.",
+            "Adiciona no Mapa filtro por última interação: Tudo, menos de 2 h, 2 a 24 h e mais de 24 h.",
+            "Marcadores, tracklogs e enlaces de estações conhecidas respeitam o filtro de atividade.",
+            "A legenda do Mapa pode ser minimizada ou expandida e preserva a preferência local.",
+            "Corrige o rate-limit para permitir corretamente a primeira resposta automática a query APRS após a inicialização.",
+            "Release completa multiplataforma.",
+        ],
+    },
     "1.6.22": {
         "title": "Atualização integrada por plataforma",
         "items": [

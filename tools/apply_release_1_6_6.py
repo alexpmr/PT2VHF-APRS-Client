@@ -13,12 +13,12 @@ html = html_path.read_text(encoding="utf-8")
 
 # Logo oficial fornecida pelo usuário.
 html = html.replace(
-    '<link rel="icon" type="image/svg+xml" href="{{ url_for(\'static\', filename=\'img/app_logo.svg\') }}">',
-    '<link rel="icon" type="image/jpeg" href="{{ url_for(\'static\', filename=\'img/aprs_logo_official.jpg\') }}">'
+    '<link rel="icon" type="image/png" href="{{ url_for(\'static\', filename=\'img/app_logo.png\') }}">',
+    '<link rel="icon" type="image/png" href="{{ url_for(\'static\', filename=\'img/app_logo.png\') }}">'
 )
 html = html.replace(
-    'src="{{ url_for(\'static\', filename=\'img/app_logo.svg\') }}"',
-    'src="{{ url_for(\'static\', filename=\'img/aprs_logo_official.jpg\') }}"'
+    'src="{{ url_for(\'static\', filename=\'img/app_logo.png\') }}"',
+    'src="{{ url_for(\'static\', filename=\'img/app_logo.png\') }}"'
 )
 
 # Bandeiras reais ao lado do seletor, evitando o fallback "BR"/"US" do Windows.
@@ -305,7 +305,7 @@ def test_v166_clear_all_language_and_save():
     assert "saveConfigFooterButton" in js
     assert "/api/maintenance/clear-all" in web
     assert "maintenance-clear-all" in html
-    assert "aprs_logo_official.jpg" in html
+    assert "img/app_logo.png" in html
 
 
 def test_v166_clear_operational_data_preserves_config_and_favorites():
