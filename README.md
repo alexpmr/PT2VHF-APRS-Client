@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.7.1
+# PT2VHF APRS Client - v1.7.2
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.1** consolida a linha 1.7 com correções do atualizador, proteção contra tracklogs anômalos, controles independentes do Mapa, nova aba **Sobre**, divulgação APRS manual e novos alertas visuais.
+A **v1.7.2** refina o uso do Mapa, acrescenta tempo relativo no popup das estações e consolida corretamente softwares APRS equivalentes no ranking de Estatísticas, preservando os identificadores técnicos para diagnóstico.
 
 ## Downloads
 
@@ -82,6 +82,8 @@ Cada Release completa publica:
 - OpenStreetMap, OpenTopoMap e Esri World Imagery.
 - A antiga área **Atividade** foi removida do Mapa. **Estações**, **Tracklog** e **Topologia observada** têm controles independentes de liga/desliga e período (**Completo, 1 h, 6 h, 24 h e 7 dias**), todos fora do canvas.
 - O **Histórico/Replay** passa a ser um controle contextual logo abaixo das abas e só aparece quando o **Mapa** está ativo.
+- Na v1.7.2, **Estações**, **Tracklog** e **Topologia observada** ficam na mesma linha contextual do **Histórico**, mantendo a barra compacta e liberando mais área útil para o mapa.
+- O popup da estação mostra a data/hora da **Última recepção** acompanhada do tempo decorrido (minutos, horas ou dias), atualizado enquanto o popup permanece aberto.
 - Tracklogs ignoram saltos de posição incompatíveis com deslocamento realista; o backend preserva a última posição válida e o mapa também quebra linhas históricas em saltos anômalos/relocações.
 - A **Legenda** do Mapa pode ser minimizada/expandida; a preferência fica salva localmente para a próxima execução.
 - Tracklogs automáticos de estações móveis.
@@ -89,6 +91,7 @@ Cada Release completa publica:
 - As estatísticas da rede ficam na aba **Estatísticas**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.
 - Ranking de **estações mais ativas** por tráfego útil, excluindo telemetria, iGates e digipeaters; rankings dedicados de digipeaters e iGates, enlaces que deixaram de aparecer, comparação com o período anterior e métricas agregadas.
 - **Ranking de software/dispositivos APRS** com nome amigável resolvido pela base APRS Device Identification, quantidade e percentual; o identificador técnico permanece interno e deixa de poluir a apresentação.
+- A v1.7.2 consolida em uma única linha TOCALLs diferentes que resolvem para o mesmo nome amigável de software/dispositivo, recalculando quantidade e percentual sem misturar versões com nomes distintos.
 - A aba **Estatísticas** usa fonte padrão ligeiramente maior e ganha controle próprio de tamanho da fonte em Configurações.
 - O Mapa ganhou **legenda dos tipos de linhas**: tracklog, enlace RF, IGate/APRS-IS, replay temporal e pacote em movimento. Em qAR/qAO, o salto físico até o IGate é tratado como RF; o papel de IGate é mantido como metadado, não como meio do enlace.
 - Animação do tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, velocidades 0,5x/1x/2x/5x/10x, timestamp e contadores. Em novas instalações, a animação **Ao vivo vem ativada por padrão**, podendo ser desativada em Configurações.
