@@ -79,6 +79,13 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens — sincronizar conversa em foco com o destinatário**
+  - Na visualização **Agrupado por remetente**, manter o indicativo em foco na lista/conversa sincronizado com o indicativo atualmente informado no campo **Destinatário**.
+  - Ao selecionar ou alterar o destinatário para um indicativo que possua conversa existente, mover automaticamente o foco para a conversa correspondente.
+  - Ao clicar em uma conversa, continuar preenchendo automaticamente o campo **Destinatário** com o mesmo indicativo.
+  - Evitar qualquer situação em que a conversa exibida pertença a um indicativo e o campo **Destinatário** contenha outro, reduzindo o risco de envio para a estação errada.
+  - Caso o destinatário digitado ainda não possua histórico de conversa, não selecionar arbitrariamente outra conversa; deixar claro que se trata de um novo destinatário.
+
 - **Mensagens — reduzir altura dos botões de filtro**
   - Deixar os botões **Agrupado por remetente**, **Minhas mensagens** e **Não lidas** visualmente mais baixos/compactos.
   - Ajustar padding, altura mínima e/ou largura para que o texto de cada botão permaneça em **uma única linha**, sem quebra.
