@@ -312,4 +312,5 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 - O filtro atua sobre os marcadores e tracklogs; enlaces de topologia associados a estações conhecidas filtradas também deixam de ser exibidos.
 - O Mapa informa quantas estações permanecem visíveis em relação ao total.
 - A opção **Tudo** permanece selecionada por padrão em cada abertura da aplicação.
+- **Mapa — legenda:** adicionada opção para minimizar/expandir a legenda; o estado escolhido é preservado localmente.
 
