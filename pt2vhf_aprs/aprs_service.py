@@ -435,7 +435,7 @@ class APRSService:
         key = (str(from_call or "").upper().strip(), query_type)
         now = time.monotonic()
         last = float(self._query_response_last.get(key) or 0.0)
-        if now - last < 30.0:
+        if last > 0.0 and now - last < 30.0:
             db.update_aprs_query_result(qid, "Rate-limit", response_text="Query repetida em menos de 30 s")
             return
         self._query_response_last[key] = now
