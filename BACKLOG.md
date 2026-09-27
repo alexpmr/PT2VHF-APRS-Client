@@ -85,6 +85,16 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens — destacar aba quando chegar nova mensagem**
+  - Quando chegar uma **nova mensagem destinada ao usuário/indicativo corrente** e a aba **Mensagens** não estiver ativa, destacar visualmente o nome da aba **Mensagens** para chamar a atenção.
+  - O destaque deve permanecer até o usuário abrir a aba **Mensagens** ou marcar/visualizar a mensagem correspondente.
+  - Diferenciar esse estado visual do aspecto normal da aba, usando efeito discreto porém evidente, como cor de destaque, badge de quantidade e/ou pulsação controlada.
+  - Não disparar o alerta para telemetria, mensagens que não sejam destinadas ao usuário corrente ou tráfego APRS irrelevante.
+  - Se chegarem várias mensagens enquanto o usuário estiver em outra aba, acumular a indicação de não lidas sem perder o primeiro alerta.
+  - Ao abrir a aba **Mensagens**, manter a lista posicionada de forma coerente para facilitar a leitura das novas mensagens.
+  - Respeitar o idioma corrente da aplicação nos textos, tooltips e acessibilidade relacionados ao aviso.
+  - Adicionar teste de regressão para garantir que a aba seja destacada apenas quando houver nova mensagem realmente dirigida ao usuário.
+
 - **Idiomas — revisão completa das traduções PT/EN/ES/FR**
   - Revisar toda a interface nos quatro idiomas suportados: **Português, English, Español e Français**.
   - Corrigir textos que continuam aparecendo em Português ou no idioma anterior após a troca de idioma.
