@@ -85,6 +85,29 @@
 
 ## Pendências para próximas versões
 
+- **Atualizador automático — aplicação fecha e atualização não inicia**
+  - Ao clicar em **Nova versão** e depois em **Baixar e instalar**, a aplicação é encerrada, porém o download/instalação da nova versão **não é iniciado**.
+  - Corrigir o fluxo para garantir que o helper externo do atualizador seja iniciado e permaneça executando **antes** de a aplicação principal encerrar.
+  - Não fechar a aplicação se o helper não tiver sido criado/iniciado com sucesso.
+  - Validar a seleção do asset correto da Release conforme plataforma, arquitetura e formato instalado/portátil.
+  - Exibir progresso de **download**, **verificação**, **instalação** e **reinicialização**, além de mensagem de erro visível quando qualquer etapa falhar.
+  - Registrar em log dedicado o caminho/URL do asset, PID do helper, diretório temporário, tamanho esperado/baixado, SHA-256, comando de instalação e código de saída.
+  - No Windows, validar separadamente **Portable** e **Setup**, incluindo UAC quando necessário.
+  - Após atualização bem-sucedida, reiniciar automaticamente a nova versão; em caso de falha, manter/restaurar a versão anterior quando aplicável.
+  - Adicionar teste de regressão cobrindo o cenário em que o helper não inicia, garantindo que a aplicação permaneça aberta e informe o erro ao usuário.
+  - Tratar como **bug prioritário da v1.7.1**, pois o comportamento atual pode deixar o usuário sem a aplicação aberta e sem atualização concluída.
+
+- **Mapa — filtrar saltos irreais de posição nos tracklogs**
+  - Antes de acrescentar uma nova posição ao tracklog, comparar a coordenada recebida com a **última posição válida aceita** da mesma estação.
+  - Calcular a distância entre os pontos e o intervalo de tempo, derivando a **velocidade implícita** do deslocamento.
+  - Ignorar posições claramente anômalas quando houver salto repentino incompatível com um deslocamento realista, evitando linhas falsas de centenas ou milhares de quilômetros no mapa.
+  - Um ponto rejeitado **não deve substituir a última posição válida** usada como referência; assim, o próximo pacote correto não ficará ligado ao ponto incorreto.
+  - Não desenhar segmento de tracklog de/para uma posição classificada como outlier.
+  - Considerar o intervalo de tempo entre os pacotes para não bloquear deslocamentos reais após longos períodos sem recepção.
+  - Se várias posições consecutivas confirmarem uma nova região, tratar como **mudança real de localização** e iniciar um novo trecho de tracklog, em vez de descartar indefinidamente a estação.
+  - Registrar no diagnóstico/log os pontos descartados, com indicativo, distância do salto, intervalo de tempo e velocidade implícita, para permitir auditoria e ajuste dos limites.
+  - Aplicar o mesmo filtro tanto ao tracklog ao vivo quanto ao replay/histórico.
+
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
