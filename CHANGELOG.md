@@ -11,6 +11,7 @@
 - Ao aplicar o filtro, marcadores e tracklogs de estações fora da faixa são ocultados; a topologia evita manter enlaces para estações conhecidas que foram filtradas.
 - O mapa mostra a quantidade de estações visíveis em relação ao total quando um filtro estiver ativo.
 - A legenda do Mapa ganha opção de **minimizar/expandir** com persistência local da preferência.
+- Corrigido o rate-limit de respostas automáticas a queries APRS para não bloquear indevidamente a **primeira query** quando o sistema tiver menos de 30 segundos de uptime.
 - Mantidos os recursos de atualização integrada e demais funções da v1.6.22.
 - Release completa multiplataforma: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
 
