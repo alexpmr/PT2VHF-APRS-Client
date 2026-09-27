@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.7.2
+# PT2VHF APRS Client - v1.7.3
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.2** refina o uso do Mapa, acrescenta tempo relativo no popup das estações e consolida corretamente softwares APRS equivalentes no ranking de Estatísticas, preservando os identificadores técnicos para diagnóstico.
+A **v1.7.3** corrige o fluxo de atualização automática e passa a consolidar versões/aliases do mesmo cliente APRS por família canônica nas Estatísticas.
 
 ## Downloads
 
@@ -92,6 +92,7 @@ Cada Release completa publica:
 - Ranking de **estações mais ativas** por tráfego útil, excluindo telemetria, iGates e digipeaters; rankings dedicados de digipeaters e iGates, enlaces que deixaram de aparecer, comparação com o período anterior e métricas agregadas.
 - **Ranking de software/dispositivos APRS** com nome amigável resolvido pela base APRS Device Identification, quantidade e percentual; o identificador técnico permanece interno e deixa de poluir a apresentação.
 - A v1.7.2 consolida em uma única linha TOCALLs diferentes que resolvem para o mesmo nome amigável de software/dispositivo, recalculando quantidade e percentual sem misturar versões com nomes distintos.
+- A v1.7.3 consolida também **versões e aliases da mesma família de cliente**. Ex.: **Dire Wolf 1.7, 1.8 e 1.9** aparecem como uma única linha **Dire Wolf**; nomes originais e TOCALLs continuam preservados internamente para diagnóstico.
 - A aba **Estatísticas** usa fonte padrão ligeiramente maior e ganha controle próprio de tamanho da fonte em Configurações.
 - O Mapa ganhou **legenda dos tipos de linhas**: tracklog, enlace RF, IGate/APRS-IS, replay temporal e pacote em movimento. Em qAR/qAO, o salto físico até o IGate é tratado como RF; o papel de IGate é mantido como metadado, não como meio do enlace.
 - Animação do tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, velocidades 0,5x/1x/2x/5x/10x, timestamp e contadores. Em novas instalações, a animação **Ao vivo vem ativada por padrão**, podendo ser desativada em Configurações.
@@ -112,6 +113,8 @@ Cada Release completa publica:
 ### Atualização integrada
 - **Verificar atualizações automaticamente** — habilitado por padrão e executado na abertura e depois a cada **5 minutos**.
 - Quando aparece **Nova versão**, clicar no indicador ou em **Baixar e instalar nova versão** inicia o fluxo automático.
+- Na v1.7.3, o botão de instalação fornece feedback imediato e o gerador dos helpers PowerShell/Bash foi corrigido para gravar quebras de linha reais, evitando o caso em que o clique parecia não produzir efeito.
+- O diagnóstico do updater registra solicitação, asset, URL, caminho temporário, tamanho, SHA-256 e erros de instalação.
 - O cliente identifica **plataforma, arquitetura e formato em execução**, seleciona o asset exato da Release oficial, confere o tamanho e calcula **SHA-256**; quando o GitHub fornece digest SHA-256, o valor também é validado.
 - Um **updater auxiliar separado** é iniciado antes do encerramento do processo atual. A aplicação tenta encerrar seus componentes de forma limpa; se a instância anterior permanecer viva após o timeout, o helper encerra somente o PID daquela instância antes de instalar.
 - Um lock em arquivo com PID impede duas instâncias de iniciarem atualizações concorrentes e permite recuperar lock obsoleto após crash.
