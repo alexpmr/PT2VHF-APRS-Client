@@ -718,8 +718,8 @@
 
   function activateTab(tab) {
     state.activeTab = tab;
-    $('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-    $('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+    $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
     syncMapContextBar();
     if (tab === 'map') {
       setTimeout(() => state.map?.invalidateSize(), 30);
