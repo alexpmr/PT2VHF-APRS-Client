@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.3": {
+        "title": "Atualizador reparado e ranking de clientes consolidado por família",
+        "items": [
+            "Corrigida a geração dos scripts auxiliares do atualizador: as quebras de linha agora são gravadas corretamente em PowerShell e Bash.",
+            "O botão Baixar e instalar mostra feedback imediato, dispara diretamente o fluxo de atualização e registra as etapas no diagnóstico.",
+            "O updater registra solicitação, asset, URL, caminho temporário, tamanho, SHA-256 e falhas para facilitar diagnóstico.",
+            "Estatísticas passa a agrupar versões semânticas do mesmo cliente em uma única família, por exemplo Dire Wolf 1.7, 1.8 e 1.9 em Dire Wolf.",
+            "Aliases, nomes originais e TOCALLs continuam preservados internamente para diagnóstico, enquanto a interface mostra o nome canônico consolidado.",
+            "Adicionados testes de regressão que geram os helpers reais e validam a consolidação por família.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.7.2": {
         "title": "Mapa mais compacto, tempo relativo e estatísticas consolidadas",
         "items": [
