@@ -2,7 +2,7 @@
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.23** é uma release completa multiplataforma que consolida a atualização integrada da v1.6.22, aplica a **logo oficial** em toda a identidade visual e adiciona no **Mapa** um filtro de atividade das estações pela última interação.
+A **v1.6.23** é uma release completa multiplataforma que consolida a atualização integrada da v1.6.22, padroniza a **identidade visual** da aplicação e adiciona no **Mapa** um filtro de atividade das estações pela última interação.
 
 ## Downloads
 
@@ -27,8 +27,8 @@ Cada Release completa publica:
 ## Destaques da série 1.6
 
 ### Identidade visual
-- A **logo oficial do PT2VHF APRS Client** é usada no cabeçalho, favicon, ícones Windows/Linux/macOS, bandeja do Windows e capa do Manual PDF.
-- O pipeline valida a presença da imagem oficial antes de gerar os pacotes.
+- A mesma logo vetorial/raster do **PT2VHF APRS Client** é usada no cabeçalho, favicon, ícones Windows/Linux/macOS, bandeja do Windows e capa do Manual PDF.
+- O pipeline valida a presença dos arquivos de logo antes de gerar os pacotes.
 
 ### Configuração
 - Configuração organizada em seções, iniciando diretamente pela Estação APRS, sem bloco introdutório redundante.
