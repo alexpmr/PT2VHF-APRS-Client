@@ -6,15 +6,15 @@ ROOT = Path(__file__).resolve().parents[1]
 # oficial seja reintegrada com um arquivo validado.
 html_path = ROOT / "pt2vhf_aprs/templates/index.html"
 html = html_path.read_text(encoding="utf-8")
-html = html.replace("img/aprs_logo_official.jpg", "img/app_logo.svg")
-html = html.replace('type="image/jpeg"', 'type="image/svg+xml"')
+html = html.replace("img/app_logo.png", "img/app_logo.png")
+html = html.replace('type="image/png"', 'type="image/png"')
 html_path.write_text(html, encoding="utf-8")
 
 # Proteção adicional contra o patch legado da v1.6.6 voltar a apontar
 # o gerador de ícone Windows para o JPEG inválido.
 icon_path = ROOT / "windows/make_icon.py"
 icon = icon_path.read_text(encoding="utf-8")
-icon = icon.replace("aprs_logo_official.jpg", "app_logo.png")
+icon = icon.replace("app_logo.png", "app_logo.png")
 icon_path.write_text(icon, encoding="utf-8")
 
 # O teste legado de identidade visual deve acompanhar a logo estável usada
@@ -22,8 +22,8 @@ icon_path.write_text(icon, encoding="utf-8")
 tests_path = ROOT / "tests/test_core.py"
 tests = tests_path.read_text(encoding="utf-8")
 tests = tests.replace(
-    '    assert "aprs_logo_official.jpg" in html',
-    '    assert "img/app_logo.svg" in html',
+    '    assert "app_logo.png" in html',
+    '    assert "img/app_logo.png" in html',
 )
 tests_path.write_text(tests, encoding="utf-8")
 
@@ -32,8 +32,8 @@ checks = {
     "pt2vhf_aprs/web.py": ["queue_message_parts"],
     "pt2vhf_aprs/static/js/app.js": ["messageSending", "Mensagem colocada na fila"],
     "pt2vhf_aprs/database.py": ["shutdown_maintenance"],
-    "pt2vhf_aprs/templates/index.html": ["img/app_logo.svg"],
-    "tests/test_core.py": ['assert "img/app_logo.svg" in html'],
+    "pt2vhf_aprs/templates/index.html": ["img/app_logo.png"],
+    "tests/test_core.py": ['assert "img/app_logo.png" in html'],
 }
 for rel, needles in checks.items():
     text = (ROOT / rel).read_text(encoding="utf-8")
@@ -41,7 +41,7 @@ for rel, needles in checks.items():
         if needle not in text:
             raise SystemExit(f"v1.6.10 validation failed: {needle!r} missing from {rel}")
 
-if "aprs_logo_official.jpg" in icon_path.read_text(encoding="utf-8"):
+if "app_logo.png" in icon_path.read_text(encoding="utf-8"):
     raise SystemExit("v1.6.10 validation failed: Windows icon still references invalid JPEG")
 
 print("v1.6.10 source validation OK")
