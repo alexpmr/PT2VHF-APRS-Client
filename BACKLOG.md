@@ -85,6 +85,15 @@
 
 ## Pendências para próximas versões
 
+- **Atualizações — piscar indicador quando houver nova versão**
+  - Quando uma nova versão estiver disponível, manter o comportamento atual de indicação visual e acrescentar também um **efeito de piscar/pulsar** no indicador de **Nova versão**.
+  - O efeito deve ser perceptível, porém discreto, sem comprometer a leitura nem causar distração excessiva.
+  - Manter o destaque ativo enquanto a nova versão continuar pendente de atualização.
+  - Parar o efeito quando o usuário iniciar a atualização, quando a versão instalada já for a mais recente ou quando não houver mais atualização disponível.
+  - Respeitar o tema claro/escuro e o idioma corrente da aplicação.
+  - Não usar o mesmo efeito visual de alertas críticos; a indicação deve comunicar **atualização disponível**, não erro.
+  - Adicionar teste de regressão para garantir que o piscar só ocorra quando houver uma versão realmente mais nova disponível.
+
 - **Mensagens — destacar aba quando chegar nova mensagem**
   - Quando chegar uma **nova mensagem destinada ao usuário/indicativo corrente** e a aba **Mensagens** não estiver ativa, destacar visualmente o nome da aba **Mensagens** para chamar a atenção.
   - O destaque deve permanecer até o usuário abrir a aba **Mensagens** ou marcar/visualizar a mensagem correspondente.
