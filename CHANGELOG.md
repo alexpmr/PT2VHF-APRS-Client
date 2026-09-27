@@ -10,6 +10,7 @@
 - O filtro oferece **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**.
 - Ao aplicar o filtro, marcadores e tracklogs de estações fora da faixa são ocultados; a topologia evita manter enlaces para estações conhecidas que foram filtradas.
 - O mapa mostra a quantidade de estações visíveis em relação ao total quando um filtro estiver ativo.
+- A legenda do Mapa ganha opção de **minimizar/expandir** com persistência local da preferência.
 - Mantidos os recursos de atualização integrada e demais funções da v1.6.22.
 - Release completa multiplataforma: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
 
