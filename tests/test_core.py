@@ -1217,3 +1217,80 @@ def test_v172_station_popup_relative_last_heard_updates_live():
     assert "há ${hours} h e ${minutes} min" in js
     assert "há ${days} dia${days === 1 ? '' : 's'}" in js
 
+def test_v173_updater_helpers_use_real_newlines(monkeypatch):
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        updates = root / "updates"
+        updates.mkdir()
+        monkeypatch.setattr(updater, "UPDATE_DIR", updates)
+        monkeypatch.setattr(updater, "PENDING_FILE", updates / "pending_update.json")
+        monkeypatch.setattr(updater, "APPLY_LOG", updates / "update_apply.log")
+        monkeypatch.setattr(updater, "UPDATE_LOCK_FILE", updates / "update.lock")
+        monkeypatch.setattr(updater, "HELPER_READY_FILE", updates / "helper_ready")
+
+        pending_windows = {
+            "path": str(updates / "PT2VHF_APRS_Client_Portable_x64_v1.7.3.exe"),
+            "current_executable": str(root / "PT2VHF_APRS_Client_Portable_x64_v1.7.2.exe"),
+            "mode": "windows-portable",
+            "pid": 12345,
+            "version": "1.7.3",
+        }
+        ps1 = updater._write_windows_helper(pending_windows)
+        powershell = ps1.read_text(encoding="utf-8")
+        assert "$ErrorActionPreference='Stop'\n$pidToWait=12345\n" in powershell
+        assert "\\n$pidToWait" not in powershell
+        assert "\nLog 'updater helper started'\n" in powershell
+
+        pending_linux = {
+            "path": str(updates / "PT2VHF_APRS_Client_x86_64_v1.7.3.AppImage"),
+            "current_executable": str(root / "PT2VHF_APRS_Client_x86_64_v1.7.2.AppImage"),
+            "mode": "linux-appimage",
+            "pid": 12345,
+            "version": "1.7.3",
+        }
+        sh = updater._write_posix_helper(pending_linux)
+        shell = sh.read_text(encoding="utf-8")
+        assert shell.startswith("#!/usr/bin/env bash\nset -e\n")
+        assert "\\nset -e" not in shell
+        assert "printf '%s %s\\n'" in shell
+
+
+def test_v173_client_versions_group_semantic_versions_into_one_family():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            now = db.utc_now_iso()
+            with db.connection() as conn:
+                conn.executemany(
+                    "INSERT INTO stations(callsign,last_heard,raw) VALUES(?,?,?)",
+                    [
+                        ("PY1DW17", now, "PY1DW17>APDW17:>test"),
+                        ("PY1DW18", now, "PY1DW18>APDW18:>test"),
+                        ("PY1DW19", now, "PY1DW19>APDW19:>test"),
+                    ],
+                )
+
+            stats = db.client_version_stats()
+            dire_wolf = [item for item in stats["items"] if item["friendly_name"] == "Dire Wolf"]
+            assert len(dire_wolf) == 1
+            assert dire_wolf[0]["stations"] == 3
+            assert set(dire_wolf[0]["identifiers"]) == {"APDW17", "APDW18", "APDW19"}
+            assert set(dire_wolf[0]["aliases"]) == {"Dire Wolf 1.7", "Dire Wolf 1.8", "Dire Wolf 1.9"}
+    finally:
+        db.DB_PATH = original
+
+
+def test_v173_download_install_button_has_immediate_feedback_and_direct_action():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    web = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+    updater_source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")
+
+    assert "Feedback visual antes mesmo da chamada HTTP" in js
+    assert "Preparando atualização…" in js
+    assert "$('#openLatestReleaseButton')?.addEventListener('click', () => void installLatestUpdate());" in js
+    assert "update_install_http_requested" in web
+    assert "update_install_requested" in updater_source
+
