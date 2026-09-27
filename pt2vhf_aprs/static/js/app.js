@@ -1212,14 +1212,61 @@
     });
   }
 
+  function formatRelativeLastHeard(value) {
+    const ms = stationLastHeardMs({ last_heard: value });
+    if (!Number.isFinite(ms)) return '';
+
+    const totalMinutes = Math.max(0, Math.floor((Date.now() - ms) / 60000));
+    const language = normalizeLanguage(state.language);
+
+    if (totalMinutes < 1) {
+      if (language === 'en') return 'less than 1 min ago';
+      if (language === 'es') return 'hace menos de 1 min';
+      if (language === 'fr') return 'il y a moins de 1 min';
+      return 'há menos de 1 min';
+    }
+
+    if (totalMinutes < 60) {
+      if (language === 'en') return `${totalMinutes} min ago`;
+      if (language === 'es') return `hace ${totalMinutes} min`;
+      if (language === 'fr') return `il y a ${totalMinutes} min`;
+      return `há ${totalMinutes} min`;
+    }
+
+    if (totalMinutes < 1440) {
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      if (language === 'en') return minutes ? `${hours} h and ${minutes} min ago` : `${hours} h ago`;
+      if (language === 'es') return minutes ? `hace ${hours} h y ${minutes} min` : `hace ${hours} h`;
+      if (language === 'fr') return minutes ? `il y a ${hours} h et ${minutes} min` : `il y a ${hours} h`;
+      return minutes ? `há ${hours} h e ${minutes} min` : `há ${hours} h`;
+    }
+
+    const days = Math.floor(totalMinutes / 1440);
+    if (language === 'en') return `${days} day${days === 1 ? '' : 's'} ago`;
+    if (language === 'es') return `hace ${days} día${days === 1 ? '' : 's'}`;
+    if (language === 'fr') return `il y a ${days} jour${days === 1 ? '' : 's'}`;
+    return `há ${days} dia${days === 1 ? '' : 's'}`;
+  }
+
+  function refreshStationPopupRelativeTimes() {
+    $('.station-last-heard-relative').forEach(element => {
+      const relative = formatRelativeLastHeard(element.dataset.lastHeard || '');
+      element.textContent = relative ? ` — ${relative}` : '';
+    });
+  }
+
   function popupHtml(s) {
     let path = '';
     try { path = JSON.parse(s.path || '[]').join(','); } catch (_) { path = s.path || ''; }
+    const lastHeardDate = fmtDate(s.last_heard);
+    const lastHeardRelative = formatRelativeLastHeard(s.last_heard);
+    const lastHeardMarkup = `${escapeHtml(lastHeardDate)}<span class="station-last-heard-relative" data-last-heard="${escapeHtml(String(s.last_heard ?? ''))}">${lastHeardRelative ? ` — ${escapeHtml(lastHeardRelative)}` : ''}</span>`;
     return `<div class="station-popup">
       <h3>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.name || s.callsign)}</h3>
       <div class="popup-grid">
         <strong>Indicativo</strong><span>${escapeHtml(s.callsign)}</span>
-        <strong>Última recepção</strong><span>${escapeHtml(fmtDate(s.last_heard))}</span>
+        <strong>${ui('Última recepção', 'Last heard')}</strong><span>${lastHeardMarkup}</span>
         <strong>Posição</strong><span>${fmtNum(s.latitude, 6)}, ${fmtNum(s.longitude, 6)}</span>
         <strong>Velocidade</strong><span>${fmtNum(s.speed, 1, ' km/h')}</span>
         <strong>Curso</strong><span>${fmtNum(s.course, 0, '°')}</span>
@@ -4287,6 +4334,7 @@
     syncLanguageFlag();
     syncMapLegendCollapsed();
     syncMapContextBar();
+    refreshStationPopupRelativeTimes();
     renderAbout();
     updateMessageComposerMode();
     updateUpdateSettingsUi();
@@ -5256,6 +5304,7 @@
     schedulePolling(async () => {
       if (state.activeTab === 'stations') await loadStations();
     }, 10000);
+    schedulePolling(refreshStationPopupRelativeTimes, 30000);
     schedulePolling(async () => {
       if (state.activeTab === 'log') await loadLog(false);
     }, 3000);
