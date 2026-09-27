@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.7.4 - 2026-09-27
+
+- **Atualizador:** mensagens temporárias agora ficam acima do modal de atualização e não são mais desfocadas pelo overlay.
+- **Atualizador:** falhas de download/instalação aparecem também dentro do próprio modal, com destaque visual de erro e texto técnico preservado.
+- **Atualizador:** estados **Preparando**, **Sucesso** e **Erro** ganharam apresentação própria; após falha, os botões de instalar, abrir a Release e fechar o modal voltam a ficar disponíveis.
+- O aviso inline usa `aria-live="assertive"`, melhorando também a sinalização de erro por tecnologias assistivas.
+- Adicionados testes de regressão para camada visual, mensagem inline e recuperação dos controles após erro.
+- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.7.3 - 2026-09-27
 
 - **Atualizador:** corrigida a geração dos scripts auxiliares PowerShell/Bash. As quebras de linha estavam sendo gravadas como texto literal `\n`, impedindo o helper de executar corretamente.
