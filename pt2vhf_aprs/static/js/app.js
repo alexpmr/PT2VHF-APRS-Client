@@ -37,6 +37,7 @@
     trafficEvents: [],
     trafficIndex: 0,
     trafficPlaying: false,
+    trafficAnimationEnabled: true,
     trafficOverview: null,
     trafficHasMore: false,
     trafficChunkLastId: 0,
@@ -107,12 +108,26 @@
     return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
   }
 
+  const EXTRA_I18N = window.PT2VHF_I18N || {};
+
+  function normalizeLanguage(value) {
+    return ['pt-BR', 'en', 'es', 'fr'].includes(String(value || '')) ? String(value) : 'pt-BR';
+  }
+
+  function translatedText(pt, en) {
+    if (state.language === 'en') return en || pt;
+    if (state.language === 'es' || state.language === 'fr') {
+      return EXTRA_I18N[state.language]?.[pt] || pt;
+    }
+    return pt;
+  }
+
   function ui(pt, en) {
-    return state.language === 'en' ? en : pt;
+    return translatedText(pt, en);
   }
 
   function currentLocale() {
-    return state.language === 'en' ? 'en-US' : 'pt-BR';
+    return ({'pt-BR':'pt-BR', en:'en-US', es:'es-ES', fr:'fr-FR'})[state.language] || 'pt-BR';
   }
 
   function fmtDate(value) {
