@@ -108,6 +108,13 @@
   - Manter os controles menos usados em um menu **Mais ▾**, evitando poluir a barra.
   - Garantir que nenhum controle volte a ficar sobreposto ao canvas do mapa ou à legenda.
 
+- **Mapa — animação do tráfego ativada por padrão**
+  - Deixar **ativada por padrão** a animação do tráfego entre estações em novas instalações.
+  - Ao receber tráfego elegível e visível no mapa, animar o deslocamento do pacote/enlace entre origem e destino sem exigir ativação manual.
+  - Manter a opção para o usuário **desativar** as animações nas configurações ou na barra superior do Mapa.
+  - Preservar a preferência salva pelo usuário: o padrão ligado deve valer quando ainda não houver configuração persistida.
+  - Respeitar filtros de atividade, visibilidade/zoom e demais regras já existentes para não animar estações ocultas.
+
 - **Busca rápida — localizar estação por indicativo**
   - Adicionar campo de busca rápida por indicativo, com filtragem caractere por caractere.
   - Aceitar indicativo completo ou parcial, incluindo SSID.
