@@ -85,37 +85,6 @@
 
 ## Pendências para próximas versões
 
-- **Mensagens — sincronizar conversa em foco com o destinatário**
-  - Na visualização **Agrupado por remetente**, manter o indicativo em foco na lista/conversa sincronizado com o indicativo atualmente informado no campo **Destinatário**.
-  - Ao selecionar ou alterar o destinatário para um indicativo que possua conversa existente, mover automaticamente o foco para a conversa correspondente.
-  - Ao clicar em uma conversa, continuar preenchendo automaticamente o campo **Destinatário** com o mesmo indicativo.
-  - Evitar qualquer situação em que a conversa exibida pertença a um indicativo e o campo **Destinatário** contenha outro, reduzindo o risco de envio para a estação errada.
-  - Caso o destinatário digitado ainda não possua histórico de conversa, não selecionar arbitrariamente outra conversa; deixar claro que se trata de um novo destinatário.
-
-- **Mensagens — reduzir altura dos botões de filtro**
-  - Deixar os botões **Agrupado por remetente**, **Minhas mensagens** e **Não lidas** visualmente mais baixos/compactos.
-  - Ajustar padding, altura mínima e/ou largura para que o texto de cada botão permaneça em **uma única linha**, sem quebra.
-  - Manter alinhamento vertical consistente com **Ocultar telemetria** e **Filtro por origem**.
-  - Preservar boa área de clique e responsividade em telas menores, evitando que os controles se sobreponham.
-
-- **Idiomas — adicionar Espanhol e Francês**
-  - Adicionar suporte completo aos idiomas **Espanhol (ES)** e **Francês (FR)** em toda a interface.
-  - Incluir os novos idiomas no seletor de idioma em **Configurações** e nos demais pontos onde houver troca rápida de idioma.
-  - Traduzir menus, abas, botões, mensagens, tooltips, modais, avisos, estados, filtros, textos de ajuda e mensagens de erro.
-  - Manter **Português** como idioma padrão da aplicação.
-  - Preservar a preferência de idioma escolhida pelo usuário entre reinicializações.
-  - Garantir fallback seguro para **Português** quando alguma chave de tradução estiver ausente.
-  - Atualizar o Manual PDF e demais textos de interface que dependam da camada de tradução, quando aplicável.
-  - Adicionar testes de regressão para garantir que **PT, EN, ES e FR** carreguem sem chaves ausentes ou textos quebrados.
-
-- **Estatísticas — nomes amigáveis e controle de fonte**
-  - No bloco de clientes/aplicativos da aba **Estatísticas**, exibir **somente o nome amigável do aplicativo/software**.
-  - Ocultar da apresentação principal o TOCALL, identificador técnico bruto ou nomenclatura duplicada quando já houver nome amigável conhecido.
-  - Manter os identificadores técnicos internamente para correlação, diagnóstico e identificação dos clientes, sem poluir a interface.
-  - Aumentar um pouco o tamanho padrão da fonte usada nos blocos/listas da aba **Estatísticas** para melhorar a leitura.
-  - Adicionar em **Configurações** um controle específico de **tamanho da fonte da aba Estatísticas**, seguindo o padrão dos controles de fonte já existentes em Mensagens/Estações/Logs.
-  - Preservar a preferência de fonte escolhida pelo usuário entre reinicializações e manter comportamento responsivo em telas menores.
-
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
@@ -144,13 +113,6 @@
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
   - Manter os controles menos usados em um menu **Mais ▾**, evitando poluir a barra.
   - Garantir que nenhum controle volte a ficar sobreposto ao canvas do mapa ou à legenda.
-
-- **Mapa — animação do tráfego ativada por padrão**
-  - Deixar **ativada por padrão** a animação do tráfego entre estações em novas instalações.
-  - Ao receber tráfego elegível e visível no mapa, animar o deslocamento do pacote/enlace entre origem e destino sem exigir ativação manual.
-  - Manter a opção para o usuário **desativar** as animações nas configurações ou na barra superior do Mapa.
-  - Preservar a preferência salva pelo usuário: o padrão ligado deve valer quando ainda não houver configuração persistida.
-  - Respeitar filtros de atividade, visibilidade/zoom e demais regras já existentes para não animar estações ocultas.
 
 - **Busca rápida — localizar estação por indicativo**
   - Adicionar campo de busca rápida por indicativo, com filtragem caractere por caractere.
@@ -252,4 +214,15 @@
 - **Histórico de versões:** adicionadas as notas internas ausentes da v1.6.23 e as notas da v1.6.24.
 - **Backlog consolidado:** removidas pendências já concluídas em queries APRS, estatísticas de clientes, idioma, topologia e gauges CPU/RAM.
 - Permanecem abertas apenas melhorias/validações ainda não concluídas, incluindo ranking de conversas, estabilidade prolongada do Portable e compatibilidade de configuração com banco antigo.
+
+## Concluído na v1.7
+
+- **Mapa:** controles de Atividade e Topologia observada ficam fora do canvas, na barra superior.
+- **Mapa:** animação de tráfego ao vivo ativada por padrão em novas instalações, com opção persistente para desativar.
+- **Mensagens:** filtros compactos, com rótulos em uma linha.
+- **Mensagens:** conversa em foco e campo Destinatário sincronizados, incluindo tratamento claro para destinatário novo sem histórico.
+- **Idiomas:** suporte a Português, English, Español e Français, com seletor rápido, persistência e fallback seguro.
+- **Estatísticas:** somente nome amigável do aplicativo/software na apresentação principal; identificadores técnicos permanecem internos.
+- **Estatísticas:** fonte padrão maior e controle próprio de tamanho na Configuração.
+- **Versionamento:** nova linha iniciada em v1.7; próximas releases serão v1.7.1, v1.7.2, v1.7.3...
 
