@@ -243,6 +243,7 @@
   }
 
   function setUpdateProgress(message = '', type = '') {
+    const progress = $('#updateDownloadProgress');
     if (!progress) return;
     const text = String(message || '').trim();
     progress.textContent = text;
@@ -350,7 +351,6 @@
       return;
     }
 
-    const progress = $('#updateDownloadProgress');
     const progressBar = $('#updateProgressBar');
     const installButton = $('#updateInstallNow');
     const settingsInstallButton = $('#openLatestReleaseButton');
