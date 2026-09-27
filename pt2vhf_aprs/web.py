@@ -512,11 +512,12 @@ def create_app() -> Flask:
 
             if message_type == "message":
                 result = service.queue_message_parts(data.get("to", ""), data.get("message", ""))
-            elif message_type in {"bulletin", "group_bulletin"}:
+            elif message_type in {"bulletin", "group_bulletin", "announcement"}:
                 group = data.get("group", "") if message_type == "group_bulletin" else ""
+                bulletin_id = data.get("bulletin_id", "A" if message_type == "announcement" else "0")
                 row_id = service.send_bulletin(
                     data.get("message", ""),
-                    bulletin_id=data.get("bulletin_id", "0"),
+                    bulletin_id=bulletin_id,
                     group=group,
                 )
             else:
