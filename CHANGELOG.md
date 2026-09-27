@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.7 - 2026-09-27
+
+- Inaugurada a linha **v1.7**; as próximas versões seguirão **v1.7.1, v1.7.2, v1.7.3...**.
+- Na aba **Mapa**, os controles **Atividade** e **Topologia observada** ficam em uma barra superior fora do canvas, eliminando sobreposição.
+- A animação de tráfego entre estações em modo **Ao vivo** passa a vir ativada por padrão em novas instalações, com preferência persistida em Configurações.
+- Na aba **Mensagens**, os botões **Agrupado por remetente**, **Minhas mensagens** e **Não lidas** ficam mais baixos e com texto em uma única linha.
+- A conversa em foco passa a ser sincronizada com o campo **Destinatário**; ao informar um indicativo diferente, o cliente muda o foco para a conversa correspondente ou deixa claro que é um novo destinatário, evitando envio acidental à estação errada.
+- Adicionados **Español (ES)** e **Français (FR)** ao seletor de idioma, mantendo Português como padrão, persistência da escolha e fallback seguro para Português.
+- Na aba **Estatísticas**, o ranking de software/aplicativos passa a mostrar somente o **nome amigável**, mantendo TOCALL/identificadores técnicos apenas internamente.
+- A fonte padrão da aba **Estatísticas** fica ligeiramente maior e passa a ter controle próprio de tamanho em **Configurações**.
+- Release completa: **Windows x64 Setup + Portable**, **Linux x86_64 TAR.GZ + AppImage + DEB**, **macOS ARM64/Intel DMG** e **Manual PDF**.
+
 ## v1.6.24 - 2026-09-27
 
 - A **logo APRS fornecida pelo projeto** passa a ser a fonte visual única da aplicação.
