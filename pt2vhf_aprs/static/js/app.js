@@ -3712,6 +3712,13 @@
     'Caminho incompleto: há nós sem posição conhecida.':'Incomplete path: some nodes have no known position.'
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
+  const LANGUAGE_META = {
+    'pt-BR': { label: 'Português', flag: '/static/img/flag_br.svg', alt: 'Brasil', htmlLang: 'pt-BR' },
+    en: { label: 'English', flag: '/static/img/flag_england.svg', alt: 'England', htmlLang: 'en' },
+    es: { label: 'Español', flag: '/static/img/flag_spain.svg', alt: 'España', htmlLang: 'es' },
+    fr: { label: 'Français', flag: '/static/img/flag_france.svg', alt: 'France', htmlLang: 'fr' },
+  };
+
   function translateConnectionState(value) {
     const map = {
       'Desconectado':'Disconnected',
@@ -3723,7 +3730,7 @@
       'Configuração incompleta':'Incomplete configuration',
       'Reconectando com a nova configuração...':'Reconnecting with new settings...'
     };
-    return state.language === 'en' ? (map[value] || value) : value;
+    return translatedText(value, map[value] || value);
   }
 
   function translateDom(root = document.body) {
@@ -3738,8 +3745,10 @@
       const original = node._pt2vhfOriginalText;
       const trimmed = original.trim();
       if (!trimmed) continue;
-      const translated = EN_TEXT.get(trimmed);
-      const chosen = state.language === 'en' && translated ? translated : trimmed;
+      const translated = state.language === 'en'
+        ? EN_TEXT.get(trimmed)
+        : EXTRA_I18N[state.language]?.[trimmed];
+      const chosen = state.language === 'pt-BR' ? trimmed : (translated || trimmed);
       const lead = original.match(/^\s*/)?.[0] || '';
       const trail = original.match(/\s*$/)?.[0] || '';
       node.nodeValue = lead + chosen + trail;
@@ -3752,8 +3761,10 @@
         const key = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
         if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
         const original = el.dataset[key];
-        const translated = EN_TEXT.get(original);
-        el.setAttribute(attr, state.language === 'en' && translated ? translated : original);
+        const translated = state.language === 'en'
+          ? EN_TEXT.get(original)
+          : EXTRA_I18N[state.language]?.[original];
+        el.setAttribute(attr, state.language === 'pt-BR' ? original : (translated || original));
       }
     }
   }
@@ -3761,20 +3772,20 @@
   function syncLanguageFlag() {
     const flag = $('#languageFlag');
     if (!flag) return;
-    const english = state.language === 'en';
-    flag.src = english ? '/static/img/flag_england.svg' : '/static/img/flag_br.svg';
-    flag.alt = english ? 'England' : 'Brasil';
+    const meta = LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR'];
+    flag.src = meta.flag;
+    flag.alt = meta.alt;
   }
 
   function syncQuickLanguageButtons() {
-    const english = state.language === 'en';
+    const meta = LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR'];
     const currentFlag = $('#languageQuickCurrentFlag');
     const currentLabel = $('#languageQuickCurrentLabel');
     if (currentFlag) {
-      currentFlag.src = english ? '/static/img/flag_england.svg' : '/static/img/flag_br.svg';
-      currentFlag.alt = english ? 'Inglaterra' : 'Brasil';
+      currentFlag.src = meta.flag;
+      currentFlag.alt = meta.alt;
     }
-    if (currentLabel) currentLabel.textContent = english ? 'English' : 'Português';
+    if (currentLabel) currentLabel.textContent = meta.label;
     $$('.language-quick-option').forEach(button => {
       const active = button.dataset.language === state.language;
       button.classList.toggle('active', active);
@@ -3793,8 +3804,8 @@
   }
 
   function applyLanguage(language) {
-    state.language = language === 'en' ? 'en' : 'pt-BR';
-    document.documentElement.lang = state.language === 'en' ? 'en' : 'pt-BR';
+    state.language = normalizeLanguage(language);
+    document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR']).htmlLang;
     translateDom(document.body);
     syncQuickLanguageButtons();
     syncLanguageFlag();
@@ -3805,7 +3816,7 @@
   }
 
   async function setQuickLanguage(language) {
-    const next = language === 'en' ? 'en' : 'pt-BR';
+    const next = normalizeLanguage(language);
     applyLanguage(next);
     setLanguageMenuOpen(false);
     try {
@@ -3854,7 +3865,7 @@
   });
 
   const languageObserver = new MutationObserver(records => {
-    if (state.language !== 'en') return;
+    if (state.language === 'pt-BR') return;
     for (const record of records) {
       for (const node of record.addedNodes) {
         if (node.nodeType === Node.ELEMENT_NODE) translateDom(node);
@@ -3873,10 +3884,10 @@
     syncDecimalFromDmsIfNeeded();
     const form = $('#configForm');
     return [
-      { key: 'callsign', labelPt: 'Indicativo', labelEn: 'Callsign', input: form?.elements.namedItem('callsign') },
-      { key: 'latitude', labelPt: 'Latitude', labelEn: 'Latitude', input: form?.elements.namedItem('latitude') },
-      { key: 'longitude', labelPt: 'Longitude', labelEn: 'Longitude', input: form?.elements.namedItem('longitude') },
-      { key: 'altitude', labelPt: 'Altitude', labelEn: 'Altitude', input: form?.elements.namedItem('altitude') },
+      { key: 'callsign', label: ui('Indicativo', 'Callsign'), input: form?.elements.namedItem('callsign') },
+      { key: 'latitude', label: ui('Latitude', 'Latitude'), input: form?.elements.namedItem('latitude') },
+      { key: 'longitude', label: ui('Longitude', 'Longitude'), input: form?.elements.namedItem('longitude') },
+      { key: 'altitude', label: ui('Altitude', 'Altitude'), input: form?.elements.namedItem('altitude') },
     ];
   }
 
@@ -3912,7 +3923,7 @@
   function showRequiredFieldsModal(missing = missingRequiredStationFields()) {
     if (!missing.length) return false;
     highlightMissingRequiredFields(missing);
-    const names = missing.map(item => state.language === 'en' ? item.labelEn : item.labelPt);
+    const names = missing.map(item => item.label);
     const message = $('#requiredFieldsMessage');
     const list = $('#requiredFieldsList');
     if (message) message.textContent = ui(
