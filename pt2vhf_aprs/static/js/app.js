@@ -258,8 +258,19 @@
         );
     $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
     const installButton = $('#updateInstallNow');
-    if (installButton) installButton.disabled = !ready;
-    $('#updateDownloadProgress').textContent = '';
+    if (installButton) installButton.disabled = !ready || state.updateDownloading;
+    const closeButton = $('#updateModalClose');
+    const releaseButton = $('#updateOpenRelease');
+    if (closeButton) closeButton.disabled = !!state.updateDownloading;
+    if (releaseButton) releaseButton.disabled = !!state.updateDownloading;
+    if (!state.updateDownloading) {
+      $('#updateDownloadProgress').textContent = '';
+      const bar = $('#updateProgressBar');
+      if (bar) {
+        bar.classList.add('hidden');
+        bar.removeAttribute('value');
+      }
+    }
     $('#updateModal').classList.remove('hidden');
   }
 
@@ -317,12 +328,21 @@
     state.updateDownloading = true;
     updateUpdateSettingsUi();
     const progress = $('#updateDownloadProgress');
+    const progressBar = $('#updateProgressBar');
     const installButton = $('#updateInstallNow');
+    const closeButton = $('#updateModalClose');
+    const releaseButton = $('#updateOpenRelease');
     if (installButton) installButton.disabled = true;
+    if (closeButton) closeButton.disabled = true;
+    if (releaseButton) releaseButton.disabled = true;
+    if (progressBar) {
+      progressBar.classList.remove('hidden');
+      progressBar.removeAttribute('value');
+    }
     if (progress) {
       progress.textContent = ui(
-        `Baixando e validando ${data.asset_name}…`,
-        `Downloading and verifying ${data.asset_name}…`
+        `Baixando, verificando e preparando ${data.asset_name}… Não feche a aplicação.`,
+        `Downloading, verifying and preparing ${data.asset_name}… Do not close the application.`
       );
     }
     $('#updateModal')?.classList.remove('hidden');
@@ -331,19 +351,26 @@
     const timeout = setTimeout(() => controller.abort(), 180000);
     try {
       const result = await api('/api/update/install', { method:'POST', signal:controller.signal });
+      if (progressBar) progressBar.value = 100;
       if (progress) progress.textContent = String(result.message || ui(
-        'Atualização pronta. Encerrando a versão atual…',
-        'Update ready. Closing the current version…'
+        'Atualização pronta. O instalador auxiliar foi confirmado e a aplicação será reiniciada…',
+        'Update ready. The updater helper was confirmed and the application will restart…'
       ));
       toast(ui(
-        `v${result.version} validada. A aplicação será reiniciada.`,
-        `v${result.version} verified. The application will restart.`
+        `v${result.version} validada. O instalador foi iniciado e a aplicação será reiniciada.`,
+        `v${result.version} verified. The installer was started and the application will restart.`
       ), 'ok');
     } catch (err) {
       if (progress) progress.textContent = err.message;
       toast(err.message, 'error');
       state.updateDownloading = false;
+      if (progressBar) {
+        progressBar.classList.add('hidden');
+        progressBar.removeAttribute('value');
+      }
       if (installButton) installButton.disabled = false;
+      if (closeButton) closeButton.disabled = false;
+      if (releaseButton) releaseButton.disabled = false;
       updateUpdateSettingsUi();
     } finally {
       clearTimeout(timeout);
@@ -352,10 +379,16 @@
 
   $('#versionStatus')?.addEventListener('click', e => {
     e.preventDefault();
-    if (state.updateInfo?.status === 'update_available') void installLatestUpdate();
+    if (state.updateInfo?.status === 'update_available') showUpdateModal();
     else refreshVersionStatus(true);
   });
-  $('#updateModalClose')?.addEventListener('click', () => $('#updateModal')?.classList.add('hidden'));
+  $('#updateModalClose')?.addEventListener('click', () => {
+    if (state.updateDownloading) {
+      toast(ui('A atualização está em andamento. Aguarde a conclusão.', 'The update is in progress. Please wait for it to finish.'), 'error');
+      return;
+    }
+    $('#updateModal')?.classList.add('hidden');
+  });
   $('#checkUpdatesNowButton')?.addEventListener('click', async () => {
     await refreshVersionStatus(true);
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
@@ -363,7 +396,7 @@
   });
   $('#updateInstallNow')?.addEventListener('click', () => void installLatestUpdate());
   $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
-  $('#openLatestReleaseButton')?.addEventListener('click', () => void installLatestUpdate());
+  $('#openLatestReleaseButton')?.addEventListener('click', () => showUpdateModal());
 
   async function showWhatsNewAfterUpdate() {
     try {
