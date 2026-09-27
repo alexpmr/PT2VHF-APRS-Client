@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.7.3 - 2026-09-27
+
+- **Atualizador:** corrigida a geração dos scripts auxiliares PowerShell/Bash. As quebras de linha estavam sendo gravadas como texto literal `\n`, impedindo o helper de executar corretamente.
+- **Baixar e instalar:** o clique agora fornece feedback visual imediato, dispara diretamente o fluxo de instalação e não fica aparentemente inerte enquanto o backend trabalha.
+- **Atualizações:** adicionados registros de diagnóstico para solicitação de instalação, asset selecionado, URL, caminho temporário, tamanho, SHA-256 e erros.
+- **Estatísticas:** versões do mesmo cliente APRS passam a ser agrupadas por família canônica. Exemplo: **Dire Wolf 1.7**, **1.8** e **1.9** aparecem como uma única linha **Dire Wolf**.
+- Aliases, nomes originais e TOCALLs permanecem preservados internamente para diagnóstico, embora a interface exiba apenas a família consolidada.
+- Adicionados testes que geram os scripts auxiliares reais e validam que utilizam quebras de linha válidas, além de teste de regressão do agrupamento por família.
+- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.7.2 - 2026-09-27
 
 - **Mapa:** os controles **Estações**, **Tracklog** e **Topologia observada** passam para a mesma barra contextual do botão **Histórico**, mantendo uma única linha compacta e liberando mais área vertical para o mapa.
