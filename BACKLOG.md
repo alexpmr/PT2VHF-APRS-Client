@@ -85,6 +85,14 @@
   - Manter alinhamento vertical consistente com **Ocultar telemetria** e **Filtro por origem**.
   - Preservar boa área de clique e responsividade em telas menores, evitando que os controles se sobreponham.
 
+- **Estatísticas — nomes amigáveis e controle de fonte**
+  - No bloco de clientes/aplicativos da aba **Estatísticas**, exibir **somente o nome amigável do aplicativo/software**.
+  - Ocultar da apresentação principal o TOCALL, identificador técnico bruto ou nomenclatura duplicada quando já houver nome amigável conhecido.
+  - Manter os identificadores técnicos internamente para correlação, diagnóstico e identificação dos clientes, sem poluir a interface.
+  - Aumentar um pouco o tamanho padrão da fonte usada nos blocos/listas da aba **Estatísticas** para melhorar a leitura.
+  - Adicionar em **Configurações** um controle específico de **tamanho da fonte da aba Estatísticas**, seguindo o padrão dos controles de fonte já existentes em Mensagens/Estações/Logs.
+  - Preservar a preferência de fonte escolhida pelo usuário entre reinicializações e manter comportamento responsivo em telas menores.
+
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
