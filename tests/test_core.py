@@ -984,7 +984,7 @@ def test_v17_statistics_friendly_names_and_font_control():
     assert "--statistics-font-size" in css
     assert "statistics_font_size" in database
     assert "statistics_font_size" in js
-    assert "'<span class="client-version-tocall">'" not in js
+    assert '<span class="client-version-tocall">' not in js
 
 
 def test_v17_message_filter_buttons_are_compact():
