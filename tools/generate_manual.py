@@ -239,7 +239,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     )
     story = []
 
-    logo_path = logo_path or (ROOT / "pt2vhf_aprs" / "static" / "img" / "aprs_logo_official.jpg")
+    logo_path = logo_path or (ROOT / "pt2vhf_aprs" / "static" / "img" / "app_logo.png")
     story.append(Spacer(1, 0.9*cm))
     if logo_path.exists():
         logo = Image(str(logo_path), width=16.0*cm, height=12.0*cm)
