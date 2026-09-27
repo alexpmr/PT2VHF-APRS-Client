@@ -85,6 +85,16 @@
   - Manter alinhamento vertical consistente com **Ocultar telemetria** e **Filtro por origem**.
   - Preservar boa área de clique e responsividade em telas menores, evitando que os controles se sobreponham.
 
+- **Idiomas — adicionar Espanhol e Francês**
+  - Adicionar suporte completo aos idiomas **Espanhol (ES)** e **Francês (FR)** em toda a interface.
+  - Incluir os novos idiomas no seletor de idioma em **Configurações** e nos demais pontos onde houver troca rápida de idioma.
+  - Traduzir menus, abas, botões, mensagens, tooltips, modais, avisos, estados, filtros, textos de ajuda e mensagens de erro.
+  - Manter **Português** como idioma padrão da aplicação.
+  - Preservar a preferência de idioma escolhida pelo usuário entre reinicializações.
+  - Garantir fallback seguro para **Português** quando alguma chave de tradução estiver ausente.
+  - Atualizar o Manual PDF e demais textos de interface que dependam da camada de tradução, quando aplicável.
+  - Adicionar testes de regressão para garantir que **PT, EN, ES e FR** carreguem sem chaves ausentes ou textos quebrados.
+
 - **Estatísticas — nomes amigáveis e controle de fonte**
   - No bloco de clientes/aplicativos da aba **Estatísticas**, exibir **somente o nome amigável do aplicativo/software**.
   - Ocultar da apresentação principal o TOCALL, identificador técnico bruto ou nomenclatura duplicada quando já houver nome amigável conhecido.
