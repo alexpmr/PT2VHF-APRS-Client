@@ -410,7 +410,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
         f"lockfile={q(str(lock_file))}",
         f"ready={q(str(ready_file))}",
         "logmsg(){ printf '%s %s\\\\n' \"$(date -Iseconds)\" \"$1\" >> \"$log\"; }",
-        "printf '%s\\n' \"$\" > \"$ready\"",
+        "printf '%s\\\\n' \"$$\" > \"$ready\"",
         "logmsg 'updater helper started'",
         "for _ in $(seq 1 32); do",
         "  if ! kill -0 \"$pid\" 2>/dev/null; then break; fi",
