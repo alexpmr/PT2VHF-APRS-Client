@@ -85,6 +85,17 @@
 
 ## Pendências para próximas versões
 
+- **Mapa — filtrar saltos irreais de posição nos tracklogs**
+  - Antes de acrescentar uma nova posição ao tracklog, comparar a coordenada recebida com a **última posição válida aceita** da mesma estação.
+  - Calcular a distância entre os pontos e o intervalo de tempo, derivando a **velocidade implícita** do deslocamento.
+  - Ignorar posições claramente anômalas quando houver salto repentino incompatível com um deslocamento realista, evitando linhas falsas de centenas ou milhares de quilômetros no mapa.
+  - Um ponto rejeitado **não deve substituir a última posição válida** usada como referência; assim, o próximo pacote correto não ficará ligado ao ponto incorreto.
+  - Não desenhar segmento de tracklog de/para uma posição classificada como outlier.
+  - Considerar o intervalo de tempo entre os pacotes para não bloquear deslocamentos reais após longos períodos sem recepção.
+  - Se várias posições consecutivas confirmarem uma nova região, tratar como **mudança real de localização** e iniciar um novo trecho de tracklog, em vez de descartar indefinidamente a estação.
+  - Registrar no diagnóstico/log os pontos descartados, com indicativo, distância do salto, intervalo de tempo e velocidade implícita, para permitir auditoria e ajuste dos limites.
+  - Aplicar o mesmo filtro tanto ao tracklog ao vivo quanto ao replay/histórico.
+
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
