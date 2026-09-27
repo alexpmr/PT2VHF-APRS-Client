@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.7.3
+# PT2VHF APRS Client - v1.7.4
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.3** corrige o fluxo de atualização automática e passa a consolidar versões/aliases do mesmo cliente APRS por família canônica nas Estatísticas.
+A **v1.7.4** melhora o diagnóstico da atualização automática: erros ficam visíveis no próprio modal e os avisos temporários permanecem acima da camada de desfoque.
 
 ## Downloads
 
@@ -114,6 +114,7 @@ Cada Release completa publica:
 - **Verificar atualizações automaticamente** — habilitado por padrão e executado na abertura e depois a cada **5 minutos**.
 - Quando aparece **Nova versão**, clicar no indicador ou em **Baixar e instalar nova versão** inicia o fluxo automático.
 - Na v1.7.3, o botão de instalação fornece feedback imediato e o gerador dos helpers PowerShell/Bash foi corrigido para gravar quebras de linha reais, evitando o caso em que o clique parecia não produzir efeito.
+- Na v1.7.4, qualquer falha de atualização é mostrada **dentro do modal**, com o detalhe técnico preservado; o toast também fica acima do modal, sem desfoque, e os controles são reativados após o erro.
 - O diagnóstico do updater registra solicitação, asset, URL, caminho temporário, tamanho, SHA-256 e erros de instalação.
 - O cliente identifica **plataforma, arquitetura e formato em execução**, seleciona o asset exato da Release oficial, confere o tamanho e calcula **SHA-256**; quando o GitHub fornece digest SHA-256, o valor também é validado.
 - Um **updater auxiliar separado** é iniciado antes do encerramento do processo atual. A aplicação tenta encerrar seus componentes de forma limpa; se a instância anterior permanecer viva após o timeout, o helper encerra somente o PID daquela instância antes de instalar.
