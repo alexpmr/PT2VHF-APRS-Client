@@ -209,6 +209,12 @@ def create_app() -> Flask:
 
     def _install_latest_update():
         try:
+            diag.log_event(
+                "update_install_http_requested",
+                current_version=__version__,
+                method=request.method,
+                path=request.path,
+            )
             status = get_update_status(force=True)
             if not status.get("update_available"):
                 return jsonify({"ok": False, "error": "Não há uma versão mais recente disponível."}), 409
@@ -235,8 +241,10 @@ def create_app() -> Flask:
             )
             return jsonify(result)
         except RuntimeError as exc:
+            diag.log_event("update_install_http_failed", error=str(exc), kind="runtime")
             return jsonify({"ok": False, "error": str(exc)}), 409
         except Exception as exc:
+            diag.log_event("update_install_http_failed", error=str(exc), kind=type(exc).__name__)
             return jsonify({"ok": False, "error": str(exc)}), 500
 
     @app.post("/api/update/install")
