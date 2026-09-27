@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.4": {
+        "title": "Erros do atualizador agora ficam visíveis no próprio modal",
+        "items": [
+            "Corrigida a camada visual das mensagens do atualizador: o toast agora fica acima do modal e não é mais desfocado pelo overlay.",
+            "Falhas de download/instalação passam a ser exibidas também dentro do modal de atualização, em uma caixa destacada e legível.",
+            "O estado do modal distingue claramente preparação, sucesso e erro, mantendo os botões disponíveis após uma falha.",
+            "A mensagem técnica do backend permanece visível para diagnóstico, sem depender de um aviso temporário.",
+            "Adicionados testes de regressão para z-index, mensagem inline e reativação dos controles após erro.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.7.3": {
         "title": "Atualizador reparado e ranking de clientes consolidado por família",
         "items": [
