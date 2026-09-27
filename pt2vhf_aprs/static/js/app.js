@@ -314,25 +314,46 @@
   }
 
   async function installLatestUpdate() {
-    const data = state.updateInfo;
+    let data = state.updateInfo;
     if (!data || data.status !== 'update_available') {
       await refreshVersionStatus(true);
-      return;
+      data = state.updateInfo;
+      if (!data || data.status !== 'update_available') {
+        toast(ui('Nenhuma atualização disponível no momento.', 'No update is currently available.'), 'error');
+        return;
+      }
     }
-    if (state.updateDownloading) return;
-    if (!data.asset_ready || !data.install_supported) {
+    if (state.updateDownloading) {
       showUpdateModal();
       return;
     }
+    if (!data.asset_ready || !data.install_supported) {
+      showUpdateModal();
+      toast(ui(
+        data.error || 'A instalação automática não está disponível para este pacote.',
+        data.error || 'Automatic installation is not available for this package.'
+      ), 'error');
+      return;
+    }
 
-    state.updateDownloading = true;
-    updateUpdateSettingsUi();
     const progress = $('#updateDownloadProgress');
     const progressBar = $('#updateProgressBar');
     const installButton = $('#updateInstallNow');
+    const settingsInstallButton = $('#openLatestReleaseButton');
     const closeButton = $('#updateModalClose');
     const releaseButton = $('#updateOpenRelease');
-    if (installButton) installButton.disabled = true;
+
+    // Feedback visual antes mesmo da chamada HTTP: o clique nunca pode parecer inerte.
+    state.updateDownloading = true;
+    if (installButton) {
+      installButton.disabled = true;
+      installButton.textContent = ui('Preparando…', 'Preparing…');
+    }
+    if (settingsInstallButton) {
+      settingsInstallButton.disabled = true;
+      settingsInstallButton.textContent = ui('Preparando atualização…', 'Preparing update…');
+    }
+    updateUpdateSettingsUi();
     if (closeButton) closeButton.disabled = true;
     if (releaseButton) releaseButton.disabled = true;
     if (progressBar) {
@@ -341,11 +362,20 @@
     }
     if (progress) {
       progress.textContent = ui(
-        `Baixando, verificando e preparando ${data.asset_name}… Não feche a aplicação.`,
-        `Downloading, verifying and preparing ${data.asset_name}… Do not close the application.`
+        `Preparando o download de ${data.asset_name}…`,
+        `Preparing download of ${data.asset_name}…`
       );
     }
     $('#updateModal')?.classList.remove('hidden');
+    // Dá ao navegador uma oportunidade de pintar o estado "Preparando" antes do request longo.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    if (progress) {
+      progress.textContent = ui(
+        `Baixando, validando e preparando ${data.asset_name}… Não feche a aplicação.`,
+        `Downloading, validating and preparing ${data.asset_name}… Do not close the application.`
+      );
+    }
+    console.info('PT2VHF updater: instalação solicitada', data.asset_name, data.latest_version);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 180000);
@@ -361,6 +391,7 @@
         `v${result.version} verified. The installer was started and the application will restart.`
       ), 'ok');
     } catch (err) {
+      console.error('PT2VHF updater: falha ao baixar/instalar', err);
       if (progress) progress.textContent = err.message;
       toast(err.message, 'error');
       state.updateDownloading = false;
@@ -368,7 +399,14 @@
         progressBar.classList.add('hidden');
         progressBar.removeAttribute('value');
       }
-      if (installButton) installButton.disabled = false;
+      if (installButton) {
+        installButton.disabled = false;
+        installButton.textContent = ui('Baixar e instalar', 'Download and install');
+      }
+      if (settingsInstallButton) {
+        settingsInstallButton.disabled = false;
+        settingsInstallButton.textContent = ui('Baixar e instalar nova versão', 'Download and install new version');
+      }
       if (closeButton) closeButton.disabled = false;
       if (releaseButton) releaseButton.disabled = false;
       updateUpdateSettingsUi();
@@ -396,7 +434,7 @@
   });
   $('#updateInstallNow')?.addEventListener('click', () => void installLatestUpdate());
   $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
-  $('#openLatestReleaseButton')?.addEventListener('click', () => showUpdateModal());
+  $('#openLatestReleaseButton')?.addEventListener('click', () => void installLatestUpdate());
 
   async function showWhatsNewAfterUpdate() {
     try {
