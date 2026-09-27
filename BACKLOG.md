@@ -85,6 +85,24 @@
 
 ## Pendências para próximas versões
 
+- **Nova aba Sobre — autor, contato e divulgação do projeto**
+  - Criar uma nova aba superior **Sobre**.
+  - Apresentar uma breve descrição do autor/projeto, identificando **Alex, PT2VHF** como idealizador do PT2VHF APRS Client e radioamador responsável pelo projeto.
+  - Explicar de forma curta o objetivo da aplicação: oferecer um cliente APRS moderno, multiplataforma e voltado à visualização, mensagens, estatísticas e análise da rede.
+  - Exibir claramente o repositório oficial por meio do link curto **tiny.cc/aprs**.
+  - Incluir uma área **Contato / Sugestões / Dúvidas / Melhorias** com:
+    - **WhatsApp:** +55 61 98402-3634
+    - **E-mail:** alexpmr@gmail.com
+  - Tornar WhatsApp e e-mail clicáveis quando a plataforma permitir, abrindo o aplicativo/navegador apropriado.
+  - Adicionar um botão de divulgação, por exemplo **Divulgar PT2VHF APRS Client na rede APRS**.
+  - Ao clicar no botão, preparar um **Announcement APRS** com texto curto contendo o nome do cliente e **tiny.cc/aprs**.
+  - Exibir uma prévia completa do pacote/mensagem antes do envio e exigir **confirmação explícita** do usuário.
+  - O envio da divulgação deve ser sempre **manual**, sem transmissão automática ao iniciar o programa e sem repetição agressiva.
+  - Permitir editar o texto antes do envio, respeitando o limite aplicável a bulletins/announcements APRS.
+  - Usar o mecanismo APRS apropriado para divulgação coletiva, preferencialmente **Announcement/Bulletin**, em vez de mensagens individuais em massa.
+  - Registrar no Log quando uma divulgação for enviada, incluindo horário e conteúdo transmitido.
+  - Manter a aba visualmente consistente com a identidade oficial da aplicação e exibir a logo APRS oficial do projeto.
+
 - **Mapa — substituir Atividade por controles independentes de Topologia, Tracklog e Estações**
   - Remover da barra superior do **MAPA** o controle atual de **Atividade** e sua contagem associada.
   - Manter **Topologia observada** com chave liga/desliga e seletor de período.
