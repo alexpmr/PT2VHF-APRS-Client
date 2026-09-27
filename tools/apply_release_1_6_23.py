@@ -5,6 +5,28 @@ version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 if version != "1.6.23":
     raise SystemExit(f"v1.6.23 validation failed: VERSION={version!r}")
 
+# Consolida a identidade oficial depois dos patches legados da série 1.6.x.
+html_path = ROOT / "pt2vhf_aprs" / "templates" / "index.html"
+html = html_path.read_text(encoding="utf-8")
+html = html.replace("img/app_logo.svg", "img/aprs_logo_official.jpg")
+html = html.replace('type="image/svg+xml"', 'type="image/jpeg"')
+html_path.write_text(html, encoding="utf-8")
+
+windows_icon = ROOT / "windows" / "make_icon.py"
+icon_text = windows_icon.read_text(encoding="utf-8")
+icon_text = icon_text.replace("app_logo.png", "aprs_logo_official.jpg")
+windows_icon.write_text(icon_text, encoding="utf-8")
+
+windows_launcher = ROOT / "windows_app.py"
+launcher_text = windows_launcher.read_text(encoding="utf-8")
+launcher_text = launcher_text.replace('"app_logo.png"', '"aprs_logo_official.jpg"')
+windows_launcher.write_text(launcher_text, encoding="utf-8")
+
+tests_path = ROOT / "tests" / "test_core.py"
+tests = tests_path.read_text(encoding="utf-8")
+tests = tests.replace('assert "img/app_logo.svg" in html', 'assert "aprs_logo_official.jpg" in html')
+tests_path.write_text(tests, encoding="utf-8")
+
 checks = {
     "pt2vhf_aprs/__init__.py": [
         '__version__ = "1.6.23"',
