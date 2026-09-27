@@ -28,6 +28,7 @@
     topologyHours: 0,
     topologyLoadBusy: false,
     mapLegendElement: null,
+    mapLegendCollapsed: localStorage.getItem('pt2vhf_map_legend_collapsed') === '1',
     trafficReplayLayers: new Set(),
     queryTraceLayers: new Set(),
     queryPollers: new Map(),
@@ -695,13 +696,27 @@
     new TopologyControl().addTo(map);
   }
 
+  function syncMapLegendCollapsed() {
+    const root = state.mapLegendElement;
+    if (!root) return;
+    const body = root.querySelector('.map-legend-body');
+    const button = root.querySelector('.map-legend-toggle');
+    const collapsed = !!state.mapLegendCollapsed;
+    body?.classList.toggle('hidden', collapsed);
+    if (button) {
+      button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      button.textContent = collapsed ? `${ui('Legenda', 'Legend')} ▸` : `${ui('Legenda', 'Legend')} ▾`;
+      button.title = collapsed ? ui('Expandir legenda', 'Expand legend') : ui('Minimizar legenda', 'Minimize legend');
+    }
+  }
+
   function addMapLegendControl(map) {
     const LegendControl = L.Control.extend({
       options: { position: 'bottomleft' },
       onAdd() {
         const wrapper = L.DomUtil.create('div', 'leaflet-control map-line-legend');
         wrapper.innerHTML = `
-          <button type="button" class="map-legend-toggle" aria-expanded="true">${ui('Legenda', 'Legend')} ▾</button>
+          <button type="button" class="map-legend-toggle"></button>
           <div class="map-legend-body">
             <div class="map-legend-item" data-legend="track"><span class="legend-line"></span><span>${ui('Tracklog', 'Tracklog')}</span></div>
             <div class="map-legend-item" data-legend="rf"><span class="legend-line"></span><span>${ui('Enlace RF', 'RF link')}</span></div>
@@ -711,13 +726,13 @@
           </div>`;
         L.DomEvent.disableClickPropagation(wrapper);
         L.DomEvent.disableScrollPropagation(wrapper);
-        wrapper.querySelector('.map-legend-toggle')?.addEventListener('click', event => {
-          const body = wrapper.querySelector('.map-legend-body');
-          const expanded = !body.classList.toggle('hidden');
-          event.currentTarget.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          event.currentTarget.textContent = expanded ? `${ui('Legenda', 'Legend')} ▾` : `${ui('Legenda', 'Legend')} ▸`;
+        wrapper.querySelector('.map-legend-toggle')?.addEventListener('click', () => {
+          state.mapLegendCollapsed = !state.mapLegendCollapsed;
+          try { localStorage.setItem('pt2vhf_map_legend_collapsed', state.mapLegendCollapsed ? '1' : '0'); } catch (_) {}
+          syncMapLegendCollapsed();
         });
         state.mapLegendElement = wrapper;
+        syncMapLegendCollapsed();
         setTimeout(updateMapLegend, 0);
         return wrapper;
       }
@@ -3676,6 +3691,8 @@
     'Adicionar aos favoritos':'Add to favorites',
     'Remover dos favoritos':'Remove from favorites',
     'Legenda':'Legend',
+    'Minimizar legenda':'Minimize legend',
+    'Expandir legenda':'Expand legend',
     'Tracklog':'Tracklog',
     'Enlace RF':'RF link',
     'Via IGate/APRS-IS':'Via IGate/APRS-IS',
@@ -3771,6 +3788,7 @@
     translateDom(document.body);
     syncQuickLanguageButtons();
     syncLanguageFlag();
+    syncMapLegendCollapsed();
     refreshStatus();
     if (state.messages.length) renderMessages();
     if (state.stations.length) renderStations();
