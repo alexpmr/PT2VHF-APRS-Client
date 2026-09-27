@@ -95,6 +95,55 @@
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
 
+- **Mapa — painel lateral de estação**
+  - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
+  - Exibir Indicativo, última recepção, distância, software/dispositivo, posição, status, favorito, mensagens, Ping, Trace e estações ouvidas.
+  - Incluir atalhos para **Mostrar log**, **Enviar mensagem**, **Ping/ACK**, **Trace**, **Posição**, **Status** e histórico de queries.
+  - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
+  - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
+
+- **Mapa — consolidar controles na barra superior**
+  - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
+  - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
+  - Manter os controles menos usados em um menu **Mais ▾**, evitando poluir a barra.
+  - Garantir que nenhum controle volte a ficar sobreposto ao canvas do mapa ou à legenda.
+
+- **Busca rápida — localizar estação por indicativo**
+  - Adicionar campo de busca rápida por indicativo, com filtragem caractere por caractere.
+  - Aceitar indicativo completo ou parcial, incluindo SSID.
+  - Ao selecionar uma estação, abrir a aba **Mapa**, centralizar o marcador e aplicar um nível de zoom adequado.
+  - Integrar a seleção ao futuro painel lateral da estação.
+  - Priorizar favoritos e correspondências exatas nas sugestões.
+
+- **Estatísticas — qualidade da rede APRS**
+  - Adicionar painel específico de qualidade/saúde da rede observada.
+  - Exibir taxa de pacotes duplicados, tráfego **RF × APRS-IS**, estações únicas por hora/dia e distribuição por tipo de pacote.
+  - Incluir mensagens com ACK/sem ACK, RTT médio/mediano do Ping, estações novas no período e estações que deixaram de aparecer.
+  - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
+  - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
+
+- **Exportação — CSV, GeoJSON e KML**
+  - Adicionar botão **Exportar** nas áreas de Estatísticas e Mapa.
+  - Exportar estatísticas tabulares em **CSV** respeitando período e filtros ativos.
+  - Exportar estações, posições, tracklogs e enlaces em **GeoJSON** e/ou **KML**.
+  - Preservar timestamp, indicativo, origem do dado e atributos úteis para análise externa.
+  - Gerar arquivos compatíveis com Excel, QGIS e Google Earth sempre que aplicável.
+
+- **Estatísticas — comparação entre períodos**
+  - Permitir comparar o período atual com o período imediatamente anterior de mesma duração.
+  - Exemplos: **últimas 24 h × 24 h anteriores** e **últimos 7 dias × semana anterior**.
+  - Mostrar variação absoluta e percentual de estações ativas, mensagens, tráfego, enlaces, digipeaters e iGates.
+  - Destacar novos enlaces, estações novas e estações que desapareceram.
+  - Evitar apresentar variação percentual quando a base anterior for zero; nesse caso, indicar **novo** ou equivalente.
+
+- **Diagnóstico — saúde da aplicação e pacote de suporte**
+  - Criar uma área de diagnóstico em **Ajuda** ou seção própria.
+  - Exibir integridade do banco SQLite, tamanho do banco, estado da conexão APRS-IS, WebView, CPU, RAM, filas de mensagens, serviços/threads principais e espaço em disco.
+  - Adicionar botão **Gerar pacote de diagnóstico**.
+  - O pacote deve incluir logs e informações técnicas úteis, removendo ou mascarando dados sensíveis antes da geração.
+  - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
+  - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
+
 ## Consolidado na v1.6.17
 
 - Release completa multiplataforma baseada nas correções testadas até a v1.6.16.
