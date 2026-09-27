@@ -1766,6 +1766,10 @@
     $('#messageType').value = 'message';
     updateMessageComposerMode();
     $('#messageTo').value = destination;
+    if (state.groupMessages) {
+      state.selectedConversation = destination;
+      renderGroupedMessages();
+    }
     $('#messageText').focus();
   }
 
@@ -1818,7 +1822,15 @@
       return;
     }
 
-    if (!state.selectedConversation || !conversations.some(item => item.contact === state.selectedConversation)) {
+    const composerDestination = normalizedCall($('#messageTo')?.value);
+    const own = normalizedCall(state.ownCallsign);
+    const destinationConversation = composerDestination && (!own || composerDestination !== own)
+      ? conversations.find(item => item.contact === composerDestination)
+      : null;
+
+    if (composerDestination && (!own || composerDestination !== own)) {
+      state.selectedConversation = destinationConversation ? composerDestination : '';
+    } else if (!state.selectedConversation || !conversations.some(item => item.contact === state.selectedConversation)) {
       state.selectedConversation = conversations[0].contact;
     }
 
@@ -1836,7 +1848,17 @@
       </div>`;
     }).join('');
 
-    const selected = conversations.find(item => item.contact === state.selectedConversation) || conversations[0];
+    const selected = conversations.find(item => item.contact === state.selectedConversation);
+    if (!selected) {
+      const destination = normalizedCall($('#messageTo')?.value);
+      empty.textContent = destination
+        ? ui(`Novo destinatário: ${destination}. Ainda não há conversa registrada com este indicativo.`, `New recipient: ${destination}. There is no recorded conversation with this callsign yet.`)
+        : ui('Selecione uma conversa ou informe um destinatário.', 'Select a conversation or enter a recipient.');
+      empty.classList.remove('hidden');
+      content.classList.add('hidden');
+      return;
+    }
+
     empty.classList.add('hidden');
     content.classList.remove('hidden');
     recipientButton.textContent = selected.contact;
@@ -1963,6 +1985,23 @@
       event.preventDefault();
       event.target.closest('[data-conversation-contact]').click();
     }
+  });
+
+  $('#messageTo')?.addEventListener('input', () => {
+    if (!state.groupMessages) return;
+    const destination = normalizedCall($('#messageTo')?.value);
+    const conversations = conversationItems();
+    if (destination && conversations.some(item => item.contact === destination)) {
+      state.selectedConversation = destination;
+    } else if (destination) {
+      state.selectedConversation = '';
+    }
+    renderGroupedMessages();
+  });
+
+  $('#messageTo')?.addEventListener('change', () => {
+    if (!state.groupMessages) return;
+    renderGroupedMessages();
   });
 
   $('#conversationSortButton')?.addEventListener('click', () => {
