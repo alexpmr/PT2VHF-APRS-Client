@@ -4433,8 +4433,7 @@
       const name = item.friendly_name || item.identifier || ui('Não identificado', 'Unidentified');
       const ownClass = item.is_own_client || item.force_own_row ? ' class="client-version-own-row"' : '';
       return '<tr' + ownClass + '><td><strong>' + escapeHtml(rank) + '</strong></td><td>' +
-        '<span class="client-version-name">' + escapeHtml(name) + '</span>' +
-        '<span class="client-version-tocall">' + escapeHtml(item.identifier || '') + '</span></td><td>' +
+        '<span class="client-version-name">' + escapeHtml(name) + '</span></td><td>' +
         Number(item.stations || 0).toLocaleString(currentLocale()) + '</td><td>' +
         Number(item.percent || 0).toLocaleString(currentLocale(), {maximumFractionDigits:1}) + '%</td></tr>';
     };
