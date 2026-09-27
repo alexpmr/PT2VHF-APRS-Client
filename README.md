@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.7
+# PT2VHF APRS Client - v1.7.1
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7** inaugura a nova linha de versões e é uma release completa multiplataforma focada em usabilidade, internacionalização, segurança no envio de mensagens e melhorias visuais.
+A **v1.7.1** consolida a linha 1.7 com correções do atualizador, proteção contra tracklogs anômalos, controles independentes do Mapa, nova aba **Sobre**, divulgação APRS manual e novos alertas visuais.
 
 ## Downloads
 
@@ -38,6 +38,7 @@ Cada Release completa publica:
 - Botão **Restaurar configuração padrão** sem apagar mensagens, estações, logs ou tracklogs.
 - Chaveamento rápido de tema no cabeçalho.
 - Idiomas **Português** (padrão), **English**, **Español** e **Français**, com seletor rápido no topo e persistência da preferência.
+- A v1.7.1 amplia a cobertura de tradução de textos estáticos e dinâmicos e atualiza imediatamente as áreas dependentes do idioma.
 
 ### Identificação do próprio cliente
 - As transmissões geradas pelo aplicativo usam o TOCALL experimental **APZVHF**, reservado aqui para identificar o **PT2VHF APRS Client** enquanto não houver uma alocação oficial específica.
@@ -61,6 +62,8 @@ Cada Release completa publica:
 - Conversas agrupadas podem ser ordenadas **A → Z** ou **Z → A** clicando em **Conversas**.
 - Selecionar uma conversa preenche automaticamente o campo **Destino**, incluindo SSID; alterar o destinatário também sincroniza a conversa em foco, evitando divergência entre a conversa visível e o indicativo que receberá a mensagem.
 - Os botões **Agrupado por remetente**, **Minhas mensagens** e **Não lidas** são compactos e mantêm seus rótulos em uma linha.
+- Quando chega uma mensagem direta enquanto outra aba está aberta, a aba **Mensagens** fica destacada/pulsando até o usuário acessá-la.
+- Em **Estatísticas → Estações mais ativas**, o indicativo é clicável e abre Mensagens com o destinatário já preenchido para resposta rápida.
 - Mensagens longas são divididas sem `1/2`, `2/2` ou outros marcadores visíveis; as partes respeitam limites de palavra sempre que possível.
 - O controle interno continua mantendo identificação de grupo e status agregado, como **2/3 confirmadas** ou **Todas confirmadas**.
 - Retry individual de partes e retry automático configurável por timeout/número máximo de tentativas.
@@ -77,8 +80,9 @@ Cada Release completa publica:
 
 ### Mapa, Log e Estatísticas
 - OpenStreetMap, OpenTopoMap e Esri World Imagery.
-- Filtro de atividade no **Mapa**, com opções **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**. O filtro usa a última recepção/interação conhecida e também oculta o tracklog das estações fora da faixa.
-- Os controles **Atividade** e **Topologia observada** ficam em uma barra superior fora do canvas do mapa, evitando sobreposição.
+- A antiga área **Atividade** foi removida do Mapa. **Estações**, **Tracklog** e **Topologia observada** têm controles independentes de liga/desliga e período (**Completo, 1 h, 6 h, 24 h e 7 dias**), todos fora do canvas.
+- O **Histórico/Replay** passa a ser um controle contextual logo abaixo das abas e só aparece quando o **Mapa** está ativo.
+- Tracklogs ignoram saltos de posição incompatíveis com deslocamento realista; o backend preserva a última posição válida e o mapa também quebra linhas históricas em saltos anômalos/relocações.
 - A **Legenda** do Mapa pode ser minimizada/expandida; a preferência fica salva localmente para a próxima execução.
 - Tracklogs automáticos de estações móveis.
 - O popup da estação oferece **Mostrar log**, abrindo o Log já filtrado pelo indicativo/SSID.
@@ -99,6 +103,8 @@ Cada Release completa publica:
 - Em Configuração é possível habilitar respostas automáticas a queries de posição, status e trace. O padrão é desligado para evitar transmissões inesperadas.
 - O histórico de queries e respostas fica no banco local e é usado pelo diagnóstico do popup.
 - O popup exibe uma área **Resultado da última query** com status, resposta, RTT e caminho do Trace, além do botão **Ver histórico de queries**.
+
+- O indicador **Nova versão** pulsa quando há atualização disponível. O clique abre um modal persistente; a aplicação só encerra depois que o helper externo de atualização confirma que iniciou corretamente.
 
 ### Atualização integrada
 - **Verificar atualizações automaticamente** — habilitado por padrão e executado na abertura e depois a cada **5 minutos**.
@@ -179,3 +185,10 @@ O workflow oficial também gera SBOMs, inventários de licenças e o manual PDF 
 ---
 
 **Por Alex, PT2VHF**
+
+
+### Sobre e divulgação APRS
+- Nova aba **Sobre**, com apresentação de **Alex, PT2VHF**, objetivo do projeto, link **tiny.cc/aprs**, WhatsApp **+55 61 98402-3634** e e-mail **alexpmr@gmail.com**.
+- A aba acompanha o idioma corrente (**PT/EN/ES/FR**).
+- O botão de divulgação prepara um **Announcement APRS BLNA** usando o indicativo/SSID corrente como remetente, mostra prévia, permite edição e exige confirmação explícita.
+- O envio é manual e único; não existe repetição automática da divulgação.

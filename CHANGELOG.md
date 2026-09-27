@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.7.1 - 2026-09-27
+
+- Corrigido o atualizador integrado: a aplicação só é encerrada após o **helper externo confirmar que iniciou**; se o helper falhar, o programa permanece aberto e informa o erro.
+- O modal **Nova versão disponível** deixa de iniciar a instalação apenas pelo clique no indicador e permanece aberto durante o fluxo; **Depois** só fecha antes do início da atualização.
+- O indicador **Nova versão** passa a piscar/pulsar discretamente enquanto houver atualização pendente.
+- Adicionado filtro contra **saltos irreais de coordenadas**: posições incompatíveis com deslocamento plausível são rejeitadas sem substituir a última posição válida; três posições coerentes na nova região confirmam uma relocação.
+- O renderizador de tracklogs históricos também quebra o traçado em saltos extremos, evitando linhas falsas de centenas/milhares de quilômetros.
+- Removido o controle **Atividade** do Mapa. **Estações**, **Tracklog** e **Topologia observada** passam a ter liga/desliga e período independentes: Completo, 1 h, 6 h, 24 h e 7 dias.
+- O controle **Histórico** passa para uma barra contextual abaixo das abas e só aparece com a aba **Mapa** ativa.
+- A aba **Mensagens** passa a pulsar quando chega uma nova mensagem direta enquanto o usuário está em outra aba.
+- Em **Estatísticas → Estações mais ativas**, os indicativos passam a ser clicáveis e abrem Mensagens já com o destinatário preenchido.
+- Nova aba **Sobre**, com apresentação de Alex/PT2VHF, contatos, link **tiny.cc/aprs** e divulgação manual do projeto por **Announcement APRS BLNA**.
+- O Announcement usa o indicativo/SSID corrente como remetente, exibe prévia, permite edição, respeita 67 caracteres e exige confirmação explícita.
+- Ampliada a cobertura das traduções **Português, English, Español e Français**, incluindo áreas recentes e atualização imediata de conteúdo dinâmico.
+- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.7 - 2026-09-27
 
 - Inaugurada a linha **v1.7**; as próximas versões seguirão **v1.7.1, v1.7.2, v1.7.3...**.

@@ -917,13 +917,17 @@ def test_map_controls_are_above_map_not_overlaid():
     map_stage_pos = html.index('class="map-stage"')
     map_pos = html.index('id="map"')
     assert toolbar_pos < map_stage_pos < map_pos
-    assert html.count('id="mapStationAgeFilter"') == 1
+    assert html.count('id="mapStationAgeFilter"') == 0
+    assert html.count('id="stationsToggle"') == 1
+    assert html.count('id="stationsHours"') == 1
+    assert html.count('id="tracklogToggle"') == 1
+    assert html.count('id="tracklogHours"') == 1
     assert html.count('id="topologyToggle"') == 1
     assert html.count('id="topologyHours"') == 1
 
     assert "grid-template-rows: auto minmax(260px, 1fr) auto;" in css
     assert ".map-top-toolbar" in css
-    assert ".map-station-age-filter {\n  position: absolute;" not in css
+    assert ".map-station-age-filter" not in css
 
     assert "L.Control.extend" not in js[js.index("function addTopologyControl"):js.index("function syncMapLegendCollapsed")]
     assert "const toggle = $('#topologyToggle');" in js
@@ -996,4 +1000,130 @@ def test_v17_message_filter_buttons_are_compact():
     assert "#unreadMessagesButton" in css
     assert "min-height: 32px;" in css
     assert "white-space: nowrap;" in css
+
+def test_v171_aprs_announcement_packet():
+    packet, addressee, message_type, text = build_bulletin_packet(
+        source="PT2VHF-15",
+        text="PT2VHF APRS Client v1.7.1 - Download: tiny.cc/aprs",
+        bulletin_id="A",
+    )
+    assert packet == "PT2VHF-15>APZVHF,TCPIP*::BLNA     :PT2VHF APRS Client v1.7.1 - Download: tiny.cc/aprs"
+    assert addressee == "BLNA"
+    assert message_type == "announcement"
+    assert classify_message_type("BLNA") == "announcement"
+    assert len(text) <= 67
+
+
+def test_v171_rejects_implausible_position_jump_until_relocation_is_confirmed():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            base = {
+                "from": "PY2OUT-9", "format": "uncompressed",
+                "speed": 0.0, "course": 0, "altitude": 1000,
+                "symbol_table": "/", "symbol": ">", "comment": "Teste", "path": [], "raw": "x",
+            }
+            db.upsert_station({**base, "latitude": -15.80, "longitude": -47.90})
+            db.upsert_station({**base, "latitude": 51.5074, "longitude": -0.1278})
+            db.upsert_station({**base, "latitude": 51.5075, "longitude": -0.1277})
+
+            station = next(row for row in db.list_stations() if row["callsign"] == "PY2OUT-9")
+            assert abs(float(station["latitude"]) - (-15.80)) < 0.001
+            assert len([x for x in db.map_data()["tracks"] if x["callsign"] == "PY2OUT-9"]) == 1
+
+            # A terceira posição consecutiva coerente na nova região confirma uma relocação.
+            db.upsert_station({**base, "latitude": 51.5076, "longitude": -0.1276})
+            station = next(row for row in db.list_stations() if row["callsign"] == "PY2OUT-9")
+            assert abs(float(station["latitude"]) - 51.5076) < 0.001
+            assert len([x for x in db.map_data()["tracks"] if x["callsign"] == "PY2OUT-9"]) == 2
+    finally:
+        db.DB_PATH = original
+
+
+def test_v171_updater_requires_helper_readiness_before_exit():
+    root = Path(__file__).resolve().parent.parent
+    updater_source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert "HELPER_READY_FILE" in updater_source
+    assert "def _wait_for_helper_ready" in updater_source
+    assert "update_helper_start_failed" in updater_source
+    assert "A aplicação permanecerá aberta" in updater_source
+    assert updater_source.index("launch_pending_update(force=True)") < updater_source.index("_request_exit_after(delay=2.5)")
+    assert "if (state.updateDownloading)" in js
+    assert "showUpdateModal();" in js
+    assert "updateProgressBar" in js
+
+
+def test_v171_map_controls_are_independent_and_activity_is_removed():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert 'id="mapStationAgeFilter"' not in html
+    for control in ("stationsToggle", "stationsHours", "tracklogToggle", "tracklogHours", "topologyToggle", "topologyHours"):
+        assert f'id="{control}"' in html
+    assert "pt2vhf_stations_enabled" in js
+    assert "pt2vhf_tracklog_enabled" in js
+    assert "splitTrackSegments" in js
+    assert "distance >= 250" in js
+    assert "mapStationAgeFilter" not in js
+
+
+def test_v171_about_tab_and_manual_aprs_promotion():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    web = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+
+    assert 'data-tab="about"' in html
+    assert 'id="tab-about"' in html
+    assert "tiny.cc/aprs" in html
+    assert "+55 61 98402-3634" in html
+    assert "alexpmr@gmail.com" in html
+    assert "aboutPromoteButton" in html
+    assert "type:'announcement'" in js
+    assert "window.confirm(copy.confirm)" in js
+    assert "promotionPacketPreview" in js
+    assert '"announcement"' in web
+
+
+def test_v171_alerts_and_quick_message_links():
+    root = Path(__file__).resolve().parent.parent
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert ".tab.has-unread:not(.active)" in css
+    assert "messageTabPulse" in css
+    assert "messagesTab?.classList.toggle('has-unread'" in js
+    assert ".version-status.update" in css
+    assert "updateAvailablePulse" in css
+    assert "data-quick-message-callsign" in js
+    assert "openMessageComposer(link.dataset.quickMessageCallsign" in js
+
+
+def test_v171_history_is_contextual_to_map():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert 'id="mapContextBar"' in html
+    assert 'id="mapHistoryToggle"' in html
+    assert "state.activeTab === 'map'" in js
+    assert "pt2vhf_map_history_open" in js
+
+
+def test_v171_i18n_expands_recent_ui_in_all_languages():
+    root = Path(__file__).resolve().parent.parent
+    app = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    extra = (root / "pt2vhf_aprs" / "static" / "js" / "i18n_extra.js").read_text(encoding="utf-8")
+
+    for text in ("Sobre", "Anúncio geral", "Período das estações", "Período do tracklog", "Replay da Rede"):
+        assert text in app or text in extra
+    assert '"Sobre": "Acerca de"' in extra
+    assert '"Sobre": "À propos"' in extra
+    assert "EN_TEXT.get(trimmed)" in app
+    assert "renderAbout();" in app
 

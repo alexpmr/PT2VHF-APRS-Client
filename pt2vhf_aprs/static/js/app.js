@@ -8,7 +8,10 @@
     mapLoadBusy: false,
     mapLoadLastAt: 0,
     mapLoadQueued: false,
-    mapStationAgeFilter: 'all',
+    stationsEnabled: localStorage.getItem('pt2vhf_stations_enabled') !== '0',
+    stationsHours: Number(localStorage.getItem('pt2vhf_stations_hours') || 0),
+    tracklogEnabled: localStorage.getItem('pt2vhf_tracklog_enabled') !== '0',
+    tracklogHours: Number(localStorage.getItem('pt2vhf_tracklog_hours') || 0),
     mapKnownCallsigns: new Set(),
     mapVisibleCallsigns: new Set(),
     systemMetricsBusy: false,
@@ -96,6 +99,7 @@
     updateDownloading: false,
     versionCheckInProgress: false,
     messageSending: false,
+    mapHistoryOpen: localStorage.getItem('pt2vhf_map_history_open') === '1',
   };
 
   const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
@@ -117,7 +121,7 @@
   function translatedText(pt, en) {
     if (state.language === 'en') return en || pt;
     if (state.language === 'es' || state.language === 'fr') {
-      return EXTRA_I18N[state.language]?.[pt] || pt;
+      return EXTRA_I18N[state.language]?.[pt] || en || EN_TEXT?.get?.(pt) || pt;
     }
     return pt;
   }
@@ -254,8 +258,19 @@
         );
     $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
     const installButton = $('#updateInstallNow');
-    if (installButton) installButton.disabled = !ready;
-    $('#updateDownloadProgress').textContent = '';
+    if (installButton) installButton.disabled = !ready || state.updateDownloading;
+    const closeButton = $('#updateModalClose');
+    const releaseButton = $('#updateOpenRelease');
+    if (closeButton) closeButton.disabled = !!state.updateDownloading;
+    if (releaseButton) releaseButton.disabled = !!state.updateDownloading;
+    if (!state.updateDownloading) {
+      $('#updateDownloadProgress').textContent = '';
+      const bar = $('#updateProgressBar');
+      if (bar) {
+        bar.classList.add('hidden');
+        bar.removeAttribute('value');
+      }
+    }
     $('#updateModal').classList.remove('hidden');
   }
 
@@ -313,12 +328,21 @@
     state.updateDownloading = true;
     updateUpdateSettingsUi();
     const progress = $('#updateDownloadProgress');
+    const progressBar = $('#updateProgressBar');
     const installButton = $('#updateInstallNow');
+    const closeButton = $('#updateModalClose');
+    const releaseButton = $('#updateOpenRelease');
     if (installButton) installButton.disabled = true;
+    if (closeButton) closeButton.disabled = true;
+    if (releaseButton) releaseButton.disabled = true;
+    if (progressBar) {
+      progressBar.classList.remove('hidden');
+      progressBar.removeAttribute('value');
+    }
     if (progress) {
       progress.textContent = ui(
-        `Baixando e validando ${data.asset_name}…`,
-        `Downloading and verifying ${data.asset_name}…`
+        `Baixando, verificando e preparando ${data.asset_name}… Não feche a aplicação.`,
+        `Downloading, verifying and preparing ${data.asset_name}… Do not close the application.`
       );
     }
     $('#updateModal')?.classList.remove('hidden');
@@ -327,19 +351,26 @@
     const timeout = setTimeout(() => controller.abort(), 180000);
     try {
       const result = await api('/api/update/install', { method:'POST', signal:controller.signal });
+      if (progressBar) progressBar.value = 100;
       if (progress) progress.textContent = String(result.message || ui(
-        'Atualização pronta. Encerrando a versão atual…',
-        'Update ready. Closing the current version…'
+        'Atualização pronta. O instalador auxiliar foi confirmado e a aplicação será reiniciada…',
+        'Update ready. The updater helper was confirmed and the application will restart…'
       ));
       toast(ui(
-        `v${result.version} validada. A aplicação será reiniciada.`,
-        `v${result.version} verified. The application will restart.`
+        `v${result.version} validada. O instalador foi iniciado e a aplicação será reiniciada.`,
+        `v${result.version} verified. The installer was started and the application will restart.`
       ), 'ok');
     } catch (err) {
       if (progress) progress.textContent = err.message;
       toast(err.message, 'error');
       state.updateDownloading = false;
+      if (progressBar) {
+        progressBar.classList.add('hidden');
+        progressBar.removeAttribute('value');
+      }
       if (installButton) installButton.disabled = false;
+      if (closeButton) closeButton.disabled = false;
+      if (releaseButton) releaseButton.disabled = false;
       updateUpdateSettingsUi();
     } finally {
       clearTimeout(timeout);
@@ -348,10 +379,16 @@
 
   $('#versionStatus')?.addEventListener('click', e => {
     e.preventDefault();
-    if (state.updateInfo?.status === 'update_available') void installLatestUpdate();
+    if (state.updateInfo?.status === 'update_available') showUpdateModal();
     else refreshVersionStatus(true);
   });
-  $('#updateModalClose')?.addEventListener('click', () => $('#updateModal')?.classList.add('hidden'));
+  $('#updateModalClose')?.addEventListener('click', () => {
+    if (state.updateDownloading) {
+      toast(ui('A atualização está em andamento. Aguarde a conclusão.', 'The update is in progress. Please wait for it to finish.'), 'error');
+      return;
+    }
+    $('#updateModal')?.classList.add('hidden');
+  });
   $('#checkUpdatesNowButton')?.addEventListener('click', async () => {
     await refreshVersionStatus(true);
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
@@ -359,7 +396,7 @@
   });
   $('#updateInstallNow')?.addEventListener('click', () => void installLatestUpdate());
   $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
-  $('#openLatestReleaseButton')?.addEventListener('click', () => void installLatestUpdate());
+  $('#openLatestReleaseButton')?.addEventListener('click', () => showUpdateModal());
 
   async function showWhatsNewAfterUpdate() {
     try {
@@ -488,23 +525,224 @@
     });
   }
 
+  function currentAppVersion() {
+    return String($('.app-version')?.textContent || '').trim().replace(/^v/i, '') || '1.7.1';
+  }
+
+  function aboutCopy() {
+    const version = currentAppVersion();
+    const copies = {
+      'pt-BR': {
+        title: 'Sobre',
+        subtitle: 'Sobre o projeto, o autor e como contribuir com sugestões.',
+        author: 'Criado por Alex, PT2VHF, radioamador e idealizador do PT2VHF APRS Client.',
+        project: 'O PT2VHF APRS Client é um cliente APRS moderno e multiplataforma para mapa, mensagens, estatísticas e análise da rede.',
+        contactTitle: 'Contato / Sugestões / Dúvidas / Melhorias',
+        contact: 'Sugestões, dúvidas, relatos de problemas e ideias de melhoria são bem-vindos.',
+        promoteTitle: 'Divulgue o projeto na rede APRS',
+        promote: 'Você pode enviar manualmente um Announcement APRS para divulgar o cliente. A mensagem poderá ser revisada antes do envio.',
+        promoteButton: 'Divulgar PT2VHF APRS Client na rede APRS',
+        eyebrow: 'Divulgação APRS',
+        modalTitle: 'Enviar anúncio do PT2VHF APRS Client',
+        modalDescription: 'Revise a mensagem abaixo. O anúncio será transmitido uma única vez usando o seu indicativo corrente como remetente.',
+        messageLabel: 'Mensagem do Announcement',
+        send: 'Confirmar e enviar',
+        cancel: 'Cancelar',
+        confirm: 'Enviar este Announcement APRS agora? O remetente será o seu indicativo corrente.',
+        sent: 'Announcement do PT2VHF APRS Client enviado.',
+        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+      },
+      en: {
+        title: 'About',
+        subtitle: 'About the project, its author and how to contribute suggestions.',
+        author: 'Created by Alex, PT2VHF, amateur radio operator and creator of PT2VHF APRS Client.',
+        project: 'PT2VHF APRS Client is a modern cross-platform APRS client for maps, messaging, statistics and network analysis.',
+        contactTitle: 'Contact / Suggestions / Questions / Improvements',
+        contact: 'Suggestions, questions, bug reports and improvement ideas are welcome.',
+        promoteTitle: 'Promote the project on the APRS network',
+        promote: 'You can manually send an APRS Announcement to promote the client. The message can be reviewed before sending.',
+        promoteButton: 'Promote PT2VHF APRS Client on APRS',
+        eyebrow: 'APRS promotion',
+        modalTitle: 'Send PT2VHF APRS Client announcement',
+        modalDescription: 'Review the message below. The announcement will be sent once using your current callsign as sender.',
+        messageLabel: 'Announcement message',
+        send: 'Confirm and send',
+        cancel: 'Cancel',
+        confirm: 'Send this APRS Announcement now? Your current callsign will be used as sender.',
+        sent: 'PT2VHF APRS Client Announcement sent.',
+        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+      },
+      es: {
+        title: 'Acerca de',
+        subtitle: 'Sobre el proyecto, su autor y cómo aportar sugerencias.',
+        author: 'Creado por Alex, PT2VHF, radioaficionado e impulsor de PT2VHF APRS Client.',
+        project: 'PT2VHF APRS Client es un cliente APRS moderno y multiplataforma para mapas, mensajes, estadísticas y análisis de la red.',
+        contactTitle: 'Contacto / Sugerencias / Dudas / Mejoras',
+        contact: 'Son bienvenidas las sugerencias, dudas, informes de problemas e ideas de mejora.',
+        promoteTitle: 'Divulgar el proyecto en la red APRS',
+        promote: 'Puede enviar manualmente un Announcement APRS para divulgar el cliente. El mensaje puede revisarse antes del envío.',
+        promoteButton: 'Divulgar PT2VHF APRS Client en APRS',
+        eyebrow: 'Divulgación APRS',
+        modalTitle: 'Enviar anuncio de PT2VHF APRS Client',
+        modalDescription: 'Revise el mensaje. El anuncio se transmitirá una sola vez usando su indicativo actual como remitente.',
+        messageLabel: 'Mensaje del Announcement',
+        send: 'Confirmar y enviar',
+        cancel: 'Cancelar',
+        confirm: '¿Enviar este Announcement APRS ahora? Se usará su indicativo actual como remitente.',
+        sent: 'Announcement de PT2VHF APRS Client enviado.',
+        download: `PT2VHF APRS Client v${version} - Descarga: tiny.cc/aprs`,
+      },
+      fr: {
+        title: 'À propos',
+        subtitle: 'À propos du projet, de son auteur et des suggestions.',
+        author: 'Créé par Alex, PT2VHF, radioamateur et créateur de PT2VHF APRS Client.',
+        project: 'PT2VHF APRS Client est un client APRS moderne et multiplateforme pour la carte, les messages, les statistiques et l’analyse du réseau.',
+        contactTitle: 'Contact / Suggestions / Questions / Améliorations',
+        contact: 'Les suggestions, questions, signalements de problèmes et idées d’amélioration sont les bienvenus.',
+        promoteTitle: 'Promouvoir le projet sur le réseau APRS',
+        promote: 'Vous pouvez envoyer manuellement une annonce APRS pour promouvoir le client. Le message peut être vérifié avant l’envoi.',
+        promoteButton: 'Promouvoir PT2VHF APRS Client sur APRS',
+        eyebrow: 'Promotion APRS',
+        modalTitle: 'Envoyer une annonce PT2VHF APRS Client',
+        modalDescription: 'Vérifiez le message. L’annonce sera transmise une seule fois avec votre indicatif actuel comme expéditeur.',
+        messageLabel: 'Message de l’annonce',
+        send: 'Confirmer et envoyer',
+        cancel: 'Annuler',
+        confirm: 'Envoyer cette annonce APRS maintenant ? Votre indicatif actuel sera utilisé comme expéditeur.',
+        sent: 'Annonce PT2VHF APRS Client envoyée.',
+        download: `PT2VHF APRS Client v${version} - Téléchargement: tiny.cc/aprs`,
+      },
+    };
+    return copies[state.language] || copies['pt-BR'];
+  }
+
+  function promotionPacketPreview(text = '') {
+    const source = normalizedCall(state.ownCallsign) || 'NOCALL';
+    return `${source}>APZVHF,TCPIP*::BLNA     :${String(text || '').slice(0, 67)}`;
+  }
+
+  function updatePromotionPreview() {
+    const input = $('#promotionMessageText');
+    if (!input) return;
+    const text = String(input.value || '').slice(0, 67);
+    $('#promotionCharCount').textContent = `${text.length} / 67`;
+    $('#promotionPacketPreview').textContent = promotionPacketPreview(text);
+  }
+
+  function renderAbout() {
+    const copy = aboutCopy();
+    if ($('#aboutTitle')) $('#aboutTitle').textContent = copy.title;
+    if ($('#aboutSubtitle')) $('#aboutSubtitle').textContent = copy.subtitle;
+    if ($('#aboutAuthorText')) $('#aboutAuthorText').textContent = copy.author;
+    if ($('#aboutProjectText')) $('#aboutProjectText').textContent = copy.project;
+    if ($('#aboutContactTitle')) $('#aboutContactTitle').textContent = copy.contactTitle;
+    if ($('#aboutContactText')) $('#aboutContactText').textContent = copy.contact;
+    if ($('#aboutPromoteTitle')) $('#aboutPromoteTitle').textContent = copy.promoteTitle;
+    if ($('#aboutPromoteText')) $('#aboutPromoteText').textContent = copy.promote;
+    if ($('#aboutPromoteButton')) $('#aboutPromoteButton').textContent = copy.promoteButton;
+    if (!$('#promotionModal')?.classList.contains('hidden')) {
+      $('#promotionEyebrow').textContent = copy.eyebrow;
+      $('#promotionModalTitle').textContent = copy.modalTitle;
+      $('#promotionModalDescription').textContent = copy.modalDescription;
+      $('#promotionMessageLabel').textContent = copy.messageLabel;
+      $('#promotionSendButton').textContent = copy.send;
+      $('#promotionCancelButton').textContent = copy.cancel;
+      const input = $('#promotionMessageText');
+      if (input && !input.dataset.userEdited) input.value = copy.download;
+      updatePromotionPreview();
+    }
+  }
+
+  function openPromotionModal() {
+    const copy = aboutCopy();
+    $('#promotionEyebrow').textContent = copy.eyebrow;
+    $('#promotionModalTitle').textContent = copy.modalTitle;
+    $('#promotionModalDescription').textContent = copy.modalDescription;
+    $('#promotionMessageLabel').textContent = copy.messageLabel;
+    $('#promotionSendButton').textContent = copy.send;
+    $('#promotionCancelButton').textContent = copy.cancel;
+    const input = $('#promotionMessageText');
+    if (input) {
+      input.dataset.userEdited = '';
+      input.value = copy.download.slice(0, 67);
+    }
+    updatePromotionPreview();
+    $('#promotionModal')?.classList.remove('hidden');
+  }
+
+  $('#aboutPromoteButton')?.addEventListener('click', openPromotionModal);
+  $('#promotionCancelButton')?.addEventListener('click', () => $('#promotionModal')?.classList.add('hidden'));
+  $('#promotionMessageText')?.addEventListener('input', event => {
+    event.target.dataset.userEdited = '1';
+    updatePromotionPreview();
+  });
+  $('#promotionSendButton')?.addEventListener('click', async () => {
+    const copy = aboutCopy();
+    const message = String($('#promotionMessageText')?.value || '').trim().slice(0, 67);
+    if (!message) {
+      toast(ui('Informe o texto do anúncio.', 'Enter the announcement text.'), 'error');
+      return;
+    }
+    if (!window.confirm(copy.confirm)) return;
+    const button = $('#promotionSendButton');
+    if (button) button.disabled = true;
+    try {
+      await api('/api/messages/send', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'announcement', bulletin_id:'A', message })
+      });
+      $('#promotionModal')?.classList.add('hidden');
+      toast(copy.sent, 'ok');
+      void loadMessages({ scrollToNewest:true });
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+
+  function syncMapContextBar() {
+    const visible = state.activeTab === 'map';
+    $('#mapContextBar')?.classList.toggle('hidden', !visible);
+    document.body.classList.toggle('map-context-visible', visible);
+    const panel = $('.map-traffic-panel');
+    const button = $('#mapHistoryToggle');
+    if (panel) panel.classList.toggle('hidden', !visible || !state.mapHistoryOpen);
+    if (button) {
+      button.classList.toggle('active-filter', state.mapHistoryOpen);
+      button.setAttribute('aria-expanded', state.mapHistoryOpen ? 'true' : 'false');
+      button.textContent = ui('Histórico', 'History');
+    }
+  }
+
   function activateTab(tab) {
     state.activeTab = tab;
     $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+    syncMapContextBar();
     if (tab === 'map') {
       setTimeout(() => state.map?.invalidateSize(), 30);
       void loadMapData();
       void pollTrafficEvents();
     }
     if (tab === 'messages') {
+      $('.tab[data-tab="messages"]')?.classList.remove('has-unread');
       loadMessages({ scrollToNewest: true });
     }
     if (tab === 'stations') loadStations({ scrollToNewest: true });
     if (tab === 'log') loadLog(true);
     if (tab === 'analysis') refreshTopologyAnalysis();
     if (tab === 'config') loadConfig();
+    if (tab === 'about') renderAbout();
   }
+
+  $('#mapHistoryToggle')?.addEventListener('click', () => {
+    state.mapHistoryOpen = !state.mapHistoryOpen;
+    localStorage.setItem('pt2vhf_map_history_open', state.mapHistoryOpen ? '1' : '0');
+    syncMapContextBar();
+    setTimeout(() => state.map?.invalidateSize(), 30);
+  });
 
   function tabSetup() {
     $$('.tab').forEach(btn => btn.addEventListener('click', () => {
@@ -627,6 +865,7 @@
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
+    addMapVisibilityControls();
     addTopologyControl(state.map);
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
@@ -664,6 +903,60 @@
     if (Number(hours) === 0) return ui('Completo', 'Complete');
     if (Number(hours) === 168) return ui('7 dias', '7 days');
     return `${Number(hours)} h`;
+  }
+
+  function addMapVisibilityControls() {
+    state.stationsHours = topologyPeriodValue(state.stationsHours);
+    state.tracklogHours = topologyPeriodValue(state.tracklogHours);
+
+    const stationsToggle = $('#stationsToggle');
+    const stationsHours = $('#stationsHours');
+    const trackToggle = $('#tracklogToggle');
+    const trackHours = $('#tracklogHours');
+
+    if (stationsToggle) stationsToggle.checked = !!state.stationsEnabled;
+    if (stationsHours) stationsHours.value = String(state.stationsHours);
+    if (trackToggle) trackToggle.checked = !!state.tracklogEnabled;
+    if (trackHours) trackHours.value = String(state.tracklogHours);
+
+    if (stationsToggle && stationsToggle.dataset.bound !== '1') {
+      stationsToggle.dataset.bound = '1';
+      stationsToggle.addEventListener('change', async () => {
+        state.stationsEnabled = stationsToggle.checked;
+        localStorage.setItem('pt2vhf_stations_enabled', state.stationsEnabled ? '1' : '0');
+        await loadMapData();
+      });
+    }
+    if (stationsHours && stationsHours.dataset.bound !== '1') {
+      stationsHours.dataset.bound = '1';
+      stationsHours.addEventListener('change', async () => {
+        state.stationsHours = topologyPeriodValue(stationsHours.value);
+        localStorage.setItem('pt2vhf_stations_hours', String(state.stationsHours));
+        await loadMapData();
+      });
+    }
+    if (trackToggle && trackToggle.dataset.bound !== '1') {
+      trackToggle.dataset.bound = '1';
+      trackToggle.addEventListener('change', async () => {
+        state.tracklogEnabled = trackToggle.checked;
+        localStorage.setItem('pt2vhf_tracklog_enabled', state.tracklogEnabled ? '1' : '0');
+        if (!state.tracklogEnabled) {
+          for (const line of state.trackLines.values()) state.map?.removeLayer(line);
+          state.trackLines.clear();
+        } else {
+          await loadMapData();
+        }
+        updateMapLegend();
+      });
+    }
+    if (trackHours && trackHours.dataset.bound !== '1') {
+      trackHours.dataset.bound = '1';
+      trackHours.addEventListener('change', async () => {
+        state.tracklogHours = topologyPeriodValue(trackHours.value);
+        localStorage.setItem('pt2vhf_tracklog_hours', String(state.tracklogHours));
+        await loadMapData();
+      });
+    }
   }
 
   function addTopologyControl(_map) {
@@ -769,6 +1062,7 @@
       replay.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width + 1)}px`;
       replay.style.borderTopStyle = 'dashed';
     }
+    root.querySelector('[data-legend="track"]')?.classList.toggle('legend-muted', !state.tracklogEnabled);
     root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
     root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
     const packetAnimating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
@@ -790,13 +1084,6 @@
       const active = new Set();
 
       for (const edge of edges) {
-        if ((state.mapStationAgeFilter || 'all') !== 'all') {
-          const source = normalizedCall(edge.source);
-          const target = normalizedCall(edge.target);
-          const sourceHidden = state.mapKnownCallsigns.has(source) && !state.mapVisibleCallsigns.has(source);
-          const targetHidden = state.mapKnownCallsigns.has(target) && !state.mapVisibleCallsigns.has(target);
-          if (sourceHidden || targetHidden) continue;
-        }
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
         const points = [
@@ -975,28 +1262,62 @@
     return Number.isFinite(ms) ? ms : null;
   }
 
-  function mapStationMatchesAge(station) {
-    const mode = state.mapStationAgeFilter || 'all';
-    if (mode === 'all') return true;
-    const heard = stationLastHeardMs(station);
-    if (!Number.isFinite(heard)) return false;
-    const age = Math.max(0, Date.now() - heard);
-    const h2 = 2 * 60 * 60 * 1000;
-    const h24 = 24 * 60 * 60 * 1000;
-    if (mode === 'lt2') return age < h2;
-    if (mode === '2to24') return age >= h2 && age < h24;
-    if (mode === 'gt24') return age >= h24;
-    return true;
+  function timestampWithinHours(value, hours) {
+    const period = topologyPeriodValue(hours);
+    if (period === 0) return true;
+    const ms = stationLastHeardMs({ last_heard: value });
+    if (!Number.isFinite(ms)) return false;
+    return Math.max(0, Date.now() - ms) <= period * 60 * 60 * 1000;
   }
 
-  function updateMapStationAgeCount(visible, total) {
-    const el = $('#mapStationAgeCount');
-    if (!el) return;
-    if ((state.mapStationAgeFilter || 'all') === 'all') {
-      el.textContent = ui(`${total} estações`, `${total} stations`);
-    } else {
-      el.textContent = ui(`${visible} de ${total} estações`, `${visible} of ${total} stations`);
+  function stationMatchesMapPeriod(station) {
+    return !!state.stationsEnabled && timestampWithinHours(station?.last_heard, state.stationsHours);
+  }
+
+  function trackMatchesMapPeriod(track) {
+    return !!state.tracklogEnabled && timestampWithinHours(track?.timestamp, state.tracklogHours);
+  }
+
+  function mapDistanceKm(a, b) {
+    const lat1 = Number(a?.latitude), lon1 = Number(a?.longitude);
+    const lat2 = Number(b?.latitude), lon2 = Number(b?.longitude);
+    if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return 0;
+    const r = 6371.0088;
+    const rad = value => value * Math.PI / 180;
+    const p1 = rad(lat1), p2 = rad(lat2);
+    const dp = rad(lat2 - lat1), dl = rad(lon2 - lon1);
+    const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    return r * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(Math.max(0, 1 - h)));
+  }
+
+  function splitTrackSegments(rows) {
+    const segments = [];
+    let current = [];
+    let previous = null;
+    for (const row of rows) {
+      const lat = Number(row.latitude), lon = Number(row.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+      let split = false;
+      if (previous) {
+        const distance = mapDistanceKm(previous, row);
+        const prevMs = stationLastHeardMs({ last_heard: previous.timestamp });
+        const nowMs = stationLastHeardMs({ last_heard: row.timestamp });
+        const elapsedHours = Number.isFinite(prevMs) && Number.isFinite(nowMs)
+          ? Math.max((nowMs - prevMs) / 3600000, 1 / 3600)
+          : 0;
+        const impliedSpeed = elapsedHours > 0 ? distance / elapsedHours : 0;
+        // Never draw a giant connecting line across a relocation or a corrupt position.
+        split = distance >= 250 || (distance >= 75 && elapsedHours > 0 && impliedSpeed > 1200);
+      }
+      if (split) {
+        if (current.length >= 2) segments.push(current);
+        current = [];
+      }
+      current.push([lat, lon]);
+      previous = row;
     }
+    if (current.length >= 2) segments.push(current);
+    return segments;
   }
 
   async function loadMapData() {
@@ -1006,11 +1327,11 @@
     try {
       const data = await api('/api/map-data');
       const allStations = Array.isArray(data.stations) ? data.stations : [];
-      const visibleStations = allStations.filter(mapStationMatchesAge);
-      state.mapKnownCallsigns = new Set(allStations.map(s => normalizedCall(s.callsign)).filter(Boolean));
-      state.mapVisibleCallsigns = new Set(visibleStations.map(s => normalizedCall(s.callsign)).filter(Boolean));
-      updateMapStationAgeCount(visibleStations.length, allStations.length);
-      const activeStations = new Set(visibleStations.map(s => s.callsign));
+      const visibleStations = allStations.filter(stationMatchesMapPeriod);
+      state.mapKnownCallsigns = new Set(allStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
+      state.mapVisibleCallsigns = new Set(visibleStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
+
+      const activeStations = new Set(visibleStations.map(station => station.callsign));
       for (const [call, marker] of state.markers) {
         if (!activeStations.has(call)) {
           state.map.removeLayer(marker);
@@ -1018,49 +1339,55 @@
         }
       }
 
-      for (const s of visibleStations) {
-        const latlng = [Number(s.latitude), Number(s.longitude)];
+      for (const station of visibleStations) {
+        const latlng = [Number(station.latitude), Number(station.longitude)];
         if (!Number.isFinite(latlng[0]) || !Number.isFinite(latlng[1])) continue;
-        let marker = state.markers.get(s.callsign);
+        let marker = state.markers.get(station.callsign);
         if (!marker) {
-          marker = L.marker(latlng, { icon: markerIcon(s), title: s.callsign }).addTo(state.map);
-          state.markers.set(s.callsign, marker);
+          marker = L.marker(latlng, { icon: markerIcon(station), title: station.callsign }).addTo(state.map);
+          state.markers.set(station.callsign, marker);
         } else {
-          marker.setLatLng(latlng).setIcon(markerIcon(s));
+          marker.setLatLng(latlng).setIcon(markerIcon(station));
         }
-        marker.bindPopup(popupHtml(s), { maxWidth: 520 });
-        if (marker._pt2vhfQueryPopupHandler) {
-          marker.off('popupopen', marker._pt2vhfQueryPopupHandler);
-        }
-        marker._pt2vhfQueryPopupHandler = () => { void loadStationQueryHistory(s.callsign, false); };
+        marker.bindPopup(popupHtml(station), { maxWidth: 520 });
+        if (marker._pt2vhfQueryPopupHandler) marker.off('popupopen', marker._pt2vhfQueryPopupHandler);
+        marker._pt2vhfQueryPopupHandler = () => { void loadStationQueryHistory(station.callsign, false); };
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
       const grouped = new Map();
-      for (const t of data.tracks) {
-        if (!state.mapVisibleCallsigns.has(normalizedCall(t.callsign))) continue;
-        if (!grouped.has(t.callsign)) grouped.set(t.callsign, []);
-        grouped.get(t.callsign).push([Number(t.latitude), Number(t.longitude)]);
+      if (state.tracklogEnabled) {
+        for (const track of (Array.isArray(data.tracks) ? data.tracks : [])) {
+          if (!trackMatchesMapPeriod(track)) continue;
+          if (!grouped.has(track.callsign)) grouped.set(track.callsign, []);
+          grouped.get(track.callsign).push(track);
+        }
       }
+
+      const drawable = new Map();
+      for (const [call, rows] of grouped) {
+        const segments = splitTrackSegments(rows);
+        if (segments.length) drawable.set(call, segments);
+      }
+
       for (const [call, line] of state.trackLines) {
-        if (!grouped.has(call)) {
+        if (!drawable.has(call)) {
           state.map.removeLayer(line);
           state.trackLines.delete(call);
         }
       }
 
-      for (const [call, points] of grouped) {
-        if (points.length < 2) continue;
+      for (const [call, segments] of drawable) {
         let line = state.trackLines.get(call);
         if (!line) {
-          line = L.polyline(points, {
+          line = L.polyline(segments, {
             color: state.mapConfig.track_color,
             weight: state.mapConfig.track_width,
             opacity: .78
           }).addTo(state.map);
           state.trackLines.set(call, line);
         } else {
-          line.setLatLngs(points);
+          line.setLatLngs(segments);
           line.setStyle({
             color: state.mapConfig.track_color,
             weight: state.mapConfig.track_width,
@@ -1068,6 +1395,7 @@
           });
         }
       }
+      updateMapLegend();
       if (state.topologyEnabled) await loadTopology();
     } catch (err) {
       console.warn(err);
@@ -2110,6 +2438,7 @@
       state.messageAlertBaselineReady = false;
       state.lastAlertedMessageId = 0;
       $('#messageBadge')?.classList.add('hidden');
+      $('.tab[data-tab="messages"]')?.classList.remove('has-unread');
       toast(`Histórico de mensagens limpo (${Number(result.deleted || 0)} registro(s)).`, 'ok');
     } catch (err) {
       toast(err.message, 'error');
@@ -2379,10 +2708,7 @@
 
   function openMessageComposer(destination = '') {
     $('.tab[data-tab="messages"]')?.click();
-    $('#messageType').value = 'message';
-    updateMessageComposerMode();
-    $('#messageTo').value = normalizedCall(destination);
-    $('#messageText').focus();
+    selectMessageRecipient(destination);
   }
 
   document.addEventListener('click', e => {
@@ -2449,16 +2775,25 @@
     const type = $('#messageType').value;
     const isMessage = type === 'message';
     const isGroup = type === 'group_bulletin';
+    const isAnnouncement = type === 'announcement';
 
     $('#messageDestinationField').classList.toggle('hidden', !isMessage);
-    $('#bulletinIdField').classList.toggle('hidden', isMessage);
+    $('#bulletinIdField').classList.toggle('hidden', isMessage || isAnnouncement);
     $('#bulletinGroupField').classList.toggle('hidden', !isGroup);
 
     const messageInput = $('#messageText');
     if (isMessage) messageInput.removeAttribute('maxlength');
     else messageInput.maxLength = 67;
-    messageInput.placeholder = isMessage ? 'Digite a mensagem APRS; textos longos serão enviados em partes' : 'Digite o texto do boletim APRS';
-    $('#sendMessageButton').textContent = isMessage ? 'Enviar' : 'Enviar boletim';
+    messageInput.placeholder = isMessage
+      ? ui('Digite a mensagem APRS; textos longos serão enviados em partes', 'Type the APRS message; long texts will be sent in parts')
+      : isAnnouncement
+        ? ui('Digite o texto do anúncio APRS', 'Type the APRS announcement text')
+        : ui('Digite o texto do boletim APRS', 'Type the APRS bulletin text');
+    $('#sendMessageButton').textContent = isMessage
+      ? ui('Enviar', 'Send')
+      : isAnnouncement
+        ? ui('Enviar anúncio', 'Send announcement')
+        : ui('Enviar boletim', 'Send bulletin');
     updateMessageCharCounter();
   }
 
@@ -2470,7 +2805,7 @@
     const type = $('#messageType').value;
     const to = $('#messageTo').value.trim().toUpperCase();
     const message = $('#messageText').value.trim();
-    const bulletinId = $('#bulletinId').value;
+    const bulletinId = type === 'announcement' ? 'A' : $('#bulletinId').value;
     const group = $('#bulletinGroup').value.trim().toUpperCase();
 
     if (!message) return toast('Informe a mensagem.', 'error');
@@ -2501,7 +2836,12 @@
             : ui('Mensagem colocada na fila de transmissão.', 'Message queued for transmission.'), 'ok');
         }
       } else {
-        toast('Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
+        toast(
+          result.type === 'announcement'
+            ? ui('Anúncio enviado ao APRS-IS sem solicitação de ACK.', 'Announcement sent to APRS-IS without ACK request.')
+            : ui('Boletim enviado ao APRS-IS sem solicitação de ACK.', 'Bulletin sent to APRS-IS without ACK request.'),
+          'ok'
+        );
       }
       void loadMessages({ scrollToNewest:true });
     } catch (err) {
@@ -2577,6 +2917,8 @@
         badge.textContent = unreadCount;
         badge.classList.toggle('hidden', unreadCount <= 0);
       }
+      const messagesTab = $('.tab[data-tab="messages"]');
+      messagesTab?.classList.toggle('has-unread', unreadCount > 0 && state.activeTab !== 'messages');
       if (!state.messageAlertBaselineReady) {
         state.lastAlertedMessageId = latest;
         state.messageAlertBaselineReady = true;
@@ -2672,9 +3014,11 @@
   function updateUnread() {
     const unread = state.messages.filter(isUnreadPersonalMessage).length;
     const badge = $('#messageBadge');
-    if (!badge) return;
-    badge.textContent = unread;
-    badge.classList.toggle('hidden', unread <= 0);
+    if (badge) {
+      badge.textContent = unread;
+      badge.classList.toggle('hidden', unread <= 0);
+    }
+    $('.tab[data-tab="messages"]')?.classList.toggle('has-unread', unread > 0 && state.activeTab !== 'messages');
   }
 
   function markMessagesSeen() {
@@ -3765,6 +4109,85 @@
     'Caminho incompleto: há nós sem posição conhecida.':'Incomplete path: some nodes have no known position.'
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
+  Object.entries({
+    'Sobre':'About',
+    'Histórico':'History',
+    'Tracklog':'Tracklog',
+    'Período das estações':'Station period',
+    'Período do tracklog':'Tracklog period',
+    'Período da topologia':'Topology period',
+    'Anúncio geral':'General announcement',
+    'Enviar anúncio':'Send announcement',
+    'Digite o texto do anúncio APRS':'Type the APRS announcement text',
+    'Replay da Rede':'Network Replay',
+    'Volte no tempo e acompanhe os pacotes pelos enlaces observados.':'Go back in time and follow packets across observed links.',
+    'Parado':'Stopped',
+    'Até':'To',
+    'Aplicar intervalo':'Apply range',
+    'Usar período das Estatísticas':'Use Statistics period',
+    'Modo':'Mode',
+    'Ao vivo':'Live',
+    'Histórico':'History',
+    'reproduzidos':'played',
+    'pendentes':'pending',
+    'Horário:':'Time:',
+    'Velocidade:':'Speed:',
+    'Selecione uma conversa para abrir o histórico.':'Select a conversation to open its history.',
+    'Enter = enviar · Shift+Enter = nova linha':'Enter = send · Shift+Enter = new line',
+    'Tráfego bruto TNC2 recebido e transmitido. O passcode da autenticação é mascarado.':'Raw TNC2 traffic received and transmitted. The authentication passcode is masked.',
+    'Dir.':'Dir.',
+    'Tráfego APRS-IS':'APRS-IS traffic',
+    'Indicadores e estatísticas da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Indicators and statistics for observed APRS-IS topology, with historical comparison and map replay.',
+    'Clique em Atualizar estatísticas.':'Click Refresh statistics.',
+    'Campos marcados como Obrigatório precisam ser preenchidos antes de conectar ao APRS-IS.':'Fields marked Required must be completed before connecting to APRS-IS.',
+    'Obrigatório. O passcode APRS-IS será calculado automaticamente.':'Required. The APRS-IS passcode will be calculated automatically.',
+    'Formato das coordenadas':'Coordinate format',
+    'Informe a altitude real da estação sempre que possível.':'Enter the station’s real altitude whenever possible.',
+    'Somente estações brasileiras (padrão)':'Brazilian stations only (default)',
+    'Centro radial — Latitude':'Radial center — Latitude',
+    'Centro radial — Longitude':'Radial center — Longitude',
+    'Área geográfica opcional':'Optional geographic area',
+    'Norte':'North',
+    'Oeste':'West',
+    'Sul':'South',
+    'Leste':'East',
+    'Retry de mensagem após (segundos)':'Retry message after (seconds)',
+    'Máximo de retries por parte':'Maximum retries per part',
+    'Tocar sinal sonoro quando uma estação transmitir':'Play a sound when a station transmits',
+    'Destacar em vermelho a estação que acabou de transmitir':'Highlight the station that just transmitted in red',
+    'Logs':'Logs',
+    'Negrito':'Bold',
+    'Espaçamento entre linhas':'Line spacing',
+    'Aguardando verificação.':'Waiting for check.',
+    'Baixar e instalar nova versão':'Download and install new version',
+    'Restaurar configuração padrão':'Restore default configuration',
+    'Salvar configuração':'Save configuration',
+    'Alterações ainda não salvas serão indicadas ao sair desta aba.':'Unsaved changes will be indicated when leaving this tab.',
+    'Atualização do aplicativo':'Application update',
+    'Nova versão disponível':'New version available',
+    'Baixar e instalar':'Download and install',
+    'Ver Release':'View Release',
+    'Depois':'Later',
+    'Animação do tráfego APRS':'APRS traffic animation',
+    'Pacote em movimento':'Moving packet',
+    'Animação temporal':'Timeline replay',
+    'Estações mais ativas':'Most active stations',
+    'Digipeaters mais utilizados':'Most used digipeaters',
+    'IGates mais ativos':'Most active IGates',
+    'Enlaces que deixaram de aparecer':'Links no longer seen',
+    'Atualizar estatísticas':'Refresh statistics',
+    'Período':'Period',
+    'Software / dispositivo':'Software / device',
+    'Não identificado':'Unidentified',
+    'Restaurar padrão':'Restore default',
+    'Tamanho da fonte':'Font size',
+    'Ver histórico de queries':'View query history',
+    'Ocultar histórico':'Hide history',
+    'Resultado da última query':'Latest query result',
+    'Nenhuma query registrada para esta estação.':'No query is recorded for this station.',
+    'Nenhuma query executada recentemente para esta estação.':'No query has been run recently for this station.'
+  }).forEach(([key, value]) => EN_TEXT.set(key, value));
+
   const LANGUAGE_META = {
     'pt-BR': { label: 'Português', flag: '/static/img/flag_br.svg', alt: 'Brasil', htmlLang: 'pt-BR' },
     en: { label: 'English', flag: '/static/img/flag_england.svg', alt: 'England', htmlLang: 'en' },
@@ -3800,7 +4223,7 @@
       if (!trimmed) continue;
       const translated = state.language === 'en'
         ? EN_TEXT.get(trimmed)
-        : EXTRA_I18N[state.language]?.[trimmed];
+        : (EXTRA_I18N[state.language]?.[trimmed] || EN_TEXT.get(trimmed));
       const chosen = state.language === 'pt-BR' ? trimmed : (translated || trimmed);
       const lead = original.match(/^\s*/)?.[0] || '';
       const trail = original.match(/\s*$/)?.[0] || '';
@@ -3816,7 +4239,7 @@
         const original = el.dataset[key];
         const translated = state.language === 'en'
           ? EN_TEXT.get(original)
-          : EXTRA_I18N[state.language]?.[original];
+          : (EXTRA_I18N[state.language]?.[original] || EN_TEXT.get(original));
         el.setAttribute(attr, state.language === 'pt-BR' ? original : (translated || original));
       }
     }
@@ -3863,9 +4286,15 @@
     syncQuickLanguageButtons();
     syncLanguageFlag();
     syncMapLegendCollapsed();
+    syncMapContextBar();
+    renderAbout();
+    updateMessageComposerMode();
+    updateUpdateSettingsUi();
     refreshStatus();
     if (state.messages.length) renderMessages();
     if (state.stations.length) renderStations();
+    if (state.activeTab === 'analysis') void refreshTopologyAnalysis();
+    if (!$('#updateModal')?.classList.contains('hidden')) showUpdateModal();
   }
 
   async function setQuickLanguage(language) {
@@ -4543,7 +4972,7 @@
       box.innerHTML =
         '<div class="topology-stat-group"><h4>' + ui('Estações mais ativas', 'Most active stations') + '</h4>' +
         '<div class="hint">' + ui('Tráfego útil por estação; telemetria, iGates e digipeaters não entram neste ranking.', 'Useful traffic by station; telemetry, iGates and digipeaters are excluded from this ranking.') + '</div>' +
-        list(data.active_stations || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
+        list(data.active_stations || [], x => `<li><button type="button" class="callsign-link callsign-quick-message" data-quick-message-callsign="${escapeHtml(x.callsign)}">${escapeHtml(x.callsign)}</button> — ${Number(x.packets||0).toLocaleString(currentLocale())} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
         list(data.digipeaters || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
         '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
@@ -4571,6 +5000,13 @@
       box.textContent = err.message;
     }
   }
+
+  document.addEventListener('click', event => {
+    const link = event.target.closest('[data-quick-message-callsign]');
+    if (!link) return;
+    event.preventDefault();
+    openMessageComposer(link.dataset.quickMessageCallsign || '');
+  });
 
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
   $('#analysisPeriod')?.addEventListener('change', async event => {
@@ -4756,16 +5192,6 @@
       await loadConfig();
       toast(ui('Configuração padrão restaurada.', 'Default configuration restored.'), 'ok');
     } catch (err) { toast(err.message, 'error'); }
-  });
-
-  $('#mapStationAgeFilter')?.addEventListener('change', async event => {
-    const value = String(event.target.value || 'all');
-    state.mapStationAgeFilter = ['lt2','2to24','gt24'].includes(value) ? value : 'all';
-    if (state.mapLoadBusy) {
-      state.mapLoadQueued = true;
-      return;
-    }
-    await loadMapData();
   });
 
   setupSortableTable('messagesTable', 'messages', renderMessages);

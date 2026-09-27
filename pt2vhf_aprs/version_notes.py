@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.1": {
+        "title": "Atualizador corrigido, Mapa refinado e nova aba Sobre",
+        "items": [
+            "O atualizador só encerra a aplicação depois que o helper externo confirma que iniciou; falhas deixam a aplicação aberta.",
+            "O indicador de nova versão pulsa e o modal permanece aberto durante o fluxo de atualização.",
+            "Tracklogs rejeitam saltos irreais de coordenadas e quebram linhas históricas em relocações/extremos.",
+            "Estações, Tracklog e Topologia ganham controles independentes de visibilidade e período; Atividade é removido.",
+            "Histórico/Replay passa a aparecer abaixo das abas somente quando o Mapa está ativo.",
+            "Mensagens sinaliza novas mensagens diretas na aba e Estações mais ativas ganha atalho clicável para mensagem rápida.",
+            "Nova aba Sobre reúne autor, contatos, tiny.cc/aprs e divulgação manual por Announcement APRS.",
+            "Revisadas e ampliadas as traduções PT/EN/ES/FR.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.7": {
         "title": "Nova linha 1.7: mensagens seguras, idiomas e interface refinada",
         "items": [

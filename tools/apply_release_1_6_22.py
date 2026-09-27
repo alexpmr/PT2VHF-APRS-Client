@@ -39,7 +39,6 @@ checks = {
     "pt2vhf_aprs/static/js/app.js": [
         "async function installLatestUpdate()",
         "/api/update/install",
-        "Baixando e validando",
     ],
     "pt2vhf_aprs/templates/index.html": [
         'id="updateInstallNow"',

@@ -78,22 +78,42 @@
   <button class="tab" data-tab="log">Log</button>
   <button class="tab" data-tab="analysis">Estatísticas</button>
   <button class="tab" data-tab="config">Configuração</button>
+  <button class="tab" data-tab="about">Sobre</button>
   <button class="tab" data-tab="help">Ajuda</button>
 </nav>
+<div id="mapContextBar" class="map-context-bar">
+  <button id="mapHistoryToggle" type="button" class="btn secondary map-history-toggle" aria-expanded="false">Histórico</button>
+</div>
 
 <main>
   <section id="tab-map" class="tab-panel active">
     <div class="map-replay-layout">
       <div class="map-top-toolbar" aria-label="Controles do mapa">
-        <div class="map-station-age-filter">
-          <label for="mapStationAgeFilter">Atividade</label>
-          <select id="mapStationAgeFilter" aria-label="Filtrar estações no mapa pela última interação">
-            <option value="all" selected>Tudo</option>
-            <option value="lt2">menos de 2 h</option>
-            <option value="2to24">2 a 24 h</option>
-            <option value="gt24">mais de 24 h</option>
+        <div class="map-visibility-control">
+          <label for="stationsToggle">
+            <input id="stationsToggle" type="checkbox" checked>
+            <span>Estações</span>
+          </label>
+          <select id="stationsHours" title="Período das estações" aria-label="Período das estações">
+            <option value="0">Completo</option>
+            <option value="1">1 h</option>
+            <option value="6">6 h</option>
+            <option value="24">24 h</option>
+            <option value="168">7 dias</option>
           </select>
-          <span id="mapStationAgeCount" class="map-station-age-count">Todas as estações</span>
+        </div>
+        <div class="map-visibility-control">
+          <label for="tracklogToggle">
+            <input id="tracklogToggle" type="checkbox" checked>
+            <span>Tracklog</span>
+          </label>
+          <select id="tracklogHours" title="Período do tracklog" aria-label="Período do tracklog">
+            <option value="0">Completo</option>
+            <option value="1">1 h</option>
+            <option value="6">6 h</option>
+            <option value="24">24 h</option>
+            <option value="168">7 dias</option>
+          </select>
         </div>
         <div class="topology-control map-topology-control">
           <label for="topologyToggle">
@@ -112,7 +132,7 @@
       <div class="map-stage">
         <div id="map"></div>
       </div>
-      <div class="traffic-animation-panel map-traffic-panel">
+      <div class="traffic-animation-panel map-traffic-panel hidden">
         <div class="traffic-animation-title">
           <div>
             <h3>Replay da Rede</h3>
@@ -237,6 +257,7 @@
         <select id="messageType">
           <option value="message">Mensagem</option>
           <option value="bulletin">Boletim geral</option>
+          <option value="announcement">Anúncio geral</option>
           <option value="group_bulletin">Boletim de grupo</option>
         </select>
       </label>
@@ -789,6 +810,41 @@
       </div>
     </form>
   </section>
+  <section id="tab-about" class="tab-panel about-panel">
+    <div class="panel-header">
+      <div>
+        <h2 id="aboutTitle">Sobre</h2>
+        <p id="aboutSubtitle"></p>
+      </div>
+    </div>
+    <div class="about-content">
+      <div class="about-card about-hero">
+        <img class="about-logo" src="{{ url_for('static', filename='img/app_logo.png') }}" alt="PT2VHF APRS Client">
+        <div>
+          <h3>PT2VHF APRS Client <span class="app-version">v{{ app_version }}</span></h3>
+          <p id="aboutAuthorText"></p>
+          <p id="aboutProjectText"></p>
+          <a id="aboutProjectLink" class="about-project-link" href="http://tiny.cc/aprs" target="_blank" rel="noopener">tiny.cc/aprs</a>
+        </div>
+      </div>
+      <div class="about-grid">
+        <article class="about-card">
+          <h3 id="aboutContactTitle"></h3>
+          <p id="aboutContactText"></p>
+          <div class="about-contact-actions">
+            <a class="btn primary" href="https://wa.me/5561984023634" target="_blank" rel="noopener">WhatsApp: +55 61 98402-3634</a>
+            <a class="btn secondary" href="mailto:alexpmr@gmail.com">alexpmr@gmail.com</a>
+          </div>
+        </article>
+        <article class="about-card">
+          <h3 id="aboutPromoteTitle"></h3>
+          <p id="aboutPromoteText"></p>
+          <button id="aboutPromoteButton" type="button" class="btn primary"></button>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <section id="tab-help" class="tab-panel help-panel">
     <div class="panel-header">
       <div>
@@ -1000,6 +1056,27 @@
   </div>
 </div>
 
+<div id="promotionModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="promotionModalTitle">
+  <div class="message-alert-card update-dialog">
+    <div class="message-alert-icon">APRS</div>
+    <div class="message-alert-content">
+      <div id="promotionEyebrow" class="message-alert-eyebrow"></div>
+      <h3 id="promotionModalTitle"></h3>
+      <p id="promotionModalDescription"></p>
+      <label class="field">
+        <span id="promotionMessageLabel"></span>
+        <textarea id="promotionMessageText" rows="3" maxlength="67"></textarea>
+        <small id="promotionCharCount">0 / 67</small>
+      </label>
+      <div id="promotionPacketPreview" class="promotion-packet-preview"></div>
+      <div class="message-alert-actions">
+        <button id="promotionSendButton" type="button" class="btn primary"></button>
+        <button id="promotionCancelButton" type="button" class="btn secondary"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="updateModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="updateModalTitle">
   <div class="message-alert-card update-dialog">
     <div class="message-alert-icon">↻</div>
@@ -1008,7 +1085,8 @@
       <h3 id="updateModalTitle">Nova versão disponível</h3>
       <p id="updateModalSummary">O pacote compatível será baixado, validado e instalado automaticamente.</p>
       <pre id="updateReleaseNotes" class="update-release-notes"></pre>
-      <div id="updateDownloadProgress" class="hint"></div>
+      <div id="updateDownloadProgress" class="hint" aria-live="polite"></div>
+      <progress id="updateProgressBar" class="update-progress hidden" max="100"></progress>
       <div class="message-alert-actions">
         <button id="updateInstallNow" type="button" class="btn primary">Baixar e instalar</button>
         <button id="updateOpenRelease" type="button" class="btn secondary">Ver Release</button>

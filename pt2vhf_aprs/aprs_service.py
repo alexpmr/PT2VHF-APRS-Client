@@ -823,6 +823,8 @@ def mask_sensitive_log_line(line: str) -> str:
 
 def classify_message_type(addressee: str) -> str:
     value = str(addressee or "").upper().strip()
+    if re.fullmatch(r"BLN[A-Z]", value):
+        return "announcement"
     if re.fullmatch(r"BLN[0-9]", value):
         return "bulletin"
     if re.fullmatch(r"BLN[0-9][A-Z0-9]{1,5}", value):
@@ -835,8 +837,8 @@ def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group:
     bulletin_id = str(bulletin_id or "").strip()
     group = str(group or "").upper().strip()
 
-    if not re.fullmatch(r"[0-9]", bulletin_id):
-        raise ValueError("O identificador do boletim deve ser um dígito de 0 a 9.")
+    if not re.fullmatch(r"[0-9A-Z]", bulletin_id):
+        raise ValueError("O identificador do boletim/anúncio deve ser 0-9 ou A-Z.")
     if group and not re.fullmatch(r"[A-Z0-9]{1,5}", group):
         raise ValueError("O grupo do boletim deve ter de 1 a 5 caracteres alfanuméricos.")
 
@@ -845,7 +847,9 @@ def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group:
         raise ValueError("Boletim vazio.")
     clean = clean[:67]
 
-    message_type = "group_bulletin" if group else "bulletin"
+    if bulletin_id.isalpha() and group:
+        raise ValueError("Announcements BLN[A-Z] não usam grupo.")
+    message_type = "announcement" if bulletin_id.isalpha() else ("group_bulletin" if group else "bulletin")
     addressee = f"BLN{bulletin_id}{group:<5}" if group else f"BLN{bulletin_id}{'':<5}"
     packet = f"{source}>{APP_TOCALL},TCPIP*::{addressee}:{clean}"
     return packet, addressee.rstrip(), message_type, clean

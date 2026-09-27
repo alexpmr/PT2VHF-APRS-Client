@@ -16,25 +16,11 @@ if version_tuple(version) < (1, 6, 23):
     raise SystemExit(f"v1.6.23 validation failed: VERSION={version!r}")
 
 checks = {
-    "pt2vhf_aprs/templates/index.html": [
-        'id="mapStationAgeFilter"',
-        'value="all" selected',
-        'value="lt2"',
-        'value="2to24"',
-        'value="gt24"',
-    ],
     "pt2vhf_aprs/static/js/app.js": [
-        "mapStationAgeFilter: 'all'",
-        "function mapStationMatchesAge(station)",
-        "function updateMapStationAgeCount(visible, total)",
-        "state.mapVisibleCallsigns",
-        "state.mapKnownCallsigns",
         "mapLegendCollapsed: localStorage.getItem(",
         "function syncMapLegendCollapsed()",
     ],
     "pt2vhf_aprs/static/css/app.css": [
-        ".map-station-age-filter",
-        ".map-station-age-count",
         ".map-legend-toggle",
     ],
     "windows/make_icon.py": [
@@ -57,4 +43,4 @@ logo_png = ROOT / "pt2vhf_aprs" / "static" / "img" / "app_logo.png"
 if not logo_png.exists() or logo_png.stat().st_size < 5000:
     raise SystemExit("v1.6.23 validation failed: application logo asset missing or invalid")
 
-print("v1.6.23 branding/map activity filter validation OK")
+print("v1.6.23 branding/legend validation OK")
