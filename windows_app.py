@@ -117,7 +117,7 @@ def _resource_path(*parts: str) -> Path:
 def _make_tray_image() -> Image.Image:
     candidates = [
         _resource_path("windows", "app_icon.ico"),
-        _resource_path("pt2vhf_aprs", "static", "img", "aprs_logo_official.jpg"),
+        _resource_path("pt2vhf_aprs", "static", "img", "app_logo.png"),
     ]
     for logo in candidates:
         try:
