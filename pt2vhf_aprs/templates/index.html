@@ -83,52 +83,52 @@
 </nav>
 <div id="mapContextBar" class="map-context-bar">
   <button id="mapHistoryToggle" type="button" class="btn secondary map-history-toggle" aria-expanded="false">Histórico</button>
+  <div class="map-context-controls" aria-label="Controles do mapa">
+    <div class="map-visibility-control">
+      <label for="stationsToggle">
+        <input id="stationsToggle" type="checkbox" checked>
+        <span>Estações</span>
+      </label>
+      <select id="stationsHours" title="Período das estações" aria-label="Período das estações">
+        <option value="0">Completo</option>
+        <option value="1">1 h</option>
+        <option value="6">6 h</option>
+        <option value="24">24 h</option>
+        <option value="168">7 dias</option>
+      </select>
+    </div>
+    <div class="map-visibility-control">
+      <label for="tracklogToggle">
+        <input id="tracklogToggle" type="checkbox" checked>
+        <span>Tracklog</span>
+      </label>
+      <select id="tracklogHours" title="Período do tracklog" aria-label="Período do tracklog">
+        <option value="0">Completo</option>
+        <option value="1">1 h</option>
+        <option value="6">6 h</option>
+        <option value="24">24 h</option>
+        <option value="168">7 dias</option>
+      </select>
+    </div>
+    <div class="topology-control map-topology-control">
+      <label for="topologyToggle">
+        <input id="topologyToggle" type="checkbox">
+        <span>Topologia observada</span>
+      </label>
+      <select id="topologyHours" title="Período da topologia" aria-label="Período da topologia">
+        <option value="0">Completo</option>
+        <option value="1">1 h</option>
+        <option value="6">6 h</option>
+        <option value="24">24 h</option>
+        <option value="168">7 dias</option>
+      </select>
+    </div>
+  </div>
 </div>
 
 <main>
   <section id="tab-map" class="tab-panel active">
     <div class="map-replay-layout">
-      <div class="map-top-toolbar" aria-label="Controles do mapa">
-        <div class="map-visibility-control">
-          <label for="stationsToggle">
-            <input id="stationsToggle" type="checkbox" checked>
-            <span>Estações</span>
-          </label>
-          <select id="stationsHours" title="Período das estações" aria-label="Período das estações">
-            <option value="0">Completo</option>
-            <option value="1">1 h</option>
-            <option value="6">6 h</option>
-            <option value="24">24 h</option>
-            <option value="168">7 dias</option>
-          </select>
-        </div>
-        <div class="map-visibility-control">
-          <label for="tracklogToggle">
-            <input id="tracklogToggle" type="checkbox" checked>
-            <span>Tracklog</span>
-          </label>
-          <select id="tracklogHours" title="Período do tracklog" aria-label="Período do tracklog">
-            <option value="0">Completo</option>
-            <option value="1">1 h</option>
-            <option value="6">6 h</option>
-            <option value="24">24 h</option>
-            <option value="168">7 dias</option>
-          </select>
-        </div>
-        <div class="topology-control map-topology-control">
-          <label for="topologyToggle">
-            <input id="topologyToggle" type="checkbox">
-            <span>Topologia observada</span>
-          </label>
-          <select id="topologyHours" title="Período da topologia" aria-label="Período da topologia">
-            <option value="0">Completo</option>
-            <option value="1">1 h</option>
-            <option value="6">6 h</option>
-            <option value="24">24 h</option>
-            <option value="168">7 dias</option>
-          </select>
-        </div>
-      </div>
       <div class="map-stage">
         <div id="map"></div>
       </div>
