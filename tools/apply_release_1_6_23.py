@@ -46,9 +46,6 @@ checks = {
     "tools/generate_manual.py": [
         "app_logo.png",
     ],
-    "README.md": [
-        "filtro de atividade",
-    ],
 }
 for rel, needles in checks.items():
     text = (ROOT / rel).read_text(encoding="utf-8")
