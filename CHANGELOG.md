@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.7.2 - 2026-09-27
+
+- **Mapa:** os controles **Estações**, **Tracklog** e **Topologia observada** passam para a mesma barra contextual do botão **Histórico**, mantendo uma única linha compacta e liberando mais área vertical para o mapa.
+- **Popup da estação:** **Última recepção** passa a mostrar também o tempo decorrido, como **há 2 min**, **há 3 h e 26 min** ou **há 4 dias**.
+- O tempo relativo da última recepção é atualizado automaticamente enquanto o popup permanece aberto e acompanha o idioma corrente (**PT/EN/ES/FR**).
+- **Estatísticas:** diferentes TOCALLs que resolvem para o mesmo nome amigável de software/dispositivo passam a ser consolidados em uma única linha, com quantidade e percentual recalculados.
+- Os identificadores técnicos associados a cada software permanecem preservados internamente; versões com nomes amigáveis distintos, como **Dire Wolf 1.8** e **Dire Wolf 1.9**, continuam separadas.
+- Mantido o destaque correto do **PT2VHF APRS Client** mesmo quando mais de um identificador técnico estiver associado ao mesmo nome amigável.
+- Adicionados testes de regressão para consolidação de software, disposição dos controles do Mapa e atualização do tempo relativo.
+- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.7.1 - 2026-09-27
 
 - Corrigido o atualizador integrado: a aplicação só é encerrada após o **helper externo confirmar que iniciou**; se o helper falhar, o programa permanece aberto e informa o erro.
