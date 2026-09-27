@@ -85,118 +85,6 @@
 
 ## Pendências para próximas versões
 
-- **Atualizações — piscar indicador quando houver nova versão**
-  - Quando uma nova versão estiver disponível, manter o comportamento atual de indicação visual e acrescentar também um **efeito de piscar/pulsar** no indicador de **Nova versão**.
-  - O efeito deve ser perceptível, porém discreto, sem comprometer a leitura nem causar distração excessiva.
-  - Manter o destaque ativo enquanto a nova versão continuar pendente de atualização.
-  - Parar o efeito quando o usuário iniciar a atualização, quando a versão instalada já for a mais recente ou quando não houver mais atualização disponível.
-  - Respeitar o tema claro/escuro e o idioma corrente da aplicação.
-  - Não usar o mesmo efeito visual de alertas críticos; a indicação deve comunicar **atualização disponível**, não erro.
-  - Adicionar teste de regressão para garantir que o piscar só ocorra quando houver uma versão realmente mais nova disponível.
-
-- **Mensagens — destacar aba quando chegar nova mensagem**
-  - Quando chegar uma **nova mensagem destinada ao usuário/indicativo corrente** e a aba **Mensagens** não estiver ativa, destacar visualmente o nome da aba **Mensagens** para chamar a atenção.
-  - O destaque deve permanecer até o usuário abrir a aba **Mensagens** ou marcar/visualizar a mensagem correspondente.
-  - Diferenciar esse estado visual do aspecto normal da aba, usando efeito discreto porém evidente, como cor de destaque, badge de quantidade e/ou pulsação controlada.
-  - Não disparar o alerta para telemetria, mensagens que não sejam destinadas ao usuário corrente ou tráfego APRS irrelevante.
-  - Se chegarem várias mensagens enquanto o usuário estiver em outra aba, acumular a indicação de não lidas sem perder o primeiro alerta.
-  - Ao abrir a aba **Mensagens**, manter a lista posicionada de forma coerente para facilitar a leitura das novas mensagens.
-  - Respeitar o idioma corrente da aplicação nos textos, tooltips e acessibilidade relacionados ao aviso.
-  - Adicionar teste de regressão para garantir que a aba seja destacada apenas quando houver nova mensagem realmente dirigida ao usuário.
-
-- **Idiomas — revisão completa das traduções PT/EN/ES/FR**
-  - Revisar toda a interface nos quatro idiomas suportados: **Português, English, Español e Français**.
-  - Corrigir textos que continuam aparecendo em Português ou no idioma anterior após a troca de idioma.
-  - Incluir na revisão não apenas textos estáticos do HTML, mas também textos gerados dinamicamente por JavaScript, mensagens de status, toasts, modais, tooltips, placeholders, títulos, menus, filtros, botões, tabelas, popups do mapa e mensagens de erro.
-  - Revisar também textos criados depois do carregamento inicial da página, garantindo que a troca de idioma seja aplicada imediatamente sem necessidade de reiniciar a aplicação.
-  - Centralizar as traduções para evitar textos duplicados ou hard-coded fora da camada de internacionalização.
-  - Adicionar verificação de chaves ausentes e fallback seguro para Português, mas tratar qualquer fallback visível em produção como item a ser corrigido.
-  - Criar testes de regressão que percorram as principais telas em **PT, EN, ES e FR** e detectem textos não traduzidos, chaves ausentes ou mistura de idiomas na mesma tela.
-  - Revisar especialmente as áreas adicionadas recentemente: **Mapa**, **Histórico/Replay**, **Mensagens**, **Estatísticas**, **Configuração**, **Atualizador**, **Sobre**, queries APRS e diálogos de confirmação.
-  - Tratar como melhoria prioritária da linha **v1.7.x**, pois a troca de idioma atualmente não traduz integralmente a interface.
-
-- **Nova aba Sobre — autor, contato e divulgação do projeto**
-  - Criar uma nova aba superior **Sobre**.
-  - Apresentar uma breve descrição do autor/projeto, identificando **Alex, PT2VHF** como idealizador do PT2VHF APRS Client e radioamador responsável pelo projeto.
-  - Explicar de forma curta o objetivo da aplicação: oferecer um cliente APRS moderno, multiplataforma e voltado à visualização, mensagens, estatísticas e análise da rede.
-  - Exibir claramente o repositório oficial por meio do link curto **tiny.cc/aprs**.
-  - Incluir uma área **Contato / Sugestões / Dúvidas / Melhorias** com:
-    - **WhatsApp:** +55 61 98402-3634
-    - **E-mail:** alexpmr@gmail.com
-  - Tornar WhatsApp e e-mail clicáveis quando a plataforma permitir, abrindo o aplicativo/navegador apropriado.
-  - Adicionar um botão de divulgação, por exemplo **Divulgar PT2VHF APRS Client na rede APRS**.
-  - Ao clicar no botão, preparar um **Announcement APRS** com texto curto contendo o nome do cliente e **tiny.cc/aprs**.
-  - Exibir uma prévia completa do pacote/mensagem antes do envio e exigir **confirmação explícita** do usuário.
-  - O envio da divulgação deve ser sempre **manual**, sem transmissão automática ao iniciar o programa e sem repetição agressiva.
-  - Permitir editar o texto antes do envio, respeitando o limite aplicável a bulletins/announcements APRS.
-  - Usar o mecanismo APRS apropriado para divulgação coletiva, preferencialmente **Announcement/Bulletin**, em vez de mensagens individuais em massa.
-  - Registrar no Log quando uma divulgação for enviada, incluindo horário e conteúdo transmitido.
-  - Manter a aba visualmente consistente com a identidade oficial da aplicação e exibir a logo APRS oficial do projeto.
-  - Todo o conteúdo textual da aba **Sobre** deve acompanhar o **idioma corrente da aplicação** (**Português, English, Español ou Français**), incluindo títulos, descrição do autor/projeto, contatos, instruções, botões, avisos, confirmação e mensagens de status.
-  - O texto sugerido para o **Announcement/Bulletin APRS** de divulgação também deve ser gerado no **idioma corrente**, mantendo **tiny.cc/aprs** inalterado.
-  - Para **Português**, usar como texto padrão de divulgação: **PT2VHF APRS Client v1.7 - Download: tiny.cc/aprs**.
-  - Nas demais línguas, manter a mesma estrutura semântica, traduzindo apenas o texto descritivo e preservando **PT2VHF APRS Client**, a versão e **tiny.cc/aprs**.
-  - Ao trocar o idioma da aplicação, a aba **Sobre** e o texto padrão de divulgação devem ser atualizados imediatamente, sem exigir reinicialização.
-
-- **Mapa — mover Histórico para uma barra contextual abaixo das abas**
-  - Remover o botão **Histórico** da barra superior global da aplicação.
-  - Exibir o controle **Histórico** em uma barra contextual **logo abaixo das abas superiores**, somente quando a aba **Mapa** estiver ativa.
-  - Ocultar completamente esse controle ao mudar para **Mensagens, Estações, Log, Estatísticas, Configuração, Sobre** ou qualquer outra aba.
-  - Manter no novo local o mesmo comportamento atual do Histórico, incluindo acesso ao modo de replay/animação temporal.
-  - Preservar estado, período e demais preferências relacionadas ao Histórico ao trocar de aba e voltar ao Mapa.
-  - Garantir que a barra contextual do Mapa não sobreponha o canvas e permaneça visualmente integrada aos demais controles específicos do Mapa.
-
-- **Mapa — substituir Atividade por controles independentes de Topologia, Tracklog e Estações**
-  - Remover da barra superior do **MAPA** o controle atual de **Atividade** e sua contagem associada.
-  - Manter **Topologia observada** com chave liga/desliga e seletor de período.
-  - Adicionar controle equivalente para **Tracklog**, com chave liga/desliga e seletor de período.
-  - Adicionar controle equivalente para **Estações**, com chave liga/desliga e seletor de período.
-  - Usar o mesmo padrão visual e de interação para os três controles, mantendo-os alinhados na barra superior e fora do canvas do mapa.
-  - Para **Topologia**, **Tracklog** e **Estações**, oferecer os mesmos ranges temporais já usados no mapa, incluindo **Completo, 1 h, 6 h, 24 h e 7 dias**.
-  - O filtro temporal de **Tracklog** deve limitar os pontos/segmentos desenhados ao período escolhido.
-  - O filtro temporal de **Estações** deve mostrar apenas estações cuja última recepção/interação esteja dentro do período escolhido.
-  - Desligar **Tracklog** deve ocultar somente os trajetos, sem ocultar as estações.
-  - Desligar **Estações** deve ocultar os marcadores das estações, sem obrigatoriamente desligar Topologia ou Tracklog.
-  - Desligar **Topologia** deve ocultar somente os enlaces observados.
-  - Preservar de forma independente o estado ligado/desligado e o período escolhido de cada controle entre reinicializações.
-  - Garantir que filtros independentes não gerem inconsistência visual: por exemplo, um tracklog pode permanecer visível mesmo que o marcador da estação esteja oculto, se esse for o estado configurado pelo usuário.
-
-- **Atualizador automático — aplicação fecha e atualização não inicia**
-  - Ao clicar em **Nova versão** e depois em **Baixar e instalar**, a aplicação é encerrada, porém o download/instalação da nova versão **não é iniciado**.
-  - Corrigir o fluxo para garantir que o helper externo do atualizador seja iniciado e permaneça executando **antes** de a aplicação principal encerrar.
-  - Não fechar a aplicação se o helper não tiver sido criado/iniciado com sucesso.
-  - Validar a seleção do asset correto da Release conforme plataforma, arquitetura e formato instalado/portátil.
-  - Exibir progresso de **download**, **verificação**, **instalação** e **reinicialização**, além de mensagem de erro visível quando qualquer etapa falhar.
-  - A janela/modal **Nova versão disponível** não deve fechar automaticamente após alguns segundos; deve permanecer aberta até uma ação explícita do usuário ou até a conclusão controlada do fluxo de atualização.
-  - Depois que o usuário clicar em **Baixar e instalar**, manter o modal visível durante **download**, **validação**, **instalação** e **reinicialização**, atualizando barra de progresso e texto de status.
-  - Não permitir que timers genéricos de pop-up/notificação fechem a janela de atualização enquanto houver operação em andamento.
-  - O botão **Depois** continua sendo a forma explícita de adiar/fechar a atualização antes do início do processo; durante uma atualização já iniciada, evitar fechamento acidental.
-  - Registrar em log dedicado o caminho/URL do asset, PID do helper, diretório temporário, tamanho esperado/baixado, SHA-256, comando de instalação e código de saída.
-  - No Windows, validar separadamente **Portable** e **Setup**, incluindo UAC quando necessário.
-  - Após atualização bem-sucedida, reiniciar automaticamente a nova versão; em caso de falha, manter/restaurar a versão anterior quando aplicável.
-  - Adicionar teste de regressão cobrindo o cenário em que o helper não inicia, garantindo que a aplicação permaneça aberta e informe o erro ao usuário.
-  - Tratar como **bug prioritário da v1.7.1**, pois o comportamento atual pode deixar o usuário sem a aplicação aberta e sem atualização concluída.
-
-- **Mapa — filtrar saltos irreais de posição nos tracklogs**
-  - Antes de acrescentar uma nova posição ao tracklog, comparar a coordenada recebida com a **última posição válida aceita** da mesma estação.
-  - Calcular a distância entre os pontos e o intervalo de tempo, derivando a **velocidade implícita** do deslocamento.
-  - Ignorar posições claramente anômalas quando houver salto repentino incompatível com um deslocamento realista, evitando linhas falsas de centenas ou milhares de quilômetros no mapa.
-  - Um ponto rejeitado **não deve substituir a última posição válida** usada como referência; assim, o próximo pacote correto não ficará ligado ao ponto incorreto.
-  - Não desenhar segmento de tracklog de/para uma posição classificada como outlier.
-  - Considerar o intervalo de tempo entre os pacotes para não bloquear deslocamentos reais após longos períodos sem recepção.
-  - Se várias posições consecutivas confirmarem uma nova região, tratar como **mudança real de localização** e iniciar um novo trecho de tracklog, em vez de descartar indefinidamente a estação.
-  - Registrar no diagnóstico/log os pontos descartados, com indicativo, distância do salto, intervalo de tempo e velocidade implícita, para permitir auditoria e ajuste dos limites.
-  - Aplicar o mesmo filtro tanto ao tracklog ao vivo quanto ao replay/histórico.
-
-- **Estatísticas — Estações mais ativas com atalho para mensagem**
-  - No bloco **Estações mais ativas**, transformar o indicativo de cada estação em **link clicável**.
-  - Ao clicar no indicativo, mudar automaticamente para a aba **Mensagens**.
-  - Preencher o campo **Destinatário** com o indicativo clicado, incluindo SSID quando houver.
-  - Se já existir conversa com a estação, sincronizar o foco da conversa com o mesmo indicativo.
-  - Deixar o campo de mensagem pronto para digitação, facilitando o envio de uma mensagem rápida.
-  - Não enviar nenhuma mensagem automaticamente; o clique deve apenas preparar a conversa/destinatário.
-  - Manter comportamento consistente com outros atalhos de indicativo existentes na aplicação.
-
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
@@ -337,4 +225,16 @@
 - **Estatísticas:** somente nome amigável do aplicativo/software na apresentação principal; identificadores técnicos permanecem internos.
 - **Estatísticas:** fonte padrão maior e controle próprio de tamanho na Configuração.
 - **Versionamento:** nova linha iniciada em v1.7; próximas releases serão v1.7.1, v1.7.2, v1.7.3...
+
+## Concluído na v1.7.1
+
+- **Atualizador:** helper externo confirmado antes do encerramento; falha não fecha a aplicação; modal persistente e progresso/status durante instalação.
+- **Atualizações:** indicador de nova versão com pulsação enquanto houver release pendente.
+- **Tracklogs:** rejeição de saltos irreais no backend e quebra visual de segmentos históricos extremos/relocações.
+- **Mapa:** removido Atividade; Estações, Tracklog e Topologia com liga/desliga e períodos independentes.
+- **Mapa:** Histórico/Replay movido para barra contextual abaixo das abas, visível somente no Mapa.
+- **Mensagens:** aba destacada/pulsando quando chega mensagem direta enquanto outra aba está ativa.
+- **Estatísticas:** indicativos de Estações mais ativas clicáveis para abrir Mensagens com destinatário preenchido.
+- **Sobre:** nova aba com Alex/PT2VHF, contatos, tiny.cc/aprs e envio manual de Announcement APRS BLNA.
+- **Idiomas:** cobertura PT/EN/ES/FR ampliada em áreas estáticas e dinâmicas, com atualização imediata na troca de idioma.
 
