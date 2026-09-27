@@ -71,10 +71,14 @@ main { height: calc(100vh - 143px); }
   padding: 5px 18px;
   border-bottom: 1px solid var(--line);
   background: #10171d;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 .map-context-bar.hidden { display: none !important; }
 body.map-context-visible main { height: calc(100vh - 184px); }
 .map-history-toggle {
+  flex: 0 0 auto;
   min-height: 29px;
   padding: 4px 11px;
   font-size: 11px;
@@ -83,6 +87,66 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   border-color: var(--accent);
   background: rgba(59,166,255,.16);
   color: #d8efff;
+}
+.map-context-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  margin-left: auto;
+}
+.map-context-bar .map-visibility-control,
+.map-context-bar .topology-control {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 29px;
+  padding: 1px 7px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 7px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 11px;
+  box-shadow: none;
+}
+.map-context-bar .map-visibility-control label,
+.map-context-bar .topology-control label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.map-context-bar .map-visibility-control input,
+.map-context-bar .topology-control input {
+  accent-color: var(--accent);
+}
+.map-context-bar .map-visibility-control select,
+.map-context-bar .topology-control select {
+  min-width: 88px;
+  height: 27px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--panel-2);
+}
+html[data-theme="light"] .map-context-bar {
+  background: #f5f8fa;
+}
+html[data-theme="light"] .map-context-bar .map-visibility-control,
+html[data-theme="light"] .map-context-bar .topology-control {
+  background: #ffffff;
+  border-color: rgba(30,55,75,.18);
+  color: #21313d;
+}
+html[data-theme="light"] .map-context-bar .map-visibility-control select,
+html[data-theme="light"] .map-context-bar .topology-control select {
+  background: #ffffff;
+  color: #1c2c37;
 }
 .tab-panel { display: none; height: 100%; }
 .tab-panel.active { display: block; }
@@ -139,6 +203,7 @@ body.map-context-visible main { height: calc(100vh - 184px); }
 .station-popup h3 { margin: 0 0 7px; font-size: 16px; }
 .station-popup .popup-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 9px; font-size: 12px; }
 .station-popup .popup-grid strong { color: var(--muted); }
+.station-last-heard-relative { color: var(--muted); white-space: nowrap; }
 .aprs-marker-wrap { background: transparent; border: 0; }
 .aprs-symbol { display: inline-block; overflow: hidden; background-repeat: no-repeat; image-rendering: auto; vertical-align: middle; }
 .aprs-marker {
@@ -2370,18 +2435,8 @@ html[data-theme="light"] .traffic-animation-panel {
   height: 100%;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(260px, 1fr) auto;
+  grid-template-rows: minmax(260px, 1fr) auto;
   overflow: hidden;
-}
-.map-top-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 8px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
 }
 .map-stage {
   position: relative;
@@ -2392,63 +2447,6 @@ html[data-theme="light"] .traffic-animation-panel {
 .map-replay-layout #map {
   min-height: 0;
   height: 100%;
-}
-.map-visibility-control,
-.map-top-toolbar .topology-control {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 9px;
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 8px;
-  background: var(--panel-2);
-  color: var(--text);
-  font-size: 11px;
-  box-shadow: none;
-}
-.map-visibility-control label,
-.map-top-toolbar .topology-control label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.map-visibility-control input,
-.map-top-toolbar .topology-control input { accent-color: var(--accent); }
-.map-visibility-control select,
-.map-top-toolbar .topology-control select {
-  min-width: 88px;
-  height: 28px;
-  padding: 3px 6px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--text);
-  background: var(--panel-2);
-}
-html[data-theme="light"] .map-top-toolbar {
-  background: #f5f8fa;
-}
-html[data-theme="light"] .map-visibility-control,
-html[data-theme="light"] .map-top-toolbar .topology-control {
-  background: #ffffff;
-  border-color: rgba(30,55,75,.18);
-  color: #21313d;
-}
-@media (max-width: 760px) {
-  .map-top-toolbar {
-    justify-content: stretch;
-    align-items: stretch;
-    padding: 8px;
-  }
-  .map-visibility-control,
-  .map-topology-control {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
 }
 .map-traffic-panel {
   margin: 0;
