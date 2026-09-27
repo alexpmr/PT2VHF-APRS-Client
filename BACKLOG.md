@@ -85,6 +85,21 @@
 
 ## Pendências para próximas versões
 
+- **Mapa — substituir Atividade por controles independentes de Topologia, Tracklog e Estações**
+  - Remover da barra superior do **MAPA** o controle atual de **Atividade** e sua contagem associada.
+  - Manter **Topologia observada** com chave liga/desliga e seletor de período.
+  - Adicionar controle equivalente para **Tracklog**, com chave liga/desliga e seletor de período.
+  - Adicionar controle equivalente para **Estações**, com chave liga/desliga e seletor de período.
+  - Usar o mesmo padrão visual e de interação para os três controles, mantendo-os alinhados na barra superior e fora do canvas do mapa.
+  - Para **Topologia**, **Tracklog** e **Estações**, oferecer os mesmos ranges temporais já usados no mapa, incluindo **Completo, 1 h, 6 h, 24 h e 7 dias**.
+  - O filtro temporal de **Tracklog** deve limitar os pontos/segmentos desenhados ao período escolhido.
+  - O filtro temporal de **Estações** deve mostrar apenas estações cuja última recepção/interação esteja dentro do período escolhido.
+  - Desligar **Tracklog** deve ocultar somente os trajetos, sem ocultar as estações.
+  - Desligar **Estações** deve ocultar os marcadores das estações, sem obrigatoriamente desligar Topologia ou Tracklog.
+  - Desligar **Topologia** deve ocultar somente os enlaces observados.
+  - Preservar de forma independente o estado ligado/desligado e o período escolhido de cada controle entre reinicializações.
+  - Garantir que filtros independentes não gerem inconsistência visual: por exemplo, um tracklog pode permanecer visível mesmo que o marcador da estação esteja oculto, se esse for o estado configurado pelo usuário.
+
 - **Atualizador automático — aplicação fecha e atualização não inicia**
   - Ao clicar em **Nova versão** e depois em **Baixar e instalar**, a aplicação é encerrada, porém o download/instalação da nova versão **não é iniciado**.
   - Corrigir o fluxo para garantir que o helper externo do atualizador seja iniciado e permaneça executando **antes** de a aplicação principal encerrar.
