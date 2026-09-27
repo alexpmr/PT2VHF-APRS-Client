@@ -929,3 +929,71 @@ def test_map_controls_are_above_map_not_overlaid():
     assert "const toggle = $('#topologyToggle');" in js
     assert "const select = $('#topologyHours');" in js
 
+def test_v17_language_options_and_runtime():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    i18n = (root / "pt2vhf_aprs" / "static" / "js" / "i18n_extra.js").read_text(encoding="utf-8")
+    database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+
+    assert 'data-language="es"' in html
+    assert 'data-language="fr"' in html
+    assert '<option value="es">Español</option>' in html
+    assert '<option value="fr">Français</option>' in html
+    assert "js/i18n_extra.js" in html
+    assert "normalizeLanguage" in js
+    assert "es:'es-ES'" in js
+    assert "fr:'fr-FR'" in js
+    assert "window.PT2VHF_I18N" in i18n
+    assert "es:" in i18n and "fr:" in i18n
+    assert '{"pt-BR", "en", "es", "fr"}' in database
+
+
+def test_v17_message_conversation_tracks_recipient():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert "$('#messageTo')?.addEventListener('input'" in js
+    assert "state.selectedConversation = destinationConversation ? composerDestination : '';" in js
+    assert "Novo destinatário:" in js
+    assert "There is no recorded conversation with this callsign yet." in js
+    assert "$('#messageTo').value = state.selectedConversation;" in js
+
+
+def test_v17_traffic_animation_defaults_enabled():
+    root = Path(__file__).resolve().parent.parent
+    database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert '"traffic_animation_enabled": 1' in database
+    assert 'name="traffic_animation_enabled" type="checkbox" checked' in html
+    assert "state.trafficPlaying = state.trafficAnimationEnabled;" in js
+    assert "traffic_animation_enabled" in js
+
+
+def test_v17_statistics_friendly_names_and_font_control():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+
+    assert 'name="statistics_font_size"' in html
+    assert 'id="statisticsFontSizeValue"' in html
+    assert "--statistics-font-size" in css
+    assert "statistics_font_size" in database
+    assert "statistics_font_size" in js
+    assert "'<span class="client-version-tocall">'" not in js
+
+
+def test_v17_message_filter_buttons_are_compact():
+    root = Path(__file__).resolve().parent.parent
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+
+    assert "#groupMessagesButton," in css
+    assert "#myMessagesButton," in css
+    assert "#unreadMessagesButton" in css
+    assert "min-height: 32px;" in css
+    assert "white-space: nowrap;" in css
+
