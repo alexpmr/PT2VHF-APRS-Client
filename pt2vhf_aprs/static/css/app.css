@@ -537,6 +537,15 @@ main { height: calc(100vh - 143px); }
   align-items: end;
   gap: 10px;
 }
+#groupMessagesButton,
+#myMessagesButton,
+#unreadMessagesButton {
+  min-height: 32px;
+  padding: 5px 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
 #myMessagesButton.active-filter {
   border-color: var(--accent);
   background: rgba(59,166,255,.16);
@@ -2039,6 +2048,10 @@ html[data-theme="light"] #logTimeHeader:hover {
 .analysis-stats {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+#tab-analysis .analysis-content,
+#tab-analysis .analysis-controls {
+  font-size: var(--statistics-font-size, 13px);
+}
 .station-popup-actions {
   gap: 8px;
   flex-wrap: wrap;
@@ -2691,13 +2704,13 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
 .analysis-client-version-heading p {
   margin: 0 0 12px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: max(11px, calc(var(--statistics-font-size, 13px) - 1px));
   line-height: 1.45;
 }
 .client-version-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: var(--statistics-font-size, 13px);
 }
 .client-version-table th,
 .client-version-table td {
@@ -2707,7 +2720,7 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
 }
 .client-version-table th {
   color: var(--muted);
-  font-size: 10px;
+  font-size: max(10px, calc(var(--statistics-font-size, 13px) - 2px));
   text-transform: uppercase;
   letter-spacing: .04em;
 }
@@ -2719,7 +2732,7 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
 .client-version-unidentified {
   margin-top: 9px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: max(11px, calc(var(--statistics-font-size, 13px) - 1px));
 }
 
 /* v1.6.20 - ranking amigável de clientes APRS */

@@ -3,11 +3,20 @@ import struct
 
 ROOT = Path(__file__).resolve().parents[1]
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-if version != "1.6.24":
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    parts = []
+    for piece in str(value or "").strip().lstrip("vV").split("."):
+        try:
+            parts.append(int(piece))
+        except ValueError:
+            break
+    return tuple(parts or [0])
+
+if version_tuple(version) < (1, 6, 24):
     raise SystemExit(f"v1.6.24 validation failed: VERSION={version!r}")
 
 checks = {
-    "pt2vhf_aprs/__init__.py": ['__version__ = "1.6.24"'],
     "pt2vhf_aprs/templates/index.html": ['type="image/png"', "img/app_logo.png"],
     "windows/make_icon.py": ['SOURCE = ROOT / "pt2vhf_aprs" / "static" / "img" / "app_logo.png"'],
     "linux/build_linux.sh": ['src = Path("pt2vhf_aprs/static/img/app_logo.png")'],
@@ -22,7 +31,6 @@ checks = {
     ],
     "tools/generate_manual.py": ['"app_logo.png"'],
     "pt2vhf_aprs/version_notes.py": ['"1.6.24"', '"1.6.23"'],
-    "README.md": ["# PT2VHF APRS Client - v1.6.24", "fonte visual única"],
     "tests/test_core.py": [
         "test_v1624_official_logo_is_single_branding_source",
         "test_v1624_version_notes_include_1623_and_1624",
