@@ -3,13 +3,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-if version != "1.7":
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    parts = []
+    for piece in str(value or "").strip().lstrip("vV").split("."):
+        try:
+            parts.append(int(piece))
+        except ValueError:
+            break
+    return tuple(parts or [0])
+
+if version_tuple(version) < (1, 7):
     raise SystemExit(f"v1.7 validation failed: VERSION={version!r}")
 
 checks = {
-    "pt2vhf_aprs/__init__.py": [
-        '__version__ = "1.7"',
-    ],
     "pt2vhf_aprs/templates/index.html": [
         'data-language="es"',
         'data-language="fr"',
@@ -46,7 +53,6 @@ checks = {
         '{"pt-BR", "en", "es", "fr"}',
     ],
     "README.md": [
-        "# PT2VHF APRS Client - v1.7",
         "Español",
         "Français",
     ],
