@@ -8,7 +8,10 @@
     mapLoadBusy: false,
     mapLoadLastAt: 0,
     mapLoadQueued: false,
-    mapStationAgeFilter: 'all',
+    stationsEnabled: localStorage.getItem('pt2vhf_stations_enabled') !== '0',
+    stationsHours: Number(localStorage.getItem('pt2vhf_stations_hours') || 0),
+    tracklogEnabled: localStorage.getItem('pt2vhf_tracklog_enabled') !== '0',
+    tracklogHours: Number(localStorage.getItem('pt2vhf_tracklog_hours') || 0),
     mapKnownCallsigns: new Set(),
     mapVisibleCallsigns: new Set(),
     systemMetricsBusy: false,
@@ -96,6 +99,7 @@
     updateDownloading: false,
     versionCheckInProgress: false,
     messageSending: false,
+    mapHistoryOpen: localStorage.getItem('pt2vhf_map_history_open') === '1',
   };
 
   const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
@@ -488,23 +492,47 @@
     });
   }
 
+  function syncMapContextBar() {
+    const visible = state.activeTab === 'map';
+    $('#mapContextBar')?.classList.toggle('hidden', !visible);
+    document.body.classList.toggle('map-context-visible', visible);
+    const panel = $('.map-traffic-panel');
+    const button = $('#mapHistoryToggle');
+    if (panel) panel.classList.toggle('hidden', !visible || !state.mapHistoryOpen);
+    if (button) {
+      button.classList.toggle('active-filter', state.mapHistoryOpen);
+      button.setAttribute('aria-expanded', state.mapHistoryOpen ? 'true' : 'false');
+      button.textContent = ui('Histórico', 'History');
+    }
+  }
+
   function activateTab(tab) {
     state.activeTab = tab;
-    $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-    $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+    $('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    $('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+    syncMapContextBar();
     if (tab === 'map') {
       setTimeout(() => state.map?.invalidateSize(), 30);
       void loadMapData();
       void pollTrafficEvents();
     }
     if (tab === 'messages') {
+      $('.tab[data-tab="messages"]')?.classList.remove('has-unread');
       loadMessages({ scrollToNewest: true });
     }
     if (tab === 'stations') loadStations({ scrollToNewest: true });
     if (tab === 'log') loadLog(true);
     if (tab === 'analysis') refreshTopologyAnalysis();
     if (tab === 'config') loadConfig();
+    if (tab === 'about') renderAbout();
   }
+
+  $('#mapHistoryToggle')?.addEventListener('click', () => {
+    state.mapHistoryOpen = !state.mapHistoryOpen;
+    localStorage.setItem('pt2vhf_map_history_open', state.mapHistoryOpen ? '1' : '0');
+    syncMapContextBar();
+    setTimeout(() => state.map?.invalidateSize(), 30);
+  });
 
   function tabSetup() {
     $$('.tab').forEach(btn => btn.addEventListener('click', () => {
