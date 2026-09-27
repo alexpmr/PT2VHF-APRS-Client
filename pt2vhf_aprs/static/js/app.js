@@ -655,6 +655,7 @@
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
+    addMapVisibilityControls();
     addTopologyControl(state.map);
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
@@ -692,6 +693,60 @@
     if (Number(hours) === 0) return ui('Completo', 'Complete');
     if (Number(hours) === 168) return ui('7 dias', '7 days');
     return `${Number(hours)} h`;
+  }
+
+  function addMapVisibilityControls() {
+    state.stationsHours = topologyPeriodValue(state.stationsHours);
+    state.tracklogHours = topologyPeriodValue(state.tracklogHours);
+
+    const stationsToggle = $('#stationsToggle');
+    const stationsHours = $('#stationsHours');
+    const trackToggle = $('#tracklogToggle');
+    const trackHours = $('#tracklogHours');
+
+    if (stationsToggle) stationsToggle.checked = !!state.stationsEnabled;
+    if (stationsHours) stationsHours.value = String(state.stationsHours);
+    if (trackToggle) trackToggle.checked = !!state.tracklogEnabled;
+    if (trackHours) trackHours.value = String(state.tracklogHours);
+
+    if (stationsToggle && stationsToggle.dataset.bound !== '1') {
+      stationsToggle.dataset.bound = '1';
+      stationsToggle.addEventListener('change', async () => {
+        state.stationsEnabled = stationsToggle.checked;
+        localStorage.setItem('pt2vhf_stations_enabled', state.stationsEnabled ? '1' : '0');
+        await loadMapData();
+      });
+    }
+    if (stationsHours && stationsHours.dataset.bound !== '1') {
+      stationsHours.dataset.bound = '1';
+      stationsHours.addEventListener('change', async () => {
+        state.stationsHours = topologyPeriodValue(stationsHours.value);
+        localStorage.setItem('pt2vhf_stations_hours', String(state.stationsHours));
+        await loadMapData();
+      });
+    }
+    if (trackToggle && trackToggle.dataset.bound !== '1') {
+      trackToggle.dataset.bound = '1';
+      trackToggle.addEventListener('change', async () => {
+        state.tracklogEnabled = trackToggle.checked;
+        localStorage.setItem('pt2vhf_tracklog_enabled', state.tracklogEnabled ? '1' : '0');
+        if (!state.tracklogEnabled) {
+          for (const line of state.trackLines.values()) state.map?.removeLayer(line);
+          state.trackLines.clear();
+        } else {
+          await loadMapData();
+        }
+        updateMapLegend();
+      });
+    }
+    if (trackHours && trackHours.dataset.bound !== '1') {
+      trackHours.dataset.bound = '1';
+      trackHours.addEventListener('change', async () => {
+        state.tracklogHours = topologyPeriodValue(trackHours.value);
+        localStorage.setItem('pt2vhf_tracklog_hours', String(state.tracklogHours));
+        await loadMapData();
+      });
+    }
   }
 
   function addTopologyControl(_map) {
