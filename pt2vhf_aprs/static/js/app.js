@@ -242,6 +242,18 @@
     }
   }
 
+  function setUpdateProgress(message = '', type = '') {
+    if (!progress) return;
+    const text = String(message || '').trim();
+    progress.textContent = text;
+    progress.classList.remove('hidden', 'working', 'success', 'error');
+    if (!text) {
+      progress.classList.add('hidden');
+      return;
+    }
+    if (type) progress.classList.add(type);
+  }
+
   function showUpdateModal() {
     const data = state.updateInfo;
     if (!data || data.status !== 'update_available') return;
@@ -264,7 +276,7 @@
     if (closeButton) closeButton.disabled = !!state.updateDownloading;
     if (releaseButton) releaseButton.disabled = !!state.updateDownloading;
     if (!state.updateDownloading) {
-      $('#updateDownloadProgress').textContent = '';
+      setUpdateProgress();
       const bar = $('#updateProgressBar');
       if (bar) {
         bar.classList.add('hidden');
@@ -329,10 +341,12 @@
     }
     if (!data.asset_ready || !data.install_supported) {
       showUpdateModal();
-      toast(ui(
+      const message = ui(
         data.error || 'A instalação automática não está disponível para este pacote.',
         data.error || 'Automatic installation is not available for this package.'
-      ), 'error');
+      );
+      setUpdateProgress(message, 'error');
+      toast(message, 'error');
       return;
     }
 
@@ -360,21 +374,17 @@
       progressBar.classList.remove('hidden');
       progressBar.removeAttribute('value');
     }
-    if (progress) {
-      progress.textContent = ui(
-        `Preparando o download de ${data.asset_name}…`,
-        `Preparing download of ${data.asset_name}…`
-      );
-    }
+    setUpdateProgress(ui(
+      `Preparando o download de ${data.asset_name}…`,
+      `Preparing download of ${data.asset_name}…`
+    ), 'working');
     $('#updateModal')?.classList.remove('hidden');
     // Dá ao navegador uma oportunidade de pintar o estado "Preparando" antes do request longo.
     await new Promise(resolve => setTimeout(resolve, 0));
-    if (progress) {
-      progress.textContent = ui(
-        `Baixando, validando e preparando ${data.asset_name}… Não feche a aplicação.`,
-        `Downloading, validating and preparing ${data.asset_name}… Do not close the application.`
-      );
-    }
+    setUpdateProgress(ui(
+      `Baixando, validando e preparando ${data.asset_name}… Não feche a aplicação.`,
+      `Downloading, validating and preparing ${data.asset_name}… Do not close the application.`
+    ), 'working');
     console.info('PT2VHF updater: instalação solicitada', data.asset_name, data.latest_version);
 
     const controller = new AbortController();
@@ -382,18 +392,23 @@
     try {
       const result = await api('/api/update/install', { method:'POST', signal:controller.signal });
       if (progressBar) progressBar.value = 100;
-      if (progress) progress.textContent = String(result.message || ui(
+      setUpdateProgress(String(result.message || ui(
         'Atualização pronta. O instalador auxiliar foi confirmado e a aplicação será reiniciada…',
         'Update ready. The updater helper was confirmed and the application will restart…'
-      ));
+      )), 'success');
       toast(ui(
         `v${result.version} validada. O instalador foi iniciado e a aplicação será reiniciada.`,
         `v${result.version} verified. The installer was started and the application will restart.`
       ), 'ok');
     } catch (err) {
       console.error('PT2VHF updater: falha ao baixar/instalar', err);
-      if (progress) progress.textContent = err.message;
-      toast(err.message, 'error');
+      const detail = String(err?.message || err || ui('Falha desconhecida na atualização.', 'Unknown update failure.'));
+      const message = ui(
+        `Não foi possível concluir a atualização automática.\n\nDetalhes: ${detail}`,
+        `Automatic update could not be completed.\n\nDetails: ${detail}`
+      );
+      setUpdateProgress(message, 'error');
+      toast(detail, 'error');
       state.updateDownloading = false;
       if (progressBar) {
         progressBar.classList.add('hidden');
