@@ -85,6 +85,17 @@
 
 ## Pendências para próximas versões
 
+- **Idiomas — revisão completa das traduções PT/EN/ES/FR**
+  - Revisar toda a interface nos quatro idiomas suportados: **Português, English, Español e Français**.
+  - Corrigir textos que continuam aparecendo em Português ou no idioma anterior após a troca de idioma.
+  - Incluir na revisão não apenas textos estáticos do HTML, mas também textos gerados dinamicamente por JavaScript, mensagens de status, toasts, modais, tooltips, placeholders, títulos, menus, filtros, botões, tabelas, popups do mapa e mensagens de erro.
+  - Revisar também textos criados depois do carregamento inicial da página, garantindo que a troca de idioma seja aplicada imediatamente sem necessidade de reiniciar a aplicação.
+  - Centralizar as traduções para evitar textos duplicados ou hard-coded fora da camada de internacionalização.
+  - Adicionar verificação de chaves ausentes e fallback seguro para Português, mas tratar qualquer fallback visível em produção como item a ser corrigido.
+  - Criar testes de regressão que percorram as principais telas em **PT, EN, ES e FR** e detectem textos não traduzidos, chaves ausentes ou mistura de idiomas na mesma tela.
+  - Revisar especialmente as áreas adicionadas recentemente: **Mapa**, **Histórico/Replay**, **Mensagens**, **Estatísticas**, **Configuração**, **Atualizador**, **Sobre**, queries APRS e diálogos de confirmação.
+  - Tratar como melhoria prioritária da linha **v1.7.x**, pois a troca de idioma atualmente não traduz integralmente a interface.
+
 - **Nova aba Sobre — autor, contato e divulgação do projeto**
   - Criar uma nova aba superior **Sobre**.
   - Apresentar uma breve descrição do autor/projeto, identificando **Alex, PT2VHF** como idealizador do PT2VHF APRS Client e radioamador responsável pelo projeto.
