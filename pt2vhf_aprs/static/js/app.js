@@ -1930,8 +1930,8 @@
     const hiddenCount = state.messages.filter(isTelemetryMessage).length;
     toast(
       state.hideTelemetryMessages
-        ? `Telemetria oculta (${hiddenCount} registro(s) nesta lista).`
-        : 'Telemetria visível.',
+        ? ui(`Telemetria oculta (${hiddenCount} registro(s) nesta lista).`, `Telemetry hidden (${hiddenCount} record(s) in this list).`)
+        : ui('Telemetria visível.', 'Telemetry visible.'),
       'ok'
     );
   });
@@ -1941,7 +1941,9 @@
     if (!btn) return;
     btn.classList.toggle('active-filter', state.groupMessages);
     btn.setAttribute('aria-pressed', state.groupMessages ? 'true' : 'false');
-    btn.textContent = state.groupMessages ? '✓ Agrupado por remetente' : 'Agrupar por remetente';
+    btn.textContent = state.groupMessages
+      ? ui('✓ Agrupado por remetente', '✓ Grouped by sender')
+      : ui('Agrupar por remetente', 'Group by sender');
   }
 
   $('#groupMessagesButton')?.addEventListener('click', () => {
@@ -2068,7 +2070,9 @@
     if (!btn) return;
     btn.classList.toggle('active-filter', state.myMessagesOnly);
     btn.setAttribute('aria-pressed', state.myMessagesOnly ? 'true' : 'false');
-    btn.textContent = state.myMessagesOnly ? '✓ Minhas mensagens' : 'Minhas mensagens';
+    btn.textContent = state.myMessagesOnly
+      ? ui('✓ Minhas mensagens', '✓ My messages')
+      : ui('Minhas mensagens', 'My messages');
     if (filter) {
       filter.disabled = state.myMessagesOnly;
       if (state.myMessagesOnly) filter.value = '';
