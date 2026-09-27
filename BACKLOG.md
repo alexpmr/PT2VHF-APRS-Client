@@ -102,6 +102,9 @@
   - Usar o mecanismo APRS apropriado para divulgação coletiva, preferencialmente **Announcement/Bulletin**, em vez de mensagens individuais em massa.
   - Registrar no Log quando uma divulgação for enviada, incluindo horário e conteúdo transmitido.
   - Manter a aba visualmente consistente com a identidade oficial da aplicação e exibir a logo APRS oficial do projeto.
+  - Todo o conteúdo textual da aba **Sobre** deve acompanhar o **idioma corrente da aplicação** (**Português, English, Español ou Français**), incluindo títulos, descrição do autor/projeto, contatos, instruções, botões, avisos, confirmação e mensagens de status.
+  - O texto sugerido para o **Announcement/Bulletin APRS** de divulgação também deve ser gerado no **idioma corrente**, mantendo **tiny.cc/aprs** inalterado.
+  - Ao trocar o idioma da aplicação, a aba **Sobre** e o texto padrão de divulgação devem ser atualizados imediatamente, sem exigir reinicialização.
 
 - **Mapa — substituir Atividade por controles independentes de Topologia, Tracklog e Estações**
   - Remover da barra superior do **MAPA** o controle atual de **Atividade** e sua contagem associada.
