@@ -1255,8 +1255,45 @@ def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
     }
 
 
+APRS_CLIENT_CANONICAL_NAMES = {
+    "aprsdroid": "APRSdroid",
+    "brandmeister dmr": "BrandMeister DMR",
+    "dire wolf": "Dire Wolf",
+    "direwolf": "Dire Wolf",
+    "esp32idf aprs": "esp32idf_APRS",
+    "ircddb gateway": "ircDDB Gateway",
+    "svxlink": "SvxLink",
+    "tinytrak": "TinyTrak",
+    "ui view32": "UI-View32",
+    "uiview32": "UI-View32",
+    "vp digi": "VP-Digi",
+    "vpdigi": "VP-Digi",
+}
+
+
+def _canonical_client_family(value: str) -> tuple[str, str]:
+    """Retorna (chave, nome) consolidando aliases e versões do mesmo cliente."""
+    original = re.sub(r"\s+", " ", str(value or "").strip())
+    if not original:
+        return "", ""
+
+    # O ranking é de clientes/produtos, não de builds. Mantém a versão
+    # disponível em aliases, mas agrupa sufixos semânticos como 1.8 / v1.9.2.
+    family = re.sub(
+        r"\s+(?:v(?:ersion)?\s*)?\d+(?:\.\d+){1,3}(?:[-+][0-9A-Za-z.-]+)?$",
+        "",
+        original,
+        flags=re.IGNORECASE,
+    ).strip() or original
+
+    key = re.sub(r"[^0-9a-z]+", " ", family.casefold()).strip()
+    display = APRS_CLIENT_CANONICAL_NAMES.get(key, family)
+    display_key = re.sub(r"[^0-9a-z]+", " ", display.casefold()).strip()
+    return display_key, display
+
+
 def client_version_stats(hours: int = 0) -> dict[str, Any]:
-    """Distribuição de software/dispositivo APRS, consolidada pelo nome amigável."""
+    """Distribuição de software/dispositivo APRS consolidada por família de cliente."""
     hours = int(hours or 0)
     params: list[Any] = []
     where = ""
@@ -1275,9 +1312,6 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
     grouped: dict[str, dict[str, Any]] = {}
     unidentified = 0
 
-    def _client_friendly_key(value: str) -> str:
-        return re.sub(r"\s+", " ", str(value or "").strip()).casefold()
-
     for row in rows:
         tocall = _aprs_tocall_from_raw(row["raw"])
         if not tocall or tocall == "APRS":
@@ -1289,16 +1323,21 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
             unidentified += 1
             continue
 
-        friendly_name = re.sub(
+        source_name = re.sub(
             r"\s+", " ", str(resolved.get("friendly_name") or tocall).strip()
         )
-        friendly_key = _client_friendly_key(friendly_name)
+        friendly_key, friendly_name = _canonical_client_family(source_name)
+        if not friendly_key:
+            unidentified += 1
+            continue
+
         bucket = grouped.get(friendly_key)
         if bucket is None:
             bucket = {
                 "friendly_name": friendly_name,
                 "stations": 0,
                 "identifiers": set(),
+                "aliases": set(),
                 "meta": resolved,
                 "is_own_client": False,
             }
@@ -1306,6 +1345,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
 
         bucket["stations"] = int(bucket["stations"]) + 1
         bucket["identifiers"].add(tocall)
+        bucket["aliases"].add(source_name)
         if tocall == APP_TOCALL:
             # Quando o próprio cliente fizer parte de um grupo consolidado,
             # seus metadados passam a ser a referência visual desse grupo.
@@ -1329,6 +1369,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
             "rank": rank,
             "identifier": identifier,
             "identifiers": identifiers,
+            "aliases": sorted(str(value) for value in bucket["aliases"]),
             "friendly_name": bucket["friendly_name"],
             "vendor": meta.get("vendor") or "",
             "model": meta.get("model") or "",
@@ -1346,6 +1387,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
             "rank": None,
             "identifier": APP_TOCALL,
             "identifiers": [APP_TOCALL],
+            "aliases": [own_meta.get("friendly_name") or "PT2VHF APRS Client"],
             "friendly_name": own_meta.get("friendly_name") or "PT2VHF APRS Client",
             "vendor": own_meta.get("vendor") or "PT2VHF",
             "model": own_meta.get("model") or "PT2VHF APRS Client",
