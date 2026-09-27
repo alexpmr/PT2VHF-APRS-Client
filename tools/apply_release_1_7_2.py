@@ -13,7 +13,7 @@ if version_tuple < (1, 7, 2):
 checks = {
     "pt2vhf_aprs/__init__.py": ['APP_TOCALL = "APZVHF"'],
     "pt2vhf_aprs/database.py": [
-        "def _client_friendly_key",
+        "def client_version_stats",
         '"identifiers": identifiers',
         '"is_own_client": is_own',
     ],
