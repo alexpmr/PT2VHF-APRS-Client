@@ -2994,6 +2994,7 @@
 
   async function loadConfig() {
     state.configLoading = true;
+    const firstConfigLoad = !state.configLoaded;
     try {
       const cfg = await api('/api/config');
       state.currentConfig = cfg;
@@ -3012,6 +3013,15 @@
       state.soundOnStationActivity = !!cfg.sound_on_station_activity;
       state.highlightStationActivity = !!cfg.highlight_station_activity;
       state.trafficAnimationEnabled = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
+      if (firstConfigLoad) {
+        state.trafficMode = 'live';
+        state.trafficPlaying = state.trafficAnimationEnabled;
+        state.timelineReplayActive = false;
+        if ($('#trafficMode')) $('#trafficMode').value = 'live';
+      } else if (!state.trafficAnimationEnabled && state.trafficMode === 'live') {
+        state.trafficPlaying = false;
+      }
+      updateTrafficAnimationUi();
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
       state.language = normalizeLanguage(cfg.language);
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
