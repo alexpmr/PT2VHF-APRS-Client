@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.23 - 2026-09-27
+
+- A **logo oficial do PT2VHF APRS Client** passa a ser usada no cabeçalho e favicon da interface.
+- Os ícones de **Windows, Linux e macOS** passam a ser derivados da mesma logo oficial, eliminando a identidade gráfica gerada separadamente por plataforma.
+- A bandeja do Windows e a capa do Manual PDF passam a usar a mesma imagem oficial.
+- Adicionada validação no pipeline para impedir a geração da Release caso a logo oficial esteja ausente/inválida.
+- Na aba **Mapa**, adicionado filtro de atividade das estações pela última interação/recepção conhecida.
+- O filtro oferece **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**.
+- Ao aplicar o filtro, marcadores e tracklogs de estações fora da faixa são ocultados; a topologia evita manter enlaces para estações conhecidas que foram filtradas.
+- O mapa mostra a quantidade de estações visíveis em relação ao total quando um filtro estiver ativo.
+- Mantidos os recursos de atualização integrada e demais funções da v1.6.22.
+- Release completa multiplataforma: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.6.22 - 2026-09-26
 
 - O aviso de **nova versão** passa a iniciar diretamente o download e a instalação do pacote compatível com a plataforma/arquitetura em execução.
