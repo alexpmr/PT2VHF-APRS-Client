@@ -525,6 +525,183 @@
     });
   }
 
+  function currentAppVersion() {
+    return String($('.app-version')?.textContent || '').trim().replace(/^v/i, '') || '1.7.1';
+  }
+
+  function aboutCopy() {
+    const version = currentAppVersion();
+    const copies = {
+      'pt-BR': {
+        title: 'Sobre',
+        subtitle: 'Sobre o projeto, o autor e como contribuir com sugestões.',
+        author: 'Criado por Alex, PT2VHF, radioamador e idealizador do PT2VHF APRS Client.',
+        project: 'O PT2VHF APRS Client é um cliente APRS moderno e multiplataforma para mapa, mensagens, estatísticas e análise da rede.',
+        contactTitle: 'Contato / Sugestões / Dúvidas / Melhorias',
+        contact: 'Sugestões, dúvidas, relatos de problemas e ideias de melhoria são bem-vindos.',
+        promoteTitle: 'Divulgue o projeto na rede APRS',
+        promote: 'Você pode enviar manualmente um Announcement APRS para divulgar o cliente. A mensagem poderá ser revisada antes do envio.',
+        promoteButton: 'Divulgar PT2VHF APRS Client na rede APRS',
+        eyebrow: 'Divulgação APRS',
+        modalTitle: 'Enviar anúncio do PT2VHF APRS Client',
+        modalDescription: 'Revise a mensagem abaixo. O anúncio será transmitido uma única vez usando o seu indicativo corrente como remetente.',
+        messageLabel: 'Mensagem do Announcement',
+        send: 'Confirmar e enviar',
+        cancel: 'Cancelar',
+        confirm: 'Enviar este Announcement APRS agora? O remetente será o seu indicativo corrente.',
+        sent: 'Announcement do PT2VHF APRS Client enviado.',
+        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+      },
+      en: {
+        title: 'About',
+        subtitle: 'About the project, its author and how to contribute suggestions.',
+        author: 'Created by Alex, PT2VHF, amateur radio operator and creator of PT2VHF APRS Client.',
+        project: 'PT2VHF APRS Client is a modern cross-platform APRS client for maps, messaging, statistics and network analysis.',
+        contactTitle: 'Contact / Suggestions / Questions / Improvements',
+        contact: 'Suggestions, questions, bug reports and improvement ideas are welcome.',
+        promoteTitle: 'Promote the project on the APRS network',
+        promote: 'You can manually send an APRS Announcement to promote the client. The message can be reviewed before sending.',
+        promoteButton: 'Promote PT2VHF APRS Client on APRS',
+        eyebrow: 'APRS promotion',
+        modalTitle: 'Send PT2VHF APRS Client announcement',
+        modalDescription: 'Review the message below. The announcement will be sent once using your current callsign as sender.',
+        messageLabel: 'Announcement message',
+        send: 'Confirm and send',
+        cancel: 'Cancel',
+        confirm: 'Send this APRS Announcement now? Your current callsign will be used as sender.',
+        sent: 'PT2VHF APRS Client Announcement sent.',
+        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+      },
+      es: {
+        title: 'Acerca de',
+        subtitle: 'Sobre el proyecto, su autor y cómo aportar sugerencias.',
+        author: 'Creado por Alex, PT2VHF, radioaficionado e impulsor de PT2VHF APRS Client.',
+        project: 'PT2VHF APRS Client es un cliente APRS moderno y multiplataforma para mapas, mensajes, estadísticas y análisis de la red.',
+        contactTitle: 'Contacto / Sugerencias / Dudas / Mejoras',
+        contact: 'Son bienvenidas las sugerencias, dudas, informes de problemas e ideas de mejora.',
+        promoteTitle: 'Divulgar el proyecto en la red APRS',
+        promote: 'Puede enviar manualmente un Announcement APRS para divulgar el cliente. El mensaje puede revisarse antes del envío.',
+        promoteButton: 'Divulgar PT2VHF APRS Client en APRS',
+        eyebrow: 'Divulgación APRS',
+        modalTitle: 'Enviar anuncio de PT2VHF APRS Client',
+        modalDescription: 'Revise el mensaje. El anuncio se transmitirá una sola vez usando su indicativo actual como remitente.',
+        messageLabel: 'Mensaje del Announcement',
+        send: 'Confirmar y enviar',
+        cancel: 'Cancelar',
+        confirm: '¿Enviar este Announcement APRS ahora? Se usará su indicativo actual como remitente.',
+        sent: 'Announcement de PT2VHF APRS Client enviado.',
+        download: `PT2VHF APRS Client v${version} - Descarga: tiny.cc/aprs`,
+      },
+      fr: {
+        title: 'À propos',
+        subtitle: 'À propos du projet, de son auteur et des suggestions.',
+        author: 'Créé par Alex, PT2VHF, radioamateur et créateur de PT2VHF APRS Client.',
+        project: 'PT2VHF APRS Client est un client APRS moderne et multiplateforme pour la carte, les messages, les statistiques et l’analyse du réseau.',
+        contactTitle: 'Contact / Suggestions / Questions / Améliorations',
+        contact: 'Les suggestions, questions, signalements de problèmes et idées d’amélioration sont les bienvenus.',
+        promoteTitle: 'Promouvoir le projet sur le réseau APRS',
+        promote: 'Vous pouvez envoyer manuellement une annonce APRS pour promouvoir le client. Le message peut être vérifié avant l’envoi.',
+        promoteButton: 'Promouvoir PT2VHF APRS Client sur APRS',
+        eyebrow: 'Promotion APRS',
+        modalTitle: 'Envoyer une annonce PT2VHF APRS Client',
+        modalDescription: 'Vérifiez le message. L’annonce sera transmise une seule fois avec votre indicatif actuel comme expéditeur.',
+        messageLabel: 'Message de l’annonce',
+        send: 'Confirmer et envoyer',
+        cancel: 'Annuler',
+        confirm: 'Envoyer cette annonce APRS maintenant ? Votre indicatif actuel sera utilisé comme expéditeur.',
+        sent: 'Annonce PT2VHF APRS Client envoyée.',
+        download: `PT2VHF APRS Client v${version} - Téléchargement: tiny.cc/aprs`,
+      },
+    };
+    return copies[state.language] || copies['pt-BR'];
+  }
+
+  function promotionPacketPreview(text = '') {
+    const source = normalizedCall(state.ownCallsign) || 'NOCALL';
+    return `${source}>APZVHF,TCPIP*::BLNA     :${String(text || '').slice(0, 67)}`;
+  }
+
+  function updatePromotionPreview() {
+    const input = $('#promotionMessageText');
+    if (!input) return;
+    const text = String(input.value || '').slice(0, 67);
+    $('#promotionCharCount').textContent = `${text.length} / 67`;
+    $('#promotionPacketPreview').textContent = promotionPacketPreview(text);
+  }
+
+  function renderAbout() {
+    const copy = aboutCopy();
+    if ($('#aboutTitle')) $('#aboutTitle').textContent = copy.title;
+    if ($('#aboutSubtitle')) $('#aboutSubtitle').textContent = copy.subtitle;
+    if ($('#aboutAuthorText')) $('#aboutAuthorText').textContent = copy.author;
+    if ($('#aboutProjectText')) $('#aboutProjectText').textContent = copy.project;
+    if ($('#aboutContactTitle')) $('#aboutContactTitle').textContent = copy.contactTitle;
+    if ($('#aboutContactText')) $('#aboutContactText').textContent = copy.contact;
+    if ($('#aboutPromoteTitle')) $('#aboutPromoteTitle').textContent = copy.promoteTitle;
+    if ($('#aboutPromoteText')) $('#aboutPromoteText').textContent = copy.promote;
+    if ($('#aboutPromoteButton')) $('#aboutPromoteButton').textContent = copy.promoteButton;
+    if (!$('#promotionModal')?.classList.contains('hidden')) {
+      $('#promotionEyebrow').textContent = copy.eyebrow;
+      $('#promotionModalTitle').textContent = copy.modalTitle;
+      $('#promotionModalDescription').textContent = copy.modalDescription;
+      $('#promotionMessageLabel').textContent = copy.messageLabel;
+      $('#promotionSendButton').textContent = copy.send;
+      $('#promotionCancelButton').textContent = copy.cancel;
+      const input = $('#promotionMessageText');
+      if (input && !input.dataset.userEdited) input.value = copy.download;
+      updatePromotionPreview();
+    }
+  }
+
+  function openPromotionModal() {
+    const copy = aboutCopy();
+    $('#promotionEyebrow').textContent = copy.eyebrow;
+    $('#promotionModalTitle').textContent = copy.modalTitle;
+    $('#promotionModalDescription').textContent = copy.modalDescription;
+    $('#promotionMessageLabel').textContent = copy.messageLabel;
+    $('#promotionSendButton').textContent = copy.send;
+    $('#promotionCancelButton').textContent = copy.cancel;
+    const input = $('#promotionMessageText');
+    if (input) {
+      input.dataset.userEdited = '';
+      input.value = copy.download.slice(0, 67);
+    }
+    updatePromotionPreview();
+    $('#promotionModal')?.classList.remove('hidden');
+  }
+
+  $('#aboutPromoteButton')?.addEventListener('click', openPromotionModal);
+  $('#promotionCancelButton')?.addEventListener('click', () => $('#promotionModal')?.classList.add('hidden'));
+  $('#promotionMessageText')?.addEventListener('input', event => {
+    event.target.dataset.userEdited = '1';
+    updatePromotionPreview();
+  });
+  $('#promotionSendButton')?.addEventListener('click', async () => {
+    const copy = aboutCopy();
+    const message = String($('#promotionMessageText')?.value || '').trim().slice(0, 67);
+    if (!message) {
+      toast(ui('Informe o texto do anúncio.', 'Enter the announcement text.'), 'error');
+      return;
+    }
+    if (!window.confirm(copy.confirm)) return;
+    const button = $('#promotionSendButton');
+    if (button) button.disabled = true;
+    try {
+      await api('/api/messages/send', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'announcement', bulletin_id:'A', message })
+      });
+      $('#promotionModal')?.classList.add('hidden');
+      toast(copy.sent, 'ok');
+      void loadMessages({ scrollToNewest:true });
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+
   function syncMapContextBar() {
     const visible = state.activeTab === 'map';
     $('#mapContextBar')?.classList.toggle('hidden', !visible);
