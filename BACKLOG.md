@@ -108,6 +108,14 @@
   - Nas demais línguas, manter a mesma estrutura semântica, traduzindo apenas o texto descritivo e preservando **PT2VHF APRS Client**, a versão e **tiny.cc/aprs**.
   - Ao trocar o idioma da aplicação, a aba **Sobre** e o texto padrão de divulgação devem ser atualizados imediatamente, sem exigir reinicialização.
 
+- **Mapa — mover Histórico para uma barra contextual abaixo das abas**
+  - Remover o botão **Histórico** da barra superior global da aplicação.
+  - Exibir o controle **Histórico** em uma barra contextual **logo abaixo das abas superiores**, somente quando a aba **Mapa** estiver ativa.
+  - Ocultar completamente esse controle ao mudar para **Mensagens, Estações, Log, Estatísticas, Configuração, Sobre** ou qualquer outra aba.
+  - Manter no novo local o mesmo comportamento atual do Histórico, incluindo acesso ao modo de replay/animação temporal.
+  - Preservar estado, período e demais preferências relacionadas ao Histórico ao trocar de aba e voltar ao Mapa.
+  - Garantir que a barra contextual do Mapa não sobreponha o canvas e permaneça visualmente integrada aos demais controles específicos do Mapa.
+
 - **Mapa — substituir Atividade por controles independentes de Topologia, Tracklog e Estações**
   - Remover da barra superior do **MAPA** o controle atual de **Atividade** e sua contagem associada.
   - Manter **Topologia observada** com chave liga/desliga e seletor de período.
