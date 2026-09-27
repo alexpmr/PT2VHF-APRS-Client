@@ -307,7 +307,7 @@ Novas demandas devem continuar na série **1.6.x** até indicação explícita p
 
 ## Concluído na v1.6.23
 
-- **Identidade visual:** logo oficial aplicada ao cabeçalho, favicon, ícones Windows/Linux/macOS, bandeja do Windows e Manual PDF.
+- **Identidade visual:** a mesma logo vetorial/raster é aplicada ao cabeçalho, favicon, ícones Windows/Linux/macOS, bandeja do Windows e Manual PDF.
 - **Mapa — filtro por última interação:** adicionadas as opções **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**.
 - O filtro atua sobre os marcadores e tracklogs; enlaces de topologia associados a estações conhecidas filtradas também deixam de ser exibidos.
 - O Mapa informa quantas estações permanecem visíveis em relação ao total.
