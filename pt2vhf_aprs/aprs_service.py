@@ -823,6 +823,8 @@ def mask_sensitive_log_line(line: str) -> str:
 
 def classify_message_type(addressee: str) -> str:
     value = str(addressee or "").upper().strip()
+    if re.fullmatch(r"BLN[A-Z]", value):
+        return "announcement"
     if re.fullmatch(r"BLN[0-9]", value):
         return "bulletin"
     if re.fullmatch(r"BLN[0-9][A-Z0-9]{1,5}", value):
