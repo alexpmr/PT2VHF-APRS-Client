@@ -1,5 +1,11 @@
 # Backlog
 
+## Política de versões a partir da próxima geração
+
+- A próxima versão completa será **v1.7**.
+- As versões seguintes desta linha usarão numeração incremental **v1.7.1, v1.7.2, v1.7.3...**.
+- Não publicar a versão intermediária **v1.6.25**.
+
 ## Concluído na v1.6.1
 
 - atualização OTA com preferências configuráveis;
