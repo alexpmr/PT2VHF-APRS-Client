@@ -76,6 +76,7 @@ Cada Release completa publica:
 ### Mapa, Log e Estatísticas
 - OpenStreetMap, OpenTopoMap e Esri World Imagery.
 - Filtro de atividade no **Mapa**, com opções **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**. O filtro usa a última recepção/interação conhecida e também oculta o tracklog das estações fora da faixa.
+- A **Legenda** do Mapa pode ser minimizada/expandida; a preferência fica salva localmente para a próxima execução.
 - Tracklogs automáticos de estações móveis.
 - O popup da estação oferece **Mostrar log**, abrindo o Log já filtrado pelo indicativo/SSID.
 - As estatísticas da rede ficam na aba **Estatísticas**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.
