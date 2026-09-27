@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7": {
+        "title": "Nova linha 1.7: mensagens seguras, idiomas e interface refinada",
+        "items": [
+            "Os controles Atividade e Topologia observada ficam acima do mapa, sem cobrir o canvas.",
+            "A animação de tráfego ao vivo vem ativada por padrão em novas instalações e pode ser desligada em Configurações.",
+            "A conversa em foco e o campo Destinatário ficam sincronizados para reduzir o risco de envio à estação errada.",
+            "Os filtros da aba Mensagens ficam mais compactos e com rótulos em uma única linha.",
+            "A interface passa a oferecer Português, English, Español e Français.",
+            "Estatísticas mostra somente nomes amigáveis dos aplicativos e ganha fonte maior com controle de tamanho em Configurações.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.6.24": {
         "title": "Logo APRS oficial única e consolidação visual",
         "items": [
