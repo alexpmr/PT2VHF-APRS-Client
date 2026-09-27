@@ -728,20 +728,23 @@ def _parse_timestamp(value: Any) -> datetime | None:
 def _position_is_plausible(
     callsign: str,
     current: sqlite3.Row | None,
+    last_valid_track: sqlite3.Row | None,
     latitude: float,
     longitude: float,
     now: datetime,
 ) -> tuple[bool, dict[str, float | str | int | bool]]:
-    if current is None or current["latitude"] is None or current["longitude"] is None:
+    reference = last_valid_track or current
+    if reference is None or reference["latitude"] is None or reference["longitude"] is None:
         with _track_relocation_lock:
             _track_relocation_candidates.pop(callsign, None)
         return True, {"distance_km": 0.0, "speed_kmh": 0.0, "relocation": False}
 
-    previous_time = _parse_timestamp(current["last_heard"])
+    timestamp_key = "timestamp" if last_valid_track is not None else "last_heard"
+    previous_time = _parse_timestamp(reference[timestamp_key])
     if previous_time is None:
         return True, {"distance_km": 0.0, "speed_kmh": 0.0, "relocation": False}
 
-    distance = haversine_km(float(current["latitude"]), float(current["longitude"]), latitude, longitude)
+    distance = haversine_km(float(reference["latitude"]), float(reference["longitude"]), latitude, longitude)
     elapsed_hours = max((now - previous_time).total_seconds() / 3600.0, 1.0 / 3600.0)
     speed = distance / elapsed_hours
 
@@ -837,6 +840,10 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
 
     current = conn.execute("SELECT * FROM stations WHERE callsign=?", (callsign,)).fetchone()
     previous = current
+    last_valid_track = conn.execute(
+        "SELECT timestamp,latitude,longitude FROM tracks WHERE callsign=? ORDER BY id DESC LIMIT 1",
+        (callsign,),
+    ).fetchone()
     packet_lat = packet.get("latitude")
     packet_lon = packet.get("longitude")
     position_valid = True
@@ -846,6 +853,7 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
             position_valid, position_meta = _position_is_plausible(
                 callsign,
                 current,
+                last_valid_track,
                 float(packet_lat),
                 float(packet_lon),
                 datetime.now(timezone.utc),
