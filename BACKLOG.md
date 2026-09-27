@@ -85,6 +85,18 @@
 
 ## Pendências para próximas versões
 
+- **Atualizador — botão “Baixar e instalar” sem ação**
+  - Corrigir o fluxo acionado pelo botão **Baixar e instalar** no aviso/modal de nova versão.
+  - Problema observado: ao clicar no botão, aparentemente **nada acontece**; não há download, progresso, mensagem de erro nem início da instalação.
+  - Validar se o evento de clique está realmente vinculado ao handler correto e se não há exceção JavaScript silenciosa interrompendo o fluxo.
+  - Validar a chamada ao backend de atualização, incluindo retorno HTTP, timeout, permissões de escrita, criação do arquivo temporário e seleção correta do asset da plataforma.
+  - Exibir feedback imediato ao usuário após o clique: **Preparando download**, **Baixando**, percentual/progresso, **Validando**, **Instalando** ou erro detalhado.
+  - Impedir cliques repetidos enquanto uma atualização estiver em andamento, sem deixar o botão aparentemente inerte.
+  - Em caso de falha, manter a aplicação aberta e mostrar o motivo técnico em linguagem legível, com opção para abrir a página da release manualmente.
+  - Registrar no diagnóstico/log todas as etapas do updater, incluindo clique, asset selecionado, URL de download, caminho temporário, tamanho recebido, SHA-256, inicialização do helper e eventual erro.
+  - Testar especificamente **Windows Portable** e **Windows Setup**, pois o comportamento pode ser diferente entre substituição do executável portátil e execução do instalador.
+  - Adicionar teste de regressão garantindo que o clique no botão dispara a requisição ao endpoint de atualização e altera imediatamente o estado visual do modal.
+
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
