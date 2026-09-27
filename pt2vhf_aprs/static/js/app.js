@@ -1058,28 +1058,62 @@
     return Number.isFinite(ms) ? ms : null;
   }
 
-  function mapStationMatchesAge(station) {
-    const mode = state.mapStationAgeFilter || 'all';
-    if (mode === 'all') return true;
-    const heard = stationLastHeardMs(station);
-    if (!Number.isFinite(heard)) return false;
-    const age = Math.max(0, Date.now() - heard);
-    const h2 = 2 * 60 * 60 * 1000;
-    const h24 = 24 * 60 * 60 * 1000;
-    if (mode === 'lt2') return age < h2;
-    if (mode === '2to24') return age >= h2 && age < h24;
-    if (mode === 'gt24') return age >= h24;
-    return true;
+  function timestampWithinHours(value, hours) {
+    const period = topologyPeriodValue(hours);
+    if (period === 0) return true;
+    const ms = stationLastHeardMs({ last_heard: value });
+    if (!Number.isFinite(ms)) return false;
+    return Math.max(0, Date.now() - ms) <= period * 60 * 60 * 1000;
   }
 
-  function updateMapStationAgeCount(visible, total) {
-    const el = $('#mapStationAgeCount');
-    if (!el) return;
-    if ((state.mapStationAgeFilter || 'all') === 'all') {
-      el.textContent = ui(`${total} estações`, `${total} stations`);
-    } else {
-      el.textContent = ui(`${visible} de ${total} estações`, `${visible} of ${total} stations`);
+  function stationMatchesMapPeriod(station) {
+    return !!state.stationsEnabled && timestampWithinHours(station?.last_heard, state.stationsHours);
+  }
+
+  function trackMatchesMapPeriod(track) {
+    return !!state.tracklogEnabled && timestampWithinHours(track?.timestamp, state.tracklogHours);
+  }
+
+  function mapDistanceKm(a, b) {
+    const lat1 = Number(a?.latitude), lon1 = Number(a?.longitude);
+    const lat2 = Number(b?.latitude), lon2 = Number(b?.longitude);
+    if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return 0;
+    const r = 6371.0088;
+    const rad = value => value * Math.PI / 180;
+    const p1 = rad(lat1), p2 = rad(lat2);
+    const dp = rad(lat2 - lat1), dl = rad(lon2 - lon1);
+    const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    return r * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(Math.max(0, 1 - h)));
+  }
+
+  function splitTrackSegments(rows) {
+    const segments = [];
+    let current = [];
+    let previous = null;
+    for (const row of rows) {
+      const lat = Number(row.latitude), lon = Number(row.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+      let split = false;
+      if (previous) {
+        const distance = mapDistanceKm(previous, row);
+        const prevMs = stationLastHeardMs({ last_heard: previous.timestamp });
+        const nowMs = stationLastHeardMs({ last_heard: row.timestamp });
+        const elapsedHours = Number.isFinite(prevMs) && Number.isFinite(nowMs)
+          ? Math.max((nowMs - prevMs) / 3600000, 1 / 3600)
+          : 0;
+        const impliedSpeed = elapsedHours > 0 ? distance / elapsedHours : 0;
+        // Never draw a giant connecting line across a relocation or a corrupt position.
+        split = distance >= 250 || (distance >= 75 && elapsedHours > 0 && impliedSpeed > 1200);
+      }
+      if (split) {
+        if (current.length >= 2) segments.push(current);
+        current = [];
+      }
+      current.push([lat, lon]);
+      previous = row;
     }
+    if (current.length >= 2) segments.push(current);
+    return segments;
   }
 
   async function loadMapData() {
@@ -1089,11 +1123,11 @@
     try {
       const data = await api('/api/map-data');
       const allStations = Array.isArray(data.stations) ? data.stations : [];
-      const visibleStations = allStations.filter(mapStationMatchesAge);
-      state.mapKnownCallsigns = new Set(allStations.map(s => normalizedCall(s.callsign)).filter(Boolean));
-      state.mapVisibleCallsigns = new Set(visibleStations.map(s => normalizedCall(s.callsign)).filter(Boolean));
-      updateMapStationAgeCount(visibleStations.length, allStations.length);
-      const activeStations = new Set(visibleStations.map(s => s.callsign));
+      const visibleStations = allStations.filter(stationMatchesMapPeriod);
+      state.mapKnownCallsigns = new Set(allStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
+      state.mapVisibleCallsigns = new Set(visibleStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
+
+      const activeStations = new Set(visibleStations.map(station => station.callsign));
       for (const [call, marker] of state.markers) {
         if (!activeStations.has(call)) {
           state.map.removeLayer(marker);
@@ -1101,49 +1135,55 @@
         }
       }
 
-      for (const s of visibleStations) {
-        const latlng = [Number(s.latitude), Number(s.longitude)];
+      for (const station of visibleStations) {
+        const latlng = [Number(station.latitude), Number(station.longitude)];
         if (!Number.isFinite(latlng[0]) || !Number.isFinite(latlng[1])) continue;
-        let marker = state.markers.get(s.callsign);
+        let marker = state.markers.get(station.callsign);
         if (!marker) {
-          marker = L.marker(latlng, { icon: markerIcon(s), title: s.callsign }).addTo(state.map);
-          state.markers.set(s.callsign, marker);
+          marker = L.marker(latlng, { icon: markerIcon(station), title: station.callsign }).addTo(state.map);
+          state.markers.set(station.callsign, marker);
         } else {
-          marker.setLatLng(latlng).setIcon(markerIcon(s));
+          marker.setLatLng(latlng).setIcon(markerIcon(station));
         }
-        marker.bindPopup(popupHtml(s), { maxWidth: 520 });
-        if (marker._pt2vhfQueryPopupHandler) {
-          marker.off('popupopen', marker._pt2vhfQueryPopupHandler);
-        }
-        marker._pt2vhfQueryPopupHandler = () => { void loadStationQueryHistory(s.callsign, false); };
+        marker.bindPopup(popupHtml(station), { maxWidth: 520 });
+        if (marker._pt2vhfQueryPopupHandler) marker.off('popupopen', marker._pt2vhfQueryPopupHandler);
+        marker._pt2vhfQueryPopupHandler = () => { void loadStationQueryHistory(station.callsign, false); };
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
       const grouped = new Map();
-      for (const t of data.tracks) {
-        if (!state.mapVisibleCallsigns.has(normalizedCall(t.callsign))) continue;
-        if (!grouped.has(t.callsign)) grouped.set(t.callsign, []);
-        grouped.get(t.callsign).push([Number(t.latitude), Number(t.longitude)]);
+      if (state.tracklogEnabled) {
+        for (const track of (Array.isArray(data.tracks) ? data.tracks : [])) {
+          if (!trackMatchesMapPeriod(track)) continue;
+          if (!grouped.has(track.callsign)) grouped.set(track.callsign, []);
+          grouped.get(track.callsign).push(track);
+        }
       }
+
+      const drawable = new Map();
+      for (const [call, rows] of grouped) {
+        const segments = splitTrackSegments(rows);
+        if (segments.length) drawable.set(call, segments);
+      }
+
       for (const [call, line] of state.trackLines) {
-        if (!grouped.has(call)) {
+        if (!drawable.has(call)) {
           state.map.removeLayer(line);
           state.trackLines.delete(call);
         }
       }
 
-      for (const [call, points] of grouped) {
-        if (points.length < 2) continue;
+      for (const [call, segments] of drawable) {
         let line = state.trackLines.get(call);
         if (!line) {
-          line = L.polyline(points, {
+          line = L.polyline(segments, {
             color: state.mapConfig.track_color,
             weight: state.mapConfig.track_width,
             opacity: .78
           }).addTo(state.map);
           state.trackLines.set(call, line);
         } else {
-          line.setLatLngs(points);
+          line.setLatLngs(segments);
           line.setStyle({
             color: state.mapConfig.track_color,
             weight: state.mapConfig.track_width,
@@ -1151,6 +1191,7 @@
           });
         }
       }
+      updateMapLegend();
       if (state.topologyEnabled) await loadTopology();
     } catch (err) {
       console.warn(err);
