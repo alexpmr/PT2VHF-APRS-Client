@@ -913,20 +913,22 @@ def test_map_controls_are_above_map_not_overlaid():
     css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
 
-    toolbar_pos = html.index('class="map-top-toolbar"')
+    context_pos = html.index('id="mapContextBar"')
+    history_pos = html.index('id="mapHistoryToggle"')
+    main_pos = html.index("<main>")
     map_stage_pos = html.index('class="map-stage"')
     map_pos = html.index('id="map"')
-    assert toolbar_pos < map_stage_pos < map_pos
-    assert html.count('id="mapStationAgeFilter"') == 0
-    assert html.count('id="stationsToggle"') == 1
-    assert html.count('id="stationsHours"') == 1
-    assert html.count('id="tracklogToggle"') == 1
-    assert html.count('id="tracklogHours"') == 1
-    assert html.count('id="topologyToggle"') == 1
-    assert html.count('id="topologyHours"') == 1
+    assert context_pos < history_pos < main_pos < map_stage_pos < map_pos
+    assert 'class="map-top-toolbar"' not in html
 
-    assert "grid-template-rows: auto minmax(260px, 1fr) auto;" in css
-    assert ".map-top-toolbar" in css
+    for control in ("stationsToggle", "stationsHours", "tracklogToggle", "tracklogHours", "topologyToggle", "topologyHours"):
+        control_pos = html.index(f'id="{control}"')
+        assert context_pos < control_pos < main_pos
+
+    assert html.count('id="mapStationAgeFilter"') == 0
+    assert "grid-template-rows: minmax(260px, 1fr) auto;" in css
+    assert ".map-context-controls" in css
+    assert ".map-top-toolbar" not in css
     assert ".map-station-age-filter" not in css
 
     assert "L.Control.extend" not in js[js.index("function addTopologyControl"):js.index("function syncMapLegendCollapsed")]
@@ -1126,4 +1128,92 @@ def test_v171_i18n_expands_recent_ui_in_all_languages():
     assert '"Sobre": "À propos"' in extra
     assert "EN_TEXT.get(trimmed)" in app
     assert "renderAbout();" in app
+
+def test_v172_client_versions_consolidate_same_friendly_application(monkeypatch):
+    original_db = db.DB_PATH
+    original_resolver = db.resolve_aprs_device_id
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            now = db.utc_now_iso()
+            with db.connection() as conn:
+                conn.executemany(
+                    "INSERT INTO stations(callsign,last_heard,raw) VALUES(?,?,?)",
+                    [
+                        ("PY1AAA", now, "PY1AAA>APAAA:>test"),
+                        ("PY1BBB", now, "PY1BBB>APBBB:>test"),
+                        ("PT2ONE", now, "PT2ONE>APZVHF:>test"),
+                        ("PT2TWO", now, "PT2TWO>APALT:>test"),
+                    ],
+                )
+
+            def fake_resolver(tocall):
+                if tocall in {"APAAA", "APBBB"}:
+                    return {
+                        "identifier": tocall,
+                        "friendly_name": "ircDDB Gateway",
+                        "identified": True,
+                        "vendor": "ircDDB",
+                        "model": "ircDDB Gateway",
+                        "class": "software",
+                        "os": "",
+                    }
+                if tocall in {"APZVHF", "APALT"}:
+                    return {
+                        "identifier": tocall,
+                        "friendly_name": "PT2VHF APRS Client",
+                        "identified": True,
+                        "vendor": "PT2VHF",
+                        "model": "PT2VHF APRS Client",
+                        "class": "software",
+                        "os": "",
+                    }
+                return original_resolver(tocall)
+
+            monkeypatch.setattr(db, "resolve_aprs_device_id", fake_resolver)
+            stats = db.client_version_stats()
+
+            assert len(stats["items"]) == 2
+            ircddb = next(item for item in stats["items"] if item["friendly_name"] == "ircDDB Gateway")
+            assert ircddb["stations"] == 2
+            assert set(ircddb["identifiers"]) == {"APAAA", "APBBB"}
+
+            own = stats["own_client"]
+            assert own["friendly_name"] == "PT2VHF APRS Client"
+            assert own["stations"] == 2
+            assert own["is_own_client"] is True
+            assert set(own["identifiers"]) == {"APALT", "APZVHF"}
+            assert own["identifier"] == "APZVHF"
+    finally:
+        db.DB_PATH = original_db
+
+
+def test_v172_map_controls_share_history_context_row():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+
+    context_start = html.index('id="mapContextBar"')
+    main_start = html.index("<main>")
+    context_html = html[context_start:main_start]
+    assert 'id="mapHistoryToggle"' in context_html
+    for control in ("stationsToggle", "stationsHours", "tracklogToggle", "tracklogHours", "topologyToggle", "topologyHours"):
+        assert f'id="{control}"' in context_html
+    assert 'class="map-top-toolbar"' not in html
+    assert "height: 41px;" in css[css.index(".map-context-bar"):css.index(".map-context-bar.hidden")]
+    assert "overflow-x: auto;" in css
+    assert "grid-template-rows: minmax(260px, 1fr) auto;" in css
+
+
+def test_v172_station_popup_relative_last_heard_updates_live():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert "function formatRelativeLastHeard(value)" in js
+    assert 'class="station-last-heard-relative"' in js
+    assert "function refreshStationPopupRelativeTimes()" in js
+    assert "schedulePolling(refreshStationPopupRelativeTimes, 30000);" in js
+    assert "há ${hours} h e ${minutes} min" in js
+    assert "há ${days} dia${days === 1 ? '' : 's'}" in js
 
