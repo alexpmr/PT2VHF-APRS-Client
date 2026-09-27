@@ -84,6 +84,9 @@ def test_aprs_service_sends_standard_query_without_message_id(monkeypatch):
             })
             service = APRSService()
             service._set_status(connected=True, verified=True)
+            # A primeira query não pode cair no rate-limit mesmo se o uptime
+            # monotônico do runner ainda for inferior a 30 segundos.
+            monkeypatch.setattr("pt2vhf_aprs.aprs_service.time.monotonic", lambda: 5.0)
             sent = []
             monkeypatch.setattr(service, "_send_raw", sent.append)
             result = service.send_query("PY2ABC-9", "APRSP")
