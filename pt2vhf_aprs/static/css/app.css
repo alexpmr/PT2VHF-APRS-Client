@@ -334,7 +334,7 @@ html[data-theme="light"] .map-context-bar .topology-control select {
 .symbol-choice { min-height: 61px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 7px; background: #0f151b; color: var(--muted); cursor: pointer; }
 .symbol-choice:hover { border-color: var(--accent); background: #172433; }
 .symbol-code { font: 11px monospace; }
-.toast { position: fixed; z-index: 3000; right: 18px; bottom: 18px; max-width: 420px; padding: 11px 14px; border: 1px solid #405365; border-radius: 8px; background: #1a252f; color: var(--text); box-shadow: 0 8px 30px rgba(0,0,0,.4); font-size: 13px; }
+.toast { position: fixed; z-index: 5200; right: 18px; bottom: 18px; max-width: 420px; padding: 11px 14px; border: 1px solid #405365; border-radius: 8px; background: #1a252f; color: var(--text); box-shadow: 0 8px 30px rgba(0,0,0,.4); font-size: 13px; }
 .toast.error { border-color: rgba(240,92,99,.65); }
 .toast.ok { border-color: rgba(56,199,118,.65); }
 @media (max-width: 900px) {
@@ -2050,6 +2050,45 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
 }
 
 .update-dialog { width: min(760px, 94vw); }
+.update-download-progress {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(59,166,255,.30);
+  border-radius: 8px;
+  background: rgba(59,166,255,.08);
+  color: #d8efff;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.update-download-progress.working {
+  border-color: rgba(59,166,255,.55);
+  background: rgba(59,166,255,.10);
+}
+.update-download-progress.success {
+  border-color: rgba(56,199,118,.58);
+  background: rgba(56,199,118,.10);
+  color: #d9f8e5;
+}
+.update-download-progress.error {
+  border-color: rgba(240,92,99,.70);
+  background: rgba(240,92,99,.12);
+  color: #ffdadd;
+  font-weight: 700;
+}
+html[data-theme="light"] .update-download-progress {
+  background: #eef7ff;
+  color: #17344a;
+}
+html[data-theme="light"] .update-download-progress.success {
+  background: #eefaf2;
+  color: #174b2e;
+}
+html[data-theme="light"] .update-download-progress.error {
+  background: #fff0f1;
+  color: #7b1f28;
+}
 .update-release-notes {
   max-height: 260px;
   overflow: auto;
