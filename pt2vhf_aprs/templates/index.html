@@ -76,7 +76,19 @@
 <main>
   <section id="tab-map" class="tab-panel active">
     <div class="map-replay-layout">
-      <div id="map"></div>
+      <div class="map-stage">
+        <div class="map-station-age-filter">
+          <label for="mapStationAgeFilter">Atividade</label>
+          <select id="mapStationAgeFilter" aria-label="Filtrar estações no mapa pela última interação">
+            <option value="all" selected>Tudo</option>
+            <option value="lt2">menos de 2 h</option>
+            <option value="2to24">2 a 24 h</option>
+            <option value="gt24">mais de 24 h</option>
+          </select>
+          <span id="mapStationAgeCount" class="map-station-age-count">Todas as estações</span>
+        </div>
+        <div id="map"></div>
+      </div>
       <div class="traffic-animation-panel map-traffic-panel">
         <div class="traffic-animation-title">
           <div>
