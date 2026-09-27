@@ -119,6 +119,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_7_2.py
 
+      - name: Validate v1.7.3 release
+        shell: pwsh
+        run: python tools\apply_release_1_7_3.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -314,6 +318,10 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_7_2.py
 
+      - name: Validate v1.7.3 release
+        shell: pwsh
+        run: python tools\apply_release_1_7_3.py
+
       - name: Install Python dependencies
         shell: pwsh
         run: |
@@ -409,6 +417,7 @@ jobs:
           python tools/apply_release_1_7.py
           python tools/apply_release_1_7_1.py
           python tools/apply_release_1_7_2.py
+          python tools/apply_release_1_7_3.py
 
       - name: Build Linux packages
         shell: bash
@@ -499,6 +508,7 @@ jobs:
           python tools/apply_release_1_7.py
           python tools/apply_release_1_7_1.py
           python tools/apply_release_1_7_2.py
+          python tools/apply_release_1_7_3.py
 
       - name: Core smoke tests
         shell: bash
@@ -557,6 +567,7 @@ jobs:
           python tools/apply_release_1_7.py
           python tools/apply_release_1_7_1.py
           python tools/apply_release_1_7_2.py
+          python tools/apply_release_1_7_3.py
 
       - name: Build macOS DMG
         shell: bash
@@ -637,6 +648,7 @@ jobs:
           python tools/apply_release_1_7.py
           python tools/apply_release_1_7_1.py
           python tools/apply_release_1_7_2.py
+          python tools/apply_release_1_7_3.py
 
       - name: Generate versioned PDF manual
         shell: bash
