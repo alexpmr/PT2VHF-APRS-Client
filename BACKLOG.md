@@ -226,6 +226,14 @@
 - **Estatísticas:** fonte padrão maior e controle próprio de tamanho na Configuração.
 - **Versionamento:** nova linha iniciada em v1.7; próximas releases serão v1.7.1, v1.7.2, v1.7.3...
 
+## Concluído na v1.7.4
+
+- **Atualizador — visibilidade de erros:** toast elevado acima do modal para não ficar desfocado pelo overlay.
+- **Atualizador — erro inline:** falhas de download/instalação exibidas dentro do modal, com detalhe técnico e destaque visual.
+- **Atualizador — recuperação:** após erro, botões de instalar, abrir Release e fechar modal voltam ao estado utilizável.
+- **Acessibilidade:** status do updater usa região `aria-live="assertive"`.
+- **Testes:** regressões adicionadas para z-index, erro inline e reativação dos controles.
+
 ## Concluído na v1.7.3
 
 - **Atualizador:** corrigida a geração dos helpers PowerShell/Bash; os scripts passam a conter quebras de linha reais em vez de sequências literais `\n`.
