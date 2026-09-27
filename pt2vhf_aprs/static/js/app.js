@@ -649,51 +649,38 @@
     return `${Number(hours)} h`;
   }
 
-  function addTopologyControl(map) {
+  function addTopologyControl(_map) {
     const savedEnabled = localStorage.getItem('pt2vhf_topology_enabled');
     const savedHoursRaw = localStorage.getItem('pt2vhf_topology_hours');
     state.topologyEnabled = savedEnabled === '1';
     state.topologyHours = savedHoursRaw === null ? 0 : topologyPeriodValue(savedHoursRaw);
 
-    const TopologyControl = L.Control.extend({
-      options: { position: 'topright' },
-      onAdd() {
-        const wrapper = L.DomUtil.create('div', 'leaflet-control topology-control');
-        wrapper.innerHTML = `
-          <label><input id="topologyToggle" type="checkbox" ${state.topologyEnabled ? 'checked' : ''}> ${ui('Topologia observada', 'Observed topology')}</label>
-          <select id="topologyHours" title="${ui('Período da topologia', 'Topology period')}">
-            <option value="0">${ui('Completo', 'Complete')}</option>
-            <option value="1">1 h</option>
-            <option value="6">6 h</option>
-            <option value="24">24 h</option>
-            <option value="168">${ui('7 dias', '7 days')}</option>
-          </select>`;
-        L.DomEvent.disableClickPropagation(wrapper);
-        L.DomEvent.disableScrollPropagation(wrapper);
+    const toggle = $('#topologyToggle');
+    const select = $('#topologyHours');
+    if (!toggle || !select) return;
 
-        setTimeout(() => {
-          const toggle = wrapper.querySelector('#topologyToggle');
-          const select = wrapper.querySelector('#topologyHours');
-          select.value = String(state.topologyHours);
-          toggle.addEventListener('change', async () => {
-            state.topologyEnabled = toggle.checked;
-            localStorage.setItem('pt2vhf_topology_enabled', state.topologyEnabled ? '1' : '0');
-            if (state.topologyEnabled) await loadTopology();
-            else clearTopologyLines();
-            updateMapLegend();
-          });
-          select.addEventListener('change', async () => {
-            state.topologyHours = topologyPeriodValue(select.value);
-            localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
-            if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.topologyHours);
-            if (state.topologyEnabled) await loadTopology();
-            if (state.activeTab === 'analysis') await refreshTopologyAnalysis();
-          });
-        }, 0);
-        return wrapper;
-      }
+    toggle.checked = state.topologyEnabled;
+    select.value = String(state.topologyHours);
+
+    if (toggle.dataset.bound === '1') return;
+    toggle.dataset.bound = '1';
+    select.dataset.bound = '1';
+
+    toggle.addEventListener('change', async () => {
+      state.topologyEnabled = toggle.checked;
+      localStorage.setItem('pt2vhf_topology_enabled', state.topologyEnabled ? '1' : '0');
+      if (state.topologyEnabled) await loadTopology();
+      else clearTopologyLines();
+      updateMapLegend();
     });
-    new TopologyControl().addTo(map);
+
+    select.addEventListener('change', async () => {
+      state.topologyHours = topologyPeriodValue(select.value);
+      localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
+      if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.topologyHours);
+      if (state.topologyEnabled) await loadTopology();
+      if (state.activeTab === 'analysis') await refreshTopologyAnalysis();
+    });
   }
 
   function syncMapLegendCollapsed() {
