@@ -879,3 +879,31 @@ def test_topology_stats_active_stations_excludes_telemetry_igates_and_digipeater
     finally:
         db.DB_PATH = original
 
+def test_v1624_official_logo_is_single_branding_source():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    workflow = (root / ".github" / "workflows" / "build-windows.yml").read_text(encoding="utf-8")
+    win_icon = (root / "windows" / "make_icon.py").read_text(encoding="utf-8")
+    mac_icon = (root / "macos" / "make_icon.py").read_text(encoding="utf-8")
+    linux_build = (root / "linux" / "build_linux.sh").read_text(encoding="utf-8")
+    manual = (root / "tools" / "generate_manual.py").read_text(encoding="utf-8")
+
+    assert 'type="image/png"' in html
+    assert html.count("img/app_logo.png") >= 2
+    assert "app_logo.svg" not in html
+    assert "app_logo.png" in win_icon
+    assert "app_logo.png" in mac_icon
+    assert "ImageDraw" not in mac_icon
+    assert "app_logo.png" in linux_build
+    assert "app_logo.png" in manual
+    assert "cp pt2vhf_aprs/static/img/app_logo.png dist-docs/manual_logo.png" in workflow
+    assert "app_logo.svg" not in workflow
+
+
+def test_v1624_version_notes_include_1623_and_1624():
+    root = Path(__file__).resolve().parent.parent
+    source = (root / "pt2vhf_aprs" / "version_notes.py").read_text(encoding="utf-8")
+    assert '"1.6.24"' in source
+    assert '"1.6.23"' in source
+    assert source.index('"1.6.24"') < source.index('"1.6.23"')
+
