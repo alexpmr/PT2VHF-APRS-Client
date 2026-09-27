@@ -79,6 +79,12 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens — reduzir altura dos botões de filtro**
+  - Deixar os botões **Agrupado por remetente**, **Minhas mensagens** e **Não lidas** visualmente mais baixos/compactos.
+  - Ajustar padding, altura mínima e/ou largura para que o texto de cada botão permaneça em **uma única linha**, sem quebra.
+  - Manter alinhamento vertical consistente com **Ocultar telemetria** e **Filtro por origem**.
+  - Preservar boa área de clique e responsividade em telas menores, evitando que os controles se sobreponham.
+
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
