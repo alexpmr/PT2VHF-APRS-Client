@@ -24,6 +24,7 @@ UPDATE_DIR = db.DB_PATH.parent / "updates"
 PENDING_FILE = UPDATE_DIR / "pending_update.json"
 APPLY_LOG = UPDATE_DIR / "update_apply.log"
 UPDATE_LOCK_FILE = UPDATE_DIR / "update.lock"
+HELPER_READY_FILE = UPDATE_DIR / "helper_ready"
 
 _update_operation_lock = threading.Lock()
 _exit_handler_lock = threading.Lock()
@@ -317,6 +318,7 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
     log = APPLY_LOG.resolve()
     pending_path = PENDING_FILE.resolve()
     lock_path = UPDATE_LOCK_FILE.resolve()
+    ready_path = HELPER_READY_FILE.resolve()
 
     common = (
         "$ErrorActionPreference='Stop'\\n"
@@ -326,7 +328,9 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
         f"$pendingFile={_ps_quote(pending_path)}\\n"
         f"$lockFile={_ps_quote(lock_path)}\\n"
         f"$logFile={_ps_quote(log)}\\n"
+        f"$readyFile={_ps_quote(ready_path)}\\n"
         "function Log([string]$m) { Add-Content -LiteralPath $logFile -Value ((Get-Date).ToString('o') + ' ' + $m) -Encoding UTF8 }\\n"
+        "Set-Content -LiteralPath $readyFile -Value $PID -Encoding ASCII\\n"
         "Log 'updater helper started'\\n"
         "$deadline=(Get-Date).AddSeconds(8)\\n"
         "while ((Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }\\n"
@@ -394,6 +398,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
     pending_file = PENDING_FILE.resolve()
     lock_file = UPDATE_LOCK_FILE.resolve()
     log = APPLY_LOG.resolve()
+    ready_file = HELPER_READY_FILE.resolve()
 
     q = shlex.quote
     lines = [
@@ -403,7 +408,9 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
         f"log={q(str(log))}",
         f"pending={q(str(pending_file))}",
         f"lockfile={q(str(lock_file))}",
+        f"ready={q(str(ready_file))}",
         "logmsg(){ printf '%s %s\\\\n' \"$(date -Iseconds)\" \"$1\" >> \"$log\"; }",
+        "printf '%s\\n' \"$\" > \"$ready\"",
         "logmsg 'updater helper started'",
         "for _ in $(seq 1 32); do",
         "  if ! kill -0 \"$pid\" 2>/dev/null; then break; fi",
@@ -496,6 +503,17 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
     return script
 
 
+def _wait_for_helper_ready(process: subprocess.Popen, timeout: float = 4.0) -> bool:
+    deadline = time.monotonic() + max(1.0, float(timeout))
+    while time.monotonic() < deadline:
+        if HELPER_READY_FILE.exists():
+            return True
+        if process.poll() is not None:
+            return False
+        time.sleep(0.1)
+    return HELPER_READY_FILE.exists()
+
+
 def launch_pending_update(force: bool = False) -> bool:
     if not force:
         cfg = db.get_config()
@@ -510,32 +528,54 @@ def launch_pending_update(force: bool = False) -> bool:
         raise ValueError("A instalação automática não é suportada neste ambiente.")
 
     UPDATE_DIR.mkdir(parents=True, exist_ok=True)
+    HELPER_READY_FILE.unlink(missing_ok=True)
+
     if sys.platform == "win32":
         helper = _write_windows_helper(pending)
-        subprocess.Popen(
-            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(helper)],
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
-            | getattr(subprocess, "DETACHED_PROCESS", 0),
+        flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        process = subprocess.Popen(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(helper)],
+            creationflags=flags,
             close_fds=True,
-        )
-    else:
-        helper = _write_posix_helper(pending)
-        subprocess.Popen(
-            ["/bin/bash", str(helper)],
-            start_new_session=True,
-            close_fds=True,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+    else:
+        helper = _write_posix_helper(pending)
+        process = subprocess.Popen(
+            ["/bin/bash", str(helper)],
+            start_new_session=True,
+            close_fds=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    if not _wait_for_helper_ready(process):
+        diag.log_event(
+            "update_helper_start_failed",
+            mode=mode,
+            target_version=pending.get("version"),
+            helper=str(helper),
+            helper_pid=process.pid,
+            returncode=process.poll(),
+        )
+        try:
+            process.terminate()
+        except Exception:
+            pass
+        raise RuntimeError("O atualizador auxiliar não iniciou corretamente. A aplicação permanecerá aberta.")
 
     diag.log_event(
         "update_helper_launched",
         mode=mode,
         target_version=pending.get("version"),
         helper=str(helper),
+        helper_pid=process.pid,
+        ready_file=str(HELPER_READY_FILE),
     )
     return True
-
 
 def download_and_install(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     if not _update_operation_lock.acquire(blocking=False):
@@ -552,14 +592,14 @@ def download_and_install(version: str, asset: dict[str, Any]) -> dict[str, Any]:
         if not launch_pending_update(force=True):
             raise RuntimeError("Não foi possível iniciar o instalador auxiliar.")
         helper_started = True
-        _request_exit_after()
+        _request_exit_after(delay=2.5)
         return {
             "ok": True,
             "version": payload["version"],
             "asset_name": payload["asset_name"],
             "sha256": payload["sha256"],
             "mode": payload["mode"],
-            "message": "Atualização baixada e validada. A aplicação atual será encerrada para instalar a nova versão.",
+            "message": "Atualização baixada, validada e helper confirmado. A aplicação será reiniciada para concluir a instalação.",
         }
     except Exception as exc:
         diag.log_event("update_install_failed", target_version=version, error=str(exc))
