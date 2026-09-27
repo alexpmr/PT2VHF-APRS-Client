@@ -1295,3 +1295,33 @@ def test_v173_download_install_button_has_immediate_feedback_and_direct_action()
     assert "update_install_http_requested" in web
     assert "update_install_requested" in updater_source
 
+def test_v174_updater_errors_are_visible_above_modal():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert 'id="updateDownloadProgress" class="update-download-progress hidden"' in html
+    assert 'role="status" aria-live="assertive"' in html
+    assert ".message-alert-overlay {" in css
+    assert "z-index: 4000;" in css
+    assert ".toast { position: fixed; z-index: 5200;" in css
+    assert ".update-download-progress.error" in css
+    assert "function setUpdateProgress(message = '', type = '')" in js
+    assert "setUpdateProgress(message, 'error');" in js
+    assert "Não foi possível concluir a atualização automática." in js
+    assert "toast(detail, 'error');" in js
+
+
+def test_v174_updater_modal_keeps_actionable_controls_after_failure():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    catch_start = js.index("PT2VHF updater: falha ao baixar/instalar")
+    catch_block = js[catch_start:catch_start + 2600]
+    assert "state.updateDownloading = false;" in catch_block
+    assert "installButton.disabled = false;" in catch_block
+    assert "closeButton.disabled = false;" in catch_block
+    assert "releaseButton.disabled = false;" in catch_block
+    assert "setUpdateProgress(message, 'error');" in catch_block
+
