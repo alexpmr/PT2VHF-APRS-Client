@@ -56,9 +56,6 @@ checks = {
     "windows/make_icon.py": [
         "app_logo.png",
     ],
-    "macos/make_icon.py": [
-        "app_logo.png",
-    ],
     "linux/build_linux.sh": [
         "app_logo.png",
     ],
