@@ -91,6 +91,10 @@
   - Não fechar a aplicação se o helper não tiver sido criado/iniciado com sucesso.
   - Validar a seleção do asset correto da Release conforme plataforma, arquitetura e formato instalado/portátil.
   - Exibir progresso de **download**, **verificação**, **instalação** e **reinicialização**, além de mensagem de erro visível quando qualquer etapa falhar.
+  - A janela/modal **Nova versão disponível** não deve fechar automaticamente após alguns segundos; deve permanecer aberta até uma ação explícita do usuário ou até a conclusão controlada do fluxo de atualização.
+  - Depois que o usuário clicar em **Baixar e instalar**, manter o modal visível durante **download**, **validação**, **instalação** e **reinicialização**, atualizando barra de progresso e texto de status.
+  - Não permitir que timers genéricos de pop-up/notificação fechem a janela de atualização enquanto houver operação em andamento.
+  - O botão **Depois** continua sendo a forma explícita de adiar/fechar a atualização antes do início do processo; durante uma atualização já iniciada, evitar fechamento acidental.
   - Registrar em log dedicado o caminho/URL do asset, PID do helper, diretório temporário, tamanho esperado/baixado, SHA-256, comando de instalação e código de saída.
   - No Windows, validar separadamente **Portable** e **Setup**, incluindo UAC quando necessário.
   - Após atualização bem-sucedida, reiniciar automaticamente a nova versão; em caso de falha, manter/restaurar a versão anterior quando aplicável.
