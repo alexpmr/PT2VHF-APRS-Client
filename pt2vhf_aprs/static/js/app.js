@@ -2497,10 +2497,7 @@
 
   function openMessageComposer(destination = '') {
     $('.tab[data-tab="messages"]')?.click();
-    $('#messageType').value = 'message';
-    updateMessageComposerMode();
-    $('#messageTo').value = normalizedCall(destination);
-    $('#messageText').focus();
+    selectMessageRecipient(destination);
   }
 
   document.addEventListener('click', e => {
@@ -2567,16 +2564,25 @@
     const type = $('#messageType').value;
     const isMessage = type === 'message';
     const isGroup = type === 'group_bulletin';
+    const isAnnouncement = type === 'announcement';
 
     $('#messageDestinationField').classList.toggle('hidden', !isMessage);
-    $('#bulletinIdField').classList.toggle('hidden', isMessage);
+    $('#bulletinIdField').classList.toggle('hidden', isMessage || isAnnouncement);
     $('#bulletinGroupField').classList.toggle('hidden', !isGroup);
 
     const messageInput = $('#messageText');
     if (isMessage) messageInput.removeAttribute('maxlength');
     else messageInput.maxLength = 67;
-    messageInput.placeholder = isMessage ? 'Digite a mensagem APRS; textos longos serão enviados em partes' : 'Digite o texto do boletim APRS';
-    $('#sendMessageButton').textContent = isMessage ? 'Enviar' : 'Enviar boletim';
+    messageInput.placeholder = isMessage
+      ? ui('Digite a mensagem APRS; textos longos serão enviados em partes', 'Type the APRS message; long texts will be sent in parts')
+      : isAnnouncement
+        ? ui('Digite o texto do anúncio APRS', 'Type the APRS announcement text')
+        : ui('Digite o texto do boletim APRS', 'Type the APRS bulletin text');
+    $('#sendMessageButton').textContent = isMessage
+      ? ui('Enviar', 'Send')
+      : isAnnouncement
+        ? ui('Enviar anúncio', 'Send announcement')
+        : ui('Enviar boletim', 'Send bulletin');
     updateMessageCharCounter();
   }
 
@@ -2588,7 +2594,7 @@
     const type = $('#messageType').value;
     const to = $('#messageTo').value.trim().toUpperCase();
     const message = $('#messageText').value.trim();
-    const bulletinId = $('#bulletinId').value;
+    const bulletinId = type === 'announcement' ? 'A' : $('#bulletinId').value;
     const group = $('#bulletinGroup').value.trim().toUpperCase();
 
     if (!message) return toast('Informe a mensagem.', 'error');
@@ -2619,7 +2625,12 @@
             : ui('Mensagem colocada na fila de transmissão.', 'Message queued for transmission.'), 'ok');
         }
       } else {
-        toast('Boletim enviado ao APRS-IS sem solicitação de ACK.', 'ok');
+        toast(
+          result.type === 'announcement'
+            ? ui('Anúncio enviado ao APRS-IS sem solicitação de ACK.', 'Announcement sent to APRS-IS without ACK request.')
+            : ui('Boletim enviado ao APRS-IS sem solicitação de ACK.', 'Bulletin sent to APRS-IS without ACK request.'),
+          'ok'
+        );
       }
       void loadMessages({ scrollToNewest:true });
     } catch (err) {
