@@ -550,6 +550,7 @@
     const messagesFamily = FONT_FAMILIES[cfg.messages_font_family] || FONT_FAMILIES.system;
     const stationsFamily = FONT_FAMILIES[cfg.stations_font_family] || FONT_FAMILIES.system;
     const logsFamily = FONT_FAMILIES[cfg.logs_font_family] || FONT_FAMILIES.consolas;
+    const statisticsSize = Math.min(20, Math.max(11, Number(cfg.statistics_font_size || 13)));
     const messagesSize = Math.min(20, Math.max(10, Number(cfg.messages_font_size || 12)));
     const stationsSize = Math.min(20, Math.max(10, Number(cfg.stations_font_size || 12)));
     const logsSize = Math.min(20, Math.max(10, Number(cfg.logs_font_size || 12)));
@@ -569,6 +570,7 @@
     root.style.setProperty('--logs-font-size', `${logsSize}px`);
     root.style.setProperty('--logs-font-weight', cfg.logs_font_weight === 'bold' ? '700' : '400');
     root.style.setProperty('--logs-line-height', String(logsLine));
+    root.style.setProperty('--statistics-font-size', `${statisticsSize}px`);
   }
 
   function applyMapPreferences(cfg = {}) {
@@ -2970,8 +2972,9 @@
       state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
       state.soundOnStationActivity = !!cfg.sound_on_station_activity;
       state.highlightStationActivity = !!cfg.highlight_station_activity;
+      state.trafficAnimationEnabled = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
-      state.language = cfg.language === 'en' ? 'en' : 'pt-BR';
+      state.language = normalizeLanguage(cfg.language);
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       validateCallsignField();
       updateAltitudeSourceStatus(cfg.altitude_source, cfg.altitude);
@@ -3004,6 +3007,7 @@
     data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
     data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
     data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
+    data.traffic_animation_enabled = !!form.elements.traffic_animation_enabled?.checked;
     data.respond_to_queries = !!form.elements.respond_to_queries?.checked;
     data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
     data.auto_download_updates = false;
@@ -3236,6 +3240,7 @@
       ['messages_font_size', '#messagesFontSizeValue', v => `${v || 12} px`],
       ['stations_font_size', '#stationsFontSizeValue', v => `${v || 12} px`],
       ['logs_font_size', '#logsFontSizeValue', v => `${v || 12} px`],
+      ['statistics_font_size', '#statisticsFontSizeValue', v => `${v || 13} px`],
       ['messages_line_height', '#messagesLineHeightValue', v => `${Number(v || 1.35).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
       ['stations_line_height', '#stationsLineHeightValue', v => `${Number(v || 1.25).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
       ['logs_line_height', '#logsLineHeightValue', v => `${Number(v || 1.30).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
@@ -3263,9 +3268,10 @@
       logs_font_family: form.elements.namedItem('logs_font_family')?.value || 'consolas',
       logs_font_size: form.elements.namedItem('logs_font_size')?.value || 12,
       logs_font_weight: form.elements.namedItem('logs_font_weight')?.value || 'normal',
-      logs_line_height: form.elements.namedItem('logs_line_height')?.value || 1.30
+      logs_line_height: form.elements.namedItem('logs_line_height')?.value || 1.30,
+      statistics_font_size: form.elements.namedItem('statistics_font_size')?.value || 13
     });
-    state.language = form.elements.namedItem('language')?.value === 'en' ? 'en' : 'pt-BR';
+    state.language = normalizeLanguage(form.elements.namedItem('language')?.value);
     applyLanguage(state.language);
     syncAppearanceControls();
   }
@@ -3298,7 +3304,8 @@
     'app_theme','language',
     'messages_font_family','messages_font_size','messages_font_weight','messages_line_height',
     'stations_font_family','stations_font_size','stations_font_weight','stations_line_height',
-    'logs_font_family','logs_font_size','logs_font_weight','logs_line_height'
+    'logs_font_family','logs_font_size','logs_font_weight','logs_line_height',
+    'statistics_font_size'
   ]) {
     const el = $('#configForm')?.elements.namedItem(name);
     el?.addEventListener('input', previewAppearanceFromForm);
@@ -3319,6 +3326,7 @@
   $('#resetMessagesTypography')?.addEventListener('click', () => resetTypography('messages', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.35}));
   $('#resetStationsTypography')?.addEventListener('click', () => resetTypography('stations', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.25}));
   $('#resetLogsTypography')?.addEventListener('click', () => resetTypography('logs', {font_family:'consolas',font_size:12,font_weight:'normal',line_height:1.30}));
+  $('#resetStatisticsTypography')?.addEventListener('click', () => resetTypography('statistics', {font_size:13}));
 
   $('#chooseSymbolButton').addEventListener('click', () => {
     const form = $('#configForm');
