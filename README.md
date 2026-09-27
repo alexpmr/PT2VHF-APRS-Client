@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.6.22
+# PT2VHF APRS Client - v1.6.23
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.22** é uma release completa multiplataforma que ativa a **atualização integrada por clique**: o cliente baixa e valida o pacote da plataforma em execução, inicia um updater auxiliar, encerra a versão anterior, instala/substitui os binários e abre automaticamente a nova versão.
+A **v1.6.23** é uma release completa multiplataforma que consolida a atualização integrada da v1.6.22, padroniza a **identidade visual** da aplicação e adiciona no **Mapa** um filtro de atividade das estações pela última interação.
 
 ## Downloads
 
@@ -25,6 +25,10 @@ Cada Release completa publica:
 - `PT2VHF_APRS_Client_Manual_vX.Y.pdf` — manual profissional gerado e validado no workflow da Release.
 
 ## Destaques da série 1.6
+
+### Identidade visual
+- A mesma logo vetorial/raster do **PT2VHF APRS Client** é usada no cabeçalho, favicon, ícones Windows/Linux/macOS, bandeja do Windows e capa do Manual PDF.
+- O pipeline valida a presença dos arquivos de logo antes de gerar os pacotes.
 
 ### Configuração
 - Configuração organizada em seções, iniciando diretamente pela Estação APRS, sem bloco introdutório redundante.
@@ -71,6 +75,8 @@ Cada Release completa publica:
 
 ### Mapa, Log e Estatísticas
 - OpenStreetMap, OpenTopoMap e Esri World Imagery.
+- Filtro de atividade no **Mapa**, com opções **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**. O filtro usa a última recepção/interação conhecida e também oculta o tracklog das estações fora da faixa.
+- A **Legenda** do Mapa pode ser minimizada/expandida; a preferência fica salva localmente para a próxima execução.
 - Tracklogs automáticos de estações móveis.
 - O popup da estação oferece **Mostrar log**, abrindo o Log já filtrado pelo indicativo/SSID.
 - As estatísticas da rede ficam na aba **Estatísticas**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.

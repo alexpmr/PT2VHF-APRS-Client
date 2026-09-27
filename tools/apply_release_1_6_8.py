@@ -1,10 +1,6 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-
-# v1.6.8 foi integrada diretamente aos arquivos-fonte.
-# Depois dos patches legados, restaura a logo estável para não depender
-# do JPEG oficial corrompido que será tratado em uma próxima versão.
 html_path = ROOT / "pt2vhf_aprs/templates/index.html"
 html = html_path.read_text(encoding="utf-8")
 html = html.replace("img/aprs_logo_official.jpg", "img/app_logo.svg")
