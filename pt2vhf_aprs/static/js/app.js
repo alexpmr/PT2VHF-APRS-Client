@@ -1250,7 +1250,7 @@
   }
 
   function refreshStationPopupRelativeTimes() {
-    $('.station-last-heard-relative').forEach(element => {
+    document.querySelectorAll('.station-last-heard-relative').forEach(element => {
       const relative = formatRelativeLastHeard(element.dataset.lastHeard || '');
       element.textContent = relative ? ` — ${relative}` : '';
     });
