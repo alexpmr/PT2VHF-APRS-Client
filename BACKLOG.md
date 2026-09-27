@@ -85,6 +85,17 @@
 
 ## Pendências para próximas versões
 
+- **Estatísticas — consolidar aliases/variações do mesmo cliente APRS**
+  - Corrigir o ranking **Versões de clientes / Software-dispositivo** para não exibir separadamente entradas que representam o mesmo aplicativo, mas chegam com pequenas variações de nome, versão, capitalização, espaços, hífens, sufixos ou aliases da base de identificação.
+  - A consolidação atual por nome amigável exato não é suficiente; criar uma camada de **nome canônico do cliente**.
+  - Normalizar pelo menos: maiúsculas/minúsculas, espaços duplicados, hífen/underscore, pontuação e aliases conhecidos.
+  - Manter versões realmente distintas separadas somente quando a versão for semanticamente relevante e identificável de forma confiável.
+  - Preservar internamente todos os TOCALLs, nomes originais e padrões associados a cada grupo canônico para diagnóstico.
+  - Exibir na interface apenas o nome canônico consolidado, quantidade total de estações e percentual recalculado.
+  - Adicionar tabela de aliases conhecida e permitir futura manutenção sem alterar a lógica principal do ranking.
+  - Adicionar teste de regressão com dois ou mais nomes amigáveis equivalentes mapeando para o mesmo cliente e validar que apenas uma linha seja exibida.
+  - Revisar especificamente os clientes duplicados observados na tela de Estatísticas da v1.7.2.
+
 - **Atualizador — botão “Baixar e instalar” sem ação**
   - Corrigir o fluxo acionado pelo botão **Baixar e instalar** no aviso/modal de nova versão.
   - Problema observado: ao clicar no botão, aparentemente **nada acontece**; não há download, progresso, mensagem de erro nem início da instalação.
