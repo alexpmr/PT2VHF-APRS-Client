@@ -85,29 +85,6 @@
 
 ## Pendências para próximas versões
 
-- **Estatísticas — consolidar aliases/variações do mesmo cliente APRS**
-  - Corrigir o ranking **Versões de clientes / Software-dispositivo** para não exibir separadamente entradas que representam o mesmo aplicativo, mas chegam com pequenas variações de nome, versão, capitalização, espaços, hífens, sufixos ou aliases da base de identificação.
-  - A consolidação atual por nome amigável exato não é suficiente; criar uma camada de **nome canônico do cliente**.
-  - Normalizar pelo menos: maiúsculas/minúsculas, espaços duplicados, hífen/underscore, pontuação e aliases conhecidos.
-  - Manter versões realmente distintas separadas somente quando a versão for semanticamente relevante e identificável de forma confiável.
-  - Preservar internamente todos os TOCALLs, nomes originais e padrões associados a cada grupo canônico para diagnóstico.
-  - Exibir na interface apenas o nome canônico consolidado, quantidade total de estações e percentual recalculado.
-  - Adicionar tabela de aliases conhecida e permitir futura manutenção sem alterar a lógica principal do ranking.
-  - Adicionar teste de regressão com dois ou mais nomes amigáveis equivalentes mapeando para o mesmo cliente e validar que apenas uma linha seja exibida.
-  - Revisar especificamente os clientes duplicados observados na tela de Estatísticas da v1.7.2.
-
-- **Atualizador — botão “Baixar e instalar” sem ação**
-  - Corrigir o fluxo acionado pelo botão **Baixar e instalar** no aviso/modal de nova versão.
-  - Problema observado: ao clicar no botão, aparentemente **nada acontece**; não há download, progresso, mensagem de erro nem início da instalação.
-  - Validar se o evento de clique está realmente vinculado ao handler correto e se não há exceção JavaScript silenciosa interrompendo o fluxo.
-  - Validar a chamada ao backend de atualização, incluindo retorno HTTP, timeout, permissões de escrita, criação do arquivo temporário e seleção correta do asset da plataforma.
-  - Exibir feedback imediato ao usuário após o clique: **Preparando download**, **Baixando**, percentual/progresso, **Validando**, **Instalando** ou erro detalhado.
-  - Impedir cliques repetidos enquanto uma atualização estiver em andamento, sem deixar o botão aparentemente inerte.
-  - Em caso de falha, manter a aplicação aberta e mostrar o motivo técnico em linguagem legível, com opção para abrir a página da release manualmente.
-  - Registrar no diagnóstico/log todas as etapas do updater, incluindo clique, asset selecionado, URL de download, caminho temporário, tamanho recebido, SHA-256, inicialização do helper e eventual erro.
-  - Testar especificamente **Windows Portable** e **Windows Setup**, pois o comportamento pode ser diferente entre substituição do executável portátil e execução do instalador.
-  - Adicionar teste de regressão garantindo que o clique no botão dispara a requisição ao endpoint de atualização e altera imediatamente o estado visual do modal.
-
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
@@ -248,6 +225,15 @@
 - **Estatísticas:** somente nome amigável do aplicativo/software na apresentação principal; identificadores técnicos permanecem internos.
 - **Estatísticas:** fonte padrão maior e controle próprio de tamanho na Configuração.
 - **Versionamento:** nova linha iniciada em v1.7; próximas releases serão v1.7.1, v1.7.2, v1.7.3...
+
+## Concluído na v1.7.3
+
+- **Atualizador:** corrigida a geração dos helpers PowerShell/Bash; os scripts passam a conter quebras de linha reais em vez de sequências literais `\n`.
+- **Baixar e instalar:** os botões de atualização fornecem feedback imediato e disparam diretamente o fluxo de download/instalação.
+- **Diagnóstico:** updater registra solicitação, asset, URL, caminho temporário, tamanho esperado/recebido, SHA-256 e falhas.
+- **Estatísticas:** versões semânticas e aliases do mesmo cliente são consolidados por família canônica; **Dire Wolf 1.7/1.8/1.9** passam a aparecer como **Dire Wolf**.
+- **Estatísticas:** nomes originais, aliases e TOCALLs permanecem preservados internamente para diagnóstico.
+- **Testes:** adicionada regressão que gera os helpers reais e valida as quebras de linha, além do agrupamento por família e do acionamento do botão de atualização.
 
 ## Concluído na v1.7.2
 
