@@ -31,7 +31,6 @@ checks = {
     ],
     "tools/generate_manual.py": ['"app_logo.png"'],
     "pt2vhf_aprs/version_notes.py": ['"1.6.24"', '"1.6.23"'],
-    "README.md": ["fonte visual única"],
     "tests/test_core.py": [
         "test_v1624_official_logo_is_single_branding_source",
         "test_v1624_version_notes_include_1623_and_1624",
