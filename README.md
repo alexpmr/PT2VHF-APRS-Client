@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.6.24
+# PT2VHF APRS Client - v1.7
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.6.24** é uma release completa multiplataforma que adota a **logo APRS oficial enviada para o projeto como fonte visual única** e consolida documentação, notas de versão e testes de regressão da série 1.6.
+A **v1.7** inaugura a nova linha de versões e é uma release completa multiplataforma focada em usabilidade, internacionalização, segurança no envio de mensagens e melhorias visuais.
 
 ## Downloads
 
@@ -24,7 +24,7 @@ Cada Release completa publica:
 ### Manual
 - `PT2VHF_APRS_Client_Manual_vX.Y.pdf` — manual profissional gerado e validado no workflow da Release.
 
-## Destaques da série 1.6
+## Destaques da v1.7 e da série 1.6
 
 ### Identidade visual
 - A **logo APRS oficial enviada para o projeto** é a única fonte da identidade visual: cabeçalho, favicon, bandeja do Windows, ícones Windows/Linux/macOS e capa do Manual PDF.
@@ -37,7 +37,7 @@ Cada Release completa publica:
 - Se houver alterações não salvas e o usuário tentar mudar de aba, o cliente oferece **Salvar e sair**, **Descartar alterações** ou **Cancelar**.
 - Botão **Restaurar configuração padrão** sem apagar mensagens, estações, logs ou tracklogs.
 - Chaveamento rápido de tema no cabeçalho.
-- Idiomas **🇧🇷 Português** (padrão) e **English com bandeira da Inglaterra**; a barra superior mostra apenas o idioma atual e abre as duas opções ao clicar.
+- Idiomas **Português** (padrão), **English**, **Español** e **Français**, com seletor rápido no topo e persistência da preferência.
 
 ### Identificação do próprio cliente
 - As transmissões geradas pelo aplicativo usam o TOCALL experimental **APZVHF**, reservado aqui para identificar o **PT2VHF APRS Client** enquanto não houver uma alocação oficial específica.
@@ -59,7 +59,8 @@ Cada Release completa publica:
 
 ### Mensagens
 - Conversas agrupadas podem ser ordenadas **A → Z** ou **Z → A** clicando em **Conversas**.
-- Selecionar uma conversa preenche automaticamente o campo **Destino**, incluindo SSID.
+- Selecionar uma conversa preenche automaticamente o campo **Destino**, incluindo SSID; alterar o destinatário também sincroniza a conversa em foco, evitando divergência entre a conversa visível e o indicativo que receberá a mensagem.
+- Os botões **Agrupado por remetente**, **Minhas mensagens** e **Não lidas** são compactos e mantêm seus rótulos em uma linha.
 - Mensagens longas são divididas sem `1/2`, `2/2` ou outros marcadores visíveis; as partes respeitam limites de palavra sempre que possível.
 - O controle interno continua mantendo identificação de grupo e status agregado, como **2/3 confirmadas** ou **Todas confirmadas**.
 - Retry individual de partes e retry automático configurável por timeout/número máximo de tentativas.
@@ -77,14 +78,16 @@ Cada Release completa publica:
 ### Mapa, Log e Estatísticas
 - OpenStreetMap, OpenTopoMap e Esri World Imagery.
 - Filtro de atividade no **Mapa**, com opções **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**. O filtro usa a última recepção/interação conhecida e também oculta o tracklog das estações fora da faixa.
+- Os controles **Atividade** e **Topologia observada** ficam em uma barra superior fora do canvas do mapa, evitando sobreposição.
 - A **Legenda** do Mapa pode ser minimizada/expandida; a preferência fica salva localmente para a próxima execução.
 - Tracklogs automáticos de estações móveis.
 - O popup da estação oferece **Mostrar log**, abrindo o Log já filtrado pelo indicativo/SSID.
 - As estatísticas da rede ficam na aba **Estatísticas**, com **Completo** como período padrão, além de 1 h, 6 h, 24 h e 7 dias.
 - Ranking de **estações mais ativas** por tráfego útil, excluindo telemetria, iGates e digipeaters; rankings dedicados de digipeaters e iGates, enlaces que deixaram de aparecer, comparação com o período anterior e métricas agregadas.
-- **Ranking de software/dispositivos APRS** com nome amigável resolvido pela base APRS Device Identification, TOCALL de referência, quantidade e percentual. O painel mostra Top 20 e destaca a posição real do PT2VHF APRS Client quando ele estiver fora do corte.
+- **Ranking de software/dispositivos APRS** com nome amigável resolvido pela base APRS Device Identification, quantidade e percentual; o identificador técnico permanece interno e deixa de poluir a apresentação.
+- A aba **Estatísticas** usa fonte padrão ligeiramente maior e ganha controle próprio de tamanho da fonte em Configurações.
 - O Mapa ganhou **legenda dos tipos de linhas**: tracklog, enlace RF, IGate/APRS-IS, replay temporal e pacote em movimento. Em qAR/qAO, o salto físico até o IGate é tratado como RF; o papel de IGate é mantido como metadado, não como meio do enlace.
-- Nova animação do tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, velocidades 0,5x/1x/2x/5x/10x, timestamp e contadores.
+- Animação do tráfego APRS em modos **Histórico** e **Ao vivo**, com Play/Pausa, início, avanço/recuo, velocidades 0,5x/1x/2x/5x/10x, timestamp e contadores. Em novas instalações, a animação **Ao vivo vem ativada por padrão**, podendo ser desativada em Configurações.
 - Em pacotes com múltiplos enlaces observados, os segmentos podem ser animados simultaneamente, reproduzindo a propagação multi-hop.
 - Cada transmissão recebida pode gerar som curto e destacar temporariamente em vermelho o marcador da estação de origem; som e destaque são configuráveis separadamente.
 - Estações favoritas são persistidas e ficam fixadas no topo da aba Estações; a estrela também aparece no popup do mapa e na área de Mensagens.

@@ -53,7 +53,7 @@ checks = {
         "test_updater_select_asset_matches_exact_platform_asset",
     ],
     "README.md": [
-        "# PT2VHF APRS Client - v1.6.",
+        "# PT2VHF APRS Client - v",
         "updater auxiliar",
     ],
 }

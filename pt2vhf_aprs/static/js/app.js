@@ -37,6 +37,7 @@
     trafficEvents: [],
     trafficIndex: 0,
     trafficPlaying: false,
+    trafficAnimationEnabled: true,
     trafficOverview: null,
     trafficHasMore: false,
     trafficChunkLastId: 0,
@@ -107,12 +108,26 @@
     return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
   }
 
+  const EXTRA_I18N = window.PT2VHF_I18N || {};
+
+  function normalizeLanguage(value) {
+    return ['pt-BR', 'en', 'es', 'fr'].includes(String(value || '')) ? String(value) : 'pt-BR';
+  }
+
+  function translatedText(pt, en) {
+    if (state.language === 'en') return en || pt;
+    if (state.language === 'es' || state.language === 'fr') {
+      return EXTRA_I18N[state.language]?.[pt] || pt;
+    }
+    return pt;
+  }
+
   function ui(pt, en) {
-    return state.language === 'en' ? en : pt;
+    return translatedText(pt, en);
   }
 
   function currentLocale() {
-    return state.language === 'en' ? 'en-US' : 'pt-BR';
+    return ({'pt-BR':'pt-BR', en:'en-US', es:'es-ES', fr:'fr-FR'})[state.language] || 'pt-BR';
   }
 
   function fmtDate(value) {
@@ -535,6 +550,7 @@
     const messagesFamily = FONT_FAMILIES[cfg.messages_font_family] || FONT_FAMILIES.system;
     const stationsFamily = FONT_FAMILIES[cfg.stations_font_family] || FONT_FAMILIES.system;
     const logsFamily = FONT_FAMILIES[cfg.logs_font_family] || FONT_FAMILIES.consolas;
+    const statisticsSize = Math.min(20, Math.max(11, Number(cfg.statistics_font_size || 13)));
     const messagesSize = Math.min(20, Math.max(10, Number(cfg.messages_font_size || 12)));
     const stationsSize = Math.min(20, Math.max(10, Number(cfg.stations_font_size || 12)));
     const logsSize = Math.min(20, Math.max(10, Number(cfg.logs_font_size || 12)));
@@ -554,6 +570,7 @@
     root.style.setProperty('--logs-font-size', `${logsSize}px`);
     root.style.setProperty('--logs-font-weight', cfg.logs_font_weight === 'bold' ? '700' : '400');
     root.style.setProperty('--logs-line-height', String(logsLine));
+    root.style.setProperty('--statistics-font-size', `${statisticsSize}px`);
   }
 
   function applyMapPreferences(cfg = {}) {
@@ -1749,6 +1766,10 @@
     $('#messageType').value = 'message';
     updateMessageComposerMode();
     $('#messageTo').value = destination;
+    if (state.groupMessages) {
+      state.selectedConversation = destination;
+      renderGroupedMessages();
+    }
     $('#messageText').focus();
   }
 
@@ -1801,7 +1822,15 @@
       return;
     }
 
-    if (!state.selectedConversation || !conversations.some(item => item.contact === state.selectedConversation)) {
+    const composerDestination = normalizedCall($('#messageTo')?.value);
+    const own = normalizedCall(state.ownCallsign);
+    const destinationConversation = composerDestination && (!own || composerDestination !== own)
+      ? conversations.find(item => item.contact === composerDestination)
+      : null;
+
+    if (composerDestination && (!own || composerDestination !== own)) {
+      state.selectedConversation = destinationConversation ? composerDestination : '';
+    } else if (!state.selectedConversation || !conversations.some(item => item.contact === state.selectedConversation)) {
       state.selectedConversation = conversations[0].contact;
     }
 
@@ -1819,7 +1848,17 @@
       </div>`;
     }).join('');
 
-    const selected = conversations.find(item => item.contact === state.selectedConversation) || conversations[0];
+    const selected = conversations.find(item => item.contact === state.selectedConversation);
+    if (!selected) {
+      const destination = normalizedCall($('#messageTo')?.value);
+      empty.textContent = destination
+        ? ui(`Novo destinatário: ${destination}. Ainda não há conversa registrada com este indicativo.`, `New recipient: ${destination}. There is no recorded conversation with this callsign yet.`)
+        : ui('Selecione uma conversa ou informe um destinatário.', 'Select a conversation or enter a recipient.');
+      empty.classList.remove('hidden');
+      content.classList.add('hidden');
+      return;
+    }
+
     empty.classList.add('hidden');
     content.classList.remove('hidden');
     recipientButton.textContent = selected.contact;
@@ -1891,8 +1930,8 @@
     const hiddenCount = state.messages.filter(isTelemetryMessage).length;
     toast(
       state.hideTelemetryMessages
-        ? `Telemetria oculta (${hiddenCount} registro(s) nesta lista).`
-        : 'Telemetria visível.',
+        ? ui(`Telemetria oculta (${hiddenCount} registro(s) nesta lista).`, `Telemetry hidden (${hiddenCount} record(s) in this list).`)
+        : ui('Telemetria visível.', 'Telemetry visible.'),
       'ok'
     );
   });
@@ -1902,7 +1941,9 @@
     if (!btn) return;
     btn.classList.toggle('active-filter', state.groupMessages);
     btn.setAttribute('aria-pressed', state.groupMessages ? 'true' : 'false');
-    btn.textContent = state.groupMessages ? '✓ Agrupado por remetente' : 'Agrupar por remetente';
+    btn.textContent = state.groupMessages
+      ? ui('✓ Agrupado por remetente', '✓ Grouped by sender')
+      : ui('Agrupar por remetente', 'Group by sender');
   }
 
   $('#groupMessagesButton')?.addEventListener('click', () => {
@@ -1946,6 +1987,23 @@
       event.preventDefault();
       event.target.closest('[data-conversation-contact]').click();
     }
+  });
+
+  $('#messageTo')?.addEventListener('input', () => {
+    if (!state.groupMessages) return;
+    const destination = normalizedCall($('#messageTo')?.value);
+    const conversations = conversationItems();
+    if (destination && conversations.some(item => item.contact === destination)) {
+      state.selectedConversation = destination;
+    } else if (destination) {
+      state.selectedConversation = '';
+    }
+    renderGroupedMessages();
+  });
+
+  $('#messageTo')?.addEventListener('change', () => {
+    if (!state.groupMessages) return;
+    renderGroupedMessages();
   });
 
   $('#conversationSortButton')?.addEventListener('click', () => {
@@ -2012,7 +2070,9 @@
     if (!btn) return;
     btn.classList.toggle('active-filter', state.myMessagesOnly);
     btn.setAttribute('aria-pressed', state.myMessagesOnly ? 'true' : 'false');
-    btn.textContent = state.myMessagesOnly ? '✓ Minhas mensagens' : 'Minhas mensagens';
+    btn.textContent = state.myMessagesOnly
+      ? ui('✓ Minhas mensagens', '✓ My messages')
+      : ui('Minhas mensagens', 'My messages');
     if (filter) {
       filter.disabled = state.myMessagesOnly;
       if (state.myMessagesOnly) filter.value = '';
@@ -2938,6 +2998,7 @@
 
   async function loadConfig() {
     state.configLoading = true;
+    const firstConfigLoad = !state.configLoaded;
     try {
       const cfg = await api('/api/config');
       state.currentConfig = cfg;
@@ -2955,8 +3016,18 @@
       state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
       state.soundOnStationActivity = !!cfg.sound_on_station_activity;
       state.highlightStationActivity = !!cfg.highlight_station_activity;
+      state.trafficAnimationEnabled = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
+      if (firstConfigLoad) {
+        state.trafficMode = 'live';
+        state.trafficPlaying = state.trafficAnimationEnabled;
+        state.timelineReplayActive = false;
+        if ($('#trafficMode')) $('#trafficMode').value = 'live';
+      } else if (!state.trafficAnimationEnabled && state.trafficMode === 'live') {
+        state.trafficPlaying = false;
+      }
+      updateTrafficAnimationUi();
       state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
-      state.language = cfg.language === 'en' ? 'en' : 'pt-BR';
+      state.language = normalizeLanguage(cfg.language);
       if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
       validateCallsignField();
       updateAltitudeSourceStatus(cfg.altitude_source, cfg.altitude);
@@ -2989,6 +3060,7 @@
     data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
     data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
     data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
+    data.traffic_animation_enabled = !!form.elements.traffic_animation_enabled?.checked;
     data.respond_to_queries = !!form.elements.respond_to_queries?.checked;
     data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
     data.auto_download_updates = false;
@@ -3221,6 +3293,7 @@
       ['messages_font_size', '#messagesFontSizeValue', v => `${v || 12} px`],
       ['stations_font_size', '#stationsFontSizeValue', v => `${v || 12} px`],
       ['logs_font_size', '#logsFontSizeValue', v => `${v || 12} px`],
+      ['statistics_font_size', '#statisticsFontSizeValue', v => `${v || 13} px`],
       ['messages_line_height', '#messagesLineHeightValue', v => `${Number(v || 1.35).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
       ['stations_line_height', '#stationsLineHeightValue', v => `${Number(v || 1.25).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
       ['logs_line_height', '#logsLineHeightValue', v => `${Number(v || 1.30).toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}×`],
@@ -3248,9 +3321,10 @@
       logs_font_family: form.elements.namedItem('logs_font_family')?.value || 'consolas',
       logs_font_size: form.elements.namedItem('logs_font_size')?.value || 12,
       logs_font_weight: form.elements.namedItem('logs_font_weight')?.value || 'normal',
-      logs_line_height: form.elements.namedItem('logs_line_height')?.value || 1.30
+      logs_line_height: form.elements.namedItem('logs_line_height')?.value || 1.30,
+      statistics_font_size: form.elements.namedItem('statistics_font_size')?.value || 13
     });
-    state.language = form.elements.namedItem('language')?.value === 'en' ? 'en' : 'pt-BR';
+    state.language = normalizeLanguage(form.elements.namedItem('language')?.value);
     applyLanguage(state.language);
     syncAppearanceControls();
   }
@@ -3283,7 +3357,8 @@
     'app_theme','language',
     'messages_font_family','messages_font_size','messages_font_weight','messages_line_height',
     'stations_font_family','stations_font_size','stations_font_weight','stations_line_height',
-    'logs_font_family','logs_font_size','logs_font_weight','logs_line_height'
+    'logs_font_family','logs_font_size','logs_font_weight','logs_line_height',
+    'statistics_font_size'
   ]) {
     const el = $('#configForm')?.elements.namedItem(name);
     el?.addEventListener('input', previewAppearanceFromForm);
@@ -3304,6 +3379,7 @@
   $('#resetMessagesTypography')?.addEventListener('click', () => resetTypography('messages', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.35}));
   $('#resetStationsTypography')?.addEventListener('click', () => resetTypography('stations', {font_family:'system',font_size:12,font_weight:'normal',line_height:1.25}));
   $('#resetLogsTypography')?.addEventListener('click', () => resetTypography('logs', {font_family:'consolas',font_size:12,font_weight:'normal',line_height:1.30}));
+  $('#resetStatisticsTypography')?.addEventListener('click', () => resetTypography('statistics', {font_size:13}));
 
   $('#chooseSymbolButton').addEventListener('click', () => {
     const form = $('#configForm');
@@ -3689,6 +3765,13 @@
     'Caminho incompleto: há nós sem posição conhecida.':'Incomplete path: some nodes have no known position.'
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
+  const LANGUAGE_META = {
+    'pt-BR': { label: 'Português', flag: '/static/img/flag_br.svg', alt: 'Brasil', htmlLang: 'pt-BR' },
+    en: { label: 'English', flag: '/static/img/flag_england.svg', alt: 'England', htmlLang: 'en' },
+    es: { label: 'Español', flag: '/static/img/flag_spain.svg', alt: 'España', htmlLang: 'es' },
+    fr: { label: 'Français', flag: '/static/img/flag_france.svg', alt: 'France', htmlLang: 'fr' },
+  };
+
   function translateConnectionState(value) {
     const map = {
       'Desconectado':'Disconnected',
@@ -3700,7 +3783,7 @@
       'Configuração incompleta':'Incomplete configuration',
       'Reconectando com a nova configuração...':'Reconnecting with new settings...'
     };
-    return state.language === 'en' ? (map[value] || value) : value;
+    return translatedText(value, map[value] || value);
   }
 
   function translateDom(root = document.body) {
@@ -3715,8 +3798,10 @@
       const original = node._pt2vhfOriginalText;
       const trimmed = original.trim();
       if (!trimmed) continue;
-      const translated = EN_TEXT.get(trimmed);
-      const chosen = state.language === 'en' && translated ? translated : trimmed;
+      const translated = state.language === 'en'
+        ? EN_TEXT.get(trimmed)
+        : EXTRA_I18N[state.language]?.[trimmed];
+      const chosen = state.language === 'pt-BR' ? trimmed : (translated || trimmed);
       const lead = original.match(/^\s*/)?.[0] || '';
       const trail = original.match(/\s*$/)?.[0] || '';
       node.nodeValue = lead + chosen + trail;
@@ -3729,8 +3814,10 @@
         const key = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
         if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
         const original = el.dataset[key];
-        const translated = EN_TEXT.get(original);
-        el.setAttribute(attr, state.language === 'en' && translated ? translated : original);
+        const translated = state.language === 'en'
+          ? EN_TEXT.get(original)
+          : EXTRA_I18N[state.language]?.[original];
+        el.setAttribute(attr, state.language === 'pt-BR' ? original : (translated || original));
       }
     }
   }
@@ -3738,20 +3825,20 @@
   function syncLanguageFlag() {
     const flag = $('#languageFlag');
     if (!flag) return;
-    const english = state.language === 'en';
-    flag.src = english ? '/static/img/flag_england.svg' : '/static/img/flag_br.svg';
-    flag.alt = english ? 'England' : 'Brasil';
+    const meta = LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR'];
+    flag.src = meta.flag;
+    flag.alt = meta.alt;
   }
 
   function syncQuickLanguageButtons() {
-    const english = state.language === 'en';
+    const meta = LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR'];
     const currentFlag = $('#languageQuickCurrentFlag');
     const currentLabel = $('#languageQuickCurrentLabel');
     if (currentFlag) {
-      currentFlag.src = english ? '/static/img/flag_england.svg' : '/static/img/flag_br.svg';
-      currentFlag.alt = english ? 'Inglaterra' : 'Brasil';
+      currentFlag.src = meta.flag;
+      currentFlag.alt = meta.alt;
     }
-    if (currentLabel) currentLabel.textContent = english ? 'English' : 'Português';
+    if (currentLabel) currentLabel.textContent = meta.label;
     $$('.language-quick-option').forEach(button => {
       const active = button.dataset.language === state.language;
       button.classList.toggle('active', active);
@@ -3770,8 +3857,8 @@
   }
 
   function applyLanguage(language) {
-    state.language = language === 'en' ? 'en' : 'pt-BR';
-    document.documentElement.lang = state.language === 'en' ? 'en' : 'pt-BR';
+    state.language = normalizeLanguage(language);
+    document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR']).htmlLang;
     translateDom(document.body);
     syncQuickLanguageButtons();
     syncLanguageFlag();
@@ -3782,7 +3869,7 @@
   }
 
   async function setQuickLanguage(language) {
-    const next = language === 'en' ? 'en' : 'pt-BR';
+    const next = normalizeLanguage(language);
     applyLanguage(next);
     setLanguageMenuOpen(false);
     try {
@@ -3831,7 +3918,7 @@
   });
 
   const languageObserver = new MutationObserver(records => {
-    if (state.language !== 'en') return;
+    if (state.language === 'pt-BR') return;
     for (const record of records) {
       for (const node of record.addedNodes) {
         if (node.nodeType === Node.ELEMENT_NODE) translateDom(node);
@@ -3850,10 +3937,10 @@
     syncDecimalFromDmsIfNeeded();
     const form = $('#configForm');
     return [
-      { key: 'callsign', labelPt: 'Indicativo', labelEn: 'Callsign', input: form?.elements.namedItem('callsign') },
-      { key: 'latitude', labelPt: 'Latitude', labelEn: 'Latitude', input: form?.elements.namedItem('latitude') },
-      { key: 'longitude', labelPt: 'Longitude', labelEn: 'Longitude', input: form?.elements.namedItem('longitude') },
-      { key: 'altitude', labelPt: 'Altitude', labelEn: 'Altitude', input: form?.elements.namedItem('altitude') },
+      { key: 'callsign', label: ui('Indicativo', 'Callsign'), input: form?.elements.namedItem('callsign') },
+      { key: 'latitude', label: ui('Latitude', 'Latitude'), input: form?.elements.namedItem('latitude') },
+      { key: 'longitude', label: ui('Longitude', 'Longitude'), input: form?.elements.namedItem('longitude') },
+      { key: 'altitude', label: ui('Altitude', 'Altitude'), input: form?.elements.namedItem('altitude') },
     ];
   }
 
@@ -3889,7 +3976,7 @@
   function showRequiredFieldsModal(missing = missingRequiredStationFields()) {
     if (!missing.length) return false;
     highlightMissingRequiredFields(missing);
-    const names = missing.map(item => state.language === 'en' ? item.labelEn : item.labelPt);
+    const names = missing.map(item => item.label);
     const message = $('#requiredFieldsMessage');
     const list = $('#requiredFieldsList');
     if (message) message.textContent = ui(
@@ -4410,8 +4497,7 @@
       const name = item.friendly_name || item.identifier || ui('Não identificado', 'Unidentified');
       const ownClass = item.is_own_client || item.force_own_row ? ' class="client-version-own-row"' : '';
       return '<tr' + ownClass + '><td><strong>' + escapeHtml(rank) + '</strong></td><td>' +
-        '<span class="client-version-name">' + escapeHtml(name) + '</span>' +
-        '<span class="client-version-tocall">' + escapeHtml(item.identifier || '') + '</span></td><td>' +
+        '<span class="client-version-name">' + escapeHtml(name) + '</span></td><td>' +
         Number(item.stations || 0).toLocaleString(currentLocale()) + '</td><td>' +
         Number(item.percent || 0).toLocaleString(currentLocale(), {maximumFractionDigits:1}) + '%</td></tr>';
     };

@@ -38,6 +38,14 @@
           <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_england.svg') }}" alt="Inglaterra">
           <span>English</span>
         </button>
+        <button type="button" class="language-quick-option" data-language="es" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_spain.svg') }}" alt="España">
+          <span>Español</span>
+        </button>
+        <button type="button" class="language-quick-option" data-language="fr" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_france.svg') }}" alt="France">
+          <span>Français</span>
+        </button>
       </div>
     </div>
     <div id="trafficActivityIndicator" class="traffic-activity-indicator" title="Sem tráfego APRS nesta sessão" aria-label="Atividade de tráfego APRS">
@@ -377,7 +385,7 @@
         <div class="analysis-client-version-heading">
           <div>
             <h3>Software / dispositivos APRS</h3>
-            <p id="clientVersionStatsHint">Distribuição pelo software/dispositivo identificado no TOCALL do último pacote de cada estação, usando a base APRS Device Identification. O TOCALL permanece visível como referência técnica.</p>
+            <p id="clientVersionStatsHint">Distribuição pelo software/dispositivo identificado no último pacote de cada estação, usando a base APRS Device Identification. A interface mostra apenas o nome amigável do aplicativo.</p>
           </div>
         </div>
         <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Atualizar estatísticas.</span></div>
@@ -607,6 +615,10 @@
               <output id="topologyWidthValue" for="topologyWidth">2 px</output>
             </div>
           </label>
+          <label class="check-field">
+            <input name="traffic_animation_enabled" type="checkbox" checked>
+            <span>Animar tráfego entre estações por padrão</span>
+          </label>
         </div>
         <div class="config-actions map-config-actions">
           <button id="resetTopologyStyleButton" type="button" class="btn secondary">Restaurar topologia padrão</button>
@@ -635,6 +647,8 @@
               <select name="language" id="appLanguage">
                 <option value="pt-BR">Português - padrão</option>
                 <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
               </select>
             </div>
             <small>O idioma é aplicado imediatamente à interface.</small>
@@ -726,8 +740,16 @@
             </div></label>
             <button id="resetLogsTypography" type="button" class="btn secondary typography-reset">Restaurar padrão</button>
           </div>
+          <div class="appearance-group">
+            <h4>Estatísticas</h4>
+            <label class="field"><span>Tamanho da fonte</span><div class="range-field-row">
+              <input name="statistics_font_size" id="statisticsFontSize" type="range" min="11" max="20" step="1" value="13">
+              <output id="statisticsFontSizeValue" for="statisticsFontSize">13 px</output>
+            </div></label>
+            <button id="resetStatisticsTypography" type="button" class="btn secondary typography-reset">Restaurar padrão</button>
+          </div>
         </div>
-        <div class="hint">Tema, idioma, fonte, tamanho, negrito e espaçamento de Mensagens, Estações e Logs são aplicados imediatamente e persistidos no banco local.</div>
+        <div class="hint">Tema, idioma e preferências de fonte de Mensagens, Estações, Logs e Estatísticas são aplicados imediatamente e persistidos no banco local.</div>
       </div>
 
       <div class="config-card full-card config-section config-section-app">
@@ -1000,6 +1022,7 @@
 
 <script id="leafletScript" async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="{{ url_for('static', filename='js/i18n_extra.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

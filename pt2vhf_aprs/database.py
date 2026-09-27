@@ -126,6 +126,7 @@ DEFAULT_CONFIG = {
     "sound_on_personal_message": 1,
     "sound_on_station_activity": 1,
     "highlight_station_activity": 1,
+    "traffic_animation_enabled": 1,
     "message_popup_seconds": 5,
     "app_theme": "dark",
     "messages_font_family": "system",
@@ -140,6 +141,7 @@ DEFAULT_CONFIG = {
     "logs_font_size": 12,
     "logs_font_weight": "normal",
     "logs_line_height": 1.30,
+    "statistics_font_size": 13,
 }
 
 
@@ -225,6 +227,7 @@ def init_db() -> None:
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
                 sound_on_station_activity INTEGER NOT NULL DEFAULT 1,
                 highlight_station_activity INTEGER NOT NULL DEFAULT 1,
+                traffic_animation_enabled INTEGER NOT NULL DEFAULT 1,
                 message_popup_seconds INTEGER NOT NULL DEFAULT 5,
                 app_theme TEXT NOT NULL DEFAULT 'dark',
                 messages_font_family TEXT NOT NULL DEFAULT 'system',
@@ -239,6 +242,7 @@ def init_db() -> None:
                 logs_font_size INTEGER NOT NULL DEFAULT 12,
                 logs_font_weight TEXT NOT NULL DEFAULT 'normal',
                 logs_line_height REAL NOT NULL DEFAULT 1.30,
+                statistics_font_size INTEGER NOT NULL DEFAULT 13,
                 updated_at TEXT NOT NULL
             );
 
@@ -424,6 +428,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_station_activity INTEGER NOT NULL DEFAULT 1")
         if "highlight_station_activity" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN highlight_station_activity INTEGER NOT NULL DEFAULT 1")
+        if "traffic_animation_enabled" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN traffic_animation_enabled INTEGER NOT NULL DEFAULT 1")
         if "message_popup_seconds" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN message_popup_seconds INTEGER NOT NULL DEFAULT 5")
         if "app_theme" not in config_columns:
@@ -452,6 +458,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN logs_font_weight TEXT NOT NULL DEFAULT 'normal'")
         if "logs_line_height" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN logs_line_height REAL NOT NULL DEFAULT 1.30")
+        if "statistics_font_size" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN statistics_font_size INTEGER NOT NULL DEFAULT 13")
         if "altitude_source" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN altitude_source TEXT NOT NULL DEFAULT 'manual'")
         if "check_updates_on_start" not in config_columns:
@@ -566,6 +574,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
     merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
     merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0
+    merged["traffic_animation_enabled"] = 1 if bool(merged["traffic_animation_enabled"]) else 0
     merged["message_popup_seconds"] = int(merged["message_popup_seconds"] or 5)
     merged["app_theme"] = str(merged["app_theme"] or "dark").lower().strip()
     merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
@@ -580,6 +589,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["logs_font_size"] = int(merged["logs_font_size"] or 12)
     merged["logs_font_weight"] = str(merged["logs_font_weight"] or "normal").lower().strip()
     merged["logs_line_height"] = float(merged["logs_line_height"] or 1.30)
+    merged["statistics_font_size"] = int(merged["statistics_font_size"] or 13)
     merged["symbol_table"] = (str(merged["symbol_table"] or "/")[:1])
     merged["symbol"] = (str(merged["symbol"] or ">")[:1])
     for field in ("latitude", "longitude", "altitude"):
@@ -621,7 +631,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
 
     if merged["app_theme"] not in {"dark", "light"}:
         raise ValueError("Tema da aplicação inválido.")
-    if merged["language"] not in {"pt-BR", "en"}:
+    if merged["language"] not in {"pt-BR", "en", "es", "fr"}:
         raise ValueError("Idioma da aplicação inválido.")
 
     allowed_fonts = {"system", "segoe", "arial", "verdana", "tahoma", "consolas"}
@@ -643,6 +653,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Tamanho da fonte de estações deve estar entre 10 e 20 px.")
     if not (10 <= merged["logs_font_size"] <= 20):
         raise ValueError("Tamanho da fonte de logs deve estar entre 10 e 20 px.")
+    if not (11 <= merged["statistics_font_size"] <= 20):
+        raise ValueError("Tamanho da fonte de estatísticas deve estar entre 11 e 20 px.")
     for key, label in (
         ("messages_line_height", "mensagens"),
         ("stations_line_height", "estações"),
