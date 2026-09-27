@@ -25,7 +25,9 @@ checks = {
         'name="traffic_animation_enabled"',
         'name="statistics_font_size"',
         'js/i18n_extra.js',
-        'class="map-top-toolbar"',
+        'id="stationsToggle"',
+        'id="tracklogToggle"',
+        'id="topologyToggle"',
     ],
     "pt2vhf_aprs/static/js/i18n_extra.js": [
         "window.PT2VHF_I18N",
@@ -45,7 +47,7 @@ checks = {
         "#groupMessagesButton,",
         "white-space: nowrap;",
         "--statistics-font-size",
-        ".map-top-toolbar",
+        ".map-visibility-control",
     ],
     "pt2vhf_aprs/database.py": [
         '"traffic_animation_enabled": 1',
