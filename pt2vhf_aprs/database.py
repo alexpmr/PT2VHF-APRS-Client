@@ -1256,7 +1256,7 @@ def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
 
 
 def client_version_stats(hours: int = 0) -> dict[str, Any]:
-    """Distribuição de software/dispositivo APRS pelo último pacote de cada estação."""
+    """Distribuição de software/dispositivo APRS, consolidada pelo nome amigável."""
     hours = int(hours or 0)
     params: list[Any] = []
     where = ""
@@ -1272,45 +1272,80 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
             params,
         ).fetchall()
 
-    counts: dict[str, int] = {}
+    grouped: dict[str, dict[str, Any]] = {}
     unidentified = 0
-    metadata: dict[str, dict[str, Any]] = {}
+
+    def _client_friendly_key(value: str) -> str:
+        return re.sub(r"\s+", " ", str(value or "").strip()).casefold()
+
     for row in rows:
         tocall = _aprs_tocall_from_raw(row["raw"])
         if not tocall or tocall == "APRS":
             unidentified += 1
             continue
+
         resolved = resolve_aprs_device_id(tocall)
         if not resolved.get("identified"):
             unidentified += 1
             continue
-        counts[tocall] = counts.get(tocall, 0) + 1
-        metadata[tocall] = resolved
 
-    identified_total = sum(counts.values())
-    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        friendly_name = re.sub(
+            r"\s+", " ", str(resolved.get("friendly_name") or tocall).strip()
+        )
+        friendly_key = _client_friendly_key(friendly_name)
+        bucket = grouped.get(friendly_key)
+        if bucket is None:
+            bucket = {
+                "friendly_name": friendly_name,
+                "stations": 0,
+                "identifiers": set(),
+                "meta": resolved,
+                "is_own_client": False,
+            }
+            grouped[friendly_key] = bucket
+
+        bucket["stations"] = int(bucket["stations"]) + 1
+        bucket["identifiers"].add(tocall)
+        if tocall == APP_TOCALL:
+            # Quando o próprio cliente fizer parte de um grupo consolidado,
+            # seus metadados passam a ser a referência visual desse grupo.
+            bucket["meta"] = resolved
+            bucket["is_own_client"] = True
+
+    identified_total = sum(int(bucket["stations"]) for bucket in grouped.values())
+    ranked = sorted(
+        grouped.values(),
+        key=lambda bucket: (-int(bucket["stations"]), str(bucket["friendly_name"]).casefold()),
+    )
+
     items: list[dict[str, Any]] = []
-    for rank, (identifier, count) in enumerate(ranked, start=1):
-        meta = metadata.get(identifier) or resolve_aprs_device_id(identifier)
+    for rank, bucket in enumerate(ranked, start=1):
+        identifiers = sorted(str(value) for value in bucket["identifiers"])
+        is_own = bool(bucket["is_own_client"]) or APP_TOCALL in identifiers
+        identifier = APP_TOCALL if is_own and APP_TOCALL in identifiers else identifiers[0]
+        meta = dict(bucket["meta"] or {})
+        count = int(bucket["stations"])
         items.append({
             "rank": rank,
             "identifier": identifier,
-            "friendly_name": meta.get("friendly_name") or identifier,
+            "identifiers": identifiers,
+            "friendly_name": bucket["friendly_name"],
             "vendor": meta.get("vendor") or "",
             "model": meta.get("model") or "",
             "class": meta.get("class") or "",
             "os": meta.get("os") or "",
             "stations": count,
             "percent": round((count / identified_total) * 100.0, 1) if identified_total else 0.0,
-            "is_own_client": identifier == APP_TOCALL,
+            "is_own_client": is_own,
         })
 
-    own_client = next((dict(item) for item in items if item["identifier"] == APP_TOCALL), None)
+    own_client = next((dict(item) for item in items if item["is_own_client"]), None)
     if own_client is None:
         own_meta = resolve_aprs_device_id(APP_TOCALL)
         own_client = {
             "rank": None,
             "identifier": APP_TOCALL,
+            "identifiers": [APP_TOCALL],
             "friendly_name": own_meta.get("friendly_name") or "PT2VHF APRS Client",
             "vendor": own_meta.get("vendor") or "PT2VHF",
             "model": own_meta.get("model") or "PT2VHF APRS Client",
@@ -1332,7 +1367,6 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
         "items": items,
         "device_id_source": "aprsorg/aprs-deviceid (CC BY-SA 2.0)",
     }
-
 
 def topology_stats(hours: int = 0) -> dict[str, Any]:
     """Resumo agregado da topologia observada para diagnóstico rápido."""
