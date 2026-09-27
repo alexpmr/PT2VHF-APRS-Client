@@ -852,6 +852,7 @@
       replay.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width + 1)}px`;
       replay.style.borderTopStyle = 'dashed';
     }
+    root.querySelector('[data-legend="track"]')?.classList.toggle('legend-muted', !state.tracklogEnabled);
     root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
     root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
     const packetAnimating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
@@ -873,13 +874,6 @@
       const active = new Set();
 
       for (const edge of edges) {
-        if ((state.mapStationAgeFilter || 'all') !== 'all') {
-          const source = normalizedCall(edge.source);
-          const target = normalizedCall(edge.target);
-          const sourceHidden = state.mapKnownCallsigns.has(source) && !state.mapVisibleCallsigns.has(source);
-          const targetHidden = state.mapKnownCallsigns.has(target) && !state.mapVisibleCallsigns.has(target);
-          if (sourceHidden || targetHidden) continue;
-        }
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
         const points = [
@@ -4880,16 +4874,6 @@
       await loadConfig();
       toast(ui('Configuração padrão restaurada.', 'Default configuration restored.'), 'ok');
     } catch (err) { toast(err.message, 'error'); }
-  });
-
-  $('#mapStationAgeFilter')?.addEventListener('change', async event => {
-    const value = String(event.target.value || 'all');
-    state.mapStationAgeFilter = ['lt2','2to24','gt24'].includes(value) ? value : 'all';
-    if (state.mapLoadBusy) {
-      state.mapLoadQueued = true;
-      return;
-    }
-    await loadMapData();
   });
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
