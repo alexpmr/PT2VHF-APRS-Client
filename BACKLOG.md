@@ -85,6 +85,18 @@
 
 ## Pendências para próximas versões
 
+- **Atualizador automático — aplicação fecha e atualização não inicia**
+  - Ao clicar em **Nova versão** e depois em **Baixar e instalar**, a aplicação é encerrada, porém o download/instalação da nova versão **não é iniciado**.
+  - Corrigir o fluxo para garantir que o helper externo do atualizador seja iniciado e permaneça executando **antes** de a aplicação principal encerrar.
+  - Não fechar a aplicação se o helper não tiver sido criado/iniciado com sucesso.
+  - Validar a seleção do asset correto da Release conforme plataforma, arquitetura e formato instalado/portátil.
+  - Exibir progresso de **download**, **verificação**, **instalação** e **reinicialização**, além de mensagem de erro visível quando qualquer etapa falhar.
+  - Registrar em log dedicado o caminho/URL do asset, PID do helper, diretório temporário, tamanho esperado/baixado, SHA-256, comando de instalação e código de saída.
+  - No Windows, validar separadamente **Portable** e **Setup**, incluindo UAC quando necessário.
+  - Após atualização bem-sucedida, reiniciar automaticamente a nova versão; em caso de falha, manter/restaurar a versão anterior quando aplicável.
+  - Adicionar teste de regressão cobrindo o cenário em que o helper não inicia, garantindo que a aplicação permaneça aberta e informe o erro ao usuário.
+  - Tratar como **bug prioritário da v1.7.1**, pois o comportamento atual pode deixar o usuário sem a aplicação aberta e sem atualização concluída.
+
 - **Mapa — filtrar saltos irreais de posição nos tracklogs**
   - Antes de acrescentar uma nova posição ao tracklog, comparar a coordenada recebida com a **última posição válida aceita** da mesma estação.
   - Calcular a distância entre os pontos e o intervalo de tempo, derivando a **velocidade implícita** do deslocamento.
