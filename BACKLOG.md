@@ -85,6 +85,17 @@
 
 ## Pendências para próximas versões
 
+- **Estatísticas — consolidar aplicativos iguais no ranking de software**
+  - Corrigir o bloco **Software / dispositivo** para não criar linhas separadas quando diferentes TOCALLs resolvem para o **mesmo nome amigável de aplicativo**.
+  - Agregar as estações pelo nome amigável normalizado do aplicativo/software, somando quantidade de estações e recalculando o percentual.
+  - Exemplo: múltiplos TOCALLs identificados como **ircDDB Gateway** devem aparecer em **uma única linha**, com a soma de todas as estações correspondentes.
+  - Manter versões explicitamente identificadas como produtos/versões distintas quando o nome amigável for diferente, por exemplo **Dire Wolf 1.8** e **Dire Wolf 1.9**.
+  - Preservar internamente a lista de TOCALLs/identificadores técnicos associados a cada grupo para diagnóstico, sem exibi-los como linhas duplicadas na interface.
+  - Recalcular o ranking após a consolidação, garantindo posição, quantidade e percentual coerentes.
+  - Garantir que o destaque/posição do **PT2VHF APRS Client** continue correto mesmo quando houver múltiplos identificadores associados ao mesmo nome amigável.
+  - Adicionar teste de regressão com dois ou mais TOCALLs diferentes mapeando para o mesmo aplicativo e validar que apenas uma linha seja exibida.
+  - Tratar como correção da **v1.7.2**.
+
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
