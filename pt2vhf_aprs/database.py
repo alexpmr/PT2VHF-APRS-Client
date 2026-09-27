@@ -61,6 +61,13 @@ APRS_DEVICE_ID_PATH = Path(__file__).resolve().parent / "data" / "aprs_device_id
 _aprs_device_id_lock = threading.Lock()
 _aprs_device_id_entries: list[dict[str, Any]] | None = None
 
+TRACK_OUTLIER_MIN_KM = 75.0
+TRACK_OUTLIER_MAX_SPEED_KMH = 1200.0
+TRACK_RELOCATION_CONFIRMATIONS = 3
+TRACK_RELOCATION_CLUSTER_KM = 25.0
+_track_relocation_lock = threading.Lock()
+_track_relocation_candidates: dict[str, dict[str, Any]] = {}
+
 
 def _retention_due(name: str, added: int = 1) -> bool:
     """Executa housekeeping apenas em lotes, nunca a cada pacote recebido."""
@@ -706,6 +713,99 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+def _parse_timestamp(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except Exception:
+        return None
+
+
+def _position_is_plausible(
+    callsign: str,
+    current: sqlite3.Row | None,
+    latitude: float,
+    longitude: float,
+    now: datetime,
+) -> tuple[bool, dict[str, float | str | int | bool]]:
+    if current is None or current["latitude"] is None or current["longitude"] is None:
+        with _track_relocation_lock:
+            _track_relocation_candidates.pop(callsign, None)
+        return True, {"distance_km": 0.0, "speed_kmh": 0.0, "relocation": False}
+
+    previous_time = _parse_timestamp(current["last_heard"])
+    if previous_time is None:
+        return True, {"distance_km": 0.0, "speed_kmh": 0.0, "relocation": False}
+
+    distance = haversine_km(float(current["latitude"]), float(current["longitude"]), latitude, longitude)
+    elapsed_hours = max((now - previous_time).total_seconds() / 3600.0, 1.0 / 3600.0)
+    speed = distance / elapsed_hours
+
+    # Long gaps are allowed: the station may genuinely have travelled or been moved.
+    if elapsed_hours >= 6.0 or distance < TRACK_OUTLIER_MIN_KM or speed <= TRACK_OUTLIER_MAX_SPEED_KMH:
+        with _track_relocation_lock:
+            _track_relocation_candidates.pop(callsign, None)
+        return True, {"distance_km": distance, "speed_kmh": speed, "relocation": False}
+
+    with _track_relocation_lock:
+        candidate = _track_relocation_candidates.get(callsign)
+        if candidate is not None:
+            cluster_distance = haversine_km(
+                float(candidate["latitude"]), float(candidate["longitude"]), latitude, longitude
+            )
+        else:
+            cluster_distance = float("inf")
+
+        if candidate is not None and cluster_distance <= TRACK_RELOCATION_CLUSTER_KM:
+            count = int(candidate.get("count") or 1) + 1
+        else:
+            count = 1
+
+        _track_relocation_candidates[callsign] = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "count": count,
+        }
+
+        if count >= TRACK_RELOCATION_CONFIRMATIONS:
+            _track_relocation_candidates.pop(callsign, None)
+            diag.log_event(
+                "track_position_relocation_confirmed",
+                callsign=callsign,
+                distance_km=round(distance, 2),
+                elapsed_hours=round(elapsed_hours, 3),
+                implied_speed_kmh=round(speed, 1),
+                confirmations=count,
+            )
+            return True, {
+                "distance_km": distance,
+                "speed_kmh": speed,
+                "relocation": True,
+                "confirmations": count,
+            }
+
+    diag.log_event(
+        "track_position_outlier_rejected",
+        callsign=callsign,
+        distance_km=round(distance, 2),
+        elapsed_hours=round(elapsed_hours, 3),
+        implied_speed_kmh=round(speed, 1),
+        latitude=latitude,
+        longitude=longitude,
+        confirmations=count,
+    )
+    return False, {
+        "distance_km": distance,
+        "speed_kmh": speed,
+        "relocation": False,
+        "confirmations": count,
+    }
+
+
 
 def _record_packet_conn(conn: sqlite3.Connection, raw: str, from_call: str | None = None,
                         packet_format: str | None = None) -> None:
@@ -735,15 +835,32 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
     is_object = fmt in {"object", "item"}
     path = json.dumps(packet.get("path") or [], ensure_ascii=False)
 
-    previous = conn.execute(
-        "SELECT latitude, longitude FROM stations WHERE callsign=?", (callsign,)
-    ).fetchone()
     current = conn.execute("SELECT * FROM stations WHERE callsign=?", (callsign,)).fetchone()
+    previous = current
+    packet_lat = packet.get("latitude")
+    packet_lon = packet.get("longitude")
+    position_valid = True
+    relocation_confirmed = False
+    if not is_object and packet_lat is not None and packet_lon is not None:
+        try:
+            position_valid, position_meta = _position_is_plausible(
+                callsign,
+                current,
+                float(packet_lat),
+                float(packet_lon),
+                datetime.now(timezone.utc),
+            )
+            relocation_confirmed = bool(position_meta.get("relocation"))
+        except Exception as exc:
+            diag.log_event("track_position_filter_error", callsign=callsign, error=str(exc))
+            position_valid = True
 
     def choose(key: str, fallback=None):
         value = None if is_object and key in {
             "latitude", "longitude", "speed", "course", "altitude", "symbol_table", "symbol"
         } else packet.get(key, None)
+        if key in {"latitude", "longitude"} and not position_valid:
+            value = None
         if value is None and current is not None:
             return current[key]
         return fallback if value is None else value
@@ -786,10 +903,10 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
     )
 
     lat, lon = packet.get("latitude"), packet.get("longitude")
-    if not is_object and lat is not None and lon is not None:
+    if not is_object and position_valid and lat is not None and lon is not None:
         should_add = True
         if previous and previous["latitude"] is not None and previous["longitude"] is not None:
-            should_add = haversine_km(
+            should_add = relocation_confirmed or haversine_km(
                 previous["latitude"], previous["longitude"], float(lat), float(lon)
             ) >= 0.01
         if should_add or previous is None:
