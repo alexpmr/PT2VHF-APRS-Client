@@ -234,6 +234,9 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
         target_version=str(version).lstrip("vV"),
         asset=name,
         mode=current_update_mode(),
+        url=url,
+        target=str(target),
+        expected_size=expected_size,
     )
 
     try:
@@ -283,6 +286,7 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
             asset=name,
             sha256=sha256,
             size=actual_size,
+            path=str(target),
         )
         return payload
     except Exception:
@@ -321,21 +325,21 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
     ready_path = HELPER_READY_FILE.resolve()
 
     common = (
-        "$ErrorActionPreference='Stop'\\n"
-        f"$pidToWait={pid}\\n"
-        f"$downloaded={_ps_quote(path)}\\n"
-        f"$current={_ps_quote(current)}\\n"
-        f"$pendingFile={_ps_quote(pending_path)}\\n"
-        f"$lockFile={_ps_quote(lock_path)}\\n"
-        f"$logFile={_ps_quote(log)}\\n"
-        f"$readyFile={_ps_quote(ready_path)}\\n"
-        "function Log([string]$m) { Add-Content -LiteralPath $logFile -Value ((Get-Date).ToString('o') + ' ' + $m) -Encoding UTF8 }\\n"
-        "Set-Content -LiteralPath $readyFile -Value $PID -Encoding ASCII\\n"
-        "Log 'updater helper started'\\n"
-        "$deadline=(Get-Date).AddSeconds(8)\\n"
-        "while ((Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }\\n"
-        "if (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) { Log 'forcing previous process to stop'; Stop-Process -Id $pidToWait -Force -ErrorAction SilentlyContinue }\\n"
-        "Start-Sleep -Milliseconds 500\\n"
+        "$ErrorActionPreference='Stop'\n"
+        f"$pidToWait={pid}\n"
+        f"$downloaded={_ps_quote(path)}\n"
+        f"$current={_ps_quote(current)}\n"
+        f"$pendingFile={_ps_quote(pending_path)}\n"
+        f"$lockFile={_ps_quote(lock_path)}\n"
+        f"$logFile={_ps_quote(log)}\n"
+        f"$readyFile={_ps_quote(ready_path)}\n"
+        "function Log([string]$m) { Add-Content -LiteralPath $logFile -Value ((Get-Date).ToString('o') + ' ' + $m) -Encoding UTF8 }\n"
+        "Set-Content -LiteralPath $readyFile -Value $PID -Encoding ASCII\n"
+        "Log 'updater helper started'\n"
+        "$deadline=(Get-Date).AddSeconds(8)\n"
+        "while ((Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }\n"
+        "if (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) { Log 'forcing previous process to stop'; Stop-Process -Id $pidToWait -Force -ErrorAction SilentlyContinue }\n"
+        "Start-Sleep -Milliseconds 500\n"
     )
 
     if mode == "windows-portable":
@@ -343,30 +347,30 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
         backup = _portable_backup_path(current)
         body = (
             common
-            + f"$destination={_ps_quote(destination)}\\n"
-            + f"$backup={_ps_quote(backup)}\\n"
-            + "try {\\n"
-            + "  if (Test-Path -LiteralPath $current) { Copy-Item -LiteralPath $current -Destination $backup -Force; Log 'backup created' }\\n"
-            + "  if (($current -ne $destination) -and (Test-Path -LiteralPath $current)) { Remove-Item -LiteralPath $current -Force }\\n"
-            + "  Move-Item -LiteralPath $downloaded -Destination $destination -Force\\n"
-            + "  Remove-Item -LiteralPath $pendingFile -Force -ErrorAction SilentlyContinue\\n"
-            + "  Remove-Item -LiteralPath $lockFile -Force -ErrorAction SilentlyContinue\\n"
-            + "  Log 'portable update installed'\\n"
-            + "  Start-Process -FilePath $destination\\n"
-            + "} catch { Log ('update failed: ' + $_.Exception.Message); throw }\\n"
+            + f"$destination={_ps_quote(destination)}\n"
+            + f"$backup={_ps_quote(backup)}\n"
+            + "try {\n"
+            + "  if (Test-Path -LiteralPath $current) { Copy-Item -LiteralPath $current -Destination $backup -Force; Log 'backup created' }\n"
+            + "  if (($current -ne $destination) -and (Test-Path -LiteralPath $current)) { Remove-Item -LiteralPath $current -Force }\n"
+            + "  Move-Item -LiteralPath $downloaded -Destination $destination -Force\n"
+            + "  Remove-Item -LiteralPath $pendingFile -Force -ErrorAction SilentlyContinue\n"
+            + "  Remove-Item -LiteralPath $lockFile -Force -ErrorAction SilentlyContinue\n"
+            + "  Log 'portable update installed'\n"
+            + "  Start-Process -FilePath $destination\n"
+            + "} catch { Log ('update failed: ' + $_.Exception.Message); throw }\n"
         )
     else:
         body = (
             common
-            + "try {\\n"
-            + "  Log 'starting installer'\\n"
-            + "  $p=Start-Process -FilePath $downloaded -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' -Verb RunAs -PassThru -Wait\\n"
-            + "  if ($p.ExitCode -ne 0) { throw ('installer exit code ' + $p.ExitCode) }\\n"
-            + "  Remove-Item -LiteralPath $pendingFile -Force -ErrorAction SilentlyContinue\\n"
-            + "  Remove-Item -LiteralPath $lockFile -Force -ErrorAction SilentlyContinue\\n"
-            + "  Log 'installer completed'\\n"
-            + "  if (Test-Path -LiteralPath $current) { Start-Process -FilePath $current }\\n"
-            + "} catch { Log ('update failed: ' + $_.Exception.Message); throw }\\n"
+            + "try {\n"
+            + "  Log 'starting installer'\n"
+            + "  $p=Start-Process -FilePath $downloaded -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' -Verb RunAs -PassThru -Wait\n"
+            + "  if ($p.ExitCode -ne 0) { throw ('installer exit code ' + $p.ExitCode) }\n"
+            + "  Remove-Item -LiteralPath $pendingFile -Force -ErrorAction SilentlyContinue\n"
+            + "  Remove-Item -LiteralPath $lockFile -Force -ErrorAction SilentlyContinue\n"
+            + "  Log 'installer completed'\n"
+            + "  if (Test-Path -LiteralPath $current) { Start-Process -FilePath $current }\n"
+            + "} catch { Log ('update failed: ' + $_.Exception.Message); throw }\n"
         )
 
     script.write_text(body, encoding="utf-8")
@@ -409,7 +413,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
         f"pending={q(str(pending_file))}",
         f"lockfile={q(str(lock_file))}",
         f"ready={q(str(ready_file))}",
-        "logmsg(){ printf '%s %s\\\\n' \"$(date -Iseconds)\" \"$1\" >> \"$log\"; }",
+        "logmsg(){ printf '%s %s\\n' \"$(date -Iseconds)\" \"$1\" >> \"$log\"; }",
         "printf '%s\\n' \"$$\" > \"$ready\"",
         "logmsg 'updater helper started'",
         "for _ in $(seq 1 32); do",
@@ -498,7 +502,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
     else:
         raise ValueError(f"Modo de atualização não suportado: {mode}")
 
-    script.write_text("\\n".join(lines) + "\\n", encoding="utf-8")
+    script.write_text("\n".join(lines) + "\n", encoding="utf-8")
     script.chmod(0o700)
     return script
 
@@ -578,6 +582,13 @@ def launch_pending_update(force: bool = False) -> bool:
     return True
 
 def download_and_install(version: str, asset: dict[str, Any]) -> dict[str, Any]:
+    diag.log_event(
+        "update_install_requested",
+        current_version=__version__,
+        target_version=str(version).lstrip("vV"),
+        asset=str(asset.get("name") or ""),
+        mode=current_update_mode(),
+    )
     if not _update_operation_lock.acquire(blocking=False):
         raise RuntimeError("Já existe uma atualização em andamento.")
     lock_acquired = False
@@ -620,16 +631,16 @@ def restore_windows_portable_backup() -> bool:
     rollback = UPDATE_DIR / "rollback_portable.ps1"
     pid = os.getpid()
     rollback.write_text(
-        "$ErrorActionPreference='Stop'\\n"
-        f"$pidToWait={pid}\\n"
-        f"$current={_ps_quote(exe)}\\n"
-        f"$backup={_ps_quote(backup)}\\n"
-        "$deadline=(Get-Date).AddSeconds(8)\\n"
-        "while ((Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }\\n"
-        "if (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) { Stop-Process -Id $pidToWait -Force -ErrorAction SilentlyContinue }\\n"
-        "Start-Sleep -Milliseconds 400\\n"
-        "Copy-Item -LiteralPath $backup -Destination $current -Force\\n"
-        "Start-Process -FilePath $current\\n",
+        "$ErrorActionPreference='Stop'\n"
+        f"$pidToWait={pid}\n"
+        f"$current={_ps_quote(exe)}\n"
+        f"$backup={_ps_quote(backup)}\n"
+        "$deadline=(Get-Date).AddSeconds(8)\n"
+        "while ((Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 250 }\n"
+        "if (Get-Process -Id $pidToWait -ErrorAction SilentlyContinue) { Stop-Process -Id $pidToWait -Force -ErrorAction SilentlyContinue }\n"
+        "Start-Sleep -Milliseconds 400\n"
+        "Copy-Item -LiteralPath $backup -Destination $current -Force\n"
+        "Start-Process -FilePath $current\n",
         encoding="utf-8",
     )
     subprocess.Popen(
