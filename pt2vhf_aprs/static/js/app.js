@@ -121,7 +121,7 @@
   function translatedText(pt, en) {
     if (state.language === 'en') return en || pt;
     if (state.language === 'es' || state.language === 'fr') {
-      return EXTRA_I18N[state.language]?.[pt] || pt;
+      return EXTRA_I18N[state.language]?.[pt] || en || EN_TEXT?.get?.(pt) || pt;
     }
     return pt;
   }
@@ -4144,7 +4144,7 @@
       if (!trimmed) continue;
       const translated = state.language === 'en'
         ? EN_TEXT.get(trimmed)
-        : EXTRA_I18N[state.language]?.[trimmed];
+        : (EXTRA_I18N[state.language]?.[trimmed] || EN_TEXT.get(trimmed));
       const chosen = state.language === 'pt-BR' ? trimmed : (translated || trimmed);
       const lead = original.match(/^\s*/)?.[0] || '';
       const trail = original.match(/\s*$/)?.[0] || '';
@@ -4160,7 +4160,7 @@
         const original = el.dataset[key];
         const translated = state.language === 'en'
           ? EN_TEXT.get(original)
-          : EXTRA_I18N[state.language]?.[original];
+          : (EXTRA_I18N[state.language]?.[original] || EN_TEXT.get(original));
         el.setAttribute(attr, state.language === 'pt-BR' ? original : (translated || original));
       }
     }
@@ -4207,9 +4207,15 @@
     syncQuickLanguageButtons();
     syncLanguageFlag();
     syncMapLegendCollapsed();
+    syncMapContextBar();
+    renderAbout();
+    updateMessageComposerMode();
+    updateUpdateSettingsUi();
     refreshStatus();
     if (state.messages.length) renderMessages();
     if (state.stations.length) renderStations();
+    if (state.activeTab === 'analysis') void refreshTopologyAnalysis();
+    if (!$('#updateModal')?.classList.contains('hidden')) showUpdateModal();
   }
 
   async function setQuickLanguage(language) {
