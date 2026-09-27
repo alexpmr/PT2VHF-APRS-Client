@@ -2,10 +2,10 @@
 
 ## v1.6.23 - 2026-09-27
 
-- A **logo oficial do PT2VHF APRS Client** passa a ser usada no cabeçalho e favicon da interface.
-- Os ícones de **Windows, Linux e macOS** passam a ser derivados da mesma logo oficial, eliminando a identidade gráfica gerada separadamente por plataforma.
-- A bandeja do Windows e a capa do Manual PDF passam a usar a mesma imagem oficial.
-- Adicionada validação no pipeline para impedir a geração da Release caso a logo oficial esteja ausente/inválida.
+- A identidade visual do **PT2VHF APRS Client** é padronizada com a mesma logo vetorial/raster no cabeçalho e favicon da interface.
+- Os ícones de **Windows, Linux e macOS** passam a usar a mesma identidade visual, evitando divergências entre plataformas.
+- A bandeja do Windows e a capa do Manual PDF passam a usar a mesma identidade visual.
+- Adicionada validação no pipeline para impedir a geração da Release caso os arquivos de logo estejam ausentes/inválidos.
 - Na aba **Mapa**, adicionado filtro de atividade das estações pela última interação/recepção conhecida.
 - O filtro oferece **Tudo** (padrão), **menos de 2 h**, **2 a 24 h** e **mais de 24 h**.
 - Ao aplicar o filtro, marcadores e tracklogs de estações fora da faixa são ocultados; a topologia evita manter enlaces para estações conhecidas que foram filtradas.
