@@ -907,3 +907,25 @@ def test_v1624_version_notes_include_1623_and_1624():
     assert '"1.6.23"' in source
     assert source.index('"1.6.24"') < source.index('"1.6.23"')
 
+def test_map_controls_are_above_map_not_overlaid():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    toolbar_pos = html.index('class="map-top-toolbar"')
+    map_stage_pos = html.index('class="map-stage"')
+    map_pos = html.index('id="map"')
+    assert toolbar_pos < map_stage_pos < map_pos
+    assert html.count('id="mapStationAgeFilter"') == 1
+    assert html.count('id="topologyToggle"') == 1
+    assert html.count('id="topologyHours"') == 1
+
+    assert "grid-template-rows: auto minmax(260px, 1fr) auto;" in css
+    assert ".map-top-toolbar" in css
+    assert ".map-station-age-filter {\n  position: absolute;" not in css
+
+    assert "L.Control.extend" not in js[js.index("function addTopologyControl"):js.index("function syncMapLegendCollapsed")]
+    assert "const toggle = $('#topologyToggle');" in js
+    assert "const select = $('#topologyHours');" in js
+

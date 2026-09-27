@@ -76,7 +76,7 @@
 <main>
   <section id="tab-map" class="tab-panel active">
     <div class="map-replay-layout">
-      <div class="map-stage">
+      <div class="map-top-toolbar" aria-label="Controles do mapa">
         <div class="map-station-age-filter">
           <label for="mapStationAgeFilter">Atividade</label>
           <select id="mapStationAgeFilter" aria-label="Filtrar estações no mapa pela última interação">
@@ -87,6 +87,21 @@
           </select>
           <span id="mapStationAgeCount" class="map-station-age-count">Todas as estações</span>
         </div>
+        <div class="topology-control map-topology-control">
+          <label for="topologyToggle">
+            <input id="topologyToggle" type="checkbox">
+            <span>Topologia observada</span>
+          </label>
+          <select id="topologyHours" title="Período da topologia" aria-label="Período da topologia">
+            <option value="0">Completo</option>
+            <option value="1">1 h</option>
+            <option value="6">6 h</option>
+            <option value="24">24 h</option>
+            <option value="168">7 dias</option>
+          </select>
+        </div>
+      </div>
+      <div class="map-stage">
         <div id="map"></div>
       </div>
       <div class="traffic-animation-panel map-traffic-panel">
