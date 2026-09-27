@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.2": {
+        "title": "Mapa mais compacto, tempo relativo e estatísticas consolidadas",
+        "items": [
+            "Estações, Tracklog e Topologia observada passam para a mesma linha contextual do botão Histórico, liberando mais área vertical para o mapa.",
+            "O popup da estação mostra o tempo decorrido desde a última recepção e o atualiza enquanto permanece aberto.",
+            "O tempo relativo respeita Português, English, Español e Français, com formatos compactos para minutos, horas e dias.",
+            "O ranking de software/dispositivos consolida TOCALLs diferentes que resolvem para o mesmo nome amigável, evitando linhas duplicadas.",
+            "Os identificadores técnicos continuam preservados internamente e o destaque do PT2VHF APRS Client é mantido após a consolidação.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.7.1": {
         "title": "Atualizador corrigido, Mapa refinado e nova aba Sobre",
         "items": [
