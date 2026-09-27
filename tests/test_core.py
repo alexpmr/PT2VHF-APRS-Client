@@ -643,7 +643,8 @@ def test_client_version_stats_by_latest_station_tocall():
             assert stats["identified_stations"] == 3
             assert stats["unidentified_stations"] == 1
             assert stats["items"][0]["identifier"] == "APDW17"
-            assert stats["items"][0]["friendly_name"] == "Dire Wolf 1.7"
+            assert stats["items"][0]["friendly_name"] == "Dire Wolf"
+            assert stats["items"][0]["aliases"] == ["Dire Wolf 1.7"]
             assert stats["items"][0]["rank"] == 1
             assert stats["items"][0]["stations"] == 2
             assert stats["items"][1]["identifier"] == "APDR16"
