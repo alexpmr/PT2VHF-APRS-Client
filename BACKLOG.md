@@ -127,6 +127,15 @@
   - Registrar no diagnóstico/log os pontos descartados, com indicativo, distância do salto, intervalo de tempo e velocidade implícita, para permitir auditoria e ajuste dos limites.
   - Aplicar o mesmo filtro tanto ao tracklog ao vivo quanto ao replay/histórico.
 
+- **Estatísticas — Estações mais ativas com atalho para mensagem**
+  - No bloco **Estações mais ativas**, transformar o indicativo de cada estação em **link clicável**.
+  - Ao clicar no indicativo, mudar automaticamente para a aba **Mensagens**.
+  - Preencher o campo **Destinatário** com o indicativo clicado, incluindo SSID quando houver.
+  - Se já existir conversa com a estação, sincronizar o foco da conversa com o mesmo indicativo.
+  - Deixar o campo de mensagem pronto para digitação, facilitando o envio de uma mensagem rápida.
+  - Não enviar nenhuma mensagem automaticamente; o clique deve apenas preparar a conversa/destinatário.
+  - Manter comportamento consistente com outros atalhos de indicativo existentes na aplicação.
+
 - **Estatísticas — ranking das estações que mais conversaram**
   - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
   - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
