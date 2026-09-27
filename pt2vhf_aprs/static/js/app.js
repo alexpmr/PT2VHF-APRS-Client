@@ -2228,6 +2228,7 @@
       state.messageAlertBaselineReady = false;
       state.lastAlertedMessageId = 0;
       $('#messageBadge')?.classList.add('hidden');
+      $('.tab[data-tab="messages"]')?.classList.remove('has-unread');
       toast(`Histórico de mensagens limpo (${Number(result.deleted || 0)} registro(s)).`, 'ok');
     } catch (err) {
       toast(err.message, 'error');
@@ -2706,6 +2707,8 @@
         badge.textContent = unreadCount;
         badge.classList.toggle('hidden', unreadCount <= 0);
       }
+      const messagesTab = $('.tab[data-tab="messages"]');
+      messagesTab?.classList.toggle('has-unread', unreadCount > 0 && state.activeTab !== 'messages');
       if (!state.messageAlertBaselineReady) {
         state.lastAlertedMessageId = latest;
         state.messageAlertBaselineReady = true;
@@ -2801,9 +2804,11 @@
   function updateUnread() {
     const unread = state.messages.filter(isUnreadPersonalMessage).length;
     const badge = $('#messageBadge');
-    if (!badge) return;
-    badge.textContent = unread;
-    badge.classList.toggle('hidden', unread <= 0);
+    if (badge) {
+      badge.textContent = unread;
+      badge.classList.toggle('hidden', unread <= 0);
+    }
+    $('.tab[data-tab="messages"]')?.classList.toggle('has-unread', unread > 0 && state.activeTab !== 'messages');
   }
 
   function markMessagesSeen() {
