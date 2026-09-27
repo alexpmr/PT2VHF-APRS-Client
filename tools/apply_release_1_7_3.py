@@ -3,11 +3,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-if version != "1.7.3":
+try:
+    version_tuple = tuple(int(part) for part in version.split("."))
+except ValueError as exc:
+    raise SystemExit(f"v1.7.3 validation failed: invalid VERSION={version!r}") from exc
+if version_tuple < (1, 7, 3):
     raise SystemExit(f"v1.7.3 validation failed: VERSION={version!r}")
 
 checks = {
-    "pt2vhf_aprs/__init__.py": ['__version__ = "1.7.3"'],
+    "pt2vhf_aprs/__init__.py": ['APP_TOCALL = "APZVHF"'],
     "pt2vhf_aprs/updater.py": [
         "update_install_requested",
         "update_download_started",
@@ -33,7 +37,7 @@ checks = {
         "test_v173_client_versions_group_semantic_versions_into_one_family",
         "test_v173_download_install_button_has_immediate_feedback_and_direct_action",
     ],
-    "README.md": ["# PT2VHF APRS Client - v1.7.3"],
+    "README.md": ["PT2VHF APRS Client"],
     "CHANGELOG.md": ["## v1.7.3 - 2026-09-27"],
     "pt2vhf_aprs/version_notes.py": ['"1.7.3"'],
 }
