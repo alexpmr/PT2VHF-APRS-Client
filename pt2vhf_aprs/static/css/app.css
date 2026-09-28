@@ -132,10 +132,8 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   flex: 0 0 auto;
 }
 .map-items-menu {
-  position: absolute;
-  z-index: 1800;
-  top: calc(100% + 5px);
-  left: 0;
+  position: fixed;
+  z-index: 5000;
   min-width: 225px;
   padding: 8px;
   border: 1px solid var(--line);
