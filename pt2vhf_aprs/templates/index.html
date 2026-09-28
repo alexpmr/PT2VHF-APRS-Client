@@ -23,6 +23,7 @@
   </div>
   <div class="connection-box">
     <button id="themeQuickToggle" type="button" class="btn secondary theme-quick-toggle" title="Alternar tema">☀/☾</button>
+    <button id="kmlExportButton" type="button" class="btn secondary header-export-button" title="Exportar dados geográficos em KML">Exportar KML</button>
     <div id="languageQuickSwitch" class="language-quick-switch" aria-label="Idioma / Language">
       <button id="languageQuickCurrent" type="button" class="language-quick-current" aria-haspopup="menu" aria-expanded="false" title="Trocar idioma">
         <img id="languageQuickCurrentFlag" class="language-quick-img" src="{{ url_for('static', filename='img/flag_br.svg') }}" alt="Brasil">
@@ -211,7 +212,7 @@
         <button id="groupMessagesButton" type="button" class="btn secondary" aria-pressed="false">Agrupar por remetente</button>
         <button id="myMessagesButton" type="button" class="btn secondary" aria-pressed="false">Minhas mensagens</button>
         <button id="unreadMessagesButton" type="button" class="btn secondary" aria-pressed="false">Não lidas</button>
-        <button id="clearMessagesButton" type="button" class="btn danger">Limpar mensagens</button>
+        <button id="clearMessagesButton" type="button" class="btn danger">Apagar todas</button>
         <label class="field compact">
           <span>Filtro por origem</span>
           <input id="messageFilter" type="text" placeholder="Ex.: PT2">
@@ -234,7 +235,14 @@
 
     <div id="groupedMessagesView" class="grouped-messages-view hidden">
       <aside class="conversation-list-panel">
-        <button id="conversationSortButton" type="button" class="conversation-list-title conversation-sort-button" title="Ordenar conversas">Conversas <span id="conversationSortIndicator">▲</span></button>
+        <div class="conversation-list-toolbar">
+          <span class="conversation-list-title">Conversas</span>
+          <select id="conversationSortKey" class="conversation-sort-key" title="Critério de ordenação">
+            <option value="sender">Remetente</option>
+            <option value="date">Data</option>
+          </select>
+          <button id="conversationSortButton" type="button" class="conversation-sort-button" title="Alternar ordem" aria-label="Alternar ordem"><span id="conversationSortIndicator">▲</span></button>
+        </div>
         <div id="conversationList" class="conversation-list"></div>
       </aside>
       <section class="conversation-thread-panel">
@@ -1072,6 +1080,38 @@
       <div class="message-alert-actions">
         <button id="promotionSendButton" type="button" class="btn primary"></button>
         <button id="promotionCancelButton" type="button" class="btn secondary"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="kmlExportModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="kmlExportTitle">
+  <div class="message-alert-card update-dialog">
+    <div class="message-alert-icon">KML</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Exportação geográfica</div>
+      <h3 id="kmlExportTitle">Exportar dados em KML</h3>
+      <p>Escolha as camadas que serão incluídas. Todas vêm marcadas por padrão.</p>
+      <div class="kml-export-options">
+        <label class="check-field"><input id="kmlStations" type="checkbox" checked><span>Estações</span></label>
+        <label class="check-field"><input id="kmlPositions" type="checkbox" checked><span>Posições</span></label>
+        <label class="check-field"><input id="kmlTracklogs" type="checkbox" checked><span>Tracklogs</span></label>
+        <label class="check-field"><input id="kmlTopology" type="checkbox" checked><span>Topologia / enlaces</span></label>
+        <label class="field kml-period-field">
+          <span>Período</span>
+          <select id="kmlExportPeriod">
+            <option value="0">Completo</option>
+            <option value="1">1 hora</option>
+            <option value="6">6 horas</option>
+            <option value="24">24 horas</option>
+            <option value="168">7 dias</option>
+          </select>
+        </label>
+      </div>
+      <div id="kmlExportStatus" class="hint" aria-live="polite"></div>
+      <div class="message-alert-actions">
+        <button id="kmlExportConfirm" type="button" class="btn primary">Gerar KML</button>
+        <button id="kmlExportCancel" type="button" class="btn secondary">Cancelar</button>
       </div>
     </div>
   </div>
