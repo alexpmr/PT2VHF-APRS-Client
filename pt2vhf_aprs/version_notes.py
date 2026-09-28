@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.9": {
+        "title": "Validação Windows x64: velocidade da animação no Mapa e rótulo Versão",
+        "items": [
+            "Na barra contextual do Mapa, o controle Velocidade passa a ficar entre Topologia observada e o seletor de período.",
+            "As opções de velocidade são 0,5x, 1x, 2x e 5x, com 1x como padrão.",
+            "O seletor da barra do Mapa e o seletor do Replay permanecem sincronizados e controlam a mesma velocidade de animação.",
+            "A velocidade escolhida fica persistida localmente para a próxima abertura.",
+            "Na barra superior, o texto Build passa a ser exibido como Versão em português.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.8": {
         "title": "Validação Windows x64: tráfego APRS hop a hop e ACK pelo path observado",
         "items": [
