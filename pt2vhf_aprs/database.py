@@ -128,9 +128,9 @@ DEFAULT_CONFIG = {
     "map_type": "osm",
     "track_color": "#3ba6ff",
     "track_width": 2,
-    "topology_rf_color": "#35a7ff",
-    "topology_igate_color": "#b06cff",
-    "topology_width": 2,
+    "topology_rf_color": "#ffff00",
+    "topology_igate_color": "#ffff00",
+    "topology_width": 1,
     "map_brightness": 100,
     "sound_on_personal_message": 1,
     "sound_on_station_activity": 1,
@@ -229,9 +229,9 @@ def init_db() -> None:
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
                 track_width INTEGER NOT NULL DEFAULT 2,
-                topology_rf_color TEXT NOT NULL DEFAULT '#35a7ff',
-                topology_igate_color TEXT NOT NULL DEFAULT '#b06cff',
-                topology_width INTEGER NOT NULL DEFAULT 2,
+                topology_rf_color TEXT NOT NULL DEFAULT '#ffff00',
+                topology_igate_color TEXT NOT NULL DEFAULT '#ffff00',
+                topology_width INTEGER NOT NULL DEFAULT 1,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
                 sound_on_station_activity INTEGER NOT NULL DEFAULT 1,
@@ -436,11 +436,11 @@ def init_db() -> None:
         if "track_width" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN track_width INTEGER NOT NULL DEFAULT 2")
         if "topology_rf_color" not in config_columns:
-            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_color TEXT NOT NULL DEFAULT '#35a7ff'")
+            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_color TEXT NOT NULL DEFAULT '#ffff00'")
         if "topology_igate_color" not in config_columns:
-            conn.execute("ALTER TABLE config ADD COLUMN topology_igate_color TEXT NOT NULL DEFAULT '#b06cff'")
+            conn.execute("ALTER TABLE config ADD COLUMN topology_igate_color TEXT NOT NULL DEFAULT '#ffff00'")
         if "topology_width" not in config_columns:
-            conn.execute("ALTER TABLE config ADD COLUMN topology_width INTEGER NOT NULL DEFAULT 2")
+            conn.execute("ALTER TABLE config ADD COLUMN topology_width INTEGER NOT NULL DEFAULT 1")
         if "map_brightness" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN map_brightness INTEGER NOT NULL DEFAULT 100")
         if "sound_on_personal_message" not in config_columns:
@@ -588,9 +588,9 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
     merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()
     merged["track_width"] = int(merged["track_width"] or 2)
-    merged["topology_rf_color"] = str(merged["topology_rf_color"] or "#35a7ff").lower().strip()
-    merged["topology_igate_color"] = str(merged["topology_igate_color"] or "#b06cff").lower().strip()
-    merged["topology_width"] = int(merged["topology_width"] or 2)
+    merged["topology_rf_color"] = str(merged["topology_rf_color"] or "#ffff00").lower().strip()
+    merged["topology_igate_color"] = str(merged["topology_igate_color"] or "#ffff00").lower().strip()
+    merged["topology_width"] = int(merged["topology_width"] or 1)
     merged["map_brightness"] = int(merged["map_brightness"] or 100)
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
     merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
