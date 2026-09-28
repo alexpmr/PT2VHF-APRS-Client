@@ -168,6 +168,16 @@
   - Diferenciar claramente **inferência por tráfego APRS observado** de uma análise real de propagação RF; não afirmar área de sombra quando os dados forem insuficientes.
   - Respeitar o período selecionado em Estatísticas e permitir comparação entre períodos para verificar se uma possível deficiência é persistente ou temporária.
 
+- **Estatísticas — estações com problemas**
+  - Adicionar um bloco **Estações com problemas** com os indicativos que apresentaram anomalias ou dados suspeitos no período selecionado.
+  - Considerar, quando detectável: **coordenadas inválidas/fake**, posição **0,0**, ausência recorrente de posição, saltos geográficos implausíveis, velocidade implícita incompatível, pacotes malformados, excesso de duplicados e outros comportamentos anômalos observáveis.
+  - Exibir para cada estação o **tipo de problema**, quantidade de ocorrências, última ocorrência e nível de recorrência.
+  - Permitir clicar no indicativo para abrir a estação no **Mapa** quando houver posição válida conhecida.
+  - Quando útil, permitir abrir os **Logs** já filtrados pelo indicativo para facilitar o diagnóstico.
+  - Não classificar automaticamente como defeituosa uma estação por um único pacote isolado; usar recorrência/quantidade mínima de evidências para reduzir falsos positivos.
+  - Diferenciar claramente **problema da estação/dado APRS** de **falha de recepção local**, ausência de cobertura ou falta de dados suficientes.
+  - Respeitar o período selecionado em Estatísticas e recalcular o bloco conforme o intervalo analisado.
+
 - **Exportação — KML pela barra superior + CSV/GeoJSON**
   - Adicionar na **barra superior** uma opção **Exportar KML**.
   - Ao clicar, abrir um seletor para escolher quais camadas/dados serão incluídos no arquivo.
