@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.7.9 - 2026-09-28
+
+- **Mapa:** novo seletor **Velocidade** entre **Topologia observada** e o período **Completo**, com opções **0,5x / 1x / 2x / 5x** e padrão **1x**.
+- **Replay:** o seletor de velocidade do painel de replay foi reduzido às mesmas quatro opções e permanece sincronizado com o controle da barra contextual.
+- **Persistência:** a velocidade escolhida é preservada localmente entre execuções.
+- **Barra superior:** em português, **Build** passa a ser apresentado como **Versão**.
+- **Build:** versão de validação somente **Windows x64 Portable**.
+
+
 ## v1.7.8 - 2026-09-28
 
 - **Windows x64:** build de validação somente em formato **Portable**.
