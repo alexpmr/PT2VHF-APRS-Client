@@ -154,7 +154,7 @@ body.map-context-visible main { height: calc(100vh - 184px); }
 }
 .map-items-menu label:hover { background: rgba(255,255,255,.06); }
 .map-items-menu input { accent-color: var(--accent); }
-.aprs-object-marker-wrap { background: transparent; border: 0; }
+.aprs-object-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }
 .aprs-object-marker {
   display: grid;
   place-items: center;
@@ -283,7 +283,10 @@ html[data-theme="light"] .map-context-bar .topology-control select {
 .station-popup .popup-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 9px; font-size: 12px; }
 .station-popup .popup-grid strong { color: var(--muted); }
 .station-last-heard-relative { color: var(--muted); white-space: nowrap; }
-.aprs-marker-wrap { background: transparent; border: 0; }
+.leaflet-pane.pt2vhf-visual-pane { pointer-events: none !important; }
+.leaflet-pane.pt2vhf-marker-pane { pointer-events: auto !important; }
+.leaflet-pane.pt2vhf-marker-pane .leaflet-marker-icon { pointer-events: auto !important; cursor: pointer; }
+.aprs-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }
 .aprs-symbol { display: inline-block; overflow: hidden; background-repeat: no-repeat; image-rendering: auto; vertical-align: middle; }
 .aprs-marker {
   display: grid;
