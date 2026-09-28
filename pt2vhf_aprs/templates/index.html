@@ -212,7 +212,7 @@
         <button id="groupMessagesButton" type="button" class="btn secondary" aria-pressed="false">Agrupar por remetente</button>
         <button id="myMessagesButton" type="button" class="btn secondary" aria-pressed="false">Minhas mensagens</button>
         <button id="unreadMessagesButton" type="button" class="btn secondary" aria-pressed="false">Não lidas</button>
-        <button id="clearMessagesButton" type="button" class="btn danger">Apagar todas</button>
+        <button id="clearMessagesButton" type="button" class="btn danger">Limpar</button>
         <label class="field compact">
           <span>Filtro por origem</span>
           <input id="messageFilter" type="text" placeholder="Ex.: PT2">
@@ -626,22 +626,22 @@
           <label class="field">
             <span>Cor da topologia RF</span>
             <div class="color-field-row">
-              <input name="topology_rf_color" type="color" value="#35a7ff" aria-label="Cor dos enlaces RF">
-              <input id="topologyRfColorText" type="text" value="#35a7ff" maxlength="7" placeholder="#35a7ff">
+              <input name="topology_rf_color" type="color" value="#ffff00" aria-label="Cor dos enlaces RF">
+              <input id="topologyRfColorText" type="text" value="#ffff00" maxlength="7" placeholder="#ffff00">
             </div>
           </label>
           <label class="field">
             <span>Cor da topologia via IGate</span>
             <div class="color-field-row">
-              <input name="topology_igate_color" type="color" value="#b06cff" aria-label="Cor dos enlaces IGate">
-              <input id="topologyIgateColorText" type="text" value="#b06cff" maxlength="7" placeholder="#b06cff">
+              <input name="topology_igate_color" type="color" value="#ffff00" aria-label="Cor dos enlaces IGate">
+              <input id="topologyIgateColorText" type="text" value="#ffff00" maxlength="7" placeholder="#ffff00">
             </div>
           </label>
           <label class="field">
             <span>Espessura da topologia</span>
             <div class="range-field-row">
-              <input name="topology_width" id="topologyWidth" type="range" min="1" max="10" step="1" value="2">
-              <output id="topologyWidthValue" for="topologyWidth">2 px</output>
+              <input name="topology_width" id="topologyWidth" type="range" min="1" max="10" step="1" value="1">
+              <output id="topologyWidthValue" for="topologyWidth">1 px</output>
             </div>
           </label>
           <label class="check-field">
@@ -651,7 +651,7 @@
         </div>
         <div class="config-actions map-config-actions">
           <button id="resetTopologyStyleButton" type="button" class="btn secondary">Restaurar topologia padrão</button>
-          <span class="hint">Padrão: RF #35a7ff, IGate #b06cff, 2 px.</span>
+          <span class="hint">Padrão: topologia amarela (#ffff00), 1 px.</span>
         </div>
         <div class="hint map-provider-hint">
           OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.
