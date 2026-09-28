@@ -1154,16 +1154,40 @@
     const menu = $('#mapItemsMenu');
     if (button && menu && button.dataset.bound !== '1') {
       button.dataset.bound = '1';
-      button.addEventListener('click', event => {
-        event.stopPropagation();
-        const open = menu.classList.toggle('hidden') === false;
-        button.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
-      menu.addEventListener('click', event => event.stopPropagation());
-      document.addEventListener('click', () => {
+
+      const positionMapItemsMenu = () => {
+        if (menu.classList.contains('hidden')) return;
+        const rect = button.getBoundingClientRect();
+        const margin = 6;
+        const width = Math.max(225, menu.offsetWidth || 225);
+        const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+        const left = Math.min(Math.max(margin, rect.left), maxLeft);
+        menu.style.left = `${Math.round(left)}px`;
+        menu.style.top = `${Math.round(rect.bottom + 5)}px`;
+      };
+
+      const closeMapItemsMenu = () => {
         menu.classList.add('hidden');
         button.setAttribute('aria-expanded', 'false');
+      };
+
+      button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const willOpen = menu.classList.contains('hidden');
+        if (willOpen) {
+          menu.classList.remove('hidden');
+          button.setAttribute('aria-expanded', 'true');
+          requestAnimationFrame(positionMapItemsMenu);
+        } else {
+          closeMapItemsMenu();
+        }
       });
+
+      menu.addEventListener('click', event => event.stopPropagation());
+      document.addEventListener('click', closeMapItemsMenu);
+      window.addEventListener('resize', positionMapItemsMenu);
+      window.addEventListener('scroll', positionMapItemsMenu, true);
     }
 
     const mapType = $('#mapTypeQuick');
