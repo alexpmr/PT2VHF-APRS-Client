@@ -12,6 +12,7 @@
 - **Mensagens:** conversas agrupadas podem ser ordenadas por **Remetente** ou **Data**, em ordem crescente ou decrescente.
 - **Mensagens:** ação **Apagar todas** remove somente o histórico local após confirmação e atualiza imediatamente os indicadores de não lidas.
 - Adicionados testes de regressão para KML, validação geográfica, anomalias, navegação das Estatísticas e controles de Mensagens.
+- **Atualizador Windows:** o helper passa a usar **CMD nativo** como caminho principal, sem depender do PowerShell para aplicar a atualização; o fallback PowerShell é gravado com BOM UTF-8 e o tempo de confirmação do helper foi ampliado.
 - Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
 
 ## v1.7.4 - 2026-09-27
