@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.7": {
+        "title": "Mapa mais limpo, novos padrões visuais e checagem de atualização a cada 30 minutos",
+        "items": [
+            "O botão Histórico permanece somente na barra contextual do Mapa; o antigo botão global deixa de ser recriado pelo patch legado de build.",
+            "Na aba Mensagens, a ação destrutiva passa a se chamar Limpar, mantendo destaque vermelho e confirmação antes da exclusão.",
+            "A Topologia observada passa a usar amarelo (#ffff00) e espessura mínima de 1 px como padrão para novas configurações.",
+            "O Tracklog permanece azul por padrão, e animações de atividade e som continuam ativados por padrão.",
+            "A verificação periódica de nova versão passa de 5 para 30 minutos, sem sobrepor verificações ainda em andamento.",
+            "Preferências já personalizadas pelo usuário são preservadas; os novos valores visuais valem como padrão para instalações/configurações não personalizadas.",
+            "Adicionados testes de regressão para evitar duplicação do Histórico, validar o botão Limpar, os padrões do Mapa e a nova cadência de atualização.",
+            "Release completa para Windows x64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.7.6": {
         "title": "Atualizador Windows reforçado, KML com Salvar como e novos rankings",
         "items": [
