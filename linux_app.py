@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import webbrowser
+from pathlib import Path
 
 from waitress import serve
 
@@ -22,6 +23,8 @@ WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 850
 WINDOW_MIN_WIDTH = 1100
 WINDOW_MIN_HEIGHT = 700
+
+_window = None
 
 
 def _wait_for_server(timeout: float = 12.0) -> bool:
@@ -55,6 +58,36 @@ def _exit_for_update() -> None:
     os._exit(0)
 
 
+class NativeApi:
+    """Bridge for native desktop file dialogs used by the web UI."""
+
+    def save_text_file(self, filename: str, content: str) -> dict:
+        try:
+            import webview
+            global _window
+            if _window is None:
+                return {"saved": False, "error": "Janela integrada indisponível."}
+            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.kml")).name
+            if not suggested.lower().endswith(".kml"):
+                suggested += ".kml"
+            selected = _window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                save_filename=suggested,
+                file_types=("KML (*.kml)", "Todos os arquivos (*.*)"),
+            )
+            if not selected:
+                return {"saved": False, "cancelled": True}
+            if isinstance(selected, (list, tuple)):
+                selected = selected[0] if selected else ""
+            target = Path(str(selected))
+            if target.suffix.lower() != ".kml":
+                target = target.with_suffix(".kml")
+            target.write_text(str(content or ""), encoding="utf-8")
+            return {"saved": True, "path": str(target)}
+        except Exception as exc:
+            return {"saved": False, "error": str(exc)}
+
+
 def _browser_loop() -> int:
     _open_browser()
     try:
@@ -66,15 +99,17 @@ def _browser_loop() -> int:
 
 
 def _run_integrated_window() -> int:
+    global _window
     try:
         import webview
     except Exception:
         return _browser_loop()
 
     try:
-        window = webview.create_window(
+        _window = webview.create_window(
             APP_NAME,
             URL,
+            js_api=NativeApi(),
             width=WINDOW_WIDTH,
             height=WINDOW_HEIGHT,
             min_size=(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT),
@@ -86,7 +121,7 @@ def _run_integrated_window() -> int:
             _shutdown()
             return True
 
-        window.events.closing += _on_closing
+        _window.events.closing += _on_closing
         webview.start(debug=False, private_mode=False)
         _shutdown()
         return 0
