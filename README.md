@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.7.5
+# PT2VHF APRS Client - v1.7.6
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.5** amplia a análise operacional da rede: exportação KML configurável, filtragem de coordenadas inválidas/suspeitas, estações com problemas, sugestões de melhoria de cobertura e navegação dos rankings diretamente para o mapa. A aba Mensagens também ganha ordenação de conversas por remetente/data e limpeza em massa com confirmação.
+A **v1.7.6** reforça o atualizador automático no Windows, adiciona **Salvar como** ao KML, reúne Histórico/KML na barra contextual do Mapa e acrescenta um ranking de interações baseado somente em conversas APRS manuais.
 
 ## Downloads
 
@@ -82,6 +82,14 @@ _Atualizado automaticamente em **2026-09-28 13:53 UTC** a partir dos contadores 
 > Os números representam downloads dos pacotes do aplicativo, não usuários únicos. Manual PDF, SBOMs e arquivos de licenças não entram no total.
 
 <!-- DOWNLOAD_STATS_END -->
+
+## Novidades da v1.7.6
+
+- **Atualização automática Windows:** helper CMD nativo como caminho principal, com confirmação mais robusta antes de fechar o aplicativo.
+- **KML:** abre **Salvar como** no aplicativo desktop para escolher pasta e nome do arquivo.
+- **Mapa:** **Histórico** e **Exportar KML** ficam na barra contextual de Estações/Tracklog/Topologia.
+- **Estatísticas:** novo ranking **Estações que mais interagiram**, considerando somente mensagens manuais entre operadores e excluindo tráfego automático.
+- **Testes:** regressões cobrindo updater Windows, KML, barra do Mapa e ranking de conversas.
 
 ## Novidades da v1.7.5
 
