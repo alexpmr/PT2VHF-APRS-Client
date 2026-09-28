@@ -114,6 +114,13 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mensagens — renomear Apagar todas para Limpar**
+  - Na barra da aba **Mensagens**, alterar o texto do botão **Apagar todas** para **Limpar**.
+  - Manter o botão no mesmo padrão visual e dimensional dos demais controles rápidos da barra, como **Lidas**, **Minhas mensagens** e filtros equivalentes.
+  - Preservar a cor/ênfase **vermelha** para indicar ação destrutiva.
+  - Manter a confirmação explícita antes de apagar o histórico local de mensagens.
+  - Não alterar a função da ação: **Limpar** continua removendo todas as mensagens armazenadas localmente, sem afetar estações, logs, tracklogs ou configurações.
+
 - **Mapa — remover Histórico da barra superior global**
   - Remover o botão **Histórico** da barra superior global da aplicação.
   - Manter apenas o botão **Histórico** que já está na barra contextual do **Mapa**, junto de **Estações, Tracklog, Topologia** e **Exportar KML**.
