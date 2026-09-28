@@ -91,6 +91,15 @@
   - Diferenciar, quando útil, mensagens enviadas, recebidas e total de interações.
   - Usar as mensagens armazenadas no banco local e evitar duplicidades artificiais.
 
+- **Mensagens — ordenação e limpeza em massa**
+  - Permitir ordenar a lista de mensagens por **remetente** e por **data/hora da mensagem**.
+  - Oferecer ordenação crescente e decrescente em ambos os critérios.
+  - Manter a ordenação compatível com os modos existentes, inclusive conversas agrupadas, filtros de **Minhas mensagens** e **Não lidas**.
+  - Adicionar na barra da aba **Mensagens** a opção **Apagar todas as mensagens**.
+  - Exigir confirmação explícita antes da exclusão em massa, deixando claro que a ação apagará o histórico local de mensagens.
+  - Após a confirmação, remover as mensagens do banco local e atualizar imediatamente contadores, filtros, conversas agrupadas e indicadores de não lidas.
+  - Não apagar configurações, estações, logs, tracklogs ou outros dados do aplicativo.
+
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
