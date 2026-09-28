@@ -280,7 +280,7 @@ def test_v165_maintenance_notifications_and_ssid():
     assert 'id="notificationVolume"' in html
     assert 'id="notificationSound"' in html
     assert 'id="testNotificationSound"' in html
-    assert 'id="toggleReplayBarButton"' in html
+    assert 'id="toggleReplayBarButton"' not in html
     assert 'map-traffic-panel hidden' in html
     assert "playBrowserNotificationSound" in js
     assert "[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?" in service
