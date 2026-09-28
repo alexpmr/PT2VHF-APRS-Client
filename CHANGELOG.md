@@ -8,9 +8,11 @@
 - **Tracklog:** permanece **azul (#3ba6ff)** por padrão.
 - **Animação e som:** permanecem ativados por padrão para novas configurações.
 - **Atualizações:** a checagem periódica de nova versão passa de 5 para **30 minutos**; o agendador só programa a próxima execução depois da conclusão da verificação atual.
+- **Windows ARM64:** novos builds nativos **Setup ARM64** e **Portable ARM64**, com seleção de asset pelo updater conforme a arquitetura detectada.
+- **Topologia RF × APRS-IS:** o parser passa a preservar a capitalização dos q-constructs; `qAR`/entrada direta e `qAr`/IGate remoto via APRS-IS deixam de ser confundidos, evitando enlaces de Internet desenhados como RF.
 - Configurações visuais já personalizadas pelo usuário são preservadas; os novos valores são aplicados somente como padrão/reset.
 - Adicionados testes de regressão para o Histórico contextual, botão Limpar, padrões do Mapa e cadência de atualização.
-- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+- Release completa: Windows x64 + Windows ARM64 (Setup + Portable), Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
 
 ## v1.7.6 - 2026-09-28
 
