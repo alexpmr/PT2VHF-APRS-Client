@@ -313,6 +313,84 @@ def _ps_quote(value: str | Path) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
+def _cmd_value(value: str | Path) -> str:
+    # Values are assigned with SET "name=value"; percent signs must be doubled
+    # so paths such as C:\100%\... are not interpreted as environment variables.
+    return str(value).replace("%", "%%")
+
+
+def _write_windows_cmd_helper(pending: dict[str, Any]) -> Path:
+    downloaded = Path(str(pending["path"])).resolve()
+    current = Path(str(pending.get("current_executable") or _current_executable_path())).resolve()
+    mode = str(pending.get("mode") or current_update_mode())
+    script = UPDATE_DIR / "apply_update.cmd"
+    log = APPLY_LOG.resolve()
+    pending_path = PENDING_FILE.resolve()
+    lock_path = UPDATE_LOCK_FILE.resolve()
+    ready_path = HELPER_READY_FILE.resolve()
+
+    lines = [
+        "@echo off",
+        "setlocal",
+        "chcp 65001 >nul",
+        f'set "downloaded={_cmd_value(downloaded)}"',
+        f'set "current={_cmd_value(current)}"',
+        f'set "pending={_cmd_value(pending_path)}"',
+        f'set "lockfile={_cmd_value(lock_path)}"',
+        f'set "logfile={_cmd_value(log)}"',
+        f'set "ready={_cmd_value(ready_path)}"',
+        '> "%ready%" echo ready',
+        '>> "%logfile%" echo %date% %time% updater cmd helper started',
+        # The app schedules its own shutdown only after seeing the ready file.
+        # A short delay avoids racing the executable lock during WebView shutdown.
+        'ping 127.0.0.1 -n 6 >nul',
+    ]
+
+    if mode == "windows-portable":
+        destination = current.parent / downloaded.name
+        backup = _portable_backup_path(current)
+        lines += [
+            f'set "destination={_cmd_value(destination)}"',
+            f'set "backup={_cmd_value(backup)}"',
+            'if exist "%current%" copy /Y "%current%" "%backup%" >nul 2>&1',
+            'set /a tries=0',
+            ':portable_retry',
+            'if /I not "%current%"=="%destination%" if exist "%current%" del /F /Q "%current%" >nul 2>&1',
+            'if /I not "%current%"=="%destination%" if exist "%current%" goto portable_wait',
+            'move /Y "%downloaded%" "%destination%" >nul 2>&1',
+            'if errorlevel 1 goto update_failed',
+            'del /F /Q "%pending%" "%lockfile%" >nul 2>&1',
+            '>> "%logfile%" echo %date% %time% portable update installed',
+            'start "" "%destination%"',
+            'exit /b 0',
+            ':portable_wait',
+            'set /a tries+=1',
+            'if %tries% GEQ 15 goto update_failed',
+            'ping 127.0.0.1 -n 2 >nul',
+            'goto portable_retry',
+        ]
+    else:
+        lines += [
+            'start "" /wait "%downloaded%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS',
+            'if errorlevel 1 goto update_failed',
+            'del /F /Q "%pending%" "%lockfile%" >nul 2>&1',
+            '>> "%logfile%" echo %date% %time% installer completed',
+            'if exist "%current%" start "" "%current%"',
+            'exit /b 0',
+        ]
+
+    lines += [
+        ':update_failed',
+        '>> "%logfile%" echo %date% %time% update failed in cmd helper',
+        'if exist "%backup%" if not exist "%current%" copy /Y "%backup%" "%current%" >nul 2>&1',
+        'if exist "%current%" start "" "%current%"',
+        'exit /b 1',
+    ]
+
+    script.write_text("\r\n".join(lines) + "\r\n", encoding="utf-8")
+    return script
+
+
 def _write_windows_helper(pending: dict[str, Any]) -> Path:
     path = Path(str(pending["path"])).resolve()
     current = Path(str(pending.get("current_executable") or _current_executable_path())).resolve()
@@ -373,7 +451,9 @@ def _write_windows_helper(pending: dict[str, Any]) -> Path:
             + "} catch { Log ('update failed: ' + $_.Exception.Message); throw }\n"
         )
 
-    script.write_text(body, encoding="utf-8")
+    # Windows PowerShell 5.1 does not reliably treat UTF-8 without BOM as
+    # UTF-8. Keep the fallback helper BOM-marked for non-ASCII user paths.
+    script.write_text(body, encoding="utf-8-sig")
     return script
 
 
@@ -507,7 +587,7 @@ def _write_posix_helper(pending: dict[str, Any]) -> Path:
     return script
 
 
-def _wait_for_helper_ready(process: subprocess.Popen, timeout: float = 4.0) -> bool:
+def _wait_for_helper_ready(process: subprocess.Popen, timeout: float = 12.0) -> bool:
     deadline = time.monotonic() + max(1.0, float(timeout))
     while time.monotonic() < deadline:
         if HELPER_READY_FILE.exists():
@@ -535,10 +615,16 @@ def launch_pending_update(force: bool = False) -> bool:
     HELPER_READY_FILE.unlink(missing_ok=True)
 
     if sys.platform == "win32":
-        helper = _write_windows_helper(pending)
-        flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        # Use the native CMD helper as the primary Windows updater. This avoids
+        # depending on PowerShell execution policy/profile/security products just
+        # to replace the executable or launch the signed Setup package.
+        helper = _write_windows_cmd_helper(pending)
+        flags = (
+            getattr(subprocess, "CREATE_NO_WINDOW", 0)
+            | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        )
         process = subprocess.Popen(
-            ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(helper)],
+            [os.environ.get("COMSPEC", r"C:\Windows\System32\cmd.exe"), "/d", "/c", str(helper)],
             creationflags=flags,
             close_fds=True,
             stdin=subprocess.DEVNULL,
@@ -569,7 +655,14 @@ def launch_pending_update(force: bool = False) -> bool:
             process.terminate()
         except Exception:
             pass
-        raise RuntimeError("O atualizador auxiliar não iniciou corretamente. A aplicação permanecerá aberta.")
+        fallback_note = ""
+        if sys.platform == "win32":
+            fallback_note = " O helper CMD não confirmou a inicialização."
+        raise RuntimeError(
+            "O atualizador auxiliar não iniciou corretamente."
+            + fallback_note
+            + " A aplicação permanecerá aberta. Consulte update_apply.log/diagnostics.log."
+        )
 
     diag.log_event(
         "update_helper_launched",
