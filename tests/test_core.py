@@ -1692,3 +1692,22 @@ def test_v1711_map_items_menu_not_clipped_and_opens():
     assert "requestAnimationFrame(positionMapItemsMenu)" in js
     assert "window.addEventListener('resize', positionMapItemsMenu)" in js
     assert "window.addEventListener('scroll', positionMapItemsMenu, true)" in js
+
+def test_v1712_clickable_markers_use_dedicated_pane():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+
+    assert "createPane('pt2vhfVisualPane')" in js
+    assert "createPane('pt2vhfMarkerPane')" in js
+    assert "visualPane.style.pointerEvents = 'none'" in js
+    assert "markerPane.style.pointerEvents = 'auto'" in js
+    assert "pane: 'pt2vhfMarkerPane'" in js
+    assert "pane: 'pt2vhfVisualPane'" in js
+    assert "zIndexOffset: 1200" in js
+    assert "zIndexOffset: 1400" in js
+
+    assert ".leaflet-pane.pt2vhf-visual-pane { pointer-events: none !important; }" in css
+    assert ".leaflet-pane.pt2vhf-marker-pane { pointer-events: auto !important; }" in css
+    assert ".aprs-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }" in css
+    assert ".aprs-object-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }" in css
