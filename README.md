@@ -90,6 +90,7 @@ _Atualizado automaticamente a partir dos contadores das GitHub Releases._
 - Digipeaters e iGates dos rankings são clicáveis e levam diretamente ao Mapa.
 - Conversas agrupadas podem ser ordenadas por **Remetente** ou **Data**, com ordem crescente/decrescente.
 - **Apagar todas** limpa somente o histórico local de mensagens, após confirmação.
+- **Atualizador Windows reforçado:** aplicação da atualização passa a usar helper CMD nativo, reduzindo falhas de inicialização do helper PowerShell.
 
 ## Destaques da v1.7 e da série 1.6
 
