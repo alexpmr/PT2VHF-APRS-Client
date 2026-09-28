@@ -12,7 +12,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Na barra superior, versão atual mostra Versão atualizada.",
             "Quando há atualização, mostra Versão X.X.X disponível em laranja e piscando.",
             "A checagem automática de nova versão permanece a cada 30 minutos.",
-            "Build de validação somente para Windows x64 Portable.",
+            "Build de validação somente para Windows x64 Portable, destinado à validação dos ajustes recentes.",
         ],
     },
     "1.7.12": {
