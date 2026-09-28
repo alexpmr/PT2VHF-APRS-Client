@@ -94,6 +94,17 @@
   - Diferenciar, quando útil, mensagens enviadas, recebidas e total de interações.
   - Usar o histórico local de mensagens e, quando necessário, heurísticas conservadoras para separar conversa humana de tráfego automatizado.
 
+- **Builds — versões ARM64**
+  - Adicionar geração oficial de artefatos **ARM64** nas plataformas em que houver suporte.
+  - **Windows ARM64:** gerar instalador e, se tecnicamente viável, versão portátil ARM64, com nomes de arquivo claramente diferenciados dos builds x64.
+  - **Linux ARM64:** gerar pacote compatível para ARM64, priorizando **TAR.GZ** e, quando suportado pelo pipeline, também **AppImage** e **DEB arm64**.
+  - **macOS ARM64:** manter o build nativo Apple Silicon já existente e garantir paridade funcional com Intel x86_64.
+  - Atualizar o workflow do GitHub Actions para compilar/testar cada arquitetura separadamente e publicar todos os artefatos na mesma Release.
+  - Atualizar o mecanismo de atualização automática para detectar a arquitetura em execução e selecionar exclusivamente o pacote correto (**x64** ou **ARM64**).
+  - Não permitir atualização cruzada entre arquiteturas.
+  - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento em ARM64 antes de considerar o build estável.
+  - Documentar claramente no README/Release qual pacote deve ser usado em cada arquitetura.
+
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
