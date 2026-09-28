@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.12": {
+        "title": "Validação Windows x64: todos os marcadores clicáveis no mapa",
+        "items": [
+            "Cria panes separados no Leaflet para marcadores clicáveis e camadas visuais.",
+            "Estações, objetos APRS e marcadores de consulta ficam em pane superior com eventos habilitados.",
+            "Tracklogs, topologia, halos e pacotes animados ficam em pane inferior sem pointer-events.",
+            "Reforça cursor e área clicável dos ícones de estação e objetos APRS.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.11": {
         "title": "Validação Windows x64: correção do menu Itens do mapa",
         "items": [
