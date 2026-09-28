@@ -2229,9 +2229,16 @@
       }))
       .filter(item => !state.unreadMessagesOnly || item.unread > 0)
       .sort((a, b) => {
+        if (state.conversationSortKey === 'date') {
+          const timeDelta = String(a.last?.timestamp || '').localeCompare(String(b.last?.timestamp || '')) * factor;
+          if (timeDelta) return timeDelta;
+        } else {
+          const senderDelta = a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor;
+          if (senderDelta) return senderDelta;
+        }
         const favoriteDelta = Number(isFavorite(b.contact)) - Number(isFavorite(a.contact));
         if (favoriteDelta) return favoriteDelta;
-        return a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' }) * factor;
+        return a.contact.localeCompare(b.contact, currentLocale(), { numeric:true, sensitivity:'base' });
       });
   }
 
@@ -2435,6 +2442,13 @@
     renderGroupedMessages();
   });
 
+  $('#conversationSortKey')?.addEventListener('change', event => {
+    state.conversationSortKey = event.target.value === 'date' ? 'date' : 'sender';
+    localStorage.setItem('pt2vhf_conversation_sort_key', state.conversationSortKey);
+    renderGroupedMessages();
+  });
+  if ($('#conversationSortKey')) $('#conversationSortKey').value = state.conversationSortKey;
+
   $('#conversationSortButton')?.addEventListener('click', () => {
     state.conversationSort = state.conversationSort === 'asc' ? 'desc' : 'asc';
     localStorage.setItem('pt2vhf_conversation_sort', state.conversationSort);
@@ -2530,17 +2544,25 @@
   });
 
   $('#clearMessagesButton')?.addEventListener('click', async () => {
-    if (!window.confirm('Apagar TODO o histórico de mensagens e boletins armazenado neste computador? Esta ação não pode ser desfeita.')) return;
+    if (!window.confirm(ui(
+      'Apagar TODAS as mensagens e boletins armazenados neste computador? Somente o histórico local de mensagens será removido. Esta ação não pode ser desfeita.',
+      'Delete ALL messages and bulletins stored on this computer? Only the local message history will be removed. This cannot be undone.'
+    ))) return;
     try {
       const result = await api('/api/messages/clear', { method: 'POST' });
       state.messages = [];
+      state.selectedConversation = '';
       renderMessages();
+      updateUnread();
       localStorage.removeItem('pt2vhf_last_seen_msg');
       state.messageAlertBaselineReady = false;
       state.lastAlertedMessageId = 0;
       $('#messageBadge')?.classList.add('hidden');
       $('.tab[data-tab="messages"]')?.classList.remove('has-unread');
-      toast(`Histórico de mensagens limpo (${Number(result.deleted || 0)} registro(s)).`, 'ok');
+      toast(ui(
+        `Histórico de mensagens apagado (${Number(result.deleted || 0)} registro(s)).`,
+        `Message history deleted (${Number(result.deleted || 0)} record(s)).`
+      ), 'ok');
     } catch (err) {
       toast(err.message, 'error');
     }
