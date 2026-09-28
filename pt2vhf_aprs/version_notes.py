@@ -12,6 +12,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Indicativos dos rankings Digipeaters mais utilizados e iGates mais ativos passam a abrir diretamente a estação no Mapa.",
             "Conversas da aba Mensagens podem ser ordenadas por Remetente ou Data, em ordem crescente/decrescente, e a ação Apagar todas remove somente o histórico local de mensagens após confirmação.",
             "Adicionados testes de regressão para validação geográfica, KML, navegação das Estatísticas e controles de Mensagens.",
+            "No Windows, o helper de atualização passa a usar CMD nativo como caminho principal, evitando falhas de inicialização do PowerShell; o fallback PowerShell também passa a ser gravado com BOM UTF-8.",
             "Release completa para Windows, Linux, macOS e Manual PDF.",
         ],
     },
