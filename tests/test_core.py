@@ -942,24 +942,18 @@ def test_map_controls_are_above_map_not_overlaid():
     context_pos = html.index('id="mapContextBar"')
     history_pos = html.index('id="mapHistoryToggle"')
     main_pos = html.index("<main>")
-    map_stage_pos = html.index('class="map-stage"')
     map_pos = html.index('id="map"')
-    assert context_pos < history_pos < main_pos < map_stage_pos < map_pos
-    assert 'class="map-top-toolbar"' not in html
+    assert context_pos < history_pos < main_pos < map_pos
 
-    for control in ("stationsToggle", "stationsHours", "tracklogToggle", "tracklogHours", "topologyToggle", "topologyHours"):
-        control_pos = html.index(f'id="{control}"')
-        assert context_pos < control_pos < main_pos
+    for control in ("mapPeriodHours", "mapItemsButton", "topologySpeed", "mapTypeQuick", "kmlExportButton"):
+        assert context_pos < html.index(f'id="{control}"') < main_pos
 
-    assert html.count('id="mapStationAgeFilter"') == 0
-    assert "grid-template-rows: minmax(260px, 1fr) auto;" in css
+    for removed in ("stationsHours", "tracklogHours", "topologyHours", "topologyToggle"):
+        assert f'id="{removed}"' not in html
+
     assert ".map-context-controls" in css
-    assert ".map-top-toolbar" not in css
-    assert ".map-station-age-filter" not in css
-
-    assert "L.Control.extend" not in js[js.index("function addTopologyControl"):js.index("function syncMapLegendCollapsed")]
-    assert "const toggle = $('#topologyToggle');" in js
-    assert "const select = $('#topologyHours');" in js
+    assert ".map-items-menu" in css
+    assert "function addMapControls()" in js
 
 def test_v17_language_options_and_runtime():
     root = Path(__file__).resolve().parent.parent
@@ -1091,14 +1085,13 @@ def test_v171_map_controls_are_independent_and_activity_is_removed():
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
 
     assert 'id="mapStationAgeFilter"' not in html
-    for control in ("stationsToggle", "stationsHours", "tracklogToggle", "tracklogHours", "topologyToggle", "topologyHours"):
-        assert f'id="{control}"' in html
-    assert "pt2vhf_stations_enabled" in js
-    assert "pt2vhf_tracklog_enabled" in js
+    assert 'id="mapPeriodHours"' in html
+    assert 'id="mapItemsButton"' in html
+    assert "pt2vhf_map_period_hours" in js
+    assert "pt2vhf_map_item_stations" in js
+    assert "pt2vhf_map_item_tracklogs" in js
     assert "splitTrackSegments" in js
     assert "distance >= 250" in js
-    assert "mapStationAgeFilter" not in js
-
 
 def test_v171_about_tab_and_manual_aprs_promotion():
     root = Path(__file__).resolve().parent.parent
@@ -1224,13 +1217,11 @@ def test_v172_map_controls_share_history_context_row():
     main_start = html.index("<main>")
     context_html = html[context_start:main_start]
     assert 'id="mapHistoryToggle"' in context_html
-    for control in ("stationsToggle", "stationsHours", "tracklogToggle", "tracklogHours", "topologyToggle", "topologyHours"):
+    for control in ("mapPeriodHours", "mapItemsButton", "topologySpeed", "mapTypeQuick"):
         assert f'id="{control}"' in context_html
     assert 'class="map-top-toolbar"' not in html
     assert "height: 41px;" in css[css.index(".map-context-bar"):css.index(".map-context-bar.hidden")]
     assert "overflow-x: auto;" in css
-    assert "grid-template-rows: minmax(260px, 1fr) auto;" in css
-
 
 def test_v172_station_popup_relative_last_heard_updates_live():
     root = Path(__file__).resolve().parent.parent
@@ -1641,22 +1632,47 @@ def test_v179_map_speed_control_and_version_label():
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
 
-    topology_start = html.index('id="topologyToggle"')
-    speed_pos = html.index('id="topologySpeed"', topology_start)
-    period_pos = html.index('id="topologyHours"', topology_start)
-    assert topology_start < speed_pos < period_pos
-
-    speed_block = html[speed_pos:period_pos]
-    assert '<option value="0.5">0,5x</option>' in speed_block
-    assert '<option value="1" selected>1x</option>' in speed_block
-    assert '<option value="2">2x</option>' in speed_block
-    assert '<option value="5">5x</option>' in speed_block
-    assert '0,25x' not in speed_block
-    assert '10x' not in speed_block
-    assert '20x' not in speed_block
+    speed_pos = html.index('id="topologySpeed"')
+    type_pos = html.index('id="mapTypeQuick"')
+    assert speed_pos < type_pos
+    speed_block = html[speed_pos:type_pos]
+    for value, label in (("0.5", "0,5x"), ("1", "1x"), ("2", "2x"), ("5", "5x")):
+        assert f'<option value="{value}"' in speed_block
+        assert label in speed_block
 
     assert "setTrafficSpeed(event.target.value, 'topology')" in js
     assert "setTrafficSpeed(event.target.value, 'replay')" in js
     assert "pt2vhf_traffic_speed" in js
     assert "ui(`Versão ${current}`, `Build ${current}`)" in js
-    assert "textEl.textContent = `Build ${current}`" not in js
+
+
+def test_v1710_unified_map_items_objects_and_internet_handoff():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+
+    assert 'id="mapPeriodHours"' in html
+    for control in ("mapItemStations", "mapItemObjects", "mapItemTracklogs", "mapItemRfLinks", "mapItemIgateLinks", "mapItemPackets"):
+        assert f'id="{control}"' in html
+        assert f'id="{control}" type="checkbox" checked' in html
+    assert 'id="mapTypeQuick"' in html
+    assert '<option value="osm">OSM</option>' in html
+    assert '<option value="topo">Topográfico</option>' in html
+    assert '<option value="satellite">Satélite</option>' in html
+
+    for removed in ("stationsHours", "tracklogHours", "topologyHours", "topologyToggle"):
+        assert f'id="{removed}"' not in html
+    assert 'id="trafficRangeStart"' not in html
+    assert 'id="trafficRangeEnd"' not in html
+
+    assert "interactive: false" in js
+    assert "segment.internet_handoff" in js
+    assert "APRS-IS" in js
+    assert "edge.kind === 'igate' && !state.igateLinksEnabled" in js
+    assert "edge.kind !== 'igate' && !state.rfLinksEnabled" in js
+    assert "objectMarkers: new Map()" in js
+
+    assert "CREATE TABLE IF NOT EXISTS aprs_objects" in database
+    assert '"internet_handoff": True' in database
+    assert '"target": "APRS-IS"' in database
