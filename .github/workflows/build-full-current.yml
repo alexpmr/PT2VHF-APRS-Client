@@ -1,0 +1,301 @@
+name: Build Full Current Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release/v1.7.14-full
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  windows-x64:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Validate v1.7.14 full release
+        shell: pwsh
+        run: python tools\apply_release_1_7_14.py
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-windows.txt
+
+      - name: Validate Python and JavaScript syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py linux_app.py macos_app.py tools
+          node --check pt2vhf_aprs\static\js\app.js
+
+      - name: Run tests
+        shell: pwsh
+        run: python -m pytest -q
+
+      - name: Generate Windows icon
+        shell: pwsh
+        run: python windows\make_icon.py
+
+      - name: Build Windows x64 application
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
+          pyinstaller --noconfirm windows\PT2VHF_APRS_Client_Portable.spec
+
+      - name: Generate SBOM and license inventory
+        shell: pwsh
+        run: |
+          cyclonedx-py environment --spec-version 1.6 --output-format JSON --output-file dist\PT2VHF_APRS_Client\SBOM.cdx.json
+          pip-licenses --format=plain-vertical --with-license-file --no-license-path --output-file=dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
+          Copy-Item THIRD_PARTY_NOTICES.md dist\PT2VHF_APRS_Client\THIRD_PARTY_NOTICES.md
+          Copy-Item LICENSE dist\PT2VHF_APRS_Client\LICENSE
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows x64 installer and portable EXE
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          New-Item -ItemType Directory -Force dist-installer | Out-Null
+          $installerScript = Get-Content windows\installer.iss -Raw
+          $installerScript = $installerScript -replace '#define MyAppVersion "[^"]+"', "#define MyAppVersion `"$version`""
+          Set-Content windows\installer.iss -Value $installerScript -Encoding UTF8
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
+          Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-installer\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
+
+      - name: Upload Windows x64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Windows-x64
+          path: |
+            dist-installer\PT2VHF_APRS_Client_Setup_x64_v*.exe
+            dist-installer\PT2VHF_APRS_Client_Portable_x64_v*.exe
+            dist\PT2VHF_APRS_Client\SBOM.cdx.json
+            dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
+
+  windows-arm64:
+    runs-on: windows-11-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup native ARM64 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'arm64'
+          cache: 'pip'
+
+      - name: Validate v1.7.14 full release
+        shell: pwsh
+        run: python tools\apply_release_1_7_14.py
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-windows.txt
+
+      - name: Validate Python and JavaScript syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py tools
+          node --check pt2vhf_aprs\static\js\app.js
+
+      - name: Run tests
+        shell: pwsh
+        run: python -m pytest -q
+
+      - name: Generate Windows icon
+        shell: pwsh
+        run: python windows\make_icon.py
+
+      - name: Build native ARM64 application
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
+          pyinstaller --noconfirm windows\PT2VHF_APRS_Client_Portable_ARM64.spec
+
+      - name: Generate ARM64 SBOM and license inventory
+        shell: pwsh
+        run: |
+          cyclonedx-py environment --spec-version 1.6 --output-format JSON --output-file dist\PT2VHF_APRS_Client\SBOM-Windows-arm64.cdx.json
+          pip-licenses --format=plain-vertical --with-license-file --no-license-path --output-file=dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES_Windows_arm64.txt
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build ARM64 installer and portable EXE
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          New-Item -ItemType Directory -Force dist-installer-arm64 | Out-Null
+          $installerScript = Get-Content windows\installer_arm64.iss -Raw
+          $installerScript = $installerScript -replace '#define MyAppVersion "[^"]+"', "#define MyAppVersion `"$version`""
+          Set-Content windows\installer_arm64.iss -Value $installerScript -Encoding UTF8
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer_arm64.iss
+          Copy-Item dist\PT2VHF_APRS_Client_Portable_ARM64.exe "dist-installer-arm64\PT2VHF_APRS_Client_Portable_ARM64_v$version.exe" -Force
+
+      - name: Upload Windows ARM64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Windows-ARM64
+          path: |
+            dist-installer-arm64\PT2VHF_APRS_Client_Setup_ARM64_v*.exe
+            dist-installer-arm64\PT2VHF_APRS_Client_Portable_ARM64_v*.exe
+            dist\PT2VHF_APRS_Client\SBOM-Windows-arm64.cdx.json
+            dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES_Windows_arm64.txt
+
+  linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Validate v1.7.14 full release
+        shell: bash
+        run: python tools/apply_release_1_7_14.py
+
+      - name: Build Linux packages
+        shell: bash
+        run: |
+          chmod +x linux/build_linux.sh
+          PYTHON_BIN=python3 bash linux/build_linux.sh
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Linux-x86_64
+          path: |
+            dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v*.tar.gz
+            dist-linux/PT2VHF_APRS_Client_x86_64_v*.AppImage
+            dist-linux/pt2vhf-aprs-client_*_amd64.deb
+            dist-linux/SBOM-Linux.cdx.json
+            dist-linux/THIRD_PARTY_LICENSES_Linux.txt
+
+  linux-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Core smoke tests
+        shell: bash
+        run: |
+          python tools/apply_release_1_7_14.py
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+          python -m compileall -q pt2vhf_aprs linux_app.py tools
+          python -m pytest -q
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Validate v1.7.14 full release
+        shell: bash
+        run: python tools/apply_release_1_7_14.py
+
+      - name: Build macOS DMG
+        shell: bash
+        run: |
+          chmod +x macos/build_macos.sh
+          PYTHON_BIN=python3 bash macos/build_macos.sh
+
+      - name: Verify runner architecture
+        shell: bash
+        run: |
+          actual="$(uname -m)"
+          echo "Expected: ${{ matrix.arch }} / Actual: $actual"
+          test "$actual" = "${{ matrix.arch }}"
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-macOS-${{ matrix.arch }}
+          path: |
+            dist-macos/PT2VHF_APRS_Client_macOS_${{ matrix.arch }}_v*.dmg
+            dist-macos/SBOM-macOS-${{ matrix.arch }}.cdx.json
+            dist-macos/THIRD_PARTY_LICENSES_macOS_${{ matrix.arch }}.txt
+
+  manual-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate v1.7.14 full release
+        shell: bash
+        run: python tools/apply_release_1_7_14.py
+
+      - name: Generate versioned PDF manual
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install "reportlab>=4.0,<5.0" "pypdf>=5.0,<7.0" "playwright>=1.55,<2.0" "cairosvg>=2.7,<3.0"
+          python -m playwright install --with-deps chromium
+          version="$(tr -d '\r\n ' < VERSION)"
+          mkdir -p dist-docs/screenshots
+          cp pt2vhf_aprs/static/img/app_logo.png dist-docs/manual_logo.png
+          python tools/capture_manual_screenshots.py --output-dir dist-docs/screenshots
+          python tools/generate_manual.py --logo dist-docs/manual_logo.png --screenshots-dir dist-docs/screenshots --output "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
+          python tools/validate_manual.py "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
+
+      - name: Upload manual artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Manual
+          path: dist-docs/PT2VHF_APRS_Client_Manual_v*.pdf
