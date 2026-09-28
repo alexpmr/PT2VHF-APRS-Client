@@ -327,6 +327,82 @@
     else window.open(url, '_blank', 'noopener');
   }
 
+  function openKmlExportModal() {
+    const modal = $('#kmlExportModal');
+    const period = $('#kmlExportPeriod');
+    if (period) period.value = String(topologyPeriodValue(state.topologyHours));
+    if ($('#kmlExportStatus')) $('#kmlExportStatus').textContent = '';
+    modal?.classList.remove('hidden');
+  }
+
+  async function exportKml() {
+    const selected = {
+      stations: !!$('#kmlStations')?.checked,
+      positions: !!$('#kmlPositions')?.checked,
+      tracklogs: !!$('#kmlTracklogs')?.checked,
+      topology: !!$('#kmlTopology')?.checked,
+    };
+    if (!Object.values(selected).some(Boolean)) {
+      const message = ui('Selecione pelo menos uma camada para exportar.', 'Select at least one layer to export.');
+      if ($('#kmlExportStatus')) $('#kmlExportStatus').textContent = message;
+      toast(message, 'error');
+      return;
+    }
+
+    const button = $('#kmlExportConfirm');
+    const cancel = $('#kmlExportCancel');
+    const status = $('#kmlExportStatus');
+    if (button) button.disabled = true;
+    if (cancel) cancel.disabled = true;
+    if (status) status.textContent = ui('Gerando arquivo KML…', 'Generating KML file…');
+
+    const params = new URLSearchParams({
+      stations: selected.stations ? '1' : '0',
+      positions: selected.positions ? '1' : '0',
+      tracklogs: selected.tracklogs ? '1' : '0',
+      topology: selected.topology ? '1' : '0',
+      hours: String(topologyPeriodValue($('#kmlExportPeriod')?.value || 0)),
+    });
+
+    try {
+      const response = await fetch(`/api/export/kml?${params.toString()}`);
+      if (!response.ok) {
+        let message = `Erro HTTP ${response.status}`;
+        try {
+          const data = await response.json();
+          if (data?.error) message = data.error;
+        } catch (_) {}
+        throw new Error(message);
+      }
+      const blob = await response.blob();
+      const disposition = String(response.headers.get('content-disposition') || '');
+      const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+      const filename = filenameMatch?.[1] || 'PT2VHF_APRS_Client_export.kml';
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      if (status) status.textContent = ui('KML gerado com sucesso.', 'KML generated successfully.');
+      toast(ui('Arquivo KML gerado.', 'KML file generated.'), 'ok');
+      setTimeout(() => $('#kmlExportModal')?.classList.add('hidden'), 500);
+    } catch (err) {
+      const message = String(err?.message || err);
+      if (status) status.textContent = message;
+      toast(message, 'error');
+    } finally {
+      if (button) button.disabled = false;
+      if (cancel) cancel.disabled = false;
+    }
+  }
+
+  $('#kmlExportButton')?.addEventListener('click', openKmlExportModal);
+  $('#kmlExportCancel')?.addEventListener('click', () => $('#kmlExportModal')?.classList.add('hidden'));
+  $('#kmlExportConfirm')?.addEventListener('click', () => void exportKml());
+
   async function installLatestUpdate() {
     let data = state.updateInfo;
     if (!data || data.status !== 'update_available') {
@@ -5179,6 +5255,14 @@
     if (!link) return;
     event.preventDefault();
     openMessageComposer(link.dataset.quickMessageCallsign || '');
+  });
+
+  document.addEventListener('click', event => {
+    const link = event.target.closest('[data-map-callsign]');
+    if (!link) return;
+    event.preventDefault();
+    event.stopPropagation();
+    void focusStationOnMap(link.dataset.mapCallsign || '');
   });
 
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
