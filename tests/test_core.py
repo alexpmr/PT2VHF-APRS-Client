@@ -1435,3 +1435,60 @@ def test_v175_invalid_geometry_is_excluded_from_export_and_replay():
     assert "station_anomalies" in database_source
     assert "def geographic_export_data" in database_source
 
+def test_v175_windows_updater_uses_native_cmd_helper(monkeypatch, tmp_path):
+    original_values = {
+        "UPDATE_DIR": updater.UPDATE_DIR,
+        "PENDING_FILE": updater.PENDING_FILE,
+        "APPLY_LOG": updater.APPLY_LOG,
+        "UPDATE_LOCK_FILE": updater.UPDATE_LOCK_FILE,
+        "HELPER_READY_FILE": updater.HELPER_READY_FILE,
+    }
+    try:
+        monkeypatch.setattr(updater, "UPDATE_DIR", tmp_path)
+        monkeypatch.setattr(updater, "PENDING_FILE", tmp_path / "pending_update.json")
+        monkeypatch.setattr(updater, "APPLY_LOG", tmp_path / "update_apply.log")
+        monkeypatch.setattr(updater, "UPDATE_LOCK_FILE", tmp_path / "update.lock")
+        monkeypatch.setattr(updater, "HELPER_READY_FILE", tmp_path / "helper_ready")
+
+        downloaded = tmp_path / "PT2VHF_APRS_Client_Portable_x64_v1.7.5.exe"
+        downloaded.write_bytes(b"test")
+        current = tmp_path / "PT2VHF_APRS_Client_Portable_x64_v1.7.4.exe"
+        current.write_bytes(b"old")
+
+        helper = updater._write_windows_cmd_helper({
+            "path": str(downloaded),
+            "current_executable": str(current),
+            "mode": "windows-portable",
+            "version": "1.7.5",
+            "pid": 1234,
+        })
+        text = helper.read_text(encoding="utf-8")
+        assert helper.suffix == ".cmd"
+        assert '> "%ready%" echo ready' in text
+        assert 'portable update installed' in text
+        assert 'ping 127.0.0.1 -n 6 >nul' in text
+        assert 'move /Y "%downloaded%" "%destination%"' in text
+        assert "powershell" not in text.lower()
+
+        ps = updater._write_windows_helper({
+            "path": str(downloaded),
+            "current_executable": str(current),
+            "mode": "windows-portable",
+            "version": "1.7.5",
+            "pid": 1234,
+        })
+        raw = ps.read_bytes()
+        assert raw.startswith(b"\xef\xbb\xbf")
+    finally:
+        for name, value in original_values.items():
+            setattr(updater, name, value)
+
+
+def test_v175_windows_updater_launch_prefers_comspec_cmd():
+    root = Path(__file__).resolve().parent.parent
+    source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")
+    assert "_write_windows_cmd_helper(pending)" in source
+    assert 'os.environ.get("COMSPEC", r"C:\\Windows\\System32\\cmd.exe")' in source
+    assert "timeout: float = 12.0" in source
+    assert "CREATE_NO_WINDOW" in source
+
