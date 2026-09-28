@@ -85,15 +85,6 @@
 
 ## Pendências para próximas versões
 
-- **Estatísticas — ranking das estações que mais interagiram por conversa**
-  - Adicionar painel com o ranking das estações que mais **conversaram manualmente** com outras estações.
-  - Considerar somente mensagens APRS pessoa-a-pessoa que representem conversa/interação real entre operadores.
-  - **Não contabilizar beacon, telemetria, status, weather, objetos/itens, boletins, ACK/REJ, queries APRS/Ping/Trace, respostas automáticas, pacotes de infraestrutura ou outros tráfegos automáticos.**
-  - Evitar que retransmissões, retries, partes duplicadas ou confirmações aumentem artificialmente a contagem.
-  - Ordenar em ordem decrescente e exibir Indicativo, quantidade de interações/mensagens manuais e percentual.
-  - Diferenciar, quando útil, mensagens enviadas, recebidas e total de interações.
-  - Usar o histórico local de mensagens e, quando necessário, heurísticas conservadoras para separar conversa humana de tráfego automatizado.
-
 - **Builds — versões ARM64**
   - Adicionar geração oficial de artefatos **ARM64** nas plataformas em que houver suporte.
   - **Windows ARM64:** gerar instalador e, se tecnicamente viável, versão portátil ARM64, com nomes de arquivo claramente diferenciados dos builds x64.
@@ -122,18 +113,6 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
-- **Mapa — mover Histórico para a barra de controles do mapa**
-  - Mover o botão **Histórico** para a mesma barra contextual onde ficam **Estações, Tracklog, Topologia** e **Exportar KML**.
-  - Manter o comportamento atual de abrir/fechar os controles de histórico/replay.
-  - Ajustar espaçamento e responsividade para que todos os controles permaneçam alinhados sem sobreposição.
-
-- **Mapa — mover Exportar KML para a barra de controles do mapa**
-  - Remover o botão **Exportar KML** da barra superior global da aplicação.
-  - Posicionar o botão na mesma barra contextual do **Mapa** onde ficam os controles de **Estações, Tracklog e Topologia**.
-  - Manter o botão visível somente quando a aba **Mapa** estiver aberta, seguindo o mesmo comportamento dos demais controles contextuais.
-  - Preservar integralmente o fluxo atual de seleção das camadas/período antes da geração do KML.
-  - Ajustar responsividade e espaçamento para que o novo botão não provoque sobreposição ou quebra da barra em resoluções menores.
-
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
@@ -153,14 +132,6 @@
   - Incluir mensagens com ACK/sem ACK, RTT médio/mediano do Ping, estações novas no período e estações que deixaram de aparecer.
   - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
   - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
-
-- **Exportação KML — escolher onde salvar**
-  - Ao clicar em **Gerar KML**, abrir uma janela **Salvar como** para o usuário escolher a pasta e o nome do arquivo antes de gravá-lo.
-  - Sugerir por padrão um nome versionado/datado, por exemplo `PT2VHF_APRS_Client_20260928_104700.kml`.
-  - Aplicar filtro/extensão **.kml** e evitar salvar silenciosamente em uma pasta de downloads sem informar o destino.
-  - Quando a plataforma permitir, lembrar a última pasta utilizada para facilitar exportações seguintes.
-  - No desktop, priorizar o seletor nativo de arquivos do Windows/Linux/macOS; em ambientes de navegador que não permitam escolher o caminho diretamente, usar a melhor alternativa disponível e informar claramente onde o arquivo será salvo.
-  - Tratar **Cancelar** como cancelamento normal, sem mensagem de erro.
 
 - **Exportação — CSV e GeoJSON**
   - Manter como próxima etapa a exportação tabular em **CSV** e geográfica em **GeoJSON**.
@@ -257,6 +228,15 @@
 - **Estatísticas:** somente nome amigável do aplicativo/software na apresentação principal; identificadores técnicos permanecem internos.
 - **Estatísticas:** fonte padrão maior e controle próprio de tamanho na Configuração.
 - **Versionamento:** nova linha iniciada em v1.7; próximas releases serão v1.7.1, v1.7.2, v1.7.3...
+
+## Concluído na v1.7.6
+
+- **Atualizador Windows:** helper nativo CMD passa a ser o caminho principal para aplicar atualização automática; PowerShell permanece apenas como fallback compatível.
+- **Exportação KML:** o desktop abre **Salvar como** para escolher pasta e nome do arquivo; cancelar não gera erro.
+- **Mapa:** **Histórico** e **Exportar KML** foram movidos para a mesma barra contextual de **Estações, Tracklog e Topologia**.
+- **Estatísticas:** novo ranking **Estações que mais interagiram**, baseado somente em conversas APRS manuais.
+- **Filtro de conversas:** beacons, telemetria, ACK/REJ, queries, respostas automáticas, boletins e retries não entram no ranking; grupos multipartes não inflam a contagem.
+- **Testes:** regressões adicionadas para updater Windows, Salvar como do KML, barra contextual do Mapa e ranking de conversas manuais.
 
 ## Concluído na v1.7.5
 
