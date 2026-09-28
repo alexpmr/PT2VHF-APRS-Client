@@ -3314,13 +3314,33 @@
   }
 
   async function focusStationOnMap(callsign) {
-    const station = state.stations.find(s => s.callsign === callsign);
-    if (!station) return;
+    const call = normalizedCall(callsign);
+    let station = state.stations.find(s => normalizedCall(s.callsign) === call);
+    if (!station) {
+      try {
+        await loadStations();
+        station = state.stations.find(s => normalizedCall(s.callsign) === call);
+      } catch (_) {}
+    }
+    if (!station) {
+      toast(ui(`${call || callsign} ainda não foi encontrada na lista local de estações.`, `${call || callsign} was not found in the local station list.`), 'error');
+      return;
+    }
 
     const lat = Number(station.latitude);
     const lon = Number(station.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-      toast(`${callsign} ainda não informou uma posição válida.`, 'error');
+    const positionRejected = station.position_valid === false || !!String(station.position_issue || '');
+    if (
+      positionRejected
+      || !Number.isFinite(lat)
+      || !Number.isFinite(lon)
+      || (Math.abs(lat) < 1e-9 && Math.abs(lon) < 1e-9)
+    ) {
+      const reason = station.position_issue_label ? ` (${station.position_issue_label})` : '';
+      toast(ui(
+        `${station.callsign} não possui uma posição válida para exibir no mapa${reason}.`,
+        `${station.callsign} does not have a valid position to display on the map${reason}.`
+      ), 'error');
       return;
     }
 
@@ -3332,12 +3352,13 @@
     const zoom = Math.max(state.map?.getZoom() || 4, 13);
     state.map?.setView([lat, lon], zoom, { animate: true });
 
-    let marker = state.markers.get(callsign);
+    let marker = state.markers.get(station.callsign);
     if (!marker) {
       await loadMapData();
-      marker = state.markers.get(callsign);
+      marker = state.markers.get(station.callsign);
     }
     marker?.openPopup();
+    if (marker) pulseStation(station.callsign);
   }
 
   async function clearAllStations() {
