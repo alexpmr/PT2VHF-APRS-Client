@@ -7,9 +7,10 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, g, jsonify, render_template, request, send_file
+from flask import Flask, Response, g, jsonify, render_template, request, send_file
 
 from . import __version__
 from . import database as db
@@ -122,6 +123,113 @@ def get_update_status(force: bool = False) -> dict:
         payload["status"] = "error"
         payload["error"] = str(exc)
         return payload
+
+
+KML_NS = "http://www.opengis.net/kml/2.2"
+
+
+def _kml_document(
+    data: dict,
+    include_stations: bool = True,
+    include_positions: bool = True,
+    include_tracklogs: bool = True,
+    include_topology: bool = True,
+) -> bytes:
+    ET.register_namespace("", KML_NS)
+    root = ET.Element(f"{{{KML_NS}}}kml")
+    document = ET.SubElement(root, f"{{{KML_NS}}}Document")
+    ET.SubElement(document, f"{{{KML_NS}}}name").text = "PT2VHF APRS Client export"
+
+    def folder(name: str):
+        node = ET.SubElement(document, f"{{{KML_NS}}}Folder")
+        ET.SubElement(node, f"{{{KML_NS}}}name").text = name
+        return node
+
+    def point(parent, name: str, lat: float, lon: float, altitude: float | None = None, description: str = ""):
+        placemark = ET.SubElement(parent, f"{{{KML_NS}}}Placemark")
+        ET.SubElement(placemark, f"{{{KML_NS}}}name").text = name
+        if description:
+            ET.SubElement(placemark, f"{{{KML_NS}}}description").text = description
+        point_node = ET.SubElement(placemark, f"{{{KML_NS}}}Point")
+        alt = 0.0 if altitude is None else float(altitude)
+        ET.SubElement(point_node, f"{{{KML_NS}}}coordinates").text = f"{float(lon):.7f},{float(lat):.7f},{alt:.1f}"
+
+    stations = list(data.get("stations") or [])
+    tracks = list(data.get("tracks") or [])
+    topology = list(data.get("topology") or [])
+
+    if include_stations:
+        station_folder = folder("Stations")
+        for station in stations:
+            description = "\n".join(
+                item for item in [
+                    f"Last heard: {station.get('last_heard') or ''}",
+                    f"Info: {station.get('info') or ''}",
+                    f"Path: {station.get('path') or ''}",
+                ] if item.split(": ", 1)[-1]
+            )
+            point(
+                station_folder,
+                str(station.get("callsign") or "Station"),
+                float(station["latitude"]),
+                float(station["longitude"]),
+                station.get("altitude"),
+                description,
+            )
+
+    if include_positions:
+        positions_folder = folder("Positions")
+        for row in tracks:
+            description = f"Timestamp: {row.get('timestamp') or ''}"
+            point(
+                positions_folder,
+                f"{row.get('callsign') or 'Station'} @ {row.get('timestamp') or ''}",
+                float(row["latitude"]),
+                float(row["longitude"]),
+                row.get("altitude"),
+                description,
+            )
+
+    if include_tracklogs:
+        track_folder = folder("Tracklogs")
+        grouped: dict[str, list[dict]] = {}
+        for row in tracks:
+            call = str(row.get("callsign") or "").upper().strip()
+            if call:
+                grouped.setdefault(call, []).append(row)
+        for call, rows in grouped.items():
+            if len(rows) < 2:
+                continue
+            placemark = ET.SubElement(track_folder, f"{{{KML_NS}}}Placemark")
+            ET.SubElement(placemark, f"{{{KML_NS}}}name").text = call
+            line = ET.SubElement(placemark, f"{{{KML_NS}}}LineString")
+            ET.SubElement(line, f"{{{KML_NS}}}tessellate").text = "1"
+            coordinates = []
+            for row in rows:
+                alt = float(row.get("altitude") or 0.0)
+                coordinates.append(f"{float(row['longitude']):.7f},{float(row['latitude']):.7f},{alt:.1f}")
+            ET.SubElement(line, f"{{{KML_NS}}}coordinates").text = " ".join(coordinates)
+
+    if include_topology:
+        topology_folder = folder("Topology")
+        for edge in topology:
+            placemark = ET.SubElement(topology_folder, f"{{{KML_NS}}}Placemark")
+            source = str(edge.get("source") or "")
+            target = str(edge.get("target") or "")
+            ET.SubElement(placemark, f"{{{KML_NS}}}name").text = f"{source} → {target}"
+            ET.SubElement(placemark, f"{{{KML_NS}}}description").text = (
+                f"Kind: {edge.get('kind') or ''}\n"
+                f"Packets: {edge.get('packet_count') or 0}\n"
+                f"Last seen: {edge.get('last_seen') or ''}"
+            )
+            line = ET.SubElement(placemark, f"{{{KML_NS}}}LineString")
+            ET.SubElement(line, f"{{{KML_NS}}}tessellate").text = "1"
+            ET.SubElement(line, f"{{{KML_NS}}}coordinates").text = (
+                f"{float(edge['source_lon']):.7f},{float(edge['source_lat']):.7f},0 "
+                f"{float(edge['target_lon']):.7f},{float(edge['target_lat']):.7f},0"
+            )
+
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
 
 
 def create_app() -> Flask:
