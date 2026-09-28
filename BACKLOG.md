@@ -122,6 +122,13 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mapa — mover Exportar KML para a barra de controles do mapa**
+  - Remover o botão **Exportar KML** da barra superior global da aplicação.
+  - Posicionar o botão na mesma barra contextual do **Mapa** onde ficam os controles de **Estações, Tracklog e Topologia**.
+  - Manter o botão visível somente quando a aba **Mapa** estiver aberta, seguindo o mesmo comportamento dos demais controles contextuais.
+  - Preservar integralmente o fluxo atual de seleção das camadas/período antes da geração do KML.
+  - Ajustar responsividade e espaçamento para que o novo botão não provoque sobreposição ou quebra da barra em resoluções menores.
+
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
