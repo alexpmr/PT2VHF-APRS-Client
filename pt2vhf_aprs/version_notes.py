@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.13": {
+        "title": "Validação Windows x64: símbolos APRS, animação limpa e status de versão",
+        "items": [
+            "Objetos APRS passam a usar o símbolo real recebido no pacote; fallback só é usado quando o símbolo não existe.",
+            "Remove o rótulo branco APRS-IS da animação, mantendo somente halo e destaque visual.",
+            "O destaque de transmissão cresce e volta ao normal em aproximadamente 1 segundo.",
+            "Na barra superior, versão atual mostra Versão atualizada.",
+            "Quando há atualização, mostra Versão X.X.X disponível em laranja e piscando.",
+            "A checagem automática de nova versão permanece a cada 30 minutos.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.12": {
         "title": "Validação Windows x64: todos os marcadores clicáveis no mapa",
         "items": [
