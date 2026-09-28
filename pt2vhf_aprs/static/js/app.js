@@ -1053,6 +1053,15 @@
       [saved, cfg] = await Promise.all([api('/api/map-state'), api('/api/config')]);
     } catch (_) {}
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
+
+    const visualPane = state.map.createPane('pt2vhfVisualPane');
+    visualPane.style.zIndex = '450';
+    visualPane.style.pointerEvents = 'none';
+
+    const markerPane = state.map.createPane('pt2vhfMarkerPane');
+    markerPane.style.zIndex = '650';
+    markerPane.style.pointerEvents = 'auto';
+
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
     addMapControls();
@@ -1315,7 +1324,8 @@
           weight: state.mapConfig.topology_width,
           opacity: .72,
           dashArray: edge.kind === 'igate' ? '7 5' : null,
-          interactive: false
+          interactive: false,
+          pane: 'pt2vhfVisualPane'
         };
         if (!line) {
           line = L.polyline(points, style).addTo(state.map);
@@ -1376,7 +1386,8 @@
               iconAnchor: [9, 9]
             }),
             title: 'Minha localização',
-            zIndexOffset: 1000
+            pane: 'pt2vhfMarkerPane',
+            zIndexOffset: 1800
           }).addTo(state.map).bindPopup('Minha localização');
         }
 
@@ -1388,7 +1399,9 @@
               radius: accuracy,
               weight: 1,
               opacity: .75,
-              fillOpacity: .08
+              fillOpacity: .08,
+              interactive: false,
+              pane: 'pt2vhfVisualPane'
             }).addTo(state.map);
           }
         }
@@ -1613,11 +1626,18 @@
         if (!Number.isFinite(latlng[0]) || !Number.isFinite(latlng[1])) continue;
         let marker = state.markers.get(station.callsign);
         if (!marker) {
-          marker = L.marker(latlng, { icon: markerIcon(station), title: station.callsign }).addTo(state.map);
+          marker = L.marker(latlng, {
+            icon: markerIcon(station),
+            title: station.callsign,
+            interactive: true,
+            pane: 'pt2vhfMarkerPane',
+            zIndexOffset: 1200
+          }).addTo(state.map);
           state.markers.set(station.callsign, marker);
         } else {
           marker.setLatLng(latlng).setIcon(markerIcon(station));
         }
+        marker.setZIndexOffset(1200);
         marker.bindPopup(popupHtml(station), { maxWidth: 520 });
         if (marker._pt2vhfQueryPopupHandler) marker.off('popupopen', marker._pt2vhfQueryPopupHandler);
         marker._pt2vhfQueryPopupHandler = () => { void loadStationQueryHistory(station.callsign, false); };
@@ -1645,11 +1665,18 @@
           iconAnchor: [12, 12],
         });
         if (!marker) {
-          marker = L.marker(latlng, { icon, title: name }).addTo(state.map);
+          marker = L.marker(latlng, {
+            icon,
+            title: name,
+            interactive: true,
+            pane: 'pt2vhfMarkerPane',
+            zIndexOffset: 1400
+          }).addTo(state.map);
           state.objectMarkers.set(name, marker);
         } else {
           marker.setLatLng(latlng).setIcon(icon);
         }
+        marker.setZIndexOffset(1400);
         marker.bindPopup(`<div class="station-popup"><h3>${escapeHtml(name)}</h3>
           <div class="popup-grid"><strong>Tipo</strong><span>Objeto APRS</span>
           <strong>Origem</strong><span>${escapeHtml(object.source_callsign || '')}</span>
@@ -1686,7 +1713,8 @@
             color: state.mapConfig.track_color,
             weight: state.mapConfig.track_width,
             opacity: .78,
-            interactive: false
+            interactive: false,
+            pane: 'pt2vhfVisualPane'
           }).addTo(state.map);
           state.trackLines.set(call, line);
         } else {
@@ -1817,7 +1845,7 @@
         fillOpacity: .08,
         opacity: .95,
         interactive: false,
-        pane: 'markerPane'
+        pane: 'pt2vhfVisualPane'
       }).addTo(state.map);
       state.trafficReplayLayers.add(halo);
       const label = L.tooltip({ permanent: false, direction: 'top', opacity: .9 })
@@ -1859,7 +1887,7 @@
         opacity: .72,
         dashArray: isInternet ? '8 6' : null,
         interactive: false,
-        pane: 'overlayPane'
+        pane: 'pt2vhfVisualPane'
       }).addTo(state.map);
       state.trafficReplayLayers.add(trail);
     }
@@ -1872,7 +1900,7 @@
       fillOpacity: .95,
       opacity: .95,
       interactive: false,
-      pane: 'markerPane'
+      pane: 'pt2vhfVisualPane'
     }).addTo(state.map);
     state.trafficReplayLayers.add(particle);
     updateMapLegend();
@@ -3002,6 +3030,8 @@
           iconAnchor: [31, 13]
         }),
         interactive: true,
+        pane: 'pt2vhfMarkerPane',
+        zIndexOffset: 1600,
         title: node.callsign
       }).addTo(state.map);
       marker.bindTooltip(node.callsign, { direction: 'top' });
@@ -3020,7 +3050,9 @@
         color: '#ffb347',
         weight: 4,
         opacity: .92,
-        dashArray: '8 6'
+        dashArray: '8 6',
+        interactive: false,
+        pane: 'pt2vhfVisualPane'
       }).addTo(state.map);
       state.queryTraceLayers.add(line);
     }
