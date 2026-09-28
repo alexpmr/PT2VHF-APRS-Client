@@ -85,11 +85,14 @@
 
 ## Pendências para próximas versões
 
-- **Estatísticas — ranking das estações que mais conversaram**
-  - Adicionar painel com o ranking das estações com maior volume de conversas/mensagens registradas pelo cliente.
-  - Ordenar em ordem decrescente e exibir Indicativo, quantidade de mensagens/interações e percentual.
+- **Estatísticas — ranking das estações que mais interagiram por conversa**
+  - Adicionar painel com o ranking das estações que mais **conversaram manualmente** com outras estações.
+  - Considerar somente mensagens APRS pessoa-a-pessoa que representem conversa/interação real entre operadores.
+  - **Não contabilizar beacon, telemetria, status, weather, objetos/itens, boletins, ACK/REJ, queries APRS/Ping/Trace, respostas automáticas, pacotes de infraestrutura ou outros tráfegos automáticos.**
+  - Evitar que retransmissões, retries, partes duplicadas ou confirmações aumentem artificialmente a contagem.
+  - Ordenar em ordem decrescente e exibir Indicativo, quantidade de interações/mensagens manuais e percentual.
   - Diferenciar, quando útil, mensagens enviadas, recebidas e total de interações.
-  - Usar as mensagens armazenadas no banco local e evitar duplicidades artificiais.
+  - Usar o histórico local de mensagens e, quando necessário, heurísticas conservadoras para separar conversa humana de tráfego automatizado.
 
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
