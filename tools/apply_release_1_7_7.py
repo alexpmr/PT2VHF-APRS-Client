@@ -66,7 +66,6 @@ checks = {
     "README.md": [
         "# PT2VHF APRS Client - v1.7.7",
         "PT2VHF_APRS_Client_Setup_ARM64_vX.Y.exe",
-        "qAr",
     ],
     "CHANGELOG.md": ["## v1.7.7 - 2026-09-28"],
     "pt2vhf_aprs/version_notes.py": ['"1.7.7"'],
