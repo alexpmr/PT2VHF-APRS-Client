@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.7.8 - 2026-09-28
+
+- **Windows x64:** build de validação somente em formato **Portable**.
+- **Animação APRS:** os segmentos observados passam a ser reproduzidos **hop a hop**, na ordem real do path APRS, em vez de todos simultaneamente.
+- **Atividade por hop:** o nó de destino pulsa quando o pacote chega a cada etapa do percurso.
+- **RF × Internet:** enlaces RF e trechos APRS-IS/Internet continuam visualmente separados; tráfego de Internet não é promovido a RF.
+- **ACK/REJ e respostas:** o retorno segue o **path efetivamente observado**. Se a resposta utilizar os mesmos digipeaters, a animação percorre o mesmo caminho em sentido inverso.
+- **Queries APRS:** respostas automáticas passam a ficar ativadas por padrão em novas configurações.
+
+
 ## v1.7.7 - 2026-09-28
 
 - **Mapa:** removida definitivamente a recriação do botão global **Histórico** pelo patch legado de build; permanece apenas o controle da barra contextual do Mapa.
