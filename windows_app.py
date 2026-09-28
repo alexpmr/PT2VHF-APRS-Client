@@ -254,6 +254,32 @@ class NativeApi:
         except Exception:
             return False
 
+    def save_text_file(self, filename: str, content: str) -> dict:
+        try:
+            import webview
+            global _window
+            if _window is None:
+                return {"saved": False, "error": "Janela integrada indisponível."}
+            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.kml")).name
+            if not suggested.lower().endswith(".kml"):
+                suggested += ".kml"
+            selected = _window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                save_filename=suggested,
+                file_types=("KML (*.kml)", "Todos os arquivos (*.*)"),
+            )
+            if not selected:
+                return {"saved": False, "cancelled": True}
+            if isinstance(selected, (list, tuple)):
+                selected = selected[0] if selected else ""
+            path = Path(str(selected))
+            if path.suffix.lower() != ".kml":
+                path = path.with_suffix(".kml")
+            path.write_text(str(content or ""), encoding="utf-8")
+            return {"saved": True, "path": str(path)}
+        except Exception as exc:
+            return {"saved": False, "error": str(exc)}
+
 
 def _run_browser_mode(icon: pystray.Icon) -> int:
     _open_browser()
