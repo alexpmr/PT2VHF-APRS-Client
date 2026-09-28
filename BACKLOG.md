@@ -114,6 +114,13 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mapa — remover Histórico da barra superior global**
+  - Remover o botão **Histórico** da barra superior global da aplicação.
+  - Manter apenas o botão **Histórico** que já está na barra contextual do **Mapa**, junto de **Estações, Tracklog, Topologia** e **Exportar KML**.
+  - Garantir que exista somente **uma instância funcional** do controle Histórico, evitando duplicidade visual e listeners duplicados.
+  - Preservar o comportamento atual de abrir/fechar o painel de histórico/replay a partir da barra do Mapa.
+  - Validar responsividade e espaçamento após a remoção do botão superior.
+
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
