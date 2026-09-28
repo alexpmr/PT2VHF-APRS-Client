@@ -115,6 +115,15 @@
         <input id="topologyToggle" type="checkbox">
         <span>Topologia observada</span>
       </label>
+      <label class="map-topology-speed-label" for="topologySpeed">
+        <span>Velocidade</span>
+        <select id="topologySpeed" title="Velocidade da animação da topologia" aria-label="Velocidade da animação da topologia">
+          <option value="0.5">0,5x</option>
+          <option value="1" selected>1x</option>
+          <option value="2">2x</option>
+          <option value="5">5x</option>
+        </select>
+      </label>
       <select id="topologyHours" title="Período da topologia" aria-label="Período da topologia">
         <option value="0">Completo</option>
         <option value="1">1 h</option>
@@ -173,13 +182,10 @@
           <label class="field compact">
             <span>Velocidade</span>
             <select id="trafficSpeed">
-              <option value="0.25">0,25×</option>
               <option value="0.5">0,5×</option>
               <option value="1" selected>1×</option>
               <option value="2">2×</option>
               <option value="5">5×</option>
-              <option value="10">10×</option>
-              <option value="20">20×</option>
             </select>
           </label>
           <button id="trafficResetButton" type="button" class="btn secondary" title="Voltar ao início">⏮ Início</button>
