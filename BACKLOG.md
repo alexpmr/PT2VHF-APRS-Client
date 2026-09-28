@@ -87,7 +87,8 @@
 
 - **Builds — versões ARM64**
   - Adicionar geração oficial de artefatos **ARM64** nas plataformas em que houver suporte.
-  - **Windows ARM64:** gerar instalador e, se tecnicamente viável, versão portátil ARM64, com nomes de arquivo claramente diferenciados dos builds x64.
+  - **Windows ARM64 — obrigatório:** gerar build nativo para Windows on ARM, incluindo **Setup ARM64** e **Portable ARM64** sempre que o empacotamento permitir.
+  - Nomear claramente os arquivos, por exemplo `PT2VHF_APRS_Client_Setup_ARM64_vX.Y.exe` e `PT2VHF_APRS_Client_Portable_ARM64_vX.Y.exe`, sem confundir com os builds x64.
   - **Linux ARM64:** gerar pacote compatível para ARM64, priorizando **TAR.GZ** e, quando suportado pelo pipeline, também **AppImage** e **DEB arm64**.
   - **macOS ARM64:** manter o build nativo Apple Silicon já existente e garantir paridade funcional com Intel x86_64.
   - Atualizar o workflow do GitHub Actions para compilar/testar cada arquitetura separadamente e publicar todos os artefatos na mesma Release.
