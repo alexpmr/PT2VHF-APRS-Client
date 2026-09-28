@@ -472,6 +472,39 @@ def create_app() -> Flask:
     def api_map_data():
         return jsonify(db.map_data())
 
+    @app.get("/api/export/kml")
+    def api_export_kml():
+        try:
+            def enabled(name: str) -> bool:
+                return str(request.args.get(name, "1")).lower() not in {"0", "false", "no", "off"}
+
+            try:
+                hours = int(request.args.get("hours", 0))
+            except (TypeError, ValueError):
+                hours = 0
+
+            options = {
+                "include_stations": enabled("stations"),
+                "include_positions": enabled("positions"),
+                "include_tracklogs": enabled("tracklogs"),
+                "include_topology": enabled("topology"),
+            }
+            if not any(options.values()):
+                return jsonify({"error": "Selecione pelo menos uma camada para exportar."}), 400
+
+            payload = db.geographic_export_data(hours)
+            content = _kml_document(payload, **options)
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"PT2VHF_APRS_Client_{stamp}.kml"
+            return Response(
+                content,
+                mimetype="application/vnd.google-earth.kml+xml",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            )
+        except Exception as exc:
+            diag.log_event("kml_export_failed", error=str(exc))
+            return jsonify({"error": str(exc)}), 400
+
     @app.post("/api/queries/send")
     def api_send_query():
         try:
