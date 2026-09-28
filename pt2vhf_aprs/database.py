@@ -123,7 +123,7 @@ DEFAULT_CONFIG = {
     "install_updates_on_exit": 0,
     "message_retry_seconds": 60,
     "message_retry_attempts": 2,
-    "respond_to_queries": 0,
+    "respond_to_queries": 1,
     "language": "pt-BR",
     "map_type": "osm",
     "track_color": "#3ba6ff",
@@ -224,7 +224,7 @@ def init_db() -> None:
                 install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
                 message_retry_attempts INTEGER NOT NULL DEFAULT 2,
-                respond_to_queries INTEGER NOT NULL DEFAULT 0,
+                respond_to_queries INTEGER NOT NULL DEFAULT 1,
                 language TEXT NOT NULL DEFAULT 'pt-BR',
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
@@ -493,7 +493,7 @@ def init_db() -> None:
         if "message_retry_attempts" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN message_retry_attempts INTEGER NOT NULL DEFAULT 2")
         if "respond_to_queries" not in config_columns:
-            conn.execute("ALTER TABLE config ADD COLUMN respond_to_queries INTEGER NOT NULL DEFAULT 0")
+            conn.execute("ALTER TABLE config ADD COLUMN respond_to_queries INTEGER NOT NULL DEFAULT 1")
 
         # Corrige o antigo padrão v1.2, que combinava brazil.aprs2.net com 14580.
         # Mantém configurações personalizadas intactas.
