@@ -5125,16 +5125,33 @@
       const list = (items, formatter) => items.length
         ? '<ol>' + items.map(formatter).join('') + '</ol>'
         : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
+      const mapCall = (callsign) => `<button type="button" class="stats-map-link" data-map-callsign="${escapeHtml(callsign)}">${escapeHtml(callsign)}</button>`;
+      const evidence = value => value
+        ? `<span class="stats-evidence">${escapeHtml(ui('evidência', 'evidence'))}: ${escapeHtml(value)}</span>`
+        : '';
+
       box.innerHTML =
         '<div class="topology-stat-group"><h4>' + ui('Estações mais ativas', 'Most active stations') + '</h4>' +
         '<div class="hint">' + ui('Tráfego útil por estação; telemetria, iGates e digipeaters não entram neste ranking.', 'Useful traffic by station; telemetry, iGates and digipeaters are excluded from this ranking.') + '</div>' +
         list(data.active_stations || [], x => `<li><button type="button" class="callsign-link callsign-quick-message" data-quick-message-callsign="${escapeHtml(x.callsign)}">${escapeHtml(x.callsign)}</button> — ${Number(x.packets||0).toLocaleString(currentLocale())} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
+
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
-        list(data.digipeaters || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+        list(data.digipeaters || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+
         '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
-        list(data.igates || [], x => `<li><strong>${escapeHtml(x.callsign)}</strong> — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+        list(data.igates || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+
+        '<div class="topology-stat-group"><h4>' + ui('Estações com problemas', 'Stations with problems') + '</h4>' +
+        '<div class="hint">' + ui('Anomalias observadas; um evento isolado não implica necessariamente defeito da estação.', 'Observed anomalies; a single event does not necessarily mean the station is faulty.') + '</div>' +
+        list(data.problem_stations || [], x => `<li>${mapCall(x.callsign)} — ${escapeHtml(x.problem || x.issue_type || '')} · ${Number(x.occurrences||0).toLocaleString(currentLocale())} · ${escapeHtml(x.recurrence || '')} <button type="button" class="callsign-link station-log-button" data-callsign="${escapeHtml(x.callsign)}">${escapeHtml(ui('Logs', 'Logs'))}</button></li>`) + '</div>' +
+
+        '<div class="topology-stat-group"><h4>' + ui('Possíveis melhorias', 'Possible improvements') + '</h4>' +
+        '<div class="hint">' + ui('Sugestões inferidas do tráfego observado; não substituem estudo de propagação RF.', 'Suggestions inferred from observed traffic; they do not replace an RF propagation study.') + '</div>' +
+        list(data.improvement_suggestions || [], x => `<li>${x.callsign ? mapCall(x.callsign) + ' — ' : ''}<strong>${escapeHtml(x.title || '')}</strong>: ${escapeHtml(x.detail || '')} ${evidence(x.evidence)}</li>`) + '</div>' +
+
         '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
         list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>' +
+
         '<div class="topology-stat-group"><h4>' + ui(data.complete ? 'Histórico completo' : 'Comparação com período anterior', data.complete ? 'Complete history' : 'Comparison with previous period') + '</h4>' +
         '<div class="hint">' +
         (data.complete
