@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.7.6 - 2026-09-28
+
+- **Atualizador Windows:** o helper passa a usar **CMD nativo** como caminho principal para aplicar atualização automática, reduzindo falhas de inicialização do PowerShell.
+- O fallback PowerShell passa a ser gravado com BOM UTF-8 e o tempo de confirmação do helper foi ampliado.
+- **Exportação KML:** ao gerar o arquivo no aplicativo desktop, abre **Salvar como** para escolher pasta e nome do arquivo; o cancelamento é tratado normalmente.
+- Em modo navegador, usa o File System Access API quando disponível e, como último fallback, informa claramente que o arquivo seguirá para a pasta de downloads do navegador.
+- **Mapa:** os botões **Histórico** e **Exportar KML** passam a ficar na mesma barra contextual de **Estações, Tracklog e Topologia**.
+- **Estatísticas:** novo bloco **Estações que mais interagiram**, calculado somente sobre conversas APRS manuais.
+- O ranking ignora beacons, telemetria, ACK/REJ, queries, respostas automáticas, boletins e retries; mensagens multipartes do mesmo grupo não são infladas artificialmente.
+- Adicionados testes de regressão para helper de atualização Windows, seletor de arquivo do KML, posição dos controles do Mapa e ranking de conversas manuais.
+- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.7.5 - 2026-09-28
 
 - **Exportação KML:** novo botão na barra superior abre um seletor com **Estações, Posições, Tracklogs e Topologia/enlaces**, todos marcados por padrão, além do período a exportar.
