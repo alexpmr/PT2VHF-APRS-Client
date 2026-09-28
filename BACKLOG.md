@@ -128,6 +128,17 @@
   - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
   - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
 
+- **Estatísticas — sugestões de melhoria da cobertura/rede**
+  - Adicionar uma área de **Possíveis melhorias** baseada nos dados realmente observados pelo cliente.
+  - Identificar **áreas de sombra ou baixa cobertura** quando houver posições suficientes, destacando regiões com poucas recepções, poucos enlaces ou interrupções recorrentes de trajetos.
+  - Detectar estações ou regiões **isoladas**, com pouca redundância de caminho, baixa densidade de enlaces ou dependência excessiva de um único digipeater/iGate.
+  - Apontar trechos de tracklog em que estações móveis desaparecem e voltam a aparecer, ajudando a localizar possíveis falhas de cobertura.
+  - Sugerir onde **um novo digipeater/iGate, reposicionamento de antena ou melhoria de instalação** poderia merecer estudo, sem tratar a sugestão como garantia de cobertura.
+  - Exibir no mapa as regiões candidatas e permitir abrir os dados que justificaram cada sugestão.
+  - Atribuir a cada sugestão um nível de evidência/confiança baseado em quantidade de amostras, período observado e recorrência do padrão.
+  - Diferenciar claramente **inferência por tráfego APRS observado** de uma análise real de propagação RF; não afirmar área de sombra quando os dados forem insuficientes.
+  - Respeitar o período selecionado em Estatísticas e permitir comparação entre períodos para verificar se uma possível deficiência é persistente ou temporária.
+
 - **Exportação — KML pela barra superior + CSV/GeoJSON**
   - Adicionar na **barra superior** uma opção **Exportar KML**.
   - Ao clicar, abrir um seletor para escolher quais camadas/dados serão incluídos no arquivo.
