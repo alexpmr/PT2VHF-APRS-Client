@@ -330,9 +330,9 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["port"] == 14580
             assert cfg["aprs_filter"] == db.BRAZIL_FILTER
             assert cfg["app_theme"] == "dark"
-            assert cfg["topology_rf_color"] == "#35a7ff"
-            assert cfg["topology_igate_color"] == "#b06cff"
-            assert cfg["topology_width"] == 2
+            assert cfg["topology_rf_color"] == "#ffff00"
+            assert cfg["topology_igate_color"] == "#ffff00"
+            assert cfg["topology_width"] == 1
             assert cfg["message_popup_seconds"] == 5
             assert cfg["sound_on_station_activity"] == 1
             assert cfg["highlight_station_activity"] == 1
@@ -550,7 +550,7 @@ def test_v162_replay_update_and_settings_ui():
     assert "favorite-star" in js
     assert "map-line-legend" in js
     assert "analysisPeriod" in js
-    assert "5 * 60 * 1000" in js
+    assert "30 * 60 * 1000" in js
     assert "AbortController" in js
     assert "showWhatsNewAfterUpdate" in js
     assert "stationIsVisible" in js
