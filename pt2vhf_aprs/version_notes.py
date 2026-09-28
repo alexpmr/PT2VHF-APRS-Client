@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.11": {
+        "title": "Validação Windows x64: correção do menu Itens do mapa",
+        "items": [
+            "Corrige o menu Itens do mapa que ficava recortado pela barra superior.",
+            "O dropdown passa a ser posicionado como camada fixa abaixo do botão, fora do overflow da barra.",
+            "Mantém abertura/fechamento por clique, fechamento ao clicar fora e reposicionamento em scroll/resize.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.10": {
         "title": "Validação Windows x64: mapa unificado, APRS-IS animado e cliques restaurados",
         "items": [
