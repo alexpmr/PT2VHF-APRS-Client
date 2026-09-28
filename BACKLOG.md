@@ -131,6 +131,14 @@
   - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
   - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
 
+- **Exportação KML — escolher onde salvar**
+  - Ao clicar em **Gerar KML**, abrir uma janela **Salvar como** para o usuário escolher a pasta e o nome do arquivo antes de gravá-lo.
+  - Sugerir por padrão um nome versionado/datado, por exemplo `PT2VHF_APRS_Client_20260928_104700.kml`.
+  - Aplicar filtro/extensão **.kml** e evitar salvar silenciosamente em uma pasta de downloads sem informar o destino.
+  - Quando a plataforma permitir, lembrar a última pasta utilizada para facilitar exportações seguintes.
+  - No desktop, priorizar o seletor nativo de arquivos do Windows/Linux/macOS; em ambientes de navegador que não permitam escolher o caminho diretamente, usar a melhor alternativa disponível e informar claramente onde o arquivo será salvo.
+  - Tratar **Cancelar** como cancelamento normal, sem mensagem de erro.
+
 - **Exportação — CSV e GeoJSON**
   - Manter como próxima etapa a exportação tabular em **CSV** e geográfica em **GeoJSON**.
   - Respeitar período e filtros ativos, preservando timestamp, indicativo, origem e atributos úteis.
