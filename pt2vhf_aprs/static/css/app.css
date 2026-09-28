@@ -158,12 +158,19 @@ body.map-context-visible main { height: calc(100vh - 184px); }
 .aprs-object-marker {
   display: grid;
   place-items: center;
+  width: 34px;
+  height: 34px;
+  line-height: 1;
+}
+.aprs-object-fallback {
+  display: inline-grid;
+  place-items: center;
   width: 24px;
   height: 24px;
-  color: #ffcc4d;
-  font-size: 20px;
-  line-height: 1;
-  text-shadow: 0 1px 3px rgba(0,0,0,.9);
+  border-radius: 4px;
+  background: #edf2f6;
+  color: #111;
+  font: 700 11px/1 monospace;
 }
 html[data-theme="light"] .map-context-field {
   background: #fff;
@@ -2413,8 +2420,9 @@ html[data-theme="light"] .analysis-metric {
   pointer-events: auto;
 }
 .aprs-marker-wrap.station-transmitting .aprs-marker,
-.station-transmitting .aprs-marker {
-  animation: stationTxPulse 1.8s ease-out;
+.station-transmitting .aprs-marker,
+.aprs-object-marker-wrap.station-transmitting .aprs-object-marker {
+  animation: stationTxPulse 1s ease-out;
   filter: drop-shadow(0 0 9px #ff3547) saturate(1.35);
 }
 @keyframes stationTxPulse {
@@ -2719,7 +2727,9 @@ html[data-theme="light"] .traffic-animation-panel {
   position: relative;
 }
 .aprs-marker-wrap.station-transmitting::before,
-.aprs-marker-wrap.station-transmitting::after {
+.aprs-marker-wrap.station-transmitting::after,
+.aprs-object-marker-wrap.station-transmitting::before,
+.aprs-object-marker-wrap.station-transmitting::after {
   content: "";
   position: absolute;
   z-index: -1;
@@ -2731,10 +2741,11 @@ html[data-theme="light"] .traffic-animation-panel {
   border-radius: 50%;
   pointer-events: none;
   transform: translate(-50%, -50%) scale(.55);
-  animation: stationTxRing 1.6s ease-out forwards;
+  animation: stationTxRing 1s ease-out forwards;
 }
-.aprs-marker-wrap.station-transmitting::after {
-  animation-delay: .32s;
+.aprs-marker-wrap.station-transmitting::after,
+.aprs-object-marker-wrap.station-transmitting::after {
+  animation-delay: .2s;
 }
 @keyframes stationTxRing {
   0% { opacity: .95; transform: translate(-50%, -50%) scale(.55); }
