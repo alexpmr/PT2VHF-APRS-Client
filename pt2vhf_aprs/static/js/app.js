@@ -45,7 +45,7 @@
     trafficHasMore: false,
     trafficChunkLastId: 0,
     trafficMode: 'history',
-    trafficSpeed: 1,
+    trafficSpeed: [0.5, 1, 2, 5].includes(Number(localStorage.getItem('pt2vhf_traffic_speed'))) ? Number(localStorage.getItem('pt2vhf_traffic_speed')) : 1,
     trafficTimer: null,
     lastTrafficPacketId: 0,
     trafficPollBusy: false,
@@ -214,8 +214,8 @@
         el.title = ui(`${current} é a versão mais recente publicada.`, `${current} is the latest published version.`);
       } else if (data.status === 'ahead') {
         el.classList.add('ahead');
-        textEl.textContent = `Build ${current}`;
-        el.title = latest ? `Build > ${latest}` : ui('Build de desenvolvimento.', 'Development build.');
+        textEl.textContent = ui(`Versão ${current}`, `Build ${current}`);
+        el.title = latest ? ui(`Versão > ${latest}`, `Build > ${latest}`) : ui('Versão de desenvolvimento.', 'Development build.');
       } else {
         throw new Error(data.error || ui('Falha temporária na verificação.', 'Temporary update check failure.'));
       }
@@ -1903,6 +1903,20 @@
     if ($('#trafficPlayPauseButton')) $('#trafficPlayPauseButton').textContent = state.trafficPlaying ? '⏸ Pause' : '▶ Play';
     $('#trafficLiveButton')?.classList.toggle('active-filter', state.trafficMode === 'live');
     updateMapLegend();
+  }
+
+
+  function setTrafficSpeed(value, source = '') {
+    const parsed = Number(value || 1);
+    state.trafficSpeed = [0.5, 1, 2, 5].includes(parsed) ? parsed : 1;
+    localStorage.setItem('pt2vhf_traffic_speed', String(state.trafficSpeed));
+
+    const replaySelect = $('#trafficSpeed');
+    const topologySelect = $('#topologySpeed');
+    if (replaySelect && source !== 'replay') replaySelect.value = String(state.trafficSpeed);
+    if (topologySelect && source !== 'topology') topologySelect.value = String(state.trafficSpeed);
+
+    updateTrafficAnimationUi();
   }
 
   async function loadTrafficHistory(resetIndex = true, startTimestamp = '') {
@@ -5405,6 +5419,8 @@
     }
   });
 
+  setTrafficSpeed(state.trafficSpeed);
+
   $('#trafficMode')?.addEventListener('change', async event => {
     state.trafficMode = event.target.value === 'live' ? 'live' : 'history';
     stopTrafficTimer();
@@ -5423,8 +5439,11 @@
   });
 
   $('#trafficSpeed')?.addEventListener('change', event => {
-    state.trafficSpeed = Math.max(.25, Number(event.target.value || 1));
-    updateTrafficAnimationUi();
+    setTrafficSpeed(event.target.value, 'replay');
+  });
+
+  $('#topologySpeed')?.addEventListener('change', event => {
+    setTrafficSpeed(event.target.value, 'topology');
   });
 
   $('#trafficTimeline')?.addEventListener('input', event => {
