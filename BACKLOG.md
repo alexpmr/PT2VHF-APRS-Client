@@ -119,6 +119,8 @@
 
 - **Mapa / dados — ignorar coordenadas falsas, inválidas ou implausíveis**
   - Detectar e desconsiderar posições APRS claramente **fake**, inválidas, de placeholder ou geograficamente implausíveis antes de desenhá-las no mapa.
+  - Desconsiderar também qualquer objeto/estação **sem coordenadas válidas** ou com **latitude = 0 e longitude = 0 (0,0)**.
+  - Não criar marcador, tracklog, enlace/topologia ou qualquer representação geográfica para objetos sem posição válida.
   - Não usar essas coordenadas para marcador da estação, tracklog, topologia, distância, estatísticas de cobertura, exportações KML/GeoJSON ou cálculos derivados.
   - Tratar com atenção especial coordenadas genéricas/placeholder e valores incompatíveis com o histórico recente da própria estação.
   - Detectar saltos impossíveis entre posições sucessivas usando distância, intervalo de tempo e velocidade implícita, evitando criar linhas atravessando continentes/oceanos por um único pacote incorreto.
