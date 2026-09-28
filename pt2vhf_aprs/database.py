@@ -1382,11 +1382,23 @@ def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
                     raise
             finally:
                 conn.set_progress_handler(None, 0)
+            issues = _station_position_issues_conn(conn)
 
         if interrupted:
             return stale
 
-        result = [dict(r) for r in rows]
+        result = []
+        for row in rows:
+            item = dict(row)
+            source = str(item.get("source") or "").upper().strip()
+            target = str(item.get("target") or "").upper().strip()
+            if source in issues or target in issues:
+                continue
+            if not _valid_geo_position(item.get("source_lat"), item.get("source_lon")):
+                continue
+            if not _valid_geo_position(item.get("target_lat"), item.get("target_lon")):
+                continue
+            result.append(item)
         with _topology_cache_lock:
             _topology_cache[hours] = (time.monotonic(), result)
 
