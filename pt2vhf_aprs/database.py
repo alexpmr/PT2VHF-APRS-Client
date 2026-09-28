@@ -1195,11 +1195,27 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
             """,
             (q, q, q),
         ).fetchall()
+        issues = _station_position_issues_conn(conn)
     result = []
+    own_valid = _valid_geo_position(own_lat, own_lon)
     for row in rows:
         item = dict(row)
-        if own_lat is not None and own_lon is not None and item["latitude"] is not None and item["longitude"] is not None:
-            item["distance_km"] = round(haversine_km(float(own_lat), float(own_lon), item["latitude"], item["longitude"]), 2)
+        call = str(item.get("callsign") or "").upper().strip()
+        issue = issues.get(call)
+        valid = _valid_geo_position(item.get("latitude"), item.get("longitude")) and issue is None
+        item["position_valid"] = bool(valid)
+        item["position_issue"] = str(issue.get("issue_type") or "") if issue else ""
+        item["position_issue_label"] = _position_issue_label(item["position_issue"]) if issue else ""
+        if own_valid and valid:
+            item["distance_km"] = round(
+                haversine_km(
+                    float(own_lat),
+                    float(own_lon),
+                    float(item["latitude"]),
+                    float(item["longitude"]),
+                ),
+                2,
+            )
         else:
             item["distance_km"] = None
         result.append(item)
@@ -2057,7 +2073,7 @@ def clear_stations() -> dict[str, int]:
 
 def map_data() -> dict[str, Any]:
     with connection() as conn:
-        stations = [dict(r) for r in conn.execute(
+        station_rows = conn.execute(
             """
             SELECT s.*, CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
             FROM stations s
@@ -2065,12 +2081,33 @@ def map_data() -> dict[str, Any]:
             WHERE s.latitude IS NOT NULL AND s.longitude IS NOT NULL
             ORDER BY favorite DESC, s.last_heard DESC
             """
-        ).fetchall()]
+        ).fetchall()
+        issues = _station_position_issues_conn(conn)
+        stations = []
+        valid_calls: set[str] = set()
+        for row in station_rows:
+            item = dict(row)
+            call = str(item.get("callsign") or "").upper().strip()
+            if call in issues or not _valid_geo_position(item.get("latitude"), item.get("longitude")):
+                continue
+            item["position_valid"] = True
+            item["position_issue"] = ""
+            stations.append(item)
+            valid_calls.add(call)
+
         # Últimos 10 mil pontos; o frontend agrupa por estação. Evita travar após meses de operação.
-        tracks = [dict(r) for r in conn.execute(
-            "SELECT callsign,timestamp,latitude,longitude,speed,course,altitude FROM tracks ORDER BY id DESC LIMIT 10000"
-        ).fetchall()]
-    tracks.reverse()
+        tracks = [
+            dict(r)
+            for r in conn.execute(
+                "SELECT callsign,timestamp,latitude,longitude,speed,course,altitude FROM tracks ORDER BY id DESC LIMIT 10000"
+            ).fetchall()
+        ]
+    tracks = [
+        row
+        for row in reversed(tracks)
+        if str(row.get("callsign") or "").upper().strip() in valid_calls
+        and _valid_geo_position(row.get("latitude"), row.get("longitude"))
+    ]
     return {"stations": stations, "tracks": tracks}
 
 
