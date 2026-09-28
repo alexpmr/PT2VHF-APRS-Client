@@ -2365,6 +2365,31 @@ def map_data() -> dict[str, Any]:
     return {"stations": stations, "tracks": tracks}
 
 
+def geographic_export_data(hours: int = 0) -> dict[str, Any]:
+    hours = int(hours or 0)
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    else:
+        cutoff = None
+
+    data = map_data()
+    tracks = []
+    for row in data.get("tracks") or []:
+        if cutoff:
+            timestamp = _parse_timestamp(row.get("timestamp"))
+            if timestamp is None or timestamp < cutoff:
+                continue
+        tracks.append(row)
+
+    return {
+        "hours": 0 if hours <= 0 else hours,
+        "stations": data.get("stations") or [],
+        "tracks": tracks,
+        "topology": list_topology_edges(hours),
+    }
+
+
 def add_aprs_query(
     direction: str,
     peer: str,
