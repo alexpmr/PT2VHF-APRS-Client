@@ -1732,11 +1732,22 @@
     if (![...from, ...to].every(Number.isFinite)) return Promise.resolve();
     if (!trafficSegmentVisible(segment)) return Promise.resolve();
 
+    const isInternet = segment.kind === 'igate';
+    const segmentColor = isInternet ? state.mapConfig.topology_igate_color : '#ffd54a';
+    const trail = L.polyline([from, to], {
+      color: segmentColor,
+      weight: Math.max(2, Number(state.mapConfig.topology_width || 1) + 1),
+      opacity: .72,
+      dashArray: isInternet ? '8 6' : null,
+      pane: 'overlayPane'
+    }).addTo(state.map);
+    state.trafficReplayLayers.add(trail);
+
     const particle = L.circleMarker(from, {
       radius: 6,
       color: '#ffffff',
       weight: 1,
-      fillColor: segment.kind === 'igate' ? state.mapConfig.topology_igate_color : '#ffd54a',
+      fillColor: segmentColor,
       fillOpacity: .95,
       opacity: .95,
       pane: 'markerPane'
@@ -1757,9 +1768,12 @@
         if (t < 1) {
           requestAnimationFrame(tick);
         } else {
+          stationActivity(segment.target);
           setTimeout(() => {
             try { state.map?.removeLayer(particle); } catch (_) {}
+            try { state.map?.removeLayer(trail); } catch (_) {}
             state.trafficReplayLayers.delete(particle);
+            state.trafficReplayLayers.delete(trail);
             updateMapLegend();
           }, 650);
           resolve();
@@ -1859,11 +1873,17 @@
     if (!event) return;
     stationActivity(event.source);
     const speed = Math.max(.25, Number(state.trafficSpeed || 1));
-    const duration = Math.max(90, 1150 / speed);
+    const duration = Math.max(90, 900 / speed);
     state.timelineReplayActive = state.trafficMode === 'history';
     updateMapLegend();
-    // Todos os segmentos observados do mesmo pacote começam juntos para mostrar a propagação multi-link simultânea.
-    await Promise.all((event.segments || []).map(segment => animateTrafficSegment(segment, event, duration)));
+
+    // Reproduz o path observado hop a hop, na ordem real do cabeçalho APRS.
+    // Assim, uma resposta/ACK que retorne pelos mesmos digipeaters percorre
+    // visualmente o caminho inverso, em vez de aparecer como um enlace direto.
+    for (const segment of (event.segments || [])) {
+      await animateTrafficSegment(segment, event, duration);
+    }
+
     if ($('#trafficCurrentTime')) $('#trafficCurrentTime').textContent = fmtDate(event.timestamp) || '—';
     syncTrafficTimeline(event.timestamp);
   }
