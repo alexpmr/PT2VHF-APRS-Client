@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.7.7 - 2026-09-28
+
+- **Mapa:** removida definitivamente a recriação do botão global **Histórico** pelo patch legado de build; permanece apenas o controle da barra contextual do Mapa.
+- **Mensagens:** **Apagar todas** passa a se chamar **Limpar**, mantendo estilo vermelho e confirmação antes de remover o histórico local.
+- **Topologia:** novo padrão visual com linhas **amarelas (#ffff00)** e espessura mínima de **1 px**.
+- **Tracklog:** permanece **azul (#3ba6ff)** por padrão.
+- **Animação e som:** permanecem ativados por padrão para novas configurações.
+- **Atualizações:** a checagem periódica de nova versão passa de 5 para **30 minutos**; o agendador só programa a próxima execução depois da conclusão da verificação atual.
+- Configurações visuais já personalizadas pelo usuário são preservadas; os novos valores são aplicados somente como padrão/reset.
+- Adicionados testes de regressão para o Histórico contextual, botão Limpar, padrões do Mapa e cadência de atualização.
+- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.7.6 - 2026-09-28
 
 - **Atualizador Windows:** o helper passa a usar **CMD nativo** como caminho principal para aplicar atualização automática, reduzindo falhas de inicialização do PowerShell.
