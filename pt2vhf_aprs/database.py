@@ -1668,6 +1668,242 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
         "device_id_source": "aprsorg/aprs-deviceid (CC BY-SA 2.0)",
     }
 
+def station_problem_stats(hours: int = 0, limit: int = 20) -> list[dict[str, Any]]:
+    hours = int(hours or 0)
+    params: list[Any] = []
+    where = ""
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        where = "WHERE timestamp >= ?"
+        params.append(cutoff)
+
+    combined: dict[tuple[str, str], dict[str, Any]] = {}
+    with connection() as conn:
+        rows = conn.execute(
+            f"""
+            SELECT UPPER(TRIM(callsign)) AS callsign,
+                   issue_type,
+                   COUNT(*) AS occurrences,
+                   MAX(timestamp) AS last_occurrence
+            FROM station_anomalies
+            {where}
+            GROUP BY UPPER(TRIM(callsign)), issue_type
+            """,
+            params,
+        ).fetchall()
+        for row in rows:
+            call = str(row["callsign"] or "").upper().strip()
+            issue_type = str(row["issue_type"] or "")
+            combined[(call, issue_type)] = {
+                "callsign": call,
+                "issue_type": issue_type,
+                "problem": _position_issue_label(issue_type),
+                "occurrences": int(row["occurrences"] or 0),
+                "last_occurrence": row["last_occurrence"],
+            }
+
+        # Também detecta problemas legados já armazenados antes da tabela de
+        # anomalias, inclusive posições 0,0 e posições incompatíveis com qAR/qAO.
+        dynamic_issues = _station_position_issues_conn(conn)
+        last_seen_rows = {
+            str(r["callsign"] or "").upper().strip(): r["last_heard"]
+            for r in conn.execute("SELECT callsign,last_heard FROM stations").fetchall()
+        }
+        for call, issue in dynamic_issues.items():
+            issue_type = str(issue.get("issue_type") or "invalid_position")
+            key = (call, issue_type)
+            existing = combined.get(key)
+            if existing:
+                existing["occurrences"] = max(1, int(existing["occurrences"]))
+            else:
+                combined[key] = {
+                    "callsign": call,
+                    "issue_type": issue_type,
+                    "problem": _position_issue_label(issue_type),
+                    "occurrences": 1,
+                    "last_occurrence": last_seen_rows.get(call),
+                }
+            combined[key]["details"] = {
+                key: value
+                for key, value in issue.items()
+                if key not in {"issue_type"}
+            }
+
+    items = list(combined.values())
+    for item in items:
+        count = int(item.get("occurrences") or 0)
+        item["recurrence"] = "alta" if count >= 5 else ("média" if count >= 2 else "baixa")
+    items.sort(
+        key=lambda item: (
+            -int(item.get("occurrences") or 0),
+            str(item.get("last_occurrence") or ""),
+            str(item.get("callsign") or ""),
+        )
+    )
+    return items[: max(1, min(int(limit or 20), 100))]
+
+
+def network_improvement_suggestions(hours: int = 0, limit: int = 12) -> list[dict[str, Any]]:
+    hours = int(hours or 0)
+    cutoff: str | None = None
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+
+    suggestions: list[dict[str, Any]] = []
+    with connection() as conn:
+        issues = _station_position_issues_conn(conn)
+        position_rows = conn.execute(
+            "SELECT callsign,latitude,longitude,last_heard FROM stations"
+        ).fetchall()
+        valid_positions = {
+            str(row["callsign"] or "").upper().strip(): (
+                float(row["latitude"]),
+                float(row["longitude"]),
+            )
+            for row in position_rows
+            if str(row["callsign"] or "").upper().strip() not in issues
+            and _valid_geo_position(row["latitude"], row["longitude"])
+        }
+
+        packet_where = "WHERE from_call IS NOT NULL AND TRIM(from_call) <> ''"
+        packet_params: list[Any] = []
+        if cutoff:
+            packet_where += " AND timestamp >= ?"
+            packet_params.append(cutoff)
+        packet_counts = {
+            str(row["callsign"] or "").upper().strip(): int(row["packets"] or 0)
+            for row in conn.execute(
+                f"""
+                SELECT UPPER(TRIM(from_call)) AS callsign, COUNT(*) AS packets
+                FROM packets
+                {packet_where}
+                GROUP BY UPPER(TRIM(from_call))
+                """,
+                packet_params,
+            ).fetchall()
+        }
+
+        edge_where = ""
+        edge_params: list[Any] = []
+        if cutoff:
+            edge_where = "WHERE last_seen >= ?"
+            edge_params.append(cutoff)
+        degree: dict[str, set[str]] = {}
+        for row in conn.execute(
+            f"SELECT source,target FROM topology_edges {edge_where}",
+            edge_params,
+        ).fetchall():
+            a = str(row["source"] or "").upper().strip()
+            b = str(row["target"] or "").upper().strip()
+            if not a or not b:
+                continue
+            degree.setdefault(a, set()).add(b)
+            degree.setdefault(b, set()).add(a)
+
+        isolated = []
+        for call, packet_count in packet_counts.items():
+            if call not in valid_positions or packet_count < 5:
+                continue
+            neighbors = len(degree.get(call, set()))
+            if neighbors <= 1:
+                isolated.append((packet_count, neighbors, call))
+        isolated.sort(reverse=True)
+        for packet_count, neighbors, call in isolated[:5]:
+            lat, lon = valid_positions[call]
+            suggestions.append({
+                "type": "isolated_station",
+                "title": "Estação com pouca redundância",
+                "callsign": call,
+                "detail": f"{packet_count} pacotes no período e {neighbors} enlace(s) distinto(s) observado(s).",
+                "evidence": "alta" if packet_count >= 25 else "média",
+                "latitude": lat,
+                "longitude": lon,
+            })
+
+        igate_rows = conn.execute(
+            f"""
+            SELECT UPPER(TRIM(igate)) AS callsign, SUM(packet_count) AS packets
+            FROM topology_edges
+            WHERE igate IS NOT NULL
+            {"AND last_seen >= ?" if cutoff else ""}
+            GROUP BY UPPER(TRIM(igate))
+            ORDER BY packets DESC
+            """,
+            ([cutoff] if cutoff else []),
+        ).fetchall()
+        igate_total = sum(int(row["packets"] or 0) for row in igate_rows)
+        if igate_rows and igate_total >= 20:
+            top = igate_rows[0]
+            top_packets = int(top["packets"] or 0)
+            share = top_packets / igate_total if igate_total else 0.0
+            if share >= 0.60:
+                suggestions.append({
+                    "type": "igate_concentration",
+                    "title": "Dependência elevada de um único iGate",
+                    "callsign": str(top["callsign"] or "").upper().strip(),
+                    "detail": f"{share * 100.0:.1f}% do tráfego encaminhado por iGate no período passou por esta estação.",
+                    "evidence": "alta" if share >= 0.80 else "média",
+                })
+
+        # Heurística deliberadamente conservadora: um grande intervalo entre
+        # posições sucessivas de uma estação móvel é apenas uma possível sombra.
+        track_where = ""
+        track_params: list[Any] = []
+        if cutoff:
+            track_where = "WHERE timestamp >= ?"
+            track_params.append(cutoff)
+        track_rows = conn.execute(
+            f"""
+            SELECT callsign,timestamp,latitude,longitude
+            FROM tracks
+            {track_where}
+            ORDER BY callsign, timestamp
+            LIMIT 30000
+            """,
+            track_params,
+        ).fetchall()
+        previous_by_call: dict[str, sqlite3.Row] = {}
+        gaps: list[tuple[float, str, dict[str, Any]]] = []
+        for row in track_rows:
+            call = str(row["callsign"] or "").upper().strip()
+            if call in issues or not _valid_geo_position(row["latitude"], row["longitude"]):
+                continue
+            previous = previous_by_call.get(call)
+            previous_by_call[call] = row
+            if previous is None:
+                continue
+            t1 = _parse_timestamp(previous["timestamp"])
+            t2 = _parse_timestamp(row["timestamp"])
+            if not t1 or not t2:
+                continue
+            elapsed_minutes = (t2 - t1).total_seconds() / 60.0
+            if elapsed_minutes < 30.0 or elapsed_minutes > 360.0:
+                continue
+            distance = haversine_km(
+                float(previous["latitude"]),
+                float(previous["longitude"]),
+                float(row["latitude"]),
+                float(row["longitude"]),
+            )
+            if distance < 10.0 or distance > 300.0:
+                continue
+            gaps.append((distance, call, {
+                "type": "possible_coverage_gap",
+                "title": "Possível trecho de baixa cobertura",
+                "callsign": call,
+                "detail": f"Intervalo de {elapsed_minutes:.0f} min entre posições separadas por {distance:.1f} km; requer validação antes de concluir que há sombra RF.",
+                "evidence": "baixa",
+                "latitude": (float(previous["latitude"]) + float(row["latitude"])) / 2.0,
+                "longitude": (float(previous["longitude"]) + float(row["longitude"])) / 2.0,
+            }))
+        gaps.sort(key=lambda value: value[0], reverse=True)
+        suggestions.extend(item for _distance, _call, item in gaps[:4])
+
+    return suggestions[: max(1, min(int(limit or 12), 50))]
+
+
 def topology_stats(hours: int = 0) -> dict[str, Any]:
     """Resumo agregado da topologia observada para diagnóstico rápido."""
     hours = int(hours or 0)
