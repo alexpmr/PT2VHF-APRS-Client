@@ -20,7 +20,7 @@ checks = {
         "pt2vhf_traffic_speed",
         "setTrafficSpeed(event.target.value, 'topology')",
         "setTrafficSpeed(event.target.value, 'replay')",
-        "ui(\`Versão \${current}\`, \`Build \${current}\`)",
+        "ui(`Versão ${current}`, `Build ${current}`)",
         "for (const segment of (event.segments || []))",
     ],
     "tests/test_core.py": ["test_v179_map_speed_control_and_version_label"],
