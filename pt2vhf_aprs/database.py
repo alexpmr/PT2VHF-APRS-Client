@@ -1990,6 +1990,7 @@ def packet_traffic_events(
             parsed.append((row, source, edges))
 
         coords: dict[str, tuple[float, float]] = {}
+        position_issues = _station_position_issues_conn(conn)
         if calls:
             placeholders = ",".join("?" for _ in calls)
             station_rows = conn.execute(
@@ -1997,8 +1998,11 @@ def packet_traffic_events(
                 [call.upper() for call in calls],
             ).fetchall()
             for station in station_rows:
-                if station["latitude"] is not None and station["longitude"] is not None:
-                    coords[str(station["callsign"]).upper()] = (float(station["latitude"]), float(station["longitude"]))
+                call = str(station["callsign"] or "").upper().strip()
+                if call in position_issues:
+                    continue
+                if _valid_geo_position(station["latitude"], station["longitude"]):
+                    coords[call] = (float(station["latitude"]), float(station["longitude"]))
 
     events: list[dict[str, Any]] = []
     for row, source, edges in parsed:
