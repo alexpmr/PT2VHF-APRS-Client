@@ -2,15 +2,17 @@
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.7** simplifica a interface do Mapa, ajusta os padrões visuais da topologia, renomeia a limpeza de mensagens e reduz a frequência das consultas de atualização para 30 minutos.
+A **v1.7.7** simplifica a interface do Mapa, ajusta os padrões visuais da topologia, corrige a separação entre enlaces RF e APRS-IS, renomeia a limpeza de mensagens, reduz a frequência das consultas de atualização para 30 minutos e adiciona builds nativos para Windows ARM64.
 
 ## Downloads
 
 Cada Release completa publica:
 
 ### Windows
-- `PT2VHF_APRS_Client_Setup_x64_vX.Y.exe` — instalador recomendado.
-- `PT2VHF_APRS_Client_Portable_x64_vX.Y.exe` — executável portátil.
+- `PT2VHF_APRS_Client_Setup_x64_vX.Y.exe` — instalador para Windows x64.
+- `PT2VHF_APRS_Client_Portable_x64_vX.Y.exe` — portátil para Windows x64.
+- `PT2VHF_APRS_Client_Setup_ARM64_vX.Y.exe` — instalador nativo para Windows ARM64.
+- `PT2VHF_APRS_Client_Portable_ARM64_vX.Y.exe` — portátil nativo para Windows ARM64.
 
 ### Linux
 - `PT2VHF_APRS_Client_x86_64_vX.Y.AppImage` — AppImage portátil.
