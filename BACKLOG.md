@@ -91,15 +91,6 @@
   - Diferenciar, quando útil, mensagens enviadas, recebidas e total de interações.
   - Usar as mensagens armazenadas no banco local e evitar duplicidades artificiais.
 
-- **Mensagens — ordenação e limpeza em massa**
-  - Permitir ordenar a lista de mensagens por **remetente** e por **data/hora da mensagem**.
-  - Oferecer ordenação crescente e decrescente em ambos os critérios.
-  - Manter a ordenação compatível com os modos existentes, inclusive conversas agrupadas, filtros de **Minhas mensagens** e **Não lidas**.
-  - Adicionar na barra da aba **Mensagens** a opção **Apagar todas as mensagens**.
-  - Exigir confirmação explícita antes da exclusão em massa, deixando claro que a ação apagará o histórico local de mensagens.
-  - Após a confirmação, remover as mensagens do banco local e atualizar imediatamente contadores, filtros, conversas agrupadas e indicadores de não lidas.
-  - Não apagar configurações, estações, logs, tracklogs ou outros dados do aplicativo.
-
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
@@ -116,18 +107,6 @@
   - Incluir atalhos para **Mostrar log**, **Enviar mensagem**, **Ping/ACK**, **Trace**, **Posição**, **Status** e histórico de queries.
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
-
-- **Mapa / dados — ignorar coordenadas falsas, inválidas ou implausíveis**
-  - Detectar e desconsiderar posições APRS claramente **fake**, inválidas, de placeholder ou geograficamente implausíveis antes de desenhá-las no mapa.
-  - Desconsiderar também qualquer objeto/estação **sem coordenadas válidas** ou com **latitude = 0 e longitude = 0 (0,0)**.
-  - Não criar marcador, tracklog, enlace/topologia ou qualquer representação geográfica para objetos sem posição válida.
-  - Não usar essas coordenadas para marcador da estação, tracklog, topologia, distância, estatísticas de cobertura, exportações KML/GeoJSON ou cálculos derivados.
-  - Tratar com atenção especial coordenadas genéricas/placeholder e valores incompatíveis com o histórico recente da própria estação.
-  - Detectar saltos impossíveis entre posições sucessivas usando distância, intervalo de tempo e velocidade implícita, evitando criar linhas atravessando continentes/oceanos por um único pacote incorreto.
-  - Quando uma posição for rejeitada, manter a última posição válida conhecida da estação, se houver, sem substituir seu histórico por dados falsos.
-  - Registrar o descarte no diagnóstico/log com motivo, indicativo e coordenada rejeitada para permitir auditoria.
-  - Diferenciar posição **inválida/rejeitada** de estação simplesmente **sem posição conhecida**.
-  - Evitar falsos positivos em estações legitimamente móveis, balões, aeronaves ou outros objetos APRS de alta velocidade; aplicar limites coerentes com o tipo/símbolo quando possível.
 
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
@@ -149,44 +128,10 @@
   - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
   - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
 
-- **Estatísticas — navegação dos rankings para o mapa**
-  - Nos blocos **Digipeaters mais utilizados** e **iGates mais ativos**, transformar os indicativos em **links clicáveis**.
-  - Ao clicar em um indicativo, abrir automaticamente a aba **Mapa**, localizar a estação correspondente e centralizar nela.
-  - Aplicar um nível de zoom adequado para facilitar a visualização da estação e de seus enlaces/topologia.
-  - Se a estação possuir posição conhecida, destacar seu marcador ao chegar ao mapa.
-  - Se não houver posição disponível, informar isso claramente ao usuário sem gerar coordenadas artificiais.
-  - Preservar o período/filtro de Estatísticas que originou a seleção sempre que isso for relevante para a visualização do mapa.
-
-- **Estatísticas — sugestões de melhoria da cobertura/rede**
-  - Adicionar uma área de **Possíveis melhorias** baseada nos dados realmente observados pelo cliente.
-  - Identificar **áreas de sombra ou baixa cobertura** quando houver posições suficientes, destacando regiões com poucas recepções, poucos enlaces ou interrupções recorrentes de trajetos.
-  - Detectar estações ou regiões **isoladas**, com pouca redundância de caminho, baixa densidade de enlaces ou dependência excessiva de um único digipeater/iGate.
-  - Apontar trechos de tracklog em que estações móveis desaparecem e voltam a aparecer, ajudando a localizar possíveis falhas de cobertura.
-  - Sugerir onde **um novo digipeater/iGate, reposicionamento de antena ou melhoria de instalação** poderia merecer estudo, sem tratar a sugestão como garantia de cobertura.
-  - Exibir no mapa as regiões candidatas e permitir abrir os dados que justificaram cada sugestão.
-  - Atribuir a cada sugestão um nível de evidência/confiança baseado em quantidade de amostras, período observado e recorrência do padrão.
-  - Diferenciar claramente **inferência por tráfego APRS observado** de uma análise real de propagação RF; não afirmar área de sombra quando os dados forem insuficientes.
-  - Respeitar o período selecionado em Estatísticas e permitir comparação entre períodos para verificar se uma possível deficiência é persistente ou temporária.
-
-- **Estatísticas — estações com problemas**
-  - Adicionar um bloco **Estações com problemas** com os indicativos que apresentaram anomalias ou dados suspeitos no período selecionado.
-  - Considerar, quando detectável: **coordenadas inválidas/fake**, posição **0,0**, ausência recorrente de posição, saltos geográficos implausíveis, velocidade implícita incompatível, pacotes malformados, excesso de duplicados e outros comportamentos anômalos observáveis.
-  - Exibir para cada estação o **tipo de problema**, quantidade de ocorrências, última ocorrência e nível de recorrência.
-  - Permitir clicar no indicativo para abrir a estação no **Mapa** quando houver posição válida conhecida.
-  - Quando útil, permitir abrir os **Logs** já filtrados pelo indicativo para facilitar o diagnóstico.
-  - Não classificar automaticamente como defeituosa uma estação por um único pacote isolado; usar recorrência/quantidade mínima de evidências para reduzir falsos positivos.
-  - Diferenciar claramente **problema da estação/dado APRS** de **falha de recepção local**, ausência de cobertura ou falta de dados suficientes.
-  - Respeitar o período selecionado em Estatísticas e recalcular o bloco conforme o intervalo analisado.
-
-- **Exportação — KML pela barra superior + CSV/GeoJSON**
-  - Adicionar na **barra superior** uma opção **Exportar KML**.
-  - Ao clicar, abrir um seletor para escolher quais camadas/dados serão incluídos no arquivo.
-  - Incluir pelo menos: **Topologia/enlaces, Estações, Posições, Tracklogs** e demais elementos geográficos relevantes disponíveis no período atual.
-  - Todas as opções devem vir **ligadas por padrão**, permitindo ao usuário desmarcar somente o que não deseja exportar.
-  - Respeitar o período/filtros ativos quando aplicável e deixar isso claro na janela de exportação.
-  - Organizar o KML em pastas/camadas separadas por tipo de dado para facilitar uso no Google Earth.
-  - Preservar timestamp, indicativo, origem do dado e atributos úteis nos elementos exportados.
-  - Manter no escopo também exportação tabular em **CSV** e geográfica em **GeoJSON**, compatíveis com Excel, QGIS e outras ferramentas.
+- **Exportação — CSV e GeoJSON**
+  - Manter como próxima etapa a exportação tabular em **CSV** e geográfica em **GeoJSON**.
+  - Respeitar período e filtros ativos, preservando timestamp, indicativo, origem e atributos úteis.
+  - Garantir compatibilidade com Excel, QGIS e outras ferramentas de análise.
 
 - **Estatísticas — comparação entre períodos**
   - Permitir comparar o período atual com o período imediatamente anterior de mesma duração.
@@ -278,6 +223,18 @@
 - **Estatísticas:** somente nome amigável do aplicativo/software na apresentação principal; identificadores técnicos permanecem internos.
 - **Estatísticas:** fonte padrão maior e controle próprio de tamanho na Configuração.
 - **Versionamento:** nova linha iniciada em v1.7; próximas releases serão v1.7.1, v1.7.2, v1.7.3...
+
+## Concluído na v1.7.5
+
+- **Exportação KML:** botão na barra superior com seleção de Estações, Posições, Tracklogs e Topologia/enlaces, todas ligadas por padrão, e escolha de período.
+- **Validação geográfica:** posições 0,0, inválidas, saltos implausíveis e coordenadas incompatíveis com iGate RF conhecido são rejeitadas e registradas como anomalias.
+- **Mapa/topologia/replay/exportação:** dados geográficos rejeitados deixam de participar de marcadores, linhas, distâncias, animações e KML.
+- **Estatísticas:** novo bloco **Estações com problemas**, com ocorrência, recorrência e atalhos para Mapa/Logs.
+- **Estatísticas:** novo bloco **Possíveis melhorias**, com baixa redundância, concentração em iGate e possíveis lacunas de cobertura, sempre apresentados como inferências.
+- **Estatísticas:** Digipeaters e iGates dos rankings passam a ser clicáveis e levam diretamente ao Mapa quando há posição válida.
+- **Mensagens:** conversas agrupadas podem ser ordenadas por Remetente ou Data, crescente/decrescente.
+- **Mensagens:** ação **Apagar todas** limpa o histórico local após confirmação e atualiza contadores/indicadores.
+- **Testes:** regressões adicionadas para coordenadas suspeitas, KML, Estatísticas e Mensagens.
 
 ## Concluído na v1.7.4
 
