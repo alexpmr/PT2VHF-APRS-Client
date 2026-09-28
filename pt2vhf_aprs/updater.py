@@ -73,9 +73,11 @@ def desired_asset_name(version: str) -> str:
     mode = current_update_mode()
     machine = _machine()
     if mode == "windows-portable":
-        return f"PT2VHF_APRS_Client_Portable_x64_v{version}.exe"
+        arch = "ARM64" if machine == "arm64" else "x64"
+        return f"PT2VHF_APRS_Client_Portable_{arch}_v{version}.exe"
     if mode == "windows-installer":
-        return f"PT2VHF_APRS_Client_Setup_x64_v{version}.exe"
+        arch = "ARM64" if machine == "arm64" else "x64"
+        return f"PT2VHF_APRS_Client_Setup_{arch}_v{version}.exe"
     if mode == "macos-dmg":
         arch = "arm64" if machine == "arm64" else "x86_64"
         return f"PT2VHF_APRS_Client_macOS_{arch}_v{version}.dmg"
@@ -92,7 +94,7 @@ def install_supported(mode: str | None = None) -> bool:
         return False
     machine = _machine()
     if mode.startswith("windows-"):
-        return sys.platform == "win32" and machine == "x86_64"
+        return sys.platform == "win32" and machine in {"x86_64", "arm64"}
     if mode == "macos-dmg":
         return sys.platform == "darwin" and machine in {"arm64", "x86_64"} and bool(shutil.which("hdiutil"))
     if mode in {"linux-appimage", "linux-tar"}:
