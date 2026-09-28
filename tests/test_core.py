@@ -1586,3 +1586,28 @@ def test_v177_legacy_build_patch_does_not_restore_global_history_button():
     assert "Não recriar o antigo botão" in patch
     assert "assert 'id=\"toggleReplayBarButton\"' not in html" in patch
 
+def test_v177_windows_arm64_build_and_updater_assets(monkeypatch):
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "build-windows.yml").read_text(encoding="utf-8")
+    installer = (root / "windows" / "installer_arm64.iss").read_text(encoding="utf-8")
+    portable_spec = (root / "windows" / "PT2VHF_APRS_Client_Portable_ARM64.spec").read_text(encoding="utf-8")
+    updater_source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")
+
+    assert "windows-arm64:" in workflow
+    assert "runs-on: windows-11-arm" in workflow
+    assert "architecture: 'arm64'" in workflow
+    assert "PT2VHF_APRS_Client_Setup_ARM64_v" in workflow
+    assert "PT2VHF_APRS_Client_Portable_ARM64_v" in workflow
+
+    assert "ArchitecturesAllowed=arm64" in installer
+    assert "ArchitecturesInstallIn64BitMode=arm64" in installer
+    assert "PT2VHF_APRS_Client_Setup_ARM64_v" in installer
+    assert "PT2VHF_APRS_Client_Portable_ARM64" in portable_spec
+    assert 'machine in {"x86_64", "arm64"}' in updater_source
+
+    monkeypatch.setattr(updater, "_machine", lambda: "arm64")
+    monkeypatch.setattr(updater, "current_update_mode", lambda: "windows-portable")
+    assert updater.desired_asset_name("1.7.7") == "PT2VHF_APRS_Client_Portable_ARM64_v1.7.7.exe"
+    monkeypatch.setattr(updater, "current_update_mode", lambda: "windows-installer")
+    assert updater.desired_asset_name("1.7.7") == "PT2VHF_APRS_Client_Setup_ARM64_v1.7.7.exe"
+
