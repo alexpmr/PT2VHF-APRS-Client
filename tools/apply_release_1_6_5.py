@@ -88,7 +88,7 @@ maintenance = '''      <div class="config-card full-card config-section config-s
         <div class="maintenance-actions">
           <button id="clearTracklogsButton" type="button" class="btn danger">Limpar tracklogs</button>
           <button id="clearStationsButton" type="button" class="btn danger">Limpar estações</button>
-          <button id="clearMessagesButton" type="button" class="btn danger">Limpar mensagens</button>
+          <button id="clearMessagesMaintenanceButton" type="button" class="btn danger">Limpar mensagens</button>
           <button id="clearLogButton" type="button" class="btn danger">Limpar Log APRS-IS</button>
         </div>
       </div>
