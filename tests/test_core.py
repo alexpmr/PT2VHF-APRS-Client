@@ -1711,3 +1711,25 @@ def test_v1712_clickable_markers_use_dedicated_pane():
     assert ".leaflet-pane.pt2vhf-marker-pane { pointer-events: auto !important; }" in css
     assert ".aprs-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }" in css
     assert ".aprs-object-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }" in css
+
+def test_v1713_object_symbols_activity_and_version_status():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+
+    assert "const objectHasSymbol = !!String(object.symbol || '').trim();" in js
+    assert "aprsSymbolHtml(object.symbol_table || '/', object.symbol, 24)" in js
+    assert "aprs-object-fallback" in js
+    assert '<div class="aprs-object-marker">◆</div>' not in js
+
+    assert ".setContent('APRS-IS')" not in js
+    assert "L.tooltip({ permanent: false, direction: 'top', opacity: .9 })" not in js
+    assert "options.duration || 1000" in js
+
+    assert "Versão atualizada" in js
+    assert "Versão ${data.latest_version} disponível" in js
+    assert "30 * 60 * 1000" in js
+
+    assert "animation: stationTxPulse 1s ease-out;" in css
+    assert "animation: stationTxRing 1s ease-out forwards;" in css
+    assert ".aprs-object-marker-wrap.station-transmitting .aprs-object-marker" in css
