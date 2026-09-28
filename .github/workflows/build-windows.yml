@@ -367,9 +367,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.7.8 portable
+      - name: Validate v1.7.9 portable
         shell: pwsh
-        run: python tools\apply_release_1_7_8.py
+        run: python tools\apply_release_1_7_9.py
 
       - name: Install Python dependencies
         shell: pwsh
