@@ -1003,20 +1003,88 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
     packet_lon = packet.get("longitude")
     position_valid = True
     relocation_confirmed = False
-    if not is_object and packet_lat is not None and packet_lon is not None:
-        try:
-            position_valid, position_meta = _position_is_plausible(
+
+    # Object/item coordinates describe the advertised object, not necessarily the
+    # transmitting station. They must never overwrite the sender's own position.
+    if not is_object and (packet_lat is not None or packet_lon is not None):
+        if not _valid_geo_position(packet_lat, packet_lon):
+            position_valid = False
+            issue_type = "zero_position" if (
+                packet_lat is not None
+                and packet_lon is not None
+                and abs(float(packet_lat)) <= POSITION_ZERO_EPSILON
+                and abs(float(packet_lon)) <= POSITION_ZERO_EPSILON
+            ) else "invalid_position"
+            _record_station_anomaly_conn(
+                conn,
                 callsign,
-                current,
-                last_valid_track,
-                float(packet_lat),
-                float(packet_lon),
-                datetime.now(timezone.utc),
+                issue_type,
+                packet_lat,
+                packet_lon,
+                {"format": fmt, "path": packet.get("path") or []},
             )
-            relocation_confirmed = bool(position_meta.get("relocation"))
-        except Exception as exc:
-            diag.log_event("track_position_filter_error", callsign=callsign, error=str(exc))
-            position_valid = True
+            diag.log_event(
+                "station_position_rejected",
+                callsign=callsign,
+                reason=issue_type,
+                latitude=packet_lat,
+                longitude=packet_lon,
+            )
+        else:
+            lat = float(packet_lat)
+            lon = float(packet_lon)
+            relay_issue, relay_meta = _rf_relay_position_issue_conn(
+                conn,
+                packet.get("path") or [],
+                lat,
+                lon,
+            )
+            if relay_issue:
+                position_valid = False
+                _record_station_anomaly_conn(
+                    conn,
+                    callsign,
+                    relay_issue,
+                    lat,
+                    lon,
+                    {"format": fmt, **relay_meta},
+                )
+                diag.log_event(
+                    "station_position_rejected",
+                    callsign=callsign,
+                    reason=relay_issue,
+                    latitude=lat,
+                    longitude=lon,
+                    **relay_meta,
+                )
+            else:
+                try:
+                    position_valid, position_meta = _position_is_plausible(
+                        callsign,
+                        current,
+                        last_valid_track,
+                        lat,
+                        lon,
+                        datetime.now(timezone.utc),
+                    )
+                    relocation_confirmed = bool(position_meta.get("relocation"))
+                    if not position_valid:
+                        _record_station_anomaly_conn(
+                            conn,
+                            callsign,
+                            "implied_speed",
+                            lat,
+                            lon,
+                            {
+                                "format": fmt,
+                                "distance_km": round(float(position_meta.get("distance_km") or 0.0), 2),
+                                "implied_speed_kmh": round(float(position_meta.get("speed_kmh") or 0.0), 1),
+                                "confirmations": int(position_meta.get("confirmations") or 0),
+                            },
+                        )
+                except Exception as exc:
+                    diag.log_event("track_position_filter_error", callsign=callsign, error=str(exc))
+                    position_valid = True
 
     def choose(key: str, fallback=None):
         value = None if is_object and key in {
@@ -1066,11 +1134,18 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
     )
 
     lat, lon = packet.get("latitude"), packet.get("longitude")
-    if not is_object and position_valid and lat is not None and lon is not None:
+    if (
+        not is_object
+        and position_valid
+        and _valid_geo_position(lat, lon)
+    ):
         should_add = True
-        if previous and previous["latitude"] is not None and previous["longitude"] is not None:
+        if (
+            previous
+            and _valid_geo_position(previous["latitude"], previous["longitude"])
+        ):
             should_add = relocation_confirmed or haversine_km(
-                previous["latitude"], previous["longitude"], float(lat), float(lon)
+                float(previous["latitude"]), float(previous["longitude"]), float(lat), float(lon)
             ) >= 0.01
         if should_add or previous is None:
             conn.execute(
