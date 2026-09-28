@@ -128,6 +128,14 @@
   - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
   - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
 
+- **Estatísticas — navegação dos rankings para o mapa**
+  - Nos blocos **Digipeaters mais utilizados** e **iGates mais ativos**, transformar os indicativos em **links clicáveis**.
+  - Ao clicar em um indicativo, abrir automaticamente a aba **Mapa**, localizar a estação correspondente e centralizar nela.
+  - Aplicar um nível de zoom adequado para facilitar a visualização da estação e de seus enlaces/topologia.
+  - Se a estação possuir posição conhecida, destacar seu marcador ao chegar ao mapa.
+  - Se não houver posição disponível, informar isso claramente ao usuário sem gerar coordenadas artificiais.
+  - Preservar o período/filtro de Estatísticas que originou a seleção sempre que isso for relevante para a visualização do mapa.
+
 - **Estatísticas — sugestões de melhoria da cobertura/rede**
   - Adicionar uma área de **Possíveis melhorias** baseada nos dados realmente observados pelo cliente.
   - Identificar **áreas de sombra ou baixa cobertura** quando houver posições suficientes, destacando regiões com poucas recepções, poucos enlaces ou interrupções recorrentes de trajetos.
