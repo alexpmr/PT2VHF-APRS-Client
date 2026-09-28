@@ -128,12 +128,15 @@
   - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
   - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
 
-- **Exportação — CSV, GeoJSON e KML**
-  - Adicionar botão **Exportar** nas áreas de Estatísticas e Mapa.
-  - Exportar estatísticas tabulares em **CSV** respeitando período e filtros ativos.
-  - Exportar estações, posições, tracklogs e enlaces em **GeoJSON** e/ou **KML**.
-  - Preservar timestamp, indicativo, origem do dado e atributos úteis para análise externa.
-  - Gerar arquivos compatíveis com Excel, QGIS e Google Earth sempre que aplicável.
+- **Exportação — KML pela barra superior + CSV/GeoJSON**
+  - Adicionar na **barra superior** uma opção **Exportar KML**.
+  - Ao clicar, abrir um seletor para escolher quais camadas/dados serão incluídos no arquivo.
+  - Incluir pelo menos: **Topologia/enlaces, Estações, Posições, Tracklogs** e demais elementos geográficos relevantes disponíveis no período atual.
+  - Todas as opções devem vir **ligadas por padrão**, permitindo ao usuário desmarcar somente o que não deseja exportar.
+  - Respeitar o período/filtros ativos quando aplicável e deixar isso claro na janela de exportação.
+  - Organizar o KML em pastas/camadas separadas por tipo de dado para facilitar uso no Google Earth.
+  - Preservar timestamp, indicativo, origem do dado e atributos úteis nos elementos exportados.
+  - Manter no escopo também exportação tabular em **CSV** e geográfica em **GeoJSON**, compatíveis com Excel, QGIS e outras ferramentas.
 
 - **Estatísticas — comparação entre períodos**
   - Permitir comparar o período atual com o período imediatamente anterior de mesma duração.
