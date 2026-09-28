@@ -85,18 +85,14 @@
 
 ## Pendências para próximas versões
 
-- **Builds — versões ARM64**
-  - Adicionar geração oficial de artefatos **ARM64** nas plataformas em que houver suporte.
-  - **Windows ARM64 — obrigatório:** gerar build nativo para Windows on ARM, incluindo **Setup ARM64** e **Portable ARM64** sempre que o empacotamento permitir.
-  - Nomear claramente os arquivos, por exemplo `PT2VHF_APRS_Client_Setup_ARM64_vX.Y.exe` e `PT2VHF_APRS_Client_Portable_ARM64_vX.Y.exe`, sem confundir com os builds x64.
-  - **Linux ARM64:** gerar pacote compatível para ARM64, priorizando **TAR.GZ** e, quando suportado pelo pipeline, também **AppImage** e **DEB arm64**.
-  - **macOS ARM64:** manter o build nativo Apple Silicon já existente e garantir paridade funcional com Intel x86_64.
-  - Atualizar o workflow do GitHub Actions para compilar/testar cada arquitetura separadamente e publicar todos os artefatos na mesma Release.
-  - Atualizar o mecanismo de atualização automática para detectar a arquitetura em execução e selecionar exclusivamente o pacote correto (**x64** ou **ARM64**).
+- **Builds — Linux ARM64**
+  - **Windows ARM64 foi incorporado na v1.7.7** com Setup e Portable nativos; manter apenas acompanhamento de compatibilidade/estabilidade.
+  - Adicionar geração oficial de artefatos **Linux ARM64**, priorizando **TAR.GZ** e, quando suportado pelo pipeline, também **AppImage** e **DEB arm64**.
+  - Manter o build nativo **macOS ARM64** já existente e garantir paridade funcional com Intel x86_64.
+  - Atualizar o mecanismo de atualização automática para Linux ARM64 quando os artefatos correspondentes estiverem disponíveis.
   - Não permitir atualização cruzada entre arquiteturas.
-  - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento em ARM64 antes de considerar o build estável.
+  - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento antes de considerar Linux ARM64 estável.
   - Documentar claramente no README/Release qual pacote deve ser usado em cada arquitetura.
-
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
@@ -113,14 +109,6 @@
   - Incluir atalhos para **Mostrar log**, **Enviar mensagem**, **Ping/ACK**, **Trace**, **Posição**, **Status** e histórico de queries.
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
-
-- **Mapa / Topologia — não classificar links de Internet como RF**
-  - Corrigir a classificação dos enlaces da topologia para que tráfego encaminhado por **APRS-IS/Internet** não seja desenhado como enlace **RF**.
-  - Considerar corretamente os marcadores de caminho APRS-IS, incluindo **TCPIP**, **TCPXX** e construções **qA*** como `qAR`, `qAO`, `qAC`, `qAS`, etc.
-  - Quando o trecho representar entrega/encaminhamento via Internet/iGate, usar o estilo/categoria **Via iGate/APRS-IS**, e não **Enlace RF**.
-  - Reservar **RF** somente para hops efetivamente observados no caminho de rádio antes da entrada no APRS-IS.
-  - Evitar linhas continentais ou intercontinentais falsas provocadas por associar o transmissor ao iGate/servidor remoto como se fosse um hop RF.
-  - Adicionar teste de regressão com caminhos mistos RF + qA*/APRS-IS para garantir a separação correta dos tipos de enlace.
 
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
@@ -246,7 +234,10 @@
 - **Tracklog:** mantido azul (`#3ba6ff`) por padrão.
 - **Animação e som:** mantidos ativados por padrão para novas configurações.
 - **Atualizações:** checagem periódica da versão mais recente alterada para **30 minutos**, sem sobreposição de verificações.
-- **Testes:** regressões adicionadas para Histórico contextual, botão Limpar, padrões do Mapa e cadência de atualização.
+- **Windows ARM64:** adicionados **Setup ARM64** e **Portable ARM64** nativos, workflow dedicado e seleção de asset pelo updater conforme a arquitetura.
+- **Topologia RF × APRS-IS:** preservada a capitalização dos q-constructs; `qAR` direto continua RF quando aplicável, enquanto `qAr`/rotas remotas via APRS-IS são classificadas como Internet/iGate.
+- **Migração de topologia:** enlaces antigos ambíguos com metadata de iGate deixam de permanecer classificados como RF, eliminando linhas de Internet tratadas como rádio.
+- **Testes:** regressões adicionadas para Histórico contextual, botão Limpar, padrões do Mapa, cadência de atualização, Windows ARM64 e separação RF × APRS-IS.
 
 ## Concluído na v1.7.6
 
