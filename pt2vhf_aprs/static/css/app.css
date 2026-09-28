@@ -37,12 +37,6 @@ h1 { margin: 0; font-size: 20px; }
 .app-version { color: var(--muted); font-size: 13px; font-weight: 700; margin-left: 6px; }
 .subtitle { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .connection-box { display: flex; align-items: center; gap: 12px; }
-.header-export-button {
-  min-height: 30px;
-  padding: 5px 10px;
-  white-space: nowrap;
-  font-size: 11px;
-}
 .status { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
 .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 3px rgba(240,92,99,.12); }
 .status.connected .dot { background: var(--ok); box-shadow: 0 0 0 3px rgba(56,199,118,.12); }
@@ -93,6 +87,13 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   border-color: var(--accent);
   background: rgba(59,166,255,.16);
   color: #d8efff;
+}
+.map-kml-export {
+  flex: 0 0 auto;
+  min-height: 29px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  font-size: 11px;
 }
 .map-context-controls {
   display: flex;
