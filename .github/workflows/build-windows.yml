@@ -229,6 +229,131 @@ jobs:
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt `
             --clobber
 
+
+  windows-arm64:
+    needs: windows-x64
+    if: ${{ !contains(github.event.head_commit.message, '[portable-only]') && !contains(github.event.head_commit.message, '[linux-only]') }}
+    runs-on: windows-11-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup native ARM64 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'arm64'
+          cache: 'pip'
+
+      - name: Apply release fixes
+        shell: pwsh
+        run: |
+          python tools\apply_release_1_6_4.py
+          python tools\apply_release_1_6_5.py
+          python tools\apply_release_1_6_6.py
+          python tools\apply_release_1_6_8.py
+          python tools\apply_release_1_6_9.py
+          python tools\apply_release_1_6_10.py
+          python tools\apply_release_1_6_11.py
+          python tools\apply_release_1_6_12.py
+          python tools\apply_release_1_6_13.py
+          python tools\apply_release_1_6_14.py
+          python tools\apply_release_1_6_15.py
+          python tools\apply_release_1_6_16.py
+          python tools\apply_release_1_6_17.py
+          python tools\apply_release_1_6_18.py
+          python tools\apply_release_1_6_19.py
+          python tools\apply_release_1_6_20.py
+          python tools\apply_release_1_6_21.py
+          python tools\apply_release_1_6_22.py
+          python tools\apply_release_1_6_23.py
+          python tools\apply_release_1_6_24.py
+          python tools\apply_release_1_7.py
+          python tools\apply_release_1_7_1.py
+          python tools\apply_release_1_7_2.py
+          python tools\apply_release_1_7_3.py
+          python tools\apply_release_1_7_4.py
+          python tools\apply_release_1_7_5.py
+          python tools\apply_release_1_7_6.py
+          python tools\apply_release_1_7_7.py
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-windows.txt
+
+      - name: Verify native ARM64 environment
+        shell: pwsh
+        run: |
+          python -c "import platform,sys; print(platform.machine(), sys.version); assert platform.machine().lower() in {'arm64','aarch64'}"
+
+      - name: Validate Python and JavaScript syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py tools
+          node --check pt2vhf_aprs\static\js\app.js
+
+      - name: Run tests
+        shell: pwsh
+        run: python -m pytest -q
+
+      - name: Generate Windows icon
+        shell: pwsh
+        run: python windows\make_icon.py
+
+      - name: Build native ARM64 application
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client.spec
+          pyinstaller --noconfirm windows\PT2VHF_APRS_Client_Portable_ARM64.spec
+
+      - name: Generate ARM64 SBOM and license inventory
+        shell: pwsh
+        run: |
+          cyclonedx-py environment --spec-version 1.6 --output-format JSON --output-file dist\PT2VHF_APRS_Client\SBOM-Windows-arm64.cdx.json
+          pip-licenses --format=plain-vertical --with-license-file --no-license-path --output-file=dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES_Windows_arm64.txt
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build ARM64 installer and portable EXE
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          New-Item -ItemType Directory -Force dist-installer-arm64 | Out-Null
+          $installerScript = Get-Content windows\installer_arm64.iss -Raw
+          $installerScript = $installerScript -replace '#define MyAppVersion "[^"]+"', "#define MyAppVersion `"$version`""
+          Set-Content windows\installer_arm64.iss -Value $installerScript -Encoding UTF8
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer_arm64.iss
+          Copy-Item dist\PT2VHF_APRS_Client_Portable_ARM64.exe "dist-installer-arm64\PT2VHF_APRS_Client_Portable_ARM64_v$version.exe" -Force
+
+      - name: Upload Windows ARM64 build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Windows-ARM64
+          path: |
+            dist-installer-arm64\PT2VHF_APRS_Client_Setup_ARM64_v*.exe
+            dist-installer-arm64\PT2VHF_APRS_Client_Portable_ARM64_v*.exe
+            dist\PT2VHF_APRS_Client\SBOM-Windows-arm64.cdx.json
+            dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES_Windows_arm64.txt
+
+      - name: Publish Windows ARM64 release assets
+        if: ${{ startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $tag = if ($env:GITHUB_REF -like "refs/tags/*") { $env:GITHUB_REF_NAME } else { "v$version" }
+          gh release upload $tag `
+            "dist-installer-arm64\PT2VHF_APRS_Client_Setup_ARM64_v$version.exe" `
+            "dist-installer-arm64\PT2VHF_APRS_Client_Portable_ARM64_v$version.exe" `
+            dist\PT2VHF_APRS_Client\SBOM-Windows-arm64.cdx.json `
+            dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES_Windows_arm64.txt `
+            --clobber
+
   windows-portable-only:
     if: ${{ contains(github.event.head_commit.message, '[portable-only]') }}
     runs-on: windows-latest
