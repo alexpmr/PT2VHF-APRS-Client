@@ -1551,3 +1551,36 @@ def test_v176_windows_updater_launch_prefers_comspec_cmd():
     assert "timeout: float = 12.0" in source
     assert "CREATE_NO_WINDOW" in source
 
+def test_v177_message_cleanup_map_defaults_and_update_cadence():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert '<button id="clearMessagesButton" type="button" class="btn danger">Limpar</button>' in html
+    assert '>Apagar todas</button>' not in html
+
+    map_start = html.index('id="mapContextBar"')
+    map_end = html.index("<main>", map_start)
+    map_bar = html[map_start:map_end]
+    assert map_bar.count('id="mapHistoryToggle"') == 1
+    assert 'id="toggleReplayBarButton"' not in html
+
+    assert db.DEFAULT_CONFIG["track_color"].lower() == "#3ba6ff"
+    assert db.DEFAULT_CONFIG["topology_rf_color"].lower() == "#ffff00"
+    assert db.DEFAULT_CONFIG["topology_igate_color"].lower() == "#ffff00"
+    assert db.DEFAULT_CONFIG["topology_width"] == 1
+    assert db.DEFAULT_CONFIG["traffic_animation_enabled"] == 1
+    assert db.DEFAULT_CONFIG["sound_on_station_activity"] == 1
+
+    assert 'name="topology_width" id="topologyWidth" type="range" min="1" max="10" step="1" value="1"' in html
+    assert html.count('value="#ffff00"') >= 2
+    assert "30 * 60 * 1000" in js
+    assert "5 * 60 * 1000" not in js
+
+
+def test_v177_legacy_build_patch_does_not_restore_global_history_button():
+    root = Path(__file__).resolve().parent.parent
+    patch = (root / "tools" / "apply_release_1_6_5.py").read_text(encoding="utf-8")
+    assert "Não recriar o antigo botão" in patch
+    assert "assert 'id=\"toggleReplayBarButton\"' not in html" in patch
+
