@@ -11,7 +11,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "O seletor da barra do Mapa e o seletor do Replay permanecem sincronizados e controlam a mesma velocidade de animação.",
             "A velocidade escolhida fica persistida localmente para a próxima abertura.",
             "Na barra superior, o texto Build passa a ser exibido como Versão em português.",
-            "Build de validação somente para Windows x64 Portable.",
+            "Build de validação somente para Windows x64 Portable, destinado à validação dos ajustes recentes.",
         ],
     },
     "1.7.8": {
