@@ -117,6 +117,16 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mapa / dados — ignorar coordenadas falsas, inválidas ou implausíveis**
+  - Detectar e desconsiderar posições APRS claramente **fake**, inválidas, de placeholder ou geograficamente implausíveis antes de desenhá-las no mapa.
+  - Não usar essas coordenadas para marcador da estação, tracklog, topologia, distância, estatísticas de cobertura, exportações KML/GeoJSON ou cálculos derivados.
+  - Tratar com atenção especial coordenadas genéricas/placeholder e valores incompatíveis com o histórico recente da própria estação.
+  - Detectar saltos impossíveis entre posições sucessivas usando distância, intervalo de tempo e velocidade implícita, evitando criar linhas atravessando continentes/oceanos por um único pacote incorreto.
+  - Quando uma posição for rejeitada, manter a última posição válida conhecida da estação, se houver, sem substituir seu histórico por dados falsos.
+  - Registrar o descarte no diagnóstico/log com motivo, indicativo e coordenada rejeitada para permitir auditoria.
+  - Diferenciar posição **inválida/rejeitada** de estação simplesmente **sem posição conhecida**.
+  - Evitar falsos positivos em estações legitimamente móveis, balões, aeronaves ou outros objetos APRS de alta velocidade; aplicar limites coerentes com o tipo/símbolo quando possível.
+
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
