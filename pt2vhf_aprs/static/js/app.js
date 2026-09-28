@@ -1055,10 +1055,12 @@
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
 
     const visualPane = state.map.createPane('pt2vhfVisualPane');
+    visualPane.classList.add('pt2vhf-visual-pane');
     visualPane.style.zIndex = '450';
     visualPane.style.pointerEvents = 'none';
 
     const markerPane = state.map.createPane('pt2vhfMarkerPane');
+    markerPane.classList.add('pt2vhf-marker-pane');
     markerPane.style.zIndex = '650';
     markerPane.style.pointerEvents = 'auto';
 
