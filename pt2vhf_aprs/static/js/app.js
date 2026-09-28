@@ -8,10 +8,13 @@
     mapLoadBusy: false,
     mapLoadLastAt: 0,
     mapLoadQueued: false,
-    stationsEnabled: localStorage.getItem('pt2vhf_stations_enabled') !== '0',
-    stationsHours: Number(localStorage.getItem('pt2vhf_stations_hours') || 0),
-    tracklogEnabled: localStorage.getItem('pt2vhf_tracklog_enabled') !== '0',
-    tracklogHours: Number(localStorage.getItem('pt2vhf_tracklog_hours') || 0),
+    mapPeriodHours: Number(localStorage.getItem('pt2vhf_map_period_hours') || 0),
+    stationsEnabled: localStorage.getItem('pt2vhf_map_item_stations') !== '0',
+    objectsEnabled: localStorage.getItem('pt2vhf_map_item_objects') !== '0',
+    tracklogEnabled: localStorage.getItem('pt2vhf_map_item_tracklogs') !== '0',
+    rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
+    igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
+    packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
     mapKnownCallsigns: new Set(),
     mapVisibleCallsigns: new Set(),
     systemMetricsBusy: false,
@@ -25,6 +28,7 @@
       map_brightness: 100
     },
     markers: new Map(),
+    objectMarkers: new Map(),
     trackLines: new Map(),
     topologyLines: new Map(),
     topologyEnabled: false,
@@ -330,7 +334,7 @@
   function openKmlExportModal() {
     const modal = $('#kmlExportModal');
     const period = $('#kmlExportPeriod');
-    if (period) period.value = String(topologyPeriodValue(state.topologyHours));
+    if (period) period.value = String(topologyPeriodValue(state.mapPeriodHours));
     if ($('#kmlExportStatus')) $('#kmlExportStatus').textContent = '';
     modal?.classList.remove('hidden');
   }
@@ -996,7 +1000,7 @@
 
   function applyMapPreferences(cfg = {}) {
     state.mapConfig = {
-      map_type: cfg.map_type || state.mapConfig.map_type || 'osm',
+      map_type: localStorage.getItem('pt2vhf_map_type_quick') || cfg.map_type || state.mapConfig.map_type || 'osm',
       track_color: cfg.track_color || state.mapConfig.track_color || '#3ba6ff',
       track_width: Number(cfg.track_width || state.mapConfig.track_width || 2),
       topology_rf_color: cfg.topology_rf_color || state.mapConfig.topology_rf_color || '#ffff00',
@@ -1022,6 +1026,9 @@
         });
       }
 
+      const quickType = $('#mapTypeQuick');
+      if (quickType) quickType.value = state.mapConfig.map_type;
+      state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
       if (state.topologyEnabled) loadTopology();
       updateMapLegend();
     }
@@ -1048,8 +1055,7 @@
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
-    addMapVisibilityControls();
-    addTopologyControl(state.map);
+    addMapControls();
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
@@ -1079,7 +1085,7 @@
 
   function topologyPeriodValue(value) {
     const parsed = Number(value);
-    return [0, 1, 6, 24, 168].includes(parsed) ? parsed : 0;
+    return [0, 1, 6, 12, 24, 168].includes(parsed) ? parsed : 0;
   }
 
   function topologyPeriodLabel(hours = state.topologyHours) {
@@ -1088,92 +1094,94 @@
     return `${Number(hours)} h`;
   }
 
-  function addMapVisibilityControls() {
-    state.stationsHours = topologyPeriodValue(state.stationsHours);
-    state.tracklogHours = topologyPeriodValue(state.tracklogHours);
+  function addMapControls() {
+    state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
+    state.topologyHours = state.mapPeriodHours;
+    state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
 
-    const stationsToggle = $('#stationsToggle');
-    const stationsHours = $('#stationsHours');
-    const trackToggle = $('#tracklogToggle');
-    const trackHours = $('#tracklogHours');
+    const period = $('#mapPeriodHours');
+    if (period) period.value = String(state.mapPeriodHours);
 
-    if (stationsToggle) stationsToggle.checked = !!state.stationsEnabled;
-    if (stationsHours) stationsHours.value = String(state.stationsHours);
-    if (trackToggle) trackToggle.checked = !!state.tracklogEnabled;
-    if (trackHours) trackHours.value = String(state.tracklogHours);
+    const itemBindings = [
+      ['#mapItemStations', 'stationsEnabled', 'pt2vhf_map_item_stations'],
+      ['#mapItemObjects', 'objectsEnabled', 'pt2vhf_map_item_objects'],
+      ['#mapItemTracklogs', 'tracklogEnabled', 'pt2vhf_map_item_tracklogs'],
+      ['#mapItemRfLinks', 'rfLinksEnabled', 'pt2vhf_map_item_rf'],
+      ['#mapItemIgateLinks', 'igateLinksEnabled', 'pt2vhf_map_item_igate'],
+      ['#mapItemPackets', 'packetsEnabled', 'pt2vhf_map_item_packets'],
+    ];
 
-    if (stationsToggle && stationsToggle.dataset.bound !== '1') {
-      stationsToggle.dataset.bound = '1';
-      stationsToggle.addEventListener('change', async () => {
-        state.stationsEnabled = stationsToggle.checked;
-        localStorage.setItem('pt2vhf_stations_enabled', state.stationsEnabled ? '1' : '0');
+    for (const [selector, key, storageKey] of itemBindings) {
+      const input = $(selector);
+      if (!input) continue;
+      input.checked = !!state[key];
+      if (input.dataset.bound === '1') continue;
+      input.dataset.bound = '1';
+      input.addEventListener('change', async () => {
+        state[key] = input.checked;
+        localStorage.setItem(storageKey, state[key] ? '1' : '0');
+        state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
+        if (!state.packetsEnabled) clearTrafficReplayLayers();
         await loadMapData();
-      });
-    }
-    if (stationsHours && stationsHours.dataset.bound !== '1') {
-      stationsHours.dataset.bound = '1';
-      stationsHours.addEventListener('change', async () => {
-        state.stationsHours = topologyPeriodValue(stationsHours.value);
-        localStorage.setItem('pt2vhf_stations_hours', String(state.stationsHours));
-        await loadMapData();
-      });
-    }
-    if (trackToggle && trackToggle.dataset.bound !== '1') {
-      trackToggle.dataset.bound = '1';
-      trackToggle.addEventListener('change', async () => {
-        state.tracklogEnabled = trackToggle.checked;
-        localStorage.setItem('pt2vhf_tracklog_enabled', state.tracklogEnabled ? '1' : '0');
-        if (!state.tracklogEnabled) {
-          for (const line of state.trackLines.values()) state.map?.removeLayer(line);
-          state.trackLines.clear();
-        } else {
-          await loadMapData();
-        }
+        if (state.topologyEnabled) await loadTopology();
+        else clearTopologyLines();
         updateMapLegend();
       });
     }
-    if (trackHours && trackHours.dataset.bound !== '1') {
-      trackHours.dataset.bound = '1';
-      trackHours.addEventListener('change', async () => {
-        state.tracklogHours = topologyPeriodValue(trackHours.value);
-        localStorage.setItem('pt2vhf_tracklog_hours', String(state.tracklogHours));
+
+    if (period && period.dataset.bound !== '1') {
+      period.dataset.bound = '1';
+      period.addEventListener('change', async () => {
+        state.mapPeriodHours = topologyPeriodValue(period.value);
+        state.topologyHours = state.mapPeriodHours;
+        state.replayWindowStart = null;
+        state.replayWindowEnd = null;
+        localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
+        if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.mapPeriodHours);
         await loadMapData();
+        if (state.topologyEnabled) await loadTopology();
+        stopTrafficTimer();
+        state.trafficPlaying = false;
+        state.trafficOverview = null;
+        if (state.trafficMode === 'history') {
+          try { await loadTrafficHistory(true); } catch (_) {}
+        }
+        updateTrafficAnimationUi();
       });
     }
-  }
 
-  function addTopologyControl(_map) {
-    const savedEnabled = localStorage.getItem('pt2vhf_topology_enabled');
-    const savedHoursRaw = localStorage.getItem('pt2vhf_topology_hours');
-    state.topologyEnabled = savedEnabled === '1';
-    state.topologyHours = savedHoursRaw === null ? 0 : topologyPeriodValue(savedHoursRaw);
+    const button = $('#mapItemsButton');
+    const menu = $('#mapItemsMenu');
+    if (button && menu && button.dataset.bound !== '1') {
+      button.dataset.bound = '1';
+      button.addEventListener('click', event => {
+        event.stopPropagation();
+        const open = menu.classList.toggle('hidden') === false;
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.addEventListener('click', event => event.stopPropagation());
+      document.addEventListener('click', () => {
+        menu.classList.add('hidden');
+        button.setAttribute('aria-expanded', 'false');
+      });
+    }
 
-    const toggle = $('#topologyToggle');
-    const select = $('#topologyHours');
-    if (!toggle || !select) return;
-
-    toggle.checked = state.topologyEnabled;
-    select.value = String(state.topologyHours);
-
-    if (toggle.dataset.bound === '1') return;
-    toggle.dataset.bound = '1';
-    select.dataset.bound = '1';
-
-    toggle.addEventListener('change', async () => {
-      state.topologyEnabled = toggle.checked;
-      localStorage.setItem('pt2vhf_topology_enabled', state.topologyEnabled ? '1' : '0');
-      if (state.topologyEnabled) await loadTopology();
-      else clearTopologyLines();
-      updateMapLegend();
-    });
-
-    select.addEventListener('change', async () => {
-      state.topologyHours = topologyPeriodValue(select.value);
-      localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
-      if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.topologyHours);
-      if (state.topologyEnabled) await loadTopology();
-      if (state.activeTab === 'analysis') await refreshTopologyAnalysis();
-    });
+    const mapType = $('#mapTypeQuick');
+    if (mapType) {
+      mapType.value = state.mapConfig.map_type;
+      if (mapType.dataset.bound !== '1') {
+        mapType.dataset.bound = '1';
+        mapType.addEventListener('change', () => {
+          const value = ['osm', 'topo', 'satellite'].includes(mapType.value) ? mapType.value : 'osm';
+          state.mapConfig.map_type = value;
+          localStorage.setItem('pt2vhf_map_type_quick', value);
+          const provider = MAP_PROVIDERS[value] || MAP_PROVIDERS.osm;
+          if (state.baseLayer) state.map.removeLayer(state.baseLayer);
+          state.baseLayer = L.tileLayer(provider.url, provider.options).addTo(state.map);
+          state.baseLayer.bringToBack();
+        });
+      }
+    }
   }
 
   function syncMapLegendCollapsed() {
@@ -1246,11 +1254,11 @@
       replay.style.borderTopStyle = 'dashed';
     }
     root.querySelector('[data-legend="track"]')?.classList.toggle('legend-muted', !state.tracklogEnabled);
-    root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
-    root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.topologyEnabled);
+    root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.rfLinksEnabled);
+    root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.igateLinksEnabled);
     const packetAnimating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
     root.querySelector('[data-legend="replay"]')?.classList.toggle('legend-muted', !state.timelineReplayActive);
-    root.querySelector('[data-legend="packet"]')?.classList.toggle('legend-muted', !packetAnimating);
+    root.querySelector('[data-legend="packet"]')?.classList.toggle('legend-muted', !state.packetsEnabled || !packetAnimating);
   }
 
   function clearTopologyLines() {
@@ -1263,10 +1271,12 @@
     if (state.topologyLoadBusy) return;
     state.topologyLoadBusy = true;
     try {
-      const edges = await api(`/api/topology?hours=${encodeURIComponent(state.topologyHours)}`);
+      const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
       const active = new Set();
 
       for (const edge of edges) {
+        if (edge.kind === 'igate' && !state.igateLinksEnabled) continue;
+        if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue;
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
         const points = [
@@ -1501,11 +1511,15 @@
   }
 
   function stationMatchesMapPeriod(station) {
-    return !!state.stationsEnabled && timestampWithinHours(station?.last_heard, state.stationsHours);
+    return !!state.stationsEnabled && timestampWithinHours(station?.last_heard, state.mapPeriodHours);
+  }
+
+  function objectMatchesMapPeriod(object) {
+    return !!state.objectsEnabled && timestampWithinHours(object?.last_heard, state.mapPeriodHours);
   }
 
   function trackMatchesMapPeriod(track) {
-    return !!state.tracklogEnabled && timestampWithinHours(track?.timestamp, state.tracklogHours);
+    return !!state.tracklogEnabled && timestampWithinHours(track?.timestamp, state.mapPeriodHours);
   }
 
   function mapDistanceKm(a, b) {
@@ -1585,6 +1599,39 @@
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
+      const visibleObjects = (Array.isArray(data.objects) ? data.objects : []).filter(objectMatchesMapPeriod);
+      const activeObjects = new Set(visibleObjects.map(object => String(object.name || '')));
+      for (const [name, marker] of state.objectMarkers) {
+        if (!activeObjects.has(name)) {
+          state.map.removeLayer(marker);
+          state.objectMarkers.delete(name);
+        }
+      }
+      for (const object of visibleObjects) {
+        const latlng = [Number(object.latitude), Number(object.longitude)];
+        if (![...latlng].every(Number.isFinite)) continue;
+        const name = String(object.name || '').trim();
+        if (!name) continue;
+        let marker = state.objectMarkers.get(name);
+        const icon = L.divIcon({
+          className: 'aprs-object-marker-wrap',
+          html: `<div class="aprs-object-marker">◆</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+        if (!marker) {
+          marker = L.marker(latlng, { icon, title: name }).addTo(state.map);
+          state.objectMarkers.set(name, marker);
+        } else {
+          marker.setLatLng(latlng).setIcon(icon);
+        }
+        marker.bindPopup(`<div class="station-popup"><h3>${escapeHtml(name)}</h3>
+          <div class="popup-grid"><strong>Tipo</strong><span>Objeto APRS</span>
+          <strong>Origem</strong><span>${escapeHtml(object.source_callsign || '')}</span>
+          <strong>Última recepção</strong><span>${escapeHtml(fmtDate(object.last_heard))}</span>
+          <strong>Informação</strong><span>${escapeHtml(object.info || '')}</span></div></div>`);
+      }
+
       const grouped = new Map();
       if (state.tracklogEnabled) {
         for (const track of (Array.isArray(data.tracks) ? data.tracks : [])) {
@@ -1613,7 +1660,8 @@
           line = L.polyline(segments, {
             color: state.mapConfig.track_color,
             weight: state.mapConfig.track_width,
-            opacity: .78
+            opacity: .78,
+            interactive: false
           }).addTo(state.map);
           state.trackLines.set(call, line);
         } else {
@@ -1726,22 +1774,70 @@
   }
 
   function animateTrafficSegment(segment, event, durationMs) {
-    if (!state.map) return Promise.resolve();
+    if (!state.map || !state.packetsEnabled) return Promise.resolve();
+
     const from = [Number(segment.source_lat), Number(segment.source_lon)];
-    const to = [Number(segment.target_lat), Number(segment.target_lon)];
-    if (![...from, ...to].every(Number.isFinite)) return Promise.resolve();
-    if (!trafficSegmentVisible(segment)) return Promise.resolve();
+    if (!from.every(Number.isFinite)) return Promise.resolve();
 
     const isInternet = segment.kind === 'igate';
     const segmentColor = isInternet ? state.mapConfig.topology_igate_color : '#ffd54a';
-    const trail = L.polyline([from, to], {
-      color: segmentColor,
-      weight: Math.max(2, Number(state.mapConfig.topology_width || 1) + 1),
-      opacity: .72,
-      dashArray: isInternet ? '8 6' : null,
-      pane: 'overlayPane'
-    }).addTo(state.map);
-    state.trafficReplayLayers.add(trail);
+
+    if (segment.internet_handoff) {
+      if (!state.igateLinksEnabled && !state.packetsEnabled) return Promise.resolve();
+      const halo = L.circleMarker(from, {
+        radius: 7,
+        color: segmentColor,
+        weight: 2,
+        dashArray: '5 4',
+        fillOpacity: .08,
+        opacity: .95,
+        interactive: false,
+        pane: 'markerPane'
+      }).addTo(state.map);
+      state.trafficReplayLayers.add(halo);
+      const label = L.tooltip({ permanent: false, direction: 'top', opacity: .9 })
+        .setLatLng(from)
+        .setContent('APRS-IS')
+        .addTo(state.map);
+      state.trafficReplayLayers.add(label);
+      const start = performance.now();
+      return new Promise(resolve => {
+        const tick = now => {
+          const t = Math.min(1, (now - start) / Math.max(120, durationMs));
+          halo.setRadius(7 + 22 * t);
+          halo.setStyle({ opacity: 1 - .7 * t, fillOpacity: .12 * (1 - t) });
+          if (t < 1) requestAnimationFrame(tick);
+          else {
+            setTimeout(() => {
+              try { state.map?.removeLayer(halo); } catch (_) {}
+              try { state.map?.removeLayer(label); } catch (_) {}
+              state.trafficReplayLayers.delete(halo);
+              state.trafficReplayLayers.delete(label);
+            }, 350);
+            resolve();
+          }
+        };
+        requestAnimationFrame(tick);
+      });
+    }
+
+    const to = [Number(segment.target_lat), Number(segment.target_lon)];
+    if (!to.every(Number.isFinite)) return Promise.resolve();
+    if (!trafficSegmentVisible(segment)) return Promise.resolve();
+
+    let trail = null;
+    const showLink = isInternet ? state.igateLinksEnabled : state.rfLinksEnabled;
+    if (showLink) {
+      trail = L.polyline([from, to], {
+        color: segmentColor,
+        weight: Math.max(2, Number(state.mapConfig.topology_width || 1) + 1),
+        opacity: .72,
+        dashArray: isInternet ? '8 6' : null,
+        interactive: false,
+        pane: 'overlayPane'
+      }).addTo(state.map);
+      state.trafficReplayLayers.add(trail);
+    }
 
     const particle = L.circleMarker(from, {
       radius: 6,
@@ -1750,9 +1846,9 @@
       fillColor: segmentColor,
       fillOpacity: .95,
       opacity: .95,
+      interactive: false,
       pane: 'markerPane'
     }).addTo(state.map);
-    particle.bindPopup(trafficEventDetails(event), { maxWidth: 440 });
     state.trafficReplayLayers.add(particle);
     updateMapLegend();
 
@@ -1771,9 +1867,11 @@
           stationActivity(segment.target);
           setTimeout(() => {
             try { state.map?.removeLayer(particle); } catch (_) {}
-            try { state.map?.removeLayer(trail); } catch (_) {}
+            if (trail) {
+              try { state.map?.removeLayer(trail); } catch (_) {}
+              state.trafficReplayLayers.delete(trail);
+            }
             state.trafficReplayLayers.delete(particle);
-            state.trafficReplayLayers.delete(trail);
             updateMapLegend();
           }, 650);
           resolve();
@@ -1843,11 +1941,9 @@
   }
 
   async function loadTrafficOverview() {
-    const hours = topologyPeriodValue(state.topologyHours);
+    const hours = topologyPeriodValue(state.mapPeriodHours);
     const params = new URLSearchParams({ bins: '140' });
-    if (state.replayWindowStart) params.set('start', state.replayWindowStart);
-    if (state.replayWindowEnd) params.set('end', state.replayWindowEnd);
-    if (!state.replayWindowStart && !state.replayWindowEnd) params.set('hours', String(hours));
+    params.set('hours', String(hours));
     const data = await api(`/api/traffic/overview?${params.toString()}`);
     state.trafficOverview = data;
     const startInput = $('#trafficRangeStart');
@@ -1870,7 +1966,7 @@
   }
 
   async function animateTrafficEvent(event) {
-    if (!event) return;
+    if (!event || !state.packetsEnabled) return;
     stationActivity(event.source);
     const speed = Math.max(.25, Number(state.trafficSpeed || 1));
     const duration = Math.max(90, 900 / speed);
@@ -1922,7 +2018,7 @@
   async function loadTrafficHistory(resetIndex = true, startTimestamp = '') {
     if (resetIndex || !state.trafficOverview) await loadTrafficOverview();
     const first = startTimestamp || state.trafficOverview?.first_timestamp || '';
-    const hours = topologyPeriodValue(state.topologyHours);
+    const hours = topologyPeriodValue(state.mapPeriodHours);
     const params = new URLSearchParams({ limit: '5000' });
     if (first) params.set('start', first);
     else if (hours) params.set('hours', String(hours));
@@ -5286,10 +5382,10 @@
     const box = $('#topologyStatsContent');
     if (!box) return;
     const periodSelect = $('#analysisPeriod');
-    if (periodSelect) periodSelect.value = String(topologyPeriodValue(state.topologyHours));
+    if (periodSelect) periodSelect.value = String(topologyPeriodValue(state.mapPeriodHours));
     box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');
     try {
-      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(topologyPeriodValue(state.topologyHours))}`);
+      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(topologyPeriodValue(state.mapPeriodHours))}`);
       const list = (items, formatter) => items.length
         ? '<ol>' + items.map(formatter).join('') + '</ol>'
         : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
@@ -5367,8 +5463,7 @@
     state.replayWindowStart = null;
     state.replayWindowEnd = null;
     localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
-    const mapPeriod = $('#topologyHours');
-    if (mapPeriod) mapPeriod.value = String(state.topologyHours);
+    // O período das Estatísticas é independente do período único do Mapa.
     if (state.topologyEnabled) await loadTopology();
     stopTrafficTimer();
     state.trafficPlaying = false;
@@ -5420,6 +5515,7 @@
   });
 
   setTrafficSpeed(state.trafficSpeed);
+  if ($('#mapTypeQuick')) $('#mapTypeQuick').value = state.mapConfig.map_type;
 
   $('#trafficMode')?.addEventListener('change', async event => {
     state.trafficMode = event.target.value === 'live' ? 'live' : 'history';
