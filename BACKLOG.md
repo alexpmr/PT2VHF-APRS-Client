@@ -128,6 +128,15 @@
   - Preservar o comportamento atual de abrir/fechar o painel de histórico/replay a partir da barra do Mapa.
   - Validar responsividade e espaçamento após a remoção do botão superior.
 
+- **Mapa — padrões visuais e animação**
+  - Definir a **Topologia observada** com linhas **amarelas** por padrão.
+  - Usar para a Topologia a **menor espessura prática disponível** como valor padrão, mantendo possibilidade de personalização em Configurações.
+  - Definir o **Tracklog em azul** por padrão.
+  - Deixar **Animações de atividade** ativadas por padrão no Mapa.
+  - Deixar os **efeitos sonoros das animações** ativados por padrão.
+  - Preservar as opções do usuário quando ele alterar manualmente cor, espessura, animação ou som; os novos valores são apenas os padrões para instalações/configurações ainda não personalizadas.
+  - Garantir que a legenda do Mapa continue sincronizada com as cores efetivamente utilizadas.
+
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
