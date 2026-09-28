@@ -2014,6 +2014,8 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "digipeaters": digis,
         "igates": igates,
         "recently_disappeared": stale,
+        "problem_stations": station_problem_stats(0 if complete else hours),
+        "improvement_suggestions": network_improvement_suggestions(0 if complete else hours),
         "client_versions": client_version_stats(0 if complete else hours),
     }
 
