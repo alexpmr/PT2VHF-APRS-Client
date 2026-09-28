@@ -19,9 +19,9 @@
       map_type: 'osm',
       track_color: '#3ba6ff',
       track_width: 2,
-      topology_rf_color: '#35a7ff',
-      topology_igate_color: '#b06cff',
-      topology_width: 2,
+      topology_rf_color: '#ffff00',
+      topology_igate_color: '#ffff00',
+      topology_width: 1,
       map_brightness: 100
     },
     markers: new Map(),
@@ -999,9 +999,9 @@
       map_type: cfg.map_type || state.mapConfig.map_type || 'osm',
       track_color: cfg.track_color || state.mapConfig.track_color || '#3ba6ff',
       track_width: Number(cfg.track_width || state.mapConfig.track_width || 2),
-      topology_rf_color: cfg.topology_rf_color || state.mapConfig.topology_rf_color || '#35a7ff',
-      topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#b06cff',
-      topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 2),
+      topology_rf_color: cfg.topology_rf_color || state.mapConfig.topology_rf_color || '#ffff00',
+      topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#ffff00',
+      topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 1),
       map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100)
     };
 
@@ -3813,9 +3813,9 @@
     if (colorInput && colorText) colorText.value = colorInput.value || '#3ba6ff';
     if (widthInput && widthValue) widthValue.textContent = `${widthInput.value || 2} px`;
     if (brightnessInput && brightnessValue) brightnessValue.textContent = `${brightnessInput.value || 100}%`;
-    if (topologyRfColor && topologyRfColorText) topologyRfColorText.value = topologyRfColor.value || '#35a7ff';
-    if (topologyIgateColor && topologyIgateColorText) topologyIgateColorText.value = topologyIgateColor.value || '#b06cff';
-    if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 2} px`;
+    if (topologyRfColor && topologyRfColorText) topologyRfColorText.value = topologyRfColor.value || '#ffff00';
+    if (topologyIgateColor && topologyIgateColorText) topologyIgateColorText.value = topologyIgateColor.value || '#ffff00';
+    if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 1} px`;
   }
 
   function previewTrackStyleFromForm() {
@@ -3858,9 +3858,9 @@
   function previewTopologyStyleFromForm() {
     const form = $('#configForm');
     if (!form) return;
-    state.mapConfig.topology_rf_color = form.elements.namedItem('topology_rf_color')?.value || '#35a7ff';
-    state.mapConfig.topology_igate_color = form.elements.namedItem('topology_igate_color')?.value || '#b06cff';
-    state.mapConfig.topology_width = Number(form.elements.namedItem('topology_width')?.value || 2);
+    state.mapConfig.topology_rf_color = form.elements.namedItem('topology_rf_color')?.value || '#ffff00';
+    state.mapConfig.topology_igate_color = form.elements.namedItem('topology_igate_color')?.value || '#ffff00';
+    state.mapConfig.topology_width = Number(form.elements.namedItem('topology_width')?.value || 1);
     syncMapPreferenceControls();
     if (state.topologyEnabled) loadTopology();
     else {
@@ -3899,9 +3899,9 @@
   $('#resetTopologyStyleButton')?.addEventListener('click', () => {
     const form = $('#configForm');
     if (!form) return;
-    form.elements.namedItem('topology_rf_color').value = '#35a7ff';
-    form.elements.namedItem('topology_igate_color').value = '#b06cff';
-    form.elements.namedItem('topology_width').value = '2';
+    form.elements.namedItem('topology_rf_color').value = '#ffff00';
+    form.elements.namedItem('topology_igate_color').value = '#ffff00';
+    form.elements.namedItem('topology_width').value = '1';
     previewTopologyStyleFromForm();
     markConfigDirty();
     toast(ui('Visual da topologia restaurado ao padrão. Clique em Salvar configuração para persistir.', 'Topology appearance restored to defaults. Click Save to persist.'), 'ok');
@@ -4036,6 +4036,7 @@
     'Minhas mensagens':'My messages',
     'Limpar mensagens':'Clear messages',
     'Apagar todas':'Delete all',
+    'Limpar':'Clear',
     'Exportar KML':'Export KML',
     'Exportar dados em KML':'Export data to KML',
     'Estações':'Stations',
@@ -4176,7 +4177,7 @@
     'Satélite — Esri World Imagery':'Satellite - Esri World Imagery',
     'Cor dos enlaces RF':'RF link color',
     'Cor dos enlaces IGate':'IGate link color',
-    'Padrão: RF #35a7ff, IGate #b06cff, 2 px.':'Default: RF #35a7ff, IGate #b06cff, 2 px.',
+    'Padrão: topologia amarela (#ffff00), 1 px.':'Default: yellow topology (#ffff00), 1 px.',
     'OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography. Satellite mode uses Esri World Imagery. Topology colors and width are applied immediately and persisted when saving.',
     'A alteração é aplicada imediatamente e fica salva após clicar em Salvar.':'The change is applied immediately and persisted after clicking Save.',
     'O idioma é aplicado imediatamente à interface.':'The language is applied immediately to the interface.',
@@ -5570,7 +5571,7 @@
     schedulePolling(checkIncomingPersonalMessages, 5000);
     schedulePolling(async () => {
       if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
-    }, 5 * 60 * 1000);
+    }, 30 * 60 * 1000);
     schedulePolling(async () => {
       if (state.activeTab === 'stations') await loadStations();
     }, 10000);
