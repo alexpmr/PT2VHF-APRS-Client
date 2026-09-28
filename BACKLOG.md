@@ -122,6 +122,11 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mapa — mover Histórico para a barra de controles do mapa**
+  - Mover o botão **Histórico** para a mesma barra contextual onde ficam **Estações, Tracklog, Topologia** e **Exportar KML**.
+  - Manter o comportamento atual de abrir/fechar os controles de histórico/replay.
+  - Ajustar espaçamento e responsividade para que todos os controles permaneçam alinhados sem sobreposição.
+
 - **Mapa — mover Exportar KML para a barra de controles do mapa**
   - Remover o botão **Exportar KML** da barra superior global da aplicação.
   - Posicionar o botão na mesma barra contextual do **Mapa** onde ficam os controles de **Estações, Tracklog e Topologia**.
