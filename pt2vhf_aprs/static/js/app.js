@@ -210,11 +210,11 @@
 
       if (data.status === 'update_available') {
         el.classList.add('update');
-        textEl.textContent = ui(`Nova versão ${latest}`, `New version ${latest}`);
+        textEl.textContent = ui(`Versão ${data.latest_version} disponível`, `Version ${data.latest_version} available`);
         el.title = ui(`Instalada ${current}. Clique para baixar e instalar ${latest}.`, `Installed ${current}. Click to download and install ${latest}.`);
       } else if (data.status === 'latest') {
         el.classList.add('latest');
-        textEl.textContent = ui('Última versão', 'Latest version');
+        textEl.textContent = ui('Versão atualizada', 'Version up to date');
         el.title = ui(`${current} é a versão mais recente publicada.`, `${current} is the latest published version.`);
       } else if (data.status === 'ahead') {
         el.classList.add('ahead');
@@ -1660,11 +1660,16 @@
         const name = String(object.name || '').trim();
         if (!name) continue;
         let marker = state.objectMarkers.get(name);
+        const objectHasSymbol = !!String(object.symbol || '').trim();
+        const objectSymbol = objectHasSymbol
+          ? aprsSymbolHtml(object.symbol_table || '/', object.symbol, 24)
+          : '<span class="aprs-object-fallback">?</span>';
         const icon = L.divIcon({
           className: 'aprs-object-marker-wrap',
-          html: `<div class="aprs-object-marker">◆</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
+          html: `<div class="aprs-object-marker">${objectSymbol}</div>`,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+          popupAnchor: [0, -18],
         });
         if (!marker) {
           marker = L.marker(latlng, {
@@ -1679,7 +1684,7 @@
           marker.setLatLng(latlng).setIcon(icon);
         }
         marker.setZIndexOffset(1400);
-        marker.bindPopup(`<div class="station-popup"><h3>${escapeHtml(name)}</h3>
+        marker.bindPopup(`<div class="station-popup"><h3>${objectSymbol} ${escapeHtml(name)}</h3>
           <div class="popup-grid"><strong>Tipo</strong><span>Objeto APRS</span>
           <strong>Origem</strong><span>${escapeHtml(object.source_callsign || '')}</span>
           <strong>Última recepção</strong><span>${escapeHtml(fmtDate(object.last_heard))}</span>
@@ -1784,7 +1789,7 @@
     el.classList.remove('station-transmitting');
     void el.offsetWidth;
     el.classList.add('station-transmitting');
-    setTimeout(() => el.classList.remove('station-transmitting'), Number(options.duration || 1800));
+    setTimeout(() => el.classList.remove('station-transmitting'), Number(options.duration || 1000));
   }
 
   function stationActivity(callsign) {
@@ -1850,11 +1855,6 @@
         pane: 'pt2vhfVisualPane'
       }).addTo(state.map);
       state.trafficReplayLayers.add(halo);
-      const label = L.tooltip({ permanent: false, direction: 'top', opacity: .9 })
-        .setLatLng(from)
-        .setContent('APRS-IS')
-        .addTo(state.map);
-      state.trafficReplayLayers.add(label);
       const start = performance.now();
       return new Promise(resolve => {
         const tick = now => {
@@ -1865,9 +1865,7 @@
           else {
             setTimeout(() => {
               try { state.map?.removeLayer(halo); } catch (_) {}
-              try { state.map?.removeLayer(label); } catch (_) {}
               state.trafficReplayLayers.delete(halo);
-              state.trafficReplayLayers.delete(label);
             }, 350);
             resolve();
           }
