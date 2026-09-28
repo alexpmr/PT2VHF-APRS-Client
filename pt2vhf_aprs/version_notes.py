@@ -11,9 +11,11 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "A Topologia observada passa a usar amarelo (#ffff00) e espessura mínima de 1 px como padrão para novas configurações.",
             "O Tracklog permanece azul por padrão, e animações de atividade e som continuam ativados por padrão.",
             "A verificação periódica de nova versão passa de 5 para 30 minutos, sem sobrepor verificações ainda em andamento.",
+            "Windows ARM64 passa a ter Setup e Portable nativos, e o atualizador escolhe automaticamente o pacote da arquitetura correta.",
+            "A topologia passa a preservar a capitalização dos q-constructs APRS-IS, evitando interpretar qAr/links remotos de Internet como qAR/enlace RF.",
             "Preferências já personalizadas pelo usuário são preservadas; os novos valores visuais valem como padrão para instalações/configurações não personalizadas.",
             "Adicionados testes de regressão para evitar duplicação do Histórico, validar o botão Limpar, os padrões do Mapa e a nova cadência de atualização.",
-            "Release completa para Windows x64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+            "Release completa para Windows x64 e ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
         ],
     },
     "1.7.6": {
