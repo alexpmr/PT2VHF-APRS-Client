@@ -1634,3 +1634,29 @@ def test_v177_windows_arm64_build_and_updater_assets(monkeypatch):
     monkeypatch.setattr(updater, "current_update_mode", lambda: "windows-installer")
     assert updater.desired_asset_name("1.7.7") == "PT2VHF_APRS_Client_Setup_ARM64_v1.7.7.exe"
 
+
+
+def test_v179_map_speed_control_and_version_label():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    topology_start = html.index('id="topologyToggle"')
+    speed_pos = html.index('id="topologySpeed"', topology_start)
+    period_pos = html.index('id="topologyHours"', topology_start)
+    assert topology_start < speed_pos < period_pos
+
+    speed_block = html[speed_pos:period_pos]
+    assert '<option value="0.5">0,5x</option>' in speed_block
+    assert '<option value="1" selected>1x</option>' in speed_block
+    assert '<option value="2">2x</option>' in speed_block
+    assert '<option value="5">5x</option>' in speed_block
+    assert '0,25x' not in speed_block
+    assert '10x' not in speed_block
+    assert '20x' not in speed_block
+
+    assert "setTrafficSpeed(event.target.value, 'topology')" in js
+    assert "setTrafficSpeed(event.target.value, 'replay')" in js
+    assert "pt2vhf_traffic_speed" in js
+    assert "ui(`Versão ${current}`, `Build ${current}`)" in js
+    assert "textEl.textContent = `Build ${current}`" not in js
