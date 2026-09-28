@@ -84,54 +84,50 @@
 <div id="mapContextBar" class="map-context-bar">
   <div class="map-context-controls" aria-label="Controles do mapa">
     <button id="mapHistoryToggle" type="button" class="btn secondary map-history-toggle" aria-expanded="false">Histórico</button>
-    <div class="map-visibility-control">
-      <label for="stationsToggle">
-        <input id="stationsToggle" type="checkbox" checked>
-        <span>Estações</span>
-      </label>
-      <select id="stationsHours" title="Período das estações" aria-label="Período das estações">
-        <option value="0">Completo</option>
+
+    <label class="map-context-field" for="mapPeriodHours">
+      <span>Período</span>
+      <select id="mapPeriodHours" title="Período único de todos os itens do mapa" aria-label="Período do mapa">
+        <option value="0" selected>Completo</option>
         <option value="1">1 h</option>
         <option value="6">6 h</option>
+        <option value="12">12 h</option>
         <option value="24">24 h</option>
         <option value="168">7 dias</option>
       </select>
+    </label>
+
+    <div class="map-items-control">
+      <button id="mapItemsButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Itens do mapa ▾</button>
+      <div id="mapItemsMenu" class="map-items-menu hidden" role="menu">
+        <label><input id="mapItemStations" type="checkbox" checked> <span>Estações</span></label>
+        <label><input id="mapItemObjects" type="checkbox" checked> <span>Objetos</span></label>
+        <label><input id="mapItemTracklogs" type="checkbox" checked> <span>Tracklogs</span></label>
+        <label><input id="mapItemRfLinks" type="checkbox" checked> <span>Enlaces RF</span></label>
+        <label><input id="mapItemIgateLinks" type="checkbox" checked> <span>Enlaces iGate/APRS-IS</span></label>
+        <label><input id="mapItemPackets" type="checkbox" checked> <span>Pacotes em movimento</span></label>
+      </div>
     </div>
-    <div class="map-visibility-control">
-      <label for="tracklogToggle">
-        <input id="tracklogToggle" type="checkbox" checked>
-        <span>Tracklog</span>
-      </label>
-      <select id="tracklogHours" title="Período do tracklog" aria-label="Período do tracklog">
-        <option value="0">Completo</option>
-        <option value="1">1 h</option>
-        <option value="6">6 h</option>
-        <option value="24">24 h</option>
-        <option value="168">7 dias</option>
+
+    <label class="map-context-field" for="topologySpeed">
+      <span>Velocidade</span>
+      <select id="topologySpeed" title="Velocidade da animação do mapa" aria-label="Velocidade da animação do mapa">
+        <option value="0.5">0,5x</option>
+        <option value="1" selected>1x</option>
+        <option value="2">2x</option>
+        <option value="5">5x</option>
       </select>
-    </div>
-    <div class="topology-control map-topology-control">
-      <label for="topologyToggle">
-        <input id="topologyToggle" type="checkbox">
-        <span>Topologia observada</span>
-      </label>
-      <label class="map-topology-speed-label" for="topologySpeed">
-        <span>Velocidade</span>
-        <select id="topologySpeed" title="Velocidade da animação da topologia" aria-label="Velocidade da animação da topologia">
-          <option value="0.5">0,5x</option>
-          <option value="1" selected>1x</option>
-          <option value="2">2x</option>
-          <option value="5">5x</option>
-        </select>
-      </label>
-      <select id="topologyHours" title="Período da topologia" aria-label="Período da topologia">
-        <option value="0">Completo</option>
-        <option value="1">1 h</option>
-        <option value="6">6 h</option>
-        <option value="24">24 h</option>
-        <option value="168">7 dias</option>
+    </label>
+
+    <label class="map-context-field" for="mapTypeQuick">
+      <span>Tipo de mapa</span>
+      <select id="mapTypeQuick" title="Tipo de mapa" aria-label="Tipo de mapa">
+        <option value="osm">OSM</option>
+        <option value="topo">Topográfico</option>
+        <option value="satellite">Satélite</option>
       </select>
-    </div>
+    </label>
+
     <button id="kmlExportButton" type="button" class="btn secondary map-kml-export" title="Exportar dados geográficos em KML">Exportar KML</button>
   </div>
 </div>
@@ -158,18 +154,6 @@
             <strong id="trafficTimelineCursor">—</strong>
             <span id="trafficTimelineEnd">—</span>
           </div>
-        </div>
-        <div class="traffic-replay-range">
-          <label class="field compact">
-            <span>De</span>
-            <input id="trafficRangeStart" type="datetime-local" step="1">
-          </label>
-          <label class="field compact">
-            <span>Até</span>
-            <input id="trafficRangeEnd" type="datetime-local" step="1">
-          </label>
-          <button id="trafficApplyRangeButton" type="button" class="btn secondary">Aplicar intervalo</button>
-          <button id="trafficClearRangeButton" type="button" class="btn secondary">Usar período das Estatísticas</button>
         </div>
         <div class="traffic-animation-controls">
           <label class="field compact">
