@@ -815,8 +815,10 @@ def test_update_check_cache_is_five_minutes():
     root = Path(__file__).resolve().parent.parent
     web_source = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
     js_source = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    # O cache HTTP interno continua curto para verificações manuais/forçadas,
+    # enquanto o polling automático da interface ocorre a cada 30 minutos.
     assert "UPDATE_CACHE_SECONDS = 5 * 60" in web_source
-    assert "5 * 60 * 1000" in js_source
+    assert "30 * 60 * 1000" in js_source
 
 
 def test_updater_asset_name_contains_version():
