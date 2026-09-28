@@ -29,6 +29,9 @@ checks = {
         '"topology_width": 1',
         '"sound_on_station_activity": 1',
         '"traffic_animation_enabled": 1',
+        'Preserve q-construct case',
+        'token in {"qAR", "qAO"}',
+        'kind = "rf" if direct_rf_gate else "igate"',
     ],
     "pt2vhf_aprs/updater.py": [
         'arch = "ARM64" if machine == "arm64" else "x64"',
@@ -57,8 +60,14 @@ checks = {
         "test_v177_message_cleanup_map_defaults_and_update_cadence",
         "test_v177_legacy_build_patch_does_not_restore_global_history_button",
         "test_v177_windows_arm64_build_and_updater_assets",
+        "test_v177_remote_igate_qconstruct_is_not_rf_link",
+        "test_v177_rf_igate_parser_preserves_qconstruct_case",
     ],
-    "README.md": ["# PT2VHF APRS Client - v1.7.7"],
+    "README.md": [
+        "# PT2VHF APRS Client - v1.7.7",
+        "PT2VHF_APRS_Client_Setup_ARM64_vX.Y.exe",
+        "qAr",
+    ],
     "CHANGELOG.md": ["## v1.7.7 - 2026-09-28"],
     "pt2vhf_aprs/version_notes.py": ['"1.7.7"'],
 }
