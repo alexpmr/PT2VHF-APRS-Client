@@ -24,8 +24,8 @@ checks = {
         "APRS_DEVICE_ID_PATH",
         '"top_limit": 20',
         '"own_client": own_client',
-        'edges.append((previous, candidate, "rf", candidate))',
-        "Migração v1.6.20",
+        "def _observed_topology_edges(",
+        "direct_rf_gate",
     ],
     "pt2vhf_aprs/aprs_service.py": [
         "APP_TOCALL",
@@ -51,7 +51,7 @@ checks = {
     ],
     "tests/test_core.py": [
         "test_aprs_device_friendly_names_and_own_client_identifier",
-        "test_qarray_igate_reception_is_rf_link",
+        "test_qarray_direct_igate_reception_is_rf_link",
     ],
 }
 for rel, needles in checks.items():
