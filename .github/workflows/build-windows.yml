@@ -475,9 +475,9 @@ jobs:
         shell: pwsh
         run: python tools\apply_release_1_7_6.py
 
-      - name: Validate v1.7.7 release
+      - name: Validate v1.7.8 portable
         shell: pwsh
-        run: python tools\apply_release_1_7_7.py
+        run: python tools\apply_release_1_7_8.py
 
       - name: Install Python dependencies
         shell: pwsh
