@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.10": {
+        "title": "Validação Windows x64: mapa unificado, APRS-IS animado e cliques restaurados",
+        "items": [
+            "A barra do Mapa passa a ter um único período para estações, objetos, tracklogs, enlaces e replay.",
+            "Itens do mapa reúne toggles para estações, objetos, tracklogs, enlaces RF, enlaces iGate/APRS-IS e pacotes em movimento, todos ligados por padrão.",
+            "O tipo de mapa pode ser trocado diretamente entre OSM, Topográfico e Satélite.",
+            "A entrega do pacote ao APRS-IS é animada no próprio iGate, sem inventar uma coordenada geográfica para a Internet.",
+            "Camadas de animação, tracklog e topologia deixam de capturar cliques, preservando a interação com estações e objetos.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.9": {
         "title": "Validação Windows x64: velocidade da animação no Mapa e rótulo Versão",
         "items": [
