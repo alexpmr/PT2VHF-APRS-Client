@@ -12,7 +12,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "ACK/REJ e respostas correlacionadas usam o path observado no pacote de retorno; quando os mesmos digipeaters são usados, a animação volta pelo mesmo caminho em sentido inverso.",
             "Não é criado enlace direto artificial entre origem e destino quando existem hops observados.",
             "Respostas automáticas a queries APRS ficam ativadas por padrão em novas configurações.",
-            "Build de validação solicitado somente para Windows x64 Portable.",
+            "Build de validação solicitado somente para Windows x64 Portable, sem instalador e sem builds de outras plataformas.",
         ],
     },
     "1.7.7": {
