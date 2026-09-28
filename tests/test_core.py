@@ -510,7 +510,7 @@ def test_observed_topology_from_aprs_path():
             edges = db.list_topology_edges(24)
             keys = {(e["source"], e["target"], e["kind"]) for e in edges}
             assert ("PY2ABC-9", "PT2DGI", "rf") in keys
-            assert ("PT2DGI", "PT2IGT", "igate") in keys
+            assert ("PT2DGI", "PT2IGT", "rf") in keys
             igate_edge = next(
                 e for e in edges
                 if e["source"] == "PT2DGI" and e["target"] == "PT2IGT"
@@ -669,12 +669,33 @@ def test_aprs_device_friendly_names_and_own_client_identifier():
     assert own["local_override"] is True
 
 
-def test_qarray_igate_transition_is_internet_link():
+def test_qarray_direct_igate_reception_is_rf_link():
     source, edges = db._observed_topology_edges("PY2ABC-9>APRS,PT2DGI*,WIDE2-1,qAR,PT2IGT:>teste")
     assert source == "PY2ABC-9"
     assert ("PY2ABC-9", "PT2DGI", "rf", None) in edges
+    assert ("PT2DGI", "PT2IGT", "rf", "PT2IGT") in edges
+    assert not any(kind == "igate" for _a, _b, kind, _igate in edges)
+
+def test_v177_remote_igate_qconstruct_is_not_rf_link():
+    source, edges = db._observed_topology_edges(
+        "PY2ABC-9>APRS,PT2DGI*,WIDE2-1,qAr,PT2IGT:>teste"
+    )
+    assert source == "PY2ABC-9"
+    assert ("PY2ABC-9", "PT2DGI", "rf", None) in edges
     assert ("PT2DGI", "PT2IGT", "igate", "PT2IGT") in edges
-    assert not any(a == "PT2DGI" and b == "PT2IGT" and kind == "rf" for a, b, kind, _igate in edges)
+    assert ("PT2DGI", "PT2IGT", "rf", "PT2IGT") not in edges
+
+    source, edges = db._observed_topology_edges(
+        "PY2NET>APRS,TCPIP*,qAC,APRSBR:>internet"
+    )
+    assert source == "PY2NET"
+    assert not any(kind == "rf" for _a, _b, kind, _igate in edges)
+
+
+def test_v177_rf_igate_parser_preserves_qconstruct_case():
+    assert db._rf_igate_from_path(["WIDE1-1*", "qAR", "PT2IGT"]) == "PT2IGT"
+    assert db._rf_igate_from_path(["WIDE1-1*", "qAr", "PT2IGT"]) == ""
+    assert db._rf_igate_from_path(["TCPIP*", "qAO", "PT2IGT"]) == ""
 
 
 def test_topology_timeline_and_period_comparison():
@@ -724,7 +745,7 @@ def test_complete_topology_favorites_and_packet_traffic():
             db.record_topology_from_raw(raw)
 
             complete = db.list_topology_edges(0)
-            assert {("PY2ABC-9", "PT2DGI", "rf"), ("PT2DGI", "PT2IGT", "igate")} <= {
+            assert {("PY2ABC-9", "PT2DGI", "rf"), ("PT2DGI", "PT2IGT", "rf")} <= {
                 (e["source"], e["target"], e["kind"]) for e in complete
             }
             igate_edge = next(e for e in complete if e["source"] == "PT2DGI" and e["target"] == "PT2IGT")
