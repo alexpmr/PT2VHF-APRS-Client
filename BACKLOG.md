@@ -114,6 +114,14 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mapa / Topologia — não classificar links de Internet como RF**
+  - Corrigir a classificação dos enlaces da topologia para que tráfego encaminhado por **APRS-IS/Internet** não seja desenhado como enlace **RF**.
+  - Considerar corretamente os marcadores de caminho APRS-IS, incluindo **TCPIP**, **TCPXX** e construções **qA*** como `qAR`, `qAO`, `qAC`, `qAS`, etc.
+  - Quando o trecho representar entrega/encaminhamento via Internet/iGate, usar o estilo/categoria **Via iGate/APRS-IS**, e não **Enlace RF**.
+  - Reservar **RF** somente para hops efetivamente observados no caminho de rádio antes da entrada no APRS-IS.
+  - Evitar linhas continentais ou intercontinentais falsas provocadas por associar o transmissor ao iGate/servidor remoto como se fosse um hop RF.
+  - Adicionar teste de regressão com caminhos mistos RF + qA*/APRS-IS para garantir a separação correta dos tipos de enlace.
+
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
