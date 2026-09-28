@@ -281,6 +281,21 @@ def init_db() -> None:
                 raw TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS aprs_objects (
+                name TEXT PRIMARY KEY,
+                source_callsign TEXT,
+                last_heard TEXT NOT NULL,
+                latitude REAL NOT NULL,
+                longitude REAL NOT NULL,
+                altitude REAL,
+                symbol_table TEXT,
+                symbol TEXT,
+                info TEXT,
+                packet_format TEXT,
+                raw TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_aprs_objects_last_heard ON aprs_objects(last_heard DESC);
+
             CREATE TABLE IF NOT EXISTS favorites (
                 callsign TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL
@@ -996,6 +1011,45 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
     info = _extract_info(packet)
     is_object = fmt in {"object", "item"}
     path = json.dumps(packet.get("path") or [], ensure_ascii=False)
+
+    if is_object and _valid_geo_position(packet.get("latitude"), packet.get("longitude")):
+        object_name = str(
+            packet.get("object_name")
+            or packet.get("item_name")
+            or packet.get("name")
+            or ""
+        ).strip()
+        if object_name:
+            conn.execute(
+                """INSERT INTO aprs_objects(
+                       name,source_callsign,last_heard,latitude,longitude,altitude,
+                       symbol_table,symbol,info,packet_format,raw
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                   ON CONFLICT(name) DO UPDATE SET
+                       source_callsign=excluded.source_callsign,
+                       last_heard=excluded.last_heard,
+                       latitude=excluded.latitude,
+                       longitude=excluded.longitude,
+                       altitude=excluded.altitude,
+                       symbol_table=excluded.symbol_table,
+                       symbol=excluded.symbol,
+                       info=excluded.info,
+                       packet_format=excluded.packet_format,
+                       raw=excluded.raw""",
+                (
+                    object_name,
+                    callsign,
+                    now,
+                    float(packet.get("latitude")),
+                    float(packet.get("longitude")),
+                    packet.get("altitude"),
+                    packet.get("symbol_table"),
+                    packet.get("symbol"),
+                    _extract_info(packet),
+                    fmt,
+                    str(packet.get("raw") or ""),
+                ),
+            )
 
     current = conn.execute("SELECT * FROM stations WHERE callsign=?", (callsign,)).fetchone()
     previous = current
@@ -2381,6 +2435,32 @@ def packet_traffic_events(
                 "target_lat": cb[0],
                 "target_lon": cb[1],
             })
+
+        # APRS-IS is a network service, not a geographic point. When a q-construct
+        # identifies the receiving iGate, add a logical handoff anchored at the
+        # iGate itself so the UI can animate the Internet transition without
+        # inventing a fake map coordinate.
+        raw_text = str(row["raw"] or "")
+        header = raw_text.split(":", 1)[0] if ":" in raw_text else raw_text
+        route = header.split(">", 1)[1].split(",")[1:] if ">" in header else []
+        for idx, token in enumerate(route):
+            token = token.strip()
+            if not re.fullmatch(r"qA[A-Za-z]", token) or idx + 1 >= len(route):
+                continue
+            gate = route[idx + 1].strip().rstrip("*").upper()
+            gate_coord = coords.get(gate)
+            if gate_coord:
+                segments.append({
+                    "source": gate,
+                    "target": "APRS-IS",
+                    "kind": "igate",
+                    "internet_handoff": True,
+                    "source_lat": gate_coord[0],
+                    "source_lon": gate_coord[1],
+                    "target_lat": None,
+                    "target_lon": None,
+                })
+            break
         events.append({
             "id": int(row["id"]),
             "timestamp": row["timestamp"],
@@ -2483,7 +2563,19 @@ def map_data() -> dict[str, Any]:
         if str(row.get("callsign") or "").upper().strip() in valid_calls
         and _valid_geo_position(row.get("latitude"), row.get("longitude"))
     ]
-    return {"stations": stations, "tracks": tracks}
+    with connection() as conn:
+        objects = [
+            dict(row)
+            for row in conn.execute(
+                """SELECT name,source_callsign,last_heard,latitude,longitude,altitude,
+                          symbol_table,symbol,info,packet_format,raw
+                   FROM aprs_objects
+                   ORDER BY last_heard DESC
+                   LIMIT 5000"""
+            ).fetchall()
+            if _valid_geo_position(row["latitude"], row["longitude"])
+        ]
+    return {"stations": stations, "objects": objects, "tracks": tracks}
 
 
 def geographic_export_data(hours: int = 0) -> dict[str, Any]:
