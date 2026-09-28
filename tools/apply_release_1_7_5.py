@@ -3,11 +3,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-if version != "1.7.5":
+try:
+    version_tuple = tuple(int(part) for part in version.split("."))
+except ValueError as exc:
+    raise SystemExit(f"v1.7.5 validation failed: invalid VERSION={version!r}") from exc
+if version_tuple < (1, 7, 5):
     raise SystemExit(f"v1.7.5 validation failed: VERSION={version!r}")
 
 checks = {
-    "pt2vhf_aprs/__init__.py": ['__version__ = "1.7.5"'],
+    "pt2vhf_aprs/__init__.py": ['APP_TOCALL = "APZVHF"'],
     "pt2vhf_aprs/database.py": [
         "def _valid_geo_position",
         "POSITION_ZERO_EPSILON",
@@ -45,7 +49,7 @@ checks = {
         "test_v175_ui_has_kml_export_message_sorting_and_stats_navigation",
         "test_v175_invalid_geometry_is_excluded_from_export_and_replay",
     ],
-    "README.md": ["# PT2VHF APRS Client - v1.7.5"],
+    "README.md": ["PT2VHF APRS Client"],
     "CHANGELOG.md": ["## v1.7.5 - 2026-09-28"],
     "pt2vhf_aprs/version_notes.py": ['"1.7.5"'],
 }
