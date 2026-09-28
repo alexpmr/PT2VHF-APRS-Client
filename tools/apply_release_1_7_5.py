@@ -17,6 +17,13 @@ checks = {
         "def network_improvement_suggestions",
         "def geographic_export_data",
     ],
+    "pt2vhf_aprs/updater.py": [
+        "def _write_windows_cmd_helper",
+        "_write_windows_cmd_helper(pending)",
+        'os.environ.get("COMSPEC", r"C:\\Windows\\System32\\cmd.exe")',
+        "timeout: float = 12.0",
+        'encoding="utf-8-sig"',
+    ],
     "pt2vhf_aprs/web.py": [
         'def _kml_document(',
         '@app.get("/api/export/kml")',
@@ -44,6 +51,8 @@ checks = {
         "test_v175_kml_export_contains_selected_layers",
         "test_v175_ui_has_kml_export_message_sorting_and_stats_navigation",
         "test_v175_invalid_geometry_is_excluded_from_export_and_replay",
+        "test_v175_windows_updater_uses_native_cmd_helper",
+        "test_v175_windows_updater_launch_prefers_comspec_cmd",
     ],
     "README.md": ["# PT2VHF APRS Client - v1.7.5"],
     "CHANGELOG.md": ["## v1.7.5 - 2026-09-28"],
