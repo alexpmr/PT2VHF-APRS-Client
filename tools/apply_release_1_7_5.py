@@ -33,7 +33,7 @@ checks = {
         'id="kmlTracklogs" type="checkbox" checked',
         'id="kmlTopology" type="checkbox" checked',
         'id="conversationSortKey"',
-        '>Apagar todas</button>',
+        'id="clearMessagesButton"',
     ],
     "pt2vhf_aprs/static/js/app.js": [
         "conversationSortKey",
