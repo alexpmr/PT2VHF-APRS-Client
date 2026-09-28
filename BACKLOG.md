@@ -97,6 +97,13 @@
   - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento em ARM64 antes de considerar o build estável.
   - Documentar claramente no README/Release qual pacote deve ser usado em cada arquitetura.
 
+- **Atualizações — checar nova versão a cada 30 minutos**
+  - Alterar a verificação periódica de novas versões para executar a cada **30 minutos**.
+  - Manter a verificação inicial ao abrir o aplicativo quando **Checar atualizações ao iniciar** estiver habilitado.
+  - Evitar consultas duplicadas ou sobrepostas quando uma verificação anterior ainda estiver em andamento.
+  - Manter o indicador visual de nova versão e o comportamento atual do modal de atualização.
+  - Não iniciar download ou instalação automaticamente apenas por causa da checagem periódica; respeitar as preferências configuradas pelo usuário.
+
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
