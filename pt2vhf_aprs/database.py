@@ -394,18 +394,18 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_station_anomalies_time ON station_anomalies(timestamp DESC);
             """
         )
-        # Migração v1.6.20: enlaces até o IGate observados por qAR/qAO são RF.
-        # Versões anteriores gravavam esses últimos saltos como kind='igate',
-        # o que fazia o mapa desenhá-los tracejados mesmo sendo recepção de rádio.
-        old_igate_rows = conn.execute(
+        # Migração v1.7.7: o nó após um qA* pertence à transição para
+        # APRS-IS/Internet. Versões anteriores chegaram a converter esse trecho
+        # para RF, produzindo linhas continentais/intercontinentais falsas.
+        old_internet_rows = conn.execute(
             """SELECT source,target,packet_count,first_seen,last_seen,igate
                FROM topology_edges
-               WHERE kind='igate' AND igate IS NOT NULL"""
+               WHERE kind='rf' AND igate IS NOT NULL"""
         ).fetchall()
-        for old_edge in old_igate_rows:
+        for old_edge in old_internet_rows:
             conn.execute(
                 """INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
-                   VALUES(?,?, 'rf', ?,?,?,?)
+                   VALUES(?,?, 'igate', ?,?,?,?)
                    ON CONFLICT(source,target,kind) DO UPDATE SET
                      packet_count=topology_edges.packet_count + excluded.packet_count,
                      first_seen=MIN(topology_edges.first_seen, excluded.first_seen),
@@ -420,9 +420,8 @@ def init_db() -> None:
                     old_edge["igate"],
                 ),
             )
-        if old_igate_rows:
-            conn.execute("DELETE FROM topology_edges WHERE kind='igate' AND igate IS NOT NULL")
-            conn.execute("UPDATE topology_events SET kind='rf' WHERE kind='igate'")
+        if old_internet_rows:
+            conn.execute("DELETE FROM topology_edges WHERE kind='rf' AND igate IS NOT NULL")
 
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
         if "open_browser_on_start" not in config_columns:
@@ -1259,13 +1258,13 @@ def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, s
             previous = node
 
     for i, token in enumerate(path):
-        if token in {"QAR", "QAO"} and i + 1 < len(path):
+        if re.fullmatch(r"QA[A-Z]", token) and i + 1 < len(path):
             candidate = path[i + 1].rstrip("*")
             if _is_topology_callsign(candidate) and candidate != previous:
-                # qAR/qAO identifica o IGate que recebeu o pacote da malha RF.
-                # O enlace físico até esse IGate continua sendo RF; guardamos
-                # o indicativo do IGate em metadata sem trocar o meio do enlace.
-                edges.append((previous, candidate, "rf", candidate))
+                # qA* marca a transição para APRS-IS. Sem evidência explícita
+                # de um hop RF (asterisco no path), não classificamos esse
+                # trecho como rádio. Isso evita enlaces RF falsos de longa distância.
+                edges.append((previous, candidate, "igate", candidate))
             break
     return source, edges
 
