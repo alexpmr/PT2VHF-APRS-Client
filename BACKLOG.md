@@ -97,13 +97,6 @@
   - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento em ARM64 antes de considerar o build estável.
   - Documentar claramente no README/Release qual pacote deve ser usado em cada arquitetura.
 
-- **Atualizações — checar nova versão a cada 30 minutos**
-  - Alterar a verificação periódica de novas versões para executar a cada **30 minutos**.
-  - Manter a verificação inicial ao abrir o aplicativo quando **Checar atualizações ao iniciar** estiver habilitado.
-  - Evitar consultas duplicadas ou sobrepostas quando uma verificação anterior ainda estiver em andamento.
-  - Manter o indicador visual de nova versão e o comportamento atual do modal de atualização.
-  - Não iniciar download ou instalação automaticamente apenas por causa da checagem periódica; respeitar as preferências configuradas pelo usuário.
-
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
@@ -120,29 +113,6 @@
   - Incluir atalhos para **Mostrar log**, **Enviar mensagem**, **Ping/ACK**, **Trace**, **Posição**, **Status** e histórico de queries.
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
-
-- **Mensagens — renomear Apagar todas para Limpar**
-  - Na barra da aba **Mensagens**, alterar o texto do botão **Apagar todas** para **Limpar**.
-  - Manter o botão no mesmo padrão visual e dimensional dos demais controles rápidos da barra, como **Lidas**, **Minhas mensagens** e filtros equivalentes.
-  - Preservar a cor/ênfase **vermelha** para indicar ação destrutiva.
-  - Manter a confirmação explícita antes de apagar o histórico local de mensagens.
-  - Não alterar a função da ação: **Limpar** continua removendo todas as mensagens armazenadas localmente, sem afetar estações, logs, tracklogs ou configurações.
-
-- **Mapa — remover Histórico da barra superior global**
-  - Remover o botão **Histórico** da barra superior global da aplicação.
-  - Manter apenas o botão **Histórico** que já está na barra contextual do **Mapa**, junto de **Estações, Tracklog, Topologia** e **Exportar KML**.
-  - Garantir que exista somente **uma instância funcional** do controle Histórico, evitando duplicidade visual e listeners duplicados.
-  - Preservar o comportamento atual de abrir/fechar o painel de histórico/replay a partir da barra do Mapa.
-  - Validar responsividade e espaçamento após a remoção do botão superior.
-
-- **Mapa — padrões visuais e animação**
-  - Definir a **Topologia observada** com linhas **amarelas** por padrão.
-  - Usar para a Topologia a **menor espessura prática disponível** como valor padrão, mantendo possibilidade de personalização em Configurações.
-  - Definir o **Tracklog em azul** por padrão.
-  - Deixar **Animações de atividade** ativadas por padrão no Mapa.
-  - Deixar os **efeitos sonoros das animações** ativados por padrão.
-  - Preservar as opções do usuário quando ele alterar manualmente cor, espessura, animação ou som; os novos valores são apenas os padrões para instalações/configurações ainda não personalizadas.
-  - Garantir que a legenda do Mapa continue sincronizada com as cores efetivamente utilizadas.
 
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
@@ -259,6 +229,16 @@
 - **Estatísticas:** somente nome amigável do aplicativo/software na apresentação principal; identificadores técnicos permanecem internos.
 - **Estatísticas:** fonte padrão maior e controle próprio de tamanho na Configuração.
 - **Versionamento:** nova linha iniciada em v1.7; próximas releases serão v1.7.1, v1.7.2, v1.7.3...
+
+## Concluído na v1.7.7
+
+- **Mapa:** removida a recriação do botão global **Histórico** pelo patch legado; permanece somente o controle contextual do Mapa.
+- **Mensagens:** **Apagar todas** foi renomeado para **Limpar**, preservando o estilo vermelho e a confirmação antes da exclusão.
+- **Topologia:** novo padrão amarelo (`#ffff00`) com espessura mínima de **1 px**.
+- **Tracklog:** mantido azul (`#3ba6ff`) por padrão.
+- **Animação e som:** mantidos ativados por padrão para novas configurações.
+- **Atualizações:** checagem periódica da versão mais recente alterada para **30 minutos**, sem sobreposição de verificações.
+- **Testes:** regressões adicionadas para Histórico contextual, botão Limpar, padrões do Mapa e cadência de atualização.
 
 ## Concluído na v1.7.6
 
