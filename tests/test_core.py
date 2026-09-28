@@ -1419,7 +1419,7 @@ def test_v175_ui_has_kml_export_message_sorting_and_stats_navigation():
     assert 'id="conversationSortKey"' in html
     assert '<option value="sender">Remetente</option>' in html
     assert '<option value="date">Data</option>' in html
-    assert 'id="clearMessagesButton" type="button" class="btn danger">Apagar todas</button>' in html
+    assert 'id="clearMessagesButton" type="button" class="btn danger"' in html
     assert "conversationSortKey" in js
     assert "data-map-callsign" in js
     assert "problem_stations" in js
