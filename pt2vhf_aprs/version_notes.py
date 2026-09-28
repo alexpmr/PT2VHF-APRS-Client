@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.8": {
+        "title": "Validação Windows x64: tráfego APRS hop a hop e ACK pelo path observado",
+        "items": [
+            "A animação de tráfego passa a percorrer os segmentos observados sequencialmente, hop a hop.",
+            "Cada hop ativa visualmente a estação de destino quando o pacote chega ao nó.",
+            "Enlaces RF permanecem distintos dos trechos APRS-IS/Internet, que continuam com representação própria.",
+            "ACK/REJ e respostas correlacionadas usam o path observado no pacote de retorno; quando os mesmos digipeaters são usados, a animação volta pelo mesmo caminho em sentido inverso.",
+            "Não é criado enlace direto artificial entre origem e destino quando existem hops observados.",
+            "Respostas automáticas a queries APRS ficam ativadas por padrão em novas configurações.",
+            "Build de validação solicitado somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.7": {
         "title": "Mapa mais limpo, novos padrões visuais e checagem de atualização a cada 30 minutos",
         "items": [
