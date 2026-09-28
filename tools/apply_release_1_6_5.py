@@ -14,10 +14,11 @@ html = html.replace(
     '<div class="traffic-animation-panel map-traffic-panel">',
     '<div class="traffic-animation-panel map-traffic-panel hidden">'
 )
+# O Histórico passou a ser contextual ao Mapa. Não recriar o antigo botão
+# global durante builds de versões novas.
 html = html.replace(
-    '<div id="trafficActivityIndicator" class="traffic-activity-indicator"',
-    '<button id="toggleReplayBarButton" type="button" class="btn secondary replay-toggle-button" aria-pressed="false" title="Mostrar/ocultar histórico">Histórico</button>\n    <div id="trafficActivityIndicator" class="traffic-activity-indicator"',
-    1
+    '<button id="toggleReplayBarButton" type="button" class="btn secondary replay-toggle-button" aria-pressed="false" title="Mostrar/ocultar histórico">Histórico</button>\n',
+    '',
 )
 
 for button in (
