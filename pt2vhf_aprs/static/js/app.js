@@ -1290,7 +1290,8 @@
           color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
           weight: state.mapConfig.topology_width,
           opacity: .72,
-          dashArray: edge.kind === 'igate' ? '7 5' : null
+          dashArray: edge.kind === 'igate' ? '7 5' : null,
+          interactive: false
         };
         if (!line) {
           line = L.polyline(points, style).addTo(state.map);
