@@ -1435,3 +1435,119 @@ def test_v175_invalid_geometry_is_excluded_from_export_and_replay():
     assert "station_anomalies" in database_source
     assert "def geographic_export_data" in database_source
 
+def test_v176_manual_conversation_ranking_excludes_automatic_traffic():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({"callsign": "PT2VHF", "ssid": 15})
+
+            db.add_message("in", "PU2AAA", "PT2VHF-15", "Olá Alex", msg_id="101")
+            db.add_message("in", "PU2AAA", "PY2BBB", "Bom dia", msg_id="102")
+            db.add_message("out", "PT2VHF-15", "PU2AAA", "Resposta parte 1", msg_id="201",
+                           message_group_id="grp-1", part_index=1, part_count=2)
+            db.add_message("out", "PT2VHF-15", "PU2AAA", "Resposta parte 2", msg_id="202",
+                           message_group_id="grp-1", part_index=2, part_count=2)
+
+            # Tráfego que não pode influenciar o ranking de conversa humana.
+            db.add_message("in", "PU2AUTO", "PT2VHF-15", "?PING?", msg_id=None)
+            db.add_message("in", "PU2AUTO", "PT2VHF-15", "ack123", msg_id=None)
+            db.add_message("in", "PU2AUTO", "BLN1", "Boletim", message_type="bulletin")
+            db.add_message("out", "PT2VHF-15", "PU2AAA", "retry", msg_id="203", retry_count=1)
+
+            rows = {row["callsign"]: row for row in db.manual_conversation_stats()}
+            assert "PT2VHF-15" not in rows
+            assert "PU2AUTO" not in rows
+            assert rows["PU2AAA"]["interactions"] == 3
+            assert rows["PU2AAA"]["sent"] == 2
+            assert rows["PU2AAA"]["received"] == 1
+            assert rows["PU2AAA"]["peers"] == 2
+            assert rows["PY2BBB"]["interactions"] == 1
+    finally:
+        db.DB_PATH = original
+
+
+def test_v176_kml_save_as_and_map_toolbar_controls():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    windows = (root / "windows_app.py").read_text(encoding="utf-8")
+    linux = (root / "linux_app.py").read_text(encoding="utf-8")
+    macos = (root / "macos_app.py").read_text(encoding="utf-8")
+
+    map_bar_start = html.index('id="mapContextBar"')
+    map_bar_end = html.index("<main>", map_bar_start)
+    map_bar = html[map_bar_start:map_bar_end]
+    header = html[:map_bar_start]
+
+    assert 'id="kmlExportButton"' in map_bar
+    assert 'id="kmlExportButton"' not in header
+    assert 'id="mapHistoryToggle"' in map_bar
+    assert map_bar.index('id="mapHistoryToggle"') < map_bar.index('id="kmlExportButton"')
+    assert "async function saveKmlContent" in js
+    assert "showSaveFilePicker" in js
+    assert "save_text_file" in js
+    assert "Exportação cancelada." in js
+
+    for source in (windows, linux, macos):
+        assert "def save_text_file" in source
+        assert "SAVE_DIALOG" in source
+        assert 'file_types=("KML (*.kml)", "Todos os arquivos (*.*)")' in source
+
+
+def test_v176_windows_updater_uses_native_cmd_helper(monkeypatch, tmp_path):
+    original_values = {
+        "UPDATE_DIR": updater.UPDATE_DIR,
+        "PENDING_FILE": updater.PENDING_FILE,
+        "APPLY_LOG": updater.APPLY_LOG,
+        "UPDATE_LOCK_FILE": updater.UPDATE_LOCK_FILE,
+        "HELPER_READY_FILE": updater.HELPER_READY_FILE,
+    }
+    try:
+        monkeypatch.setattr(updater, "UPDATE_DIR", tmp_path)
+        monkeypatch.setattr(updater, "PENDING_FILE", tmp_path / "pending_update.json")
+        monkeypatch.setattr(updater, "APPLY_LOG", tmp_path / "update_apply.log")
+        monkeypatch.setattr(updater, "UPDATE_LOCK_FILE", tmp_path / "update.lock")
+        monkeypatch.setattr(updater, "HELPER_READY_FILE", tmp_path / "helper_ready")
+
+        downloaded = tmp_path / "PT2VHF_APRS_Client_Portable_x64_v1.7.6.exe"
+        downloaded.write_bytes(b"test")
+        current = tmp_path / "PT2VHF_APRS_Client_Portable_x64_v1.7.5.exe"
+        current.write_bytes(b"old")
+
+        helper = updater._write_windows_cmd_helper({
+            "path": str(downloaded),
+            "current_executable": str(current),
+            "mode": "windows-portable",
+            "version": "1.7.6",
+            "pid": 1234,
+        })
+        text_value = helper.read_text(encoding="utf-8")
+        assert helper.suffix == ".cmd"
+        assert '> "%ready%" echo ready' in text_value
+        assert 'portable update installed' in text_value
+        assert 'move /Y "%downloaded%" "%destination%"' in text_value
+        assert "powershell" not in text_value.lower()
+
+        ps = updater._write_windows_helper({
+            "path": str(downloaded),
+            "current_executable": str(current),
+            "mode": "windows-portable",
+            "version": "1.7.6",
+            "pid": 1234,
+        })
+        assert ps.read_bytes().startswith(b"\xef\xbb\xbf")
+    finally:
+        for name, value in original_values.items():
+            setattr(updater, name, value)
+
+
+def test_v176_windows_updater_launch_prefers_comspec_cmd():
+    root = Path(__file__).resolve().parent.parent
+    source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")
+    assert "_write_windows_cmd_helper(pending)" in source
+    assert 'os.environ.get("COMSPEC", r"C:\\Windows\\System32\\cmd.exe")' in source
+    assert "timeout: float = 12.0" in source
+    assert "CREATE_NO_WINDOW" in source
+
