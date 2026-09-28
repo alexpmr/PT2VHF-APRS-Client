@@ -1904,6 +1904,117 @@ def network_improvement_suggestions(hours: int = 0, limit: int = 12) -> list[dic
     return suggestions[: max(1, min(int(limit or 12), 50))]
 
 
+def manual_conversation_stats(hours: int = 0, limit: int = 20) -> list[dict[str, Any]]:
+    """Rank stations by human APRS message interactions, excluding automated traffic."""
+    hours = int(hours or 0)
+    params: list[Any] = []
+    where = [
+        "message_type='message'",
+        "COALESCE(retry_count,0)=0",
+        "TRIM(COALESCE(message,'')) <> ''",
+    ]
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        where.append("timestamp >= ?")
+        params.append(cutoff)
+
+    cfg = get_config()
+    own_base = str(cfg.get("callsign") or "").upper().strip()
+    own_ssid = str(cfg.get("ssid") or "").strip()
+    own_call = own_base
+    if own_base and own_ssid and own_ssid not in {"0", "None", "none"}:
+        own_call = f"{own_base}-{own_ssid}"
+
+    callsign_re = re.compile(r"^[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?$")
+    reserved_targets = {
+        "CQ", "ALL", "APRS", "BEACON", "BLN", "NWS", "SKY", "WX",
+    }
+    auto_patterns = (
+        re.compile(r"^\s*\?", re.IGNORECASE),
+        re.compile(r"^\s*(?:ACK|REJ)[A-Z0-9]{1,5}\s*$", re.IGNORECASE),
+        re.compile(r"^\s*DIRECTS=", re.IGNORECASE),
+        re.compile(r"(?:^|\s)[A-Z0-9-]*_?HEARD:", re.IGNORECASE),
+        re.compile(r"^\s*[A-Z0-9-]+>[^:]+:\s*$", re.IGNORECASE),
+    )
+
+    with connection() as conn:
+        rows = conn.execute(
+            f"""
+            SELECT id,direction,from_call,to_call,message,msg_id,message_group_id,
+                   part_index,part_count,retry_count,timestamp
+            FROM messages
+            WHERE {" AND ".join(where)}
+            ORDER BY timestamp ASC, id ASC
+            """,
+            params,
+        ).fetchall()
+
+    counts: dict[str, dict[str, Any]] = {}
+    seen: set[str] = set()
+    for row in rows:
+        source = str(row["from_call"] or "").upper().strip()
+        target = str(row["to_call"] or "").upper().strip()
+        message = str(row["message"] or "").strip()
+        if not callsign_re.fullmatch(source) or not callsign_re.fullmatch(target):
+            continue
+        if target in reserved_targets or source in reserved_targets:
+            continue
+        if any(pattern.search(message) for pattern in auto_patterns):
+            continue
+
+        group_id = str(row["message_group_id"] or "").strip()
+        msg_id = str(row["msg_id"] or "").strip()
+        direction = str(row["direction"] or "").lower().strip()
+        if group_id:
+            unique_key = f"group:{direction}:{source}:{target}:{group_id}"
+        elif msg_id:
+            unique_key = f"msg:{direction}:{source}:{target}:{msg_id}"
+        else:
+            unique_key = (
+                f"text:{direction}:{source}:{target}:"
+                f"{message.casefold()}:{str(row['timestamp'] or '')}"
+            )
+        if unique_key in seen:
+            continue
+        seen.add(unique_key)
+
+        for call, sent_delta, recv_delta, peer in (
+            (source, 1, 0, target),
+            (target, 0, 1, source),
+        ):
+            if own_call and call == own_call:
+                continue
+            item = counts.setdefault(call, {
+                "callsign": call,
+                "interactions": 0,
+                "sent": 0,
+                "received": 0,
+                "peers": set(),
+            })
+            item["interactions"] += 1
+            item["sent"] += sent_delta
+            item["received"] += recv_delta
+            item["peers"].add(peer)
+
+    total_participations = sum(int(item["interactions"]) for item in counts.values())
+    result: list[dict[str, Any]] = []
+    for item in counts.values():
+        interactions = int(item["interactions"])
+        result.append({
+            "callsign": item["callsign"],
+            "interactions": interactions,
+            "sent": int(item["sent"]),
+            "received": int(item["received"]),
+            "peers": len(item["peers"]),
+            "percent": round(interactions * 100.0 / total_participations, 1) if total_participations else 0.0,
+        })
+    result.sort(key=lambda item: (-int(item["interactions"]), str(item["callsign"])))
+    for index, item in enumerate(result[: max(1, min(int(limit or 20), 100))], start=1):
+        item["rank"] = index
+    return result[: max(1, min(int(limit or 20), 100))]
+
+
 def topology_stats(hours: int = 0) -> dict[str, Any]:
     """Resumo agregado da topologia observada para diagnóstico rápido."""
     hours = int(hours or 0)
@@ -2011,6 +2122,7 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "packets": int(totals["packets"] or 0),
         "active_stations": active_stations,
         "active_station_packets": eligible_packets,
+        "manual_conversations": manual_conversation_stats(0 if complete else hours),
         "digipeaters": digis,
         "igates": igates,
         "recently_disappeared": stale,
