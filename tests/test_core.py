@@ -1676,3 +1676,19 @@ def test_v1710_unified_map_items_objects_and_internet_handoff():
     assert "CREATE TABLE IF NOT EXISTS aprs_objects" in database
     assert '"internet_handoff": True' in database
     assert '"target": "APRS-IS"' in database
+
+def test_v1711_map_items_menu_not_clipped_and_opens():
+    root = Path(__file__).resolve().parent.parent
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    menu_css = css[css.index(".map-items-menu {"):css.index(".map-items-menu label")]
+    assert "position: fixed;" in menu_css
+    assert "z-index: 5000;" in menu_css
+
+    assert "const positionMapItemsMenu = () => {" in js
+    assert "const closeMapItemsMenu = () => {" in js
+    assert "menu.classList.remove('hidden')" in js
+    assert "requestAnimationFrame(positionMapItemsMenu)" in js
+    assert "window.addEventListener('resize', positionMapItemsMenu)" in js
+    assert "window.addEventListener('scroll', positionMapItemsMenu, true)" in js
