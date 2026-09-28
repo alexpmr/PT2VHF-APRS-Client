@@ -30,6 +30,25 @@ checks = {
         '"sound_on_station_activity": 1',
         '"traffic_animation_enabled": 1',
     ],
+    "pt2vhf_aprs/updater.py": [
+        'arch = "ARM64" if machine == "arm64" else "x64"',
+        'machine in {"x86_64", "arm64"}',
+    ],
+    "windows/PT2VHF_APRS_Client_Portable_ARM64.spec": [
+        "PT2VHF_APRS_Client_Portable_ARM64",
+    ],
+    "windows/installer_arm64.iss": [
+        "ArchitecturesAllowed=arm64",
+        "ArchitecturesInstallIn64BitMode=arm64",
+        "PT2VHF_APRS_Client_Setup_ARM64_v",
+    ],
+    ".github/workflows/build-windows.yml": [
+        "windows-arm64:",
+        "runs-on: windows-11-arm",
+        "architecture: 'arm64'",
+        "PT2VHF_APRS_Client_Setup_ARM64_v",
+        "PT2VHF_APRS_Client_Portable_ARM64_v",
+    ],
     "tools/apply_release_1_6_5.py": [
         "Não recriar o antigo botão",
         "assert 'id=\"toggleReplayBarButton\"' not in html",
@@ -37,6 +56,7 @@ checks = {
     "tests/test_core.py": [
         "test_v177_message_cleanup_map_defaults_and_update_cadence",
         "test_v177_legacy_build_patch_does_not_restore_global_history_button",
+        "test_v177_windows_arm64_build_and_updater_assets",
     ],
     "README.md": ["# PT2VHF APRS Client - v1.7.7"],
     "CHANGELOG.md": ["## v1.7.7 - 2026-09-28"],
