@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.6": {
+        "title": "Atualizador Windows reforçado, KML com Salvar como e novos rankings",
+        "items": [
+            "No Windows, a atualização automática passa a usar helper CMD nativo como caminho principal, reduzindo falhas de inicialização do PowerShell.",
+            "O KML agora pergunta onde salvar o arquivo no desktop e usa seletor nativo de arquivo quando disponível.",
+            "Os botões Histórico e Exportar KML foram movidos para a mesma barra contextual do Mapa, junto de Estações, Tracklog e Topologia.",
+            "A aba Estatísticas ganha o ranking Estações que mais interagiram, considerando somente conversas APRS manuais e excluindo beacons, telemetria, ACK/REJ, queries, respostas automáticas, boletins e retries.",
+            "A exportação KML continua com Estações, Posições, Tracklogs e Topologia selecionados por padrão e período configurável.",
+            "Adicionados testes de regressão para o helper Windows, Salvar como do KML, posição dos controles no Mapa e ranking de conversas manuais.",
+            "Release completa para Windows, Linux, macOS e Manual PDF.",
+        ],
+    },
     "1.7.5": {
         "title": "Exportação KML, validação de posições e novas análises da rede",
         "items": [
