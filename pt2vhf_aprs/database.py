@@ -751,16 +751,21 @@ def _path_tokens(value: Any) -> list[str]:
             raw = []
     if not isinstance(raw, list):
         return []
-    return [str(item or "").upper().strip() for item in raw if str(item or "").strip()]
+    # Preserve q-construct case: qAR and qAr have different APRS-IS meanings.
+    return [str(item or "").strip() for item in raw if str(item or "").strip()]
 
 
 def _rf_igate_from_path(value: Any) -> str:
     path = _path_tokens(value)
     for index, token in enumerate(path[:-1]):
-        if token in {"QAR", "QAO"}:
-            relay = path[index + 1].rstrip("*").strip()
-            if relay and relay not in {"TCPIP", "TCPXX"}:
-                return relay
+        if token not in {"qAR", "qAO"}:
+            continue
+        prior = {item.rstrip("*").upper() for item in path[:index]}
+        if prior & {"TCPIP", "TCPXX"}:
+            continue
+        relay = path[index + 1].rstrip("*").upper().strip()
+        if relay and relay not in {"TCPIP", "TCPXX"}:
+            return relay
     return ""
 
 
@@ -1243,29 +1248,34 @@ def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, s
     if len(route) < 2:
         return source, []
 
-    path = [part.strip().upper() for part in route[1:] if part.strip()]
+    # Preserve q-construct case. In APRS-IS, qAR and qAr are distinct:
+    # qAR is a direct RF gate, while qAr is a remote IGate reached through APRS-IS.
+    path = [part.strip() for part in route[1:] if part.strip()]
     edges: list[tuple[str, str, str, str | None]] = []
     previous = source
 
     for token in path:
-        if token.lower().startswith("q"):
+        if re.fullmatch(r"qA[A-Za-z]", token):
             break
         if not token.endswith("*"):
             continue
-        node = token.rstrip("*")
+        node = token.rstrip("*").upper()
         if _is_topology_callsign(node) and node != previous:
             edges.append((previous, node, "rf", None))
             previous = node
 
     for i, token in enumerate(path):
-        if re.fullmatch(r"QA[A-Z]", token) and i + 1 < len(path):
-            candidate = path[i + 1].rstrip("*")
-            if _is_topology_callsign(candidate) and candidate != previous:
-                # qA* marca a transição para APRS-IS. Sem evidência explícita
-                # de um hop RF (asterisco no path), não classificamos esse
-                # trecho como rádio. Isso evita enlaces RF falsos de longa distância.
-                edges.append((previous, candidate, "igate", candidate))
+        if not re.fullmatch(r"qA[A-Za-z]", token) or i + 1 >= len(path):
+            continue
+        candidate = path[i + 1].rstrip("*").upper()
+        if not _is_topology_callsign(candidate) or candidate == previous:
             break
+
+        prior = {item.rstrip("*").upper() for item in path[:i]}
+        direct_rf_gate = token in {"qAR", "qAO"} and not (prior & {"TCPIP", "TCPXX"})
+        kind = "rf" if direct_rf_gate else "igate"
+        edges.append((previous, candidate, kind, candidate))
+        break
     return source, edges
 
 
