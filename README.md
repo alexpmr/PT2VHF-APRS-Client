@@ -1,8 +1,8 @@
-# PT2VHF APRS Client - v1.7.7
+# PT2VHF APRS Client - v1.7.8
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.7** simplifica a interface do Mapa, ajusta os padrões visuais da topologia, corrige a separação entre enlaces RF e APRS-IS, renomeia a limpeza de mensagens, reduz a frequência das consultas de atualização para 30 minutos e adiciona builds nativos para Windows ARM64.
+A **v1.7.8** é uma versão de validação focada no Windows x64 Portable. Ela mantém as correções da v1.7.7 e passa a animar o tráfego APRS hop a hop, preservando a distinção RF/APRS-IS e permitindo visualizar ACK/respostas pelo path efetivamente observado. Respostas automáticas a queries APRS passam a vir ativadas por padrão em novas configurações.
 
 ## Downloads
 
