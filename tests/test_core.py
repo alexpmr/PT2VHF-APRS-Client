@@ -5,7 +5,7 @@ import tempfile
 from pt2vhf_aprs import database as db
 from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import APRSService, build_beacon_packet, build_bulletin_packet, build_query_payload, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, parse_query_text, parse_trace_nodes, split_message_id, split_aprs_message_parts
-from pt2vhf_aprs.web import version_tuple
+from pt2vhf_aprs.web import _kml_document, version_tuple
 
 
 def test_beacon_packet():
@@ -1324,4 +1324,114 @@ def test_v174_updater_modal_keeps_actionable_controls_after_failure():
     assert "closeButton.disabled = false;" in catch_block
     assert "releaseButton.disabled = false;" in catch_block
     assert "setUpdateProgress(message, 'error');" in catch_block
+
+def test_v175_rejects_zero_and_rf_implausible_positions():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+
+            db.upsert_station({
+                "from": "PT2PAG-15",
+                "format": "uncompressed",
+                "latitude": -15.80,
+                "longitude": -47.90,
+                "path": ["WIDE1-1"],
+                "raw": "PT2PAG-15>APRS:!1548.00S/04754.00W>",
+            })
+            db.upsert_station({
+                "from": "PU2ZERO-9",
+                "format": "uncompressed",
+                "latitude": 0.0,
+                "longitude": 0.0,
+                "path": ["qAR", "PT2PAG-15"],
+                "raw": "PU2ZERO-9>APRS,qAR,PT2PAG-15:!0000.00N/00000.00E>",
+            })
+            db.upsert_station({
+                "from": "PU2AMA-7",
+                "format": "mic-e",
+                "latitude": 24.0,
+                "longitude": 121.0,
+                "path": ["PT2ON-15", "WIDE1*", "WIDE2-2", "qAR", "PT2PAG-15"],
+                "raw": "PU2AMA-7>APRS,PT2ON-15,WIDE1*,WIDE2-2,qAR,PT2PAG-15:test",
+            })
+
+            mapped = {row["callsign"] for row in db.map_data()["stations"]}
+            assert "PT2PAG-15" in mapped
+            assert "PU2ZERO-9" not in mapped
+            assert "PU2AMA-7" not in mapped
+
+            stations = {row["callsign"]: row for row in db.list_stations()}
+            assert stations["PU2ZERO-9"]["position_valid"] is False
+            assert stations["PU2AMA-7"]["position_valid"] is False
+
+            problems = db.station_problem_stats()
+            problem_types = {(row["callsign"], row["issue_type"]) for row in problems}
+            assert ("PU2ZERO-9", "zero_position") in problem_types
+            assert ("PU2AMA-7", "rf_relay_distance") in problem_types
+    finally:
+        db.DB_PATH = original
+
+
+def test_v175_kml_export_contains_selected_layers():
+    payload = {
+        "stations": [{
+            "callsign": "PT2VHF-15",
+            "latitude": -15.8,
+            "longitude": -47.9,
+            "altitude": 1000,
+            "last_heard": "2026-09-28T12:00:00+00:00",
+            "info": "test",
+            "path": "[]",
+        }],
+        "tracks": [
+            {"callsign": "PT2VHF-15", "timestamp": "2026-09-28T12:00:00+00:00", "latitude": -15.8, "longitude": -47.9, "altitude": 1000},
+            {"callsign": "PT2VHF-15", "timestamp": "2026-09-28T12:01:00+00:00", "latitude": -15.81, "longitude": -47.91, "altitude": 1002},
+        ],
+        "topology": [{
+            "source": "PT2VHF-15", "target": "PT2PAG-15", "kind": "rf",
+            "packet_count": 2, "last_seen": "2026-09-28T12:01:00+00:00",
+            "source_lat": -15.8, "source_lon": -47.9,
+            "target_lat": -15.7, "target_lon": -47.8,
+        }],
+    }
+    text = _kml_document(payload).decode("utf-8")
+    assert "<name>Stations</name>" in text
+    assert "<name>Positions</name>" in text
+    assert "<name>Tracklogs</name>" in text
+    assert "<name>Topology</name>" in text
+    assert "PT2VHF-15" in text
+    assert "-47.9000000,-15.8000000,1000.0" in text
+
+
+def test_v175_ui_has_kml_export_message_sorting_and_stats_navigation():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    web = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+
+    assert 'id="kmlExportButton"' in html
+    for checkbox in ("kmlStations", "kmlPositions", "kmlTracklogs", "kmlTopology"):
+        assert f'id="{checkbox}" type="checkbox" checked' in html
+    assert 'id="conversationSortKey"' in html
+    assert '<option value="sender">Remetente</option>' in html
+    assert '<option value="date">Data</option>' in html
+    assert 'id="clearMessagesButton" type="button" class="btn danger">Apagar todas</button>' in html
+    assert "conversationSortKey" in js
+    assert "data-map-callsign" in js
+    assert "problem_stations" in js
+    assert "improvement_suggestions" in js
+    assert '@app.get("/api/export/kml")' in web
+
+
+def test_v175_invalid_geometry_is_excluded_from_export_and_replay():
+    root = Path(__file__).resolve().parent.parent
+    database_source = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+
+    assert "def _valid_geo_position" in database_source
+    assert "POSITION_ZERO_EPSILON" in database_source
+    assert "rf_relay_distance" in database_source
+    assert "station_anomalies" in database_source
+    assert "def geographic_export_data" in database_source
 
