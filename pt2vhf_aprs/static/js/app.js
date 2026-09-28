@@ -2644,6 +2644,10 @@
     }
   });
 
+  $('#clearMessagesMaintenanceButton')?.addEventListener('click', () => {
+    $('#clearMessagesButton')?.click();
+  });
+
   $('#messageTo').addEventListener('input', debounce(async (ev) => {
     try {
       const list = await api(`/api/callsigns?prefix=${encodeURIComponent(ev.target.value)}`);
