@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.7.5 - 2026-09-28
+
+- **Exportação KML:** novo botão na barra superior abre um seletor com **Estações, Posições, Tracklogs e Topologia/enlaces**, todos marcados por padrão, além do período a exportar.
+- O KML é organizado em pastas separadas e preserva indicativo, timestamp, altitude e metadados relevantes, com saída compatível com Google Earth.
+- **Qualidade de posição:** coordenadas **0,0**, fora dos limites geográficos, saltos com velocidade implícita extrema e posições incompatíveis com um iGate RF conhecido são rejeitadas.
+- Dados geográficos rejeitados não entram no mapa, tracklogs, topologia, replay, distância nem exportações; a última posição válida é preservada quando disponível.
+- **Estatísticas:** novo bloco **Estações com problemas** mostra anomalia, quantidade, recorrência e atalhos para Mapa/Logs.
+- **Estatísticas:** novo bloco **Possíveis melhorias** sinaliza baixa redundância, concentração excessiva em um iGate e possíveis trechos de baixa cobertura, sempre identificados como inferências do tráfego observado.
+- **Estatísticas:** indicativos em **Digipeaters mais utilizados** e **iGates mais ativos** passam a abrir a estação diretamente no mapa.
+- **Mensagens:** conversas agrupadas podem ser ordenadas por **Remetente** ou **Data**, em ordem crescente ou decrescente.
+- **Mensagens:** ação **Apagar todas** remove somente o histórico local após confirmação e atualiza imediatamente os indicadores de não lidas.
+- Adicionados testes de regressão para KML, validação geográfica, anomalias, navegação das Estatísticas e controles de Mensagens.
+- Release completa: Windows x64 Setup + Portable, Linux x86_64 TAR.GZ + AppImage + DEB, macOS ARM64/Intel DMG e Manual PDF.
+
 ## v1.7.4 - 2026-09-27
 
 - **Atualizador:** mensagens temporárias agora ficam acima do modal de atualização e não são mais desfocadas pelo overlay.
