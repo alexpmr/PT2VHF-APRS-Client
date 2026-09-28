@@ -5268,6 +5268,10 @@
         '<div class="hint">' + ui('Tráfego útil por estação; telemetria, iGates e digipeaters não entram neste ranking.', 'Useful traffic by station; telemetry, iGates and digipeaters are excluded from this ranking.') + '</div>' +
         list(data.active_stations || [], x => `<li><button type="button" class="callsign-link callsign-quick-message" data-quick-message-callsign="${escapeHtml(x.callsign)}">${escapeHtml(x.callsign)}</button> — ${Number(x.packets||0).toLocaleString(currentLocale())} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
 
+        '<div class="topology-stat-group"><h4>' + ui('Estações que mais interagiram', 'Most interactive stations') + '</h4>' +
+        '<div class="hint">' + ui('Somente conversas APRS manuais entre estações. Beacons, telemetria, ACK/REJ, queries, respostas automáticas, boletins e retries não entram no ranking.', 'Only manual APRS conversations between stations. Beacons, telemetry, ACK/REJ, queries, automatic replies, bulletins and retries are excluded.') + '</div>' +
+        list(data.manual_conversations || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.interactions||0).toLocaleString(currentLocale())} ${escapeHtml(ui('interações', 'interactions'))} · ${Number(x.peers||0).toLocaleString(currentLocale())} ${escapeHtml(ui('contatos', 'peers'))} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
+
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
         list(data.digipeaters || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
 
