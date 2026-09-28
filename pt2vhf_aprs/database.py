@@ -65,6 +65,8 @@ TRACK_OUTLIER_MIN_KM = 75.0
 TRACK_OUTLIER_MAX_SPEED_KMH = 1200.0
 TRACK_RELOCATION_CONFIRMATIONS = 3
 TRACK_RELOCATION_CLUSTER_KM = 25.0
+RF_POSITION_MAX_DISTANCE_KM = 2500.0
+POSITION_ZERO_EPSILON = 1e-9
 _track_relocation_lock = threading.Lock()
 _track_relocation_candidates: dict[str, dict[str, Any]] = {}
 
@@ -378,6 +380,18 @@ def init_db() -> None:
             );
             CREATE INDEX IF NOT EXISTS idx_topology_events_time ON topology_events(timestamp DESC);
             CREATE INDEX IF NOT EXISTS idx_topology_events_source_target ON topology_events(source, target);
+
+            CREATE TABLE IF NOT EXISTS station_anomalies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                callsign TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                issue_type TEXT NOT NULL,
+                latitude REAL,
+                longitude REAL,
+                details TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_station_anomalies_call_time ON station_anomalies(callsign, timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_station_anomalies_time ON station_anomalies(timestamp DESC);
             """
         )
         # Migração v1.6.20: enlaces até o IGate observados por qAR/qAO são RF.
@@ -711,6 +725,147 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     dl = math.radians(lon2 - lon1)
     a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _valid_geo_position(latitude: Any, longitude: Any) -> bool:
+    try:
+        lat = float(latitude)
+        lon = float(longitude)
+    except (TypeError, ValueError):
+        return False
+    if not math.isfinite(lat) or not math.isfinite(lon):
+        return False
+    if lat < -90.0 or lat > 90.0 or lon < -180.0 or lon > 180.0:
+        return False
+    if abs(lat) <= POSITION_ZERO_EPSILON and abs(lon) <= POSITION_ZERO_EPSILON:
+        return False
+    return True
+
+
+def _path_tokens(value: Any) -> list[str]:
+    if isinstance(value, (list, tuple)):
+        raw = value
+    else:
+        try:
+            raw = json.loads(str(value or "[]"))
+        except Exception:
+            raw = []
+    if not isinstance(raw, list):
+        return []
+    return [str(item or "").upper().strip() for item in raw if str(item or "").strip()]
+
+
+def _rf_igate_from_path(value: Any) -> str:
+    path = _path_tokens(value)
+    for index, token in enumerate(path[:-1]):
+        if token in {"QAR", "QAO"}:
+            relay = path[index + 1].rstrip("*").strip()
+            if relay and relay not in {"TCPIP", "TCPXX"}:
+                return relay
+    return ""
+
+
+def _record_station_anomaly_conn(
+    conn: sqlite3.Connection,
+    callsign: str,
+    issue_type: str,
+    latitude: Any = None,
+    longitude: Any = None,
+    details: dict[str, Any] | None = None,
+) -> None:
+    conn.execute(
+        """INSERT INTO station_anomalies(callsign,timestamp,issue_type,latitude,longitude,details)
+           VALUES(?,?,?,?,?,?)""",
+        (
+            str(callsign or "").upper().strip(),
+            utc_now_iso(),
+            str(issue_type or "unknown"),
+            latitude,
+            longitude,
+            json.dumps(details or {}, ensure_ascii=False, separators=(",", ":")),
+        ),
+    )
+
+
+def _rf_relay_position_issue_conn(
+    conn: sqlite3.Connection,
+    path_value: Any,
+    latitude: float,
+    longitude: float,
+) -> tuple[str | None, dict[str, Any]]:
+    relay = _rf_igate_from_path(path_value)
+    if not relay:
+        return None, {}
+    row = conn.execute(
+        "SELECT callsign,latitude,longitude FROM stations WHERE UPPER(callsign)=?",
+        (relay,),
+    ).fetchone()
+    if not row or not _valid_geo_position(row["latitude"], row["longitude"]):
+        return None, {}
+    distance = haversine_km(
+        float(latitude),
+        float(longitude),
+        float(row["latitude"]),
+        float(row["longitude"]),
+    )
+    if distance <= RF_POSITION_MAX_DISTANCE_KM:
+        return None, {"relay": relay, "relay_distance_km": distance}
+    return "rf_relay_distance", {
+        "relay": relay,
+        "relay_distance_km": distance,
+        "limit_km": RF_POSITION_MAX_DISTANCE_KM,
+    }
+
+
+def _station_position_issues_conn(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
+    rows = conn.execute(
+        "SELECT callsign,latitude,longitude,path,last_heard FROM stations"
+    ).fetchall()
+    valid_coords: dict[str, tuple[float, float]] = {}
+    for row in rows:
+        if _valid_geo_position(row["latitude"], row["longitude"]):
+            valid_coords[str(row["callsign"] or "").upper().strip()] = (
+                float(row["latitude"]),
+                float(row["longitude"]),
+            )
+
+    issues: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        call = str(row["callsign"] or "").upper().strip()
+        lat, lon = row["latitude"], row["longitude"]
+        if lat is None or lon is None:
+            continue
+        if not _valid_geo_position(lat, lon):
+            issue = "zero_position" if (
+                lat is not None and lon is not None
+                and abs(float(lat)) <= POSITION_ZERO_EPSILON
+                and abs(float(lon)) <= POSITION_ZERO_EPSILON
+            ) else "invalid_position"
+            issues[call] = {"issue_type": issue, "latitude": lat, "longitude": lon}
+            continue
+
+        relay = _rf_igate_from_path(row["path"])
+        relay_coords = valid_coords.get(relay)
+        if relay and relay_coords:
+            distance = haversine_km(float(lat), float(lon), relay_coords[0], relay_coords[1])
+            if distance > RF_POSITION_MAX_DISTANCE_KM:
+                issues[call] = {
+                    "issue_type": "rf_relay_distance",
+                    "latitude": float(lat),
+                    "longitude": float(lon),
+                    "relay": relay,
+                    "relay_distance_km": round(distance, 1),
+                }
+    return issues
+
+
+def _position_issue_label(issue_type: str) -> str:
+    return {
+        "zero_position": "Coordenadas 0,0",
+        "invalid_position": "Coordenadas inválidas",
+        "rf_relay_distance": "Posição incompatível com o iGate RF",
+        "implied_speed": "Salto geográfico / velocidade implícita",
+    }.get(str(issue_type or ""), "Posição suspeita")
 
 
 def _parse_timestamp(value: Any) -> datetime | None:
