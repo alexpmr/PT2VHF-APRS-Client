@@ -30,14 +30,16 @@ Cada Release completa publica:
 
 <!-- DOWNLOAD_STATS_START -->
 
-_Atualizado automaticamente em **2026-09-28 13:53 UTC** a partir dos contadores das GitHub Releases._
+_Atualizado automaticamente em **2026-09-28 23:16 UTC** a partir dos contadores das GitHub Releases._
 
 | Release | Windows | Linux | macOS | Total |
 |---|---:|---:|---:|---:|
-| [v1.7.5](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.5) | 0 | 0 | 0 | **0** |
-| [v1.7.4](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.4) | 25 | 1 | 0 | **26** |
+| [v1.7.7](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.7) | 13 | 0 | 0 | **13** |
+| [v1.7.6](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.6) | 6 | 0 | 0 | **6** |
+| [v1.7.5](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.5) | 2 | 0 | 0 | **2** |
+| [v1.7.4](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.4) | 27 | 1 | 0 | **28** |
 | [v1.7.3](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.3) | 18 | 1 | 0 | **19** |
-| [v1.7.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.2) | 24 | 0 | 0 | **24** |
+| [v1.7.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.2) | 25 | 0 | 0 | **25** |
 | [v1.7.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.1) | 7 | 0 | 0 | **7** |
 | [v1.7](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7) | 7 | 0 | 0 | **7** |
 | [v1.6.24](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.24) | 12 | 0 | 0 | **12** |
@@ -79,7 +81,7 @@ _Atualizado automaticamente em **2026-09-28 13:53 UTC** a partir dos contadores 
 | [v0.2.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.2) | 0 | 0 | 0 | **0** |
 | [v0.2.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.1) | 0 | 0 | 0 | **0** |
 | [v0.2.0](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.0) | 1 | 0 | 0 | **1** |
-| **Acumulado** | **206** | **11** | **0** | **217** |
+| **Acumulado** | **230** | **11** | **0** | **241** |
 
 > Os números representam downloads dos pacotes do aplicativo, não usuários únicos. Manual PDF, SBOMs e arquivos de licenças não entram no total.
 
