@@ -539,9 +539,11 @@ def test_v162_replay_update_and_settings_ui():
     assert 'id="trafficLiveButton"' in html
     assert 'id="trafficActivityIndicator"' in html
     assert 'id="animateTopologyButton"' not in html
-    assert html.count('type="submit"') == 0
-    assert 'id="saveConfigFooterButton" type="button"' in html
-    assert 'id="saveConfigFooterButton"' in html
+    # O botão Salvar configuração é o único submit legítimo do formulário.
+    # O handler de submit evita navegação e centraliza a validação/salvamento.
+    assert html.count('type="submit"') == 1
+    assert 'id="saveConfigFooterButton" type="submit"' in html
+    assert "$('#configForm').addEventListener('submit'" in js
     assert 'id="whatsNewModal"' in html
     assert 'name="sound_on_station_activity" type="checkbox" checked' in html
     assert 'name="highlight_station_activity" type="checkbox" checked' in html
