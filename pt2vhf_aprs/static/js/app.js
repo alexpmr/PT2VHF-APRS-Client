@@ -335,6 +335,55 @@
     modal?.classList.remove('hidden');
   }
 
+  async function saveKmlContent(filename, content) {
+    const nativeSave = window.pywebview?.api?.save_text_file;
+    if (nativeSave) {
+      const result = await nativeSave(filename, content);
+      if (result?.cancelled) return { cancelled: true };
+      if (!result?.saved) {
+        throw new Error(result?.error || ui('Não foi possível salvar o arquivo KML.', 'Could not save the KML file.'));
+      }
+      return { saved: true, path: String(result.path || filename), native: true };
+    }
+
+    if (typeof window.showSaveFilePicker === 'function') {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{
+            description: 'KML',
+            accept: { 'application/vnd.google-earth.kml+xml': ['.kml'] },
+          }],
+          excludeAcceptAllOption: false,
+        });
+        const writable = await handle.createWritable();
+        await writable.write(new Blob([content], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' }));
+        await writable.close();
+        return { saved: true, path: handle.name || filename, native: false };
+      } catch (err) {
+        if (err?.name === 'AbortError') return { cancelled: true };
+        throw err;
+      }
+    }
+
+    const proceed = window.confirm(ui(
+      'Este navegador não permite escolher a pasta diretamente. Se continuar, o arquivo será enviado ao gerenciador de downloads do navegador. Deseja continuar?',
+      'This browser cannot choose the folder directly. If you continue, the file will be sent to the browser download manager. Continue?'
+    ));
+    if (!proceed) return { cancelled: true };
+
+    const blob = new Blob([content], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    return { saved: true, path: ui('pasta de downloads do navegador', 'browser downloads folder'), browserFallback: true };
+  }
+
   async function exportKml() {
     const selected = {
       stations: !!$('#kmlStations')?.checked,
@@ -374,21 +423,25 @@
         } catch (_) {}
         throw new Error(message);
       }
-      const blob = await response.blob();
+
       const disposition = String(response.headers.get('content-disposition') || '');
       const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
-      const filename = filenameMatch?.[1] || 'PT2VHF_APRS_Client_export.kml';
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-      if (status) status.textContent = ui('KML gerado com sucesso.', 'KML generated successfully.');
-      toast(ui('Arquivo KML gerado.', 'KML file generated.'), 'ok');
-      setTimeout(() => $('#kmlExportModal')?.classList.add('hidden'), 500);
+      const filename = filenameMatch?.[1] || `PT2VHF_APRS_Client_${new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15)}.kml`;
+      const content = await response.text();
+
+      if (status) status.textContent = ui('Escolha onde deseja salvar o arquivo…', 'Choose where to save the file…');
+      const result = await saveKmlContent(filename, content);
+      if (result?.cancelled) {
+        if (status) status.textContent = ui('Exportação cancelada.', 'Export cancelled.');
+        return;
+      }
+
+      const savedMessage = result?.path
+        ? ui(`KML salvo em: ${result.path}`, `KML saved to: ${result.path}`)
+        : ui('KML salvo com sucesso.', 'KML saved successfully.');
+      if (status) status.textContent = savedMessage;
+      toast(savedMessage, 'ok');
+      setTimeout(() => $('#kmlExportModal')?.classList.add('hidden'), 900);
     } catch (err) {
       const message = String(err?.message || err);
       if (status) status.textContent = message;
