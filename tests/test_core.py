@@ -1873,3 +1873,152 @@ def test_v1718_partial_tree_selection_keeps_parent_enabled():
     change_block = js[change_start:change_end]
     assert "syncMapViewTreeCheckboxes();" in change_block
     assert "for (const descendant" in change_block
+
+
+def test_v1719_objects_use_object_semantics_not_publisher_device():
+    object_meta = db.aprs_object_map_metadata(
+        "RPT-145",
+        "D-Star repeater 145.000 MHz",
+        "/",
+        "r",
+        "object",
+    )
+    assert object_meta["map_role"] == "object"
+    assert object_meta["map_family_label"] == "D-Star"
+    assert object_meta["device_tocall"] == ""
+
+    generic = db.aprs_object_map_metadata(
+        "LOCALOBJ",
+        "ponto de interesse",
+        "/",
+        ">",
+        "object",
+    )
+    assert generic["map_family_label"] == "Outros objetos"
+
+    publisher = db.aprs_map_device_metadata(
+        "PY2ABC>APDW18,TCPIP*:>Dire Wolf",
+        "Dire Wolf",
+        "#",
+    )
+    assert "Dire Wolf" in publisher["map_family_label"]
+    assert generic["map_family_label"] != publisher["map_family_label"]
+
+
+def test_v1719_rf_heard_list_uses_observed_rf_edges():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.record_topology_from_raw("PY2SRC>APRS,PY2DIGI*:>test")
+            rows = db.list_rf_received_by("PY2DIGI", hours=0)
+            assert rows
+            assert rows[0]["callsign"] == "PY2SRC"
+            assert int(rows[0]["packets"]) >= 1
+    finally:
+        db.DB_PATH = original
+
+
+def test_v1719_unified_station_stats_exclude_digis_and_igates():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            db.save_config({
+                "callsign": "PT2VHF",
+                "ssid": 0,
+                "latitude": -15.8,
+                "longitude": -47.9,
+                "altitude": 1000,
+            })
+
+            db.upsert_station({
+                "from": "PY2STA",
+                "format": "uncompressed",
+                "latitude": -15.81,
+                "longitude": -47.91,
+                "symbol_table": "/",
+                "symbol": ">",
+                "comment": "APRSdroid",
+                "path": ["TCPIP*"],
+                "raw": "PY2STA>APAND1,TCPIP*:>APRSdroid",
+            })
+            db.upsert_station({
+                "from": "PY2DIGI",
+                "format": "uncompressed",
+                "latitude": -15.82,
+                "longitude": -47.92,
+                "symbol_table": "/",
+                "symbol": "#",
+                "comment": "LoRa APRS Digipeater",
+                "path": ["WIDE1-1"],
+                "raw": "PY2DIGI>APRFGL,WIDE1-1:>LoRa APRS Digipeater",
+            })
+            db.upsert_station({
+                "from": "PY2IGATE",
+                "format": "uncompressed",
+                "latitude": -15.83,
+                "longitude": -47.93,
+                "symbol_table": "/",
+                "symbol": "&",
+                "comment": "LoRa APRS iGate",
+                "path": ["TCPIP*"],
+                "raw": "PY2IGATE>APRFGI,TCPIP*:>LoRa APRS iGate",
+            })
+
+            for _ in range(3):
+                db.record_packet("PY2STA>APAND1,TCPIP*:>APRSdroid", "PY2STA", "uncompressed")
+            for _ in range(5):
+                db.record_packet("PY2DIGI>APRFGL,WIDE1-1:>Digi", "PY2DIGI", "uncompressed")
+            for _ in range(4):
+                db.record_packet("PY2IGATE>APRFGI,TCPIP*:>iGate", "PY2IGATE", "uncompressed")
+
+            db.add_message("in", "PY2STA", "PT2VHF", "Olá Alex", msg_id="A1")
+            db.add_message("in", "PY2DIGI", "PT2VHF", "Mensagem de teste", msg_id="D1")
+            db.add_message("in", "PY2IGATE", "PT2VHF", "Mensagem de teste", msg_id="I1")
+
+            stats = db.topology_stats(0)
+            ranking = stats["station_rankings"]
+            calls = {item["callsign"] for item in ranking}
+            assert "PY2STA" in calls
+            assert "PY2DIGI" not in calls
+            assert "PY2IGATE" not in calls
+
+            normal = next(item for item in ranking if item["callsign"] == "PY2STA")
+            assert normal["packets"] == 3
+            assert normal["interactions"] >= 1
+            assert normal["sent"] >= 1
+            assert "APRSdroid" in normal["application"]
+    finally:
+        db.DB_PATH = original
+
+
+def test_v1719_statistics_ui_uses_one_sortable_station_table():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+
+    assert "renderStationStatsTable(data.station_rankings || [])" in js
+    assert "data-station-stats-sort" in js
+    assert "Pacotes úteis" in js
+    assert "Interações" in js
+    assert "Enviadas" in js
+    assert "Recebidas" in js
+    assert "Contatos" in js
+    assert "Tipo / aplicação" in js
+    assert "Estações mais ativas" not in js[js.index("async function refreshTopologyAnalysis()"):js.index("document.addEventListener('click', event => {", js.index("async function refreshTopologyAnalysis()"))]
+    assert ".station-ranking-group" in css
+    assert ".station-ranking-table-wrap" in css
+
+
+def test_v1719_station_popup_has_rf_received_section():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    web = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+
+    assert "Estações recebidas por RF" in js
+    assert "loadStationRfHeard(station.callsign)" in js
+    assert "/rf-heard?hours=" in js
+    assert '@app.get("/api/stations/<callsign>/rf-heard")' in web
