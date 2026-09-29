@@ -1730,6 +1730,59 @@ def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict
     }
 
 
+def aprs_object_map_metadata(
+    name: str,
+    info: str = "",
+    symbol_table: str = "/",
+    symbol: str = "",
+    packet_format: str = "object",
+) -> dict[str, Any]:
+    """Classifica um objeto APRS pela semântica do próprio objeto.
+
+    Não usa o TOCALL/cliente da estação publicadora para evitar que software
+    como Dire Wolf, D-Star gateway etc. apareça simultaneamente em Estações e
+    Objetos apenas por ter publicado o objeto.
+    """
+    object_name = re.sub(r"\s+", " ", str(name or "").strip())
+    object_info = re.sub(r"\s+", " ", str(info or "").strip())
+    descriptor = f"{object_name} {object_info}".upper()
+    sym = str(symbol or "")[:1]
+    fmt = str(packet_format or "").lower().strip()
+
+    if re.search(r"\bRDZ\b|RDZSONDE|RADIOSONDE|SONDE", descriptor):
+        key, label = "rdzsonde", "RDZSonDe"
+    elif re.search(r"\bDMR\b|BRANDMEISTER|MOTOTRBO", descriptor):
+        key, label = "dmr", "DMR"
+    elif re.search(r"\bD-?STAR\b|DSTAR|D-APRS", descriptor):
+        key, label = "d-star", "D-Star"
+    elif re.search(r"\bBALLOON\b|\bBALAO\b|\bBALÃO\b", descriptor) or sym == "O":
+        key, label = "balloon", "Balão / Radiossonda"
+    elif re.search(r"\bREPEATER\b|\bREPETIDOR\b|\bRPT\b", descriptor):
+        key, label = "repeater", "Repetidor"
+    elif re.search(r"\bWEATHER\b|\bWX\b|METEO", descriptor) or sym == "_":
+        key, label = "weather", "Estação meteorológica"
+    elif re.search(r"\bALERT\b|\bALERTA\b|\bNWS\b|EMERGENCY", descriptor):
+        key, label = "alert", "Alerta"
+    elif fmt == "item":
+        key, label = "aprs-item", "Item APRS"
+    else:
+        key, label = "other-object", "Outros objetos"
+
+    return {
+        "device_tocall": "",
+        "device_identified": False,
+        "device_class": "object",
+        "device_vendor": "",
+        "device_model": "",
+        "device_os": "",
+        "device_features": [],
+        "map_role": "object",
+        "map_subtype": key,
+        "map_family_key": key,
+        "map_family_label": label,
+    }
+
+
 APRS_CLIENT_CANONICAL_NAMES = {
     "aprsdroid": "APRSdroid",
     "brandmeister dmr": "BrandMeister DMR",
@@ -2762,10 +2815,12 @@ def map_data() -> dict[str, Any]:
             if not _valid_geo_position(row["latitude"], row["longitude"]):
                 continue
             item = dict(row)
-            item.update(aprs_map_device_metadata(
-                str(item.get("raw") or ""),
+            item.update(aprs_object_map_metadata(
+                str(item.get("name") or ""),
                 str(item.get("info") or ""),
+                str(item.get("symbol_table") or "/"),
                 str(item.get("symbol") or ""),
+                str(item.get("packet_format") or "object"),
             ))
             objects.append(item)
     return {"stations": stations, "objects": objects, "tracks": tracks}
