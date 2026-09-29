@@ -1352,9 +1352,17 @@
       const own = node.querySelector(':scope > .map-view-row > .map-view-checkbox');
       const children = [...node.querySelectorAll(':scope > .map-view-children > .map-view-node > .map-view-row > .map-view-checkbox')];
       if (!own || !children.length) continue;
+
       const all = children.every(input => input.checked && !input.indeterminate);
       const some = children.some(input => input.checked || input.indeterminate);
+
+      // Em uma árvore com seleção parcial, o pai representa a existência de
+      // qualquer filho ativo. O estado intermediário não pode desligar o grupo.
+      own.checked = some;
       own.indeterminate = some && !all;
+
+      if (own.dataset.mapStateKey) setMapViewState(own.dataset.mapStateKey, some);
+      if (own.dataset.mapFilterKey) setMapViewFilter(own.dataset.mapFilterKey, some);
     }
   }
 
@@ -1431,6 +1439,10 @@
 
         apply(input);
         for (const descendant of node?.querySelectorAll(':scope > .map-view-children .map-view-checkbox') || []) apply(descendant);
+
+        // Recalcula os pais a partir dos filhos. Isso garante que marcar apenas
+        // RDZSonDe, DMR, D-Star etc. mantenha "Objetos APRS" ativo em estado
+        // intermediário, em vez de bloquear todos os objetos.
         syncMapViewTreeCheckboxes();
         void refreshMapFromViewTree();
       });
