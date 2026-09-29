@@ -2936,6 +2936,41 @@ def geographic_export_data(hours: int = 0) -> dict[str, Any]:
     }
 
 
+
+def list_rf_received_by(receiver: str, hours: int = 0, limit: int = 100) -> list[dict[str, Any]]:
+    """Estações comprovadamente observadas chegando ao nó por enlace RF."""
+    receiver = str(receiver or "").upper().strip()
+    if not receiver:
+        return []
+    limit = max(1, min(int(limit or 100), 500))
+    params: list[Any] = [receiver]
+    where = ""
+    if int(hours or 0) > 0:
+        safe_hours = max(1, min(int(hours), 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=safe_hours)).isoformat(timespec="seconds")
+        where = "AND last_seen >= ?"
+        params.append(cutoff)
+    params.append(limit)
+    with connection() as conn:
+        rows = conn.execute(
+            f"""
+            SELECT UPPER(TRIM(source)) AS callsign,
+                   SUM(packet_count) AS packets,
+                   MAX(last_seen) AS last_seen
+            FROM topology_edges
+            WHERE UPPER(TRIM(target))=?
+              AND kind='rf'
+              AND UPPER(TRIM(source)) <> UPPER(TRIM(target))
+              {where}
+            GROUP BY UPPER(TRIM(source))
+            ORDER BY packets DESC, last_seen DESC, callsign
+            LIMIT ?
+            """,
+            params,
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
 def add_aprs_query(
     direction: str,
     peer: str,
