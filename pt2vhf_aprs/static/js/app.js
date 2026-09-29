@@ -1120,6 +1120,297 @@
     return `${Number(hours)} h`;
   }
 
+  const MAP_VIEW_STATE_STORAGE = {
+    stationsEnabled: 'pt2vhf_map_item_stations',
+    digisEnabled: 'pt2vhf_map_item_digis',
+    igatesEnabled: 'pt2vhf_map_item_igates',
+    objectsEnabled: 'pt2vhf_map_item_objects',
+    tracklogEnabled: 'pt2vhf_map_item_tracklogs',
+    rfLinksEnabled: 'pt2vhf_map_item_rf',
+    igateLinksEnabled: 'pt2vhf_map_item_igate',
+    packetsEnabled: 'pt2vhf_map_item_packets',
+  };
+
+  const MAP_DEVICE_CLASS_LABELS = {
+    network: ['Equipamento de rede', 'Network appliance'],
+    rig: ['Rádio / Rig', 'Rig'],
+    software: ['Software desktop', 'Desktop software'],
+    app: ['Aplicativo móvel', 'Mobile app'],
+    dstar: ['D-Star', 'D-Star'],
+    daemon: ['Software em segundo plano', 'Background software'],
+    gadget: ['Gadget', 'Gadget'],
+    wx: ['Estação meteorológica', 'Weather station'],
+    satellite: ['Satélite', 'Satellite'],
+    service: ['Serviço / Bot', 'Service / Bot'],
+    ht: ['HT', 'HT'],
+    tracker: ['Tracker', 'Tracker'],
+    unknown: ['Outros / não identificados', 'Other / unidentified'],
+  };
+
+  function mapFilterSlug(value) {
+    return String(value || 'unknown')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown';
+  }
+
+  function mapViewFilterEnabled(key) {
+    return state.mapViewFilters[String(key || '')] !== false;
+  }
+
+  function persistMapViewFilters() {
+    localStorage.setItem('pt2vhf_map_view_filters', JSON.stringify(state.mapViewFilters));
+  }
+
+  function setMapViewFilter(key, enabled) {
+    key = String(key || '');
+    if (!key) return;
+    if (enabled) delete state.mapViewFilters[key];
+    else state.mapViewFilters[key] = false;
+    persistMapViewFilters();
+  }
+
+  function setMapViewState(key, enabled) {
+    if (!(key in MAP_VIEW_STATE_STORAGE)) return;
+    state[key] = !!enabled;
+    localStorage.setItem(MAP_VIEW_STATE_STORAGE[key], state[key] ? '1' : '0');
+  }
+
+  function mapDeviceClassLabel(value) {
+    const key = String(value || 'unknown').toLowerCase();
+    const labels = MAP_DEVICE_CLASS_LABELS[key] || MAP_DEVICE_CLASS_LABELS.unknown;
+    return ui(labels[0], labels[1]);
+  }
+
+  function stationMapRole(station) {
+    const role = String(station?.map_role || 'station').toLowerCase();
+    return role === 'digi' || role === 'igate' ? role : 'station';
+  }
+
+  function stationMapFilterKeys(station) {
+    const role = stationMapRole(station);
+    const vendor = mapFilterSlug(station?.device_vendor || ui('Não identificado', 'Unidentified'));
+    const model = mapFilterSlug(station?.device_model || station?.device_tocall || ui('Não identificado', 'Unidentified'));
+    if (role === 'station') {
+      const cls = mapFilterSlug(station?.device_class || 'unknown');
+      return [
+        `station:class:${cls}`,
+        `station:vendor:${cls}:${vendor}`,
+        `station:model:${cls}:${vendor}:${model}`,
+      ];
+    }
+    const subtype = mapFilterSlug(station?.map_subtype || 'unknown');
+    return [
+      `${role}:subtype:${subtype}`,
+      `${role}:vendor:${subtype}:${vendor}`,
+      `${role}:model:${subtype}:${vendor}:${model}`,
+    ];
+  }
+
+  function stationMatchesViewFilter(station) {
+    const role = stationMapRole(station);
+    if (role === 'station' && !state.stationsEnabled) return false;
+    if (role === 'digi' && !state.digisEnabled) return false;
+    if (role === 'igate' && !state.igatesEnabled) return false;
+    return stationMapFilterKeys(station).every(mapViewFilterEnabled);
+  }
+
+  function objectMapFilterKeys(object) {
+    const source = mapFilterSlug(object?.source_callsign || 'unknown');
+    const name = mapFilterSlug(object?.name || 'unknown');
+    return [`object:source:${source}`, `object:name:${source}:${name}`];
+  }
+
+  function objectMatchesViewFilter(object) {
+    return !!state.objectsEnabled && objectMapFilterKeys(object).every(mapViewFilterEnabled);
+  }
+
+  function mapViewSubtypeLabel(role, subtype) {
+    const value = String(subtype || 'unknown').toLowerCase();
+    if (value === 'hybrid') return role === 'digi' ? ui('Digi + iGate', 'Digi + iGate') : ui('iGate + Digi', 'iGate + Digi');
+    if (value === 'lora') return 'LoRa APRS';
+    if (value === 'conventional') return ui('APRS convencional', 'Conventional APRS');
+    return ui('Não identificado', 'Unidentified');
+  }
+
+  function mapViewNodeHtml(node, depth = 0) {
+    const children = Array.isArray(node.children) ? node.children : [];
+    const expandable = children.length > 0;
+    const expanded = expandable && state.mapViewExpanded.has(node.id);
+    const stateAttr = node.stateKey ? ` data-map-state-key="${escapeHtml(node.stateKey)}"` : '';
+    const filterAttr = node.filterKey ? ` data-map-filter-key="${escapeHtml(node.filterKey)}"` : '';
+    const checked = node.stateKey ? !!state[node.stateKey] : mapViewFilterEnabled(node.filterKey);
+    return `<div class="map-view-node" data-map-node-id="${escapeHtml(node.id)}" data-depth="${depth}">
+      <div class="map-view-row">
+        ${expandable
+          ? `<button type="button" class="map-view-expand" data-map-tree-expand="${escapeHtml(node.id)}" aria-expanded="${expanded ? 'true' : 'false'}">${expanded ? '▾' : '▸'}</button>`
+          : '<span class="map-view-expand-spacer"></span>'}
+        <input type="checkbox" class="map-view-checkbox"${stateAttr}${filterAttr}${checked ? ' checked' : ''}>
+        <span class="map-view-label">${escapeHtml(node.label)}</span>
+        ${Number.isFinite(Number(node.count)) ? `<span class="map-view-count">${Number(node.count).toLocaleString(currentLocale())}</span>` : ''}
+      </div>
+      ${expandable ? `<div class="map-view-children${expanded ? '' : ' hidden'}">${children.map(child => mapViewNodeHtml(child, depth + 1)).join('')}</div>` : ''}
+    </div>`;
+  }
+
+  function groupedMapNodes(rows, role) {
+    const top = new Map();
+    for (const station of rows) {
+      const keys = stationMapFilterKeys(station);
+      const primaryRaw = role === 'station'
+        ? String(station.device_class || 'unknown').toLowerCase()
+        : String(station.map_subtype || 'unknown').toLowerCase();
+      const primaryKey = keys[0];
+      const primaryLabel = role === 'station'
+        ? mapDeviceClassLabel(primaryRaw)
+        : mapViewSubtypeLabel(role, primaryRaw);
+      if (!top.has(primaryKey)) top.set(primaryKey, { label: primaryLabel, rows: [] });
+      top.get(primaryKey).rows.push(station);
+    }
+
+    return [...top.entries()]
+      .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
+      .map(([primaryKey, bucket]) => {
+        const vendors = new Map();
+        for (const station of bucket.rows) {
+          const vendorLabel = String(station.device_vendor || ui('Não identificado', 'Unidentified')).trim();
+          const vendorKey = stationMapFilterKeys(station)[1];
+          if (!vendors.has(vendorKey)) vendors.set(vendorKey, { label: vendorLabel, rows: [] });
+          vendors.get(vendorKey).rows.push(station);
+        }
+        const vendorNodes = [...vendors.entries()]
+          .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
+          .map(([vendorKey, vendorBucket]) => {
+            const models = new Map();
+            for (const station of vendorBucket.rows) {
+              const modelLabel = String(station.device_model || station.device_tocall || ui('Não identificado', 'Unidentified')).trim();
+              const modelKey = stationMapFilterKeys(station)[2];
+              if (!models.has(modelKey)) models.set(modelKey, { label: modelLabel, count: 0 });
+              models.get(modelKey).count += 1;
+            }
+            return {
+              id: `node:${vendorKey}`,
+              label: vendorBucket.label,
+              filterKey: vendorKey,
+              count: vendorBucket.rows.length,
+              children: [...models.entries()]
+                .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
+                .map(([modelKey, model]) => ({
+                  id: `node:${modelKey}`,
+                  label: model.label,
+                  filterKey: modelKey,
+                  count: model.count,
+                })),
+            };
+          });
+        return {
+          id: `node:${primaryKey}`,
+          label: bucket.label,
+          filterKey: primaryKey,
+          count: bucket.rows.length,
+          children: vendorNodes,
+        };
+      });
+  }
+
+  function objectMapNodes(objects) {
+    const sources = new Map();
+    for (const object of objects) {
+      const sourceLabel = String(object.source_callsign || ui('Origem não identificada', 'Unidentified source')).trim();
+      const keys = objectMapFilterKeys(object);
+      if (!sources.has(keys[0])) sources.set(keys[0], { label: sourceLabel, rows: [] });
+      sources.get(keys[0]).rows.push(object);
+    }
+    return [...sources.entries()]
+      .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
+      .map(([sourceKey, bucket]) => ({
+        id: `node:${sourceKey}`,
+        label: bucket.label,
+        filterKey: sourceKey,
+        count: bucket.rows.length,
+        children: bucket.rows
+          .slice()
+          .sort((a,b) => String(a.name || '').localeCompare(String(b.name || ''), currentLocale()))
+          .map(object => {
+            const objectKey = objectMapFilterKeys(object)[1];
+            return {
+              id: `node:${objectKey}`,
+              label: String(object.name || ui('Objeto sem nome', 'Unnamed object')),
+              filterKey: objectKey,
+              count: 1,
+            };
+          }),
+      }));
+  }
+
+  function renderMapViewTree(stations = [], objects = []) {
+    const tree = $('#mapViewTree');
+    if (!tree) return;
+
+    const stationRows = stations.filter(item => stationMapRole(item) === 'station');
+    const digiRows = stations.filter(item => stationMapRole(item) === 'digi');
+    const igateRows = stations.filter(item => stationMapRole(item) === 'igate');
+
+    const nodes = [
+      {
+        id: 'root:stations',
+        label: ui('Estações', 'Stations'),
+        stateKey: 'stationsEnabled',
+        count: stationRows.length,
+        children: groupedMapNodes(stationRows, 'station'),
+      },
+      {
+        id: 'root:digis',
+        label: ui('Digipeaters', 'Digipeaters'),
+        stateKey: 'digisEnabled',
+        count: digiRows.length,
+        children: groupedMapNodes(digiRows, 'digi'),
+      },
+      {
+        id: 'root:igates',
+        label: 'iGates',
+        stateKey: 'igatesEnabled',
+        count: igateRows.length,
+        children: groupedMapNodes(igateRows, 'igate'),
+      },
+      {
+        id: 'root:objects',
+        label: ui('Objetos APRS', 'APRS objects'),
+        stateKey: 'objectsEnabled',
+        count: objects.length,
+        children: objectMapNodes(objects),
+      },
+      { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled' },
+      { id: 'root:rf', label: ui('Enlaces RF', 'RF links'), stateKey: 'rfLinksEnabled' },
+      { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
+      { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
+    ];
+
+    tree.innerHTML = nodes.map(node => mapViewNodeHtml(node, 0)).join('');
+    syncMapViewTreeCheckboxes();
+  }
+
+  function syncMapViewTreeCheckboxes() {
+    const tree = $('#mapViewTree');
+    if (!tree) return;
+    const nodes = [...tree.querySelectorAll('.map-view-node')].reverse();
+    for (const node of nodes) {
+      const own = node.querySelector(':scope > .map-view-row > .map-view-checkbox');
+      const children = [...node.querySelectorAll(':scope > .map-view-children > .map-view-node > .map-view-row > .map-view-checkbox')];
+      if (!own || !children.length) continue;
+      const all = children.every(input => input.checked && !input.indeterminate);
+      const some = children.some(input => input.checked || input.indeterminate);
+      own.indeterminate = some && !all;
+    }
+  }
+
+  async function refreshMapFromViewTree() {
+    state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
+    if (!state.packetsEnabled) clearTrafficReplayLayers();
+    await loadMapData();
+    if (!state.topologyEnabled) clearTopologyLines();
+    updateMapLegend();
+  }
+
   function addMapControls() {
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
     state.topologyHours = state.mapPeriodHours;
@@ -1127,33 +1418,6 @@
 
     const period = $('#mapPeriodHours');
     if (period) period.value = String(state.mapPeriodHours);
-
-    const itemBindings = [
-      ['#mapItemStations', 'stationsEnabled', 'pt2vhf_map_item_stations'],
-      ['#mapItemObjects', 'objectsEnabled', 'pt2vhf_map_item_objects'],
-      ['#mapItemTracklogs', 'tracklogEnabled', 'pt2vhf_map_item_tracklogs'],
-      ['#mapItemRfLinks', 'rfLinksEnabled', 'pt2vhf_map_item_rf'],
-      ['#mapItemIgateLinks', 'igateLinksEnabled', 'pt2vhf_map_item_igate'],
-      ['#mapItemPackets', 'packetsEnabled', 'pt2vhf_map_item_packets'],
-    ];
-
-    for (const [selector, key, storageKey] of itemBindings) {
-      const input = $(selector);
-      if (!input) continue;
-      input.checked = !!state[key];
-      if (input.dataset.bound === '1') continue;
-      input.dataset.bound = '1';
-      input.addEventListener('change', async () => {
-        state[key] = input.checked;
-        localStorage.setItem(storageKey, state[key] ? '1' : '0');
-        state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
-        if (!state.packetsEnabled) clearTrafficReplayLayers();
-        await loadMapData();
-        if (state.topologyEnabled) await loadTopology();
-        else clearTopologyLines();
-        updateMapLegend();
-      });
-    }
 
     if (period && period.dataset.bound !== '1') {
       period.dataset.bound = '1';
@@ -1165,7 +1429,6 @@
         localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
         if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.mapPeriodHours);
         await loadMapData();
-        if (state.topologyEnabled) await loadTopology();
         stopTrafficTimer();
         state.trafficPlaying = false;
         state.trafficOverview = null;
@@ -1173,6 +1436,61 @@
           try { await loadTrafficHistory(true); } catch (_) {}
         }
         updateTrafficAnimationUi();
+      });
+    }
+
+    const tree = $('#mapViewTree');
+    if (tree && tree.dataset.bound !== '1') {
+      tree.dataset.bound = '1';
+
+      tree.addEventListener('click', event => {
+        const expand = event.target.closest('[data-map-tree-expand]');
+        if (!expand) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const id = String(expand.dataset.mapTreeExpand || '');
+        const node = expand.closest('.map-view-node');
+        const children = node?.querySelector(':scope > .map-view-children');
+        if (!children) return;
+        const willExpand = children.classList.contains('hidden');
+        children.classList.toggle('hidden', !willExpand);
+        expand.textContent = willExpand ? '▾' : '▸';
+        expand.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+        if (willExpand) state.mapViewExpanded.add(id);
+        else state.mapViewExpanded.delete(id);
+        localStorage.setItem('pt2vhf_map_view_expanded', JSON.stringify([...state.mapViewExpanded]));
+      });
+
+      tree.addEventListener('change', event => {
+        const input = event.target.closest('.map-view-checkbox');
+        if (!input) return;
+        const value = !!input.checked;
+        const node = input.closest('.map-view-node');
+
+        const apply = target => {
+          if (target.dataset.mapStateKey) setMapViewState(target.dataset.mapStateKey, value);
+          if (target.dataset.mapFilterKey) setMapViewFilter(target.dataset.mapFilterKey, value);
+          target.checked = value;
+          target.indeterminate = false;
+        };
+
+        apply(input);
+        for (const descendant of node?.querySelectorAll(':scope > .map-view-children .map-view-checkbox') || []) apply(descendant);
+        syncMapViewTreeCheckboxes();
+        void refreshMapFromViewTree();
+      });
+    }
+
+    const allButton = $('#mapViewAllButton');
+    if (allButton && allButton.dataset.bound !== '1') {
+      allButton.dataset.bound = '1';
+      allButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        for (const key of Object.keys(MAP_VIEW_STATE_STORAGE)) setMapViewState(key, true);
+        state.mapViewFilters = {};
+        persistMapViewFilters();
+        void refreshMapFromViewTree();
       });
     }
 
@@ -1185,11 +1503,13 @@
         if (menu.classList.contains('hidden')) return;
         const rect = button.getBoundingClientRect();
         const margin = 6;
-        const width = Math.max(225, menu.offsetWidth || 225);
+        const width = Math.max(360, menu.offsetWidth || 360);
         const maxLeft = Math.max(margin, window.innerWidth - width - margin);
         const left = Math.min(Math.max(margin, rect.left), maxLeft);
+        const maxTop = Math.max(margin, window.innerHeight - Math.min(menu.offsetHeight || 520, 620) - margin);
+        const top = Math.min(rect.bottom + 5, maxTop);
         menu.style.left = `${Math.round(left)}px`;
-        menu.style.top = `${Math.round(rect.bottom + 5)}px`;
+        menu.style.top = `${Math.round(top)}px`;
       };
 
       const closeMapItemsMenu = () => {
