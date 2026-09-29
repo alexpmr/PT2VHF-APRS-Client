@@ -1911,8 +1911,8 @@ def test_v1719_rf_heard_list_uses_observed_rf_edges():
         with tempfile.TemporaryDirectory() as td:
             db.DB_PATH = Path(td) / "test.db"
             db.init_db()
-            db.record_topology_from_raw("PY2SRC>APRS,PY2DIGI*:>test")
-            rows = db.list_rf_received_by("PY2DIGI", hours=0)
+            db.record_topology_from_raw("PY2SRC>APRS,PY2DGI*:>test")
+            rows = db.list_rf_received_by("PY2DGI", hours=0)
             assert rows
             assert rows[0]["callsign"] == "PY2SRC"
             assert int(rows[0]["packets"]) >= 1
