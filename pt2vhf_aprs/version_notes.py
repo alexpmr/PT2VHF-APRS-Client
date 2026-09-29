@@ -11,7 +11,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Pai parcialmente selecionado representa seleção parcial, não grupo desligado.",
             "A mesma regra vale para Estações, Digipeaters, iGates e Objetos APRS.",
             "Marcar o pai ativa todos os filhos; desmarcar o pai desativa todos; marcar apenas algumas famílias mostra somente essas famílias.",
-            "Build de validação somente para Windows x64 Portable.",
+            "Build de validação somente para Windows x64 Portable, destinado ao teste da seleção parcial do menu Ver.",
         ],
     },
     "1.7.17": {
