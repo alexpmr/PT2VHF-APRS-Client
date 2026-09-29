@@ -1245,7 +1245,7 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     with connection() as conn:
         rows = conn.execute(
             """
-            SELECT s.,
+            SELECT s.*,
                    CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite,
                    CASE WHEN
                         COALESCE(s.message_capable,0)=1
@@ -2558,7 +2558,7 @@ def map_data() -> dict[str, Any]:
     with connection() as conn:
         station_rows = conn.execute(
             """
-            SELECT s.,
+            SELECT s.*,
                    CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite,
                    CASE WHEN
                         COALESCE(s.message_capable,0)=1
