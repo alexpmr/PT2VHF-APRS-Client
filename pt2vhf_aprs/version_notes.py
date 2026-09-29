@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.17": {
+        "title": "Validação Windows x64: filtros Ver por tipo/família",
+        "items": [
+            "Remove indicativos e objetos individuais da árvore Ver como níveis de filtragem.",
+            "Objetos APRS passam a ser agrupados por família funcional, como RDZSonDe, em vez de por indicativo de origem.",
+            "Estações, digipeaters e iGates passam a ser agrupados diretamente por produto/tipo, como Bravo Tracker, DMR, D-Star, HBLink, Dire Wolf e Aprx.",
+            "Desmarcar uma família oculta todos os itens daquele tipo no mapa, independentemente do indicativo.",
+            "A contagem ao lado da família representa quantos itens daquele tipo estão no período atual do mapa.",
+            "Filtros antigos da v1.7.16 são migrados para uma nova chave para evitar ocultações indevidas.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.16": {
         "title": "Validação Windows x64: menu Ver hierárquico no Mapa",
         "items": [
