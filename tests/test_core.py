@@ -1733,3 +1733,28 @@ def test_v1713_object_symbols_activity_and_version_status():
     assert "animation: stationTxPulse 1s ease-out;" in css
     assert "animation: stationTxRing 1s ease-out forwards;" in css
     assert ".aprs-object-marker-wrap.station-transmitting .aprs-object-marker" in css
+
+def test_v1715_infrastructure_interaction_requires_evidence():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+    database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+
+    assert "function stationInteractionProfile(s)" in js
+    assert "interaction_evidence" in js
+    assert "const digiSymbol = String(s?.symbol || '') === '#';" in js
+    assert "D-?STAR" in js
+    assert "HOTSPOT" in js
+    assert "DIGI(?:PEATER)?" in js
+    assert "stationInteractionDisabledAttrs" in js
+    assert '${interactionDisabled}>Ping/ACK</button>' in js
+    assert '${interactionDisabled}>Enviar mensagem</button>' in js
+    assert "station-interaction-disabled-note" in js
+
+    assert "m.direction='in'" in database
+    assert "UPPER(COALESCE(m.status,'')) IN ('ACK','REJ')" in database
+    assert "q.response_at IS NOT NULL" in database
+    assert "AS interaction_evidence" in database
+
+    assert ".station-popup .btn:disabled" in css
+    assert ".station-interaction-disabled-note" in css
