@@ -1851,3 +1851,25 @@ def test_v1717_map_ver_groups_by_family_not_callsign():
 
     hblink = db.aprs_map_device_metadata("KF7EEL>APHBL1,TCPIP*:>HBLink D-APRS Gateway", "D-APRS", "&")
     assert hblink["map_family_label"] == "HBLink D-APRS Gateway"
+
+
+def test_v1718_partial_tree_selection_keeps_parent_enabled():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    start = js.index("function syncMapViewTreeCheckboxes()")
+    end = js.index("async function refreshMapFromViewTree()", start)
+    block = js[start:end]
+
+    assert "own.checked = some;" in block
+    assert "own.indeterminate = some && !all;" in block
+    assert "setMapViewState(own.dataset.mapStateKey, some)" in block
+    assert "setMapViewFilter(own.dataset.mapFilterKey, some)" in block
+
+    # Child selection must no longer leave Objects/Stations/Digis/iGates
+    # globally disabled while some descendants remain selected.
+    change_start = js.index("tree.addEventListener('change'")
+    change_end = js.index("const allButton = $('#mapViewAllButton')", change_start)
+    change_block = js[change_start:change_end]
+    assert "syncMapViewTreeCheckboxes();" in change_block
+    assert "for (const descendant" in change_block
