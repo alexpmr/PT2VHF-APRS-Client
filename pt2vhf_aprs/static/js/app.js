@@ -5816,6 +5816,69 @@
   }
 
 
+  let stationStatsRows = [];
+  let stationStatsSort = { key: 'packets', dir: 'desc' };
+
+  function stationStatsValue(row, key) {
+    if (['packets','interactions','sent','received','peers'].includes(key)) return Number(row?.[key] || 0);
+    if (key === 'last_seen') return new Date(row?.last_seen || 0).getTime() || 0;
+    return String(row?.[key] || '').toLocaleLowerCase(currentLocale());
+  }
+
+  function renderStationStatsTable(rows = stationStatsRows) {
+    stationStatsRows = Array.isArray(rows) ? rows.slice() : [];
+    const { key, dir } = stationStatsSort;
+    const sorted = stationStatsRows.slice().sort((a,b) => {
+      const av = stationStatsValue(a, key);
+      const bv = stationStatsValue(b, key);
+      let cmp = 0;
+      if (typeof av === 'number' && typeof bv === 'number') cmp = av - bv;
+      else cmp = String(av).localeCompare(String(bv), currentLocale());
+      if (cmp === 0) cmp = String(a.callsign || '').localeCompare(String(b.callsign || ''), currentLocale());
+      return dir === 'asc' ? cmp : -cmp;
+    });
+
+    const arrow = column => column === key ? (dir === 'asc' ? '▲' : '▼') : '';
+    const th = (column, label) =>
+      `<th data-station-stats-sort="${column}">${escapeHtml(label)} <span class="sort-indicator">${arrow(column)}</span></th>`;
+
+    const body = sorted.length
+      ? sorted.map(row => `<tr>
+          <td><button type="button" class="stats-map-link" data-map-callsign="${escapeHtml(row.callsign || '')}">${escapeHtml(row.callsign || '')}</button></td>
+          <td>${Number(row.packets || 0).toLocaleString(currentLocale())}</td>
+          <td>${Number(row.interactions || 0).toLocaleString(currentLocale())}</td>
+          <td>${Number(row.sent || 0).toLocaleString(currentLocale())}</td>
+          <td>${Number(row.received || 0).toLocaleString(currentLocale())}</td>
+          <td>${Number(row.peers || 0).toLocaleString(currentLocale())}</td>
+          <td>${escapeHtml(row.last_seen ? fmtDate(row.last_seen) : '')}</td>
+          <td>${escapeHtml(row.application || '')}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="8" class="hint">${escapeHtml(ui('Sem dados.', 'No data.'))}</td></tr>`;
+
+    return `<div class="topology-stat-group station-ranking-group">
+      <h4>${escapeHtml(ui('Estações - atividade e interações', 'Stations - activity and interactions'))}</h4>
+      <div class="hint">${escapeHtml(ui(
+        'Ranking único de estações comuns. Telemetria, iGates e digipeaters são excluídos; interações consideram somente conversas APRS manuais.',
+        'Unified ranking of regular stations. Telemetry, iGates and digipeaters are excluded; interactions count only manual APRS conversations.'
+      ))}</div>
+      <div class="station-ranking-table-wrap">
+        <table class="data-table station-ranking-table">
+          <thead><tr>
+            ${th('callsign', ui('Indicativo', 'Callsign'))}
+            ${th('packets', ui('Pacotes úteis', 'Useful packets'))}
+            ${th('interactions', ui('Interações', 'Interactions'))}
+            ${th('sent', ui('Enviadas', 'Sent'))}
+            ${th('received', ui('Recebidas', 'Received'))}
+            ${th('peers', ui('Contatos', 'Peers'))}
+            ${th('last_seen', ui('Última atividade', 'Last activity'))}
+            ${th('application', ui('Tipo / aplicação', 'Type / application'))}
+          </tr></thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
   async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
     if (!box) return;
@@ -5833,13 +5896,7 @@
         : '';
 
       box.innerHTML =
-        '<div class="topology-stat-group"><h4>' + ui('Estações mais ativas', 'Most active stations') + '</h4>' +
-        '<div class="hint">' + ui('Tráfego útil por estação; telemetria, iGates e digipeaters não entram neste ranking.', 'Useful traffic by station; telemetry, iGates and digipeaters are excluded from this ranking.') + '</div>' +
-        list(data.active_stations || [], x => `<li><button type="button" class="callsign-link callsign-quick-message" data-quick-message-callsign="${escapeHtml(x.callsign)}">${escapeHtml(x.callsign)}</button> — ${Number(x.packets||0).toLocaleString(currentLocale())} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
-
-        '<div class="topology-stat-group"><h4>' + ui('Estações que mais interagiram', 'Most interactive stations') + '</h4>' +
-        '<div class="hint">' + ui('Somente conversas APRS manuais entre estações. Beacons, telemetria, ACK/REJ, queries, respostas automáticas, boletins e retries não entram no ranking.', 'Only manual APRS conversations between stations. Beacons, telemetry, ACK/REJ, queries, automatic replies, bulletins and retries are excluded.') + '</div>' +
-        list(data.manual_conversations || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.interactions||0).toLocaleString(currentLocale())} ${escapeHtml(ui('interações', 'interactions'))} · ${Number(x.peers||0).toLocaleString(currentLocale())} ${escapeHtml(ui('contatos', 'peers'))} · ${Number(x.percent||0).toLocaleString(currentLocale(), {maximumFractionDigits:1})}%</li>`) + '</div>' +
+        renderStationStatsTable(data.station_rankings || []) +
 
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
         list(data.digipeaters || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
@@ -5893,6 +5950,18 @@
     event.preventDefault();
     event.stopPropagation();
     void focusStationOnMap(link.dataset.mapCallsign || '');
+  });
+
+  document.addEventListener('click', event => {
+    const header = event.target.closest('[data-station-stats-sort]');
+    if (!header) return;
+    const key = String(header.dataset.stationStatsSort || '');
+    if (!key) return;
+    stationStatsSort = stationStatsSort.key === key
+      ? { key, dir: stationStatsSort.dir === 'asc' ? 'desc' : 'asc' }
+      : { key, dir: ['callsign','application'].includes(key) ? 'asc' : 'desc' };
+    const group = $('.station-ranking-group');
+    if (group) group.outerHTML = renderStationStatsTable(stationStatsRows);
   });
 
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
