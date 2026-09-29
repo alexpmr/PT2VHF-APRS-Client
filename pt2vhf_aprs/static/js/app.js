@@ -1871,6 +1871,10 @@
         <strong>Informação</strong><span>${escapeHtml(s.info || '')}</span>
         <strong>Via</strong><span>${escapeHtml(path)}</span>
       </div>
+      <div class="station-rf-heard-section">
+        <div class="station-query-title">${ui('Estações recebidas por RF', 'Stations received by RF')}</div>
+        <div class="station-rf-heard-list" data-rf-heard="${escapeHtml(s.callsign)}"><span class="hint">${escapeHtml(ui('Carregando…', 'Loading…'))}</span></div>
+      </div>
       <div class="station-query-actions">
         <div class="station-query-title">Diagnóstico / Queries APRS</div>
         <div class="station-query-buttons">
@@ -2012,7 +2016,10 @@
         marker.setZIndexOffset(1200);
         marker.bindPopup(popupHtml(station), { maxWidth: 520 });
         if (marker._pt2vhfQueryPopupHandler) marker.off('popupopen', marker._pt2vhfQueryPopupHandler);
-        marker._pt2vhfQueryPopupHandler = () => { void loadStationQueryHistory(station.callsign, false); };
+        marker._pt2vhfQueryPopupHandler = () => {
+          void loadStationQueryHistory(station.callsign, false);
+          void loadStationRfHeard(station.callsign);
+        };
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
@@ -3370,6 +3377,41 @@
         escapeHtml(String(item.status || '')) + rttText +
         '<br><span>' + escapeHtml(fmtDate(item.sent_at)) + '</span></div>';
     }).join('');
+  }
+
+  function stationRfHeardElement(callsign) {
+    const call = normalizedCall(callsign);
+    return [...document.querySelectorAll('.station-rf-heard-list')].find(
+      el => normalizedCall(el.dataset.rfHeard || '') === call
+    ) || null;
+  }
+
+  async function loadStationRfHeard(callsign) {
+    const call = normalizedCall(callsign);
+    const el = stationRfHeardElement(call);
+    if (!call || !el) return [];
+    try {
+      const rows = await api(
+        '/api/stations/' + encodeURIComponent(call) +
+        '/rf-heard?hours=' + encodeURIComponent(topologyPeriodValue(state.mapPeriodHours)) +
+        '&limit=100'
+      );
+      const items = Array.isArray(rows) ? rows : [];
+      if (!items.length) {
+        el.innerHTML = '<span class="hint">' + escapeHtml(ui('Nenhuma recepção RF observada neste período.', 'No RF reception observed in this period.')) + '</span>';
+        return items;
+      }
+      el.innerHTML = '<div class="station-rf-heard-grid">' + items.map(item =>
+        '<button type="button" class="stats-map-link station-rf-heard-call" data-map-callsign="' +
+          escapeHtml(item.callsign || '') + '">' + escapeHtml(item.callsign || '') + '</button>' +
+        '<span>' + Number(item.packets || 0).toLocaleString(currentLocale()) + ' · ' +
+          escapeHtml(fmtDate(item.last_seen)) + '</span>'
+      ).join('') + '</div>';
+      return items;
+    } catch (err) {
+      el.innerHTML = '<span class="query-status-error">' + escapeHtml(err.message) + '</span>';
+      return [];
+    }
   }
 
   async function loadStationQueryHistory(callsign, showHistory = false) {
