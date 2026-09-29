@@ -1245,7 +1245,35 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     with connection() as conn:
         rows = conn.execute(
             """
-            SELECT s.*, CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
+            SELECT s.,
+                   CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite,
+                   CASE WHEN
+                        COALESCE(s.message_capable,0)=1
+                        OR EXISTS (
+                            SELECT 1 FROM messages m
+                            WHERE m.direction='in'
+                              AND m.message_type='message'
+                              AND UPPER(m.from_call)=UPPER(s.callsign)
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM messages m
+                            WHERE m.direction='out'
+                              AND UPPER(m.to_call)=UPPER(s.callsign)
+                              AND UPPER(COALESCE(m.status,'')) IN ('ACK','REJ')
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM aprs_queries q
+                            WHERE UPPER(q.peer)=UPPER(s.callsign)
+                              AND (
+                                  q.direction='in'
+                                  OR (
+                                      q.direction='out'
+                                      AND q.response_at IS NOT NULL
+                                      AND UPPER(COALESCE(q.status,''))='RESPONDIDA'
+                                  )
+                              )
+                        )
+                   THEN 1 ELSE 0 END AS interaction_evidence
             FROM stations s
             LEFT JOIN favorites f ON UPPER(f.callsign)=UPPER(s.callsign)
             WHERE UPPER(s.callsign) LIKE ? OR UPPER(COALESCE(s.name,'')) LIKE ? OR UPPER(COALESCE(s.info,'')) LIKE ?
@@ -2530,7 +2558,35 @@ def map_data() -> dict[str, Any]:
     with connection() as conn:
         station_rows = conn.execute(
             """
-            SELECT s.*, CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
+            SELECT s.,
+                   CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite,
+                   CASE WHEN
+                        COALESCE(s.message_capable,0)=1
+                        OR EXISTS (
+                            SELECT 1 FROM messages m
+                            WHERE m.direction='in'
+                              AND m.message_type='message'
+                              AND UPPER(m.from_call)=UPPER(s.callsign)
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM messages m
+                            WHERE m.direction='out'
+                              AND UPPER(m.to_call)=UPPER(s.callsign)
+                              AND UPPER(COALESCE(m.status,'')) IN ('ACK','REJ')
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM aprs_queries q
+                            WHERE UPPER(q.peer)=UPPER(s.callsign)
+                              AND (
+                                  q.direction='in'
+                                  OR (
+                                      q.direction='out'
+                                      AND q.response_at IS NOT NULL
+                                      AND UPPER(COALESCE(q.status,''))='RESPONDIDA'
+                                  )
+                              )
+                        )
+                   THEN 1 ELSE 0 END AS interaction_evidence
             FROM stations s
             LEFT JOIN favorites f ON UPPER(f.callsign)=UPPER(s.callsign)
             WHERE s.latitude IS NOT NULL AND s.longitude IS NOT NULL
