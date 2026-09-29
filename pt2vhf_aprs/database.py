@@ -1606,6 +1606,60 @@ def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
     }
 
 
+def _aprs_map_family(resolved: dict[str, Any], descriptor: str, role: str) -> tuple[str, str]:
+    """Normaliza o tipo/família usado no filtro Ver do mapa."""
+    model = str(resolved.get("model") or resolved.get("friendly_name") or "").strip()
+    vendor = str(resolved.get("vendor") or "").strip()
+    device_class = str(resolved.get("class") or "").strip().lower()
+    text = " ".join(part for part in (model, vendor, descriptor) if part).upper()
+
+    # Famílias funcionais amplas que o usuário precisa conseguir ocultar de uma vez.
+    if re.search(r"RDZ|SONDE|RADIOSONDE", text):
+        return "rdzsonde", "RDZSonDe"
+    if "BRAVO TRACKER" in text:
+        return "bravo-tracker", "Bravo Tracker"
+    if device_class == "dstar" or re.search(r"\bD-?STAR\b|DSTAR|D-APRS", text):
+        # HBLink é mais útil como família própria do que escondido em D-Star.
+        if "HBLINK" in text:
+            return "hblink-daprs-gateway", "HBLink D-APRS Gateway"
+        return "d-star", "D-Star"
+    if re.search(r"\bDMR\b|BRANDMEISTER|MOTOTRBO", text):
+        return "dmr", "DMR"
+    if "HBLINK" in text:
+        return "hblink-daprs-gateway", "HBLink D-APRS Gateway"
+
+    if model:
+        _, display = _canonical_client_family(model)
+        display = re.sub(r"\s+", " ", display).strip()
+        if display:
+            key = re.sub(r"[^0-9a-z]+", "-", display.casefold()).strip("-") or "unknown"
+            return key, display
+
+    if vendor:
+        display = re.sub(r"\s+", " ", vendor).strip()
+        key = re.sub(r"[^0-9a-z]+", "-", display.casefold()).strip("-") or "unknown"
+        return key, display
+
+    class_labels = {
+        "network": "Equipamento de rede",
+        "rig": "Rádio / Rig",
+        "software": "Software",
+        "app": "Aplicativo móvel",
+        "daemon": "Software em segundo plano",
+        "digi": "Digipeater",
+        "gadget": "Gadget",
+        "wx": "Estação meteorológica",
+        "igate": "iGate",
+        "satellite": "Satélite",
+        "service": "Serviço / Bot",
+        "ht": "HT",
+        "tracker": "Tracker",
+    }
+    label = class_labels.get(device_class) or ("Digipeater" if role == "digi" else ("iGate" if role == "igate" else "Não identificado"))
+    key = re.sub(r"[^0-9a-z]+", "-", label.casefold()).strip("-") or "unknown"
+    return key, label
+
+
 def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict[str, Any]:
     """Classificação leve para filtros hierárquicos do mapa."""
     tocall = _aprs_tocall_from_raw(raw)
@@ -1659,6 +1713,8 @@ def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict
     else:
         subtype = device_class or "unknown"
 
+    family_key, family_label = _aprs_map_family(resolved, descriptor, role)
+
     return {
         "device_tocall": tocall,
         "device_identified": bool(resolved.get("identified")),
@@ -1669,6 +1725,8 @@ def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict
         "device_features": features,
         "map_role": role,
         "map_subtype": subtype,
+        "map_family_key": family_key,
+        "map_family_label": family_label,
     }
 
 
@@ -2693,17 +2751,23 @@ def map_data() -> dict[str, Any]:
         and _valid_geo_position(row.get("latitude"), row.get("longitude"))
     ]
     with connection() as conn:
-        objects = [
-            dict(row)
-            for row in conn.execute(
-                """SELECT name,source_callsign,last_heard,latitude,longitude,altitude,
-                          symbol_table,symbol,info,packet_format,raw
-                   FROM aprs_objects
-                   ORDER BY last_heard DESC
-                   LIMIT 5000"""
-            ).fetchall()
-            if _valid_geo_position(row["latitude"], row["longitude"])
-        ]
+        objects = []
+        for row in conn.execute(
+            """SELECT name,source_callsign,last_heard,latitude,longitude,altitude,
+                      symbol_table,symbol,info,packet_format,raw
+               FROM aprs_objects
+               ORDER BY last_heard DESC
+               LIMIT 5000"""
+        ).fetchall():
+            if not _valid_geo_position(row["latitude"], row["longitude"]):
+                continue
+            item = dict(row)
+            item.update(aprs_map_device_metadata(
+                str(item.get("raw") or ""),
+                str(item.get("info") or ""),
+                str(item.get("symbol") or ""),
+            ))
+            objects.append(item)
     return {"stations": stations, "objects": objects, "tracks": tracks}
 
 
