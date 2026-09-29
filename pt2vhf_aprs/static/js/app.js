@@ -19,7 +19,7 @@
     packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
     mapViewFilters: (() => {
       try {
-        const parsed = JSON.parse(localStorage.getItem('pt2vhf_map_view_filters') || '{}');
+        const parsed = JSON.parse(localStorage.getItem('pt2vhf_map_view_filters_v2') || '{}');
         return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
       } catch (_) { return {}; }
     })(),
@@ -1158,7 +1158,7 @@
   }
 
   function persistMapViewFilters() {
-    localStorage.setItem('pt2vhf_map_view_filters', JSON.stringify(state.mapViewFilters));
+    localStorage.setItem('pt2vhf_map_view_filters_v2', JSON.stringify(state.mapViewFilters));
   }
 
   function setMapViewFilter(key, enabled) {
@@ -1188,22 +1188,14 @@
 
   function stationMapFilterKeys(station) {
     const role = stationMapRole(station);
-    const vendor = mapFilterSlug(station?.device_vendor || ui('Não identificado', 'Unidentified'));
-    const model = mapFilterSlug(station?.device_model || station?.device_tocall || ui('Não identificado', 'Unidentified'));
-    if (role === 'station') {
-      const cls = mapFilterSlug(station?.device_class || 'unknown');
-      return [
-        `station:class:${cls}`,
-        `station:vendor:${cls}:${vendor}`,
-        `station:model:${cls}:${vendor}:${model}`,
-      ];
-    }
-    const subtype = mapFilterSlug(station?.map_subtype || 'unknown');
-    return [
-      `${role}:subtype:${subtype}`,
-      `${role}:vendor:${subtype}:${vendor}`,
-      `${role}:model:${subtype}:${vendor}:${model}`,
-    ];
+    const family = mapFilterSlug(
+      station?.map_family_key
+      || station?.map_family_label
+      || station?.device_model
+      || station?.device_class
+      || 'unknown'
+    );
+    return [`${role}:family:${family}`];
   }
 
   function stationMatchesViewFilter(station) {
@@ -1215,9 +1207,14 @@
   }
 
   function objectMapFilterKeys(object) {
-    const source = mapFilterSlug(object?.source_callsign || 'unknown');
-    const name = mapFilterSlug(object?.name || 'unknown');
-    return [`object:source:${source}`, `object:name:${source}:${name}`];
+    const family = mapFilterSlug(
+      object?.map_family_key
+      || object?.map_family_label
+      || object?.device_model
+      || object?.device_class
+      || 'unknown'
+    );
+    return [`object:family:${family}`];
   }
 
   function objectMatchesViewFilter(object) {
@@ -1253,92 +1250,50 @@
   }
 
   function groupedMapNodes(rows, role) {
-    const top = new Map();
+    const families = new Map();
     for (const station of rows) {
-      const keys = stationMapFilterKeys(station);
-      const primaryRaw = role === 'station'
-        ? String(station.device_class || 'unknown').toLowerCase()
-        : String(station.map_subtype || 'unknown').toLowerCase();
-      const primaryKey = keys[0];
-      const primaryLabel = role === 'station'
-        ? mapDeviceClassLabel(primaryRaw)
-        : mapViewSubtypeLabel(role, primaryRaw);
-      if (!top.has(primaryKey)) top.set(primaryKey, { label: primaryLabel, rows: [] });
-      top.get(primaryKey).rows.push(station);
+      const filterKey = stationMapFilterKeys(station)[0];
+      const label = String(
+        station.map_family_label
+        || station.device_model
+        || station.device_class
+        || ui('Não identificado', 'Unidentified')
+      ).trim();
+      if (!families.has(filterKey)) families.set(filterKey, { label, count: 0 });
+      families.get(filterKey).count += 1;
     }
 
-    return [...top.entries()]
+    return [...families.entries()]
       .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
-      .map(([primaryKey, bucket]) => {
-        const vendors = new Map();
-        for (const station of bucket.rows) {
-          const vendorLabel = String(station.device_vendor || ui('Não identificado', 'Unidentified')).trim();
-          const vendorKey = stationMapFilterKeys(station)[1];
-          if (!vendors.has(vendorKey)) vendors.set(vendorKey, { label: vendorLabel, rows: [] });
-          vendors.get(vendorKey).rows.push(station);
-        }
-        const vendorNodes = [...vendors.entries()]
-          .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
-          .map(([vendorKey, vendorBucket]) => {
-            const models = new Map();
-            for (const station of vendorBucket.rows) {
-              const modelLabel = String(station.device_model || station.device_tocall || ui('Não identificado', 'Unidentified')).trim();
-              const modelKey = stationMapFilterKeys(station)[2];
-              if (!models.has(modelKey)) models.set(modelKey, { label: modelLabel, count: 0 });
-              models.get(modelKey).count += 1;
-            }
-            return {
-              id: `node:${vendorKey}`,
-              label: vendorBucket.label,
-              filterKey: vendorKey,
-              count: vendorBucket.rows.length,
-              children: [...models.entries()]
-                .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
-                .map(([modelKey, model]) => ({
-                  id: `node:${modelKey}`,
-                  label: model.label,
-                  filterKey: modelKey,
-                  count: model.count,
-                })),
-            };
-          });
-        return {
-          id: `node:${primaryKey}`,
-          label: bucket.label,
-          filterKey: primaryKey,
-          count: bucket.rows.length,
-          children: vendorNodes,
-        };
-      });
+      .map(([filterKey, family]) => ({
+        id: `node:${filterKey}`,
+        label: family.label,
+        filterKey,
+        count: family.count,
+      }));
   }
 
   function objectMapNodes(objects) {
-    const sources = new Map();
+    const families = new Map();
     for (const object of objects) {
-      const sourceLabel = String(object.source_callsign || ui('Origem não identificada', 'Unidentified source')).trim();
-      const keys = objectMapFilterKeys(object);
-      if (!sources.has(keys[0])) sources.set(keys[0], { label: sourceLabel, rows: [] });
-      sources.get(keys[0]).rows.push(object);
+      const filterKey = objectMapFilterKeys(object)[0];
+      const label = String(
+        object.map_family_label
+        || object.device_model
+        || object.device_class
+        || ui('Não identificado', 'Unidentified')
+      ).trim();
+      if (!families.has(filterKey)) families.set(filterKey, { label, count: 0 });
+      families.get(filterKey).count += 1;
     }
-    return [...sources.entries()]
+
+    return [...families.entries()]
       .sort((a,b) => a[1].label.localeCompare(b[1].label, currentLocale()))
-      .map(([sourceKey, bucket]) => ({
-        id: `node:${sourceKey}`,
-        label: bucket.label,
-        filterKey: sourceKey,
-        count: bucket.rows.length,
-        children: bucket.rows
-          .slice()
-          .sort((a,b) => String(a.name || '').localeCompare(String(b.name || ''), currentLocale()))
-          .map(object => {
-            const objectKey = objectMapFilterKeys(object)[1];
-            return {
-              id: `node:${objectKey}`,
-              label: String(object.name || ui('Objeto sem nome', 'Unnamed object')),
-              filterKey: objectKey,
-              count: 1,
-            };
-          }),
+      .map(([filterKey, family]) => ({
+        id: `node:${filterKey}`,
+        label: family.label,
+        filterKey,
+        count: family.count,
       }));
   }
 
