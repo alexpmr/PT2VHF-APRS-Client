@@ -1653,9 +1653,9 @@ def test_v1710_unified_map_items_objects_and_internet_handoff():
     database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
 
     assert 'id="mapPeriodHours"' in html
-    for control in ("mapItemStations", "mapItemObjects", "mapItemTracklogs", "mapItemRfLinks", "mapItemIgateLinks", "mapItemPackets"):
-        assert f'id="{control}"' in html
-        assert f'id="{control}" type="checkbox" checked' in html
+    assert 'id="mapItemsButton"' in html
+    assert 'id="mapViewTree"' in html
+    assert 'id="mapViewAllButton"' in html
     assert 'id="mapTypeQuick"' in html
     assert '<option value="osm">OSM</option>' in html
     assert '<option value="topo">Topográfico</option>' in html
@@ -1672,6 +1672,10 @@ def test_v1710_unified_map_items_objects_and_internet_handoff():
     assert "edge.kind === 'igate' && !state.igateLinksEnabled" in js
     assert "edge.kind !== 'igate' && !state.rfLinksEnabled" in js
     assert "objectMarkers: new Map()" in js
+    assert "tracklogEnabled:" in js
+    assert "rfLinksEnabled:" in js
+    assert "igateLinksEnabled:" in js
+    assert "packetsEnabled:" in js
 
     assert "CREATE TABLE IF NOT EXISTS aprs_objects" in database
     assert '"internet_handoff": True' in database
