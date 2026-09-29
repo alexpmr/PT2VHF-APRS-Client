@@ -14,7 +14,7 @@ checks = {
     "pt2vhf_aprs/__init__.py": ['__version__ = "1.7.17"'],
     "pt2vhf_aprs/static/js/app.js": [
         "pt2vhf_map_view_filters_v2",
-        "station:family:",
+        "${role}:family:${family}",
         "object:family:",
         "function groupedMapNodes(rows, role)",
         "function objectMapNodes(objects)",
