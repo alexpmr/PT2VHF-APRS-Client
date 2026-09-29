@@ -2003,7 +2003,12 @@
     try {
       const data = await api('/api/map-data');
       const allStations = Array.isArray(data.stations) ? data.stations : [];
-      const visibleStations = allStations.filter(stationMatchesMapPeriod);
+      const allObjects = Array.isArray(data.objects) ? data.objects : [];
+      const periodStations = allStations.filter(stationMatchesMapPeriod);
+      const periodObjects = allObjects.filter(objectMatchesMapPeriod);
+      renderMapViewTree(periodStations, periodObjects);
+
+      const visibleStations = periodStations.filter(stationMatchesViewFilter);
       state.mapKnownCallsigns = new Set(allStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
       state.mapVisibleCallsigns = new Set(visibleStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
 
@@ -2038,7 +2043,7 @@
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
-      const visibleObjects = (Array.isArray(data.objects) ? data.objects : []).filter(objectMatchesMapPeriod);
+      const visibleObjects = periodObjects.filter(objectMatchesViewFilter);
       const activeObjects = new Set(visibleObjects.map(object => String(object.name || '')));
       for (const [name, marker] of state.objectMarkers) {
         if (!activeObjects.has(name)) {
@@ -2087,6 +2092,8 @@
       if (state.tracklogEnabled) {
         for (const track of (Array.isArray(data.tracks) ? data.tracks : [])) {
           if (!trackMatchesMapPeriod(track)) continue;
+          const call = normalizedCall(track.callsign);
+          if (!call || !state.mapVisibleCallsigns.has(call)) continue;
           if (!grouped.has(track.callsign)) grouped.set(track.callsign, []);
           grouped.get(track.callsign).push(track);
         }
