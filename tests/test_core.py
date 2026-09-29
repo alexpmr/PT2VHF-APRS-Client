@@ -1808,3 +1808,46 @@ def test_v1716_hierarchical_map_filters_and_device_roles():
     app = db.aprs_map_device_metadata("PY2AAA>APAND1,TCPIP*:>APRSdroid", "", ">")
     assert app["map_role"] == "station"
     assert app["device_class"] == "app"
+
+
+def test_v1717_map_ver_groups_by_family_not_callsign():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+
+    assert "pt2vhf_map_view_filters_v2" in js
+    assert "station:family:" in js
+    assert "object:family:" in js
+    assert "map_family_label" in js
+    assert "map_family_key" in js
+
+    grouped_start = js.index("function groupedMapNodes(rows, role)")
+    grouped_end = js.index("function objectMapNodes(objects)", grouped_start)
+    grouped = js[grouped_start:grouped_end]
+    assert "device_vendor" not in grouped
+    assert "device_tocall" not in grouped
+    assert "source_callsign" not in grouped
+    assert "children:" not in grouped
+
+    objects_start = js.index("function objectMapNodes(objects)")
+    objects_end = js.index("function renderMapViewTree", objects_start)
+    object_nodes = js[objects_start:objects_end]
+    assert "source_callsign" not in object_nodes
+    assert "object.name" not in object_nodes
+    assert "children:" not in object_nodes
+
+    assert "def _aprs_map_family" in database
+    assert '"RDZSonDe"' in database
+    assert '"Bravo Tracker"' in database
+    assert '"D-Star"' in database
+    assert '"DMR"' in database
+    assert '"HBLink D-APRS Gateway"' in database
+
+    rdz = db.aprs_map_device_metadata("PP2LA-11>APRRDZ,TCPIP*:;X3922153*...", "radiosonde", "/")
+    assert rdz["map_family_label"] == "RDZSonDe"
+
+    dmr = db.aprs_map_device_metadata("PY2AAA>APBM01,TCPIP*:>BrandMeister DMR", "DMR", ">")
+    assert dmr["map_family_label"] == "DMR"
+
+    hblink = db.aprs_map_device_metadata("KF7EEL>APHBL1,TCPIP*:>HBLink D-APRS Gateway", "D-APRS", "&")
+    assert hblink["map_family_label"] == "HBLink D-APRS Gateway"
