@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.7.19 - 2026-09-29
+
+- **Mapa / Ver:** consolida a árvore hierárquica por famílias funcionais, com seleção parcial correta.
+- **Objetos APRS:** deixam de herdar a classificação do TOCALL/software da estação publicadora; o tipo do objeto passa a ser determinado pela semântica do próprio objeto.
+- **Categorias exclusivas:** estações, digipeaters, iGates e objetos permanecem em grupos principais distintos.
+- **Estatísticas:** junta **Estações mais ativas** e **Estações que mais interagiram** em uma única tabela ordenável.
+- **Ranking de estações:** exclui telemetria, digipeaters e iGates; mostra pacotes úteis, interações, mensagens enviadas/recebidas, contatos, última atividade e tipo/aplicação.
+- **RF observado:** o popup da estação passa a listar as estações comprovadamente recebidas por RF, com contagem e última observação.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como **latest** no GitHub.
+
+
 ## v1.7.15 - 2026-09-28
 
 - **Interações APRS:** digipeaters, hotspots, gateways e repetidores identificados como infraestrutura ficam com mensagens e queries dirigidas desabilitadas quando não há evidência de suporte interativo.
