@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.18": {
+        "title": "Validação Windows x64: seleção parcial do menu Ver",
+        "items": [
+            "Corrige o caso em que famílias marcadas em Objetos APRS não apareciam no mapa quando o pai estava em estado intermediário.",
+            "O estado do grupo pai passa a ser derivado dos filhos: qualquer filho ativo mantém o grupo habilitado.",
+            "Pai parcialmente selecionado representa seleção parcial, não grupo desligado.",
+            "A mesma regra vale para Estações, Digipeaters, iGates e Objetos APRS.",
+            "Marcar o pai ativa todos os filhos; desmarcar o pai desativa todos; marcar apenas algumas famílias mostra somente essas famílias.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.17": {
         "title": "Validação Windows x64: filtros Ver por tipo/família",
         "items": [
