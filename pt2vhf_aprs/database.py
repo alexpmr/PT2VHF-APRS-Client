@@ -1749,14 +1749,14 @@ def aprs_object_map_metadata(
     sym = str(symbol or "")[:1]
     fmt = str(packet_format or "").lower().strip()
 
-    if re.search(r"\bRDZ\b|RDZSONDE|RADIOSONDE|SONDE", descriptor):
+    if re.search(r"\bRDZ\b|RDZSONDE", descriptor):
         key, label = "rdzsonde", "RDZSonDe"
+    elif re.search(r"RADIOSONDE|SONDE|\bBALLOON\b|\bBALAO\b|\bBALÃO\b", descriptor) or sym == "O":
+        key, label = "balloon", "Balão / Radiossonda"
     elif re.search(r"\bDMR\b|BRANDMEISTER|MOTOTRBO", descriptor):
         key, label = "dmr", "DMR"
     elif re.search(r"\bD-?STAR\b|DSTAR|D-APRS", descriptor):
         key, label = "d-star", "D-Star"
-    elif re.search(r"\bBALLOON\b|\bBALAO\b|\bBALÃO\b", descriptor) or sym == "O":
-        key, label = "balloon", "Balão / Radiossonda"
     elif re.search(r"\bREPEATER\b|\bREPETIDOR\b|\bRPT\b", descriptor):
         key, label = "repeater", "Repetidor"
     elif re.search(r"\bWEATHER\b|\bWX\b|METEO", descriptor) or sym == "_":
