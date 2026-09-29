@@ -1647,6 +1647,12 @@
       for (const edge of edges) {
         if (edge.kind === 'igate' && !state.igateLinksEnabled) continue;
         if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue;
+
+        const sourceCall = normalizedCall(edge.source);
+        const targetCall = normalizedCall(edge.target);
+        if (sourceCall && state.mapKnownCallsigns.has(sourceCall) && !state.mapVisibleCallsigns.has(sourceCall)) continue;
+        if (targetCall && state.mapKnownCallsigns.has(targetCall) && !state.mapVisibleCallsigns.has(targetCall)) continue;
+
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
         const points = [
@@ -2203,8 +2209,16 @@
     playStationActivitySound(call);
   }
 
+  function mapCallVisibleForTraffic(callsign) {
+    const call = normalizedCall(callsign);
+    if (!call || call === 'APRS-IS') return true;
+    if (!state.mapKnownCallsigns.has(call)) return true;
+    return state.mapVisibleCallsigns.has(call);
+  }
+
   function trafficSegmentVisible(segment) {
     if (!state.map) return false;
+    if (!mapCallVisibleForTraffic(segment?.source) || !mapCallVisibleForTraffic(segment?.target)) return false;
     const from = L.latLng(Number(segment.source_lat), Number(segment.source_lon));
     const to = L.latLng(Number(segment.target_lat), Number(segment.target_lon));
     if (![from.lat, from.lng, to.lat, to.lng].every(Number.isFinite)) return false;
@@ -2234,6 +2248,7 @@
 
   function animateTrafficSegment(segment, event, durationMs) {
     if (!state.map || !state.packetsEnabled) return Promise.resolve();
+    if (!mapCallVisibleForTraffic(segment?.source) || !mapCallVisibleForTraffic(segment?.target)) return Promise.resolve();
 
     const from = [Number(segment.source_lat), Number(segment.source_lon)];
     if (!from.every(Number.isFinite)) return Promise.resolve();
