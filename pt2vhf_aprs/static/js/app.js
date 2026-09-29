@@ -1489,12 +1489,68 @@
     });
   }
 
+  function stationInteractionProfile(s) {
+    const format = String(s?.packet_format || '').trim().toLowerCase();
+    const hasEvidence = Number(s?.interaction_evidence || 0) === 1
+      || Number(s?.message_capable || 0) === 1;
+
+    if (hasEvidence) {
+      return { enabled: true, infrastructure: false, reason: '' };
+    }
+
+    if (format === 'object' || format === 'item') {
+      return {
+        enabled: false,
+        infrastructure: true,
+        reason: ui(
+          'Objetos/itens APRS não são destinos interativos.',
+          'APRS objects/items are not interactive destinations.'
+        )
+      };
+    }
+
+    const descriptor = [
+      s?.name,
+      s?.callsign,
+      s?.info,
+      s?.raw
+    ].map(value => String(value || '').toUpperCase()).join(' ');
+
+    const digiSymbol = String(s?.symbol || '') === '#';
+    const infrastructurePattern = /\bDIGI(?:PEATER)?\b|\bWIDE[1-7](?:-[1-7])?\b|\bRELAY\b|\bI-?GATE\b|\bIGATE\b|\bHOTSPOT\b|\bGATEWAY\b|\bREPEATER\b|\bREPETIDOR\b|\bD-?STAR\b|\bDMR\b|\bC4FM\b|\bYSF\b|\bECHOLINK\b/i;
+    const infrastructure = digiSymbol || infrastructurePattern.test(descriptor);
+
+    if (!infrastructure) {
+      return { enabled: true, infrastructure: false, reason: '' };
+    }
+
+    return {
+      enabled: false,
+      infrastructure: true,
+      reason: ui(
+        'Esta estação aparenta ser infraestrutura/digipeater e ainda não demonstrou suporte a mensagens ou queries APRS.',
+        'This station appears to be infrastructure/a digipeater and has not demonstrated APRS message or query support.'
+      )
+    };
+  }
+
+  function stationInteractionDisabledAttrs(profile) {
+    if (profile?.enabled) return '';
+    const reason = escapeHtml(profile?.reason || ui('Interação APRS indisponível.', 'APRS interaction unavailable.'));
+    return ` disabled aria-disabled="true" title="${reason}"`;
+  }
+
   function popupHtml(s) {
     let path = '';
     try { path = JSON.parse(s.path || '[]').join(','); } catch (_) { path = s.path || ''; }
     const lastHeardDate = fmtDate(s.last_heard);
     const lastHeardRelative = formatRelativeLastHeard(s.last_heard);
     const lastHeardMarkup = `${escapeHtml(lastHeardDate)}<span class="station-last-heard-relative" data-last-heard="${escapeHtml(String(s.last_heard ?? ''))}">${lastHeardRelative ? ` — ${escapeHtml(lastHeardRelative)}` : ''}</span>`;
+    const interaction = stationInteractionProfile(s);
+    const interactionDisabled = stationInteractionDisabledAttrs(interaction);
+    const interactionNotice = interaction.enabled
+      ? ''
+      : `<div class="station-interaction-disabled-note">${escapeHtml(interaction.reason)}</div>`;
     return `<div class="station-popup">
       <h3>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.name || s.callsign)}</h3>
       <div class="popup-grid">
@@ -1510,12 +1566,13 @@
       <div class="station-query-actions">
         <div class="station-query-title">Diagnóstico / Queries APRS</div>
         <div class="station-query-buttons">
-          <button type="button" class="btn secondary station-query-button" data-query-type="APRSP" data-callsign="${escapeHtml(s.callsign)}">Posição</button>
-          <button type="button" class="btn secondary station-query-button" data-query-type="APRSS" data-callsign="${escapeHtml(s.callsign)}">Status</button>
-          <button type="button" class="btn secondary station-query-button" data-query-type="APRSD" data-callsign="${escapeHtml(s.callsign)}">Ouvidos</button>
-          <button type="button" class="btn secondary station-query-button" data-query-type="PINGACK" data-callsign="${escapeHtml(s.callsign)}">Ping/ACK</button>
-          <button type="button" class="btn secondary station-query-button" data-query-type="APRST" data-callsign="${escapeHtml(s.callsign)}">Trace</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRSP" data-callsign="${escapeHtml(s.callsign)}"${interactionDisabled}>Posição</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRSS" data-callsign="${escapeHtml(s.callsign)}"${interactionDisabled}>Status</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRSD" data-callsign="${escapeHtml(s.callsign)}"${interactionDisabled}>Ouvidos</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="PINGACK" data-callsign="${escapeHtml(s.callsign)}"${interactionDisabled}>Ping/ACK</button>
+          <button type="button" class="btn secondary station-query-button" data-query-type="APRST" data-callsign="${escapeHtml(s.callsign)}"${interactionDisabled}>Trace</button>
         </div>
+        ${interactionNotice}
         <div class="station-query-result" data-query-result="${escapeHtml(s.callsign)}">${queryResultMarkup(state.queryLastByStation.get(normalizedCall(s.callsign)) || null)}</div>
         <button type="button" class="btn secondary station-query-history-button" data-callsign="${escapeHtml(s.callsign)}">Ver histórico de queries</button>
         <div class="station-query-history hidden" data-query-history="${escapeHtml(s.callsign)}"></div>
@@ -1523,7 +1580,7 @@
       <div class="station-popup-actions">
         ${favoriteStarHtml(s.callsign, false)}
         <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Ver logs</button>
-        <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}">Enviar mensagem</button>
+        <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}"${interactionDisabled}>Enviar mensagem</button>
       </div>
     </div>`;
   }
