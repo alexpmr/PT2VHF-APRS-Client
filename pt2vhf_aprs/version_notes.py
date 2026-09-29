@@ -12,7 +12,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Ações passivas, como Ver logs e histórico de queries, continuam disponíveis.",
             "Mantém a checagem de atualização ao iniciar e a cada 30 minutos.",
             "Status de atualização permanece como Versão atualizada ou Versão X.X.X disponível em laranja e piscando.",
-            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como GitHub Release latest.",
         ],
     },
     "1.7.13": {
