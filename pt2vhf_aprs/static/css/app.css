@@ -3098,3 +3098,110 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   font-size: 11px;
   line-height: 1.35;
 }
+
+
+/* v1.7.16 - hierarchical map "Ver" tree */
+.map-view-tree-menu {
+  width: min(430px, calc(100vw - 16px));
+  max-width: 430px;
+  max-height: min(70vh, 620px);
+  overflow: hidden;
+  padding: 0;
+}
+.map-view-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-2);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.map-view-tree-header strong {
+  color: var(--text);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.map-view-all-button {
+  min-height: 25px;
+  padding: 2px 8px;
+  font-size: 10px;
+}
+.map-view-tree {
+  max-height: calc(min(70vh, 620px) - 44px);
+  overflow: auto;
+  padding: 6px 5px 8px;
+}
+.map-view-node {
+  min-width: 0;
+}
+.map-view-row {
+  display: grid;
+  grid-template-columns: 18px 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 11px;
+}
+.map-view-row:hover {
+  background: rgba(127,127,127,.10);
+}
+.map-view-node[data-depth="1"] > .map-view-row { padding-left: 15px; }
+.map-view-node[data-depth="2"] > .map-view-row { padding-left: 27px; }
+.map-view-node[data-depth="3"] > .map-view-row { padding-left: 39px; }
+.map-view-expand,
+.map-view-expand-spacer {
+  width: 18px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+.map-view-expand {
+  cursor: pointer;
+}
+.map-view-expand:hover {
+  color: var(--text);
+}
+.map-view-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.map-view-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+.map-view-count {
+  min-width: 22px;
+  padding-left: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.map-view-children {
+  min-width: 0;
+}
+.map-view-children.hidden {
+  display: none !important;
+}
+html[data-theme="light"] .map-view-tree-header {
+  background: #f4f7f9;
+}
