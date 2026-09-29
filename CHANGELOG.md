@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.7.15 - 2026-09-28
+
+- **Interações APRS:** digipeaters, hotspots, gateways e repetidores identificados como infraestrutura ficam com mensagens e queries dirigidas desabilitadas quando não há evidência de suporte interativo.
+- **Detecção por evidência:** mensagens recebidas, ACK/REJ, queries recebidas ou respostas efetivas a queries liberam automaticamente a interação com a estação.
+- **Objetos/itens APRS:** continuam não interativos.
+- **Popup:** ações passivas, como logs, favorito e histórico de queries, permanecem disponíveis mesmo quando a transmissão dirigida está desabilitada.
+- **Atualizações:** mantém checagem inicial e a cada **30 minutos**, com **Versão atualizada** ou **Versão X.X.X disponível** em laranja e piscando.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como **latest** no GitHub.
+
+
 ## v1.7.9 - 2026-09-28
 
 - **Mapa:** novo seletor **Velocidade** entre **Topologia observada** e o período **Completo**, com opções **0,5x / 1x / 2x / 5x** e padrão **1x**.
