@@ -1629,7 +1629,11 @@ def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict
         re.search(r"\bDIGI(?:PEATER)?\b|\bDIGI\b|UIDIGI|VP-DIGI|DIGI_NED", descriptor)
     )
     has_igate = device_class == "igate" or bool(
-        re.search(r"\bI-?GATE\b|\bIGATE\b|APRS[- ]?IS GATEWAY", descriptor)
+        re.search(
+            r"\bI-?GATE\b|\bIGATE\b|APRS[- ]?IS GATEWAY|"
+            r"\bLORA\b.*\bGATEWAY\b|\bGATEWAY\b.*\bDIGI",
+            descriptor,
+        )
     )
     is_lora = "LORA" in descriptor
 
