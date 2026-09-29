@@ -3080,3 +3080,21 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   .about-logo { width: min(320px, 100%); }
   .about-grid { grid-template-columns: 1fr; }
 }
+
+
+/* v1.7.15 - non-interactive APRS infrastructure */
+.station-popup .btn:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+  filter: grayscale(.35);
+}
+.station-interaction-disabled-note {
+  margin-top: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--muted);
+  background: rgba(127,127,127,.08);
+  font-size: 11px;
+  line-height: 1.35;
+}
