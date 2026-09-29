@@ -3205,3 +3205,26 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
 html[data-theme="light"] .map-view-tree-header {
   background: #f4f7f9;
 }
+
+
+/* v1.7.19 - unified station ranking */
+.station-ranking-group {
+  grid-column: 1 / -1;
+}
+.station-ranking-table-wrap {
+  margin-top: 9px;
+  overflow: auto;
+  max-height: 430px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.station-ranking-table {
+  min-width: 920px;
+}
+.station-ranking-table td:nth-child(n+2):nth-child(-n+6) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.station-ranking-table th:nth-child(n+2):nth-child(-n+6) {
+  text-align: right;
+}
