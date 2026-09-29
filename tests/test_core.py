@@ -1758,3 +1758,49 @@ def test_v1715_infrastructure_interaction_requires_evidence():
 
     assert ".station-popup .btn:disabled" in css
     assert ".station-interaction-disabled-note" in css
+
+
+def test_v1716_hierarchical_map_filters_and_device_roles():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+
+    assert 'id="mapItemsButton"' in html
+    assert '>Ver ▾</button>' in html
+    assert 'id="mapViewTree"' in html
+    assert 'id="mapViewAllButton"' in html
+    assert 'id="mapItemStations"' not in html
+    assert 'id="mapItemObjects"' not in html
+
+    assert "digisEnabled:" in js
+    assert "igatesEnabled:" in js
+    assert "function stationMapFilterKeys(station)" in js
+    assert "function stationMatchesViewFilter(station)" in js
+    assert "function objectMatchesViewFilter(object)" in js
+    assert "function renderMapViewTree(stations = [], objects = [])" in js
+    assert "groupedMapNodes(stationRows, 'station')" in js
+    assert "groupedMapNodes(digiRows, 'digi')" in js
+    assert "groupedMapNodes(igateRows, 'igate')" in js
+    assert "objectMapNodes(objects)" in js
+    assert "pt2vhf_map_view_filters" in js
+    assert "pt2vhf_map_view_expanded" in js
+    assert "mapCallVisibleForTraffic" in js
+
+    assert ".map-view-tree-menu" in css
+    assert ".map-view-checkbox" in css
+    assert ".map-view-children.hidden" in css
+
+    digi = db.aprs_map_device_metadata("PY2AAA>APRFGL,WIDE1-1:>LoRa", "", "#")
+    assert digi["map_role"] == "digi"
+    assert digi["map_subtype"] in {"lora", "hybrid"}
+    assert digi["device_class"] == "digi"
+
+    igate = db.aprs_map_device_metadata("PY2AAA>APRFGI,TCPIP*:>LoRa", "", "&")
+    assert igate["map_role"] == "igate"
+    assert igate["map_subtype"] in {"lora", "hybrid"}
+    assert igate["device_class"] == "igate"
+
+    app = db.aprs_map_device_metadata("PY2AAA>APAND1,TCPIP*:>APRSdroid", "", ">")
+    assert app["map_role"] == "station"
+    assert app["device_class"] == "app"
