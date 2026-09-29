@@ -610,6 +610,15 @@ def create_app() -> Flask:
     def api_stations():
         return jsonify(db.list_stations(request.args.get("filter", "")))
 
+    @app.get("/api/stations/<callsign>/rf-heard")
+    def api_station_rf_heard(callsign: str):
+        try:
+            hours = int(request.args.get("hours", 0))
+            limit = int(request.args.get("limit", 100))
+            return jsonify(db.list_rf_received_by(callsign, hours=hours, limit=limit))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
     @app.post("/api/tracks/clear")
     def api_clear_tracklogs():
         deleted = db.clear_tracklogs()
