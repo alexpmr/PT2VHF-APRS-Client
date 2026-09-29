@@ -98,14 +98,13 @@
     </label>
 
     <div class="map-items-control">
-      <button id="mapItemsButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Itens do mapa ▾</button>
-      <div id="mapItemsMenu" class="map-items-menu hidden" role="menu">
-        <label><input id="mapItemStations" type="checkbox" checked> <span>Estações</span></label>
-        <label><input id="mapItemObjects" type="checkbox" checked> <span>Objetos</span></label>
-        <label><input id="mapItemTracklogs" type="checkbox" checked> <span>Tracklogs</span></label>
-        <label><input id="mapItemRfLinks" type="checkbox" checked> <span>Enlaces RF</span></label>
-        <label><input id="mapItemIgateLinks" type="checkbox" checked> <span>Enlaces iGate/APRS-IS</span></label>
-        <label><input id="mapItemPackets" type="checkbox" checked> <span>Pacotes em movimento</span></label>
+      <button id="mapItemsButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Ver ▾</button>
+      <div id="mapItemsMenu" class="map-items-menu map-view-tree-menu hidden" role="menu">
+        <div class="map-view-tree-header">
+          <strong>Ver</strong>
+          <button id="mapViewAllButton" type="button" class="btn secondary map-view-all-button">Tudo</button>
+        </div>
+        <div id="mapViewTree" class="map-view-tree" aria-label="Camadas e filtros do mapa"></div>
       </div>
     </div>
 
