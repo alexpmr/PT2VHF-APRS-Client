@@ -1542,7 +1542,7 @@ def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
     """Resolve TOCALL pelo snapshot oficial aprs-deviceid, preferindo padrões específicos."""
     code = str(tocall or "").upper().strip()
     if not code:
-        return {"identifier": "", "friendly_name": "Não identificado", "identified": False}
+        return {"identifier": "", "friendly_name": "Não identificado", "identified": False, "features": []}
 
     best: dict[str, Any] | None = None
     best_score: tuple[int, int, int] = (-1, -1, -999)
@@ -1574,6 +1574,7 @@ def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
             "class": "",
             "os": "",
             "pattern": "",
+            "features": [],
         }
 
     model = str(best.get("model") or "").strip()
@@ -1601,6 +1602,69 @@ def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
         "os": str(best.get("os") or ""),
         "pattern": pattern,
         "local_override": bool(best.get("local_override")),
+        "features": [str(item) for item in (best.get("features") or []) if str(item).strip()],
+    }
+
+
+def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict[str, Any]:
+    """Classificação leve para filtros hierárquicos do mapa."""
+    tocall = _aprs_tocall_from_raw(raw)
+    resolved = resolve_aprs_device_id(tocall)
+    device_class = str(resolved.get("class") or "").strip().lower()
+    vendor = str(resolved.get("vendor") or "").strip()
+    model = str(resolved.get("model") or resolved.get("friendly_name") or "").strip()
+    features = [str(item) for item in (resolved.get("features") or []) if str(item).strip()]
+
+    descriptor = " ".join(
+        part for part in (
+            device_class,
+            vendor,
+            model,
+            str(info or ""),
+            str(raw or ""),
+        ) if part
+    ).upper()
+
+    has_digi = device_class == "digi" or bool(
+        re.search(r"\bDIGI(?:PEATER)?\b|\bDIGI\b|UIDIGI|VP-DIGI|DIGI_NED", descriptor)
+    )
+    has_igate = device_class == "igate" or bool(
+        re.search(r"\bI-?GATE\b|\bIGATE\b|APRS[- ]?IS GATEWAY", descriptor)
+    )
+    is_lora = "LORA" in descriptor
+
+    # A classe oficial do aprs-deviceid é o critério principal para híbridos.
+    if device_class == "digi" or (has_digi and not has_igate):
+        role = "digi"
+    elif device_class == "igate" or (has_igate and not has_digi):
+        role = "igate"
+    elif has_digi and has_igate:
+        role = "digi" if str(symbol or "") == "#" else "igate"
+    else:
+        role = "station"
+
+    if role in {"digi", "igate"}:
+        if has_digi and has_igate:
+            subtype = "hybrid"
+        elif is_lora:
+            subtype = "lora"
+        elif resolved.get("identified"):
+            subtype = "conventional"
+        else:
+            subtype = "unknown"
+    else:
+        subtype = device_class or "unknown"
+
+    return {
+        "device_tocall": tocall,
+        "device_identified": bool(resolved.get("identified")),
+        "device_class": device_class or "unknown",
+        "device_vendor": vendor,
+        "device_model": model,
+        "device_os": str(resolved.get("os") or "").strip(),
+        "device_features": features,
+        "map_role": role,
+        "map_subtype": subtype,
     }
 
 
@@ -2603,6 +2667,11 @@ def map_data() -> dict[str, Any]:
                 continue
             item["position_valid"] = True
             item["position_issue"] = ""
+            item.update(aprs_map_device_metadata(
+                str(item.get("raw") or ""),
+                str(item.get("info") or ""),
+                str(item.get("symbol") or ""),
+            ))
             stations.append(item)
             valid_calls.add(call)
 
