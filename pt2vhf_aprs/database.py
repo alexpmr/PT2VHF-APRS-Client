@@ -2333,7 +2333,34 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
             WHERE callsign IS NOT NULL AND callsign <> ''
             """
         ).fetchall()
-        excluded_calls = sorted({str(r["callsign"] or "").upper().strip() for r in infrastructure_rows if r["callsign"]})
+        excluded_set = {
+            str(r["callsign"] or "").upper().strip()
+            for r in infrastructure_rows
+            if r["callsign"]
+        }
+
+        # Também classifica pelo próprio pacote mais recente da estação. Isso
+        # elimina iGates/digis que ainda não apareceram como alvo de um enlace
+        # no banco de topologia, evitando que sejam misturados no ranking.
+        station_meta: dict[str, dict[str, Any]] = {}
+        station_last_heard: dict[str, str] = {}
+        for station_row in conn.execute(
+            "SELECT callsign,raw,info,symbol,last_heard FROM stations"
+        ).fetchall():
+            call = str(station_row["callsign"] or "").upper().strip()
+            if not call:
+                continue
+            meta = aprs_map_device_metadata(
+                str(station_row["raw"] or ""),
+                str(station_row["info"] or ""),
+                str(station_row["symbol"] or ""),
+            )
+            station_meta[call] = meta
+            station_last_heard[call] = str(station_row["last_heard"] or "")
+            if str(meta.get("map_role") or "") in {"digi", "igate"}:
+                excluded_set.add(call)
+
+        excluded_calls = sorted(call for call in excluded_set if call)
 
         active_clauses = [
             "p.from_call IS NOT NULL",
@@ -2385,6 +2412,63 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
             f"SELECT COUNT(*) AS edges, COALESCE(SUM(packet_count),0) AS packets FROM topology_edges WHERE 1=1 {time_filter}",
             params,
         ).fetchone()
+    manual_rows = [
+        item for item in manual_conversation_stats(0 if complete else hours, limit=100)
+        if str(item.get("callsign") or "").upper().strip() not in excluded_set
+    ]
+    manual_by_call = {
+        str(item.get("callsign") or "").upper().strip(): item
+        for item in manual_rows
+        if str(item.get("callsign") or "").strip()
+    }
+    active_by_call = {
+        str(row["callsign"] or "").upper().strip(): row
+        for row in active_rows
+        if str(row["callsign"] or "").strip()
+    }
+
+    station_calls = sorted(set(active_by_call) | set(manual_by_call))
+    station_rankings: list[dict[str, Any]] = []
+    for call in station_calls:
+        if call in excluded_set:
+            continue
+        active = active_by_call.get(call)
+        manual = manual_by_call.get(call) or {}
+        packets = int(active["packets"] or 0) if active is not None else 0
+        interactions = int(manual.get("interactions") or 0)
+        meta = station_meta.get(call) or {}
+        application = str(
+            meta.get("map_family_label")
+            or meta.get("device_model")
+            or meta.get("device_class")
+            or ""
+        ).strip()
+        last_seen = (
+            str(active["last_seen"] or "") if active is not None
+            else str(station_last_heard.get(call) or "")
+        )
+        station_rankings.append({
+            "callsign": call,
+            "packets": packets,
+            "interactions": interactions,
+            "sent": int(manual.get("sent") or 0),
+            "received": int(manual.get("received") or 0),
+            "peers": int(manual.get("peers") or 0),
+            "last_seen": last_seen,
+            "application": application,
+        })
+
+    station_rankings.sort(
+        key=lambda item: (
+            -int(item.get("packets") or 0),
+            -int(item.get("interactions") or 0),
+            str(item.get("callsign") or ""),
+        )
+    )
+    for rank, item in enumerate(station_rankings[:50], start=1):
+        item["rank"] = rank
+    station_rankings = station_rankings[:50]
+
     return {
         "hours": 0 if complete else hours,
         "complete": complete,
@@ -2392,7 +2476,8 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "packets": int(totals["packets"] or 0),
         "active_stations": active_stations,
         "active_station_packets": eligible_packets,
-        "manual_conversations": manual_conversation_stats(0 if complete else hours),
+        "manual_conversations": manual_rows[:20],
+        "station_rankings": station_rankings,
         "digipeaters": digis,
         "igates": igates,
         "recently_disappeared": stale,
