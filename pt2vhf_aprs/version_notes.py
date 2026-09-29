@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.16": {
+        "title": "Validação Windows x64: menu Ver hierárquico no Mapa",
+        "items": [
+            "Substitui Itens do mapa por Ver, com árvore expansível inspirada no filtro de camadas do Google Earth.",
+            "Separa Estações, Digipeaters, iGates, Objetos APRS, Tracklogs, enlaces RF, enlaces iGate/APRS-IS e pacotes em movimento.",
+            "Estações são subdivididas por classe APRS, fabricante e modelo usando o snapshot offline aprs-deviceid já incluído no aplicativo.",
+            "Digipeaters e iGates recebem subdivisões por APRS convencional, LoRa APRS, híbridos Digi+iGate e itens não identificados.",
+            "Objetos APRS podem ser expandidos por origem e individualmente ligados/desligados.",
+            "Filtros persistem entre execuções e também afetam tracklogs, topologia e animação de pacotes.",
+            "Tudo permanece ligado por padrão.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.15": {
         "title": "Produção: interações APRS inteligentes e Release latest",
         "items": [
