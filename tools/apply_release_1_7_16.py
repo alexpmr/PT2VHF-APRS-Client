@@ -1,7 +1,10 @@
 from pathlib import Path
-from pt2vhf_aprs import database as db
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from pt2vhf_aprs import database as db
 
 version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 if version != "1.7.16":
