@@ -13,7 +13,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "O ranking mostra indicativo, pacotes úteis, interações, enviadas, recebidas, contatos, última atividade e tipo/aplicação.",
             "O popup da estação mostra as estações comprovadamente recebidas por RF, com quantidade de pacotes e última observação.",
             "Mantém a árvore Ver por famílias, seleção parcial corrigida, flags de idioma e demais correções das versões de validação 1.7.16-1.7.18.",
-            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como GitHub Release latest.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como GitHub Release latest após validação integral.",
         ],
     },
     "1.7.18": {
