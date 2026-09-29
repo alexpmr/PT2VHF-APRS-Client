@@ -13,7 +13,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Objetos APRS podem ser expandidos por origem e individualmente ligados/desligados.",
             "Filtros persistem entre execuções e também afetam tracklogs, topologia e animação de pacotes.",
             "Tudo permanece ligado por padrão.",
-            "Build de validação somente para Windows x64 Portable.",
+            "Build de validação somente para Windows x64 Portable, destinado ao teste da nova árvore Ver.",
         ],
     },
     "1.7.15": {
