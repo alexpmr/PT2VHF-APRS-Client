@@ -10,11 +10,26 @@
     mapLoadQueued: false,
     mapPeriodHours: Number(localStorage.getItem('pt2vhf_map_period_hours') || 0),
     stationsEnabled: localStorage.getItem('pt2vhf_map_item_stations') !== '0',
+    digisEnabled: localStorage.getItem('pt2vhf_map_item_digis') !== '0',
+    igatesEnabled: localStorage.getItem('pt2vhf_map_item_igates') !== '0',
     objectsEnabled: localStorage.getItem('pt2vhf_map_item_objects') !== '0',
     tracklogEnabled: localStorage.getItem('pt2vhf_map_item_tracklogs') !== '0',
     rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
     igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
+    mapViewFilters: (() => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem('pt2vhf_map_view_filters') || '{}');
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch (_) { return {}; }
+    })(),
+    mapViewExpanded: (() => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem('pt2vhf_map_view_expanded') || '[]');
+        return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+      } catch (_) { return new Set(); }
+    })(),
+    mapViewTreeSignature: '',
     mapKnownCallsigns: new Set(),
     mapVisibleCallsigns: new Set(),
     systemMetricsBusy: false,
@@ -1608,15 +1623,15 @@
   }
 
   function stationMatchesMapPeriod(station) {
-    return !!state.stationsEnabled && timestampWithinHours(station?.last_heard, state.mapPeriodHours);
+    return timestampWithinHours(station?.last_heard, state.mapPeriodHours);
   }
 
   function objectMatchesMapPeriod(object) {
-    return !!state.objectsEnabled && timestampWithinHours(object?.last_heard, state.mapPeriodHours);
+    return timestampWithinHours(object?.last_heard, state.mapPeriodHours);
   }
 
   function trackMatchesMapPeriod(track) {
-    return !!state.tracklogEnabled && timestampWithinHours(track?.timestamp, state.mapPeriodHours);
+    return timestampWithinHours(track?.timestamp, state.mapPeriodHours);
   }
 
   function mapDistanceKm(a, b) {
