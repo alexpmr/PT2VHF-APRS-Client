@@ -30,11 +30,12 @@ Cada Release completa publica:
 
 <!-- DOWNLOAD_STATS_START -->
 
-_Atualizado automaticamente em **2026-09-28 23:16 UTC** a partir dos contadores das GitHub Releases._
+_Atualizado automaticamente em **2026-09-29 05:43 UTC** a partir dos contadores das GitHub Releases._
 
 | Release | Windows | Linux | macOS | Total |
 |---|---:|---:|---:|---:|
-| [v1.7.7](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.7) | 13 | 0 | 0 | **13** |
+| [v1.7.15](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.15) | 5 | 0 | 0 | **5** |
+| [v1.7.7](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.7) | 16 | 0 | 0 | **16** |
 | [v1.7.6](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.6) | 6 | 0 | 0 | **6** |
 | [v1.7.5](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.5) | 2 | 0 | 0 | **2** |
 | [v1.7.4](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.4) | 27 | 1 | 0 | **28** |
@@ -81,7 +82,7 @@ _Atualizado automaticamente em **2026-09-28 23:16 UTC** a partir dos contadores 
 | [v0.2.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.2) | 0 | 0 | 0 | **0** |
 | [v0.2.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.1) | 0 | 0 | 0 | **0** |
 | [v0.2.0](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.0) | 1 | 0 | 0 | **1** |
-| **Acumulado** | **230** | **11** | **0** | **241** |
+| **Acumulado** | **238** | **11** | **0** | **249** |
 
 > Os números representam downloads dos pacotes do aplicativo, não usuários únicos. Manual PDF, SBOMs e arquivos de licenças não entram no total.
 
