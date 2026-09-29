@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.15": {
+        "title": "Produção: interações APRS inteligentes e Release latest",
+        "items": [
+            "Digipeaters, hotspots e outras estações de infraestrutura deixam mensagens e queries APRS desabilitadas quando não há evidência de capacidade interativa.",
+            "Uma estação de infraestrutura volta a permitir interação automaticamente quando já enviou mensagem, respondeu ACK/REJ, enviou query ou respondeu uma query dirigida.",
+            "Objetos e itens APRS permanecem não interativos.",
+            "Ações passivas, como Ver logs e histórico de queries, continuam disponíveis.",
+            "Mantém a checagem de atualização ao iniciar e a cada 30 minutos.",
+            "Status de atualização permanece como Versão atualizada ou Versão X.X.X disponível em laranja e piscando.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.7.13": {
         "title": "Validação Windows x64: símbolos APRS, animação limpa e status de versão",
         "items": [
