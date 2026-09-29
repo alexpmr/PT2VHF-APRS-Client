@@ -1816,7 +1816,7 @@ def test_v1717_map_ver_groups_by_family_not_callsign():
     database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
 
     assert "pt2vhf_map_view_filters_v2" in js
-    assert "station:family:" in js
+    assert "${role}:family:${family}" in js
     assert "object:family:" in js
     assert "map_family_label" in js
     assert "map_family_key" in js
