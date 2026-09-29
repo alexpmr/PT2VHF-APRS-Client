@@ -3228,3 +3228,29 @@ html[data-theme="light"] .map-view-tree-header {
 .station-ranking-table th:nth-child(n+2):nth-child(-n+6) {
   text-align: right;
 }
+
+
+/* v1.7.19 - RF heard list inside station popup */
+.station-rf-heard-section {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+.station-rf-heard-grid {
+  display: grid;
+  grid-template-columns: minmax(80px, auto) minmax(140px, 1fr);
+  gap: 5px 10px;
+  align-items: center;
+  margin-top: 7px;
+  max-height: 150px;
+  overflow: auto;
+}
+.station-rf-heard-grid > span {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.station-rf-heard-call {
+  text-align: left;
+  justify-self: start;
+}
