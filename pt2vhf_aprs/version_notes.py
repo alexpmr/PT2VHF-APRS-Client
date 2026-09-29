@@ -12,7 +12,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Desmarcar uma família oculta todos os itens daquele tipo no mapa, independentemente do indicativo.",
             "A contagem ao lado da família representa quantos itens daquele tipo estão no período atual do mapa.",
             "Filtros antigos da v1.7.16 são migrados para uma nova chave para evitar ocultações indevidas.",
-            "Build de validação somente para Windows x64 Portable.",
+            "Build de validação somente para Windows x64 Portable, destinado ao teste do agrupamento por famílias.",
         ],
     },
     "1.7.16": {
