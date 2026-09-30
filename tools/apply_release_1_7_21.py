@@ -19,7 +19,7 @@ checks = {
         "pt2vhfRadarPane",
         "maxNativeZoom: 7",
         "/256/{z}/{x}/{y}/2/1_0.png",
-        "weatherRadarEnabled: 'pt2vhf_map_item_weather_radar'",
+        "weatherRadarEnabled: localStorage.getItem('pt2vhf_map_item_weather_radar') === '1'",
         "Radar meteorológico",
         "weather_radar_transparency",
         "Weather data ©",
@@ -29,6 +29,9 @@ checks = {
         'name="weather_radar_transparency"',
         'id="weatherRadarTransparency"',
         "Transparência do radar meteorológico",
+        'id="mapLayersButton"',
+        'id="mapLayersMenu"',
+        'id="weatherRadarLayerToggle"',
     ],
     "pt2vhf_aprs/database.py": [
         '"weather_radar_transparency": 35',
