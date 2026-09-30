@@ -1136,6 +1136,11 @@
     return [0, 1, 6, 12, 24, 168].includes(parsed) ? parsed : 0;
   }
 
+  function statisticsPeriodValue(value) {
+    const parsed = Number(value);
+    return [0, 1, 6, 24, 168].includes(parsed) ? parsed : 0;
+  }
+
   function topologyPeriodLabel(hours = state.topologyHours) {
     if (Number(hours) === 0) return ui('Completo', 'Complete');
     if (Number(hours) === 168) return ui('7 dias', '7 days');
@@ -1398,7 +1403,7 @@
 
   function addMapControls() {
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
-    state.topologyHours = topologyPeriodValue(state.topologyHours);
+    state.topologyHours = statisticsPeriodValue(state.topologyHours);
     state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
 
     const period = $('#mapPeriodHours');
@@ -5945,7 +5950,7 @@
     const box = $('#topologyStatsContent');
     if (!box) return;
     const periodSelect = $('#analysisPeriod');
-    state.topologyHours = topologyPeriodValue(state.topologyHours);
+    state.topologyHours = statisticsPeriodValue(state.topologyHours);
     if (periodSelect) periodSelect.value = String(state.topologyHours);
     box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');
     try {
@@ -6029,7 +6034,7 @@
 
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
   $('#analysisPeriod')?.addEventListener('change', async event => {
-    state.topologyHours = topologyPeriodValue(event.target.value);
+    state.topologyHours = statisticsPeriodValue(event.target.value);
     localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
     // O período das Estatísticas é totalmente independente do período do Mapa.
     await refreshTopologyAnalysis();
