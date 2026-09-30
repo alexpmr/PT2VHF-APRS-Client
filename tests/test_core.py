@@ -2105,3 +2105,65 @@ def test_v1720_readme_has_direct_latest_downloads_and_no_download_counter_table(
     assert "## Downloads por Release" not in readme
     assert "DOWNLOAD_STATS_START" not in readme
     assert "DOWNLOAD_STATS_END" not in readme
+
+
+def test_v1721_weather_radar_layer_and_transparency_setting():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
+
+    assert "weatherRadarEnabled: localStorage.getItem('pt2vhf_map_item_weather_radar') === '1'" in js
+    assert "RAINVIEWER_WEATHER_MAPS_URL" in js
+    assert "https://api.rainviewer.com/public/weather-maps.json" in js
+    assert "pt2vhfRadarPane" in js
+    assert "maxNativeZoom: 7" in js
+    assert "/256/{z}/{x}/{y}/2/1_0.png" in js
+    assert "Weather data ©" in js
+    assert "RainViewer" in js
+    assert "Radar meteorológico" in js
+    assert "weatherRadarEnabled: 'pt2vhf_map_item_weather_radar'" in js
+
+    assert 'name="weather_radar_transparency"' in html
+    assert 'id="weatherRadarTransparency"' in html
+    assert 'id="weatherRadarTransparencyValue"' in html
+    assert "Transparência do radar meteorológico" in html
+
+    assert '"weather_radar_transparency": 35' in database
+    assert "weather_radar_transparency INTEGER NOT NULL DEFAULT 35" in database
+    assert 'merged["weather_radar_transparency"]' in database
+
+
+def test_v1721_weather_radar_config_persists_and_validates():
+    original = db.DB_PATH
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            db.DB_PATH = Path(td) / "test.db"
+            db.init_db()
+            assert db.get_config()["weather_radar_transparency"] == 35
+
+            saved = db.save_config({"weather_radar_transparency": 55})
+            assert saved["weather_radar_transparency"] == 55
+
+            with pytest.raises(ValueError):
+                db.save_config({"weather_radar_transparency": 101})
+            with pytest.raises(ValueError):
+                db.save_config({"weather_radar_transparency": -1})
+    finally:
+        db.DB_PATH = original
+
+
+def test_v1721_weather_radar_is_below_aprs_overlays_and_off_by_default():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert "radarPane.style.zIndex = '320'" in js
+    assert "visualPane.style.zIndex = '450'" in js
+    assert "markerPane.style.zIndex = '650'" in js
+    assert "localStorage.getItem('pt2vhf_map_item_weather_radar') === '1'" in js
+
+    render_start = js.index("function renderMapViewTree")
+    render_end = js.index("function syncMapViewTreeCheckboxes", render_start)
+    render = js[render_start:render_end]
+    assert "root:weather-radar" in render
+    assert "weatherRadarEnabled" in render
