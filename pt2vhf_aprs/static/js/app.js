@@ -132,7 +132,7 @@
   const BRAZIL_PREFIXES = ['PP','PQ','PR','PS','PT','PU','PV','PW','PX','PY','ZV','ZW','ZX','ZY','ZZ'];
   const BRAZIL_FILTER = 'p/' + BRAZIL_PREFIXES.join('/');
   const RAINVIEWER_MAPS_URL = 'https://api.rainviewer.com/public/weather-maps.json';
-  const WEATHER_RADAR_REFRESH_MS = 5 * 60 * 1000;
+  const WEATHER_RADAR_REFRESH_MS = 300000;
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
