@@ -4,86 +4,30 @@ Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensa
 
 A **v1.7.19** é a release completa de produção. Consolida a árvore **Ver** por famílias funcionais, corrige a separação entre objetos e estações, unifica o ranking de atividade/interações e adiciona ao popup a relação de estações recebidas por RF.
 
-## Downloads
+## Downloads da versão mais recente
 
-Cada Release completa publica:
+Os arquivos abaixo apontam diretamente para a **Release latest** do projeto.
 
 ### Windows
-- `PT2VHF_APRS_Client_Setup_x64_vX.Y.exe` — instalador para Windows x64.
-- `PT2VHF_APRS_Client_Portable_x64_vX.Y.exe` — portátil para Windows x64.
-- `PT2VHF_APRS_Client_Setup_ARM64_vX.Y.exe` — instalador nativo para Windows ARM64.
-- `PT2VHF_APRS_Client_Portable_ARM64_vX.Y.exe` — portátil nativo para Windows ARM64.
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Setup_x64_v1.7.20.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Portable_x64_v1.7.20.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Setup_ARM64_v1.7.20.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Portable_ARM64_v1.7.20.exe)
 
 ### Linux
-- `PT2VHF_APRS_Client_x86_64_vX.Y.AppImage` — AppImage portátil.
-- `PT2VHF_APRS_Client_Linux_x86_64_vX.Y.tar.gz` — pacote portátil genérico.
-- `pt2vhf-aprs-client_X.Y_amd64.deb` — Debian/Ubuntu e derivados.
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_x86_64_v1.7.20.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/pt2vhf-aprs-client_1.7.20_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Linux_x86_64_v1.7.20.tar.gz)
 
 ### macOS
-- `PT2VHF_APRS_Client_macOS_arm64_vX.Y.dmg` — Apple Silicon.
-- `PT2VHF_APRS_Client_macOS_x86_64_vX.Y.dmg` — Macs Intel.
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_macOS_arm64_v1.7.20.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_macOS_x86_64_v1.7.20.dmg)
 
-### Manual
-- `PT2VHF_APRS_Client_Manual_vX.Y.pdf` — manual profissional gerado e validado no workflow da Release.
+### Documentação
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Manual_v1.7.20.pdf)
+- [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
-## Downloads por Release
 
-<!-- DOWNLOAD_STATS_START -->
-
-_Atualizado automaticamente em **2026-09-28 13:53 UTC** a partir dos contadores das GitHub Releases._
-
-| Release | Windows | Linux | macOS | Total |
-|---|---:|---:|---:|---:|
-| [v1.7.5](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.5) | 0 | 0 | 0 | **0** |
-| [v1.7.4](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.4) | 25 | 1 | 0 | **26** |
-| [v1.7.3](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.3) | 18 | 1 | 0 | **19** |
-| [v1.7.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.2) | 24 | 0 | 0 | **24** |
-| [v1.7.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7.1) | 7 | 0 | 0 | **7** |
-| [v1.7](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.7) | 7 | 0 | 0 | **7** |
-| [v1.6.24](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.24) | 12 | 0 | 0 | **12** |
-| [v1.6.23](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.23) | 1 | 0 | 0 | **1** |
-| [v1.6.22](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.22) | 6 | 1 | 0 | **7** |
-| [v1.6.21](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.21) | 1 | 0 | 0 | **1** |
-| [v1.6.19](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.19) | 3 | 0 | 0 | **3** |
-| [v1.6.18](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.18) | 8 | 1 | 0 | **9** |
-| [v1.6.17](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.17) | 4 | 0 | 0 | **4** |
-| [v1.6.16](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.16) | 3 | 0 | 0 | **3** |
-| [v1.6.15](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.15) | 2 | 0 | 0 | **2** |
-| [v1.6.14](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.14) | 1 | 0 | 0 | **1** |
-| [v1.6.13](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.13) | 2 | 0 | 0 | **2** |
-| [v1.6.11](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.11) | 1 | 0 | 0 | **1** |
-| [v1.6.10](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.10) | 6 | 4 | 0 | **10** |
-| [v1.6.9](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.9) | 0 | 0 | 0 | **0** |
-| [v1.6.5](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.5) | 5 | 0 | 0 | **5** |
-| [v1.6.4](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.4) | 1 | 0 | 0 | **1** |
-| [v1.6.3](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.3) | 1 | 0 | 0 | **1** |
-| [v1.6.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.2) | 6 | 0 | 0 | **6** |
-| [v1.6.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6.1) | 5 | 0 | 0 | **5** |
-| [v1.6](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.6) | 12 | 1 | 0 | **13** |
-| [v1.5](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.5) | 4 | 0 | 0 | **4** |
-| [v1.4](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.4) | 1 | 0 | 0 | **1** |
-| [v1.3](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.3) | 1 | 0 | 0 | **1** |
-| [v1.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.2) | 3 | 1 | 0 | **4** |
-| [v1.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.1) | 3 | 0 | 0 | **3** |
-| [v1.0](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.0) | 6 | 1 | 0 | **7** |
-| [v0.3.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.3.2) | 5 | 0 | 0 | **5** |
-| [v0.3.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.3.1) | 3 | 0 | 0 | **3** |
-| [v0.3.0](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.3.0) | 4 | 0 | 0 | **4** |
-| [v0.2.9](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.9) | 2 | 0 | 0 | **2** |
-| [v0.2.8](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.8) | 1 | 0 | 0 | **1** |
-| [v0.2.7](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.7) | 5 | 0 | 0 | **5** |
-| [v0.2.6](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.6) | 5 | 0 | 0 | **5** |
-| [v0.2.5](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.5) | 1 | 0 | 0 | **1** |
-| [v0.2.4](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.4) | 0 | 0 | 0 | **0** |
-| [v0.2.3](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.3) | 0 | 0 | 0 | **0** |
-| [v0.2.2](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.2) | 0 | 0 | 0 | **0** |
-| [v0.2.1](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.1) | 0 | 0 | 0 | **0** |
-| [v0.2.0](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v0.2.0) | 1 | 0 | 0 | **1** |
-| **Acumulado** | **206** | **11** | **0** | **217** |
-
-> Os números representam downloads dos pacotes do aplicativo, não usuários únicos. Manual PDF, SBOMs e arquivos de licenças não entram no total.
-
-<!-- DOWNLOAD_STATS_END -->
 
 ## Novidades da v1.7.7
 
