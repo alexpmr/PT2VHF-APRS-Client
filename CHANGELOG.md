@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.7.20 - 2026-09-30
+
+- **Estatísticas / Período:** corrige o filtro temporal; a consulta passa a usar o período selecionado na própria aba Estatísticas.
+- **Mapa × Estatísticas:** os períodos agora são independentes e persistidos em chaves separadas.
+- **RF × Internet:** `qAR`/`qAO` preservam evidência de entrada direta por RF; `qAr` e demais caminhos remotos continuam classificados como Internet/APRS-IS.
+- **Primeira execução:** configuração incompleta abre automaticamente a aba **Configuração**, com foco no campo **Indicativo**.
+- **GitHub:** remove a tabela de contadores de downloads do README e adiciona downloads diretos da Release `latest`.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## v1.7.19 - 2026-09-29
 
 - **Mapa / Ver:** consolida a árvore hierárquica por famílias funcionais, com seleção parcial correta.
