@@ -111,6 +111,15 @@
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
 
+- **Mapa — popup de estação não pode ficar cortado pela barra superior**
+  - Corrigir situações em que, ao clicar em uma estação próxima à parte superior do mapa, o topo do popup fica escondido atrás da barra de controles/abas.
+  - Após abrir o popup, verificar automaticamente se todo o conteúdo visível cabe na área útil do mapa.
+  - Se houver corte no topo, aplicar **auto-pan vertical** suficiente para deslocar o mapa e trazer o cabeçalho do popup para baixo da barra superior.
+  - Considerar a altura real da barra contextual do Mapa e das abas, não apenas os limites brutos do container Leaflet.
+  - Evitar reposicionamentos repetidos depois que o usuário mover manualmente o mapa ou o popup.
+  - Em popups muito altos, limitar a altura ao espaço disponível e usar rolagem interna, mantendo cabeçalho e ações acessíveis.
+  - Adicionar teste de regressão para estação próxima ao topo da viewport e para janela com altura reduzida.
+
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
   - Exibir Indicativo, última recepção, distância, software/dispositivo, posição, status, favorito, mensagens, Ping, Trace e estações ouvidas.
