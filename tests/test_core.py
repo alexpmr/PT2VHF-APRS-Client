@@ -2162,3 +2162,21 @@ def test_v1721_track_hover_metadata_and_update_cleanup(monkeypatch, tmp_path):
     assert stale_temp.name in removed
     assert not old_setup.exists()
     assert not stale_temp.exists()
+
+
+def test_v1722_weather_radar_layer_and_settings():
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    web = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
+
+    assert db.DEFAULT_CONFIG["weather_radar_opacity"] == 60
+    assert 'id="mapLayersButton"' in html
+    assert 'id="weatherRadarToggle"' in html
+    assert 'name="weather_radar_opacity" id="weatherRadarOpacity"' in html
+    assert "WEATHER_RADAR_API = '/api/weather/radar'" in js
+    assert "maxNativeZoom: 7" in js
+    assert "pane: 'pt2vhfWeatherPane'" in js
+    assert "weatherRadarLayer.setOpacity" in js
+    assert '@app.get("/api/weather/radar")' in web
+    assert "api.rainviewer.com/public/weather-maps.json" in web
