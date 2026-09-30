@@ -1273,7 +1273,7 @@
   }
 
   const RAINVIEWER_WEATHER_MAPS_URL = 'https://api.rainviewer.com/public/weather-maps.json';
-  const WEATHER_RADAR_META_TTL_MS = 5 * 60 * 1000;
+  const WEATHER_RADAR_META_TTL_MS = 300000;
 
   function weatherRadarOpacity() {
     const transparency = Math.max(0, Math.min(100, Number(state.mapConfig.weather_radar_transparency ?? 35)));
@@ -6370,7 +6370,7 @@
     }, 10000);
     schedulePolling(async () => {
       if (state.activeTab === 'map' && state.weatherRadarEnabled) await loadWeatherRadar(true);
-    }, 5 * 60 * 1000);
+    }, 300000);
     schedulePolling(async () => {
       if (state.activeTab === 'map') await pollTrafficEvents();
     }, 3000);
