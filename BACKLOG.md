@@ -6,6 +6,14 @@
 - As versões seguintes desta linha usarão numeração incremental **v1.7.1, v1.7.2, v1.7.3...**.
 - Não publicar a versão intermediária **v1.6.25**.
 
+## Concluído na v1.7.22
+
+- **Mapa → Camadas → Clima:** radar meteorológico como sobreposição independente do mapa-base.
+- **Radar de precipitação:** atualização periódica a partir do quadro mais recente disponível no RainViewer.
+- **Configuração:** controle persistente de opacidade da camada de clima.
+- **Popup da estação:** altura limitada, rolagem interna e proteção adicional de auto-pan/keepInView para evitar corte no topo.
+- **Build:** validação somente Windows x64 Portable.
+
 ## Concluído na v1.7.21
 
 - **Hover de enlaces:** painel contextual fixo com origem/destino, tipo RF ou Internet/APRS-IS, direção, pacotes e período observado.
@@ -110,15 +118,6 @@
   - Validar upgrade com banco de versão anterior, alterar configuração, salvar, reiniciar e confirmar persistência.
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
-
-- **Mapa — popup de estação não pode ficar cortado pela barra superior**
-  - Corrigir situações em que, ao clicar em uma estação próxima à parte superior do mapa, o topo do popup fica escondido atrás da barra de controles/abas.
-  - Após abrir o popup, verificar automaticamente se todo o conteúdo visível cabe na área útil do mapa.
-  - Se houver corte no topo, aplicar **auto-pan vertical** suficiente para deslocar o mapa e trazer o cabeçalho do popup para baixo da barra superior.
-  - Considerar a altura real da barra contextual do Mapa e das abas, não apenas os limites brutos do container Leaflet.
-  - Evitar reposicionamentos repetidos depois que o usuário mover manualmente o mapa ou o popup.
-  - Em popups muito altos, limitar a altura ao espaço disponível e usar rolagem interna, mantendo cabeçalho e ações acessíveis.
-  - Adicionar teste de regressão para estação próxima ao topo da viewport e para janela com altura reduzida.
 
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
