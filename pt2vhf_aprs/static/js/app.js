@@ -1096,6 +1096,11 @@
     visualPane.style.zIndex = '450';
     visualPane.style.pointerEvents = 'none';
 
+    const interactionPane = state.map.createPane('pt2vhfInteractionPane');
+    interactionPane.classList.add('pt2vhf-interaction-pane');
+    interactionPane.style.zIndex = '475';
+    interactionPane.style.pointerEvents = 'auto';
+
     const markerPane = state.map.createPane('pt2vhfMarkerPane');
     markerPane.classList.add('pt2vhf-marker-pane');
     markerPane.style.zIndex = '650';
@@ -1623,6 +1628,180 @@
     root.querySelector('[data-legend="packet"]')?.classList.toggle('legend-muted', !state.packetsEnabled || !packetAnimating);
   }
 
+  function mapHoverDuration(milliseconds) {
+    const ms = Math.max(0, Number(milliseconds) || 0);
+    const totalSeconds = Math.round(ms / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const parts = [];
+    if (days) parts.push(`${days} d`);
+    if (hours) parts.push(`${hours} h`);
+    if (minutes) parts.push(`${minutes} min`);
+    if (!parts.length || (parts.length < 2 && seconds)) parts.push(`${seconds} s`);
+    return parts.slice(0, 2).join(' ');
+  }
+
+  function mapHoverAge(value) {
+    const ms = stationLastHeardMs({ last_heard: value });
+    if (!Number.isFinite(ms)) return '—';
+    return mapHoverDuration(Math.max(0, Date.now() - ms));
+  }
+
+  function showMapHoverInfo(type, title, rows) {
+    const panel = $('#mapHoverInfoPanel');
+    const typeNode = $('#mapHoverInfoType');
+    const titleNode = $('#mapHoverInfoTitle');
+    const body = $('#mapHoverInfoBody');
+    if (!panel || !typeNode || !titleNode || !body) return;
+    typeNode.textContent = type || ui('Detalhes do mapa', 'Map details');
+    titleNode.textContent = title || '—';
+    body.innerHTML = (rows || [])
+      .filter(row => row && row[1] !== null && row[1] !== undefined && String(row[1]).trim() !== '')
+      .map(([label, value]) => `<strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span>`)
+      .join('');
+    panel.classList.remove('hidden');
+  }
+
+  function hideMapHoverInfo() {
+    $('#mapHoverInfoPanel')?.classList.add('hidden');
+  }
+
+  function parseTrackPath(row) {
+    try {
+      const parsed = JSON.parse(String(row?.path || '[]'));
+      return Array.isArray(parsed) ? parsed.map(value => String(value || '').trim()).filter(Boolean) : [];
+    } catch (_) {
+      return String(row?.path || '').split(',').map(value => value.trim()).filter(Boolean);
+    }
+  }
+
+  function trackPathNode(token) {
+    return String(token || '').replace(/\*+$/, '').trim().toUpperCase();
+  }
+
+  function isGenericAprsPathNode(token) {
+    const value = trackPathNode(token);
+    return !value
+      || /^QA[A-Z]$/i.test(value)
+      || /^(WIDE|TRACE)\d+-\d+$/i.test(value)
+      || /^(TCPIP|TCPXX|NOGATE|RFONLY)$/i.test(value);
+  }
+
+  function trackHoverSummary(callsign, rows) {
+    const ordered = [...(rows || [])]
+      .filter(row => Number.isFinite(Number(row?.latitude)) && Number.isFinite(Number(row?.longitude)))
+      .sort((a, b) => (stationLastHeardMs({ last_heard: a.timestamp }) || 0) - (stationLastHeardMs({ last_heard: b.timestamp }) || 0));
+    if (!ordered.length) return null;
+
+    let distanceKm = 0;
+    let previous = null;
+    for (const row of ordered) {
+      if (previous) {
+        const legDistance = mapDistanceKm(previous, row);
+        const prevMs = stationLastHeardMs({ last_heard: previous.timestamp });
+        const nowMs = stationLastHeardMs({ last_heard: row.timestamp });
+        const elapsedHours = Number.isFinite(prevMs) && Number.isFinite(nowMs)
+          ? Math.max((nowMs - prevMs) / 3600000, 1 / 3600)
+          : 0;
+        const impliedSpeed = elapsedHours > 0 ? legDistance / elapsedHours : 0;
+        const split = legDistance >= 250 || (legDistance >= 75 && elapsedHours > 0 && impliedSpeed > 1200);
+        if (!split) distanceKm += legDistance;
+      }
+      previous = row;
+    }
+
+    const first = ordered[0];
+    const last = ordered[ordered.length - 1];
+    const firstMs = stationLastHeardMs({ last_heard: first.timestamp });
+    const lastMs = stationLastHeardMs({ last_heard: last.timestamp });
+    const durationMs = Number.isFinite(firstMs) && Number.isFinite(lastMs) ? Math.max(0, lastMs - firstMs) : 0;
+    const averageSpeed = durationMs > 0 ? distanceKm / (durationMs / 3600000) : null;
+    const speedValues = ordered.map(row => Number(row.speed)).filter(Number.isFinite);
+    const maxSpeed = speedValues.length ? Math.max(...speedValues) : null;
+    const rssiValues = ordered.map(row => Number(row.rssi)).filter(Number.isFinite);
+    const snrValues = ordered.map(row => Number(row.snr)).filter(Number.isFinite);
+
+    const paths = new Set();
+    const digipeaters = new Set();
+    const igates = new Set();
+    const receptionKinds = new Set();
+
+    for (const row of ordered) {
+      const tokens = parseTrackPath(row);
+      if (!tokens.length) continue;
+      paths.add(tokens.join(','));
+      const qIndex = tokens.findIndex(token => /^qA[A-Za-z]$/.test(String(token || '')));
+      if (qIndex >= 0 && qIndex + 1 < tokens.length) {
+        const igate = trackPathNode(tokens[qIndex + 1]);
+        if (igate) igates.add(igate);
+      }
+      const qToken = qIndex >= 0 ? String(tokens[qIndex]) : '';
+      if (qToken === 'qAR' || qToken === 'qAO') receptionKinds.add('RF');
+      else if (qToken === 'qAr') receptionKinds.add('Internet/APRS-IS');
+
+      const beforeQ = qIndex >= 0 ? tokens.slice(0, qIndex) : tokens;
+      for (const token of beforeQ) {
+        const node = trackPathNode(token);
+        if (isGenericAprsPathNode(node) || node === normalizedCall(callsign)) continue;
+        if (/^[A-Z0-9]{1,6}(?:-\d{1,2})?$/.test(node)) digipeaters.add(node);
+      }
+    }
+
+    const summarizeSet = (items, limit = 7) => {
+      const values = [...items];
+      if (!values.length) return '';
+      return values.length <= limit ? values.join(', ') : `${values.slice(0, limit).join(', ')} +${values.length - limit}`;
+    };
+    const firstCoord = `${Number(first.latitude).toFixed(5)}, ${Number(first.longitude).toFixed(5)}`;
+    const lastCoord = `${Number(last.latitude).toFixed(5)}, ${Number(last.longitude).toFixed(5)}`;
+    const pathsText = summarizeSet(paths, 3);
+
+    return {
+      title: normalizedCall(callsign),
+      rows: [
+        [ui('Início', 'Start'), fmtDate(first.timestamp)],
+        [ui('Fim', 'End'), fmtDate(last.timestamp)],
+        [ui('Duração', 'Duration'), mapHoverDuration(durationMs)],
+        [ui('Distância', 'Distance'), `${distanceKm.toFixed(distanceKm >= 100 ? 1 : 2)} km`],
+        [ui('Velocidade média', 'Average speed'), Number.isFinite(averageSpeed) ? `${averageSpeed.toFixed(1)} km/h` : '—'],
+        [ui('Velocidade máxima', 'Maximum speed'), Number.isFinite(maxSpeed) ? `${maxSpeed.toFixed(1)} km/h` : '—'],
+        [ui('Posições', 'Positions'), String(ordered.length)],
+        [ui('Primeira posição', 'First position'), firstCoord],
+        [ui('Última posição', 'Last position'), lastCoord],
+        [ui('Última posição há', 'Last position ago'), mapHoverAge(last.timestamp)],
+        [ui('Digipeaters observados', 'Observed digipeaters'), summarizeSet(digipeaters)],
+        [ui('iGates observados', 'Observed iGates'), summarizeSet(igates)],
+        [ui('Recepção identificada', 'Identified reception'), summarizeSet(receptionKinds)],
+        [ui('Caminhos APRS', 'APRS paths'), pathsText],
+        ['RSSI', rssiValues.length ? `${Math.min(...rssiValues).toFixed(0)} a ${Math.max(...rssiValues).toFixed(0)} dBm` : ''],
+        ['SNR', snrValues.length ? `${Math.min(...snrValues).toFixed(1)} a ${Math.max(...snrValues).toFixed(1)} dB` : ''],
+        [ui('Período do mapa', 'Map period'), state.mapPeriodHours === 0 ? ui('Completo', 'Complete') : `${state.mapPeriodHours} h`],
+      ],
+    };
+  }
+
+  function showTopologyHover(edge) {
+    if (!edge) return;
+    const isInternet = edge.kind === 'igate';
+    showMapHoverInfo(
+      ui('Enlace observado', 'Observed link'),
+      `${edge.source || '—'} → ${edge.target || '—'}`,
+      [
+        [ui('Tipo', 'Type'), isInternet ? 'Internet/APRS-IS' : 'RF'],
+        [ui('Origem', 'Source'), edge.source || '—'],
+        [ui('Destino', 'Destination'), edge.target || '—'],
+        [ui('Sentido', 'Direction'), `${edge.source || '—'} → ${edge.target || '—'}`],
+        [ui('Pacotes observados', 'Observed packets'), Number(edge.packet_count || 0).toLocaleString('pt-BR')],
+        [ui('Primeira observação', 'First observed'), fmtDate(edge.first_seen)],
+        [ui('Última observação', 'Last observed'), fmtDate(edge.last_seen)],
+        [ui('Última observação há', 'Last observed ago'), mapHoverAge(edge.last_seen)],
+        ['iGate', edge.igate || ''],
+      ],
+    );
+  }
+
   function clearTopologyLines() {
     for (const line of state.topologyLines.values()) state.map?.removeLayer(line);
     state.topologyLines.clear();
@@ -1659,14 +1838,22 @@
           weight: state.mapConfig.topology_width,
           opacity: .72,
           dashArray: edge.kind === 'igate' ? '7 5' : null,
-          interactive: false,
-          pane: 'pt2vhfVisualPane'
+          interactive: true,
+          bubblingMouseEvents: false,
+          pane: 'pt2vhfInteractionPane'
         };
         if (!line) {
           line = L.polyline(points, style).addTo(state.map);
           state.topologyLines.set(key, line);
         } else {
           line.setLatLngs(points).setStyle(style);
+        }
+
+        line._pt2vhfEdge = edge;
+        if (!line._pt2vhfHoverBound) {
+          line.on('mouseover', () => showTopologyHover(line._pt2vhfEdge));
+          line.on('mouseout', hideMapHoverInfo);
+          line._pt2vhfHoverBound = true;
         }
 
         line.bindPopup(`
@@ -2107,7 +2294,7 @@
       const drawable = new Map();
       for (const [call, rows] of grouped) {
         const segments = splitTrackSegments(rows);
-        if (segments.length) drawable.set(call, segments);
+        if (segments.length) drawable.set(call, { segments, rows });
       }
 
       for (const [call, line] of state.trackLines) {
@@ -2117,15 +2304,17 @@
         }
       }
 
-      for (const [call, segments] of drawable) {
+      for (const [call, trackData] of drawable) {
+        const segments = trackData.segments;
         let line = state.trackLines.get(call);
         if (!line) {
           line = L.polyline(segments, {
             color: state.mapConfig.track_color,
             weight: state.mapConfig.track_width,
             opacity: .78,
-            interactive: false,
-            pane: 'pt2vhfVisualPane'
+            interactive: true,
+            bubblingMouseEvents: false,
+            pane: 'pt2vhfInteractionPane'
           }).addTo(state.map);
           state.trackLines.set(call, line);
         } else {
@@ -2135,6 +2324,15 @@
             weight: state.mapConfig.track_width,
             opacity: .78
           });
+        }
+        line._pt2vhfTrackSummary = trackHoverSummary(call, trackData.rows);
+        if (!line._pt2vhfHoverBound) {
+          line.on('mouseover', () => {
+            const summary = line._pt2vhfTrackSummary;
+            if (summary) showMapHoverInfo(ui('Tracklog', 'Tracklog'), summary.title, summary.rows);
+          });
+          line.on('mouseout', hideMapHoverInfo);
+          line._pt2vhfHoverBound = true;
         }
       }
       updateMapLegend();
