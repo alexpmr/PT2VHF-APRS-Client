@@ -1001,7 +1001,7 @@
     }
   };
 
-  const RAINVIEWER_MAPS_API = 'https://api.rainviewer.com/public/weather-maps.json';
+  const WEATHER_RADAR_API = '/api/weather/radar';
   const WEATHER_RADAR_REFRESH_MS = 300000;
 
   function clampRadarOpacity(value) {
@@ -1049,14 +1049,11 @@
     if (!silent) setWeatherRadarStatus(ui('Carregando radar…', 'Loading radar…'));
 
     try {
-      const response = await fetch(RAINVIEWER_MAPS_API, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const payload = await response.json();
-      const frames = Array.isArray(payload?.radar?.past) ? payload.radar.past : [];
-      const frame = frames.length ? frames[frames.length - 1] : null;
+      const payload = await api(WEATHER_RADAR_API);
       const host = String(payload?.host || '').replace(/\/$/, '');
-      const path = String(frame?.path || '');
-      if (!frame || !host.startsWith('https://') || !path.startsWith('/')) {
+      const path = String(payload?.path || '');
+      const frameTimeValue = Number(payload?.time || 0);
+      if (!host.startsWith('https://') || !path.startsWith('/v2/radar/') || frameTimeValue <= 0) {
         throw new Error(ui('Nenhum quadro de radar disponível.', 'No radar frame is available.'));
       }
 
@@ -1074,7 +1071,7 @@
       if (state.weatherRadarLayer) state.map.removeLayer(state.weatherRadarLayer);
       state.weatherRadarLayer = nextLayer;
 
-      const frameTime = Number(frame.time || 0) * 1000;
+      const frameTime = frameTimeValue * 1000;
       const timeText = frameTime > 0
         ? new Date(frameTime).toLocaleString(currentLocale(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
         : '';
