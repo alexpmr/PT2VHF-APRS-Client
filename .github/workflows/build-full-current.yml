@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -12,7 +15,7 @@ permissions:
 
 jobs:
   windows-x64:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -88,7 +91,7 @@ jobs:
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
 
   windows-arm64:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: windows-11-arm
     steps:
       - name: Checkout
@@ -163,7 +166,7 @@ jobs:
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES_Windows_arm64.txt
 
   linux-x64:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -197,7 +200,7 @@ jobs:
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt
 
   linux-smoke:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
     strategy:
       fail-fast: false
       matrix:
@@ -224,7 +227,7 @@ jobs:
           python -m pytest -q
 
   macos:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
     strategy:
       fail-fast: false
       matrix:
@@ -271,7 +274,7 @@ jobs:
             dist-macos/THIRD_PARTY_LICENSES_macOS_${{ matrix.arch }}.txt
 
   manual-pdf:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -308,7 +311,7 @@ jobs:
 
 
   publish-release:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name != 'pull_request' && (github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:')) }}
     needs:
       - windows-x64
       - windows-arm64
