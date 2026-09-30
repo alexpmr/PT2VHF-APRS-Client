@@ -291,6 +291,8 @@ html[data-theme="light"] .map-context-bar .topology-control select {
 .station-popup .popup-grid strong { color: var(--muted); }
 .station-last-heard-relative { color: var(--muted); white-space: nowrap; }
 .leaflet-pane.pt2vhf-visual-pane { pointer-events: none !important; }
+.leaflet-pane.pt2vhf-interaction-pane { pointer-events: auto !important; }
+.leaflet-pane.pt2vhf-interaction-pane .leaflet-interactive { pointer-events: auto !important; cursor: help; }
 .leaflet-pane.pt2vhf-marker-pane { pointer-events: auto !important; }
 .leaflet-pane.pt2vhf-marker-pane .leaflet-marker-icon { pointer-events: auto !important; cursor: pointer; }
 .aprs-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }
@@ -2650,6 +2652,55 @@ html[data-theme="light"] .traffic-animation-panel {
   min-height: 0;
   height: 100%;
   overflow: hidden;
+}
+.map-hover-info-panel {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 900;
+  width: min(390px, calc(100% - 24px));
+  max-height: min(52%, 430px);
+  overflow: auto;
+  padding: 11px 12px;
+  border: 1px solid rgba(120,160,190,.55);
+  border-radius: 9px;
+  background: rgba(14,20,26,.94);
+  color: var(--text);
+  box-shadow: 0 8px 28px rgba(0,0,0,.36);
+  backdrop-filter: blur(5px);
+  pointer-events: none;
+}
+.map-hover-info-panel.hidden { display: none; }
+.map-hover-info-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--line);
+}
+.map-hover-info-header span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.map-hover-info-header strong { font-size: 14px; }
+.map-hover-info-body {
+  display: grid;
+  grid-template-columns: minmax(92px, auto) 1fr;
+  gap: 4px 9px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.map-hover-info-body strong {
+  color: var(--muted);
+  font-weight: 650;
+}
+.map-hover-info-body span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .map-replay-layout #map {
   min-height: 0;
