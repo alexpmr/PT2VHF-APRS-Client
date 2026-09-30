@@ -5,6 +5,10 @@
     activeTab: 'map',
     map: null,
     baseLayer: null,
+    weatherRadarLayer: null,
+    weatherRadarLoading: false,
+    weatherRadarRefreshTimer: null,
+    weatherRadarEnabled: localStorage.getItem('pt2vhf_weather_radar_enabled') === '1',
     mapLoadBusy: false,
     mapLoadLastAt: 0,
     mapLoadQueued: false,
@@ -40,7 +44,8 @@
       topology_rf_color: '#ffff00',
       topology_igate_color: '#ffff00',
       topology_width: 1,
-      map_brightness: 100
+      map_brightness: 100,
+      weather_radar_opacity: 60
     },
     markers: new Map(),
     objectMarkers: new Map(),
@@ -996,6 +1001,115 @@
     }
   };
 
+  const RAINVIEWER_MAPS_API = 'https://api.rainviewer.com/public/weather-maps.json';
+  const WEATHER_RADAR_REFRESH_MS = 300000;
+
+  function clampRadarOpacity(value) {
+    return Math.min(100, Math.max(10, Number(value || 60)));
+  }
+
+  function setWeatherRadarStatus(message, isError = false) {
+    const status = $('#weatherRadarStatus');
+    if (!status) return;
+    status.textContent = message;
+    status.classList.toggle('error', !!isError);
+  }
+
+  function syncWeatherRadarUi() {
+    const toggle = $('#weatherRadarToggle');
+    const button = $('#mapLayersButton');
+    if (toggle) toggle.checked = !!state.weatherRadarEnabled;
+    if (button) {
+      const label = ui('Camadas', 'Layers');
+      button.textContent = state.weatherRadarEnabled ? `${label} (1) ▾` : `${label} ▾`;
+    }
+    if (!state.weatherRadarEnabled) {
+      setWeatherRadarStatus(ui('Camada desligada.', 'Layer disabled.'));
+    }
+  }
+
+  function stopWeatherRadarRefresh() {
+    if (state.weatherRadarRefreshTimer) {
+      clearInterval(state.weatherRadarRefreshTimer);
+      state.weatherRadarRefreshTimer = null;
+    }
+  }
+
+  function startWeatherRadarRefresh() {
+    stopWeatherRadarRefresh();
+    if (!state.weatherRadarEnabled) return;
+    state.weatherRadarRefreshTimer = setInterval(() => {
+      void loadWeatherRadar(true);
+    }, WEATHER_RADAR_REFRESH_MS);
+  }
+
+  async function loadWeatherRadar(silent = false) {
+    if (!state.map || !state.weatherRadarEnabled || state.weatherRadarLoading) return;
+    state.weatherRadarLoading = true;
+    if (!silent) setWeatherRadarStatus(ui('Carregando radar…', 'Loading radar…'));
+
+    try {
+      const response = await fetch(RAINVIEWER_MAPS_API, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      const frames = Array.isArray(payload?.radar?.past) ? payload.radar.past : [];
+      const frame = frames.length ? frames[frames.length - 1] : null;
+      const host = String(payload?.host || '').replace(/\/$/, '');
+      const path = String(frame?.path || '');
+      if (!frame || !host.startsWith('https://') || !path.startsWith('/')) {
+        throw new Error(ui('Nenhum quadro de radar disponível.', 'No radar frame is available.'));
+      }
+
+      const tileUrl = `${host}${path}/256/{z}/{x}/{y}/2/1_0.png`;
+      const nextLayer = L.tileLayer(tileUrl, {
+        pane: 'pt2vhfWeatherPane',
+        opacity: clampRadarOpacity(state.mapConfig.weather_radar_opacity) / 100,
+        maxNativeZoom: 7,
+        maxZoom: 19,
+        tileSize: 256,
+        attribution: 'Weather data &copy; <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>'
+      });
+
+      nextLayer.addTo(state.map);
+      if (state.weatherRadarLayer) state.map.removeLayer(state.weatherRadarLayer);
+      state.weatherRadarLayer = nextLayer;
+
+      const frameTime = Number(frame.time || 0) * 1000;
+      const timeText = frameTime > 0
+        ? new Date(frameTime).toLocaleString(currentLocale(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+        : '';
+      setWeatherRadarStatus(
+        timeText
+          ? ui(`Radar atualizado: ${timeText}`, `Radar updated: ${timeText}`)
+          : ui('Radar atualizado.', 'Radar updated.')
+      );
+    } catch (err) {
+      setWeatherRadarStatus(
+        ui(`Falha ao carregar radar: ${err.message}`, `Unable to load radar: ${err.message}`),
+        true
+      );
+      if (!silent) toast(ui('Não foi possível carregar o radar meteorológico.', 'Unable to load the weather radar.'), 'error');
+    } finally {
+      state.weatherRadarLoading = false;
+    }
+  }
+
+  function setWeatherRadarEnabled(enabled) {
+    state.weatherRadarEnabled = !!enabled;
+    localStorage.setItem('pt2vhf_weather_radar_enabled', state.weatherRadarEnabled ? '1' : '0');
+    if (!state.weatherRadarEnabled) {
+      stopWeatherRadarRefresh();
+      if (state.weatherRadarLayer && state.map) {
+        state.map.removeLayer(state.weatherRadarLayer);
+        state.weatherRadarLayer = null;
+      }
+    } else {
+      void loadWeatherRadar(false);
+      startWeatherRadarRefresh();
+    }
+    syncWeatherRadarUi();
+  }
+
   const FONT_FAMILIES = {
     system: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
     segoe: '"Segoe UI", Arial, sans-serif',
@@ -1043,7 +1157,8 @@
       topology_rf_color: cfg.topology_rf_color || state.mapConfig.topology_rf_color || '#ffff00',
       topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#ffff00',
       topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 1),
-      map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100)
+      map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100),
+      weather_radar_opacity: clampRadarOpacity(cfg.weather_radar_opacity || state.mapConfig.weather_radar_opacity || 60)
     };
 
     if (state.map) {
@@ -1054,6 +1169,9 @@
 
       const tilePane = state.map.getPane('tilePane');
       if (tilePane) tilePane.style.filter = `brightness(${state.mapConfig.map_brightness}%)`;
+      if (state.weatherRadarLayer) {
+        state.weatherRadarLayer.setOpacity(state.mapConfig.weather_radar_opacity / 100);
+      }
 
       for (const line of state.trackLines.values()) {
         line.setStyle({
@@ -1091,6 +1209,11 @@
     } catch (_) {}
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
 
+    const weatherPane = state.map.createPane('pt2vhfWeatherPane');
+    weatherPane.classList.add('pt2vhf-weather-pane');
+    weatherPane.style.zIndex = '350';
+    weatherPane.style.pointerEvents = 'none';
+
     const visualPane = state.map.createPane('pt2vhfVisualPane');
     visualPane.classList.add('pt2vhf-visual-pane');
     visualPane.style.zIndex = '450';
@@ -1109,6 +1232,10 @@
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
     addMapControls();
+    if (state.weatherRadarEnabled) {
+      void loadWeatherRadar(false);
+      startWeatherRadarRefresh();
+    }
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
@@ -1532,6 +1659,57 @@
       window.addEventListener('resize', positionMapItemsMenu);
       window.addEventListener('scroll', positionMapItemsMenu, true);
     }
+
+    const layersButton = $('#mapLayersButton');
+    const layersMenu = $('#mapLayersMenu');
+    if (layersButton && layersMenu && layersButton.dataset.bound !== '1') {
+      layersButton.dataset.bound = '1';
+
+      const positionLayersMenu = () => {
+        if (layersMenu.classList.contains('hidden')) return;
+        const rect = layersButton.getBoundingClientRect();
+        const margin = 6;
+        const width = Math.max(245, layersMenu.offsetWidth || 245);
+        const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+        const left = Math.min(Math.max(margin, rect.left), maxLeft);
+        const maxTop = Math.max(margin, window.innerHeight - Math.min(layersMenu.offsetHeight || 220, 420) - margin);
+        const top = Math.min(rect.bottom + 5, maxTop);
+        layersMenu.style.left = `${Math.round(left)}px`;
+        layersMenu.style.top = `${Math.round(top)}px`;
+      };
+
+      const closeLayersMenu = () => {
+        layersMenu.classList.add('hidden');
+        layersButton.setAttribute('aria-expanded', 'false');
+      };
+
+      layersButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const willOpen = layersMenu.classList.contains('hidden');
+        if (willOpen) {
+          $('#mapItemsMenu')?.classList.add('hidden');
+          $('#mapItemsButton')?.setAttribute('aria-expanded', 'false');
+          layersMenu.classList.remove('hidden');
+          layersButton.setAttribute('aria-expanded', 'true');
+          requestAnimationFrame(positionLayersMenu);
+        } else {
+          closeLayersMenu();
+        }
+      });
+
+      layersMenu.addEventListener('click', event => event.stopPropagation());
+      document.addEventListener('click', closeLayersMenu);
+      window.addEventListener('resize', positionLayersMenu);
+      window.addEventListener('scroll', positionLayersMenu, true);
+    }
+
+    const radarToggle = $('#weatherRadarToggle');
+    if (radarToggle && radarToggle.dataset.bound !== '1') {
+      radarToggle.dataset.bound = '1';
+      radarToggle.addEventListener('change', () => setWeatherRadarEnabled(radarToggle.checked));
+    }
+    syncWeatherRadarUi();
 
     const mapType = $('#mapTypeQuick');
     if (mapType) {
@@ -4636,6 +4814,8 @@
     const widthValue = $('#trackWidthValue');
     const brightnessInput = form.elements.namedItem('map_brightness');
     const brightnessValue = $('#mapBrightnessValue');
+    const radarOpacityInput = form.elements.namedItem('weather_radar_opacity');
+    const radarOpacityValue = $('#weatherRadarOpacityValue');
     const topologyRfColor = form.elements.namedItem('topology_rf_color');
     const topologyRfColorText = $('#topologyRfColorText');
     const topologyIgateColor = form.elements.namedItem('topology_igate_color');
@@ -4646,6 +4826,7 @@
     if (colorInput && colorText) colorText.value = colorInput.value || '#3ba6ff';
     if (widthInput && widthValue) widthValue.textContent = `${widthInput.value || 2} px`;
     if (brightnessInput && brightnessValue) brightnessValue.textContent = `${brightnessInput.value || 100}%`;
+    if (radarOpacityInput && radarOpacityValue) radarOpacityValue.textContent = `${radarOpacityInput.value || 60}%`;
     if (topologyRfColor && topologyRfColorText) topologyRfColorText.value = topologyRfColor.value || '#ffff00';
     if (topologyIgateColor && topologyIgateColorText) topologyIgateColorText.value = topologyIgateColor.value || '#ffff00';
     if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 1} px`;
@@ -4686,6 +4867,14 @@
     if (out) out.textContent = `${e.target.value}%`;
     const tilePane = state.map?.getPane('tilePane');
     if (tilePane) tilePane.style.filter = `brightness(${e.target.value}%)`;
+  });
+
+  $('#weatherRadarOpacity')?.addEventListener('input', e => {
+    const opacity = clampRadarOpacity(e.target.value);
+    state.mapConfig.weather_radar_opacity = opacity;
+    const out = $('#weatherRadarOpacityValue');
+    if (out) out.textContent = `${opacity}%`;
+    if (state.weatherRadarLayer) state.weatherRadarLayer.setOpacity(opacity / 100);
   });
 
   function previewTopologyStyleFromForm() {
@@ -4958,6 +5147,12 @@
     'Enviar beacon agora':'Send beacon now',
     'Mapa':'Map',
     'Tipo de mapa':'Map type',
+    'Camadas':'Layers',
+    'Radar meteorológico':'Weather radar',
+    'Camada desligada.':'Layer disabled.',
+    'Dados de radar por RainViewer.':'Radar data by RainViewer.',
+    'Opacidade do radar':'Radar opacity',
+    'Controla a transparência da camada de radar meteorológico.':'Controls the transparency of the weather radar layer.',
     'Cor dos tracklogs':'Tracklog color',
     'Espessura dos tracklogs':'Tracklog width',
     'Brilho do mapa':'Map brightness',
@@ -5409,6 +5604,7 @@
     syncLanguageFlag();
     syncMapLegendCollapsed();
     syncMapContextBar();
+    syncWeatherRadarUi();
     refreshStationPopupRelativeTimes();
     renderAbout();
     updateMessageComposerMode();
