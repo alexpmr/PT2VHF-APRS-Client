@@ -130,6 +130,7 @@
   - Espelhar no PT2VHF APRS Client a organização usada no Traffic Analyzer: **mapa-base** separado de **Camadas**.
   - Mapas-base disponíveis: **Ruas / OpenStreetMap (OSM)**, **Topográfico**, **Claro**, **Escuro** e **Satélite**.
   - Manter **Radar meteorológico (RainViewer)** dentro do menu **Camadas**, independente do mapa-base, com ativação/desativação própria e atualização periódica.
+  - **Não incluir camada de raios/lightning**, pois a integração considerada não oferece cobertura útil para o Brasil e é voltada aos EUA.
   - Preservar o controle de **opacidade do radar** em Configuração.
   - Adicionar inicialmente ao APRS Client os mapas-base **Claro** e **Escuro**, que ainda não existem nele, mantendo OSM, Topográfico e Satélite.
   - Não misturar mapas-base com sobreposições: **Claro/Escuro/Satélite** são mapas-base; **Radar** é camada.
