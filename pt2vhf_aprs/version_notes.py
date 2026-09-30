@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.22": {
+        "title": "Validação Windows x64: Camadas e radar meteorológico",
+        "items": [
+            "No Mapa, o novo menu Camadas aparece ao lado de Tipo de mapa e fica preparado para novas sobreposições.",
+            "A primeira camada é Radar meteorológico, que pode ser ligada ou desligada independentemente do mapa-base.",
+            "O radar usa o quadro mais recente disponível no RainViewer e é atualizado automaticamente enquanto estiver ativo.",
+            "Estações, objetos, tracklogs e enlaces APRS permanecem visualmente acima da camada meteorológica.",
+            "Configuração ganha controle de opacidade do radar de 10% a 100%, com padrão de 60%.",
+            "Build de validação somente para Windows x64 Portable.",
+        ],
+    },
     "1.7.21": {
         "title": "Hover detalhado de enlaces e tracklogs; atualização sem acúmulo",
         "items": [
