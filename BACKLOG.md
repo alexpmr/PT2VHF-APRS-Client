@@ -12,7 +12,7 @@
 - **Radar de precipitação:** atualização periódica a partir do quadro mais recente disponível no RainViewer.
 - **Configuração:** controle persistente de opacidade da camada de clima.
 - **Popup da estação:** altura limitada, rolagem interna e proteção adicional de auto-pan/keepInView para evitar corte no topo.
-- **Build:** validação somente Windows x64 Portable.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.7.21
 
