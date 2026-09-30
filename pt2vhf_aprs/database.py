@@ -310,7 +310,11 @@ def init_db() -> None:
                 longitude REAL NOT NULL,
                 speed REAL,
                 course REAL,
-                altitude REAL
+                altitude REAL,
+                path TEXT,
+                raw TEXT,
+                rssi REAL,
+                snr REAL
             );
             CREATE INDEX IF NOT EXISTS idx_tracks_callsign_time ON tracks(callsign, timestamp);
             CREATE INDEX IF NOT EXISTS idx_tracks_time ON tracks(timestamp);
@@ -437,6 +441,16 @@ def init_db() -> None:
             )
         if old_internet_rows:
             conn.execute("DELETE FROM topology_edges WHERE kind='rf' AND igate IS NOT NULL")
+
+        track_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tracks)").fetchall()}
+        if "path" not in track_columns:
+            conn.execute("ALTER TABLE tracks ADD COLUMN path TEXT")
+        if "raw" not in track_columns:
+            conn.execute("ALTER TABLE tracks ADD COLUMN raw TEXT")
+        if "rssi" not in track_columns:
+            conn.execute("ALTER TABLE tracks ADD COLUMN rssi REAL")
+        if "snr" not in track_columns:
+            conn.execute("ALTER TABLE tracks ADD COLUMN snr REAL")
 
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
         if "open_browser_on_start" not in config_columns:
@@ -1207,8 +1221,14 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
             ) >= 0.01
         if should_add or previous is None:
             conn.execute(
-                "INSERT INTO tracks(callsign,timestamp,latitude,longitude,speed,course,altitude) VALUES(?,?,?,?,?,?,?)",
-                (callsign, now, float(lat), float(lon), packet.get("speed"), packet.get("course"), packet.get("altitude")),
+                """INSERT INTO tracks(
+                       callsign,timestamp,latitude,longitude,speed,course,altitude,path,raw,rssi,snr
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    callsign, now, float(lat), float(lon),
+                    packet.get("speed"), packet.get("course"), packet.get("altitude"),
+                    values["path"], values["raw"], packet.get("rssi"), packet.get("snr"),
+                ),
             )
 
 
@@ -2882,7 +2902,9 @@ def map_data() -> dict[str, Any]:
         tracks = [
             dict(r)
             for r in conn.execute(
-                "SELECT callsign,timestamp,latitude,longitude,speed,course,altitude FROM tracks ORDER BY id DESC LIMIT 10000"
+                """SELECT callsign,timestamp,latitude,longitude,speed,course,altitude,
+                          path,raw,rssi,snr
+                   FROM tracks ORDER BY id DESC LIMIT 10000"""
             ).fetchall()
         ]
     tracks = [
