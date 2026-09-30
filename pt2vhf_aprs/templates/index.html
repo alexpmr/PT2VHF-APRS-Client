@@ -127,6 +127,17 @@
       </select>
     </label>
 
+    <div class="map-layers-control">
+      <button id="mapLayersButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Camadas ▾</button>
+      <div id="mapLayersMenu" class="map-items-menu map-layers-menu hidden" role="menu">
+        <div class="map-layers-menu-header"><strong>Camadas</strong></div>
+        <label>
+          <input id="weatherRadarLayerToggle" type="checkbox">
+          <span>Radar meteorológico</span>
+        </label>
+      </div>
+    </div>
+
     <button id="kmlExportButton" type="button" class="btn secondary map-kml-export" title="Exportar dados geográficos em KML">Exportar KML</button>
   </div>
 </div>
