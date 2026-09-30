@@ -26,7 +26,7 @@ jobs:
 
       - name: Validate v1.7.21 production release
         shell: pwsh
-        run: python tools\apply_release_1_7_20.py
+        run: python tools\apply_release_1_7_21.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -103,7 +103,7 @@ jobs:
 
       - name: Validate v1.7.21 production release
         shell: pwsh
-        run: python tools\apply_release_1_7_20.py
+        run: python tools\apply_release_1_7_21.py
 
       - name: Install Python dependencies
         shell: pwsh
