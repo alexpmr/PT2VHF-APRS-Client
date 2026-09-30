@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.21": {
+        "title": "Hover detalhado de enlaces e tracklogs; atualização sem acúmulo",
+        "items": [
+            "No Mapa, passar o mouse sobre um enlace mostra um painel fixo com origem, destino, tipo RF ou Internet/APRS-IS, sentido, pacotes, primeira/última observação e iGate quando disponível.",
+            "Passar o mouse sobre um tracklog mostra início, fim, duração, distância, velocidade média e máxima, posições, coordenadas inicial/final, digipeaters, iGates, caminhos APRS, RSSI/SNR quando disponíveis e período do mapa.",
+            "Novos pontos de tracklog passam a persistir path, pacote bruto, RSSI e SNR quando recebidos; históricos antigos continuam compatíveis e exibem apenas os dados que já existiam.",
+            "O updater reutiliza sempre o nome oficial do pacote e sobrescreve downloads anteriores, sem gerar cópias numeradas.",
+            "Após uma versão iniciar com sucesso, pacotes antigos e downloads parciais são removidos da pasta temporária, preservando somente uma atualização realmente mais nova ainda pendente.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.7.20": {
         "title": "Produção: período das Estatísticas, RF × Internet e primeira configuração",
         "items": [
