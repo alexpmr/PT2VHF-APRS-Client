@@ -2,6 +2,8 @@
 
 ## v1.7.22 - 2026-09-30
 
+- **Pipeline:** corrigidos testes legados de links v1.7.20 e conflito de literal de cadência, permitindo a geração completa da produção v1.7.22.
+
 - **Mapa / Camadas:** adiciona o menu **Camadas** junto ao tipo de mapa e a opção **Clima**.
 - **Radar meteorológico:** sobrepõe o radar de precipitação mais recente disponível no RainViewer, independentemente do mapa-base.
 - **Atualização do radar:** consulta periodicamente novos quadros enquanto a camada estiver ligada; em falha transitória, preserva a última camada válida.
