@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.7.22 - 2026-09-30
+
+- **Mapa / Camadas:** adiciona o menu **Camadas** junto ao tipo de mapa e a opção **Clima**.
+- **Radar meteorológico:** sobrepõe o radar de precipitação mais recente disponível no RainViewer, independentemente do mapa-base.
+- **Atualização do radar:** consulta periodicamente novos quadros enquanto a camada estiver ligada; em falha transitória, preserva a última camada válida.
+- **Configuração:** adiciona controle de **opacidade da camada de clima**, com persistência e migração automática do banco.
+- **Popup da estação:** limita altura, habilita rolagem interna e reforça auto-pan/keepInView para evitar que o topo fique escondido pela interface.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como **latest**.
+
 ## v1.7.21 - 2026-09-30
 
 - **Mapa / enlaces:** hover exibe painel fixo com origem, destino, RF × Internet/APRS-IS, sentido, pacotes e janela de observação.

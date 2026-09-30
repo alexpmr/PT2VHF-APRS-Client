@@ -1,30 +1,30 @@
-# PT2VHF APRS Client - v1.7.20
+# PT2VHF APRS Client - v1.7.22
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.20** é a release completa de produção. Corrige o filtro de período das Estatísticas, melhora a classificação RF × Internet, abre Configuração na primeira execução e simplifica a página principal com downloads diretos da versão mais recente.
+A **v1.7.22** é a release completa de produção. Além das correções acumuladas da série 1.7, adiciona **Mapa → Camadas → Clima** com radar de precipitação, controle de opacidade e proteção adicional do popup de estações contra corte na interface.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **Release latest** do projeto.
+Os arquivos abaixo apontam diretamente para a **release v1.7.22**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Setup_x64_v1.7.20.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Portable_x64_v1.7.20.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Setup_ARM64_v1.7.20.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Portable_ARM64_v1.7.20.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Setup_x64_v1.7.22.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Portable_x64_v1.7.22.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Setup_ARM64_v1.7.22.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Portable_ARM64_v1.7.22.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_x86_64_v1.7.20.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/pt2vhf-aprs-client_1.7.20_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Linux_x86_64_v1.7.20.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_x86_64_v1.7.22.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/pt2vhf-aprs-client_1.7.22_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Linux_x86_64_v1.7.22.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_macOS_arm64_v1.7.20.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_macOS_x86_64_v1.7.20.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_macOS_arm64_v1.7.22.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_macOS_x86_64_v1.7.22.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest/download/PT2VHF_APRS_Client_Manual_v1.7.20.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Manual_v1.7.22.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 

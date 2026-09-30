@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.22": {
+        "title": "Produção: camada de clima, radar e popup protegido",
+        "items": [
+            "Adiciona Mapa → Camadas → Clima, com radar de precipitação mais recente disponível no RainViewer sobre qualquer mapa-base.",
+            "A camada de clima fica desligada por padrão e pode ser ligada ou desligada independentemente de OSM, Topográfico ou Satélite.",
+            "Configuração ganha controle de opacidade do radar, aplicado imediatamente e persistido no banco com migração automática.",
+            "O radar é atualizado periodicamente enquanto a camada está ativa e mantém a última imagem válida se uma atualização temporariamente falhar.",
+            "O popup de estação passa a usar altura máxima, rolagem interna, keepInView e margem superior de auto-pan para reduzir cortes sob a barra do mapa.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.7.21": {
         "title": "Hover detalhado de enlaces e tracklogs; atualização sem acúmulo",
         "items": [
