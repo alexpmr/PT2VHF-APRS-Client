@@ -2105,3 +2105,60 @@ def test_v1720_readme_has_direct_latest_downloads_and_no_download_counter_table(
     assert "## Downloads por Release" not in readme
     assert "DOWNLOAD_STATS_START" not in readme
     assert "DOWNLOAD_STATS_END" not in readme
+
+
+def test_v1721_track_hover_metadata_and_update_cleanup(monkeypatch, tmp_path):
+    root = Path(__file__).resolve().parent.parent
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
+
+    assert 'id="mapHoverInfoPanel"' in html
+    assert "pt2vhfInteractionPane" in js
+    assert "trackHoverSummary" in js
+    assert "showTopologyHover" in js
+    assert "interactive: true" in js
+    assert "pt2vhf-interaction-pane" in css
+
+    original_db = db.DB_PATH
+    try:
+        db.DB_PATH = tmp_path / "track-metadata.db"
+        db.init_db()
+        db.upsert_station({
+            "from": "PT2VHF-9",
+            "format": "position",
+            "latitude": -15.8000,
+            "longitude": -47.9000,
+            "speed": 42.0,
+            "course": 90.0,
+            "altitude": 1100.0,
+            "path": ["PT2DGI*", "WIDE2-1", "qAR", "PT2IGT"],
+            "raw": "PT2VHF-9>APRS,PT2DGI*,WIDE2-1,qAR,PT2IGT:!1548.00S/04754.00W>",
+            "rssi": -91.0,
+            "snr": 6.5,
+        })
+        tracks = [row for row in db.map_data()["tracks"] if row["callsign"] == "PT2VHF-9"]
+        assert len(tracks) == 1
+        assert "PT2DGI" in tracks[0]["path"]
+        assert tracks[0]["raw"].startswith("PT2VHF-9>")
+        assert float(tracks[0]["rssi"]) == -91.0
+        assert float(tracks[0]["snr"]) == 6.5
+    finally:
+        db.DB_PATH = original_db
+
+    update_dir = tmp_path / "updates"
+    update_dir.mkdir()
+    pending_file = update_dir / "pending_update.json"
+    monkeypatch.setattr(updater, "UPDATE_DIR", update_dir)
+    monkeypatch.setattr(updater, "PENDING_FILE", pending_file)
+
+    old_setup = update_dir / "PT2VHF_APRS_Client_Setup_x64_v1.7.20.exe"
+    stale_temp = update_dir / "PT2VHF_APRS_Client_Setup_x64_v1.7.21.exe.download"
+    old_setup.write_bytes(b"old")
+    stale_temp.write_bytes(b"partial")
+
+    removed = updater.cleanup_obsolete_downloads("1.7.21")
+    assert old_setup.name in removed
+    assert stale_temp.name in removed
+    assert not old_setup.exists()
+    assert not stale_temp.exists()
