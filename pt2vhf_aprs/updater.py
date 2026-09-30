@@ -132,6 +132,61 @@ def pending_update() -> dict[str, Any] | None:
         return None
 
 
+def _version_tuple(value: str) -> tuple[int, ...]:
+    numbers: list[int] = []
+    for piece in str(value or "").lstrip("vV").split("."):
+        try:
+            numbers.append(int(piece))
+        except ValueError:
+            numbers.append(0)
+    return tuple(numbers)
+
+
+def _is_downloaded_update_file(path: Path) -> bool:
+    name = path.name.lower()
+    if name.endswith(".download"):
+        return True
+    if name.startswith("pt2vhf_aprs_client_") and name.endswith((".exe", ".dmg", ".appimage", ".tar.gz")):
+        return True
+    if name.startswith("pt2vhf-aprs-client_") and name.endswith(".deb"):
+        return True
+    return False
+
+
+def cleanup_obsolete_downloads(current_version: str | None = None) -> list[str]:
+    """Remove pacotes antigos apenas depois que uma versão já iniciou com sucesso.
+
+    Uma atualização pendente mais nova que a versão em execução é preservada.
+    Arquivos auxiliares, logs e backups de rollback não são tocados.
+    """
+    current = str(current_version or __version__).lstrip("vV")
+    UPDATE_DIR.mkdir(parents=True, exist_ok=True)
+    pending = pending_update()
+    keep_path: Path | None = None
+    if pending and _version_tuple(str(pending.get("version") or "")) > _version_tuple(current):
+        try:
+            keep_path = Path(str(pending.get("path") or "")).resolve()
+        except Exception:
+            keep_path = None
+    elif pending:
+        clear_pending_update()
+
+    removed: list[str] = []
+    for path in UPDATE_DIR.iterdir():
+        if not path.is_file() or not _is_downloaded_update_file(path):
+            continue
+        try:
+            if keep_path is not None and path.resolve() == keep_path:
+                continue
+            path.unlink(missing_ok=True)
+            removed.append(path.name)
+        except Exception as exc:
+            diag.log_event("update_cleanup_file_error", path=str(path), error=str(exc))
+    if removed:
+        diag.log_event("update_cleanup_completed", current_version=current, removed=removed)
+    return removed
+
+
 def clear_pending_update() -> None:
     try:
         PENDING_FILE.unlink(missing_ok=True)
@@ -227,6 +282,9 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     UPDATE_DIR.mkdir(parents=True, exist_ok=True)
     target = UPDATE_DIR / name
     temp = target.with_suffix(target.suffix + ".download")
+    # Repetir o download nunca cria cópias "(1)", "(2)" etc. O temporário
+    # anterior é descartado e o nome oficial da Release é sempre reutilizado.
+    temp.unlink(missing_ok=True)
     digest = hashlib.sha256()
     expected_size = int(asset.get("size") or 0)
 
@@ -265,6 +323,9 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
         if expected.startswith("sha256:") and sha256.lower() != expected.split(":", 1)[1]:
             raise ValueError("O SHA-256 da atualização baixada não corresponde ao publicado no GitHub.")
 
+        # No Windows, remover explicitamente o pacote antigo torna a semântica
+        # de sobrescrita inequívoca antes do replace atômico do novo download.
+        target.unlink(missing_ok=True)
         temp.replace(target)
         if target.suffix.lower() == ".appimage":
             target.chmod(target.stat().st_mode | 0o111)
