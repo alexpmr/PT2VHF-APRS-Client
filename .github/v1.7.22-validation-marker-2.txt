@@ -1,0 +1,1 @@
+Second full validation trigger after fixing stale v1.7.20 README assertions and radar cadence literal collision.
