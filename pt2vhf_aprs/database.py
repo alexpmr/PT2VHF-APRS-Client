@@ -773,10 +773,10 @@ def _path_tokens(value: Any) -> list[str]:
 def _rf_igate_from_path(value: Any) -> str:
     path = _path_tokens(value)
     for index, token in enumerate(path[:-1]):
+        # qAR/qAO preserve case and explicitly identify the station that
+        # gated the packet from RF. Do not downgrade this evidence merely
+        # because TCPIP/TCPXX also appears elsewhere in the APRS-IS path.
         if token not in {"qAR", "qAO"}:
-            continue
-        prior = {item.rstrip("*").upper() for item in path[:index]}
-        if prior & {"TCPIP", "TCPXX"}:
             continue
         relay = path[index + 1].rstrip("*").upper().strip()
         if relay and relay not in {"TCPIP", "TCPXX"}:
@@ -1353,8 +1353,11 @@ def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, s
         if not _is_topology_callsign(candidate) or candidate == previous:
             break
 
-        prior = {item.rstrip("*").upper() for item in path[:i]}
-        direct_rf_gate = token in {"qAR", "qAO"} and not (prior & {"TCPIP", "TCPXX"})
+        # q-construct case is semantically significant. qAR/qAO are
+        # direct RF gate evidence; qAr and the remaining qA* variants are
+        # Internet/APRS-IS routing evidence. TCPIP/TCPXX elsewhere in the
+        # header must not erase an RF hop already proven by qAR/qAO.
+        direct_rf_gate = token in {"qAR", "qAO"}
         kind = "rf" if direct_rf_gate else "igate"
         edges.append((previous, candidate, kind, candidate))
         break
