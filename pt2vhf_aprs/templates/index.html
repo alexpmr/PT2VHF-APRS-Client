@@ -127,6 +127,18 @@
       </select>
     </label>
 
+    <div class="map-items-control map-layers-control">
+      <button id="mapLayersButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Camadas ▾</button>
+      <div id="mapLayersMenu" class="map-items-menu map-layers-menu hidden" role="menu">
+        <label>
+          <input id="weatherRadarToggle" type="checkbox">
+          <span>Radar meteorológico</span>
+        </label>
+        <div id="weatherRadarStatus" class="hint">Camada desligada.</div>
+        <div class="hint">Dados de radar por RainViewer.</div>
+      </div>
+    </div>
+
     <button id="kmlExportButton" type="button" class="btn secondary map-kml-export" title="Exportar dados geográficos em KML">Exportar KML</button>
   </div>
 </div>
@@ -618,6 +630,14 @@
               <input name="map_brightness" id="mapBrightness" type="range" min="30" max="150" step="5" value="100">
               <output id="mapBrightnessValue" for="mapBrightness">100%</output>
             </div>
+          </label>
+          <label class="field">
+            <span>Opacidade do radar</span>
+            <div class="range-field-row">
+              <input name="weather_radar_opacity" id="weatherRadarOpacity" type="range" min="10" max="100" step="5" value="60">
+              <output id="weatherRadarOpacityValue" for="weatherRadarOpacity">60%</output>
+            </div>
+            <span class="hint">Controla a transparência da camada de radar meteorológico.</span>
           </label>
           <label class="field">
             <span>Cor da topologia RF</span>
