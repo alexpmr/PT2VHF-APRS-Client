@@ -613,6 +613,14 @@
             </div>
           </label>
           <label class="field">
+            <span>Transparência do radar meteorológico</span>
+            <div class="range-field-row">
+              <input name="weather_radar_transparency" id="weatherRadarTransparency" type="range" min="0" max="100" step="5" value="35">
+              <output id="weatherRadarTransparencyValue" for="weatherRadarTransparency">35%</output>
+            </div>
+            <small>0% = radar opaco; 100% = radar totalmente transparente. A camada é ligada pelo menu Ver no Mapa.</small>
+          </label>
+          <label class="field">
             <span>Cor da topologia RF</span>
             <div class="color-field-row">
               <input name="topology_rf_color" type="color" value="#ffff00" aria-label="Cor dos enlaces RF">
@@ -643,7 +651,7 @@
           <span class="hint">Padrão: topologia amarela (#ffff00), 1 px.</span>
         </div>
         <div class="hint map-provider-hint">
-          OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.
+          OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. O radar meteorológico usa dados do RainViewer; a transparência é aplicada imediatamente e persistida ao salvar. Cores e espessura da topologia também são aplicadas imediatamente.
         </div>
       </div>
 
