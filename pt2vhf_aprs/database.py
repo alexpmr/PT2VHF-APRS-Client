@@ -132,6 +132,7 @@ DEFAULT_CONFIG = {
     "topology_igate_color": "#ffff00",
     "topology_width": 1,
     "map_brightness": 100,
+    "weather_radar_opacity": 60,
     "sound_on_personal_message": 1,
     "sound_on_station_activity": 1,
     "highlight_station_activity": 1,
@@ -233,6 +234,7 @@ def init_db() -> None:
                 topology_igate_color TEXT NOT NULL DEFAULT '#ffff00',
                 topology_width INTEGER NOT NULL DEFAULT 1,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
+                weather_radar_opacity INTEGER NOT NULL DEFAULT 60,
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
                 sound_on_station_activity INTEGER NOT NULL DEFAULT 1,
                 highlight_station_activity INTEGER NOT NULL DEFAULT 1,
@@ -471,6 +473,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN topology_width INTEGER NOT NULL DEFAULT 1")
         if "map_brightness" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN map_brightness INTEGER NOT NULL DEFAULT 100")
+        if "weather_radar_opacity" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN weather_radar_opacity INTEGER NOT NULL DEFAULT 60")
         if "sound_on_personal_message" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
         if "sound_on_station_activity" not in config_columns:
@@ -620,6 +624,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["topology_igate_color"] = str(merged["topology_igate_color"] or "#ffff00").lower().strip()
     merged["topology_width"] = int(merged["topology_width"] or 1)
     merged["map_brightness"] = int(merged["map_brightness"] or 100)
+    merged["weather_radar_opacity"] = int(merged["weather_radar_opacity"] or 60)
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
     merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
     merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0
@@ -675,6 +680,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Espessura da topologia deve estar entre 1 e 10.")
     if not (30 <= merged["map_brightness"] <= 150):
         raise ValueError("Brilho do mapa deve estar entre 30% e 150%.")
+    if not (10 <= merged["weather_radar_opacity"] <= 100):
+        raise ValueError("Opacidade do radar deve estar entre 10% e 100%.")
     if not (1 <= merged["message_popup_seconds"] <= 60):
         raise ValueError("Duração do aviso de mensagem deve estar entre 1 e 60 segundos.")
 
