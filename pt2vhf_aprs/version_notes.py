@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.20": {
+        "title": "Produção: período das Estatísticas, RF × Internet e primeira configuração",
+        "items": [
+            "Corrige o filtro por período da aba Estatísticas, que passa a usar sua própria seleção e não mais o período do Mapa.",
+            "Mapa e Estatísticas mantêm períodos independentes e persistidos separadamente.",
+            "A classificação de topologia preserva qAR/qAO como evidência de recepção direta por RF, inclusive quando TCPIP/TCPXX aparece em outra parte do path; qAr permanece Internet/APRS-IS.",
+            "Na primeira execução ou quando a configuração obrigatória estiver incompleta, o aplicativo abre diretamente em Configuração e posiciona o foco no Indicativo.",
+            "A página principal do GitHub remove a tabela de contadores de downloads e oferece links diretos para os produtos da Release latest.",
+            "O workflow automático que recriava a tabela de contadores de downloads foi desativado no branch principal.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.7.19": {
         "title": "Produção: mapa por famílias, estatísticas consolidadas e RF observado",
         "items": [
