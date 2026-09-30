@@ -2,9 +2,6 @@ name: Build Windows + Linux + macOS + Manual
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
