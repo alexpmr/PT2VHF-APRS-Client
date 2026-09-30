@@ -1,0 +1,63 @@
+name: Build v1.7.21 Windows x64 Portable
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release/v1.7.21-validation
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  windows-portable-x64:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Validate v1.7.21 portable
+        shell: pwsh
+        run: python tools\apply_release_1_7_21.py
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-windows.txt
+
+      - name: Validate Python and JavaScript syntax
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py tools
+          node --check pt2vhf_aprs\static\js\app.js
+
+      - name: Run tests
+        shell: pwsh
+        run: python -m pytest -q
+
+      - name: Generate Windows icon
+        shell: pwsh
+        run: python windows\make_icon.py
+
+      - name: Build Windows x64 portable EXE
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client_Portable.spec
+          $version = (Get-Content VERSION -Raw).Trim()
+          New-Item -ItemType Directory -Force dist-portable | Out-Null
+          Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-portable\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
+
+      - name: Upload portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Windows-Portable-x64
+          path: dist-portable\PT2VHF_APRS_Client_Portable_x64_v*.exe
