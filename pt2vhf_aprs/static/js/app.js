@@ -1171,7 +1171,6 @@
     rfLinksEnabled: 'pt2vhf_map_item_rf',
     igateLinksEnabled: 'pt2vhf_map_item_igate',
     packetsEnabled: 'pt2vhf_map_item_packets',
-    weatherRadarEnabled: 'pt2vhf_map_item_weather_radar',
   };
 
   const MAP_DEVICE_CLASS_LABELS = {
@@ -1451,7 +1450,6 @@
         count: objects.length,
         children: objectMapNodes(objects),
       },
-      { id: 'root:weather-radar', label: ui('Radar meteorológico', 'Weather radar'), stateKey: 'weatherRadarEnabled' },
       { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled' },
       { id: 'root:rf', label: ui('Enlaces RF', 'RF links'), stateKey: 'rfLinksEnabled' },
       { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
@@ -1635,6 +1633,60 @@
           state.baseLayer.bringToBack();
         });
       }
+    }
+
+    const layersButton = $('#mapLayersButton');
+    const layersMenu = $('#mapLayersMenu');
+    const radarToggle = $('#weatherRadarLayerToggle');
+    if (radarToggle) radarToggle.checked = !!state.weatherRadarEnabled;
+
+    if (radarToggle && radarToggle.dataset.bound !== '1') {
+      radarToggle.dataset.bound = '1';
+      radarToggle.addEventListener('change', async () => {
+        state.weatherRadarEnabled = !!radarToggle.checked;
+        localStorage.setItem('pt2vhf_map_item_weather_radar', state.weatherRadarEnabled ? '1' : '0');
+        await loadWeatherRadar(true);
+      });
+    }
+
+    if (layersButton && layersMenu && layersButton.dataset.bound !== '1') {
+      layersButton.dataset.bound = '1';
+
+      const positionLayersMenu = () => {
+        if (layersMenu.classList.contains('hidden')) return;
+        const rect = layersButton.getBoundingClientRect();
+        const margin = 6;
+        const width = Math.max(225, layersMenu.offsetWidth || 225);
+        const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+        const left = Math.min(Math.max(margin, rect.left), maxLeft);
+        const maxTop = Math.max(margin, window.innerHeight - (layersMenu.offsetHeight || 120) - margin);
+        const top = Math.min(rect.bottom + 5, maxTop);
+        layersMenu.style.left = `${Math.round(left)}px`;
+        layersMenu.style.top = `${Math.round(top)}px`;
+      };
+
+      const closeLayersMenu = () => {
+        layersMenu.classList.add('hidden');
+        layersButton.setAttribute('aria-expanded', 'false');
+      };
+
+      layersButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const willOpen = layersMenu.classList.contains('hidden');
+        if (willOpen) {
+          layersMenu.classList.remove('hidden');
+          layersButton.setAttribute('aria-expanded', 'true');
+          requestAnimationFrame(positionLayersMenu);
+        } else {
+          closeLayersMenu();
+        }
+      });
+
+      layersMenu.addEventListener('click', event => event.stopPropagation());
+      document.addEventListener('click', closeLayersMenu);
+      window.addEventListener('resize', positionLayersMenu);
+      window.addEventListener('scroll', positionLayersMenu, true);
     }
   }
 
