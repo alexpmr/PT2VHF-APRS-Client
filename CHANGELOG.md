@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.7.22 - 2026-09-30
+
+- **Mapa / Camadas:** adiciona o menu **Camadas** ao lado de **Tipo de mapa**, preparado para novas sobreposições.
+- **Clima:** adiciona a primeira camada, **Radar meteorológico**, ativável e desativável independentemente do mapa-base.
+- **Radar:** usa o quadro mais recente disponível no RainViewer e atualiza automaticamente enquanto a camada estiver ligada.
+- **Composição visual:** o radar fica abaixo de estações, objetos, tracklogs e enlaces APRS para preservar a leitura operacional do mapa.
+- **Configuração:** adiciona **Opacidade do radar** de 10% a 100%, com padrão de 60%.
+- **Robustez:** os metadados do RainViewer são consultados pelo backend local, evitando dependência de CORS no WebView2.
+- **Build:** versão de validação somente **Windows x64 Portable**.
+
 ## v1.7.21 - 2026-09-30
 
 - **Mapa / enlaces:** hover exibe painel fixo com origem, destino, RF × Internet/APRS-IS, sentido, pacotes e janela de observação.
