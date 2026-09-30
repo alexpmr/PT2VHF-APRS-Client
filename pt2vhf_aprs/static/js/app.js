@@ -47,7 +47,7 @@
     trackLines: new Map(),
     topologyLines: new Map(),
     topologyEnabled: false,
-    topologyHours: 0,
+    topologyHours: Number(localStorage.getItem('pt2vhf_topology_hours') || 0),
     topologyLoadBusy: false,
     mapLegendElement: null,
     mapLegendCollapsed: localStorage.getItem('pt2vhf_map_legend_collapsed') === '1',
@@ -918,6 +918,28 @@
     }
   }
 
+  function stationConfigurationComplete(cfg = state.currentConfig) {
+    const callsign = String(cfg?.callsign || '').trim().toUpperCase();
+    const hasValue = value => value !== null && value !== undefined && String(value).trim() !== '';
+    const finiteValue = value => hasValue(value) && Number.isFinite(Number(value));
+    return /^[A-Z0-9]{1,6}$/.test(callsign)
+      && finiteValue(cfg?.latitude)
+      && finiteValue(cfg?.longitude)
+      && finiteValue(cfg?.altitude);
+  }
+
+  function focusInitialConfigurationIfNeeded() {
+    if (stationConfigurationComplete()) return false;
+    activateTab('config');
+    showConfigSection('aprs');
+    setTimeout(() => {
+      const field = $('#callsignInput');
+      field?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+      field?.focus?.();
+    }, 80);
+    return true;
+  }
+
   function activateTab(tab) {
     state.activeTab = tab;
     $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
@@ -1376,7 +1398,7 @@
 
   function addMapControls() {
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
-    state.topologyHours = state.mapPeriodHours;
+    state.topologyHours = topologyPeriodValue(state.topologyHours);
     state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
 
     const period = $('#mapPeriodHours');
@@ -1386,11 +1408,9 @@
       period.dataset.bound = '1';
       period.addEventListener('change', async () => {
         state.mapPeriodHours = topologyPeriodValue(period.value);
-        state.topologyHours = state.mapPeriodHours;
         state.replayWindowStart = null;
         state.replayWindowEnd = null;
         localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
-        if ($('#analysisPeriod')) $('#analysisPeriod').value = String(state.mapPeriodHours);
         await loadMapData();
         stopTrafficTimer();
         state.trafficPlaying = false;
@@ -5925,10 +5945,11 @@
     const box = $('#topologyStatsContent');
     if (!box) return;
     const periodSelect = $('#analysisPeriod');
-    if (periodSelect) periodSelect.value = String(topologyPeriodValue(state.mapPeriodHours));
+    state.topologyHours = topologyPeriodValue(state.topologyHours);
+    if (periodSelect) periodSelect.value = String(state.topologyHours);
     box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');
     try {
-      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(topologyPeriodValue(state.mapPeriodHours))}`);
+      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(state.topologyHours)}`);
       const list = (items, formatter) => items.length
         ? '<ol>' + items.map(formatter).join('') + '</ol>'
         : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
@@ -6009,17 +6030,8 @@
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
   $('#analysisPeriod')?.addEventListener('change', async event => {
     state.topologyHours = topologyPeriodValue(event.target.value);
-    state.replayWindowStart = null;
-    state.replayWindowEnd = null;
     localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));
-    // O período das Estatísticas é independente do período único do Mapa.
-    if (state.topologyEnabled) await loadTopology();
-    stopTrafficTimer();
-    state.trafficPlaying = false;
-    if (state.trafficMode === 'history') {
-      try { await loadTrafficHistory(true); } catch (_) {}
-    }
-    updateTrafficAnimationUi();
+    // O período das Estatísticas é totalmente independente do período do Mapa.
     await refreshTopologyAnalysis();
   });
 
@@ -6213,6 +6225,7 @@
     const startup = await Promise.allSettled([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
+    focusInitialConfigurationIfNeeded();
     updateMyMessagesButton();
     updateUnreadMessagesButton();
     updateTrafficAnimationUi();
