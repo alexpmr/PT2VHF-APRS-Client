@@ -25,6 +25,11 @@ UPDATE_CACHE_SECONDS = 5 * 60
 _update_cache: dict[str, object] = {"timestamp": 0.0, "payload": None}
 _update_cache_lock = threading.Lock()
 
+RAINVIEWER_MAPS_API = "https://api.rainviewer.com/public/weather-maps.json"
+RAINVIEWER_CACHE_SECONDS = 120
+_rainviewer_cache: dict[str, object] = {"timestamp": 0.0, "payload": None}
+_rainviewer_cache_lock = threading.Lock()
+
 
 def version_tuple(value: str) -> tuple[int, ...]:
     text = str(value or "").strip().lower()
@@ -123,6 +128,42 @@ def get_update_status(force: bool = False) -> dict:
         payload["status"] = "error"
         payload["error"] = str(exc)
         return payload
+
+
+def get_latest_radar_frame(force: bool = False) -> dict:
+    now = time.monotonic()
+    with _rainviewer_cache_lock:
+        cached = _rainviewer_cache.get("payload")
+        cached_at = float(_rainviewer_cache.get("timestamp") or 0.0)
+        if not force and cached and now - cached_at < RAINVIEWER_CACHE_SECONDS:
+            return dict(cached)
+
+    req = urllib.request.Request(
+        RAINVIEWER_MAPS_API,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": f"PT2VHF-APRS-Client/{__version__}",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=6) as response:
+        data = json.loads(response.read().decode("utf-8"))
+
+    host = str(data.get("host") or "").strip().rstrip("/")
+    frames = list((data.get("radar") or {}).get("past") or [])
+    if not host.startswith("https://") or not frames:
+        raise ValueError("RainViewer não retornou um quadro de radar utilizável.")
+
+    frame = frames[-1] or {}
+    path = str(frame.get("path") or "").strip()
+    timestamp = int(frame.get("time") or 0)
+    if not path.startswith("/v2/radar/") or timestamp <= 0:
+        raise ValueError("Quadro de radar RainViewer inválido.")
+
+    payload = {"host": host, "path": path, "time": timestamp}
+    with _rainviewer_cache_lock:
+        _rainviewer_cache["timestamp"] = now
+        _rainviewer_cache["payload"] = dict(payload)
+    return payload
 
 
 KML_NS = "http://www.opengis.net/kml/2.2"
@@ -461,6 +502,14 @@ def create_app() -> Flask:
             return jsonify({"ok": True, "config": cfg})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/weather/radar")
+    def api_weather_radar():
+        try:
+            return jsonify({"ok": True, **get_latest_radar_frame()})
+        except Exception as exc:
+            diag.log_event("weather_radar_error", error=str(exc))
+            return jsonify({"ok": False, "error": str(exc)}), 502
 
     @app.get("/api/map-state")
     def api_get_map_state():
