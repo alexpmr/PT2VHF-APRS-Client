@@ -697,7 +697,7 @@ def test_v177_remote_igate_qconstruct_is_not_rf_link():
 def test_v177_rf_igate_parser_preserves_qconstruct_case():
     assert db._rf_igate_from_path(["WIDE1-1*", "qAR", "PT2IGT"]) == "PT2IGT"
     assert db._rf_igate_from_path(["WIDE1-1*", "qAr", "PT2IGT"]) == ""
-    assert db._rf_igate_from_path(["TCPIP*", "qAO", "PT2IGT"]) == ""
+    assert db._rf_igate_from_path(["TCPIP*", "qAO", "PT2IGT"]) == "PT2IGT"
 
 
 def test_topology_timeline_and_period_comparison():
@@ -2022,3 +2022,86 @@ def test_v1719_station_popup_has_rf_received_section():
     assert "loadStationRfHeard(station.callsign)" in js
     assert "/rf-heard?hours=" in js
     assert '@app.get("/api/stations/<callsign>/rf-heard")' in web
+
+
+def test_v1720_statistics_period_is_independent_from_map_period():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert "topologyHours: Number(localStorage.getItem('pt2vhf_topology_hours') || 0)" in js
+    assert "function statisticsPeriodValue(value)" in js
+
+    refresh_start = js.index("async function refreshTopologyAnalysis()")
+    refresh_end = js.index("document.addEventListener('click', event => {", refresh_start)
+    refresh_block = js[refresh_start:refresh_end]
+    assert "statisticsPeriodValue(state.topologyHours)" in refresh_block
+    assert "topology/stats?hours=" in refresh_block
+    assert "state.topologyHours" in refresh_block
+    assert "state.mapPeriodHours" not in refresh_block
+
+    controls_start = js.index("function addMapControls()")
+    controls_end = js.index("function syncMapLegendCollapsed", controls_start)
+    controls_block = js[controls_start:controls_end]
+    assert "state.mapPeriodHours = topologyPeriodValue(period.value)" in controls_block
+    assert "$('#analysisPeriod')" not in controls_block
+    assert "state.topologyHours = state.mapPeriodHours" not in controls_block
+
+    handler_start = js.index("$('#analysisPeriod')?.addEventListener")
+    handler_end = js.index("$('#trafficApplyRangeButton')", handler_start)
+    handler = js[handler_start:handler_end]
+    assert "state.topologyHours = statisticsPeriodValue(event.target.value)" in handler
+    assert "await refreshTopologyAnalysis()" in handler
+    assert "loadTopology()" not in handler
+    assert "loadTrafficHistory" not in handler
+
+
+def test_v1720_qar_qao_preserve_rf_even_with_tcpip_marker():
+    source, edges = db._observed_topology_edges(
+        "PY2SRC>APRS,TCPIP*,qAR,PY2IGT:>direct rf gate"
+    )
+    assert source == "PY2SRC"
+    assert ("PY2SRC", "PY2IGT", "rf", "PY2IGT") in edges
+    assert not any(kind == "igate" for _a, _b, kind, _igate in edges)
+
+    source, edges = db._observed_topology_edges(
+        "PY2SRC>APRS,PY2DGI*,TCPIP*,qAR,PY2IGT:>mixed path"
+    )
+    assert ("PY2SRC", "PY2DGI", "rf", None) in edges
+    assert ("PY2DGI", "PY2IGT", "rf", "PY2IGT") in edges
+
+    source, edges = db._observed_topology_edges(
+        "PY2SRC>APRS,PY2DGI*,TCPIP*,qAr,PY2IGT:>remote igate"
+    )
+    assert ("PY2SRC", "PY2DGI", "rf", None) in edges
+    assert ("PY2DGI", "PY2IGT", "igate", "PY2IGT") in edges
+
+    assert db._rf_igate_from_path(["TCPIP*", "qAR", "PY2IGT"]) == "PY2IGT"
+    assert db._rf_igate_from_path(["TCPIP*", "qAr", "PY2IGT"]) == ""
+
+
+def test_v1720_first_run_opens_configuration_and_focuses_callsign():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+
+    assert "function stationConfigurationComplete" in js
+    assert "function focusInitialConfigurationIfNeeded" in js
+    assert "activateTab('config')" in js
+    assert "showConfigSection('aprs')" in js
+    assert "$('#callsignInput')" in js
+
+    boot_start = js.index("async function boot()")
+    boot_block = js[boot_start:]
+    assert "focusInitialConfigurationIfNeeded();" in boot_block
+
+
+def test_v1720_readme_has_direct_latest_downloads_and_no_download_counter_table():
+    root = Path(__file__).resolve().parent.parent
+    readme = (root / "README.md").read_text(encoding="utf-8")
+
+    assert "## Downloads da versão mais recente" in readme
+    assert "releases/latest/download/PT2VHF_APRS_Client_Setup_x64_v1.7.20.exe" in readme
+    assert "releases/latest/download/PT2VHF_APRS_Client_Portable_x64_v1.7.20.exe" in readme
+    assert "releases/latest/download/PT2VHF_APRS_Client_Manual_v1.7.20.pdf" in readme
+    assert "## Downloads por Release" not in readme
+    assert "DOWNLOAD_STATS_START" not in readme
+    assert "DOWNLOAD_STATS_END" not in readme
