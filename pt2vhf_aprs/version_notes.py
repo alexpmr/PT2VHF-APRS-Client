@@ -13,7 +13,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Configuração > Mapa passa a ter ajuste de transparência do radar de 0% a 100%, com padrão de 35%.",
             "A transparência é aplicada imediatamente e persistida ao salvar a configuração.",
             "A camada atualiza periodicamente o frame mais recente e exibe atribuição Weather data © RainViewer.",
-            "Build de validação somente para Windows x64 Portable, destinado ao teste da camada de radar meteorológico RainViewer.",
+            "Build de validação somente para Windows x64 Portable, destinado ao teste do menu Camadas e da camada de radar meteorológico RainViewer.",
         ],
     },
     "1.7.20": {
