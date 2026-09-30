@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - release/v1.7.22-validation
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -12,7 +15,7 @@ permissions:
 
 jobs:
   windows-portable-x64:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: windows-latest
     steps:
       - name: Checkout
