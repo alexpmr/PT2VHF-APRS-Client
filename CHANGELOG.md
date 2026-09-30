@@ -7,7 +7,7 @@
 - **Atualização do radar:** consulta periodicamente novos quadros enquanto a camada estiver ligada; em falha transitória, preserva a última camada válida.
 - **Configuração:** adiciona controle de **opacidade da camada de clima**, com persistência e migração automática do banco.
 - **Popup da estação:** limita altura, habilita rolagem interna e reforça auto-pan/keepInView para evitar que o topo fique escondido pela interface.
-- **Build:** validação somente **Windows x64 Portable**, publicada como **pré-release de teste** sem substituir a versão estável.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como **latest**.
 
 ## v1.7.21 - 2026-09-30
 
