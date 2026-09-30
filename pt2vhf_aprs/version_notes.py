@@ -12,7 +12,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Na primeira execução ou quando a configuração obrigatória estiver incompleta, o aplicativo abre diretamente em Configuração e posiciona o foco no Indicativo.",
             "A página principal do GitHub remove a tabela de contadores de downloads e oferece links diretos para os produtos da Release latest.",
             "O workflow automático que recriava a tabela de contadores de downloads foi desativado no branch principal.",
-            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF, publicada como GitHub Release latest após validação integral.",
         ],
     },
     "1.7.19": {
