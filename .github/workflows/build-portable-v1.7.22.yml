@@ -10,7 +10,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 jobs:
@@ -64,3 +64,19 @@ jobs:
         with:
           name: PT2VHF-APRS-Client-Windows-Portable-x64
           path: dist-portable\PT2VHF_APRS_Client_Portable_x64_v*.exe
+
+      - name: Publish Windows x64 portable validation prerelease
+        if: ${{ github.event_name != 'pull_request' }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $tag = "v$version-test"
+          $asset = "dist-portable\PT2VHF_APRS_Client_Portable_x64_v$version.exe"
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $asset --clobber --repo $env:GITHUB_REPOSITORY
+          } else {
+            gh release create $tag $asset --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --prerelease --title "PT2VHF APRS Client v$version - Windows x64 Portable (teste)" --notes "Build de validação Windows x64 Portable. Inclui Mapa → Camadas → Clima com radar RainViewer, controle de opacidade e proteção adicional do popup de estação. Não substitui a release estável."
+          }
