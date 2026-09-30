@@ -127,7 +127,8 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   color: var(--text);
   background: var(--panel-2);
 }
-.map-items-control {
+.map-items-control,
+.map-layers-control {
   position: relative;
   flex: 0 0 auto;
 }
@@ -3253,4 +3254,17 @@ html[data-theme="light"] .map-view-tree-header {
 .station-rf-heard-call {
   text-align: left;
   justify-self: start;
+}
+
+
+/* v1.7.21 - extensible map Layers menu */
+.map-layers-menu {
+  min-width: 235px;
+}
+.map-layers-menu-header {
+  padding: 3px 6px 7px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 11px;
 }
