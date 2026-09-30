@@ -30,7 +30,7 @@ Cada Release completa publica:
 
 <!-- DOWNLOAD_STATS_START -->
 
-_Atualizado automaticamente em **2026-09-29 22:14 UTC** a partir dos contadores das GitHub Releases._
+_Atualizado automaticamente em **2026-09-30 05:31 UTC** a partir dos contadores das GitHub Releases._
 
 | Release | Windows | Linux | macOS | Total |
 |---|---:|---:|---:|---:|
