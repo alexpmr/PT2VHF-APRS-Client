@@ -2122,7 +2122,7 @@ def test_v1721_weather_radar_layer_and_transparency_setting():
     assert "Weather data ©" in js
     assert "RainViewer" in js
     assert "Radar meteorológico" in js
-    assert "weatherRadarEnabled: 'pt2vhf_map_item_weather_radar'" in js
+    assert "weatherRadarEnabled: localStorage.getItem('pt2vhf_map_item_weather_radar') === '1'" in js
 
     assert 'name="weather_radar_transparency"' in html
     assert 'id="weatherRadarTransparency"' in html
@@ -2156,6 +2156,7 @@ def test_v1721_weather_radar_config_persists_and_validates():
 def test_v1721_weather_radar_is_below_aprs_overlays_and_off_by_default():
     root = Path(__file__).resolve().parent.parent
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
 
     assert "radarPane.style.zIndex = '320'" in js
     assert "visualPane.style.zIndex = '450'" in js
@@ -2165,5 +2166,14 @@ def test_v1721_weather_radar_is_below_aprs_overlays_and_off_by_default():
     render_start = js.index("function renderMapViewTree")
     render_end = js.index("function syncMapViewTreeCheckboxes", render_start)
     render = js[render_start:render_end]
-    assert "root:weather-radar" in render
-    assert "weatherRadarEnabled" in render
+    assert "root:weather-radar" not in render
+
+    assert 'id="mapLayersButton"' in html
+    assert 'id="mapLayersMenu"' in html
+    assert 'id="weatherRadarLayerToggle"' in html
+    assert "Camadas" in html
+    assert "Radar meteorológico" in html
+
+    assert "const layersButton = $('#mapLayersButton')" in js
+    assert "const radarToggle = $('#weatherRadarLayerToggle')" in js
+    assert "loadWeatherRadar(true)" in js
