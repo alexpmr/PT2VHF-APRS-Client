@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.7.21 - 2026-09-30
+
+- **Mapa / enlaces:** hover exibe painel fixo com origem, destino, RF × Internet/APRS-IS, sentido, pacotes e janela de observação.
+- **Mapa / tracklogs:** hover exibe início/fim, duração, distância, velocidade média/máxima, quantidade de posições, pontos inicial/final e tempo desde a última posição.
+- **Tracklogs enriquecidos:** novos pontos passam a guardar path, raw, RSSI e SNR quando disponíveis, permitindo identificar digipeaters, iGates e caminhos APRS observados.
+- **Compatibilidade:** tracklogs históricos anteriores à v1.7.21 permanecem utilizáveis; campos não existentes no histórico são simplesmente omitidos.
+- **Atualizador:** repetir um download reutiliza/sobrescreve o mesmo arquivo temporário e oficial, evitando cópias numeradas.
+- **Limpeza automática:** após a versão atual iniciar corretamente, instaladores/pacotes antigos e downloads parciais são removidos da pasta temporária, preservando uma atualização mais nova ainda pendente.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## v1.7.20 - 2026-09-30
 
 - **Estatísticas / Período:** corrige o filtro temporal; a consulta passa a usar o período selecionado na própria aba Estatísticas.
