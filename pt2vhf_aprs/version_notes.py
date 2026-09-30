@@ -6,7 +6,8 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
     "1.7.21": {
         "title": "Validação Windows x64: radar meteorológico no mapa",
         "items": [
-            "Adiciona a camada opcional Radar meteorológico ao menu Ver do Mapa.",
+            "Adiciona ao topo do Mapa, ao lado de Tipo de mapa, o novo menu Camadas, preparado para receber várias sobreposições no futuro.",
+            "A primeira camada disponível é Radar meteorológico, controlada exclusivamente pelo menu Camadas.",
             "A camada usa o frame de radar mais recente disponível no RainViewer e fica desligada por padrão.",
             "O radar é renderizado abaixo das estações, objetos, tracklogs, enlaces e animações APRS.",
             "Configuração > Mapa passa a ter ajuste de transparência do radar de 0% a 100%, com padrão de 35%.",
