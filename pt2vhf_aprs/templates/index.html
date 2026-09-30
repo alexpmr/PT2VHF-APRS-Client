@@ -136,6 +136,13 @@
     <div class="map-replay-layout">
       <div class="map-stage">
         <div id="map"></div>
+        <aside id="mapHoverInfoPanel" class="map-hover-info-panel hidden" aria-live="polite">
+          <div class="map-hover-info-header">
+            <span id="mapHoverInfoType">Detalhes do mapa</span>
+            <strong id="mapHoverInfoTitle">—</strong>
+          </div>
+          <div id="mapHoverInfoBody" class="map-hover-info-body"></div>
+        </aside>
       </div>
       <div class="traffic-animation-panel map-traffic-panel hidden">
         <div class="traffic-animation-title">
