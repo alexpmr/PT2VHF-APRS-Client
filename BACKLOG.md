@@ -126,6 +126,20 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mapa — camada Elevação com corte por altitude**
+  - Adicionar em **Camadas** uma sobreposição analítica chamada **Elevação** baseada em DEM.
+  - Quando ativada, exibir somente o terreno cuja altitude seja **maior ou igual à cota mínima selecionada**; todo o terreno abaixo do limite fica transparente.
+  - Adicionar no próprio mapa um **controle deslizante vertical** para ajustar a cota mínima em tempo real.
+  - O slider deve representar altitude: mover para cima aumenta a cota mínima; mover para baixo reduz a cota.
+  - Exibir ao lado do controle o valor atual em metros, por exemplo **1.000 m**.
+  - Atualizar imediatamente a forma/área destacada no mapa durante o movimento do slider, permitindo perceber visualmente cristas, serras, platôs e maciços que permanecem acima da cota.
+  - Permitir também ajuste fino por campo numérico, além do arraste do slider.
+  - Manter controle separado de **opacidade** da camada.
+  - Estações APRS, objetos, tracklogs, enlaces, animações e radar devem permanecer acima da camada de elevação.
+  - Posicionar o slider vertical na lateral do mapa sem encobrir popup, legenda ou controles principais e adaptá-lo a janelas de menor altura.
+  - Persistir a última cota mínima e a opacidade escolhidas.
+  - A implementação deve usar dados reais de elevação/DEM; não inferir altitude a partir do mapa topográfico visual.
+
 - **Mapa — paridade de mapas/camadas com o Traffic Analyzer**
   - Espelhar no PT2VHF APRS Client a organização usada no Traffic Analyzer: **mapa-base** separado de **Camadas**.
   - Mapas-base disponíveis: **Ruas / OpenStreetMap (OSM)**, **Topográfico**, **Claro**, **Escuro** e **Satélite**.
