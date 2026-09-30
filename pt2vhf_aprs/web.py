@@ -238,6 +238,13 @@ def create_app() -> Flask:
     db.init_db()
     diag.configure(db.DB_PATH.parent)
     diag.log_event("flask_app_created", version=__version__)
+    try:
+        # Chegar até aqui confirma que a versão atual iniciou e abriu o banco.
+        # Nesse ponto é seguro remover instaladores/pacotes antigos, preservando
+        # apenas uma atualização realmente mais nova ainda pendente.
+        updater.cleanup_obsolete_downloads(__version__)
+    except Exception as exc:
+        diag.log_event("update_cleanup_startup_error", error=str(exc))
 
     @app.before_request
     def diagnostics_request_start():
