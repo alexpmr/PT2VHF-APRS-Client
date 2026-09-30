@@ -126,6 +126,15 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
+- **Mapa — paridade de mapas/camadas com o Traffic Analyzer**
+  - Espelhar no PT2VHF APRS Client a organização usada no Traffic Analyzer: **mapa-base** separado de **Camadas**.
+  - Mapas-base disponíveis: **Ruas / OpenStreetMap (OSM)**, **Topográfico**, **Claro**, **Escuro** e **Satélite**.
+  - Manter **Radar meteorológico (RainViewer)** dentro do menu **Camadas**, independente do mapa-base, com ativação/desativação própria e atualização periódica.
+  - Preservar o controle de **opacidade do radar** em Configuração.
+  - Adicionar inicialmente ao APRS Client os mapas-base **Claro** e **Escuro**, que ainda não existem nele, mantendo OSM, Topográfico e Satélite.
+  - Não misturar mapas-base com sobreposições: **Claro/Escuro/Satélite** são mapas-base; **Radar** é camada.
+  - Manter a estrutura de Camadas preparada para receber novas sobreposições posteriormente, sem alterar novamente a barra principal.
+
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
   - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
