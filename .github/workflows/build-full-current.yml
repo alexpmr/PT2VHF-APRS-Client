@@ -4,14 +4,15 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - release/v1.7.14-full
+      - main
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 jobs:
   windows-x64:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -23,9 +24,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.7.14 full release
+      - name: Validate v1.7.22 production release
         shell: pwsh
-        run: python tools\apply_release_1_7_14.py
+        run: python tools\apply_release_1_7_22.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -87,6 +88,7 @@ jobs:
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES.txt
 
   windows-arm64:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: windows-11-arm
     steps:
       - name: Checkout
@@ -99,9 +101,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.7.14 full release
+      - name: Validate v1.7.22 production release
         shell: pwsh
-        run: python tools\apply_release_1_7_14.py
+        run: python tools\apply_release_1_7_22.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -161,6 +163,7 @@ jobs:
             dist\PT2VHF_APRS_Client\THIRD_PARTY_LICENSES_Windows_arm64.txt
 
   linux-x64:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -172,9 +175,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.7.14 full release
+      - name: Validate v1.7.22 production release
         shell: bash
-        run: python tools/apply_release_1_7_14.py
+        run: python tools/apply_release_1_7_22.py
 
       - name: Build Linux packages
         shell: bash
@@ -194,6 +197,7 @@ jobs:
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt
 
   linux-smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     strategy:
       fail-fast: false
       matrix:
@@ -212,7 +216,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_7_14.py
+          python tools/apply_release_1_7_22.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -220,6 +224,7 @@ jobs:
           python -m pytest -q
 
   macos:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     strategy:
       fail-fast: false
       matrix:
@@ -239,9 +244,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.7.14 full release
+      - name: Validate v1.7.22 production release
         shell: bash
-        run: python tools/apply_release_1_7_14.py
+        run: python tools/apply_release_1_7_22.py
 
       - name: Build macOS DMG
         shell: bash
@@ -266,6 +271,7 @@ jobs:
             dist-macos/THIRD_PARTY_LICENSES_macOS_${{ matrix.arch }}.txt
 
   manual-pdf:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -276,9 +282,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.7.14 full release
+      - name: Validate v1.7.22 production release
         shell: bash
-        run: python tools/apply_release_1_7_14.py
+        run: python tools/apply_release_1_7_22.py
 
       - name: Generate versioned PDF manual
         shell: bash
@@ -299,3 +305,62 @@ jobs:
         with:
           name: PT2VHF-APRS-Client-Manual
           path: dist-docs/PT2VHF_APRS_Client_Manual_v*.pdf
+
+
+  publish-release:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    needs:
+      - windows-x64
+      - windows-arm64
+      - linux-x64
+      - linux-smoke
+      - macos
+      - manual-pdf
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all production artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: PT2VHF-APRS-Client-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Setup Python for release notes
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate release notes
+        shell: bash
+        run: python tools/release_notes.py --output release-notes.md
+
+      - name: Publish GitHub Release as latest
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(tr -d '\r\n ' < VERSION)"
+          tag="v$version"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag"               --title "PT2VHF APRS Client $tag"               --notes-file release-notes.md               --latest
+          else
+            gh release create "$tag"               --target "$GITHUB_SHA"               --title "PT2VHF APRS Client $tag"               --notes-file release-notes.md               --latest
+          fi
+
+          mapfile -t files < <(find release-assets -type f -print | sort)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No release assets found."
+            exit 1
+          fi
+
+          printf 'Uploading %s production assets\n' "${#files[@]}"
+          gh release upload "$tag" "${files[@]}" --clobber
+
+          latest="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')"
+          echo "GitHub latest release: $latest"
+          test "$latest" = "$tag"
