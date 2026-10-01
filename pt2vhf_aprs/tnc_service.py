@@ -770,7 +770,6 @@ class TNCService:
         self._recent_is_to_rf: dict[str, float] = {}
         self._source_activity: dict[str, deque[float]] = defaultdict(deque)
         self._tx_activity: deque[float] = deque()
-        _ensure_schema()
 
     def status(self) -> dict[str, Any]:
         with self._status_lock:
