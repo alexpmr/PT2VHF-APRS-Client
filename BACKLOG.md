@@ -139,6 +139,16 @@
   - Criar simulador de transporte KISS completo para cenários de múltiplos digis/iGates e testes de congestionamento sem rádio físico.
   - Ampliar políticas do otimizador automático somente após coleta de uso real, preservando compatibilidade APRS e logs auditáveis.
 
+- **Mapa — corrigir mapas Claro/Escuro que exibem “API KEY REQUIRED”**
+  - Corrigir os mapas-base **Claro** e **Escuro**, que atualmente podem carregar tiles com a mensagem **API KEY REQUIRED** e deixar o fundo do mapa cinza.
+  - Não depender de uma API key implícita ou inexistente para os estilos padrão distribuídos com o aplicativo.
+  - Preferir provedores/endpoints de tiles que funcionem **sem chave** para os estilos Claro e Escuro, mantendo atribuição correta.
+  - Caso algum provedor futuro exija chave, adicionar campo explícito em **Configuração**, validar antes de ativar o mapa e exibir erro claro ao usuário em vez de tiles quebrados.
+  - Implementar fallback automático para **OpenStreetMap** quando o provedor Claro/Escuro falhar, evitando deixar o mapa inutilizável.
+  - Registrar no diagnóstico o provedor, status HTTP e motivo da falha dos tiles, sem expor credenciais.
+  - Adicionar teste de regressão garantindo que **OSM, Topográfico, Claro, Escuro e Satélite** possam ser selecionados sem gerar texto “API KEY REQUIRED” na configuração padrão.
+  - Validar o comportamento nos builds Windows, Linux e macOS, inclusive no WebView2/engine embarcado.
+
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
   - Exibir Indicativo, última recepção, distância, software/dispositivo, posição, status, favorito, mensagens, Ping, Trace e estações ouvidas.
