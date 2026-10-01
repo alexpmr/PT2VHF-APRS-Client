@@ -534,7 +534,7 @@
               <option value="custom">Personalizado</option>
             </select>
           </label>
-          <label class="field full"><span>Aliases personalizados</span><input id="tncDigiAliases" name="digi_aliases" placeholder="Ex.: PT2DIGI,DF1-1"><small>Separados por vírgula; usados no perfil Personalizado.</small></label>
+          <label class="field full"><span>Aliases personalizados</span><input id="tncDigiAliases" name="digi_aliases" placeholder="Ex.: PT2DGI,DF1-1"><small>Separados por vírgula; usados no perfil Personalizado.</small></label>
           <label class="field"><span>Máximo de hops repetidos</span><input id="tncDigiMaxHops" name="digi_max_hops" type="number" min="1" max="7" value="3"></label>
           <label class="field"><span>Janela de duplicatas</span><input id="tncDuplicateWindow" name="duplicate_window_seconds" type="number" min="5" max="300" value="30"><small>segundos</small></label>
           <label class="field"><span>Rate limit por origem</span><input id="tncSourceRate" name="source_rate_limit_per_minute" type="number" min="5" max="300" value="30"><small>pacotes/min</small></label>
@@ -571,7 +571,7 @@
       <article class="config-card tnc-save-card">
         <h3>Aplicar configuração</h3>
         <p>Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.</p>
-        <button id="tncSave" type="submit" class="btn primary">Salvar TNC / RF</button>
+        <button id="tncSave" type="button" class="btn primary">Salvar TNC / RF</button>
         <span id="tncSaveStatus" class="hint"></span>
       </article>
     </form>
