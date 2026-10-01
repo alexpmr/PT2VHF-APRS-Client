@@ -111,6 +111,7 @@ def _ensure_schema() -> None:
             CREATE TABLE IF NOT EXISTS tnc_heard(
                 callsign TEXT PRIMARY KEY,
                 last_heard TEXT NOT NULL,
+                last_direct_heard TEXT,
                 direct INTEGER NOT NULL DEFAULT 0,
                 path TEXT,
                 heard_count INTEGER NOT NULL DEFAULT 0,
@@ -143,6 +144,9 @@ def _ensure_schema() -> None:
             CREATE INDEX IF NOT EXISTS idx_tnc_edges_activity ON tnc_edges(interactions DESC,last_seen DESC);
             """
         )
+        heard_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_heard)").fetchall()}
+        if "last_direct_heard" not in heard_columns:
+            conn.execute("ALTER TABLE tnc_heard ADD COLUMN last_direct_heard TEXT")
 
 
 def get_tnc_config() -> dict[str, Any]:
@@ -301,16 +305,17 @@ def update_heard(packet: dict[str, Any], raw_tnc2: str) -> None:
     now = utc_now_iso()
     with db.connection() as conn:
         conn.execute(
-            """INSERT INTO tnc_heard(callsign,last_heard,direct,path,heard_count,last_packet_type,last_raw)
-               VALUES(?,?,?,?,1,?,?)
+            """INSERT INTO tnc_heard(callsign,last_heard,last_direct_heard,direct,path,heard_count,last_packet_type,last_raw)
+               VALUES(?,?,?,?,?,1,?,?)
                ON CONFLICT(callsign) DO UPDATE SET
                  last_heard=excluded.last_heard,
-                 direct=MAX(tnc_heard.direct,excluded.direct),
+                 last_direct_heard=CASE WHEN excluded.direct=1 THEN excluded.last_heard ELSE tnc_heard.last_direct_heard END,
+                 direct=excluded.direct,
                  path=excluded.path,
                  heard_count=tnc_heard.heard_count+1,
                  last_packet_type=excluded.last_packet_type,
                  last_raw=excluded.last_raw""",
-            (source, now, direct, json.dumps(path, ensure_ascii=False), packet_type, raw_tnc2),
+            (source, now, now if direct else None, direct, json.dumps(path, ensure_ascii=False), packet_type, raw_tnc2),
         )
 
 
@@ -397,7 +402,7 @@ def direct_heard_recent(callsign: str, window_minutes: int) -> bool:
     cutoff = (datetime.now(timezone.utc) - timedelta(minutes=max(1, int(window_minutes)))).replace(microsecond=0).isoformat()
     with db.connection() as conn:
         row = conn.execute(
-            "SELECT 1 FROM tnc_heard WHERE callsign=? AND direct=1 AND last_heard>=?",
+            "SELECT 1 FROM tnc_heard WHERE callsign=? AND last_direct_heard IS NOT NULL AND last_direct_heard>=?",
             (callsign, cutoff),
         ).fetchone()
     return bool(row)
@@ -802,6 +807,7 @@ class TNCService:
 
     def start_if_configured(self) -> None:
         cfg = get_tnc_config()
+        _trim_history(cfg)
         if cfg.get("auto_connect"):
             try:
                 self.connect()
