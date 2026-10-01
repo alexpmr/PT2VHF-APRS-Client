@@ -20,6 +20,7 @@ from pt2vhf_aprs import database as db
 from pt2vhf_aprs import diagnostics as diag
 from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import service
+from pt2vhf_aprs.tnc_service import service as tnc_service
 from pt2vhf_aprs.web import create_app
 
 APP_NAME = "PT2VHF APRS Client"
@@ -152,6 +153,10 @@ def _shutdown_components(icon: pystray.Icon | None = None) -> None:
     diag.stop_watchdog()
     try:
         service.shutdown()
+    except Exception:
+        pass
+    try:
+        tnc_service.shutdown()
     except Exception:
         pass
     try:
@@ -358,6 +363,7 @@ def main() -> int:
     db.init_db()
     app = create_app()
     service.start_if_configured()
+    tnc_service.start_if_configured()
 
     server_thread = threading.Thread(
         target=lambda: serve(app, host=HOST, port=PORT, threads=8, url_scheme="http"),
