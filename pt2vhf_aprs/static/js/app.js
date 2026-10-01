@@ -65,7 +65,8 @@
     objectMarkers: new Map(),
     trackLines: new Map(),
     topologyLines: new Map(),
-    topologyEnabled: false,
+    topologyEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0'
+      || localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     topologyHours: Number(localStorage.getItem('pt2vhf_topology_hours') || 0),
     topologyLoadBusy: false,
     mapLegendElement: null,
@@ -128,6 +129,7 @@
     currentConfig: null,
     autoLocationInProgress: false,
     lastConnectionErrorShown: '',
+    localInterfaceAnnounced: false,
     conversationSort: localStorage.getItem('pt2vhf_conversation_sort') === 'desc' ? 'desc' : 'asc',
     conversationSortKey: localStorage.getItem('pt2vhf_conversation_sort_key') === 'date' ? 'date' : 'sender',
     configDirty: false,
@@ -3422,6 +3424,18 @@
         toast(ui('Falha na conexão APRS-IS: ', 'APRS-IS connection failed: ') + s.last_error, 'error');
       }
       if (s.connected) state.lastConnectionErrorShown = '';
+      const localInfo = s.local_interface || {};
+      const localHost = String(localInfo.host || '');
+      const localPort = Number(localInfo.port || 0);
+      const localStatus = $('#localInterfaceStatus');
+      if (localStatus) {
+        localStatus.textContent = localHost && localPort ? `${localHost}:${localPort}` : ui('indisponível', 'unavailable');
+      }
+      if (!state.localInterfaceAnnounced && localHost && localPort) {
+        state.localInterfaceAnnounced = true;
+        toast(`${ui('Interface local', 'Local interface')}: ${localHost}:${localPort}`, 'ok');
+      }
+
       const stationCount = Number(s.stations || 0);
       const messageCount = Number(s.messages || 0);
       const packetCount = Number(s.packets_received || 0);
@@ -5507,6 +5521,9 @@
     'Enviar beacon agora':'Send beacon now',
     'Mapa':'Map',
     'Tipo de mapa':'Map type',
+    'Interface local':'Local interface',
+    'Porta local escolhida automaticamente na inicialização':'Local port selected automatically at startup',
+    'detectando…':'detecting…',
     'Topográfico':'Topographic',
     'Claro — OpenStreetMap':'Light — OpenStreetMap',
     'Escuro — OpenStreetMap':'Dark — OpenStreetMap',
@@ -5936,14 +5953,6 @@
     }
   }
 
-  function syncLanguageFlag() {
-    const flag = $('#languageFlag');
-    if (!flag) return;
-    const meta = LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR'];
-    flag.src = meta.flag;
-    flag.alt = meta.alt;
-  }
-
   function syncQuickLanguageButtons() {
     const meta = LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR'];
     const currentFlag = $('#languageQuickCurrentFlag');
@@ -5976,7 +5985,6 @@
     translateDom(document.body);
     document.dispatchEvent(new CustomEvent('pt2vhf-language-changed', { detail: { language: state.language } }));
     syncQuickLanguageButtons();
-    syncLanguageFlag();
     syncMapLegendCollapsed();
     syncMapContextBar();
     refreshStationPopupRelativeTimes();

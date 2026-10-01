@@ -875,8 +875,7 @@
           </label>
           <label class="field theme-field">
             <span>Idioma / Language</span>
-            <div class="language-select-wrap">
-              <img id="languageFlag" class="language-flag" src="{{ url_for('static', filename='img/flag_br.svg') }}" alt="Brasil">
+            <div class="language-select-wrap compact-language-select">
               <select name="language" id="appLanguage">
                 <option value="pt-BR">Português - padrão</option>
                 <option value="en">English</option>
@@ -890,6 +889,10 @@
             <input name="open_browser_on_start" type="checkbox">
             <span>Abrir também no navegador ao iniciar</span>
           </label>
+          <div class="local-interface-info" title="Porta local escolhida automaticamente na inicialização">
+            <strong>Interface local:</strong>
+            <span id="localInterfaceStatus">detectando…</span>
+          </div>
         </div>
         <div class="appearance-grid">
           <div class="appearance-group">

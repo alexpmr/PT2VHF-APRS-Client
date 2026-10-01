@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.8.2 - 2026-10-01
+
+- O servidor web interno passa a usar **porta dinâmica**, começando em **8080** e avançando para **8081, 8082, 8083...** quando houver conflito.
+- A escolha da porta é feita pelo **bind real do servidor**, sem janela de corrida entre “testar” e “abrir”.
+- Windows, Linux e macOS usam a URL realmente alocada no WebView/navegador; a instância Windows também persiste temporariamente a porta para permitir localizar uma execução já aberta.
+- A porta escolhida é exibida como **Interface local** e registrada no diagnóstico do Windows.
+- A captura automática do Manual PDF deixa de assumir uma porta fixa e acompanha a porta publicada pela aplicação.
+- Em **Mapa → Ver → Objetos**, objetos identificados de forma confiável como **AIS** passam a aparecer em categoria própria.
+- **Balão/Radiosonda** permanece como categoria existente e independente.
+- A identificação AIS é conservadora: AIS/MMSI e marcadores equivalentes classificam; o símbolo de barco isolado não força a categoria.
+- O menu **Ver** mantém todas as categorias/subcategorias habilitadas por padrão em novas configurações e preserva escolhas já salvas.
+- Remove a **bandeira grande** da aba Configuração; mantém seletor de idioma compacto e as pequenas bandeiras do seletor rápido no cabeçalho.
+- Adiciona indicador da interface local em Configuração e traduções correspondentes em PT-BR/EN/ES/FR.
+- Adiciona testes de regressão para fallback de portas, AIS, defaults do menu Ver, UI de idioma e integração dos launchers.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.1 - 2026-10-01
 
 - Remove **Relevo sombreado** do menu Camadas e do código de carregamento; **Relevo com corte** permanece como a camada de elevação.

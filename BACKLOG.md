@@ -109,20 +109,6 @@
   - Não permitir atualização cruzada entre arquiteturas.
   - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento antes de considerar Linux ARM64 estável.
   - Documentar claramente no README/Release qual pacote deve ser usado em cada arquitetura.
-- **Inicialização — porta interna dinâmica e sem conflito**
-  - Substituir a porta interna fixa atual por seleção automática de porta local, evitando conflito com outras aplicações.
-  - Usar **8080** como primeira candidata e, se estiver ocupada, tentar sequencialmente **8081, 8082, 8083...** até encontrar uma porta disponível.
-  - Não fazer apenas uma sondagem seguida de abertura posterior, pois outra aplicação pode ocupar a porta nesse intervalo; a verificação deve ser feita por **bind real do socket**, mantendo a porta reservada para o servidor assim que ela for escolhida.
-  - Escutar somente em **localhost/loopback** por padrão, sem expor o servidor interno na rede local.
-  - Se houver uma porta explicitamente configurada por parâmetro/variável de ambiente, respeitá-la quando disponível; se estiver ocupada, informar claramente o conflito ou aplicar fallback automático conforme o contexto de inicialização.
-  - Fazer o WebView/navegador interno utilizar automaticamente a URL final, por exemplo **http://127.0.0.1:8082**, sem depender de número de porta fixo no restante do código.
-  - Ao iniciar, indicar de forma discreta qual porta foi selecionada, por exemplo **“Interface local: 127.0.0.1:8082”**, e registrar a mesma informação no diagnóstico/log.
-  - Garantir que links internos, atualização, encerramento, health checks, captura do manual e demais componentes que hoje assumem uma porta fixa passem a consumir a porta efetivamente alocada.
-  - Ao encerrar a aplicação, liberar corretamente o socket/porta para que ela possa ser reutilizada na próxima execução.
-  - Se nenhuma porta puder ser aberta dentro de uma faixa razoável, exibir erro claro em vez de permanecer travado tentando iniciar.
-  - Adicionar testes de regressão simulando **8080 ocupada**, múltiplas portas consecutivas ocupadas, porta explicitamente configurada e liberação correta após o encerramento.
-  - Validar esse comportamento em **Windows Setup/Portable, Windows ARM64, Linux e macOS**.
-
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
@@ -132,13 +118,6 @@
   - Validar upgrade com banco de versão anterior, alterar configuração, salvar, reiniciar e confirmar persistência.
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
-
-- **Configuração — remover bandeira grande do seletor de idioma**
-  - Remover a **imagem grande da bandeira** atualmente exibida na aba **Configuração**.
-  - Manter apenas um indicador discreto do idioma selecionado, como a pequena bandeira já usada no seletor ou somente o nome do idioma.
-  - Evitar reservar uma área grande da tela apenas para identificação do idioma.
-  - Preservar o funcionamento atual de **PT-BR, English, Español e Français**, incluindo persistência e troca imediata do idioma.
-  - Ajustar o layout para que a remoção da imagem não deixe espaço vazio ou desalinhamento na seção.
 
 - **Idiomas — continuar revisão global de textos residuais**
   - A aba **TNC / RF** foi revisada em PT-BR, EN, ES e FR na v1.8.1, incluindo textos estáticos, estados dinâmicos e mensagens técnicas conhecidas.
@@ -157,23 +136,6 @@
   - Evoluir o grafo textual “Quem fala com quem” para visualização gráfica interativa no Mapa/Estatísticas.
   - Criar simulador de transporte KISS completo para cenários de múltiplos digis/iGates e testes de congestionamento sem rádio físico.
   - Ampliar políticas do otimizador automático somente após coleta de uso real, preservando compatibilidade APRS e logs auditáveis.
-
-- **Mapa → Ver → Objetos — subcategoria AIS**
-  - **Balão/Radiosonda já existe** na árvore atual de **Mapa → Ver → Objetos**; não criar uma segunda categoria equivalente.
-  - Adicionar uma subcategoria específica **AIS** dentro de **Objetos**.
-  - Permitir ligar/desligar **AIS** independentemente de **Balão/Radiosonda** e dos demais objetos APRS.
-  - O controle pai **Objetos** deve continuar funcionando como chave geral da categoria e refletir corretamente o estado das subcategorias.
-  - Classificar automaticamente como **AIS** somente objetos/pacotes cuja identificação como tráfego marítimo AIS seja confiável pelo tipo, origem ou conteúdo observado.
-  - Objetos que não puderem ser classificados com segurança como AIS permanecem em sua categoria atual; não inferir AIS apenas por nome ou posição.
-  - Manter a preferência de visibilidade de **AIS** persistida como os demais filtros de **Ver**.
-
-- **Mapa → Ver — tudo habilitado por padrão**
-  - Em novas instalações/configurações, o menu **Ver** deve iniciar com **todas as categorias e subcategorias habilitadas**.
-  - Isso inclui estações, objetos, **AIS**, **Balão/Radiosonda**, tracklogs, enlaces/topologia, pacotes/animações e demais itens atualmente controlados por **Ver**, respeitando a estrutura existente.
-  - O estado padrão deve ser aplicado somente quando ainda não houver preferência salva do usuário.
-  - Se o usuário desabilitar qualquer item, preservar essa escolha nas próximas execuções.
-  - O controle pai deve refletir corretamente estados completos ou parciais quando alguma subcategoria for alterada.
-  - Adicionar teste de regressão garantindo que uma configuração nova abra **Ver** com tudo marcado e que preferências previamente salvas não sejam sobrescritas.
 
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
@@ -240,6 +202,32 @@
   - O pacote deve incluir logs e informações técnicas úteis, removendo ou mascarando dados sensíveis antes da geração.
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
+
+- **Mapa → Ver — ações Selecionar tudo / Remover tudo**
+  - Substituir o comportamento atual do botão genérico **Tudo** por controles explícitos e autoexplicativos.
+  - Adicionar ação **Selecionar tudo** para ativar todas as categorias e subcategorias do menu **Ver**.
+  - Adicionar ação **Remover tudo** (ou **Desmarcar tudo**, conforme o texto que melhor couber na interface) para desativar todas as categorias e subcategorias de uma vez.
+  - Aplicar a mudança imediatamente ao mapa, sem exigir fechar/reabrir o menu.
+  - Manter sincronizados os estados dos controles-pai e respectivos filhos, incluindo estado intermediário quando aplicável.
+  - Preservar o funcionamento individual das categorias **Estações, Digipeaters, iGates, Objetos, Tracklogs, enlaces RF, enlaces APRS-IS/iGate e pacotes em movimento**.
+  - Em **Objetos**, incluir também todas as subcategorias disponíveis, incluindo **AIS** e **Balão/Radiosonda**.
+  - Persistir a seleção resultante no armazenamento local da mesma forma que os controles individuais.
+  - Traduzir os novos comandos em **PT-BR, EN, ES e FR**.
+  - Incluir teste de regressão garantindo que **Selecionar tudo** realmente habilita todos os estados/filtros e que **Remover tudo** desabilita todos sem deixar pais/filhos inconsistentes.
+
+## Concluído na v1.8.2
+
+- **Inicialização:** porta interna automática a partir de **8080**, avançando sequencialmente até encontrar a primeira disponível por bind real do servidor.
+- **Desktop:** Windows, Linux e macOS passam a usar automaticamente a porta efetivamente reservada no WebView/navegador.
+- **Instância existente:** Windows persiste temporariamente host/porta para uma nova abertura localizar a interface correta.
+- **Interface:** a porta selecionada aparece em **Configuração → Interface local** e é registrada no diagnóstico do Windows.
+- **Manual:** captura automática deixa de depender de porta fixa e acompanha a porta publicada pela aplicação.
+- **Mapa → Ver → Objetos:** adicionada categoria **AIS**, independente de **Balão/Radiosonda**.
+- **Classificação AIS:** identificação conservadora por AIS/MMSI/marcadores equivalentes; símbolo de barco isolado não força a categoria.
+- **Mapa → Ver:** todos os itens permanecem habilitados por padrão em novas configurações, preservando preferências salvas.
+- **Configuração:** removida a bandeira grande do seletor de idioma; permanece o seletor compacto e as bandeiras pequenas do cabeçalho.
+- **Testes:** regressões para fallback de porta, AIS, defaults do menu Ver, interface local e remoção da bandeira grande.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.1
 

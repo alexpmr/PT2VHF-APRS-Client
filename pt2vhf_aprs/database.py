@@ -1800,7 +1800,9 @@ def aprs_object_map_metadata(
     sym = str(symbol or "")[:1]
     fmt = str(packet_format or "").lower().strip()
 
-    if re.search(r"\bRDZ\b|RDZSONDE", descriptor):
+    if re.search(r"\bAIS\b|AIS[-_ ]?APRS|AIS2APRS|AISGATE|AISHUB|\bMMSI\s*[:=#-]?\s*\d{7,9}\b", descriptor):
+        key, label = "ais", "AIS"
+    elif re.search(r"\bRDZ\b|RDZSONDE", descriptor):
         key, label = "rdzsonde", "RDZSonDe"
     elif re.search(r"RADIOSONDE|SONDE|\bBALLOON\b|\bBALAO\b|\bBALÃO\b", descriptor) or sym == "O":
         key, label = "balloon", "Balão / Radiossonda"
