@@ -137,6 +137,13 @@
   - Criar simulador de transporte KISS completo para cenários de múltiplos digis/iGates e testes de congestionamento sem rádio físico.
   - Ampliar políticas do otimizador automático somente após coleta de uso real, preservando compatibilidade APRS e logs auditáveis.
 
+- **Mapa → Ver → Objetos — subcategorias AIS e Sondas**
+  - Dentro da árvore **Mapa → Ver → Objetos**, adicionar as subcategorias **AIS** e **Sondas**.
+  - Permitir ligar/desligar **AIS** e **Sondas** independentemente, sem afetar os demais objetos APRS.
+  - O controle pai **Objetos** deve continuar funcionando como chave geral da categoria e refletir corretamente o estado das subcategorias.
+  - Classificar os objetos automaticamente como **AIS** ou **Sonda** somente quando houver identificação confiável pelo tipo/origem/conteúdo do pacote; objetos não identificados permanecem na categoria geral correspondente.
+  - Manter a preferência de visibilidade das duas subcategorias persistida como os demais filtros de **Ver**.
+
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
   - Exibir Indicativo, última recepção, distância, software/dispositivo, posição, status, favorito, mensagens, Ping, Trace e estações ouvidas.
