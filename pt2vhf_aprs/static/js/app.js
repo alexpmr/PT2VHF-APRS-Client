@@ -5568,9 +5568,6 @@
     'Claro':'Light',
     'Escuro':'Dark',
     'Satélite — Esri World Imagery':'Satellite - Esri World Imagery',
-    'Claro — CARTO Positron':'Light - CARTO Positron',
-    'Escuro — CARTO Dark Matter':'Dark - CARTO Dark Matter',
-    'Relevo sombreado':'Hillshade',
     'Relevo com corte':'Relief cutoff',
     'Corte do relevo':'Relief cutoff',
     'Máximo do slider de corte do relevo':'Relief cutoff slider maximum',
@@ -5582,7 +5579,6 @@
     'Cor dos enlaces IGate':'IGate link color',
     'Padrão: topologia amarela (#ffff00), 1 px.':'Default: yellow topology (#ffff00), 1 px.',
     'OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography. Satellite mode uses Esri World Imagery. Topology colors and width are applied immediately and persisted when saving.',
-    'OpenStreetMap e OpenTopoMap usam cartografia colaborativa; Claro e Escuro usam CARTO; Satélite usa Esri World Imagery. A camada Clima usa RainViewer. Relevo sombreado usa Esri World Hillshade e Relevo com corte usa dados DEM Terrarium. Não há camada de raios. Cores, espessuras, cotas e opacidades são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography; Light and Dark use CARTO; Satellite uses Esri World Imagery. Weather uses RainViewer. Hillshade uses Esri World Hillshade and Relief cutoff uses Terrarium DEM data. There is no lightning layer. Colors, widths, cutoffs and opacities are applied immediately and persisted when saved.',
     'A alteração é aplicada imediatamente e fica salva após clicar em Salvar.':'The change is applied immediately and persisted after clicking Save.',
     'O idioma é aplicado imediatamente à interface.':'The language is applied immediately to the interface.',
     'Sistema':'System',
@@ -7055,3 +7051,4 @@
 
   boot();
 })();
+
