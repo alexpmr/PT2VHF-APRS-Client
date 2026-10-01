@@ -128,6 +128,10 @@
         <option value="topo">Topográfico</option>
         <option value="light">Claro</option>
         <option value="dark">Escuro</option>
+        <option value="cyclosm">CyclOSM</option>
+        <option value="humanitarian">Humanitário / HOT</option>
+        <option value="osmde">OSM.DE</option>
+        <option value="opnv">ÖPNVKarte</option>
         <option value="satellite">Satélite</option>
       </select>
     </label>
@@ -140,13 +144,6 @@
           <span>
             <strong>Clima</strong>
             <small id="weatherRadarStatus">Radar de chuva desativado</small>
-          </span>
-        </label>
-        <label class="map-layer-option">
-          <input id="hillshadeToggle" type="checkbox">
-          <span>
-            <strong>Relevo sombreado</strong>
-            <small id="hillshadeStatus">Desativado</small>
           </span>
         </label>
         <label class="map-layer-option">
@@ -775,8 +772,12 @@
             <select name="map_type">
               <option value="osm">OpenStreetMap</option>
               <option value="topo">OpenTopoMap</option>
-              <option value="light">Claro — CARTO Positron</option>
-              <option value="dark">Escuro — CARTO Dark Matter</option>
+              <option value="light">Claro — OpenStreetMap</option>
+              <option value="dark">Escuro — OpenStreetMap</option>
+              <option value="cyclosm">CyclOSM</option>
+              <option value="humanitarian">Humanitário / HOT</option>
+              <option value="osmde">OSM.DE</option>
+              <option value="opnv">ÖPNVKarte</option>
               <option value="satellite">Satélite — Esri World Imagery</option>
             </select>
           </label>
@@ -857,7 +858,7 @@
           <span class="hint">Padrão: topologia amarela (#ffff00), 1 px.</span>
         </div>
         <div class="hint map-provider-hint">
-          OpenStreetMap e OpenTopoMap usam cartografia colaborativa; Claro e Escuro usam CARTO; Satélite usa Esri World Imagery. A camada Clima usa RainViewer. Relevo sombreado usa Esri World Hillshade e Relevo com corte usa dados DEM Terrarium. Não há camada de raios. Cores, espessuras, cotas e opacidades são aplicadas imediatamente e persistidas ao salvar.
+          OpenStreetMap, Claro, Escuro, CyclOSM, Humanitário / HOT, OSM.DE e ÖPNVKarte usam dados OpenStreetMap; Topográfico usa OpenTopoMap e Satélite usa Esri World Imagery. Claro e Escuro não exigem API key. A camada Clima usa RainViewer e Relevo com corte usa dados DEM Terrarium. Não há camada de raios nem Relevo sombreado.
         </div>
       </div>
 
@@ -1095,7 +1096,7 @@
 
         <article class="help-card">
           <h3>3. Mapa</h3>
-          <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong> e <strong>Satélite</strong>.</p>
+          <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong>, <strong>Claro</strong>, <strong>Escuro</strong>, <strong>CyclOSM</strong>, <strong>Humanitário / HOT</strong>, <strong>OSM.DE</strong>, <strong>ÖPNVKarte</strong> e <strong>Satélite</strong>.</p>
           <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
           <p>Clique em uma estação para abrir os detalhes. Use <strong>Enviar mensagem</strong>, <strong>Ver logs</strong> ou a <strong>estrela amarela</strong> para favoritar a estação.</p>
           <p><strong>Queries APRS:</strong> o popup da estação inclui atalhos para consultar <strong>Posição</strong>, <strong>Status</strong>, <strong>Ouvidos</strong>, executar <strong>Ping/ACK</strong> e solicitar <strong>Trace</strong>. Quando o trace retornar um caminho e houver posições conhecidas, os hops são destacados temporariamente no mapa; hops sem posição continuam indicados na resposta sem localização inventada.</p>
