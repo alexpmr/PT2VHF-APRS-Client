@@ -41,7 +41,10 @@
       topology_igate_color: '#ffff00',
       topology_width: 1,
       map_brightness: 100,
-      weather_radar_opacity: 55
+      weather_radar_opacity: 55,
+      elevation_threshold: 1000,
+      elevation_slider_max: 3000,
+      elevation_opacity: 55
     },
     weatherRadarEnabled: localStorage.getItem('pt2vhf_weather_radar_enabled') === '1',
     weatherRadarLayer: null,
@@ -49,6 +52,12 @@
     weatherRadarLastRefresh: 0,
     weatherRadarRefreshBusy: false,
     weatherRadarRefreshTimer: null,
+    hillshadeEnabled: localStorage.getItem('pt2vhf_hillshade_enabled') === '1',
+    hillshadeLayer: null,
+    elevationEnabled: localStorage.getItem('pt2vhf_elevation_enabled') === '1',
+    elevationLayer: null,
+    elevationControl: null,
+    elevationRedrawRaf: null,
     markers: new Map(),
     objectMarkers: new Map(),
     trackLines: new Map(),
@@ -999,6 +1008,14 @@
       url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
       options: { maxZoom: 17, attribution: 'Map data &copy; OpenStreetMap contributors | Map style &copy; OpenTopoMap (CC-BY-SA)' }
     },
+    light: {
+      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      options: { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }
+    },
+    dark: {
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      options: { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }
+    },
     satellite: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       options: { maxZoom: 19, attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }
@@ -1053,8 +1070,12 @@
       topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#ffff00',
       topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 1),
       map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100),
-      weather_radar_opacity: Math.min(100, Math.max(10, Number(cfg.weather_radar_opacity || state.mapConfig.weather_radar_opacity || 55)))
+      weather_radar_opacity: Math.min(100, Math.max(10, Number(cfg.weather_radar_opacity || state.mapConfig.weather_radar_opacity || 55))),
+      elevation_threshold: Math.max(0, Math.round(Number(cfg.elevation_threshold ?? state.mapConfig.elevation_threshold ?? 1000))),
+      elevation_slider_max: Math.min(9000, Math.max(100, Math.round(Number(cfg.elevation_slider_max ?? state.mapConfig.elevation_slider_max ?? 3000)))),
+      elevation_opacity: Math.min(100, Math.max(10, Math.round(Number(cfg.elevation_opacity ?? state.mapConfig.elevation_opacity ?? 55))))
     };
+    state.mapConfig.elevation_threshold = Math.min(state.mapConfig.elevation_threshold, state.mapConfig.elevation_slider_max);
 
     if (state.map) {
       const provider = MAP_PROVIDERS[state.mapConfig.map_type] || MAP_PROVIDERS.osm;
@@ -1078,8 +1099,14 @@
       if (state.weatherRadarLayer) {
         state.weatherRadarLayer.setOpacity(state.mapConfig.weather_radar_opacity / 100);
       }
+      if (state.elevationLayer) redrawElevationTiles();
+      syncElevationControls();
       const radarToggle = $('#weatherRadarToggle');
       if (radarToggle) radarToggle.checked = !!state.weatherRadarEnabled;
+      const hillshadeToggle = $('#hillshadeToggle');
+      if (hillshadeToggle) hillshadeToggle.checked = !!state.hillshadeEnabled;
+      const elevationToggle = $('#elevationToggle');
+      if (elevationToggle) elevationToggle.checked = !!state.elevationEnabled;
       state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
       if (state.topologyEnabled) loadTopology();
       updateMapLegend();
@@ -1105,6 +1132,16 @@
       [saved, cfg] = await Promise.all([api('/api/map-state'), api('/api/config')]);
     } catch (_) {}
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
+
+    const hillshadePane = state.map.createPane('pt2vhfHillshadePane');
+    hillshadePane.classList.add('pt2vhf-hillshade-pane');
+    hillshadePane.style.zIndex = '220';
+    hillshadePane.style.pointerEvents = 'none';
+
+    const elevationPane = state.map.createPane('pt2vhfElevationPane');
+    elevationPane.classList.add('pt2vhf-elevation-pane');
+    elevationPane.style.zIndex = '230';
+    elevationPane.style.pointerEvents = 'none';
 
     const weatherPane = state.map.createPane('pt2vhfWeatherPane');
     weatherPane.classList.add('pt2vhf-weather-pane');
@@ -1132,6 +1169,8 @@
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
+    if (state.hillshadeEnabled) setHillshadeEnabled(true, { persist: false });
+    if (state.elevationEnabled) setElevationEnabled(true, { persist: false });
     if (state.weatherRadarEnabled) void setWeatherRadarEnabled(true, { force: true, quiet: true });
   }
 
@@ -1250,6 +1289,248 @@
     const ok = await refreshWeatherRadar(!!options.force, !!options.quiet);
     scheduleWeatherRadarRefresh();
     return ok;
+  }
+
+  function simpleLayerStatus(selector, text, isError = false) {
+    const node = $(selector);
+    if (!node) return;
+    node.textContent = text;
+    node.classList.toggle('error', !!isError);
+  }
+
+  function setHillshadeEnabled(enabled, options = {}) {
+    state.hillshadeEnabled = !!enabled;
+    try { localStorage.setItem('pt2vhf_hillshade_enabled', state.hillshadeEnabled ? '1' : '0'); } catch (_) {}
+    const toggle = $('#hillshadeToggle');
+    if (toggle) toggle.checked = state.hillshadeEnabled;
+    if (!state.map) return;
+    if (state.hillshadeEnabled) {
+      if (!state.hillshadeLayer) {
+        state.hillshadeLayer = L.tileLayer(
+          'https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+          {
+            pane: 'pt2vhfHillshadePane',
+            opacity: .42,
+            maxZoom: 16,
+            attribution: 'Hillshade &copy; Esri'
+          }
+        );
+      }
+      if (!state.map.hasLayer(state.hillshadeLayer)) state.hillshadeLayer.addTo(state.map);
+      simpleLayerStatus('#hillshadeStatus', ui('Ativado', 'Enabled'));
+    } else {
+      if (state.hillshadeLayer && state.map.hasLayer(state.hillshadeLayer)) state.map.removeLayer(state.hillshadeLayer);
+      simpleLayerStatus('#hillshadeStatus', ui('Desativado', 'Disabled'));
+    }
+  }
+
+  function elevationMetersText(value) {
+    return `${Math.round(Number(value) || 0).toLocaleString(currentLocale())} m`;
+  }
+
+  function elevationStatusText() {
+    return `${ui('Ativado', 'Enabled')} · ≥ ${elevationMetersText(state.mapConfig.elevation_threshold)}`;
+  }
+
+  function renderElevationTile(canvas) {
+    const raw = canvas?._pt2vhfElevationRaw;
+    if (!raw) return;
+    const ctx = canvas.getContext('2d');
+    const out = ctx.createImageData(256, 256);
+    const dst = out.data;
+    const threshold = Number(state.mapConfig.elevation_threshold) || 0;
+    const alpha = Math.max(0, Math.min(255, Math.round((Number(state.mapConfig.elevation_opacity) || 55) / 100 * 255)));
+    for (let i = 0; i < raw.length; i += 4) {
+      const altitude = (raw[i] * 256 + raw[i + 1] + raw[i + 2] / 256) - 32768;
+      if (altitude >= threshold) {
+        const rise = Math.max(0, Math.min(1, (altitude - threshold) / 2500));
+        dst[i] = Math.round(224 + 22 * rise);
+        dst[i + 1] = Math.round(172 - 55 * rise);
+        dst[i + 2] = Math.round(62 - 25 * rise);
+        dst[i + 3] = alpha;
+      }
+    }
+    ctx.putImageData(out, 0, 0);
+  }
+
+  function redrawElevationTiles() {
+    if (state.elevationRedrawRaf) cancelAnimationFrame(state.elevationRedrawRaf);
+    state.elevationRedrawRaf = requestAnimationFrame(() => {
+      state.elevationRedrawRaf = null;
+      if (!state.elevationLayer) return;
+      for (const entry of Object.values(state.elevationLayer._tiles || {})) {
+        const canvas = entry?.el;
+        if (canvas?._pt2vhfElevationRaw) renderElevationTile(canvas);
+      }
+      simpleLayerStatus('#elevationStatus', elevationStatusText());
+    });
+  }
+
+  function syncElevationControls() {
+    const slider = $('#elevationThresholdSlider');
+    const number = $('#elevationThresholdNumber');
+    const value = $('#elevationThresholdValue');
+    const maxLabel = $('#elevationScaleMax');
+    const hidden = $('#elevationThresholdConfig');
+    const maxSetting = $('#elevationSliderMax');
+    const maxSettingValue = $('#elevationSliderMaxValue');
+    const opacity = $('#elevationOpacity');
+    const opacityValue = $('#elevationOpacityValue');
+    const max = Math.min(9000, Math.max(100, Number(state.mapConfig.elevation_slider_max) || 3000));
+    const threshold = Math.max(0, Math.min(max, Number(state.mapConfig.elevation_threshold) || 0));
+    state.mapConfig.elevation_slider_max = Math.round(max);
+    state.mapConfig.elevation_threshold = Math.round(threshold);
+    if (slider) {
+      slider.max = String(state.mapConfig.elevation_slider_max);
+      slider.value = String(state.mapConfig.elevation_threshold);
+    }
+    if (number) number.value = String(state.mapConfig.elevation_slider_max);
+    if (value) value.textContent = elevationMetersText(state.mapConfig.elevation_threshold);
+    if (maxLabel) maxLabel.textContent = elevationMetersText(state.mapConfig.elevation_slider_max);
+    if (hidden) hidden.value = String(state.mapConfig.elevation_threshold);
+    if (maxSetting) maxSetting.value = String(state.mapConfig.elevation_slider_max);
+    if (maxSettingValue) maxSettingValue.textContent = elevationMetersText(state.mapConfig.elevation_slider_max);
+    if (opacity) opacity.value = String(state.mapConfig.elevation_opacity);
+    if (opacityValue) opacityValue.textContent = `${state.mapConfig.elevation_opacity}%`;
+  }
+
+  function setElevationThreshold(value, options = {}) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    state.mapConfig.elevation_threshold = Math.max(0, Math.min(state.mapConfig.elevation_slider_max, Math.round(parsed)));
+    syncElevationControls();
+    redrawElevationTiles();
+    if (options.markDirty) markConfigDirty();
+  }
+
+  function setElevationSliderMax(value, options = {}) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    state.mapConfig.elevation_slider_max = Math.min(9000, Math.max(100, Math.round(parsed)));
+    if (state.mapConfig.elevation_threshold > state.mapConfig.elevation_slider_max) {
+      state.mapConfig.elevation_threshold = state.mapConfig.elevation_slider_max;
+    }
+    syncElevationControls();
+    redrawElevationTiles();
+    if (options.markDirty) markConfigDirty();
+  }
+
+  function setElevationOpacity(value, options = {}) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    state.mapConfig.elevation_opacity = Math.min(100, Math.max(10, Math.round(parsed)));
+    syncElevationControls();
+    redrawElevationTiles();
+    if (options.markDirty) markConfigDirty();
+  }
+
+  function decodeElevationBlob(blob) {
+    if (typeof createImageBitmap === 'function') return createImageBitmap(blob);
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error(ui('tile DEM inválido', 'invalid DEM tile')));
+      };
+      image.src = url;
+    });
+  }
+
+  const ElevationGridLayer = L.GridLayer.extend({
+    createTile(coords, done) {
+      const canvas = L.DomUtil.create('canvas', 'leaflet-tile');
+      canvas.width = 256;
+      canvas.height = 256;
+      canvas.setAttribute('aria-hidden', 'true');
+      fetch(`/api/layers/elevation/tile/${coords.z}/${coords.x}/${coords.y}`, { cache: 'force-cache' })
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.blob();
+        })
+        .then(blob => decodeElevationBlob(blob))
+        .then(bitmap => {
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.clearRect(0, 0, 256, 256);
+          ctx.drawImage(bitmap, 0, 0, 256, 256);
+          if (bitmap?.close) bitmap.close();
+          const src = ctx.getImageData(0, 0, 256, 256);
+          canvas._pt2vhfElevationRaw = new Uint8ClampedArray(src.data);
+          renderElevationTile(canvas);
+          done(null, canvas);
+        })
+        .catch(err => {
+          canvas._pt2vhfElevationError = String(err?.message || err);
+          done(null, canvas);
+        });
+      return canvas;
+    }
+  });
+
+  function ensureElevationLayer() {
+    if (!state.elevationLayer) {
+      state.elevationLayer = new ElevationGridLayer({
+        pane: 'pt2vhfElevationPane',
+        tileSize: 256,
+        minZoom: 0,
+        maxZoom: 19,
+        maxNativeZoom: 15,
+        attribution: 'Elevation &copy; Mapzen / AWS Open Data'
+      });
+    }
+    return state.elevationLayer;
+  }
+
+  function initElevationControl() {
+    if (state.elevationControl || !state.map) return;
+    const box = L.DomUtil.create('div', 'elevation-threshold-control', state.map.getContainer());
+    box.id = 'elevationThresholdControl';
+    box.innerHTML = `
+      <div class="elevation-threshold-title">${ui('Corte do relevo', 'Relief cutoff')}</div>
+      <div id="elevationThresholdValue" class="elevation-threshold-value">1.000 m</div>
+      <div id="elevationScaleMax" class="elevation-scale-label">3.000 m</div>
+      <input id="elevationThresholdSlider" class="elevation-vertical-range" type="range" min="0" max="3000" step="50" value="1000" aria-label="${ui('Altitude mínima exibida', 'Minimum displayed altitude')}">
+      <div class="elevation-scale-label">0 m</div>
+      <div class="elevation-control-row">
+        <input id="elevationThresholdNumber" class="elevation-threshold-number" type="number" min="100" max="9000" step="100" value="3000" aria-label="${ui('Limite máximo do slider em metros', 'Slider maximum in meters')}">
+      </div>
+      <div class="elevation-threshold-unit">${ui('máx. do slider (m)', 'slider max (m)')}</div>
+    `;
+    L.DomEvent.disableClickPropagation(box);
+    L.DomEvent.disableScrollPropagation(box);
+    const slider = box.querySelector('#elevationThresholdSlider');
+    const number = box.querySelector('#elevationThresholdNumber');
+    slider.addEventListener('input', () => setElevationThreshold(slider.value, { markDirty: true }));
+    slider.addEventListener('change', () => setElevationThreshold(slider.value, { markDirty: true }));
+    number.addEventListener('input', () => {
+      if (number.value !== '') setElevationSliderMax(number.value, { markDirty: true });
+    });
+    number.addEventListener('change', () => setElevationSliderMax(number.value, { markDirty: true }));
+    state.elevationControl = box;
+    syncElevationControls();
+  }
+
+  function setElevationEnabled(enabled, options = {}) {
+    state.elevationEnabled = !!enabled;
+    try { localStorage.setItem('pt2vhf_elevation_enabled', state.elevationEnabled ? '1' : '0'); } catch (_) {}
+    const toggle = $('#elevationToggle');
+    if (toggle) toggle.checked = state.elevationEnabled;
+    initElevationControl();
+    $('#elevationThresholdControl')?.classList.toggle('active', state.elevationEnabled);
+    if (!state.map) return;
+    if (state.elevationEnabled) {
+      const layer = ensureElevationLayer();
+      if (!state.map.hasLayer(layer)) layer.addTo(state.map);
+      simpleLayerStatus('#elevationStatus', elevationStatusText());
+    } else {
+      if (state.elevationLayer && state.map.hasLayer(state.elevationLayer)) state.map.removeLayer(state.elevationLayer);
+      simpleLayerStatus('#elevationStatus', ui('Desativado', 'Disabled'));
+    }
+    if (options.markDirty) markConfigDirty();
   }
 
   function topologyPeriodValue(value) {
@@ -1652,6 +1933,8 @@
     const layersButton = $('#mapLayersButton');
     const layersMenu = $('#mapLayersMenu');
     const radarToggle = $('#weatherRadarToggle');
+    const hillshadeToggle = $('#hillshadeToggle');
+    const elevationToggle = $('#elevationToggle');
     if (layersButton && layersMenu && layersButton.dataset.bound !== '1') {
       layersButton.dataset.bound = '1';
       const positionLayersMenu = () => {
@@ -1689,6 +1972,20 @@
         radarToggle.addEventListener('change', () => { void setWeatherRadarEnabled(radarToggle.checked, { force: true }); });
       }
     }
+    if (hillshadeToggle) {
+      hillshadeToggle.checked = !!state.hillshadeEnabled;
+      if (hillshadeToggle.dataset.bound !== '1') {
+        hillshadeToggle.dataset.bound = '1';
+        hillshadeToggle.addEventListener('change', () => setHillshadeEnabled(hillshadeToggle.checked));
+      }
+    }
+    if (elevationToggle) {
+      elevationToggle.checked = !!state.elevationEnabled;
+      if (elevationToggle.dataset.bound !== '1') {
+        elevationToggle.dataset.bound = '1';
+        elevationToggle.addEventListener('change', () => setElevationEnabled(elevationToggle.checked));
+      }
+    }
 
     const mapType = $('#mapTypeQuick');
     if (mapType) {
@@ -1696,7 +1993,7 @@
       if (mapType.dataset.bound !== '1') {
         mapType.dataset.bound = '1';
         mapType.addEventListener('change', () => {
-          const value = ['osm', 'topo', 'satellite'].includes(mapType.value) ? mapType.value : 'osm';
+          const value = ['osm', 'topo', 'light', 'dark', 'satellite'].includes(mapType.value) ? mapType.value : 'osm';
           state.mapConfig.map_type = value;
           localStorage.setItem('pt2vhf_map_type_quick', value);
           const provider = MAP_PROVIDERS[value] || MAP_PROVIDERS.osm;
@@ -4803,6 +5100,10 @@
     const brightnessValue = $('#mapBrightnessValue');
     const radarOpacityInput = form.elements.namedItem('weather_radar_opacity');
     const radarOpacityValue = $('#weatherRadarOpacityValue');
+    const elevationMaxInput = form.elements.namedItem('elevation_slider_max');
+    const elevationMaxValue = $('#elevationSliderMaxValue');
+    const elevationOpacityInput = form.elements.namedItem('elevation_opacity');
+    const elevationOpacityValue = $('#elevationOpacityValue');
     const topologyRfColor = form.elements.namedItem('topology_rf_color');
     const topologyRfColorText = $('#topologyRfColorText');
     const topologyIgateColor = form.elements.namedItem('topology_igate_color');
@@ -4814,6 +5115,9 @@
     if (widthInput && widthValue) widthValue.textContent = `${widthInput.value || 2} px`;
     if (brightnessInput && brightnessValue) brightnessValue.textContent = `${brightnessInput.value || 100}%`;
     if (radarOpacityInput && radarOpacityValue) radarOpacityValue.textContent = `${radarOpacityInput.value || 55}%`;
+    if (elevationMaxInput && elevationMaxValue) elevationMaxValue.textContent = elevationMetersText(elevationMaxInput.value || 3000);
+    if (elevationOpacityInput && elevationOpacityValue) elevationOpacityValue.textContent = `${elevationOpacityInput.value || 55}%`;
+    syncElevationControls();
     if (topologyRfColor && topologyRfColorText) topologyRfColorText.value = topologyRfColor.value || '#ffff00';
     if (topologyIgateColor && topologyIgateColorText) topologyIgateColorText.value = topologyIgateColor.value || '#ffff00';
     if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 1} px`;
@@ -4863,6 +5167,13 @@
     if (out) out.textContent = `${value}%`;
     if (state.weatherRadarLayer) state.weatherRadarLayer.setOpacity(value / 100);
   });
+
+  $('#elevationSliderMax')?.addEventListener('input', e => {
+    if (e.target.value !== '') setElevationSliderMax(e.target.value, { markDirty: true });
+  });
+  $('#elevationSliderMax')?.addEventListener('change', e => setElevationSliderMax(e.target.value, { markDirty: true }));
+  $('#elevationOpacity')?.addEventListener('input', e => setElevationOpacity(e.target.value, { markDirty: true }));
+  $('#elevationOpacity')?.addEventListener('change', e => setElevationOpacity(e.target.value, { markDirty: true }));
 
   function previewTopologyStyleFromForm() {
     const form = $('#configForm');
@@ -5184,10 +5495,21 @@
     'Gera':'Generates',
     'Se o filtro for deixado vazio, o programa pedirá confirmação antes de salvar. Dependendo do servidor/porta, isso pode resultar em um fluxo de tráfego muito amplo.':'If the filter is left empty, the program will ask for confirmation before saving. Depending on the server/port, this can result in a very broad traffic stream.',
     'Satélite — Esri World Imagery':'Satellite - Esri World Imagery',
+    'Claro — CARTO Positron':'Light - CARTO Positron',
+    'Escuro — CARTO Dark Matter':'Dark - CARTO Dark Matter',
+    'Relevo sombreado':'Hillshade',
+    'Relevo com corte':'Relief cutoff',
+    'Corte do relevo':'Relief cutoff',
+    'Máximo do slider de corte do relevo':'Relief cutoff slider maximum',
+    'Opacidade do relevo com corte':'Relief cutoff opacity',
+    'Controla a transparência do radar de chuva exibido em Mapa → Camadas → Clima.':'Controls the transparency of the rain radar shown in Map → Layers → Weather.',
+    'Define o topo da escala do slider vertical da camada Relevo com corte. Padrão: 3.000 m.':'Sets the top of the vertical slider scale for the Relief cutoff layer. Default: 3,000 m.',
+    'A camada mostra apenas terreno com altitude igual ou superior à cota escolhida no slider.':'The layer shows only terrain at or above the cutoff selected on the slider.',
     'Cor dos enlaces RF':'RF link color',
     'Cor dos enlaces IGate':'IGate link color',
     'Padrão: topologia amarela (#ffff00), 1 px.':'Default: yellow topology (#ffff00), 1 px.',
     'OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography. Satellite mode uses Esri World Imagery. Topology colors and width are applied immediately and persisted when saving.',
+    'OpenStreetMap e OpenTopoMap usam cartografia colaborativa; Claro e Escuro usam CARTO; Satélite usa Esri World Imagery. A camada Clima usa RainViewer. Relevo sombreado usa Esri World Hillshade e Relevo com corte usa dados DEM Terrarium. Não há camada de raios. Cores, espessuras, cotas e opacidades são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography; Light and Dark use CARTO; Satellite uses Esri World Imagery. Weather uses RainViewer. Hillshade uses Esri World Hillshade and Relief cutoff uses Terrarium DEM data. There is no lightning layer. Colors, widths, cutoffs and opacities are applied immediately and persisted when saved.',
     'A alteração é aplicada imediatamente e fica salva após clicar em Salvar.':'The change is applied immediately and persisted after clicking Save.',
     'O idioma é aplicado imediatamente à interface.':'The language is applied immediately to the interface.',
     'Sistema':'System',
