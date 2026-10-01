@@ -315,8 +315,7 @@
     field('tncRole')?.addEventListener('change', applyRolePreset);
     $('#tncRefreshPorts')?.addEventListener('click', loadPorts);
     $('#tncRefreshData')?.addEventListener('click', refreshData);
-    $('#tncForm')?.addEventListener('submit', async event => {
-      event.preventDefault();
+    $('#tncSave')?.addEventListener('click', async () => {
       try { await saveConfig(); await refreshData(); } catch (error) { showError(error.message); }
     });
     $('#tncConnect')?.addEventListener('click', async () => {
