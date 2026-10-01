@@ -133,6 +133,9 @@ DEFAULT_CONFIG = {
     "topology_width": 1,
     "map_brightness": 100,
     "weather_radar_opacity": 55,
+    "elevation_threshold": 1000,
+    "elevation_slider_max": 3000,
+    "elevation_opacity": 55,
     "sound_on_personal_message": 1,
     "sound_on_station_activity": 1,
     "highlight_station_activity": 1,
@@ -235,6 +238,9 @@ def init_db() -> None:
                 topology_width INTEGER NOT NULL DEFAULT 1,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
                 weather_radar_opacity INTEGER NOT NULL DEFAULT 55,
+                elevation_threshold INTEGER NOT NULL DEFAULT 1000,
+                elevation_slider_max INTEGER NOT NULL DEFAULT 3000,
+                elevation_opacity INTEGER NOT NULL DEFAULT 55,
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
                 sound_on_station_activity INTEGER NOT NULL DEFAULT 1,
                 highlight_station_activity INTEGER NOT NULL DEFAULT 1,
@@ -475,6 +481,12 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN map_brightness INTEGER NOT NULL DEFAULT 100")
         if "weather_radar_opacity" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN weather_radar_opacity INTEGER NOT NULL DEFAULT 55")
+        if "elevation_threshold" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN elevation_threshold INTEGER NOT NULL DEFAULT 1000")
+        if "elevation_slider_max" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN elevation_slider_max INTEGER NOT NULL DEFAULT 3000")
+        if "elevation_opacity" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN elevation_opacity INTEGER NOT NULL DEFAULT 55")
         if "sound_on_personal_message" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
         if "sound_on_station_activity" not in config_columns:
@@ -625,6 +637,9 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["topology_width"] = int(merged["topology_width"] or 1)
     merged["map_brightness"] = int(merged["map_brightness"] or 100)
     merged["weather_radar_opacity"] = int(merged["weather_radar_opacity"] or 55)
+    merged["elevation_threshold"] = int(merged["elevation_threshold"] if merged["elevation_threshold"] not in ("", None) else 1000)
+    merged["elevation_slider_max"] = int(merged["elevation_slider_max"] if merged["elevation_slider_max"] not in ("", None) else 3000)
+    merged["elevation_opacity"] = int(merged["elevation_opacity"] if merged["elevation_opacity"] not in ("", None) else 55)
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
     merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
     merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0
@@ -666,7 +681,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Porta inválida.")
     if merged["altitude_source"] not in {"manual", "geolocation", "fallback_zero"}:
         merged["altitude_source"] = "manual"
-    if merged["map_type"] not in {"osm", "topo", "satellite"}:
+    if merged["map_type"] not in {"osm", "topo", "light", "dark", "satellite"}:
         raise ValueError("Tipo de mapa inválido.")
     if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["track_color"]):
         raise ValueError("Cor do tracklog inválida.")
@@ -682,6 +697,12 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Brilho do mapa deve estar entre 30% e 150%.")
     if not (10 <= merged["weather_radar_opacity"] <= 100):
         raise ValueError("Opacidade do radar deve estar entre 10% e 100%.")
+    if not (100 <= merged["elevation_slider_max"] <= 9000):
+        raise ValueError("Máximo do slider de relevo deve estar entre 100 m e 9.000 m.")
+    if not (0 <= merged["elevation_threshold"] <= merged["elevation_slider_max"]):
+        raise ValueError("Cota do relevo deve ficar entre 0 m e o máximo configurado.")
+    if not (10 <= merged["elevation_opacity"] <= 100):
+        raise ValueError("Opacidade do relevo deve estar entre 10% e 100%.")
     if not (1 <= merged["message_popup_seconds"] <= 60):
         raise ValueError("Duração do aviso de mensagem deve estar entre 1 e 60 segundos.")
 
