@@ -66,11 +66,7 @@ $XDG_DATA_HOME/PT2VHF-APRS-Client/data/pt2vhf_aprs.db
 
 ## Janela integrada e fallback pelo navegador
 
-A execução normal tenta usar a janela integrada. Em desktops onde GTK/WebKit2GTK ou outro backend compatível não estiver disponível, o programa informa a situação no terminal e abre:
-
-```text
-http://127.0.0.1:8080
-```
+A execução normal tenta usar a janela integrada. Em desktops onde GTK/WebKit2GTK ou outro backend compatível não estiver disponível, o programa informa a situação no terminal e abre a interface local. A aplicação começa tentando **127.0.0.1:8080**; se a porta já estiver ocupada, tenta **8081, 8082, 8083...** até encontrar uma livre.
 
 Para forçar o navegador desde o início:
 
@@ -84,7 +80,7 @@ ou, na versão portátil:
 ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6.22 --browser
 ```
 
-A porta continua restrita a `127.0.0.1`; não exponha a porta 8080 diretamente à Internet.
+A interface continua restrita a `127.0.0.1`; não exponha a porta interna diretamente à Internet. A porta efetivamente escolhida aparece na própria aplicação e no terminal.
 
 ## Abrir também no navegador
 
@@ -110,10 +106,10 @@ Para a versão portátil, troque o caminho em `Exec=` pelo caminho completo do e
 
 ## Diagnóstico
 
-Verifique primeiro se o servidor local responde:
+Verifique primeiro qual porta foi informada como **Interface local** pela aplicação e teste essa URL, por exemplo:
 
 ```bash
-curl -I http://127.0.0.1:8080/
+curl -I http://127.0.0.1:8082/
 ```
 
 Se a janela integrada não abrir, execute em modo navegador:
