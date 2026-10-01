@@ -1103,11 +1103,34 @@ class TNCService:
         )
 
     def _handle_rf_to_is(self, packet: dict[str, Any], cfg: dict[str, Any]) -> None:
+        path_tokens = {
+            str(item or "").upper().rstrip("*")
+            for item in (packet.get("path_text") or [])
+            if str(item or "").strip()
+        }
+        blocked_tokens = {"NOGATE", "RFONLY"}
+        blocked = sorted(path_tokens & blocked_tokens)
+        if blocked:
+            record_decision(
+                "igate_rf_is", "blocked",
+                "Path solicita não fazer gating para Internet: " + ", ".join(blocked),
+                source=packet["source"], destination=packet["destination"], raw_tnc2=packet["tnc2"],
+            )
+            return
+        if any(token.startswith("QA") or token in {"TCPIP", "TCPXX"} for token in path_tokens):
+            record_decision(
+                "igate_rf_is", "blocked",
+                "Pacote contém marcador de APRS-IS/Internet no path; possível loop de gating.",
+                source=packet["source"], destination=packet["destination"], raw_tnc2=packet["tnc2"],
+            )
+            return
         try:
             own = self._own_call()
             if not own:
                 raise RuntimeError("Indicativo local não configurado.")
             gated = add_igate_q_construct(packet["tnc2"], own)
+            if len(gated.encode("latin-1", errors="replace")) > 512:
+                raise ValueError("Pacote excede o limite operacional após inclusão do q-construct.")
             from .aprs_service import service as aprs_service
             aprs_service.send_igate_packet(gated)
             record_decision(
@@ -1155,6 +1178,13 @@ class TNCService:
 
         path = [item.strip() for item in str(cfg.get("igate_rf_path") or "").split(",") if item.strip()]
         third_party = "}" + cleaned
+        if len(third_party.encode("latin-1", errors="replace")) > 255:
+            record_decision(
+                "igate_is_rf", "blocked",
+                "Mensagem encapsulada excede o tamanho seguro para transmissão AX.25.",
+                source=source, destination=destination, raw_tnc2=raw,
+            )
+            return
         frame = encode_ax25(own, "APZVHF", third_party, path)
         queued = self._enqueue(frame, f"iGate IS→RF para {destination} ouvido recentemente", raw_tnc2=cleaned, priority=0)
         record_decision(
