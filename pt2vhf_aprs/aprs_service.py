@@ -406,7 +406,7 @@ class APRSService:
         self._maybe_resolve_nonmessage_query_response(from_call, parsed, line)
         msg = parse_message_line(line, parsed)
         if msg:
-            self._handle_message(msg, line)
+            self._handle_message(msg, line, via_rf=True)
 
     def send_igate_packet(self, line: str) -> None:
         """Envia ao APRS-IS um pacote originado do RF pelo iGate local."""
@@ -548,7 +548,7 @@ class APRSService:
         )
         return {"id": query_id, "to": destination, "query_type": "PINGACK", "payload": "PING", "message_id": msg_id, "status": "Aguardando resposta"}
 
-    def _handle_message(self, msg: dict[str, str], raw: str) -> None:
+    def _handle_message(self, msg: dict[str, str], raw: str, via_rf: bool = False) -> None:
         text = msg["text"].strip()
         from_call = msg["from"].upper()
         to_call = msg["to"].upper()
@@ -567,7 +567,7 @@ class APRSService:
         own_call = full_callsign(cfg).upper()
         is_personal_message = classify_message_type(to_call) == "message" and to_call == own_call
 
-        if is_personal_message and not msg_id and message_text.strip().startswith("?"):
+        if is_personal_message and not msg_id and message_text.strip().startswith("?") and not via_rf:
             self._handle_directed_query(from_call, message_text.strip(), raw)
             return
 
@@ -599,7 +599,7 @@ class APRSService:
         if is_personal_message and bool(cfg.get("sound_on_personal_message", 1)):
             _notify_personal_message(from_call, message_text)
 
-        if is_personal_message and msg_id and self.status()["verified"]:
+        if is_personal_message and msg_id and self.status()["verified"] and not via_rf:
             try:
                 self.send_ack(from_call, msg_id)
             except Exception:
