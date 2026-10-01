@@ -17,6 +17,15 @@ from . import database as db
 from . import diagnostics as diag
 from . import updater
 from .aprs_service import full_callsign, service
+from .tnc_service import (
+    get_tnc_config,
+    heard_stations,
+    list_decisions,
+    list_frames,
+    save_tnc_config,
+    service as tnc_service,
+    tnc_statistics,
+)
 from .version_notes import notes_for
 
 
@@ -340,12 +349,22 @@ def create_app() -> Flask:
             payload["tx_queue"] = int(service._tx_queue.qsize())
         except Exception:
             payload["tx_queue"] = 0
+        try:
+            tnc_status = tnc_service.status()
+            payload["tnc_connected"] = bool(tnc_status.get("connected"))
+            payload["tnc_tx_queue"] = int(tnc_status.get("tx_queue") or 0)
+            payload["tnc_tx_paused"] = bool(tnc_status.get("tx_paused"))
+        except Exception:
+            payload["tnc_connected"] = False
+            payload["tnc_tx_queue"] = 0
+            payload["tnc_tx_paused"] = False
         return jsonify(payload)
 
     @app.get("/api/status")
     def api_status():
         payload = service.status()
         payload.update(db.summary_counts())
+        payload["tnc"] = tnc_service.status()
         return jsonify(payload)
 
     @app.get("/api/current-version-info")
@@ -434,6 +453,86 @@ def create_app() -> Flask:
             return jsonify({"ok": True, "message": "Rollback iniciado. A aplicação será reiniciada."})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 500
+
+    @app.get("/api/tnc/status")
+    def api_tnc_status():
+        return jsonify({"ok": True, "status": tnc_service.status(), "config": get_tnc_config()})
+
+    @app.get("/api/tnc/ports")
+    def api_tnc_ports():
+        return jsonify({"ok": True, "ports": tnc_service.available_ports()})
+
+    @app.post("/api/tnc/connect")
+    def api_tnc_connect():
+        try:
+            tnc_service.connect()
+            return jsonify({"ok": True, "status": tnc_service.status()})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/tnc/disconnect")
+    def api_tnc_disconnect():
+        tnc_service.disconnect()
+        return jsonify({"ok": True, "status": tnc_service.status()})
+
+    @app.post("/api/tnc/tx/stop")
+    def api_tnc_tx_stop():
+        tnc_service.emergency_stop_tx()
+        return jsonify({"ok": True, "status": tnc_service.status()})
+
+    @app.post("/api/tnc/tx/resume")
+    def api_tnc_tx_resume():
+        try:
+            tnc_service.resume_tx()
+            return jsonify({"ok": True, "status": tnc_service.status()})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/tnc/config")
+    def api_tnc_config():
+        return jsonify(get_tnc_config())
+
+    @app.post("/api/tnc/config")
+    def api_tnc_save_config():
+        try:
+            before = get_tnc_config()
+            saved = save_tnc_config(request.get_json(force=True) or {})
+            reconnect_keys = {"transport", "serial_port", "serial_baud", "tcp_host", "tcp_port"}
+            changed = any(before.get(key) != saved.get(key) for key in reconnect_keys)
+            if changed and tnc_service.status().get("wanted"):
+                tnc_service.reconnect()
+            return jsonify({"ok": True, "config": saved, "status": tnc_service.status()})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/tnc/frames")
+    def api_tnc_frames():
+        try:
+            return jsonify(list_frames(int(request.args.get("limit", 250))))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.get("/api/tnc/decisions")
+    def api_tnc_decisions():
+        try:
+            return jsonify(list_decisions(int(request.args.get("limit", 250))))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.get("/api/tnc/heard")
+    def api_tnc_heard():
+        try:
+            return jsonify(heard_stations(int(request.args.get("limit", 250))))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.get("/api/tnc/optimizer")
+    def api_tnc_optimizer():
+        return jsonify(tnc_service.optimizer_report())
+
+    @app.get("/api/tnc/statistics")
+    def api_tnc_statistics():
+        return jsonify(tnc_statistics())
 
     @app.post("/api/connect")
     def api_connect():

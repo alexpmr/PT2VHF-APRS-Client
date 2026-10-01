@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.0": {
+        "title": "TNC KISS, Digipeater, iGate e otimização inteligente de RF",
+        "items": [
+            "Inicia a série 1.8 com uma nova aba TNC / RF para operação local de rádio além do APRS-IS.",
+            "Adiciona KISS TCP e KISS Serial, listagem de portas, reconexão, monitor de frames AX.25/APRS e contadores RX/TX.",
+            "Implementa decodificação e geração AX.25 UI, KISS escaping, representação TNC2 e suporte a paths com SSID e indicador de repetição.",
+            "Adiciona Digipeater com perfis Fill-in WIDE1-1, Wide/Regional WIDEn-N e aliases personalizados, com supressão de duplicatas, prevenção de loops, limite de hops e rate limit por origem.",
+            "Adiciona fila de TX com prioridade para ACK/REJ e mensagens, mantendo telemetria e tráfego de baixa prioridade atrás do tráfego útil.",
+            "Adiciona iGate RF→APRS-IS com qAR e iGate APRS-IS→RF restritivo a mensagens destinadas a estações ouvidas diretamente por RF dentro da janela configurada.",
+            "Constrói grafo de quem fala com quem usando mensagens e ACK/REJ observados em RF e APRS-IS, com recomendações e modo automático conservador.",
+            "Registra frames, estações ouvidas, decisões de digi/iGate e relações de comunicação no SQLite local com retenção configurável.",
+            "TX automático, Digipeater e iGate Internet→RF permanecem desligados por padrão e exigem confirmação explícita; há botão PARAR TX para bloqueio imediato sem derrubar RX.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.7.23": {
         "title": "Produção: relevo com corte, hillshade e novos mapas-base",
         "items": [

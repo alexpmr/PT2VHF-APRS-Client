@@ -1,33 +1,64 @@
-# PT2VHF APRS Client - v1.7.23
+# PT2VHF APRS Client - v1.8.0
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.23** é a release completa de produção. Além das correções acumuladas da série 1.7, adiciona **Relevo com corte** por altitude com slider vertical, **Relevo sombreado**, mapas-base **Claro/Escuro** e mantém **Mapa → Camadas → Clima** com radar de precipitação.
+A **v1.8.0** inicia a nova série com integração **TNC / RF**: KISS Serial/TCP, monitor AX.25, Digipeater, iGate inteligente e análise de **quem fala com quem**, mantendo todos os recursos de mapa, mensagens, estatísticas e atualização da v1.7.23.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.7.23**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.0**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Setup_x64_v1.7.23.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Portable_x64_v1.7.23.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Setup_ARM64_v1.7.23.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Portable_ARM64_v1.7.23.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Setup_x64_v1.8.0.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Portable_x64_v1.8.0.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Setup_ARM64_v1.8.0.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Portable_ARM64_v1.8.0.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_x86_64_v1.7.23.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/pt2vhf-aprs-client_1.7.23_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Linux_x86_64_v1.7.23.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_x86_64_v1.8.0.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/pt2vhf-aprs-client_1.8.0_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Linux_x86_64_v1.8.0.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_macOS_arm64_v1.7.23.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_macOS_x86_64_v1.7.23.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_macOS_arm64_v1.8.0.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_macOS_x86_64_v1.8.0.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Manual_v1.7.23.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Manual_v1.8.0.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.0
+
+### TNC / RF
+- Nova aba **TNC / RF** para operar o cliente também com rádio local, sem substituir o APRS-IS.
+- **KISS TCP** para Dire Wolf e outros modems compatíveis e **KISS Serial** para TNCs físicos.
+- Detecção/listagem de portas seriais, baud rate, conexão/reconexão e estado TNC no cabeçalho.
+- Monitor de frames **AX.25/APRS** recebidos e transmitidos, com origem, destino, path, tipo e representação TNC2.
+
+### Digipeater
+- Perfis **Fill-in (WIDE1-1)**, **Wide/Regional (WIDEn-N)** e **Personalizado**.
+- Supressão de duplicatas por assinatura do pacote e janela temporal.
+- Proteção contra loop, limite de hops e rate limit por estação.
+- Fila de transmissão com prioridade para **ACK/REJ e mensagens** sobre telemetria/status repetitivos.
+
+### iGate inteligente
+- **RF → APRS-IS** com qAR e preservação do pacote recebido.
+- **APRS-IS → RF** restrito a mensagens cujo destinatário tenha sido ouvido **diretamente por RF** dentro da janela configurada.
+- Tabela própria de estações ouvidas por RF, distinguindo última audição direta de recepções posteriores via digi.
+- Decisões de gating ficam registradas com o motivo de envio, bloqueio ou supressão.
+
+### Quem fala com quem
+- O cliente constrói um grafo de interações com origem, destino, meio RF/APRS-IS, quantidade, ACK/REJ e última atividade.
+- Modos do otimizador: **Desligado**, **Observação/Recomendação** e **Automático conservador**.
+- O modo automático atua em prioridades, duplicatas, gating e contenção de tráfego de baixa prioridade; **não cria um protocolo proprietário nem reescreve arbitrariamente paths APRS de terceiros**.
+
+### Segurança operacional
+- **TX automático, Digipeater e iGate Internet→RF ficam desligados por padrão.**
+- Para liberar transmissão automática é necessário marcar uma confirmação explícita.
+- O botão vermelho **PARAR TX** interrompe imediatamente novas transmissões automáticas sem derrubar a recepção TNC.
+- O histórico de frames, decisões e relações fica no SQLite local com retenção configurável.
 
 ## Novidades da v1.7.7
 

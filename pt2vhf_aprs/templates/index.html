@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/app_logo.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tnc.css') }}">
 </head>
 <body>
 <header class="app-header">
@@ -66,6 +67,7 @@
       <span class="version-status-dot"></span>
       <span id="versionStatusText">Verificando versão…</span>
     </a>
+    <div id="tncHeaderStatus" class="status disconnected tnc-header-status" title="Estado TNC / RF"><span class="dot"></span><span>TNC offline</span></div>
     <div id="connectionStatus" class="status disconnected"><span class="dot"></span><span>Desconectado</span></div>
     <button id="connectButton" class="btn primary">Conectar</button>
   </div>
@@ -77,6 +79,7 @@
   <button class="tab" data-tab="stations">Estações</button>
   <button class="tab" data-tab="log">Log</button>
   <button class="tab" data-tab="analysis">Estatísticas</button>
+  <button class="tab" data-tab="tnc">TNC / RF</button>
   <button class="tab" data-tab="config">Configuração</button>
   <button class="tab" data-tab="about">Sobre</button>
   <button class="tab" data-tab="help">Ajuda</button>
@@ -445,6 +448,154 @@
         <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Atualizar estatísticas.</span></div>
       </div>
 
+    </div>
+  </section>
+
+  <section id="tab-tnc" class="tab-panel">
+    <div class="panel-header tnc-panel-header">
+      <div>
+        <h2>TNC / RF</h2>
+        <p>KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.</p>
+      </div>
+      <div class="tnc-actions">
+        <button id="tncRefreshPorts" type="button" class="btn secondary">Atualizar portas</button>
+        <button id="tncConnect" type="button" class="btn primary">Conectar TNC</button>
+        <button id="tncDisconnect" type="button" class="btn secondary">Desconectar</button>
+        <button id="tncEmergencyStop" type="button" class="btn danger">PARAR TX</button>
+        <button id="tncResumeTx" type="button" class="btn secondary">Liberar TX</button>
+      </div>
+    </div>
+
+    <div class="tnc-status-grid">
+      <div class="tnc-metric"><span>Estado</span><strong id="tncMetricState">Desconectado</strong><small id="tncMetricEndpoint">—</small></div>
+      <div class="tnc-metric"><span>RX RF</span><strong id="tncMetricRx">0</strong><small id="tncMetricLastRx">—</small></div>
+      <div class="tnc-metric"><span>TX RF</span><strong id="tncMetricTx">0</strong><small id="tncMetricLastTx">—</small></div>
+      <div class="tnc-metric"><span>Duplicatas evitadas</span><strong id="tncMetricDuplicates">0</strong><small>janela configurável</small></div>
+      <div class="tnc-metric"><span>Fila TX</span><strong id="tncMetricQueue">0</strong><small id="tncMetricTxState">TX automático desligado</small></div>
+      <div class="tnc-metric"><span>Otimizador</span><strong id="tncMetricOptimizer">Observação</strong><small id="tncMetricRole">Monitor</small></div>
+    </div>
+
+    <div id="tncError" class="tnc-error hidden" role="alert"></div>
+
+    <form id="tncForm" class="tnc-config-grid">
+      <article class="config-card">
+        <h3>Conexão KISS</h3>
+        <div class="form-grid two-cols">
+          <label class="field"><span>Transporte</span>
+            <select id="tncTransport" name="transport">
+              <option value="tcp">KISS TCP</option>
+              <option value="serial">KISS Serial</option>
+            </select>
+          </label>
+          <label class="check-field tnc-check"><input id="tncAutoConnect" name="auto_connect" type="checkbox"><span>Conectar TNC ao iniciar</span></label>
+          <label class="field tnc-tcp-field"><span>Host</span><input id="tncTcpHost" name="tcp_host" value="127.0.0.1"></label>
+          <label class="field tnc-tcp-field"><span>Porta TCP</span><input id="tncTcpPort" name="tcp_port" type="number" min="1" max="65535" value="8001"></label>
+          <label class="field tnc-serial-field"><span>Porta serial</span>
+            <select id="tncSerialPort" name="serial_port"><option value="">Selecione…</option></select>
+          </label>
+          <label class="field tnc-serial-field"><span>Baud rate</span>
+            <select id="tncSerialBaud" name="serial_baud">
+              <option>1200</option><option>2400</option><option>4800</option><option selected>9600</option>
+              <option>19200</option><option>38400</option><option>57600</option><option>115200</option><option>230400</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">Compatível com TNC físico em KISS e softwares como Dire Wolf por KISS TCP. APRS-IS e RF podem operar de forma independente.</p>
+      </article>
+
+      <article class="config-card">
+        <h3>Papel RF e segurança de TX</h3>
+        <div class="form-grid two-cols">
+          <label class="field"><span>Papel principal</span>
+            <select id="tncRole" name="role">
+              <option value="monitor">Somente monitor</option>
+              <option value="station">Estação local</option>
+              <option value="digi">Digipeater</option>
+              <option value="igate_rx">iGate RX-only</option>
+              <option value="igate_bidir">iGate bidirecional</option>
+              <option value="digi_igate">Digi + iGate</option>
+            </select>
+          </label>
+          <label class="field"><span>Retenção do histórico</span><input id="tncRetentionDays" name="retention_days" type="number" min="1" max="90" value="14"><small>dias</small></label>
+          <label class="check-field tnc-check"><input id="tncAutoTxEnabled" name="auto_tx_enabled" type="checkbox"><span>Habilitar transmissão automática em RF</span></label>
+          <label class="check-field tnc-check tnc-confirm"><input id="tncTxConfirmed" name="tx_confirmed" type="checkbox"><span>Confirmo que revisei indicativo, rádio, frequência e regras antes de permitir TX automático</span></label>
+        </div>
+        <div class="tnc-safety-note"><strong>Segurança:</strong> TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão <strong>PARAR TX</strong> interrompe imediatamente novas transmissões sem derrubar o monitor RX.</div>
+      </article>
+
+      <article class="config-card">
+        <h3>Digipeater inteligente</h3>
+        <div class="form-grid two-cols">
+          <label class="check-field tnc-check"><input id="tncDigiEnabled" name="digi_enabled" type="checkbox"><span>Ativar Digipeater</span></label>
+          <label class="field"><span>Perfil</span>
+            <select id="tncDigiProfile" name="digi_profile">
+              <option value="fill">Fill-in — WIDE1-1</option>
+              <option value="wide">Wide / Regional — WIDEn-N</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </label>
+          <label class="field full"><span>Aliases personalizados</span><input id="tncDigiAliases" name="digi_aliases" placeholder="Ex.: PT2DGI,DF1-1"><small>Separados por vírgula; usados no perfil Personalizado.</small></label>
+          <label class="field"><span>Máximo de hops repetidos</span><input id="tncDigiMaxHops" name="digi_max_hops" type="number" min="1" max="7" value="3"></label>
+          <label class="field"><span>Janela de duplicatas</span><input id="tncDuplicateWindow" name="duplicate_window_seconds" type="number" min="5" max="300" value="30"><small>segundos</small></label>
+          <label class="field"><span>Rate limit por origem</span><input id="tncSourceRate" name="source_rate_limit_per_minute" type="number" min="5" max="300" value="30"><small>pacotes/min</small></label>
+        </div>
+        <p class="hint">O digi usa supressão de duplicatas, bloqueio de loop, limite de hops e fila com prioridade para mensagens/ACK/REJ.</p>
+      </article>
+
+      <article class="config-card">
+        <h3>iGate inteligente</h3>
+        <div class="form-grid two-cols">
+          <label class="check-field tnc-check"><input id="tncIgateRx" name="igate_rx_enabled" type="checkbox"><span>RF → APRS-IS</span></label>
+          <label class="check-field tnc-check"><input id="tncIgateTx" name="igate_tx_enabled" type="checkbox"><span>APRS-IS → RF restritivo</span></label>
+          <label class="field"><span>Janela “ouvido por RF”</span><input id="tncIgateHeardWindow" name="igate_heard_window_minutes" type="number" min="1" max="180" value="30"><small>minutos</small></label>
+          <label class="field"><span>Path RF do iGate</span><input id="tncIgateRfPath" name="igate_rf_path" placeholder="vazio = direto"><small>Ex.: WIDE1-1. Prefira vazio quando a cobertura direta for suficiente.</small></label>
+        </div>
+        <p class="hint">Internet→RF só considera mensagens cujo destino tenha sido ouvido <strong>diretamente</strong> por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.</p>
+      </article>
+
+      <article class="config-card tnc-optimizer-card">
+        <h3>Otimização “quem fala com quem”</h3>
+        <div class="form-grid two-cols">
+          <label class="field"><span>Modo</span>
+            <select id="tncOptimizerMode" name="optimizer_mode">
+              <option value="off">Desligado</option>
+              <option value="observe" selected>Observação / recomendação</option>
+              <option value="automatic">Automático conservador</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.</p>
+        <div id="tncRecommendations" class="tnc-recommendations"><span class="hint">Aguardando dados.</span></div>
+      </article>
+
+      <article class="config-card tnc-save-card">
+        <h3>Aplicar configuração</h3>
+        <p>Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.</p>
+        <button id="tncSave" type="button" class="btn primary">Salvar TNC / RF</button>
+        <span id="tncSaveStatus" class="hint"></span>
+      </article>
+    </form>
+
+    <div class="tnc-data-grid">
+      <article class="tnc-table-card">
+        <div class="tnc-card-heading"><div><h3>Monitor TNC</h3><p>Frames AX.25/APRS recebidos e transmitidos.</p></div><button id="tncRefreshData" type="button" class="btn secondary">Atualizar</button></div>
+        <div class="table-wrap tnc-table-wrap"><table><thead><tr><th>Hora</th><th>Dir.</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>Path</th><th>Pacote TNC2</th></tr></thead><tbody id="tncFramesBody"><tr><td colspan="7">Sem frames.</td></tr></tbody></table></div>
+      </article>
+
+      <article class="tnc-table-card">
+        <div class="tnc-card-heading"><div><h3>Decisões Digi / iGate</h3><p>Auditoria do que foi enviado, suprimido ou bloqueado.</p></div></div>
+        <div class="table-wrap tnc-table-wrap"><table><thead><tr><th>Hora</th><th>Ação</th><th>Decisão</th><th>Origem</th><th>Destino</th><th>Motivo</th></tr></thead><tbody id="tncDecisionsBody"><tr><td colspan="6">Sem decisões.</td></tr></tbody></table></div>
+      </article>
+
+      <article class="tnc-table-card">
+        <div class="tnc-card-heading"><div><h3>Estações ouvidas por RF</h3><p>Presença local usada pelo iGate inteligente.</p></div></div>
+        <div class="table-wrap tnc-table-wrap"><table><thead><tr><th>Estação</th><th>Última RF</th><th>Direta</th><th>Contagem</th><th>Último tipo</th><th>Path</th></tr></thead><tbody id="tncHeardBody"><tr><td colspan="6">Nenhuma estação ouvida pelo TNC.</td></tr></tbody></table></div>
+      </article>
+
+      <article class="tnc-table-card">
+        <div class="tnc-card-heading"><div><h3>Quem fala com quem</h3><p>Grafo textual consolidado das interações RF e APRS-IS.</p></div></div>
+        <div class="table-wrap tnc-table-wrap"><table><thead><tr><th>Origem</th><th>Destino</th><th>Meio</th><th>Interações</th><th>ACK/REJ</th><th>Última</th></tr></thead><tbody id="tncEdgesBody"><tr><td colspan="6">Aguardando interações.</td></tr></tbody></table></div>
+      </article>
     </div>
   </section>
 
@@ -1194,5 +1345,6 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="{{ url_for('static', filename='js/i18n_extra.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
 </body>
 </html>

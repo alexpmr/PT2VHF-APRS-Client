@@ -383,6 +383,40 @@ class APRSService:
         if msg:
             self._handle_message(msg, line)
 
+        # Entrega uma cópia dos pacotes APRS-IS ao módulo TNC/iGate.
+        # Import local evita dependência circular durante a inicialização.
+        try:
+            from .tnc_service import service as tnc_service
+            tnc_service.handle_is_packet(line, parsed)
+        except Exception as exc:
+            diag.log_event("tnc_is_hook_error", error=str(exc))
+
+    def ingest_rf_packet(self, line: str) -> None:
+        """Injeta pacote recebido via TNC no mesmo pipeline de banco/mensagens do APRS-IS."""
+        if not line or line.startswith("#"):
+            return
+        parsed: dict[str, Any] = {}
+        try:
+            parsed = aprslib.parse(line) if aprslib else {}
+        except Exception:
+            parsed = {"raw": line}
+        fmt = str(parsed.get("format") or "")
+        from_call = str(parsed.get("from") or extract_source(line) or "")
+        db.process_received_packet(line, parsed, from_call, fmt)
+        self._maybe_resolve_nonmessage_query_response(from_call, parsed, line)
+        msg = parse_message_line(line, parsed)
+        if msg:
+            self._handle_message(msg, line, via_rf=True)
+
+    def send_igate_packet(self, line: str) -> None:
+        """Envia ao APRS-IS um pacote originado do RF pelo iGate local."""
+        status = self.status()
+        if not status.get("connected"):
+            raise ConnectionError("APRS-IS desconectado; não é possível fazer RF→IS.")
+        if not status.get("verified"):
+            raise PermissionError("APRS-IS não verificado; RF→IS bloqueado.")
+        self._send_raw(line)
+
     def _maybe_resolve_nonmessage_query_response(self, from_call: str, parsed: dict[str, Any], raw: str) -> None:
         peer = str(from_call or "").upper().strip()
         if not peer:
@@ -514,7 +548,7 @@ class APRSService:
         )
         return {"id": query_id, "to": destination, "query_type": "PINGACK", "payload": "PING", "message_id": msg_id, "status": "Aguardando resposta"}
 
-    def _handle_message(self, msg: dict[str, str], raw: str) -> None:
+    def _handle_message(self, msg: dict[str, str], raw: str, via_rf: bool = False) -> None:
         text = msg["text"].strip()
         from_call = msg["from"].upper()
         to_call = msg["to"].upper()
@@ -533,7 +567,7 @@ class APRSService:
         own_call = full_callsign(cfg).upper()
         is_personal_message = classify_message_type(to_call) == "message" and to_call == own_call
 
-        if is_personal_message and not msg_id and message_text.strip().startswith("?"):
+        if is_personal_message and not msg_id and message_text.strip().startswith("?") and not via_rf:
             self._handle_directed_query(from_call, message_text.strip(), raw)
             return
 
@@ -565,7 +599,7 @@ class APRSService:
         if is_personal_message and bool(cfg.get("sound_on_personal_message", 1)):
             _notify_personal_message(from_call, message_text)
 
-        if is_personal_message and msg_id and self.status()["verified"]:
+        if is_personal_message and msg_id and self.status()["verified"] and not via_rf:
             try:
                 self.send_ack(from_call, msg_id)
             except Exception:
