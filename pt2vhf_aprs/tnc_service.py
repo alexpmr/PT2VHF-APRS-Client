@@ -890,9 +890,12 @@ class TNCService:
         except Exception:
             pass
 
-    def _read_transport(self, transport: Any, cfg: dict[str, Any]) -> bytes:
+    def _read_transport(self, transport: Any, cfg: dict[str, Any]) -> bytes | None:
         if cfg["transport"] == "tcp":
-            return transport.recv(8192)
+            try:
+                return transport.recv(8192)
+            except socket.timeout:
+                return None
         waiting = int(getattr(transport, "in_waiting", 0) or 0)
         return transport.read(max(1, min(waiting or 1, 8192)))
 
@@ -932,6 +935,8 @@ class TNCService:
                 retry = 2
                 while self.status()["wanted"] and not self._stop.is_set():
                     chunk = self._read_transport(transport, cfg)
+                    if chunk is None:
+                        continue
                     if cfg["transport"] == "tcp" and chunk == b"":
                         raise ConnectionError("KISS TCP encerrou a conexão.")
                     if not chunk:
@@ -1047,6 +1052,11 @@ class TNCService:
         )
         update_heard(packet, packet["tnc2"])
 
+        if duplicate:
+            self._increment_status("duplicates_suppressed")
+            record_decision("digi", "suppressed", "Duplicado dentro da janela de supressão.", source=source, destination=destination, raw_tnc2=packet["tnc2"])
+            return
+
         message = parse_message_tnc2(packet["tnc2"])
         if message:
             record_edge(message["source"], message["destination"], "RF", message["text"])
@@ -1056,11 +1066,6 @@ class TNCService:
             aprs_service.ingest_rf_packet(packet["tnc2"])
         except Exception as exc:
             diag.log_event("tnc_rf_ingest_error", error=str(exc))
-
-        if duplicate:
-            self._increment_status("duplicates_suppressed")
-            record_decision("digi", "suppressed", "Duplicado dentro da janela de supressão.", source=source, destination=destination, raw_tnc2=packet["tnc2"])
-            return
 
         if not self._source_rate_allowed(source, cfg):
             record_decision("digi", "suppressed", "Rate limit por estação excedido.", source=source, destination=destination, raw_tnc2=packet["tnc2"])
