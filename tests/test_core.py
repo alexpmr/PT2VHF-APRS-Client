@@ -2094,14 +2094,15 @@ def test_v1720_first_run_opens_configuration_and_focuses_callsign():
     assert "focusInitialConfigurationIfNeeded();" in boot_block
 
 
-def test_v1722_readme_has_versioned_production_downloads_and_no_download_counter_table():
+def test_readme_has_current_versioned_production_downloads_and_no_download_counter_table():
     root = Path(__file__).resolve().parent.parent
     readme = (root / "README.md").read_text(encoding="utf-8")
+    version = (root / "VERSION").read_text(encoding="utf-8").strip()
 
     assert "## Downloads da versão mais recente" in readme
-    assert "releases/download/v1.7.22/PT2VHF_APRS_Client_Setup_x64_v1.7.22.exe" in readme
-    assert "releases/download/v1.7.22/PT2VHF_APRS_Client_Portable_x64_v1.7.22.exe" in readme
-    assert "releases/download/v1.7.22/PT2VHF_APRS_Client_Manual_v1.7.22.pdf" in readme
+    assert f"releases/download/v{version}/PT2VHF_APRS_Client_Setup_x64_v{version}.exe" in readme
+    assert f"releases/download/v{version}/PT2VHF_APRS_Client_Portable_x64_v{version}.exe" in readme
+    assert f"releases/download/v{version}/PT2VHF_APRS_Client_Manual_v{version}.pdf" in readme
     assert "releases/latest/download/" not in readme
     assert "## Downloads por Release" not in readme
     assert "DOWNLOAD_STATS_START" not in readme
