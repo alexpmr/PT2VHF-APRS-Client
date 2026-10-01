@@ -1,0 +1,37 @@
+.tnc-header-status{min-width:112px}
+.tnc-panel-header{align-items:flex-start;gap:16px}
+.tnc-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.btn.danger{background:#9f2d2d;border-color:#c74a4a;color:#fff}
+.btn.danger:hover{background:#b33636}
+.tnc-status-grid{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px;margin:0 0 14px}
+.tnc-metric{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.tnc-metric span,.tnc-metric small{display:block;color:var(--muted)}
+.tnc-metric strong{display:block;font-size:20px;margin:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnc-error{margin:0 0 12px;padding:10px 12px;border:1px solid #b84242;background:rgba(184,66,66,.14);border-radius:9px;color:#ffb0b0}
+.tnc-config-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.tnc-config-grid .config-card{margin:0}
+.tnc-check{align-self:end;min-height:42px}
+.tnc-confirm{border:1px solid #7e6322;border-radius:8px;padding:8px;background:rgba(190,145,28,.08)}
+.tnc-safety-note{margin-top:10px;padding:10px;border-left:4px solid #d2972a;background:rgba(210,151,42,.09);border-radius:6px;font-size:12px;line-height:1.5}
+.tnc-optimizer-card,.tnc-save-card{grid-column:1/-1}
+.tnc-recommendations{display:grid;gap:7px;margin-top:10px}
+.tnc-recommendation{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+.tnc-recommendation strong{display:block;margin-bottom:3px}
+.tnc-data-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.tnc-table-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.tnc-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.tnc-card-heading h3{margin:0 0 3px}
+.tnc-card-heading p{margin:0;color:var(--muted);font-size:12px}
+.tnc-table-wrap{max-height:330px;overflow:auto}
+.tnc-table-wrap table{width:100%;font-size:11px;border-collapse:collapse}
+.tnc-table-wrap th{position:sticky;top:0;background:var(--panel);z-index:1}
+.tnc-table-wrap td,.tnc-table-wrap th{padding:7px 8px;vertical-align:top;border-bottom:1px solid var(--line)}
+.tnc-table-wrap td:last-child{max-width:460px;word-break:break-word}
+.tnc-badge{display:inline-block;border-radius:999px;padding:2px 7px;border:1px solid var(--line);font-size:10px}
+.tnc-badge.good{border-color:#2d8b57;color:#72d99d}
+.tnc-badge.warn{border-color:#9d762a;color:#e2bd67}
+.tnc-badge.bad{border-color:#a33b3b;color:#f08a8a}
+.tnc-tcp-field.hidden,.tnc-serial-field.hidden{display:none!important}
+@media(max-width:1250px){.tnc-status-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.tnc-config-grid,.tnc-data-grid{grid-template-columns:1fr}.tnc-optimizer-card,.tnc-save-card{grid-column:auto}.tnc-status-grid{grid-template-columns:repeat(2,1fr)}.tnc-actions{justify-content:flex-start}}
+@media(max-width:620px){.tnc-status-grid{grid-template-columns:1fr}.tnc-actions{display:grid;grid-template-columns:1fr 1fr}.tnc-actions .btn{width:100%}}
