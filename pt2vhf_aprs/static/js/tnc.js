@@ -29,7 +29,11 @@
       'Decisões Digi / iGate':'Digi / iGate decisions','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit of what was sent, suppressed or blocked.','Ação':'Action','Decisão':'Decision','Motivo':'Reason','Sem decisões.':'No decisions.',
       'Estações ouvidas por RF':'Stations heard over RF','Presença local usada pelo iGate inteligente.':'Local presence used by the smart iGate.','Estação':'Station','Última RF':'Last RF','Direta':'Direct','Contagem':'Count','Último tipo':'Last type','Nenhuma estação ouvida pelo TNC.':'No stations heard by the TNC.',
       'Quem fala com quem':'Who talks to whom','Grafo textual consolidado das interações RF e APRS-IS.':'Consolidated textual graph of RF and APRS-IS interactions.','Meio':'Medium','Interações':'Interactions','Última':'Last','Aguardando interações.':'Waiting for interactions.',
-      'Ativado':'Enabled','não detectada agora':'not detected now','Configuração TNC / RF salva.':'TNC / RF settings saved.','Sim':'Yes','Via digi':'Via digi',
+      'Ativado':'Enabled','Desconectado':'Disconnected','Observação':'Observation','TX automático desligado':'Automatic TX off','não detectada agora':'not detected now','Configuração TNC / RF salva.':'TNC / RF settings saved.','Sim':'Yes','Via digi':'Via digi',
+      'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão':'Automatic TX, Digipeater and Internet→RF iGate are off by default. The button',
+      'interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'immediately blocks new transmissions without stopping RX monitoring.',
+      'Internet→RF só considera mensagens cujo destino tenha sido ouvido':'Internet→RF only considers messages whose destination was heard',
+      'diretamente':'directly','por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'over RF within the configured window. Generic Internet traffic is not dumped onto the channel.',
       'Liberar novamente a transmissão automática em RF com a configuração atual?':'Resume automatic RF transmission with the current configuration?'
     },
     es: {
@@ -56,7 +60,11 @@
       'Internet→RF só considera mensagens cujo destino tenha sido ouvido diretamente por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'Internet→RF solo considera mensajes cuyo destino haya sido oído directamente por RF dentro de la ventana configurada. El tráfico genérico de Internet no se vuelca al canal.',
       'O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.':'El grafo usa mensajes, ACK/REJ y presencia RF para priorizar tráfico útil y evitar repeticiones innecesarias. No reescribe arbitrariamente paths de terceros ni inventa enlaces RF.',
       'Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.':'Los cambios de transporte reconectan el TNC si ya está en uso. Activar funciones TX requiere la confirmación explícita anterior.',
-      'Ativado':'Activado','Desconectado':'Desconectado','não detectada agora':'no detectado ahora','Configuração TNC / RF salva.':'Configuración TNC / RF guardada.','Sim':'Sí','Via digi':'Vía digi',
+      'Ativado':'Activado','Desconectado':'Desconectado','Observação':'Observación','TX automático desligado':'TX automático desactivado','não detectada agora':'no detectado ahora','Configuração TNC / RF salva.':'Configuración TNC / RF guardada.','Sim':'Sí','Via digi':'Vía digi',
+      'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão':'TX automático, Digipeater e iGate Internet→RF vienen desactivados por defecto. El botón',
+      'interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'bloquea inmediatamente nuevas transmisiones sin detener el monitor RX.',
+      'Internet→RF só considera mensagens cujo destino tenha sido ouvido':'Internet→RF solo considera mensajes cuyo destino haya sido oído',
+      'diretamente':'directamente','por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'por RF dentro de la ventana configurada. El tráfico genérico de Internet no se vuelca al canal.',
       'Liberar novamente a transmissão automática em RF com a configuração atual?':'¿Reanudar la transmisión RF automática con la configuración actual?'
     },
     fr: {
@@ -83,7 +91,11 @@
       'Internet→RF só considera mensagens cujo destino tenha sido ouvido diretamente por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'Internet→RF ne considère que les messages dont le destinataire a été entendu directement en RF dans la fenêtre configurée. Le trafic Internet générique n’est pas injecté sur le canal.',
       'O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.':'Le graphe utilise les messages, ACK/REJ et la présence RF pour prioriser le trafic utile et éviter les répétitions inutiles. Il ne réécrit pas arbitrairement les paths tiers et n’invente pas de liaisons RF.',
       'Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.':'Les changements de transport reconnectent le TNC s’il est déjà utilisé. L’activation des fonctions TX exige la confirmation explicite ci-dessus.',
-      'Ativado':'Activé','Desconectado':'Déconnecté','não detectada agora':'non détecté actuellement','Configuração TNC / RF salva.':'Configuration TNC / RF enregistrée.','Sim':'Oui','Via digi':'Via digi',
+      'Ativado':'Activé','Desconectado':'Déconnecté','Observação':'Observation','TX automático desligado':'TX automatique désactivé','não detectada agora':'non détecté actuellement','Configuração TNC / RF salva.':'Configuration TNC / RF enregistrée.','Sim':'Oui','Via digi':'Via digi',
+      'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão':'Le TX automatique, le Digipeater et l’iGate Internet→RF sont désactivés par défaut. Le bouton',
+      'interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'bloque immédiatement les nouvelles transmissions sans arrêter le moniteur RX.',
+      'Internet→RF só considera mensagens cujo destino tenha sido ouvido':'Internet→RF ne considère que les messages dont le destinataire a été entendu',
+      'diretamente':'directement','por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'en RF dans la fenêtre configurée. Le trafic Internet générique n’est pas injecté sur le canal.',
       'Liberar novamente a transmissão automática em RF com a configuração atual?':'Reprendre la transmission RF automatique avec la configuration actuelle ?'
     }
   };
