@@ -84,5 +84,7 @@ def test_v181_tnc_rf_translations_follow_app_language():
 
 
 def test_v181_version():
-    assert read("VERSION").strip() == "1.8.1"
-    assert '__version__ = "1.8.1"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 1)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
