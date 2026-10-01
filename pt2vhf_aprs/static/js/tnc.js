@@ -28,7 +28,9 @@
       'Hora':'Time','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'TNC2 packet','Sem frames.':'No frames.',
       'Decisões Digi / iGate':'Digi / iGate decisions','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit of what was sent, suppressed or blocked.','Ação':'Action','Decisão':'Decision','Motivo':'Reason','Sem decisões.':'No decisions.',
       'Estações ouvidas por RF':'Stations heard over RF','Presença local usada pelo iGate inteligente.':'Local presence used by the smart iGate.','Estação':'Station','Última RF':'Last RF','Direta':'Direct','Contagem':'Count','Último tipo':'Last type','Nenhuma estação ouvida pelo TNC.':'No stations heard by the TNC.',
-      'Quem fala com quem':'Who talks to whom','Grafo textual consolidado das interações RF e APRS-IS.':'Consolidated textual graph of RF and APRS-IS interactions.','Meio':'Medium','Interações':'Interactions','Última':'Last','Aguardando interações.':'Waiting for interactions.'
+      'Quem fala com quem':'Who talks to whom','Grafo textual consolidado das interações RF e APRS-IS.':'Consolidated textual graph of RF and APRS-IS interactions.','Meio':'Medium','Interações':'Interactions','Última':'Last','Aguardando interações.':'Waiting for interactions.',
+      'Ativado':'Enabled','não detectada agora':'not detected now','Configuração TNC / RF salva.':'TNC / RF settings saved.','Sim':'Yes','Via digi':'Via digi',
+      'Liberar novamente a transmissão automática em RF com a configuração atual?':'Resume automatic RF transmission with the current configuration?'
     },
     es: {
       'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS Serial/TCP, monitor AX.25, Digipeater, iGate y análisis adaptativo de quién habla con quién.',
@@ -47,7 +49,15 @@
       'Hora':'Hora','Dir.':'Dir.','Origem':'Origen','Destino':'Destino','Tipo':'Tipo','Pacote TNC2':'Paquete TNC2','Sem frames.':'Sin tramas.',
       'Decisões Digi / iGate':'Decisiones Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Auditoría de lo enviado, suprimido o bloqueado.','Ação':'Acción','Decisão':'Decisión','Motivo':'Motivo','Sem decisões.':'Sin decisiones.',
       'Estações ouvidas por RF':'Estaciones oídas por RF','Presença local usada pelo iGate inteligente.':'Presencia local usada por el iGate inteligente.','Estação':'Estación','Última RF':'Última RF','Direta':'Directa','Contagem':'Conteo','Último tipo':'Último tipo','Nenhuma estação ouvida pelo TNC.':'Ninguna estación oída por el TNC.',
-      'Quem fala com quem':'Quién habla con quién','Grafo textual consolidado das interações RF e APRS-IS.':'Grafo textual consolidado de interacciones RF y APRS-IS.','Meio':'Medio','Interações':'Interacciones','Última':'Última','Aguardando interações.':'Esperando interacciones.'
+      'Quem fala com quem':'Quién habla con quién','Grafo textual consolidado das interações RF e APRS-IS.':'Grafo textual consolidado de interacciones RF y APRS-IS.','Meio':'Medio','Interações':'Interacciones','Última':'Última','Aguardando interações.':'Esperando interacciones.',
+      'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão PARAR TX interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'TX automático, Digipeater e iGate Internet→RF vienen desactivados por defecto. DETENER TX bloquea inmediatamente nuevas transmisiones sin detener el monitor RX.',
+      'O digi usa supressão de duplicatas, bloqueio de loop, limite de hops e fila com prioridade para mensagens/ACK/REJ.':'El digi usa supresión de duplicados, bloqueo de bucles, límite de hops y cola con prioridad para mensajes/ACK/REJ.',
+      'Ex.: WIDE1-1. Prefira vazio quando a cobertura direta for suficiente.':'Ej.: WIDE1-1. Prefiera vacío cuando la cobertura directa sea suficiente.',
+      'Internet→RF só considera mensagens cujo destino tenha sido ouvido diretamente por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'Internet→RF solo considera mensajes cuyo destino haya sido oído directamente por RF dentro de la ventana configurada. El tráfico genérico de Internet no se vuelca al canal.',
+      'O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.':'El grafo usa mensajes, ACK/REJ y presencia RF para priorizar tráfico útil y evitar repeticiones innecesarias. No reescribe arbitrariamente paths de terceros ni inventa enlaces RF.',
+      'Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.':'Los cambios de transporte reconectan el TNC si ya está en uso. Activar funciones TX requiere la confirmación explícita anterior.',
+      'Ativado':'Activado','Desconectado':'Desconectado','não detectada agora':'no detectado ahora','Configuração TNC / RF salva.':'Configuración TNC / RF guardada.','Sim':'Sí','Via digi':'Vía digi',
+      'Liberar novamente a transmissão automática em RF com a configuração atual?':'¿Reanudar la transmisión RF automática con la configuración actual?'
     },
     fr: {
       'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS série/TCP, moniteur AX.25, Digipeater, iGate et analyse adaptative des communications.',
@@ -66,7 +76,15 @@
       'Hora':'Heure','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'Paquet TNC2','Sem frames.':'Aucune trame.',
       'Decisões Digi / iGate':'Décisions Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit de ce qui a été envoyé, supprimé ou bloqué.','Ação':'Action','Decisão':'Décision','Motivo':'Motif','Sem decisões.':'Aucune décision.',
       'Estações ouvidas por RF':'Stations entendues en RF','Presença local usada pelo iGate inteligente.':'Présence locale utilisée par l’iGate intelligent.','Estação':'Station','Última RF':'Dernière RF','Direta':'Directe','Contagem':'Nombre','Último tipo':'Dernier type','Nenhuma estação ouvida pelo TNC.':'Aucune station entendue par le TNC.',
-      'Quem fala com quem':'Qui parle à qui','Grafo textual consolidado das interações RF e APRS-IS.':'Graphe textuel consolidé des interactions RF et APRS-IS.','Meio':'Média','Interações':'Interactions','Última':'Dernière','Aguardando interações.':'En attente d’interactions.'
+      'Quem fala com quem':'Qui parle à qui','Grafo textual consolidado das interações RF e APRS-IS.':'Graphe textuel consolidé des interactions RF et APRS-IS.','Meio':'Média','Interações':'Interactions','Última':'Dernière','Aguardando interações.':'En attente d’interactions.',
+      'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão PARAR TX interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'Le TX automatique, le Digipeater et l’iGate Internet→RF sont désactivés par défaut. ARRÊTER TX bloque immédiatement les nouvelles transmissions sans arrêter le moniteur RX.',
+      'O digi usa supressão de duplicatas, bloqueio de loop, limite de hops e fila com prioridade para mensagens/ACK/REJ.':'Le digi utilise la suppression des doublons, le blocage des boucles, une limite de hops et une file prioritaire pour les messages/ACK/REJ.',
+      'Ex.: WIDE1-1. Prefira vazio quando a cobertura direta for suficiente.':'Ex. : WIDE1-1. Laissez vide lorsque la couverture directe est suffisante.',
+      'Internet→RF só considera mensagens cujo destino tenha sido ouvido diretamente por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'Internet→RF ne considère que les messages dont le destinataire a été entendu directement en RF dans la fenêtre configurée. Le trafic Internet générique n’est pas injecté sur le canal.',
+      'O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.':'Le graphe utilise les messages, ACK/REJ et la présence RF pour prioriser le trafic utile et éviter les répétitions inutiles. Il ne réécrit pas arbitrairement les paths tiers et n’invente pas de liaisons RF.',
+      'Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.':'Les changements de transport reconnectent le TNC s’il est déjà utilisé. L’activation des fonctions TX exige la confirmation explicite ci-dessus.',
+      'Ativado':'Activé','Desconectado':'Déconnecté','não detectada agora':'non détecté actuellement','Configuração TNC / RF salva.':'Configuration TNC / RF enregistrée.','Sim':'Oui','Via digi':'Via digi',
+      'Liberar novamente a transmissão automática em RF com a configuração atual?':'Reprendre la transmission RF automatique avec la configuration actuelle ?'
     }
   };
 
@@ -112,16 +130,34 @@
 
   function localizeBackendMessage(value) {
     const text = String(value || '');
-    const known = {
-      'Confirme explicitamente a habilitação de transmissão automática em RF.':'Confirm explicit enablement of automatic RF transmission.',
-      'Digipeater/iGate TX exige a chave Transmissão automática habilitada.':'Digipeater/iGate TX requires Automatic transmission to be enabled.',
-      'Selecione a porta serial do TNC.':'Select the TNC serial port.',
-      'Informe o host do KISS TCP.':'Enter the KISS TCP host.',
-      'TX automático não está habilitado e confirmado na configuração.':'Automatic TX is not enabled and confirmed in settings.',
-      'TNC desconectado.':'TNC disconnected.'
+    const maps = {
+      en: {
+        'Confirme explicitamente a habilitação de transmissão automática em RF.':'Confirm explicit enablement of automatic RF transmission.',
+        'Digipeater/iGate TX exige a chave Transmissão automática habilitada.':'Digipeater/iGate TX requires Automatic transmission to be enabled.',
+        'Selecione a porta serial do TNC.':'Select the TNC serial port.',
+        'Informe o host do KISS TCP.':'Enter the KISS TCP host.',
+        'TX automático não está habilitado e confirmado na configuração.':'Automatic TX is not enabled and confirmed in settings.',
+        'TNC desconectado.':'TNC disconnected.'
+      },
+      es: {
+        'Confirme explicitamente a habilitação de transmissão automática em RF.':'Confirme explícitamente la habilitación de transmisión RF automática.',
+        'Digipeater/iGate TX exige a chave Transmissão automática habilitada.':'Digipeater/iGate TX requiere Transmisión automática habilitada.',
+        'Selecione a porta serial do TNC.':'Seleccione el puerto serie del TNC.',
+        'Informe o host do KISS TCP.':'Informe el host de KISS TCP.',
+        'TX automático não está habilitado e confirmado na configuração.':'TX automático no está habilitado y confirmado en la configuración.',
+        'TNC desconectado.':'TNC desconectado.'
+      },
+      fr: {
+        'Confirme explicitamente a habilitação de transmissão automática em RF.':'Confirmez explicitement l’activation de la transmission RF automatique.',
+        'Digipeater/iGate TX exige a chave Transmissão automática habilitada.':'Digipeater/iGate TX exige que Transmission automatique soit activée.',
+        'Selecione a porta serial do TNC.':'Sélectionnez le port série du TNC.',
+        'Informe o host do KISS TCP.':'Indiquez l’hôte KISS TCP.',
+        'TX automático não está habilitado e confirmado na configuração.':'Le TX automatique n’est pas activé et confirmé dans la configuration.',
+        'TNC desconectado.':'TNC déconnecté.'
+      }
     };
-    if (tncLanguage() === 'en' && known[text]) return known[text];
-    return text;
+    const lang = tncLanguage();
+    return lang === 'pt-BR' ? text : (maps[lang]?.[text] || text);
   }
 
   let lastConfig = null;
