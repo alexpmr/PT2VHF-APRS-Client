@@ -203,6 +203,18 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+- **Mapa → Ver — ações Selecionar tudo / Remover tudo**
+  - Substituir o comportamento atual do botão genérico **Tudo** por controles explícitos e autoexplicativos.
+  - Adicionar ação **Selecionar tudo** para ativar todas as categorias e subcategorias do menu **Ver**.
+  - Adicionar ação **Remover tudo** (ou **Desmarcar tudo**, conforme o texto que melhor couber na interface) para desativar todas as categorias e subcategorias de uma vez.
+  - Aplicar a mudança imediatamente ao mapa, sem exigir fechar/reabrir o menu.
+  - Manter sincronizados os estados dos controles-pai e respectivos filhos, incluindo estado intermediário quando aplicável.
+  - Preservar o funcionamento individual das categorias **Estações, Digipeaters, iGates, Objetos, Tracklogs, enlaces RF, enlaces APRS-IS/iGate e pacotes em movimento**.
+  - Em **Objetos**, incluir também todas as subcategorias disponíveis, incluindo **AIS** e **Balão/Radiosonda**.
+  - Persistir a seleção resultante no armazenamento local da mesma forma que os controles individuais.
+  - Traduzir os novos comandos em **PT-BR, EN, ES e FR**.
+  - Incluir teste de regressão garantindo que **Selecionar tudo** realmente habilita todos os estados/filtros e que **Remover tudo** desabilita todos sem deixar pais/filhos inconsistentes.
+
 ## Concluído na v1.8.2
 
 - **Inicialização:** porta interna automática a partir de **8080**, avançando sequencialmente até encontrar a primeira disponível por bind real do servidor.
