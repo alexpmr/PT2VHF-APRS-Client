@@ -121,8 +121,10 @@
       for (const node of nodes) {
         const parent = node.parentElement;
         if (!parent || ['SCRIPT','STYLE','CODE'].includes(parent.tagName)) continue;
-        if (node._pt2vhfTncOriginal === undefined) node._pt2vhfTncOriginal = node.nodeValue;
-        const original = node._pt2vhfTncOriginal;
+        if (node._pt2vhfTncOriginal === undefined) {
+          node._pt2vhfTncOriginal = node._pt2vhfOriginalText !== undefined ? node._pt2vhfOriginalText : node.nodeValue;
+        }
+        const original = node._pt2vhfOriginalText !== undefined ? node._pt2vhfOriginalText : node._pt2vhfTncOriginal;
         const trimmed = original.trim();
         if (!trimmed) continue;
         const lead = original.match(/^\s*/)?.[0] || '';
@@ -133,8 +135,9 @@
         for (const attr of ['placeholder','title','aria-label']) {
           if (!el.hasAttribute(attr)) continue;
           const key = 'tncOriginal' + attr.replace(/[^a-z0-9]/gi,'_');
-          if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
-          el.setAttribute(attr, tr(el.dataset[key]));
+          const appKey = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
+          if (!(key in el.dataset)) el.dataset[key] = el.dataset[appKey] || el.getAttribute(attr) || '';
+          el.setAttribute(attr, tr(el.dataset[appKey] || el.dataset[key]));
         }
       }
     }
