@@ -176,6 +176,25 @@
   - Integrar a seleção ao futuro painel lateral da estação.
   - Priorizar favoritos e correspondências exatas nas sugestões.
 
+- **Estatísticas → Softwares e dispositivos — separar aplicativos APRS de hardware**
+  - Na seção **Softwares e dispositivos**, adicionar controles independentes **Mostrar aplicativos APRS** e **Mostrar dispositivos**.
+  - Permitir usar apenas **Mostrar aplicativos APRS**, ocultando rádios, transceptores, trackers e outros equipamentos físicos do ranking.
+  - A finalidade é permitir um ranking real de **clientes/aplicativos APRS**, sem fazer um rádio D-STAR que injeta posição/telemetria competir diretamente com softwares como **PT2VHF APRS Client, UI-View, WinAPRS** e demais clientes APRS.
+  - Manter também a possibilidade de visualizar **somente dispositivos** ou **aplicativos + dispositivos**.
+  - Classificar cada identificação conhecida em pelo menos três grupos internos: **Aplicativo APRS**, **Dispositivo/Hardware** e **Não identificado/Indeterminado**.
+  - Usar a base local de **APRS Device Identification / TOCALL** e demais evidências já existentes para a classificação; não inferir arbitrariamente que todo TOCALL corresponde a software.
+  - Considerar como **Dispositivo/Hardware** rádios e equipamentos que geram/injetam APRS diretamente, inclusive equipamentos **D-STAR** quando identificados dessa forma, trackers, TNCs/firmwares embarcados e produtos equivalentes.
+  - Considerar como **Aplicativo APRS** clientes executados em computador/celular ou software dedicado de APRS, incluindo o **PT2VHF APRS Client** e outros clientes reconhecidos pela base de identificação.
+  - Quando um identificador representar uma combinação de hardware + software/firmware e não houver separação confiável, classificá-lo como **Indeterminado** em vez de contaminar o ranking de aplicativos.
+  - O ranking, quantidade e percentual devem ser **recalculados somente sobre as categorias atualmente visíveis**. Exemplo: com apenas Aplicativos APRS marcado, o percentual deve representar a participação entre os aplicativos reconhecidos, e não sobre aplicativos + rádios ocultos.
+  - Manter a regra atual de consolidar nomes equivalentes/duplicados do mesmo aplicativo antes de ranquear.
+  - Exibir de forma discreta a categoria de cada item (**Aplicativo**, **Dispositivo** ou **Indeterminado**) quando as categorias estiverem misturadas.
+  - Definir **Mostrar aplicativos APRS** e **Mostrar dispositivos** como habilitados por padrão para preservar a visão atual; a seleção do usuário deve ser persistida.
+  - Avaliar um terceiro controle **Mostrar não identificados** para não misturar entradas desconhecidas ao ranking de aplicativos quando o usuário quiser análise estritamente de software.
+  - Aplicar o mesmo período/filtro temporal já selecionado em Estatísticas.
+  - Traduzir os novos controles e categorias em **PT-BR, EN, ES e FR**.
+  - Adicionar testes de regressão com exemplos de **aplicativo APRS, rádio D-STAR/hardware, tracker/firmware e não identificado**, verificando filtragem, ordenação, consolidação e recálculo correto dos percentuais.
+
 - **Estatísticas — qualidade da rede APRS**
   - Adicionar painel específico de qualidade/saúde da rede observada.
   - Exibir taxa de pacotes duplicados, tráfego **RF × APRS-IS**, estações únicas por hora/dia e distribuição por tipo de pacote.
