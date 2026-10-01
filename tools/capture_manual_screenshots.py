@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import socket
 import subprocess
@@ -56,6 +57,23 @@ def seed(data_dir: Path) -> None:
     db.add_aprs_log("TX", "PT2VHF-15>APRS,TCPIP*::PY2ABC-9:Recebido{102")
 
 
+def wait_runtime_url(data_dir: Path, timeout: float = 15.0) -> str:
+    runtime_file = data_dir / "local_server.json"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            payload = json.loads(runtime_file.read_text(encoding="utf-8"))
+            host = str(payload.get("host") or "127.0.0.1")
+            port = int(payload.get("port") or 0)
+            if port > 0:
+                wait_port(host, port, timeout=2.0)
+                return f"http://{host}:{port}"
+        except Exception:
+            pass
+        time.sleep(0.1)
+    raise RuntimeError("A interface local do cliente não publicou a porta selecionada.")
+
+
 def capture(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="pt2vhf-manual-") as td:
@@ -69,11 +87,11 @@ def capture(output_dir: Path) -> None:
             cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
         try:
-            wait_port("127.0.0.1", 8765)
+            local_url = wait_runtime_url(data_dir)
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
-                page.goto("http://127.0.0.1:8765", wait_until="networkidle")
+                page.goto(local_url, wait_until="networkidle")
                 page.wait_for_timeout(1800)
                 page.screenshot(path=str(output_dir / "map.png"))
                 for tab, filename in [("messages","messages.png"),("stations","stations.png"),("log","log.png")]:
