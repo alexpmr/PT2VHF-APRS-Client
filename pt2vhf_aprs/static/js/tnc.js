@@ -4,6 +4,126 @@
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const TNC_I18N = {
+    en: {
+      'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS Serial/TCP, AX.25 monitor, Digipeater, iGate and adaptive communication analysis.',
+      'Atualizar portas':'Refresh ports','Conectar TNC':'Connect TNC','Desconectar':'Disconnect','PARAR TX':'STOP TX','Liberar TX':'Resume TX',
+      'Estado':'Status','Duplicatas evitadas':'Duplicates avoided','janela configurável':'configurable window','Fila TX':'TX queue','Otimizador':'Optimizer',
+      'Conexão KISS':'KISS connection','Transporte':'Transport','Conectar TNC ao iniciar':'Connect TNC at startup','Porta TCP':'TCP port','Porta serial':'Serial port','Selecione…':'Select…',
+      'Compatível com TNC físico em KISS e softwares como Dire Wolf por KISS TCP. APRS-IS e RF podem operar de forma independente.':'Compatible with physical KISS TNCs and software such as Dire Wolf over KISS TCP. APRS-IS and RF can operate independently.',
+      'Papel RF e segurança de TX':'RF role and TX safety','Papel principal':'Primary role','Somente monitor':'Monitor only','Estação local':'Local station','iGate bidirecional':'Bidirectional iGate',
+      'Retenção do histórico':'History retention','dias':'days','Habilitar transmissão automática em RF':'Enable automatic RF transmission',
+      'Confirmo que revisei indicativo, rádio, frequência e regras antes de permitir TX automático':'I confirm that I reviewed callsign, radio, frequency and rules before allowing automatic TX',
+      'Segurança:':'Safety:','TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão PARAR TX interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'Automatic TX, Digipeater and Internet→RF iGate are off by default. STOP TX immediately blocks new transmissions without stopping RX monitoring.',
+      'Digipeater inteligente':'Smart Digipeater','Ativar Digipeater':'Enable Digipeater','Perfil':'Profile','Personalizado':'Custom','Aliases personalizados':'Custom aliases',
+      'Separados por vírgula; usados no perfil Personalizado.':'Comma-separated; used by the Custom profile.','Máximo de hops repetidos':'Maximum repeated hops','Janela de duplicatas':'Duplicate window','segundos':'seconds',
+      'Rate limit por origem':'Rate limit per source','pacotes/min':'packets/min','O digi usa supressão de duplicatas, bloqueio de loop, limite de hops e fila com prioridade para mensagens/ACK/REJ.':'The digi uses duplicate suppression, loop blocking, hop limits and a queue that prioritizes messages/ACK/REJ.',
+      'iGate inteligente':'Smart iGate','APRS-IS → RF restritivo':'Restricted APRS-IS → RF','Janela “ouvido por RF”':'RF-heard window','minutos':'minutes','Path RF do iGate':'iGate RF path','vazio = direto':'empty = direct',
+      'Ex.: WIDE1-1. Prefira vazio quando a cobertura direta for suficiente.':'Example: WIDE1-1. Prefer empty when direct coverage is sufficient.',
+      'Internet→RF só considera mensagens cujo destino tenha sido ouvido diretamente por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'Internet→RF only considers messages whose destination was heard directly over RF within the configured window. Generic Internet traffic is not dumped onto the channel.',
+      'Otimização “quem fala com quem”':'“Who talks to whom” optimization','Modo':'Mode','Desligado':'Off','Observação / recomendação':'Observation / recommendation','Automático conservador':'Conservative automatic',
+      'O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.':'The graph uses messages, ACK/REJ and RF presence to prioritize useful traffic and avoid unnecessary repetition. It does not arbitrarily rewrite third-party paths or invent RF links.',
+      'Aguardando dados.':'Waiting for data.','Aplicar configuração':'Apply settings','Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.':'Transport changes reconnect the TNC if it is already in use. Enabling TX functions requires the explicit confirmation above.',
+      'Salvar TNC / RF':'Save TNC / RF','Monitor TNC':'TNC monitor','Frames AX.25/APRS recebidos e transmitidos.':'Received and transmitted AX.25/APRS frames.','Atualizar':'Refresh',
+      'Hora':'Time','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'TNC2 packet','Sem frames.':'No frames.',
+      'Decisões Digi / iGate':'Digi / iGate decisions','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit of what was sent, suppressed or blocked.','Ação':'Action','Decisão':'Decision','Motivo':'Reason','Sem decisões.':'No decisions.',
+      'Estações ouvidas por RF':'Stations heard over RF','Presença local usada pelo iGate inteligente.':'Local presence used by the smart iGate.','Estação':'Station','Última RF':'Last RF','Direta':'Direct','Contagem':'Count','Último tipo':'Last type','Nenhuma estação ouvida pelo TNC.':'No stations heard by the TNC.',
+      'Quem fala com quem':'Who talks to whom','Grafo textual consolidado das interações RF e APRS-IS.':'Consolidated textual graph of RF and APRS-IS interactions.','Meio':'Medium','Interações':'Interactions','Última':'Last','Aguardando interações.':'Waiting for interactions.'
+    },
+    es: {
+      'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS Serial/TCP, monitor AX.25, Digipeater, iGate y análisis adaptativo de quién habla con quién.',
+      'Atualizar portas':'Actualizar puertos','Conectar TNC':'Conectar TNC','Desconectar':'Desconectar','PARAR TX':'DETENER TX','Liberar TX':'Reanudar TX',
+      'Estado':'Estado','Duplicatas evitadas':'Duplicados evitados','janela configurável':'ventana configurable','Fila TX':'Cola TX','Otimizador':'Optimizador',
+      'Conexão KISS':'Conexión KISS','Transporte':'Transporte','Conectar TNC ao iniciar':'Conectar TNC al iniciar','Porta TCP':'Puerto TCP','Porta serial':'Puerto serie','Selecione…':'Seleccione…',
+      'Compatível com TNC físico em KISS e softwares como Dire Wolf por KISS TCP. APRS-IS e RF podem operar de forma independente.':'Compatible con TNC físicos KISS y software como Dire Wolf mediante KISS TCP. APRS-IS y RF pueden operar de forma independiente.',
+      'Papel RF e segurança de TX':'Función RF y seguridad TX','Papel principal':'Función principal','Somente monitor':'Solo monitor','Estação local':'Estación local','iGate bidirecional':'iGate bidireccional',
+      'Retenção do histórico':'Retención del historial','dias':'días','Habilitar transmissão automática em RF':'Habilitar transmisión automática por RF',
+      'Confirmo que revisei indicativo, rádio, frequência e regras antes de permitir TX automático':'Confirmo que revisé indicativo, radio, frecuencia y reglas antes de permitir TX automático',
+      'Segurança:':'Seguridad:','Digipeater inteligente':'Digipeater inteligente','Ativar Digipeater':'Activar Digipeater','Perfil':'Perfil','Personalizado':'Personalizado','Aliases personalizados':'Alias personalizados',
+      'Separados por vírgula; usados no perfil Personalizado.':'Separados por comas; usados en el perfil Personalizado.','Máximo de hops repetidos':'Máximo de hops repetidos','Janela de duplicatas':'Ventana de duplicados','segundos':'segundos',
+      'Rate limit por origem':'Límite por origen','pacotes/min':'paquetes/min','iGate inteligente':'iGate inteligente','APRS-IS → RF restritivo':'APRS-IS → RF restrictivo','Janela “ouvido por RF”':'Ventana “oído por RF”','minutos':'minutos','Path RF do iGate':'Path RF del iGate','vazio = direto':'vacío = directo',
+      'Otimização “quem fala com quem”':'Optimización “quién habla con quién”','Modo':'Modo','Desligado':'Desactivado','Observação / recomendação':'Observación / recomendación','Automático conservador':'Automático conservador',
+      'Aguardando dados.':'Esperando datos.','Aplicar configuração':'Aplicar configuración','Salvar TNC / RF':'Guardar TNC / RF','Monitor TNC':'Monitor TNC','Frames AX.25/APRS recebidos e transmitidos.':'Tramas AX.25/APRS recibidas y transmitidas.','Atualizar':'Actualizar',
+      'Hora':'Hora','Dir.':'Dir.','Origem':'Origen','Destino':'Destino','Tipo':'Tipo','Pacote TNC2':'Paquete TNC2','Sem frames.':'Sin tramas.',
+      'Decisões Digi / iGate':'Decisiones Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Auditoría de lo enviado, suprimido o bloqueado.','Ação':'Acción','Decisão':'Decisión','Motivo':'Motivo','Sem decisões.':'Sin decisiones.',
+      'Estações ouvidas por RF':'Estaciones oídas por RF','Presença local usada pelo iGate inteligente.':'Presencia local usada por el iGate inteligente.','Estação':'Estación','Última RF':'Última RF','Direta':'Directa','Contagem':'Conteo','Último tipo':'Último tipo','Nenhuma estação ouvida pelo TNC.':'Ninguna estación oída por el TNC.',
+      'Quem fala com quem':'Quién habla con quién','Grafo textual consolidado das interações RF e APRS-IS.':'Grafo textual consolidado de interacciones RF y APRS-IS.','Meio':'Medio','Interações':'Interacciones','Última':'Última','Aguardando interações.':'Esperando interacciones.'
+    },
+    fr: {
+      'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS série/TCP, moniteur AX.25, Digipeater, iGate et analyse adaptative des communications.',
+      'Atualizar portas':'Actualiser les ports','Conectar TNC':'Connecter le TNC','Desconectar':'Déconnecter','PARAR TX':'ARRÊTER TX','Liberar TX':'Reprendre TX',
+      'Estado':'État','Duplicatas evitadas':'Doublons évités','janela configurável':'fenêtre configurable','Fila TX':'File TX','Otimizador':'Optimiseur',
+      'Conexão KISS':'Connexion KISS','Transporte':'Transport','Conectar TNC ao iniciar':'Connecter le TNC au démarrage','Porta TCP':'Port TCP','Porta serial':'Port série','Selecione…':'Sélectionner…',
+      'Compatível com TNC físico em KISS e softwares como Dire Wolf por KISS TCP. APRS-IS e RF podem operar de forma independente.':'Compatible avec les TNC physiques KISS et les logiciels comme Dire Wolf via KISS TCP. APRS-IS et RF peuvent fonctionner indépendamment.',
+      'Papel RF e segurança de TX':'Rôle RF et sécurité TX','Papel principal':'Rôle principal','Somente monitor':'Moniteur uniquement','Estação local':'Station locale','iGate bidirecional':'iGate bidirectionnel',
+      'Retenção do histórico':'Rétention de l’historique','dias':'jours','Habilitar transmissão automática em RF':'Activer la transmission RF automatique',
+      'Confirmo que revisei indicativo, rádio, frequência e regras antes de permitir TX automático':'Je confirme avoir vérifié l’indicatif, la radio, la fréquence et les règles avant d’autoriser le TX automatique',
+      'Segurança:':'Sécurité :','Digipeater inteligente':'Digipeater intelligent','Ativar Digipeater':'Activer le Digipeater','Perfil':'Profil','Personalizado':'Personnalisé','Aliases personalizados':'Alias personnalisés',
+      'Separados por vírgula; usados no perfil Personalizado.':'Séparés par des virgules ; utilisés avec le profil Personnalisé.','Máximo de hops repetidos':'Nombre maximal de hops répétés','Janela de duplicatas':'Fenêtre des doublons','segundos':'secondes',
+      'Rate limit por origem':'Limite par source','pacotes/min':'paquets/min','iGate inteligente':'iGate intelligent','APRS-IS → RF restritivo':'APRS-IS → RF restrictif','Janela “ouvido por RF”':'Fenêtre « entendu en RF »','minutos':'minutes','Path RF do iGate':'Path RF de l’iGate','vazio = direto':'vide = direct',
+      'Otimização “quem fala com quem”':'Optimisation « qui parle à qui »','Modo':'Mode','Desligado':'Désactivé','Observação / recomendação':'Observation / recommandation','Automático conservador':'Automatique conservateur',
+      'Aguardando dados.':'En attente de données.','Aplicar configuração':'Appliquer la configuration','Salvar TNC / RF':'Enregistrer TNC / RF','Monitor TNC':'Moniteur TNC','Frames AX.25/APRS recebidos e transmitidos.':'Trames AX.25/APRS reçues et transmises.','Atualizar':'Actualiser',
+      'Hora':'Heure','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'Paquet TNC2','Sem frames.':'Aucune trame.',
+      'Decisões Digi / iGate':'Décisions Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit de ce qui a été envoyé, supprimé ou bloqué.','Ação':'Action','Decisão':'Décision','Motivo':'Motif','Sem decisões.':'Aucune décision.',
+      'Estações ouvidas por RF':'Stations entendues en RF','Presença local usada pelo iGate inteligente.':'Présence locale utilisée par l’iGate intelligent.','Estação':'Station','Última RF':'Dernière RF','Direta':'Directe','Contagem':'Nombre','Último tipo':'Dernier type','Nenhuma estação ouvida pelo TNC.':'Aucune station entendue par le TNC.',
+      'Quem fala com quem':'Qui parle à qui','Grafo textual consolidado das interações RF e APRS-IS.':'Graphe textuel consolidé des interactions RF et APRS-IS.','Meio':'Média','Interações':'Interactions','Última':'Dernière','Aguardando interações.':'En attente d’interactions.'
+    }
+  };
+
+  function tncLanguage() {
+    const lang = String(document.documentElement.lang || 'pt-BR').toLowerCase();
+    if (lang.startsWith('en')) return 'en';
+    if (lang.startsWith('es')) return 'es';
+    if (lang.startsWith('fr')) return 'fr';
+    return 'pt-BR';
+  }
+
+  function tr(pt) {
+    const lang = tncLanguage();
+    return lang === 'pt-BR' ? pt : (TNC_I18N[lang]?.[pt] || pt);
+  }
+
+  function translateTncStatic() {
+    for (const root of [$('#tab-tnc'), $('#tncHeaderStatus')].filter(Boolean)) {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        const parent = node.parentElement;
+        if (!parent || ['SCRIPT','STYLE','CODE'].includes(parent.tagName)) continue;
+        if (node._pt2vhfTncOriginal === undefined) node._pt2vhfTncOriginal = node.nodeValue;
+        const original = node._pt2vhfTncOriginal;
+        const trimmed = original.trim();
+        if (!trimmed) continue;
+        const lead = original.match(/^\s*/)?.[0] || '';
+        const trail = original.match(/\s*$/)?.[0] || '';
+        node.nodeValue = lead + tr(trimmed) + trail;
+      }
+      for (const el of root.querySelectorAll?.('[placeholder],[title],[aria-label]') || []) {
+        for (const attr of ['placeholder','title','aria-label']) {
+          if (!el.hasAttribute(attr)) continue;
+          const key = 'tncOriginal' + attr.replace(/[^a-z0-9]/gi,'_');
+          if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
+          el.setAttribute(attr, tr(el.dataset[key]));
+        }
+      }
+    }
+  }
+
+  function localizeBackendMessage(value) {
+    const text = String(value || '');
+    const known = {
+      'Confirme explicitamente a habilitação de transmissão automática em RF.':'Confirm explicit enablement of automatic RF transmission.',
+      'Digipeater/iGate TX exige a chave Transmissão automática habilitada.':'Digipeater/iGate TX requires Automatic transmission to be enabled.',
+      'Selecione a porta serial do TNC.':'Select the TNC serial port.',
+      'Informe o host do KISS TCP.':'Enter the KISS TCP host.',
+      'TX automático não está habilitado e confirmado na configuração.':'Automatic TX is not enabled and confirmed in settings.',
+      'TNC desconectado.':'TNC disconnected.'
+    };
+    if (tncLanguage() === 'en' && known[text]) return known[text];
+    return text;
+  }
+
   let lastConfig = null;
   let initialized = false;
   let pollTimer = null;
@@ -25,7 +145,7 @@
   function showError(error = '') {
     const box = $('#tncError');
     if (!box) return;
-    box.textContent = String(error || '');
+    box.textContent = localizeBackendMessage(error);
     box.classList.toggle('hidden', !error);
   }
 
@@ -43,13 +163,13 @@
 
   function roleLabel(role) {
     return ({
-      monitor:'Monitor', station:'Estação local', digi:'Digipeater',
-      igate_rx:'iGate RX-only', igate_bidir:'iGate bidirecional', digi_igate:'Digi + iGate'
+      monitor:tr('Somente monitor'), station:tr('Estação local'), digi:'Digipeater',
+      igate_rx:'iGate RX-only', igate_bidir:tr('iGate bidirecional'), digi_igate:'Digi + iGate'
     })[role] || role || '—';
   }
 
   function optimizerLabel(mode) {
-    return ({off:'Desligado', observe:'Observação', automatic:'Automático'})[mode] || mode || '—';
+    return ({off:tr('Desligado'), observe:tr('Observação / recomendação'), automatic:tr('Automático conservador')})[mode] || mode || '—';
   }
 
   function setStatus(payload = {}) {
@@ -58,19 +178,19 @@
     if (header) {
       header.className = `${statusClass(!!status.connected, !!status.tx_paused)} tnc-header-status`;
       const text = header.querySelector('span:last-child');
-      if (text) text.textContent = status.connected ? (status.tx_paused ? 'TNC · TX parado' : 'TNC conectado') : 'TNC offline';
+      if (text) text.textContent = status.connected ? (status.tx_paused ? `TNC · ${tr('PARAR TX')}` : `TNC ${tr('Ativado').toLowerCase()}`) : 'TNC offline';
       header.title = [status.state, status.endpoint, status.last_error].filter(Boolean).join(' · ');
     }
     const pairs = [
-      ['#tncMetricState', status.state || 'Desconectado'],
+      ['#tncMetricState', status.connected ? tr('Ativado') : tr('Desconectado')],
       ['#tncMetricEndpoint', status.endpoint || '—'],
       ['#tncMetricRx', Number(status.frames_rx || 0).toLocaleString()],
       ['#tncMetricTx', Number(status.frames_tx || 0).toLocaleString()],
       ['#tncMetricDuplicates', Number(status.duplicates_suppressed || 0).toLocaleString()],
       ['#tncMetricQueue', Number(status.tx_queue || 0).toLocaleString()],
-      ['#tncMetricLastRx', status.last_rx_at ? `Último: ${humanTime(status.last_rx_at)}` : '—'],
-      ['#tncMetricLastTx', status.last_tx_at ? `Último: ${humanTime(status.last_tx_at)}` : '—'],
-      ['#tncMetricTxState', status.tx_paused ? 'TX PARADO' : (lastConfig?.auto_tx_enabled ? 'TX automático habilitado' : 'TX automático desligado')],
+      ['#tncMetricLastRx', status.last_rx_at ? `${tr('Última')}: ${humanTime(status.last_rx_at)}` : '—'],
+      ['#tncMetricLastTx', status.last_tx_at ? `${tr('Última')}: ${humanTime(status.last_tx_at)}` : '—'],
+      ['#tncMetricTxState', status.tx_paused ? tr('PARAR TX') : (lastConfig?.auto_tx_enabled ? tr('Ativado') : tr('Desligado'))],
       ['#tncMetricOptimizer', optimizerLabel(status.optimizer_mode || lastConfig?.optimizer_mode)],
       ['#tncMetricRole', roleLabel(status.role || lastConfig?.role)],
     ];
@@ -183,7 +303,7 @@
     const wanted = select.value || select.dataset.selected || lastConfig?.serial_port || '';
     try {
       const data = await requestJson('/api/tnc/ports');
-      select.innerHTML = '<option value="">Selecione…</option>';
+      select.innerHTML = `<option value="">${tr('Selecione…')}</option>`;
       for (const port of data.ports || []) {
         const opt = document.createElement('option');
         opt.value = port.device;
@@ -210,7 +330,7 @@
     if (!quiet) {
       const out = $('#tncSaveStatus');
       if (out) {
-        out.textContent = 'Configuração TNC / RF salva.';
+        out.textContent = tr('Configuração TNC / RF salva.');
         setTimeout(() => { if (out.textContent.includes('salva')) out.textContent = ''; }, 3500);
       }
     }
@@ -230,7 +350,7 @@
 
   function renderDecisions(rows = []) {
     const body = $('#tncDecisionsBody'); if (!body) return;
-    if (!rows.length) { body.innerHTML = '<tr><td colspan="6">Sem decisões.</td></tr>'; return; }
+    if (!rows.length) { body.innerHTML = `<tr><td colspan="6">${tr('Sem decisões.')}</td></tr>`; return; }
     body.innerHTML = rows.map(row => {
       const cls = row.decision === 'sent' || row.decision === 'queued' ? 'good' : (row.decision === 'blocked' || row.decision === 'error' ? 'bad' : 'warn');
       return `<tr><td>${esc(humanTime(row.timestamp))}</td><td>${esc(row.action)}</td><td><span class="tnc-badge ${cls}">${esc(row.decision)}</span></td>
@@ -240,9 +360,9 @@
 
   function renderHeard(rows = []) {
     const body = $('#tncHeardBody'); if (!body) return;
-    if (!rows.length) { body.innerHTML = '<tr><td colspan="6">Nenhuma estação ouvida pelo TNC.</td></tr>'; return; }
+    if (!rows.length) { body.innerHTML = `<tr><td colspan="6">${tr('Nenhuma estação ouvida pelo TNC.')}</td></tr>`; return; }
     body.innerHTML = rows.map(row => `<tr><td><strong>${esc(row.callsign)}</strong></td><td>${esc(humanTime(row.last_heard))}</td>
-      <td><span class="tnc-badge ${row.direct?'good':'warn'}">${row.direct?'Sim':'Via digi'}</span></td><td>${Number(row.heard_count||0).toLocaleString()}</td>
+      <td><span class="tnc-badge ${row.direct?'good':'warn'}">${row.direct?tr('Sim'):tr('Via digi')}</span></td><td>${Number(row.heard_count||0).toLocaleString()}</td>
       <td>${esc(row.last_packet_type)}</td><td>${esc((row.path || []).map(p => typeof p === 'string' ? p : (p.value || '') + (p.repeated ? '*' : '')).join(', '))}</td></tr>`).join('');
   }
 
@@ -254,12 +374,12 @@
       body.innerHTML = edges.length ? edges.map(row => `<tr><td>${esc(row.source)}</td><td>${esc(row.destination)}</td>
         <td><span class="tnc-badge ${row.medium==='RF'?'good':'warn'}">${esc(row.medium)}</span></td>
         <td>${Number(row.interactions||0).toLocaleString()}</td><td>${Number(row.ack_count||0).toLocaleString()}</td><td>${esc(humanTime(row.last_seen))}</td></tr>`).join('')
-        : '<tr><td colspan="6">Aguardando interações.</td></tr>';
+        : `<tr><td colspan="6">${tr('Aguardando interações.')}</td></tr>`;
     }
     const rec = $('#tncRecommendations');
     if (rec) {
       const rows = report.recommendations || [];
-      rec.innerHTML = rows.map(item => `<div class="tnc-recommendation"><strong>${esc(item.title)}</strong><span>${esc(item.detail)}</span></div>`).join('') || '<span class="hint">Aguardando dados.</span>';
+      rec.innerHTML = rows.map(item => `<div class="tnc-recommendation"><strong>${esc(item.title)}</strong><span>${esc(item.detail)}</span></div>`).join('') || `<span class="hint">${tr('Aguardando dados.')}</span>`;
     }
     const opt = $('#tncMetricOptimizer'); if (opt) opt.textContent = optimizerLabel(report.mode);
   }
@@ -337,7 +457,7 @@
       } catch (error) { showError(error.message); }
     });
     $('#tncResumeTx')?.addEventListener('click', async () => {
-      if (!confirm('Liberar novamente a transmissão automática em RF com a configuração atual?')) return;
+      if (!confirm(tr('Liberar novamente a transmissão automática em RF com a configuração atual?'))) return;
       try {
         const data = await requestJson('/api/tnc/tx/resume', {method:'POST', body:'{}'});
         setStatus(data.status || {}); await refreshData();
@@ -349,6 +469,12 @@
     });
   }
 
+  document.addEventListener('pt2vhf-language-changed', () => {
+    translateTncStatic();
+    refreshStatus();
+    if ($('.tab.active[data-tab="tnc"]')) refreshData();
+  });
+  translateTncStatic();
   bind();
   initialLoad();
   pollTimer = setInterval(() => {
