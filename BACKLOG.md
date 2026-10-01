@@ -137,12 +137,22 @@
   - Criar simulador de transporte KISS completo para cenários de múltiplos digis/iGates e testes de congestionamento sem rádio físico.
   - Ampliar políticas do otimizador automático somente após coleta de uso real, preservando compatibilidade APRS e logs auditáveis.
 
-- **Mapa → Ver → Objetos — subcategorias AIS e Sondas**
-  - Dentro da árvore **Mapa → Ver → Objetos**, adicionar as subcategorias **AIS** e **Sondas**.
-  - Permitir ligar/desligar **AIS** e **Sondas** independentemente, sem afetar os demais objetos APRS.
+- **Mapa → Ver → Objetos — subcategoria AIS**
+  - **Balão/Radiosonda já existe** na árvore atual de **Mapa → Ver → Objetos**; não criar uma segunda categoria equivalente.
+  - Adicionar uma subcategoria específica **AIS** dentro de **Objetos**.
+  - Permitir ligar/desligar **AIS** independentemente de **Balão/Radiosonda** e dos demais objetos APRS.
   - O controle pai **Objetos** deve continuar funcionando como chave geral da categoria e refletir corretamente o estado das subcategorias.
-  - Classificar os objetos automaticamente como **AIS** ou **Sonda** somente quando houver identificação confiável pelo tipo/origem/conteúdo do pacote; objetos não identificados permanecem na categoria geral correspondente.
-  - Manter a preferência de visibilidade das duas subcategorias persistida como os demais filtros de **Ver**.
+  - Classificar automaticamente como **AIS** somente objetos/pacotes cuja identificação como tráfego marítimo AIS seja confiável pelo tipo, origem ou conteúdo observado.
+  - Objetos que não puderem ser classificados com segurança como AIS permanecem em sua categoria atual; não inferir AIS apenas por nome ou posição.
+  - Manter a preferência de visibilidade de **AIS** persistida como os demais filtros de **Ver**.
+
+- **Mapa → Ver — tudo habilitado por padrão**
+  - Em novas instalações/configurações, o menu **Ver** deve iniciar com **todas as categorias e subcategorias habilitadas**.
+  - Isso inclui estações, objetos, **AIS**, **Balão/Radiosonda**, tracklogs, enlaces/topologia, pacotes/animações e demais itens atualmente controlados por **Ver**, respeitando a estrutura existente.
+  - O estado padrão deve ser aplicado somente quando ainda não houver preferência salva do usuário.
+  - Se o usuário desabilitar qualquer item, preservar essa escolha nas próximas execuções.
+  - O controle pai deve refletir corretamente estados completos ou parciais quando alguma subcategoria for alterada.
+  - Adicionar teste de regressão garantindo que uma configuração nova abra **Ver** com tudo marcado e que preferências previamente salvas não sejam sobrescritas.
 
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
