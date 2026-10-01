@@ -56,6 +56,7 @@
     hillshadeLayer: null,
     elevationEnabled: localStorage.getItem('pt2vhf_elevation_enabled') === '1',
     elevationLayer: null,
+    elevationLayerClass: null,
     elevationControl: null,
     elevationRedrawRaf: null,
     markers: new Map(),
@@ -1441,38 +1442,43 @@
     });
   }
 
-  const ElevationGridLayer = L.GridLayer.extend({
-    createTile(coords, done) {
-      const canvas = L.DomUtil.create('canvas', 'leaflet-tile');
-      canvas.width = 256;
-      canvas.height = 256;
-      canvas.setAttribute('aria-hidden', 'true');
-      fetch(`/api/layers/elevation/tile/${coords.z}/${coords.x}/${coords.y}`, { cache: 'force-cache' })
-        .then(response => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return response.blob();
-        })
-        .then(blob => decodeElevationBlob(blob))
-        .then(bitmap => {
-          const ctx = canvas.getContext('2d', { willReadFrequently: true });
-          ctx.clearRect(0, 0, 256, 256);
-          ctx.drawImage(bitmap, 0, 0, 256, 256);
-          if (bitmap?.close) bitmap.close();
-          const src = ctx.getImageData(0, 0, 256, 256);
-          canvas._pt2vhfElevationRaw = new Uint8ClampedArray(src.data);
-          renderElevationTile(canvas);
-          done(null, canvas);
-        })
-        .catch(err => {
-          canvas._pt2vhfElevationError = String(err?.message || err);
-          done(null, canvas);
-        });
-      return canvas;
-    }
-  });
+  function ensureElevationLayerClass() {
+    if (state.elevationLayerClass) return state.elevationLayerClass;
+    state.elevationLayerClass = L.GridLayer.extend({
+      createTile(coords, done) {
+        const canvas = L.DomUtil.create('canvas', 'leaflet-tile');
+        canvas.width = 256;
+        canvas.height = 256;
+        canvas.setAttribute('aria-hidden', 'true');
+        fetch(`/api/layers/elevation/tile/${coords.z}/${coords.x}/${coords.y}`, { cache: 'force-cache' })
+          .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.blob();
+          })
+          .then(blob => decodeElevationBlob(blob))
+          .then(bitmap => {
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.clearRect(0, 0, 256, 256);
+            ctx.drawImage(bitmap, 0, 0, 256, 256);
+            if (bitmap?.close) bitmap.close();
+            const src = ctx.getImageData(0, 0, 256, 256);
+            canvas._pt2vhfElevationRaw = new Uint8ClampedArray(src.data);
+            renderElevationTile(canvas);
+            done(null, canvas);
+          })
+          .catch(err => {
+            canvas._pt2vhfElevationError = String(err?.message || err);
+            done(null, canvas);
+          });
+        return canvas;
+      }
+    });
+    return state.elevationLayerClass;
+  }
 
   function ensureElevationLayer() {
     if (!state.elevationLayer) {
+      const ElevationGridLayer = ensureElevationLayerClass();
       state.elevationLayer = new ElevationGridLayer({
         pane: 'pt2vhfElevationPane',
         tileSize: 256,
