@@ -1,2 +1,2 @@
-__version__ = "1.7.23"
+__version__ = "1.8.0"
 APP_TOCALL = "APZVHF"
