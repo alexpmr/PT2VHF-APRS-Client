@@ -1,30 +1,30 @@
-# PT2VHF APRS Client - v1.7.22
+# PT2VHF APRS Client - v1.7.23
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.7.22** é a release completa de produção. Além das correções acumuladas da série 1.7, adiciona **Mapa → Camadas → Clima** com radar de precipitação, controle de opacidade e proteção adicional do popup de estações contra corte na interface.
+A **v1.7.23** é a release completa de produção. Além das correções acumuladas da série 1.7, adiciona **Relevo com corte** por altitude com slider vertical, **Relevo sombreado**, mapas-base **Claro/Escuro** e mantém **Mapa → Camadas → Clima** com radar de precipitação.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.7.22**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.7.23**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Setup_x64_v1.7.22.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Portable_x64_v1.7.22.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Setup_ARM64_v1.7.22.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Portable_ARM64_v1.7.22.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Setup_x64_v1.7.23.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Portable_x64_v1.7.23.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Setup_ARM64_v1.7.23.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Portable_ARM64_v1.7.23.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_x86_64_v1.7.22.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/pt2vhf-aprs-client_1.7.22_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Linux_x86_64_v1.7.22.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_x86_64_v1.7.23.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/pt2vhf-aprs-client_1.7.23_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Linux_x86_64_v1.7.23.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_macOS_arm64_v1.7.22.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_macOS_x86_64_v1.7.22.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_macOS_arm64_v1.7.23.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_macOS_x86_64_v1.7.23.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.22/PT2VHF_APRS_Client_Manual_v1.7.22.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.7.23/PT2VHF_APRS_Client_Manual_v1.7.23.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
@@ -110,7 +110,9 @@ Os arquivos abaixo apontam diretamente para a **release v1.7.22**, evitando link
 - Colunas e cabeçalhos usam alinhamento consistente.
 
 ### Mapa, Log e Estatísticas
-- OpenStreetMap, OpenTopoMap e Esri World Imagery.
+- Mapas-base **OpenStreetMap, OpenTopoMap, Claro (CARTO Positron), Escuro (CARTO Dark Matter) e Esri World Imagery**.
+- Em **Camadas**, **Clima** permanece independente do mapa-base; **Relevo sombreado** adiciona hillshade e **Relevo com corte** usa DEM real para destacar somente terreno a partir da cota selecionada.
+- O **Relevo com corte** possui slider vertical no lado direito do mapa, máximo padrão de 3.000 m configurável até 9.000 m e opacidade independente.
 - A antiga área **Atividade** foi removida do Mapa. **Estações**, **Tracklog** e **Topologia observada** têm controles independentes de liga/desliga e período (**Completo, 1 h, 6 h, 24 h e 7 dias**), todos fora do canvas.
 - O **Histórico/Replay** passa a ser um controle contextual logo abaixo das abas e só aparece quando o **Mapa** está ativo.
 - Na v1.7.2, **Estações**, **Tracklog** e **Topologia observada** ficam na mesma linha contextual do **Histórico**, mantendo a barra compacta e liberando mais área útil para o mapa.
