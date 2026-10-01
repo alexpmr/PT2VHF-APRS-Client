@@ -1,33 +1,42 @@
-# PT2VHF APRS Client - v1.8.0
+# PT2VHF APRS Client - v1.8.1
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.0** inicia a nova série com integração **TNC / RF**: KISS Serial/TCP, monitor AX.25, Digipeater, iGate inteligente e análise de **quem fala com quem**, mantendo todos os recursos de mapa, mensagens, estatísticas e atualização da v1.7.23.
+A **v1.8.1** é a produção completa da série 1.8 com integração **TNC / RF**, revisão PT/EN/ES/FR e novos mapas-base sem API key. Mantém KISS Serial/TCP, Digipeater, iGate inteligente e análise de **quem fala com quem** da v1.8.0.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.0**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.1**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Setup_x64_v1.8.0.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Portable_x64_v1.8.0.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Setup_ARM64_v1.8.0.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Portable_ARM64_v1.8.0.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Setup_x64_v1.8.1.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Portable_x64_v1.8.1.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Setup_ARM64_v1.8.1.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Portable_ARM64_v1.8.1.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_x86_64_v1.8.0.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/pt2vhf-aprs-client_1.8.0_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Linux_x86_64_v1.8.0.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_x86_64_v1.8.1.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/pt2vhf-aprs-client_1.8.1_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Linux_x86_64_v1.8.1.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_macOS_arm64_v1.8.0.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_macOS_x86_64_v1.8.0.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_macOS_arm64_v1.8.1.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_macOS_x86_64_v1.8.1.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.0/PT2VHF_APRS_Client_Manual_v1.8.0.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Manual_v1.8.1.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.1
+
+- Remove **Relevo sombreado** e mantém **Relevo com corte** como camada de elevação.
+- Corrige **Claro/Escuro** para funcionar sem API key.
+- Adiciona **CyclOSM, Humanitário/HOT, OSM.DE e ÖPNVKarte**.
+- Adiciona fallback automático para OSM quando um provedor alternativo falhar.
+- Revisa a aba **TNC / RF** em **Português, English, Español e Français**, incluindo textos dinâmicos e troca imediata de idioma.
+- Mantém integralmente KISS Serial/TCP, Digipeater, iGate inteligente, grafo “Quem fala com quem” e segurança de TX da v1.8.0.
 
 ## Novidades da v1.8.0
 
@@ -141,8 +150,11 @@ Os arquivos abaixo apontam diretamente para a **release v1.8.0**, evitando links
 - Colunas e cabeçalhos usam alinhamento consistente.
 
 ### Mapa, Log e Estatísticas
-- Mapas-base **OpenStreetMap, OpenTopoMap, Claro (CARTO Positron), Escuro (CARTO Dark Matter) e Esri World Imagery**.
-- Em **Camadas**, **Clima** permanece independente do mapa-base; **Relevo sombreado** adiciona hillshade e **Relevo com corte** usa DEM real para destacar somente terreno a partir da cota selecionada.
+- Mapas-base **OpenStreetMap, OpenTopoMap, Claro, Escuro, CyclOSM, Humanitário / HOT, OSM.DE, ÖPNVKarte e Esri World Imagery**.
+- **Claro e Escuro não exigem API key**: usam tiles OpenStreetMap com tratamento visual local no cliente.
+- Em **Camadas**, **Clima** permanece independente do mapa-base e **Relevo com corte** usa DEM real para destacar somente terreno a partir da cota selecionada.
+- **Relevo sombreado foi removido na v1.8.1**.
+- Se um mapa-base alternativo falhar repetidamente, o cliente volta automaticamente para **OpenStreetMap** e registra o evento no diagnóstico.
 - O **Relevo com corte** possui slider vertical no lado direito do mapa, máximo padrão de 3.000 m configurável até 9.000 m e opacidade independente.
 - A antiga área **Atividade** foi removida do Mapa. **Estações**, **Tracklog** e **Topologia observada** têm controles independentes de liga/desliga e período (**Completo, 1 h, 6 h, 24 h e 7 dias**), todos fora do canvas.
 - O **Histórico/Replay** passa a ser um controle contextual logo abaixo das abas e só aparece quando o **Mapa** está ativo.
