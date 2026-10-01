@@ -5512,6 +5512,8 @@
     'Escuro — OpenStreetMap':'Dark — OpenStreetMap',
     'Humanitário / HOT':'Humanitarian / HOT',
     'Satélite':'Satellite',
+    'OpenStreetMap, Claro, Escuro, CyclOSM, Humanitário / HOT, OSM.DE e ÖPNVKarte usam dados OpenStreetMap; Topográfico usa OpenTopoMap e Satélite usa Esri World Imagery. Claro e Escuro não exigem API key. A camada Clima usa RainViewer e Relevo com corte usa dados DEM Terrarium.':'OpenStreetMap, Light, Dark, CyclOSM, Humanitarian / HOT, OSM.DE and ÖPNVKarte use OpenStreetMap data; Topographic uses OpenTopoMap and Satellite uses Esri World Imagery. Light and Dark do not require an API key. Weather uses RainViewer and Relief cutoff uses Terrarium DEM data.',
+    'Escolha entre OpenStreetMap, OpenTopoMap, Claro, Escuro, CyclOSM, Humanitário / HOT, OSM.DE, ÖPNVKarte e Satélite.':'Choose between OpenStreetMap, OpenTopoMap, Light, Dark, CyclOSM, Humanitarian / HOT, OSM.DE, ÖPNVKarte and Satellite.',
     'Cor dos tracklogs':'Tracklog color',
     'Espessura dos tracklogs':'Tracklog width',
     'Brilho do mapa':'Map brightness',
