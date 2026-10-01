@@ -147,6 +147,30 @@ def test_v180_tnc_interface_and_api_are_present():
     assert "/api/tnc/tx/stop" in js
 
 
+def test_rf_to_is_policy_blocks_nogate_rfonly_and_internet_markers(monkeypatch, tmp_path):
+    from pt2vhf_aprs import tnc_service as mod
+
+    monkeypatch.setattr(db, "DB_PATH", tmp_path / "tnc-gate.db")
+    cfg = normalize_tnc_config({"igate_rx_enabled": True}, strict=False)
+    svc = mod.TNCService()
+
+    decisions = []
+    monkeypatch.setattr(mod, "record_decision", lambda *args, **kwargs: decisions.append((args, kwargs)))
+
+    for marker in ("NOGATE", "RFONLY", "TCPIP", "qAR"):
+        packet = {
+            "source": "PT2ABC",
+            "destination": "APRS",
+            "path_text": [marker],
+            "tnc2": f"PT2ABC>APRS,{marker}:>teste",
+        }
+        svc._handle_rf_to_is(packet, cfg)
+
+    assert len(decisions) == 4
+    assert all(item[0][0] == "igate_rf_is" for item in decisions)
+    assert all(item[0][1] == "blocked" for item in decisions)
+
+
 def test_v180_no_rf_auto_tx_defaults():
     cfg = normalize_tnc_config({}, strict=False)
     assert cfg["auto_tx_enabled"] == 0
