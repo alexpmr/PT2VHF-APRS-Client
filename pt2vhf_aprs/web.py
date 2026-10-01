@@ -314,6 +314,14 @@ def create_app() -> Flask:
             "threads": [{"name": t.name, "ident": t.ident, "daemon": t.daemon} for t in threading.enumerate()],
         })
 
+    @app.post("/api/diagnostics/map-provider-error")
+    def api_diagnostics_map_provider_error():
+        payload = request.get_json(silent=True) or {}
+        provider = str(payload.get("provider") or "")[:40]
+        detail = str(payload.get("detail") or "")[:240]
+        diag.log_event("map_provider_error", provider=provider, detail=detail)
+        return jsonify({"ok": True})
+
     @app.get("/api/diagnostics/log")
     def api_diagnostics_log():
         path = diag.log_path()

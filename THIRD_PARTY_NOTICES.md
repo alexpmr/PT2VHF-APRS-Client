@@ -28,6 +28,16 @@ The project's own MIT-licensed source remains MIT-licensed; GPL-covered third-pa
 
 This list focuses on principal direct dependencies. Transitive Python dependencies retain their own licenses.
 
+## Map services
+
+The application can request map tiles or overlays from third-party services at runtime. Those services are not bundled with the application and retain their own attribution, acceptable-use and availability terms.
+
+Current selectable map sources include **OpenStreetMap**, **OpenTopoMap**, **CyclOSM**, **Humanitarian OpenStreetMap / HOT**, **OpenStreetMap Deutschland (OSM.DE)**, **ÖPNVKarte** and **Esri World Imagery**. The Light and Dark modes in v1.8.1 use the standard OpenStreetMap raster tiles with local visual filters and do not use a separate keyed tile provider.
+
+The **Relief cutoff** overlay uses Terrarium-format elevation data obtained at runtime through the application's local proxy. The **Weather** overlay uses RainViewer metadata/tiles when enabled.
+
+Users and redistributors should preserve the attribution rendered in the map and respect each upstream service's usage policy. None of the default map modes introduced in v1.8.1 requires an API key.
+
 ## Source availability
 
 The project source and build scripts are published at:

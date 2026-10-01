@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.1": {
+        "title": "Mapas sem chave, remoção do hillshade e tradução completa do TNC/RF",
+        "items": [
+            "Remove Relevo sombreado da interface e do carregamento; Relevo com corte permanece como camada de elevação baseada em DEM.",
+            "Corrige Claro e Escuro para funcionarem sobre tiles OpenStreetMap sem API key, com estilos visuais locais.",
+            "Adiciona CyclOSM, Humanitário / HOT, OSM.DE e ÖPNVKarte como novos mapas-base sem chave.",
+            "Mantém OSM, OpenTopoMap e Satélite, com atribuição específica por provedor.",
+            "Adiciona fallback automático para OpenStreetMap após falhas repetidas de tiles de um mapa-base alternativo e registra o evento no diagnóstico.",
+            "A aba TNC / RF passa a acompanhar PT-BR, EN, ES e FR, incluindo textos estáticos, estados, tabelas, confirmações e mensagens técnicas conhecidas.",
+            "A troca de idioma atualiza imediatamente os componentes TNC/RF já abertos, sem reiniciar o cliente.",
+            "Atualiza a tradução dos novos mapas-base e da ajuda/configuração de mapas.",
+            "Mantém todos os recursos da v1.8.0, incluindo KISS Serial/TCP, Digipeater, iGate inteligente, análise de quem fala com quem e segurança de TX.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.0": {
         "title": "TNC KISS, Digipeater, iGate e otimização inteligente de RF",
         "items": [

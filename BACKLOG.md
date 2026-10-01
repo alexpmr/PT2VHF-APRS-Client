@@ -119,10 +119,8 @@
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
 
-- **Idiomas — revisar TNC / RF e eliminar textos residuais em português**
-  - Corrigir a nova aba **TNC / RF**, que atualmente permanece em português mesmo quando o aplicativo está em **English, Español ou Français**.
-  - Traduzir integralmente a aba TNC / RF em **PT-BR, EN, ES e FR**, incluindo títulos, subtítulos, botões, campos, opções de selects, placeholders, dicas, notas de segurança, cabeçalhos de tabelas, estados e mensagens vazias.
-  - Traduzir também os textos dinâmicos da área TNC / RF: estado da conexão, papel RF, modo do otimizador, decisões Digi/iGate, motivos de bloqueio/supressão, recomendações, erros, confirmações, alertas e mensagens de salvamento.
+- **Idiomas — continuar revisão global de textos residuais**
+  - A aba **TNC / RF** foi revisada em PT-BR, EN, ES e FR na v1.8.1, incluindo textos estáticos, estados dinâmicos e mensagens técnicas conhecidas.
   - Evitar exibir diretamente ao usuário mensagens técnicas do backend em português quando a interface estiver em outro idioma; mapear erros e estados conhecidos para chaves de tradução, preservando o detalhe técnico somente quando necessário para diagnóstico.
   - Fazer uma **varredura completa em todas as abas e popups** do aplicativo para localizar textos estáticos ou dinâmicos que ainda não acompanham a troca de idioma.
   - Revisar especialmente **Mapa, Mensagens, Estações, Log, Estatísticas, TNC / RF, Configuração, Sobre, atualização, exportação KML, queries APRS, popups e toasts**.
@@ -138,34 +136,6 @@
   - Evoluir o grafo textual “Quem fala com quem” para visualização gráfica interativa no Mapa/Estatísticas.
   - Criar simulador de transporte KISS completo para cenários de múltiplos digis/iGates e testes de congestionamento sem rádio físico.
   - Ampliar políticas do otimizador automático somente após coleta de uso real, preservando compatibilidade APRS e logs auditáveis.
-
-- **Mapa — corrigir mapas Claro/Escuro que exibem “API KEY REQUIRED”**
-  - Corrigir os mapas-base **Claro** e **Escuro**, que atualmente podem carregar tiles com a mensagem **API KEY REQUIRED** e deixar o fundo do mapa cinza.
-  - Não depender de uma API key implícita ou inexistente para os estilos padrão distribuídos com o aplicativo.
-  - Preferir provedores/endpoints de tiles que funcionem **sem chave** para os estilos Claro e Escuro, mantendo atribuição correta.
-  - Caso algum provedor futuro exija chave, adicionar campo explícito em **Configuração**, validar antes de ativar o mapa e exibir erro claro ao usuário em vez de tiles quebrados.
-  - Implementar fallback automático para **OpenStreetMap** quando o provedor Claro/Escuro falhar, evitando deixar o mapa inutilizável.
-  - Registrar no diagnóstico o provedor, status HTTP e motivo da falha dos tiles, sem expor credenciais.
-  - Adicionar teste de regressão garantindo que **OSM, Topográfico, Claro, Escuro e Satélite** possam ser selecionados sem gerar texto “API KEY REQUIRED” na configuração padrão.
-  - Validar o comportamento nos builds Windows, Linux e macOS, inclusive no WebView2/engine embarcado.
-
-- **Mapa — simplificar camadas de terreno**
-  - Remover **Relevo sombreado** do menu **Camadas**, da configuração, do carregamento Leaflet e dos textos/traduções associados.
-  - Preservar **Relevo com corte** como a única camada de terreno/elevação, com slider vertical, cota mínima, limite máximo e opacidade.
-  - Migrar preferências antigas sem erro: se houver configuração salva de Relevo sombreado, ignorá-la com segurança.
-  - Garantir que a remoção não afete Radar, Relevo com corte, estações, objetos, tracklogs, enlaces, replay ou animações.
-  - Adicionar teste de regressão para confirmar que **Relevo sombreado** não aparece mais na UI nem é carregado em background.
-
-- **Mapa — novos mapas-base sem API key**
-  - Adicionar **CyclOSM** para uso móvel, estradas secundárias e expedições.
-  - Adicionar **Humanitário / HOT** como opção clara e de alto contraste para leitura de ícones APRS e enlaces.
-  - Adicionar **OSM.DE** como alternativa geral ao OSM padrão.
-  - Adicionar **ÖPNVKarte** como opção especializada em transporte público/ambiente urbano.
-  - Manter **OSM**, **Topográfico** e **Satélite**.
-  - Substituir/corrigir **Claro** e **Escuro** para variantes que funcionem sem API key na configuração padrão.
-  - Exibir atribuição correta de cada provedor no mapa.
-  - Aplicar fallback automático para **OSM** em caso de erro de tiles/provedor indisponível.
-  - Validar os mapas nos builds Windows, Linux e macOS e adicionar teste que percorra todos os mapas-base configurados.
 
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
@@ -191,22 +161,7 @@
   - Manter controle separado de **opacidade** da camada.
   - Persistir a última cota mínima, o limite máximo configurado e a opacidade escolhida.
   - Estações APRS, objetos, tracklogs, enlaces, animações e radar devem permanecer acima da camada de elevação.
-  - **Remover a camada Relevo sombreado** da interface e do código de produção; manter apenas o **Relevo com corte** como camada de terreno baseada em DEM.
   - A implementação deve usar dados reais de elevação/DEM; não inferir altitude a partir do mapa topográfico visual.
-
-- **Mapa — paridade de mapas/camadas com o Traffic Analyzer**
-  - Espelhar no PT2VHF APRS Client a organização usada no Traffic Analyzer: **mapa-base** separado de **Camadas**.
-  - Mapas-base disponíveis: **Ruas / OpenStreetMap (OSM)**, **Topográfico**, **Claro**, **Escuro**, **CyclOSM**, **Humanitário / HOT**, **OSM.DE**, **ÖPNVKarte** e **Satélite**.
-  - Manter **Radar meteorológico (RainViewer)** dentro do menu **Camadas**, independente do mapa-base, com ativação/desativação própria e atualização periódica.
-  - **Não incluir camada de raios/lightning**, pois a integração considerada não oferece cobertura útil para o Brasil e é voltada aos EUA.
-  - Preservar o controle de **opacidade do radar** em Configuração.
-  - Corrigir/substituir os atuais mapas **Claro** e **Escuro** para que funcionem sem API key e adicionar os novos mapas-base **CyclOSM**, **Humanitário / HOT**, **OSM.DE** e **ÖPNVKarte**, todos sem exigir chave na configuração padrão.
-  - Não misturar mapas-base com sobreposições: **Claro/Escuro/CyclOSM/Humanitário/OSM.DE/ÖPNVKarte/Satélite** são mapas-base; **Radar** e **Relevo com corte** são camadas.
-  - Tratar **NASA GIBS** como fonte para futuras **camadas científicas/satélite temporais**, e não como mapa-base; incluir somente produtos que possam ser usados sem API key e com atribuição/licenciamento compatíveis.
-  - Validar disponibilidade, limites de uso, atribuição e política de cada provedor antes da publicação; não incluir endpoint que exija chave silenciosamente.
-  - Implementar fallback automático para **OSM** quando um mapa-base alternativo falhar.
-  - Avaliar em etapa posterior um **mapa vetorial OSM/Shortbread com estilos próprios** (Claro, Escuro, Alto contraste/APRS), reduzindo dependência de estilos raster de terceiros.
-  - Manter a estrutura de Camadas preparada para receber novas sobreposições posteriormente, sem alterar novamente a barra principal.
 
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
@@ -247,6 +202,16 @@
   - O pacote deve incluir logs e informações técnicas úteis, removendo ou mascarando dados sensíveis antes da geração.
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
+
+## Concluído na v1.8.1
+
+- **Mapa:** removido **Relevo sombreado**; Relevo com corte permanece como única camada de elevação.
+- **Mapas-base:** Claro/Escuro corrigidos para operação sem API key usando OSM com estilo local.
+- **Mapas-base:** adicionados **CyclOSM, Humanitário / HOT, OSM.DE e ÖPNVKarte**.
+- **Resiliência:** fallback automático para OSM após falhas repetidas de tiles, com registro no diagnóstico.
+- **Idiomas:** aba **TNC / RF** revisada em PT-BR, EN, ES e FR, incluindo conteúdo dinâmico e troca imediata de idioma.
+- **Idiomas:** novos nomes e textos de ajuda dos mapas-base traduzidos.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.0
 

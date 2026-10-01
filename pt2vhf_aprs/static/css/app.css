@@ -193,7 +193,6 @@ html[data-theme="light"] .map-layers-menu {
   color: #1c2c37;
 }
 .leaflet-pane.pt2vhf-weather-pane,
-.leaflet-pane.pt2vhf-hillshade-pane,
 .leaflet-pane.pt2vhf-elevation-pane { pointer-events: none !important; }
 
 .elevation-threshold-control {

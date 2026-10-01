@@ -11,10 +11,14 @@ def test_v1723_relief_cutoff_and_map_layers():
     web = (ROOT / "pt2vhf_aprs/web.py").read_text(encoding="utf-8")
 
     # Map bases and layers.
-    assert "basemaps.cartocdn.com/light_all" in js
-    assert "basemaps.cartocdn.com/dark_all" in js
-    assert "World_Hillshade/MapServer/tile" in js
-    assert "pt2vhfHillshadePane" in js
+    assert "basemaps.cartocdn.com/light_all" not in js
+    assert "basemaps.cartocdn.com/dark_all" not in js
+    assert "World_Hillshade/MapServer/tile" not in js
+    assert "pt2vhfHillshadePane" not in js
+    assert "tile-cyclosm.openstreetmap.fr/cyclosm" in js
+    assert "tile.openstreetmap.fr/hot" in js
+    assert "tile.openstreetmap.de" in js
+    assert "tile.memomaps.de/tilegen" in js
     assert "pt2vhfElevationPane" in js
     assert "ensureElevationLayerClass" in js
     assert "/api/layers/elevation/tile/" in js
@@ -29,7 +33,7 @@ def test_v1723_relief_cutoff_and_map_layers():
     assert "elevation_opacity" in js
 
     # UI.
-    assert 'id="hillshadeToggle"' in html
+    assert 'id="hillshadeToggle"' not in html
     assert 'id="elevationToggle"' in html
     assert 'value="light"' in html
     assert 'value="dark"' in html
@@ -49,7 +53,7 @@ def test_v1723_relief_cutoff_and_map_layers():
     assert "elevation_threshold INTEGER NOT NULL DEFAULT 1000" in db
     assert "elevation_slider_max INTEGER NOT NULL DEFAULT 3000" in db
     assert "elevation_opacity INTEGER NOT NULL DEFAULT 55" in db
-    assert '{"osm", "topo", "light", "dark", "satellite"}' in db
+    assert '{"osm", "topo", "light", "dark", "cyclosm", "humanitarian", "osmde", "opnv", "satellite"}' in db
 
     # Same-origin DEM proxy.
     assert 'ELEVATION_TILE_BASE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"' in web

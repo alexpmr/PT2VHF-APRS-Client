@@ -681,7 +681,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Porta inválida.")
     if merged["altitude_source"] not in {"manual", "geolocation", "fallback_zero"}:
         merged["altitude_source"] = "manual"
-    if merged["map_type"] not in {"osm", "topo", "light", "dark", "satellite"}:
+    if merged["map_type"] not in {"osm", "topo", "light", "dark", "cyclosm", "humanitarian", "osmde", "opnv", "satellite"}:
         raise ValueError("Tipo de mapa inválido.")
     if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["track_color"]):
         raise ValueError("Cor do tracklog inválida.")

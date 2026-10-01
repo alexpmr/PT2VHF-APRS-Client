@@ -5,6 +5,10 @@
     activeTab: 'map',
     map: null,
     baseLayer: null,
+    baseLayerType: 'osm',
+    baseLayerErrorCount: 0,
+    baseLayerErrorWindowStartedAt: 0,
+    baseLayerFallbackBusy: false,
     mapLoadBusy: false,
     mapLoadLastAt: 0,
     mapLoadQueued: false,
@@ -52,8 +56,6 @@
     weatherRadarLastRefresh: 0,
     weatherRadarRefreshBusy: false,
     weatherRadarRefreshTimer: null,
-    hillshadeEnabled: localStorage.getItem('pt2vhf_hillshade_enabled') === '1',
-    hillshadeLayer: null,
     elevationEnabled: localStorage.getItem('pt2vhf_elevation_enabled') === '1',
     elevationLayer: null,
     elevationLayerClass: null,
@@ -1002,26 +1004,132 @@
 
   const MAP_PROVIDERS = {
     osm: {
+      label: 'OpenStreetMap',
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
+      options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' },
+      filter: ''
     },
     topo: {
+      label: 'OpenTopoMap',
       url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      options: { maxZoom: 17, attribution: 'Map data &copy; OpenStreetMap contributors | Map style &copy; OpenTopoMap (CC-BY-SA)' }
+      options: { maxZoom: 17, attribution: 'Map data &copy; OpenStreetMap contributors | Map style &copy; OpenTopoMap (CC-BY-SA)' },
+      filter: ''
     },
     light: {
-      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-      options: { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }
+      label: 'Claro',
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' },
+      filter: 'grayscale(14%) saturate(72%) brightness(112%) contrast(92%)'
     },
     dark: {
-      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      options: { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }
+      label: 'Escuro',
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' },
+      filter: 'invert(92%) hue-rotate(180deg) saturate(75%) brightness(72%) contrast(94%)'
+    },
+    cyclosm: {
+      label: 'CyclOSM',
+      url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+      options: { maxZoom: 20, subdomains: 'abc', attribution: '&copy; OpenStreetMap contributors | Map style &copy; CyclOSM' },
+      filter: ''
+    },
+    humanitarian: {
+      label: 'Humanitário / HOT',
+      url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      options: { maxZoom: 19, subdomains: 'abc', attribution: '&copy; OpenStreetMap contributors | Tiles courtesy of Humanitarian OpenStreetMap Team' },
+      filter: ''
+    },
+    osmde: {
+      label: 'OSM.DE',
+      url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+      options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors | OpenStreetMap Deutschland' },
+      filter: ''
+    },
+    opnv: {
+      label: 'ÖPNVKarte',
+      url: 'https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png',
+      options: { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors | ÖPNVKarte' },
+      filter: ''
     },
     satellite: {
+      label: 'Satélite',
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      options: { maxZoom: 19, attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }
+      options: { maxZoom: 19, attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' },
+      filter: ''
     }
   };
+
+  const MAP_TYPES = Object.freeze(Object.keys(MAP_PROVIDERS));
+
+  function baseMapFilter(provider) {
+    const visual = String(provider?.filter || '').trim();
+    const brightness = `brightness(${Number(state.mapConfig.map_brightness || 100)}%)`;
+    return visual ? `${visual} ${brightness}` : brightness;
+  }
+
+  function reportMapProviderFailure(type, detail = '') {
+    try {
+      fetch('/api/diagnostics/map-provider-error', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ provider: type, detail: String(detail || 'tile_error').slice(0, 240) })
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
+  function applyBaseMap(type, { persist = false, notifyFallback = false } = {}) {
+    if (!state.map) return;
+    const selected = MAP_PROVIDERS[type] ? type : 'osm';
+    const provider = MAP_PROVIDERS[selected];
+    state.baseLayerType = selected;
+    state.baseLayerErrorCount = 0;
+    state.baseLayerErrorWindowStartedAt = Date.now();
+    state.baseLayerFallbackBusy = false;
+
+    if (state.baseLayer) state.map.removeLayer(state.baseLayer);
+    const layer = L.tileLayer(provider.url, provider.options);
+    state.baseLayer = layer;
+    layer.on('tileerror', event => {
+      if (state.baseLayer !== layer || selected === 'osm' || state.baseLayerFallbackBusy) return;
+      const now = Date.now();
+      if (now - state.baseLayerErrorWindowStartedAt > 8000) {
+        state.baseLayerErrorWindowStartedAt = now;
+        state.baseLayerErrorCount = 0;
+      }
+      state.baseLayerErrorCount += 1;
+      if (state.baseLayerErrorCount < 3) return;
+      state.baseLayerFallbackBusy = true;
+      reportMapProviderFailure(selected, event?.tile?.src || 'tile_error');
+      state.mapConfig.map_type = 'osm';
+      try { localStorage.setItem('pt2vhf_map_type_quick', 'osm'); } catch (_) {}
+      const quick = $('#mapTypeQuick');
+      if (quick) quick.value = 'osm';
+      const formType = $('#configForm')?.elements.namedItem('map_type');
+      if (formType) formType.value = 'osm';
+      toast(ui(
+        `O mapa ${provider.label} não respondeu. O cliente voltou automaticamente para OpenStreetMap.`,
+        `${provider.label} did not respond. The client automatically switched back to OpenStreetMap.`
+      ), 'error');
+      setTimeout(() => applyBaseMap('osm', { persist: true }), 0);
+    });
+    layer.addTo(state.map);
+    layer.bringToBack();
+
+    const tilePane = state.map.getPane('tilePane');
+    if (tilePane) tilePane.style.filter = baseMapFilter(provider);
+
+    state.mapConfig.map_type = selected;
+    const quick = $('#mapTypeQuick');
+    if (quick) quick.value = selected;
+    const formType = $('#configForm')?.elements.namedItem('map_type');
+    if (formType && formType.value !== selected) formType.value = selected;
+    if (persist) {
+      try { localStorage.setItem('pt2vhf_map_type_quick', selected); } catch (_) {}
+    }
+    if (notifyFallback && selected === 'osm') {
+      toast(ui('Mapa alterado para OpenStreetMap.', 'Map switched to OpenStreetMap.'), 'ok');
+    }
+  }
 
   const FONT_FAMILIES = {
     system: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
@@ -1079,13 +1187,7 @@
     state.mapConfig.elevation_threshold = Math.min(state.mapConfig.elevation_threshold, state.mapConfig.elevation_slider_max);
 
     if (state.map) {
-      const provider = MAP_PROVIDERS[state.mapConfig.map_type] || MAP_PROVIDERS.osm;
-      if (state.baseLayer) state.map.removeLayer(state.baseLayer);
-      state.baseLayer = L.tileLayer(provider.url, provider.options).addTo(state.map);
-      state.baseLayer.bringToBack();
-
-      const tilePane = state.map.getPane('tilePane');
-      if (tilePane) tilePane.style.filter = `brightness(${state.mapConfig.map_brightness}%)`;
+      applyBaseMap(state.mapConfig.map_type);
 
       for (const line of state.trackLines.values()) {
         line.setStyle({
@@ -1104,8 +1206,6 @@
       syncElevationControls();
       const radarToggle = $('#weatherRadarToggle');
       if (radarToggle) radarToggle.checked = !!state.weatherRadarEnabled;
-      const hillshadeToggle = $('#hillshadeToggle');
-      if (hillshadeToggle) hillshadeToggle.checked = !!state.hillshadeEnabled;
       const elevationToggle = $('#elevationToggle');
       if (elevationToggle) elevationToggle.checked = !!state.elevationEnabled;
       state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
@@ -1133,11 +1233,6 @@
       [saved, cfg] = await Promise.all([api('/api/map-state'), api('/api/config')]);
     } catch (_) {}
     state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
-
-    const hillshadePane = state.map.createPane('pt2vhfHillshadePane');
-    hillshadePane.classList.add('pt2vhf-hillshade-pane');
-    hillshadePane.style.zIndex = '220';
-    hillshadePane.style.pointerEvents = 'none';
 
     const elevationPane = state.map.createPane('pt2vhfElevationPane');
     elevationPane.classList.add('pt2vhf-elevation-pane');
@@ -1170,7 +1265,6 @@
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
     await loadMapData();
-    if (state.hillshadeEnabled) setHillshadeEnabled(true, { persist: false });
     if (state.elevationEnabled) setElevationEnabled(true, { persist: false });
     if (state.weatherRadarEnabled) void setWeatherRadarEnabled(true, { force: true, quiet: true });
   }
@@ -1297,32 +1391,6 @@
     if (!node) return;
     node.textContent = text;
     node.classList.toggle('error', !!isError);
-  }
-
-  function setHillshadeEnabled(enabled, options = {}) {
-    state.hillshadeEnabled = !!enabled;
-    try { localStorage.setItem('pt2vhf_hillshade_enabled', state.hillshadeEnabled ? '1' : '0'); } catch (_) {}
-    const toggle = $('#hillshadeToggle');
-    if (toggle) toggle.checked = state.hillshadeEnabled;
-    if (!state.map) return;
-    if (state.hillshadeEnabled) {
-      if (!state.hillshadeLayer) {
-        state.hillshadeLayer = L.tileLayer(
-          'https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
-          {
-            pane: 'pt2vhfHillshadePane',
-            opacity: .42,
-            maxZoom: 16,
-            attribution: 'Hillshade &copy; Esri'
-          }
-        );
-      }
-      if (!state.map.hasLayer(state.hillshadeLayer)) state.hillshadeLayer.addTo(state.map);
-      simpleLayerStatus('#hillshadeStatus', ui('Ativado', 'Enabled'));
-    } else {
-      if (state.hillshadeLayer && state.map.hasLayer(state.hillshadeLayer)) state.map.removeLayer(state.hillshadeLayer);
-      simpleLayerStatus('#hillshadeStatus', ui('Desativado', 'Disabled'));
-    }
   }
 
   function elevationMetersText(value) {
@@ -1939,7 +2007,6 @@
     const layersButton = $('#mapLayersButton');
     const layersMenu = $('#mapLayersMenu');
     const radarToggle = $('#weatherRadarToggle');
-    const hillshadeToggle = $('#hillshadeToggle');
     const elevationToggle = $('#elevationToggle');
     if (layersButton && layersMenu && layersButton.dataset.bound !== '1') {
       layersButton.dataset.bound = '1';
@@ -1978,13 +2045,6 @@
         radarToggle.addEventListener('change', () => { void setWeatherRadarEnabled(radarToggle.checked, { force: true }); });
       }
     }
-    if (hillshadeToggle) {
-      hillshadeToggle.checked = !!state.hillshadeEnabled;
-      if (hillshadeToggle.dataset.bound !== '1') {
-        hillshadeToggle.dataset.bound = '1';
-        hillshadeToggle.addEventListener('change', () => setHillshadeEnabled(hillshadeToggle.checked));
-      }
-    }
     if (elevationToggle) {
       elevationToggle.checked = !!state.elevationEnabled;
       if (elevationToggle.dataset.bound !== '1') {
@@ -1999,13 +2059,9 @@
       if (mapType.dataset.bound !== '1') {
         mapType.dataset.bound = '1';
         mapType.addEventListener('change', () => {
-          const value = ['osm', 'topo', 'light', 'dark', 'satellite'].includes(mapType.value) ? mapType.value : 'osm';
+          const value = MAP_TYPES.includes(mapType.value) ? mapType.value : 'osm';
           state.mapConfig.map_type = value;
-          localStorage.setItem('pt2vhf_map_type_quick', value);
-          const provider = MAP_PROVIDERS[value] || MAP_PROVIDERS.osm;
-          if (state.baseLayer) state.map.removeLayer(state.baseLayer);
-          state.baseLayer = L.tileLayer(provider.url, provider.options).addTo(state.map);
-          state.baseLayer.bringToBack();
+          applyBaseMap(value, { persist: true });
         });
       }
     }
@@ -5451,6 +5507,13 @@
     'Enviar beacon agora':'Send beacon now',
     'Mapa':'Map',
     'Tipo de mapa':'Map type',
+    'Topográfico':'Topographic',
+    'Claro — OpenStreetMap':'Light — OpenStreetMap',
+    'Escuro — OpenStreetMap':'Dark — OpenStreetMap',
+    'Humanitário / HOT':'Humanitarian / HOT',
+    'Satélite':'Satellite',
+    'OpenStreetMap, Claro, Escuro, CyclOSM, Humanitário / HOT, OSM.DE e ÖPNVKarte usam dados OpenStreetMap; Topográfico usa OpenTopoMap e Satélite usa Esri World Imagery. Claro e Escuro não exigem API key. A camada Clima usa RainViewer e Relevo com corte usa dados DEM Terrarium.':'OpenStreetMap, Light, Dark, CyclOSM, Humanitarian / HOT, OSM.DE and ÖPNVKarte use OpenStreetMap data; Topographic uses OpenTopoMap and Satellite uses Esri World Imagery. Light and Dark do not require an API key. Weather uses RainViewer and Relief cutoff uses Terrarium DEM data.',
+    'Escolha entre OpenStreetMap, OpenTopoMap, Claro, Escuro, CyclOSM, Humanitário / HOT, OSM.DE, ÖPNVKarte e Satélite.':'Choose between OpenStreetMap, OpenTopoMap, Light, Dark, CyclOSM, Humanitarian / HOT, OSM.DE, ÖPNVKarte and Satellite.',
     'Cor dos tracklogs':'Tracklog color',
     'Espessura dos tracklogs':'Tracklog width',
     'Brilho do mapa':'Map brightness',
@@ -5507,9 +5570,6 @@
     'Claro':'Light',
     'Escuro':'Dark',
     'Satélite — Esri World Imagery':'Satellite - Esri World Imagery',
-    'Claro — CARTO Positron':'Light - CARTO Positron',
-    'Escuro — CARTO Dark Matter':'Dark - CARTO Dark Matter',
-    'Relevo sombreado':'Hillshade',
     'Relevo com corte':'Relief cutoff',
     'Corte do relevo':'Relief cutoff',
     'Máximo do slider de corte do relevo':'Relief cutoff slider maximum',
@@ -5521,7 +5581,6 @@
     'Cor dos enlaces IGate':'IGate link color',
     'Padrão: topologia amarela (#ffff00), 1 px.':'Default: yellow topology (#ffff00), 1 px.',
     'OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography. Satellite mode uses Esri World Imagery. Topology colors and width are applied immediately and persisted when saving.',
-    'OpenStreetMap e OpenTopoMap usam cartografia colaborativa; Claro e Escuro usam CARTO; Satélite usa Esri World Imagery. A camada Clima usa RainViewer. Relevo sombreado usa Esri World Hillshade e Relevo com corte usa dados DEM Terrarium. Não há camada de raios. Cores, espessuras, cotas e opacidades são aplicadas imediatamente e persistidas ao salvar.':'OpenStreetMap and OpenTopoMap use collaborative cartography; Light and Dark use CARTO; Satellite uses Esri World Imagery. Weather uses RainViewer. Hillshade uses Esri World Hillshade and Relief cutoff uses Terrarium DEM data. There is no lightning layer. Colors, widths, cutoffs and opacities are applied immediately and persisted when saved.',
     'A alteração é aplicada imediatamente e fica salva após clicar em Salvar.':'The change is applied immediately and persisted after clicking Save.',
     'O idioma é aplicado imediatamente à interface.':'The language is applied immediately to the interface.',
     'Sistema':'System',
@@ -5915,6 +5974,7 @@
     state.language = normalizeLanguage(language);
     document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR']).htmlLang;
     translateDom(document.body);
+    document.dispatchEvent(new CustomEvent('pt2vhf-language-changed', { detail: { language: state.language } }));
     syncQuickLanguageButtons();
     syncLanguageFlag();
     syncMapLegendCollapsed();
@@ -6993,3 +7053,4 @@
 
   boot();
 })();
+

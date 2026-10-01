@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.1 - 2026-10-01
+
+- Remove **Relevo sombreado** do menu Camadas e do código de carregamento; **Relevo com corte** permanece como a camada de elevação.
+- Corrige **Claro** e **Escuro** para funcionar sem API key, usando tiles OpenStreetMap com filtros visuais locais.
+- Adiciona mapas-base **CyclOSM**, **Humanitário / HOT**, **OSM.DE** e **ÖPNVKarte**, todos sem API key na configuração padrão.
+- Mantém **OSM**, **OpenTopoMap** e **Satélite**.
+- Adiciona fallback automático para **OSM** após falhas repetidas de um mapa alternativo, evitando mapa cinza/quebrado.
+- Registra falhas de provedor no diagnóstico local.
+- Traduz integralmente a nova aba **TNC / RF** para **PT-BR, English, Español e Français**, inclusive estados e textos dinâmicos.
+- A troca de idioma passa a atualizar imediatamente o conteúdo TNC/RF já aberto.
+- Atualiza traduções e ajuda dos novos mapas-base.
+- Mantém todos os recursos da v1.8.0 e os defaults seguros de transmissão RF.
+- Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.0 - 2026-10-01
 
 - Inicia a série **1.8** com integração RF/TNC no PT2VHF APRS Client.
