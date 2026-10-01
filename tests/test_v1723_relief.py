@@ -53,7 +53,7 @@ def test_v1723_relief_cutoff_and_map_layers():
     assert "elevation_threshold INTEGER NOT NULL DEFAULT 1000" in db
     assert "elevation_slider_max INTEGER NOT NULL DEFAULT 3000" in db
     assert "elevation_opacity INTEGER NOT NULL DEFAULT 55" in db
-    assert '{"osm", "topo", "light", "dark", "satellite"}' in db
+    assert '{"osm", "topo", "light", "dark", "cyclosm", "humanitarian", "osmde", "opnv", "satellite"}' in db
 
     # Same-origin DEM proxy.
     assert 'ELEVATION_TILE_BASE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"' in web
