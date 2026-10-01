@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.7.23": {
+        "title": "Produção: relevo com corte, hillshade e novos mapas-base",
+        "items": [
+            "Adiciona Mapa → Camadas → Relevo com corte, usando DEM Terrarium real para mostrar somente terreno igual ou acima da cota selecionada.",
+            "O corte é ajustado em tempo real por slider vertical no lado direito do mapa, com cota atual visível e limite máximo padrão de 3.000 m configurável até 9.000 m.",
+            "Adiciona controle independente de opacidade do Relevo com corte e persiste cota, máximo do slider e transparência no banco local.",
+            "Adiciona Relevo sombreado como camada independente usando Esri World Hillshade, sem acionar o slider de corte.",
+            "Adiciona os mapas-base Claro (CARTO Positron) e Escuro (CARTO Dark Matter), mantendo OSM, Topográfico e Satélite.",
+            "Mantém Clima/RainViewer independente dos mapas-base e não inclui camada de raios.",
+            "Estações APRS, objetos, tracklogs, enlaces, replay e animações permanecem acima das camadas de relevo.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.7.22": {
         "title": "Produção: camada de clima, radar e popup protegido",
         "items": [

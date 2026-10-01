@@ -21,9 +21,36 @@ from .version_notes import notes_for
 
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
+ELEVATION_TILE_BASE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"
 UPDATE_CACHE_SECONDS = 5 * 60
 _update_cache: dict[str, object] = {"timestamp": 0.0, "payload": None}
 _update_cache_lock = threading.Lock()
+
+
+def get_elevation_tile(z: int, x: int, y: int) -> bytes:
+    z = int(z)
+    x = int(x)
+    y = int(y)
+    if z < 0 or z > 15:
+        raise ValueError("Zoom de elevação fora do intervalo suportado.")
+    limit = 1 << z
+    x = x % limit
+    if y < 0 or y >= limit:
+        raise ValueError("Tile de elevação fora dos limites.")
+    url = f"{ELEVATION_TILE_BASE_URL}/{z}/{x}/{y}.png"
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "image/png",
+            "User-Agent": f"PT2VHF-APRS-Client/{__version__}",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=15) as response:
+        raw = response.read(2_000_000)
+        content_type = str(response.headers.get("Content-Type") or "").lower()
+    if len(raw) < 8 or raw[:8] != b"\x89PNG\r\n\x1a\n":
+        raise RuntimeError(f"Tile DEM inválido ({content_type or 'sem Content-Type'}).")
+    return raw
 
 
 def version_tuple(value: str) -> tuple[int, ...]:
@@ -288,6 +315,22 @@ def create_app() -> Flask:
     @app.get("/")
     def index():
         return render_template("index.html", app_version=__version__)
+
+    @app.get("/api/layers/elevation/tile/<int:z>/<int:x>/<int:y>")
+    def api_elevation_tile(z: int, x: int, y: int):
+        try:
+            raw = get_elevation_tile(z, x, y)
+            response = Response(raw, mimetype="image/png")
+            response.headers["Cache-Control"] = "public, max-age=86400"
+            return response
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        except (urllib.error.URLError, TimeoutError, RuntimeError) as exc:
+            diag.log_event("elevation_tile_error", z=z, x=x, y=y, error=str(exc))
+            return jsonify({"ok": False, "error": str(exc)}), 502
+        except Exception as exc:
+            diag.log_event("elevation_tile_error", z=z, x=x, y=y, error=str(exc))
+            return jsonify({"ok": False, "error": "Falha ao obter dados de elevação."}), 502
 
     @app.get("/api/system-metrics")
     def api_system_metrics():

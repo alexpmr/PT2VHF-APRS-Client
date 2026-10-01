@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.23 - 2026-09-30
+
+- Adiciona **Mapa → Camadas → Relevo com corte**, baseado em DEM Terrarium real.
+- O slider vertical no lado direito do mapa define a cota mínima em tempo real; somente terreno com altitude igual ou superior permanece destacado.
+- Mantém **3.000 m** como máximo padrão do slider, configurável entre **100 e 9.000 m**, com ajuste automático da cota quando necessário.
+- Adiciona opacidade independente do Relevo com corte e persistência de cota, máximo e transparência.
+- Adiciona **Relevo sombreado** independente usando Esri World Hillshade.
+- Adiciona mapas-base **Claro (CARTO Positron)** e **Escuro (CARTO Dark Matter)**, além de OSM, Topográfico e Satélite.
+- Mantém Clima/RainViewer como overlay independente e **não inclui camada de raios**.
+- Mantém estações, objetos APRS, tracklogs, enlaces, replay e animações acima das camadas de relevo.
+- Adiciona proxy local para tiles DEM, evitando dependência de CORS no navegador/WebView.
+- Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## v1.7.22 - 2026-09-30
 
 - **Pipeline:** corrigidos testes legados de links v1.7.20 e conflito de literal de cadência, permitindo a geração completa da produção v1.7.22.

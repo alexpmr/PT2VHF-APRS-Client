@@ -192,7 +192,78 @@ html[data-theme="light"] .map-layers-menu {
   background: #fff;
   color: #1c2c37;
 }
-.leaflet-pane.pt2vhf-weather-pane { pointer-events: none !important; }
+.leaflet-pane.pt2vhf-weather-pane,
+.leaflet-pane.pt2vhf-hillshade-pane,
+.leaflet-pane.pt2vhf-elevation-pane { pointer-events: none !important; }
+
+.elevation-threshold-control {
+  display: none;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1150;
+  min-width: 78px;
+  padding: 8px 7px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(23,33,43,.95);
+  color: var(--text);
+  box-shadow: 0 8px 22px rgba(0,0,0,.35);
+  text-align: center;
+}
+.elevation-threshold-control.active { display: block; }
+.elevation-threshold-title {
+  margin-bottom: 3px;
+  color: #e9d46d;
+  font-size: 10px;
+  font-weight: 800;
+}
+.elevation-threshold-value {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.elevation-vertical-range {
+  display: block;
+  width: 28px;
+  height: 390px;
+  margin: 2px auto;
+  padding: 0;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  -webkit-appearance: slider-vertical;
+  accent-color: #e4b800;
+}
+.elevation-scale-label {
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1;
+}
+.elevation-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.elevation-threshold-number {
+  width: 66px !important;
+  padding: 3px 4px !important;
+  font-size: 11px !important;
+  text-align: center;
+}
+.elevation-threshold-unit {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+html[data-theme="light"] .elevation-threshold-control {
+  background: rgba(255,255,255,.96);
+  color: #1c2c37;
+}
+@media (max-height: 700px) {
+  .elevation-vertical-range { height: 255px; }
+}
 .station-popup { max-height: min(620px, calc(100vh - 230px)); overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
 .aprs-object-marker-wrap { background: transparent; border: 0; pointer-events: auto !important; cursor: pointer; }
 .aprs-object-marker {
