@@ -1941,6 +1941,16 @@ html[data-theme="light"] #messagesTable tbody tr.message-row-ack:hover td {
   align-items: end;
 }
 .app-browser-check { margin-top: 0; padding-bottom: 2px; }
+.compact-language-select select { width: 100%; }
+.local-interface-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.local-interface-info strong { color: var(--text); font-weight: 600; }
 .app-save-actions { margin-top: 14px; }
 
 html[data-theme="light"] .coordinate-tools,
