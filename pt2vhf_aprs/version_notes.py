@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.2": {
+        "title": "Porta local automática, filtro AIS e ajustes de interface",
+        "items": [
+            "O servidor interno passa a reservar automaticamente a primeira porta livre a partir de 8080, avançando para 8081, 8082 e seguintes quando necessário.",
+            "A seleção é feita por bind real do servidor, evitando conflito e a condição de corrida de testar/liberar uma porta antes da abertura.",
+            "Windows, Linux, macOS, modo navegador e captura do Manual usam a porta efetivamente alocada.",
+            "A interface mostra a porta local escolhida e o Windows registra a informação no diagnóstico; uma segunda abertura pode recuperar a URL da instância existente.",
+            "Mapa → Ver → Objetos ganha classificação específica AIS, separada de Balão/Radiosonda e dos demais objetos APRS.",
+            "A classificação AIS é conservadora e exige identificação por AIS/MMSI ou marcadores equivalentes; símbolo de embarcação isolado não basta.",
+            "Os itens de Mapa → Ver permanecem habilitados por padrão em novas configurações, preservando preferências já salvas pelo usuário.",
+            "A bandeira grande foi removida da aba Configuração; o seletor de idioma permanece compacto e as bandeiras pequenas do seletor rápido no cabeçalho continuam disponíveis.",
+            "Adiciona indicação discreta da Interface local na Configuração e mantém a tradução PT-BR/EN/ES/FR.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.1": {
         "title": "Mapas sem chave, remoção do hillshade e tradução completa do TNC/RF",
         "items": [
