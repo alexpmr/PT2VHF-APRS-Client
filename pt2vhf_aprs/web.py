@@ -349,6 +349,15 @@ def create_app() -> Flask:
             payload["tx_queue"] = int(service._tx_queue.qsize())
         except Exception:
             payload["tx_queue"] = 0
+        try:
+            tnc_status = tnc_service.status()
+            payload["tnc_connected"] = bool(tnc_status.get("connected"))
+            payload["tnc_tx_queue"] = int(tnc_status.get("tx_queue") or 0)
+            payload["tnc_tx_paused"] = bool(tnc_status.get("tx_paused"))
+        except Exception:
+            payload["tnc_connected"] = False
+            payload["tnc_tx_queue"] = 0
+            payload["tnc_tx_paused"] = False
         return jsonify(payload)
 
     @app.get("/api/status")
