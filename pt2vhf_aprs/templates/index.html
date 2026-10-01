@@ -123,6 +123,8 @@
       <select id="mapTypeQuick" title="Tipo de mapa" aria-label="Tipo de mapa">
         <option value="osm">OSM</option>
         <option value="topo">Topográfico</option>
+        <option value="light">Claro</option>
+        <option value="dark">Escuro</option>
         <option value="satellite">Satélite</option>
       </select>
     </label>
@@ -135,6 +137,20 @@
           <span>
             <strong>Clima</strong>
             <small id="weatherRadarStatus">Radar de chuva desativado</small>
+          </span>
+        </label>
+        <label class="map-layer-option">
+          <input id="hillshadeToggle" type="checkbox">
+          <span>
+            <strong>Relevo sombreado</strong>
+            <small id="hillshadeStatus">Desativado</small>
+          </span>
+        </label>
+        <label class="map-layer-option">
+          <input id="elevationToggle" type="checkbox">
+          <span>
+            <strong>Relevo com corte</strong>
+            <small id="elevationStatus">Desativado</small>
           </span>
         </label>
       </div>
@@ -608,6 +624,8 @@
             <select name="map_type">
               <option value="osm">OpenStreetMap</option>
               <option value="topo">OpenTopoMap</option>
+              <option value="light">Claro — CARTO Positron</option>
+              <option value="dark">Escuro — CARTO Dark Matter</option>
               <option value="satellite">Satélite — Esri World Imagery</option>
             </select>
           </label>
@@ -641,6 +659,23 @@
             <small>Controla a transparência do radar de chuva exibido em Mapa → Camadas → Clima.</small>
           </label>
           <label class="field">
+            <span>Máximo do slider de corte do relevo</span>
+            <div class="range-field-row">
+              <input name="elevation_slider_max" id="elevationSliderMax" type="number" min="100" max="9000" step="100" value="3000">
+              <output id="elevationSliderMaxValue" for="elevationSliderMax">3.000 m</output>
+            </div>
+            <small>Define o topo da escala do slider vertical da camada Relevo com corte. Padrão: 3.000 m.</small>
+          </label>
+          <label class="field">
+            <span>Opacidade do relevo com corte</span>
+            <div class="range-field-row">
+              <input name="elevation_opacity" id="elevationOpacity" type="range" min="10" max="100" step="5" value="55">
+              <output id="elevationOpacityValue" for="elevationOpacity">55%</output>
+            </div>
+            <small>A camada mostra apenas terreno com altitude igual ou superior à cota escolhida no slider.</small>
+          </label>
+          <input name="elevation_threshold" id="elevationThresholdConfig" type="hidden" value="1000">
+          <label class="field">
             <span>Cor da topologia RF</span>
             <div class="color-field-row">
               <input name="topology_rf_color" type="color" value="#ffff00" aria-label="Cor dos enlaces RF">
@@ -671,7 +706,7 @@
           <span class="hint">Padrão: topologia amarela (#ffff00), 1 px.</span>
         </div>
         <div class="hint map-provider-hint">
-          OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. A camada Clima usa o radar de precipitação mais recente disponível no RainViewer e requer acesso à Internet. Cores, espessuras e opacidade são aplicadas imediatamente e persistidas ao salvar.
+          OpenStreetMap e OpenTopoMap usam cartografia colaborativa; Claro e Escuro usam CARTO; Satélite usa Esri World Imagery. A camada Clima usa RainViewer. Relevo sombreado usa Esri World Hillshade e Relevo com corte usa dados DEM Terrarium. Não há camada de raios. Cores, espessuras, cotas e opacidades são aplicadas imediatamente e persistidas ao salvar.
         </div>
       </div>
 
