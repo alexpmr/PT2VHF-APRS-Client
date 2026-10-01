@@ -126,18 +126,24 @@
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
 
-- **Mapa — camada Elevação com corte por altitude**
-  - Adicionar em **Camadas** uma sobreposição analítica chamada **Elevação** baseada em DEM.
+- **Mapa — camada Elevação mínima com corte por altitude**
+  - Replicar no **PT2VHF APRS Client** o comportamento final validado no **Traffic Analyzer**.
+  - Adicionar em **Camadas** uma sobreposição analítica chamada **Elevação mínima**, baseada em dados reais de DEM.
   - Quando ativada, exibir somente o terreno cuja altitude seja **maior ou igual à cota mínima selecionada**; todo o terreno abaixo do limite fica transparente.
-  - Adicionar no próprio mapa um **controle deslizante vertical** para ajustar a cota mínima em tempo real.
+  - O controle vertical deve aparecer **somente enquanto a camada Elevação mínima estiver ligada**.
+  - Posicionar o controle na **lateral direita do mapa**, centralizado verticalmente, sem depender da camada Relevo sombreado.
   - O slider deve representar altitude: mover para cima aumenta a cota mínima; mover para baixo reduz a cota.
-  - Exibir ao lado do controle o valor atual em metros, por exemplo **1.000 m**.
-  - Atualizar imediatamente a forma/área destacada no mapa durante o movimento do slider, permitindo perceber visualmente cristas, serras, platôs e maciços que permanecem acima da cota.
-  - Permitir também ajuste fino por campo numérico, além do arraste do slider.
+  - Exibir acima do slider o valor atual da cota em metros, por exemplo **1.000 m**.
+  - Atualizar imediatamente a área destacada durante o movimento do slider.
+  - Usar **3.000 m como limite máximo padrão** do slider.
+  - O **campo numérico inferior do próprio controle** deve informar e alterar o **limite máximo do range do slider**, e não a cota mínima atual.
+  - Permitir no campo inferior limite configurável de **100 a 9.000 m**; ao mudar o valor, atualizar imediatamente o máximo do slider e a indicação superior da escala.
+  - Se o novo limite máximo ficar abaixo da cota mínima atual, ajustar automaticamente a cota ao novo máximo.
+  - A altura normal do slider deverá ser de aproximadamente **390 px**; em janelas de menor altura, usar aproximadamente **255 px**, mantendo adaptação responsiva.
   - Manter controle separado de **opacidade** da camada.
+  - Persistir a última cota mínima, o limite máximo configurado e a opacidade escolhida.
   - Estações APRS, objetos, tracklogs, enlaces, animações e radar devem permanecer acima da camada de elevação.
-  - Posicionar o slider vertical na lateral do mapa sem encobrir popup, legenda ou controles principais e adaptá-lo a janelas de menor altura.
-  - Persistir a última cota mínima e a opacidade escolhidas.
+  - **Relevo sombreado** deve permanecer independente da camada Elevação mínima; ligar somente o relevo sombreado não deve exibir o slider.
   - A implementação deve usar dados reais de elevação/DEM; não inferir altitude a partir do mapa topográfico visual.
 
 - **Mapa — paridade de mapas/camadas com o Traffic Analyzer**
