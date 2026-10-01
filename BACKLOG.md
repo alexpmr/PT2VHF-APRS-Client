@@ -119,6 +119,66 @@
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
 
+- **TNC / RF — interface de conexão, Digipeater e iGate inteligente**
+  - Criar uma área própria de **TNC / Rádio** na Configuração e um indicador de estado na interface principal.
+  - Suportar inicialmente **KISS TNC** por **porta serial** e **KISS TCP**, permitindo uso com TNCs físicos e softwares como Dire Wolf; manter arquitetura extensível para outros protocolos, como AGWPE, sem acoplar o núcleo APRS a um único fabricante.
+  - Na conexão serial, permitir selecionar porta COM/tty, baud rate, reconexão automática e identificação amigável do TNC; no modo TCP, configurar host, porta, timeout e reconexão.
+  - Implementar **detecção/listagem de portas seriais**, teste de conexão, status Conectado/Desconectado/Reconectando, contadores RX/TX, último frame e diagnóstico de erro.
+  - Disponibilizar **monitor TNC** com frames AX.25/APRS recebidos e transmitidos, timestamp, origem, destino, path, PID/tipo quando disponível e representação TNC2 decodificada.
+  - Manter **APRS-IS e TNC independentes**: o cliente pode operar somente Internet, somente RF ou em modo híbrido.
+  - Permitir selecionar o papel RF: **Somente monitor**, **Estação local**, **Digipeater**, **iGate RX**, **iGate bidirecional** ou **Digi + iGate**.
+  - Separar claramente **recepção RF**, **transmissão RF**, **digipeating** e **gating Internet↔RF**, com chaves independentes e indicação visual explícita quando houver capacidade de transmissão.
+  - Antes de habilitar qualquer retransmissão automática, validar indicativo/SSID, configuração de path e parâmetros mínimos; impedir loops e transmissões acidentais causadas por configuração incompleta.
+
+  - **Digipeater APRS**
+    - Implementar digipeating compatível com os aliases e regras APRS usuais, incluindo tratamento de **WIDE1-1 / WIDEn-N** conforme perfil configurado.
+    - Permitir perfis como **Fill-in**, **Wide/Regional** e **Personalizado**, evitando que um nó fill-in se comporte como digi regional por engano.
+    - Implementar **duplicate suppression** por hash/assinatura do frame e janela temporal configurável, evitando repetir o mesmo pacote recebido por caminhos diferentes.
+    - Detectar e bloquear **loops**, paths já consumidos, chamadas repetidas indevidamente e frames que excedam limites configurados de hops.
+    - Respeitar o path APRS original e registrar no banco a decisão tomada: retransmitido, duplicado, bloqueado por loop, fora de política, TTL expirado ou outro motivo.
+    - Aplicar fila de TX com prioridade para **mensagens/ACK/REJ e tráfego útil**, evitando que beacons, telemetria repetitiva ou duplicatas dominem o canal.
+    - Permitir limites por origem/tipo de pacote e **rate limit** por estação para conter equipamentos mal configurados sem bloquear toda a rede.
+    - Expor métricas de airtime/ocupação quando o TNC ou modem fornecer essa informação; quando não houver métrica real, não inventar utilização de canal.
+
+  - **iGate APRS inteligente**
+    - Implementar **RF → APRS-IS** com deduplicação, preservação do pacote original e q-construct adequado ao papel de iGate.
+    - Implementar **APRS-IS → RF** de forma restritiva e compatível com a lógica de iGate: transmitir para RF somente quando houver justificativa local, evitando transformar o iGate em retransmissor indiscriminado da Internet.
+    - Manter uma tabela de **estações ouvidas por RF**, com última recepção, se foi direta ou via digi, path observado, frequência de atividade e qualidade RF quando disponível.
+    - Para mensagens vindas da Internet, considerar elegível para RF principalmente o destinatário **recentemente ouvido na área RF**; manter janela temporal configurável.
+    - Evitar retransmitir para RF pacotes que já tenham sido observados localmente, mensagens duplicadas ou tráfego cujo destino não possua presença RF recente.
+    - Registrar toda decisão de gating com motivo: gated RF→IS, gated IS→RF, destino não ouvido, duplicado, bloqueado por política, limite excedido ou sem capacidade TX.
+    - Permitir modo **RX-only iGate** como opção simples e segura.
+
+  - **Otimização adaptativa baseada em quem fala com quem**
+    - Construir um **grafo de interação RF/APRS** usando dados observados: estação de origem, destino das mensagens, digipeaters utilizados, iGate de entrada/saída, paths, ACK/REJ, frequência de contatos e última atividade.
+    - Diferenciar claramente **relação observada** de rota física inferida; não assumir enlace RF direto apenas porque duas estações trocaram mensagens via APRS-IS.
+    - Manter uma **tabela de vizinhança RF** com estações diretamente ouvidas, estações ouvidas via digi e digis realmente utilizados.
+    - Calcular, por período, pares que mais se comunicam, paths efetivamente úteis, redundância, duplicatas, taxa de ACK e tempo de resposta quando mensurável.
+    - Usar essa análise para ajustar somente decisões permitidas pelo protocolo: prioridade de fila, supressão de duplicatas, necessidade de gating IS→RF, rate limits e preferência por não repetir tráfego desnecessário.
+    - **Não reescrever arbitrariamente paths APRS de terceiros** nem criar roteamento proprietário incompatível com outros digipeaters; a inteligência deve otimizar dentro das regras APRS.
+    - Implementar primeiro um modo **Recomendação/Observação**, mostrando o que o sistema faria e por quê; somente depois permitir **Otimização automática**, ativada explicitamente pelo usuário.
+    - No modo automático, usar limites conservadores, permitir rollback para perfil fixo e registrar cada decisão no log para auditoria.
+    - Se a ocupação de RF aumentar, reduzir automaticamente repetições de baixa prioridade e preservar mensagens, ACK/REJ e tráfego operacional importante.
+    - Quando houver múltiplos iGates/digis observados, detectar **redundância saudável** versus repetição excessiva, sem desligar tráfego com base apenas em uma amostra curta.
+    - Criar indicadores como **pacotes evitados**, duplicatas suprimidas, mensagens entregues, ACKs observados, tráfego RF economizado e principais pares de comunicação.
+
+  - **Mapa, Estatísticas e diagnóstico**
+    - Identificar no Mapa pacotes recebidos diretamente pelo TNC, repetidos pelo digi local, enviados ao APRS-IS e gated da Internet para RF.
+    - Exibir no popup/painel da estação se ela foi ouvida **diretamente por RF**, **via digi**, **via APRS-IS** ou por mais de um meio.
+    - Adicionar em Estatísticas uma seção **RF / TNC / Digi / iGate** com RX/TX, frames repetidos, duplicatas suprimidas, mensagens gated, principais paths e estações mais ouvidas.
+    - Criar uma visualização opcional do **grafo de comunicação**, permitindo ver quem fala com quem e quais digis/iGates participam dos caminhos observados.
+    - Integrar o módulo ao diagnóstico existente, incluindo estado do TNC, porta/host (sem dados sensíveis), filas, erros de serial/TCP e últimos eventos de RF.
+    - Persistir histórico necessário no SQLite com retenção configurável, evitando crescimento ilimitado do banco.
+
+  - **Segurança operacional e testes**
+    - Deixar **TX automático, Digipeater e iGate bidirecional desativados por padrão** em novas instalações; monitor e iGate RX-only podem ser habilitados separadamente.
+    - Exigir confirmação explícita ao ativar pela primeira vez qualquer função que transmita automaticamente em RF.
+    - Adicionar botão de **parada imediata de TX automático**, sem derrubar a recepção/monitoramento.
+    - Validar comportamento com frames gravados/replay antes de testar em RF real.
+    - Criar testes de regressão para KISS escaping, AX.25 encode/decode, SSID, paths WIDE, duplicate suppression, loops, filas, ACK/REJ, gating RF→IS e IS→RF.
+    - Incluir um **simulador TNC** nos testes para validar cenários de múltiplas estações/digis/iGates sem precisar de rádio físico.
+    - Documentar claramente que a operação em RF depende da configuração correta da estação, do equipamento e das regras aplicáveis ao serviço de radioamador.
+
 - **Mapa — painel lateral de estação**
   - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
   - Exibir Indicativo, última recepção, distância, software/dispositivo, posição, status, favorito, mensagens, Ping, Trace e estações ouvidas.
