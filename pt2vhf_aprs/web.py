@@ -17,6 +17,7 @@ from . import database as db
 from . import diagnostics as diag
 from . import updater
 from .aprs_service import full_callsign, service
+from .local_server import runtime_info as local_server_runtime_info
 from .tnc_service import (
     get_tnc_config,
     heard_stations,
@@ -373,6 +374,7 @@ def create_app() -> Flask:
         payload = service.status()
         payload.update(db.summary_counts())
         payload["tnc"] = tnc_service.status()
+        payload["local_interface"] = local_server_runtime_info()
         return jsonify(payload)
 
     @app.get("/api/current-version-info")
