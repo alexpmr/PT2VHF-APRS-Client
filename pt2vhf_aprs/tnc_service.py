@@ -789,6 +789,11 @@ class TNCService:
                 if hasattr(self._status, key):
                     setattr(self._status, key, value)
 
+    def _increment_status(self, key: str, amount: int = 1) -> None:
+        with self._status_lock:
+            if hasattr(self._status, key):
+                setattr(self._status, key, int(getattr(self._status, key) or 0) + int(amount))
+
     def available_ports(self) -> list[dict[str, str]]:
         if list_ports is None:
             return []
@@ -971,7 +976,8 @@ class TNCService:
                     continue
                 self._write_transport(kiss_encode(frame))
                 self._tx_activity.append(time.monotonic())
-                self._set_status(last_tx_at=utc_now_iso(), frames_tx=self.status()["frames_tx"] + 1)
+                self._set_status(last_tx_at=utc_now_iso())
+                self._increment_status("frames_tx")
                 try:
                     packet = decode_ax25(frame)
                     record_frame(
@@ -1032,7 +1038,8 @@ class TNCService:
         source = packet["source"]
         destination = packet["destination"]
         kind = packet_priority_kind(packet["info_text"])
-        self._set_status(last_rx_at=utc_now_iso(), frames_rx=self.status()["frames_rx"] + 1)
+        self._set_status(last_rx_at=utc_now_iso())
+        self._increment_status("frames_rx")
         record_frame(
             "RX", packet["tnc2"], source=source, destination=destination,
             path=packet["path_text"], packet_type=kind,
@@ -1051,7 +1058,7 @@ class TNCService:
             diag.log_event("tnc_rf_ingest_error", error=str(exc))
 
         if duplicate:
-            self._set_status(duplicates_suppressed=self.status()["duplicates_suppressed"] + 1)
+            self._increment_status("duplicates_suppressed")
             record_decision("digi", "suppressed", "Duplicado dentro da janela de supressão.", source=source, destination=destination, raw_tnc2=packet["tnc2"])
             return
 
