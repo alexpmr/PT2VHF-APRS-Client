@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.8.0 - 2026-10-01
+
+- Inicia a série **1.8** com integração RF/TNC no PT2VHF APRS Client.
+- Adiciona nova aba **TNC / RF** com estado de conexão, monitor AX.25/APRS, configuração de papel RF, Digipeater, iGate e analisador adaptativo.
+- Suporta **KISS TCP** e **KISS Serial**, incluindo detecção/listagem de portas seriais, baud rate, reconexão e contadores RX/TX.
+- Implementa codec **KISS + AX.25 UI** com escaping FEND/FESC, CALL/SSID, path, bits de repetição e representação TNC2.
+- Implementa **Digipeater** com perfis Fill-in (WIDE1-1), Wide/Regional (WIDEn-N) e aliases personalizados.
+- O digi aplica supressão de duplicatas, bloqueio de loops, limite de hops, rate limit por origem e fila de TX priorizada.
+- Implementa **iGate RF→APRS-IS** com qAR e **APRS-IS→RF** restritivo a mensagens destinadas a estações ouvidas diretamente por RF dentro da janela configurada.
+- Adiciona tabela de estações ouvidas por RF, preservando timestamp próprio da última audição direta mesmo quando a estação depois chega via digi.
+- Adiciona grafo **Quem fala com quem**, consolidando interações por RF/APRS-IS, ACK/REJ, contagem e última atividade.
+- Adiciona otimizador em modos **Desligado**, **Observação/Recomendação** e **Automático conservador**; o modo automático reduz tráfego de baixa prioridade sob pressão local de TX sem reescrever arbitrariamente paths de terceiros.
+- Adiciona auditoria detalhada das decisões: enviado, enfileirado, duplicado, bloqueado, ignorado ou suprimido, sempre com motivo.
+- Adiciona retenção configurável para histórico TNC e persistência em SQLite.
+- **Segurança operacional:** TX automático, Digipeater e iGate Internet→RF ficam desligados por padrão, exigem confirmação explícita e podem ser interrompidos imediatamente pelo botão **PARAR TX** sem desativar o monitor RX.
+- Mensagens recebidas pelo TNC entram no histórico local sem gerar ACK pelo APRS-IS por engano.
+- Adiciona testes de regressão para KISS, AX.25, WIDE1-1/WIDE2-2, loops, qAR, limpeza de path Internet, presença RF direta e defaults seguros de TX.
+- Mantém todos os recursos da v1.7.23, incluindo Relevo com corte, Relevo sombreado, radar meteorológico e mapas-base Claro/Escuro.
+- Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.7.23 - 2026-09-30
 
 - Adiciona **Mapa → Camadas → Relevo com corte**, baseado em DEM Terrarium real.
