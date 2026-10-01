@@ -36,11 +36,8 @@ window.PT2VHF_I18N = {
     "Escuro — OpenStreetMap": "Oscuro — OpenStreetMap",
     "Humanitário / HOT": "Humanitario / HOT",
     "Satélite": "Satélite",
-    "Claro — CARTO Positron": "Claro — CARTO Positron",
-    "Escuro — CARTO Dark Matter": "Oscuro — CARTO Dark Matter",
     "Camadas": "Capas",
     "Clima": "Clima",
-    "Relevo sombreado": "Relieve sombreado",
     "Relevo com corte": "Relieve con corte",
     "Corte do relevo": "Corte del relieve",
     "Máximo do slider de corte do relevo": "Máximo del control de corte del relieve",
@@ -347,11 +344,8 @@ window.PT2VHF_I18N = {
     "Escuro — OpenStreetMap": "Sombre — OpenStreetMap",
     "Humanitário / HOT": "Humanitaire / HOT",
     "Satélite": "Satellite",
-    "Claro — CARTO Positron": "Clair — CARTO Positron",
-    "Escuro — CARTO Dark Matter": "Sombre — CARTO Dark Matter",
     "Camadas": "Calques",
     "Clima": "Météo",
-    "Relevo sombreado": "Relief ombré",
     "Relevo com corte": "Relief avec seuil",
     "Corte do relevo": "Seuil du relief",
     "Máximo do slider de corte do relevo": "Maximum du curseur de seuil du relief",
@@ -621,3 +615,4 @@ window.PT2VHF_I18N = {
     "Alterações ainda não salvas serão indicadas ao sair desta aba.": "Les modifications non enregistrées seront signalées en quittant cet onglet."
   }
 };
+
