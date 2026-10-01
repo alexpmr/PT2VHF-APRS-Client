@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 from PIL import Image
 import pystray
 from pystray import MenuItem as Item
-from waitress import serve
 
 from pt2vhf_aprs import __version__
 from pt2vhf_aprs import database as db
@@ -21,11 +20,17 @@ from pt2vhf_aprs import diagnostics as diag
 from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.tnc_service import service as tnc_service
+from pt2vhf_aprs.local_server import (
+    configured_start_port,
+    read_runtime_url,
+    runtime_file_for,
+    start_local_server,
+)
 from pt2vhf_aprs.web import create_app
 
 APP_NAME = "PT2VHF APRS Client"
 HOST = "127.0.0.1"
-PORT = int(os.getenv("PT2VHF_PORT", "8080"))
+PORT = configured_start_port()
 URL = f"http://{HOST}:{PORT}"
 MUTEX_NAME = "Global\\PT2VHF_APRS_Client_SingleInstance"
 WINDOW_WIDTH = 1400
@@ -37,6 +42,7 @@ _window = None
 _tray_icon: pystray.Icon | None = None
 _browser_mode = False
 _quitting = False
+_server_handle = None
 
 
 def _already_running() -> bool:
@@ -64,6 +70,8 @@ def _focus_existing_window() -> bool:
 
 
 def _wait_for_server(timeout: float = 12.0) -> bool:
+    if _server_handle is not None:
+        return bool(_server_handle.wait_ready(timeout))
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -74,8 +82,15 @@ def _wait_for_server(timeout: float = 12.0) -> bool:
     return False
 
 
+def _current_url() -> str:
+    if _server_handle is not None:
+        return _server_handle.url
+    discovered = read_runtime_url(db.DB_PATH.parent)
+    return discovered or URL
+
+
 def _open_browser(*_args) -> None:
-    webbrowser.open(URL, new=2)
+    webbrowser.open(_current_url(), new=2)
 
 
 def _open_external_url(url: str) -> bool:
@@ -149,6 +164,7 @@ def _show_native_window(*_args) -> None:
 
 def _shutdown_components(icon: pystray.Icon | None = None) -> None:
     """Encerra os componentes de fundo antes de finalizar o processo."""
+    global _server_handle
     diag.log_event("app_shutdown_requested")
     diag.stop_watchdog()
     try:
@@ -163,6 +179,12 @@ def _shutdown_components(icon: pystray.Icon | None = None) -> None:
         db.shutdown_maintenance()
     except Exception:
         pass
+    try:
+        if _server_handle is not None:
+            _server_handle.close()
+    except Exception:
+        pass
+    _server_handle = None
 
     tray = icon or _tray_icon
     try:
@@ -302,7 +324,7 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
 
     _window = webview.create_window(
         APP_NAME,
-        URL,
+        _current_url(),
         js_api=NativeApi(),
         width=WINDOW_WIDTH,
         height=WINDOW_HEIGHT,
@@ -345,7 +367,7 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
 
 
 def main() -> int:
-    global _browser_mode, _tray_icon
+    global _browser_mode, _tray_icon, _server_handle, PORT, URL
     _browser_mode = "--browser" in sys.argv[1:]
 
     if _already_running():
@@ -365,25 +387,39 @@ def main() -> int:
     service.start_if_configured()
     tnc_service.start_if_configured()
 
-    server_thread = threading.Thread(
-        target=lambda: serve(app, host=HOST, port=PORT, threads=8, url_scheme="http"),
-        name="pt2vhf-http",
-        daemon=True,
-    )
-    server_thread.start()
+    try:
+        _server_handle = start_local_server(
+            app,
+            host=HOST,
+            start_port=PORT,
+            runtime_file=runtime_file_for(db.DB_PATH.parent),
+        )
+        PORT = int(_server_handle.port)
+        URL = _server_handle.url
+        diag.log_event(
+            "local_server_started",
+            host=HOST,
+            port=PORT,
+            url=URL,
+            fallback_count=_server_handle.fallback_count,
+        )
+        print(f"{APP_NAME} — Interface local: {HOST}:{PORT}")
+    except Exception as exc:
+        diag.log_event("local_server_start_failed", error=str(exc))
+        try:
+            ctypes.windll.user32.MessageBoxW(
+                None,
+                "Não foi possível reservar uma porta local para o PT2VHF APRS Client.\n\n"
+                f"Detalhes: {exc}",
+                APP_NAME,
+                0x10,
+            )
+        except Exception:
+            pass
+        return 2
 
     if not _wait_for_server():
         diag.dump_threads("local_server_start_timeout")
-        if os.name == "nt":
-            try:
-                ctypes.windll.user32.MessageBoxW(
-                    None,
-                    "O servidor local do PT2VHF APRS Client não iniciou na porta configurada.",
-                    APP_NAME,
-                    0x10,
-                )
-            except Exception:
-                pass
         return 2
 
     diag.start_watchdog(URL)
