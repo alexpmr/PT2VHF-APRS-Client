@@ -119,6 +119,13 @@
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
 
+- **Configuração — remover bandeira grande do seletor de idioma**
+  - Remover a **imagem grande da bandeira** atualmente exibida na aba **Configuração**.
+  - Manter apenas um indicador discreto do idioma selecionado, como a pequena bandeira já usada no seletor ou somente o nome do idioma.
+  - Evitar reservar uma área grande da tela apenas para identificação do idioma.
+  - Preservar o funcionamento atual de **PT-BR, English, Español e Français**, incluindo persistência e troca imediata do idioma.
+  - Ajustar o layout para que a remoção da imagem não deixe espaço vazio ou desalinhamento na seção.
+
 - **Idiomas — continuar revisão global de textos residuais**
   - A aba **TNC / RF** foi revisada em PT-BR, EN, ES e FR na v1.8.1, incluindo textos estáticos, estados dinâmicos e mensagens técnicas conhecidas.
   - Evitar exibir diretamente ao usuário mensagens técnicas do backend em português quando a interface estiver em outro idioma; mapear erros e estados conhecidos para chaves de tradução, preservando o detalhe técnico somente quando necessário para diagnóstico.
