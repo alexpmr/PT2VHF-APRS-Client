@@ -109,6 +109,20 @@
   - Não permitir atualização cruzada entre arquiteturas.
   - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento antes de considerar Linux ARM64 estável.
   - Documentar claramente no README/Release qual pacote deve ser usado em cada arquitetura.
+- **Inicialização — porta interna dinâmica e sem conflito**
+  - Substituir a porta interna fixa atual por seleção automática de porta local, evitando conflito com outras aplicações.
+  - Usar **8080** como primeira candidata e, se estiver ocupada, tentar sequencialmente **8081, 8082, 8083...** até encontrar uma porta disponível.
+  - Não fazer apenas uma sondagem seguida de abertura posterior, pois outra aplicação pode ocupar a porta nesse intervalo; a verificação deve ser feita por **bind real do socket**, mantendo a porta reservada para o servidor assim que ela for escolhida.
+  - Escutar somente em **localhost/loopback** por padrão, sem expor o servidor interno na rede local.
+  - Se houver uma porta explicitamente configurada por parâmetro/variável de ambiente, respeitá-la quando disponível; se estiver ocupada, informar claramente o conflito ou aplicar fallback automático conforme o contexto de inicialização.
+  - Fazer o WebView/navegador interno utilizar automaticamente a URL final, por exemplo **http://127.0.0.1:8082**, sem depender de número de porta fixo no restante do código.
+  - Ao iniciar, indicar de forma discreta qual porta foi selecionada, por exemplo **“Interface local: 127.0.0.1:8082”**, e registrar a mesma informação no diagnóstico/log.
+  - Garantir que links internos, atualização, encerramento, health checks, captura do manual e demais componentes que hoje assumem uma porta fixa passem a consumir a porta efetivamente alocada.
+  - Ao encerrar a aplicação, liberar corretamente o socket/porta para que ela possa ser reutilizada na próxima execução.
+  - Se nenhuma porta puder ser aberta dentro de uma faixa razoável, exibir erro claro em vez de permanecer travado tentando iniciar.
+  - Adicionar testes de regressão simulando **8080 ocupada**, múltiplas portas consecutivas ocupadas, porta explicitamente configurada e liberação correta após o encerramento.
+  - Validar esse comportamento em **Windows Setup/Portable, Windows ARM64, Linux e macOS**.
+
 - **Portátil — validação prolongada de estabilidade**
   - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
   - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
