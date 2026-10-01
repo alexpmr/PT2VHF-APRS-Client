@@ -119,6 +119,18 @@
   - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
   - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
 
+- **Idiomas — revisar TNC / RF e eliminar textos residuais em português**
+  - Corrigir a nova aba **TNC / RF**, que atualmente permanece em português mesmo quando o aplicativo está em **English, Español ou Français**.
+  - Traduzir integralmente a aba TNC / RF em **PT-BR, EN, ES e FR**, incluindo títulos, subtítulos, botões, campos, opções de selects, placeholders, dicas, notas de segurança, cabeçalhos de tabelas, estados e mensagens vazias.
+  - Traduzir também os textos dinâmicos da área TNC / RF: estado da conexão, papel RF, modo do otimizador, decisões Digi/iGate, motivos de bloqueio/supressão, recomendações, erros, confirmações, alertas e mensagens de salvamento.
+  - Evitar exibir diretamente ao usuário mensagens técnicas do backend em português quando a interface estiver em outro idioma; mapear erros e estados conhecidos para chaves de tradução, preservando o detalhe técnico somente quando necessário para diagnóstico.
+  - Fazer uma **varredura completa em todas as abas e popups** do aplicativo para localizar textos estáticos ou dinâmicos que ainda não acompanham a troca de idioma.
+  - Revisar especialmente **Mapa, Mensagens, Estações, Log, Estatísticas, TNC / RF, Configuração, Sobre, atualização, exportação KML, queries APRS, popups e toasts**.
+  - Garantir que a mudança de idioma atualize imediatamente os componentes já abertos, sem exigir reinício ou recarregamento da aplicação.
+  - Manter **Português (Brasil)** como idioma padrão e usar fallback seguro somente quando uma chave ainda não existir, evitando misturar dois idiomas na mesma tela.
+  - Revisar terminologia técnica de APRS/TNC para não traduzir incorretamente termos de protocolo como **KISS, AX.25, APRS-IS, Digipeater, iGate, WIDE1-1, WIDEn-N, ACK/REJ, RFONLY, NOGATE e q-construct**.
+  - Adicionar testes de regressão que verifiquem as quatro línguas nas principais telas e detectem textos PT-BR inesperados quando EN/ES/FR estiverem ativos.
+
 - **TNC / RF — próximos passos após a v1.8.0**
   - Adicionar protocolo **AGWPE** como alternativa a KISS, mantendo KISS Serial/TCP como base estável.
   - Integrar envio de mensagens e ACK da própria estação diretamente pelo RF/TNC na aba Mensagens, com escolha explícita de transporte **APRS-IS / RF / Automático**.
