@@ -39,13 +39,13 @@ def test_ax25_tnc2_roundtrip_and_path_flags():
         "PT2ABC-9",
         "APRS",
         "!1545.00S/04748.00W-Teste",
-        ["WIDE1-1", "PT2DIGI-1*"],
+        ["WIDE1-1", "PT2DGI-1*"],
     )
     decoded = decode_ax25(frame)
     assert decoded["source"] == "PT2ABC-9"
     assert decoded["destination"] == "APRS"
-    assert decoded["path_text"] == ["WIDE1-1", "PT2DIGI-1*"]
-    assert decoded["tnc2"].startswith("PT2ABC-9>APRS,WIDE1-1,PT2DIGI-1*:")
+    assert decoded["path_text"] == ["WIDE1-1", "PT2DGI-1*"]
+    assert decoded["tnc2"].startswith("PT2ABC-9>APRS,WIDE1-1,PT2DGI-1*:")
     rebuilt = decode_ax25(tnc2_to_ax25(decoded["tnc2"]))
     assert rebuilt["source"] == decoded["source"]
     assert rebuilt["destination"] == decoded["destination"]
@@ -118,10 +118,10 @@ def test_recent_direct_hearing_has_own_timestamp(tmp_path, monkeypatch):
 
     via_digi_packet = {
         "source": "PT2ABC",
-        "path": [{"value": "PT2DIGI", "repeated": True}],
+        "path": [{"value": "PT2DGI", "repeated": True}],
         "info_text": ">via digi",
     }
-    update_heard(via_digi_packet, "PT2ABC>APRS,PT2DIGI*:>via digi")
+    update_heard(via_digi_packet, "PT2ABC>APRS,PT2DGI*:>via digi")
     # A última recepção pode ter vindo via digi, mas a audição direta recente não é perdida.
     assert direct_heard_recent("PT2ABC", 30)
 
