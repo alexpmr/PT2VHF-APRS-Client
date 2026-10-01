@@ -1,33 +1,43 @@
-# PT2VHF APRS Client - v1.8.1
+# PT2VHF APRS Client - v1.8.2
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.1** é a produção completa da série 1.8 com integração **TNC / RF**, revisão PT/EN/ES/FR e novos mapas-base sem API key. Mantém KISS Serial/TCP, Digipeater, iGate inteligente e análise de **quem fala com quem** da v1.8.0.
+A **v1.8.2** amplia a série 1.8 com **porta local automática**, categoria **AIS** em Mapa → Ver → Objetos e ajustes de interface, mantendo a integração **TNC / RF**, os mapas sem API key e todos os recursos da v1.8.1.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.1**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.2**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Setup_x64_v1.8.1.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Portable_x64_v1.8.1.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Setup_ARM64_v1.8.1.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Portable_ARM64_v1.8.1.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Setup_x64_v1.8.2.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Portable_x64_v1.8.2.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Setup_ARM64_v1.8.2.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Portable_ARM64_v1.8.2.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_x86_64_v1.8.1.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/pt2vhf-aprs-client_1.8.1_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Linux_x86_64_v1.8.1.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_x86_64_v1.8.2.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/pt2vhf-aprs-client_1.8.2_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Linux_x86_64_v1.8.2.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_macOS_arm64_v1.8.1.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_macOS_x86_64_v1.8.1.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_macOS_arm64_v1.8.2.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_macOS_x86_64_v1.8.2.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.1/PT2VHF_APRS_Client_Manual_v1.8.1.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Manual_v1.8.2.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.2
+
+- **Porta local automática:** o cliente começa em **8080** e avança para 8081, 8082… quando encontra conflito, usando a primeira porta realmente disponível.
+- A porta efetivamente escolhida aparece em **Configuração → Interface local** e é usada automaticamente pelo WebView/navegador.
+- **Mapa → Ver → Objetos:** nova categoria **AIS**, separada de **Balão/Radiosonda**.
+- **Mapa → Ver:** todos os itens continuam habilitados por padrão em novas configurações, sem sobrescrever escolhas já salvas.
+- **Configuração:** removida a bandeira grande do seletor de idioma; permanecem o seletor compacto e as pequenas bandeiras do cabeçalho.
+- A captura do Manual PDF e os launchers Windows/Linux/macOS acompanham a porta dinâmica.
+- Mantém integralmente TNC/RF, Digipeater, iGate inteligente, mapas sem API key e traduções da v1.8.1.
 
 ## Novidades da v1.8.1
 
