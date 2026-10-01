@@ -128,4 +128,4 @@ def test_v182_desktop_launchers_use_reserved_dynamic_server():
 
 
 def test_v182_version():
-    assert read("VERSION").strip() in {"1.8.1", "1.8.2"}
+    assert read("VERSION").strip() == "1.8.2"
