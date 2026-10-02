@@ -5814,6 +5814,14 @@
     'Selecionar tudo':'Select all',
     'Remover tudo':'Clear all',
     'Filtros do ranking de software e dispositivos':'Software and device ranking filters',
+    'Aplicativos':'Applications',
+    'Dispositivos':'Devices',
+    'Indeterminados':'Undetermined',
+    'Visíveis no ranking':'Visible in ranking',
+    'Selecione pelo menos uma categoria para exibir o ranking.':'Select at least one category to display the ranking.',
+    'Nenhum item das categorias selecionadas foi identificado neste período.':'No item from the selected categories was identified in this period.',
+    'Identificação: APRS Device Identification (aprsorg/aprs-deviceid). Percentuais são recalculados apenas sobre as categorias visíveis.':'Identification: APRS Device Identification (aprsorg/aprs-deviceid). Percentages are recalculated only across visible categories.',
+    'Distribuição pelo software/dispositivo identificado no último pacote de cada estação, usando a base APRS Device Identification.':'Distribution by software/device identified in each station\'s latest packet, using the APRS Device Identification database.',
     'Distribuição pelo identificador TOCALL do último pacote de cada estação. Quando o software/versão não puder ser determinado com segurança, ele fica como Não identificado.':'Distribution based on the TOCALL identifier in each station\'s latest packet. When software/version cannot be determined reliably, it remains Unidentified.',
     'Indicadores e estatísticas da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators and statistics with historical comparison and map replay.',
     'Período':'Period',
@@ -6795,18 +6803,13 @@
           escapeHtml(ui('PT2VHF APRS Client ainda não foi observado neste período.', 'PT2VHF APRS Client has not been observed in this period yet.')) +
           '</div>' : '') +
       '<div class="client-version-unidentified">' +
-      escapeHtml(ui(
-        'Aplicativos: ' + appCount.toLocaleString(currentLocale()) +
-          ' · Dispositivos: ' + deviceCount.toLocaleString(currentLocale()) +
-          ' · Indeterminados: ' + unknownCount.toLocaleString(currentLocale()) +
-          ' · Visíveis no ranking: ' + visibleTotal.toLocaleString(currentLocale()) +
-          ' · Total: ' + total.toLocaleString(currentLocale()),
-        'Applications: ' + appCount.toLocaleString(currentLocale()) +
-          ' · Devices: ' + deviceCount.toLocaleString(currentLocale()) +
-          ' · Undetermined: ' + unknownCount.toLocaleString(currentLocale()) +
-          ' · Visible in ranking: ' + visibleTotal.toLocaleString(currentLocale()) +
-          ' · Total: ' + total.toLocaleString(currentLocale())
-      )) +
+      escapeHtml([
+        `${ui('Aplicativos', 'Applications')}: ${appCount.toLocaleString(currentLocale())}`,
+        `${ui('Dispositivos', 'Devices')}: ${deviceCount.toLocaleString(currentLocale())}`,
+        `${ui('Indeterminados', 'Undetermined')}: ${unknownCount.toLocaleString(currentLocale())}`,
+        `${ui('Visíveis no ranking', 'Visible in ranking')}: ${visibleTotal.toLocaleString(currentLocale())}`,
+        `${ui('Total', 'Total')}: ${total.toLocaleString(currentLocale())}`,
+      ].join(' · ')) +
       '<br><span>' + escapeHtml(ui(
         'Identificação: APRS Device Identification (aprsorg/aprs-deviceid). Percentuais são recalculados apenas sobre as categorias visíveis.',
         'Identification: APRS Device Identification (aprsorg/aprs-deviceid). Percentages are recalculated only across visible categories.'
