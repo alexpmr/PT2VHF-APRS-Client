@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.8.11 - 2026-10-02
+
+- Corrige a perda da origem de recepção nos pacotes: cada entrada persistida passa a registrar explicitamente **RF** ou **APRS-IS**.
+- Adiciona uma impressão lógica do pacote que ignora o path APRS para correlacionar a mesma transmissão observada pelos dois meios em uma janela curta.
+- A aba **TNC / RF → Estações ouvidas por RF** passa a usar evidência persistente e consegue recuperar estações RF mesmo quando o resumo `tnc_heard` estiver incompleto.
+- A tabela RF passa a mostrar **Recepções, Pacotes RF persistidos, Distância, recepção direta/via digi quando conhecida, último tipo e path**.
+- A posição/distância é incorporada quando a estação possui coordenadas válidas e a estação local está configurada.
+- As **Estatísticas** passam a exibir um resumo **RF × APRS-IS**, incluindo pacotes RF, estações únicas RF, frames RF recebidos, pacotes APRS-IS, estações vistas nos dois meios e total lógico deduplicado.
+- O ranking de estações ganha colunas separadas **RF** e **APRS-IS**, preservando os dois fatos de recepção para o mesmo indicativo.
+- O indicador superior **Pacotes observados** passa a preferir o total lógico deduplicado entre meios quando disponível.
+- A recepção RF não é inferida a partir do indicativo: somente pacotes que entraram efetivamente pelo pipeline TNC/KISS recebem `medium=RF`.
+- Recepção APRS-IS continua registrada separadamente, mesmo quando o mesmo indicativo ou a mesma transmissão também foi vista por RF.
+- Adiciona diagnóstico **tnc_rf_station_heard** para nova estação RF e resumo periódico **tnc_rf_rx_summary**.
+- Na aba **Configuração**, os títulos dos blocos passam a usar **laranja**, fonte maior e hierarquia visual mais clara, com adaptação para tema claro/escuro e telas menores.
+- Inclui regressões para RF-only, RF+APRS-IS, deduplicação entre meios, fallback da tabela TNC/RF, Estatísticas e estilo dos blocos de Configuração.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.10 - 2026-10-02
 
 - Unifica no cabeçalho o **indicador de estado APRS-IS** e a ação **Conectar/Desconectar** em um único componente clicável.
