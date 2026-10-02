@@ -527,7 +527,8 @@
     body.innerHTML = rows.map(row => {
       const directLabel = row.direct_known === false ? '—' : (row.direct ? tr('Sim') : tr('Via digi'));
       const directClass = row.direct_known === false ? '' : (row.direct ? 'good' : 'warn');
-      const distance = Number.isFinite(Number(row.distance_km))
+      const hasDistance = row.distance_km !== null && row.distance_km !== undefined && row.distance_km !== '';
+      const distance = hasDistance && Number.isFinite(Number(row.distance_km))
         ? `${Number(row.distance_km).toLocaleString(undefined,{maximumFractionDigits:2})} km`
         : '—';
       const path = (row.path || []).map(p => typeof p === 'string' ? p : (p.value || '') + (p.repeated ? '*' : '')).join(', ');
