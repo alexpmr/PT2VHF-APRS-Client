@@ -130,6 +130,10 @@
     autoLocationInProgress: false,
     lastConnectionErrorShown: '',
     localInterfaceAnnounced: false,
+    clientStatsShowApps: localStorage.getItem('pt2vhf_stats_show_apps') !== '0',
+    clientStatsShowDevices: localStorage.getItem('pt2vhf_stats_show_devices') !== '0',
+    clientStatsShowUnknown: localStorage.getItem('pt2vhf_stats_show_unknown') !== '0',
+    clientVersionStats: null,
     conversationSort: localStorage.getItem('pt2vhf_conversation_sort') === 'desc' ? 'desc' : 'asc',
     conversationSortKey: localStorage.getItem('pt2vhf_conversation_sort_key') === 'date' ? 'date' : 'sender',
     configDirty: false,
@@ -1879,6 +1883,31 @@
     updateMapLegend();
   }
 
+  function setAllMapView(enabled) {
+    const value = !!enabled;
+    for (const key of Object.keys(MAP_VIEW_STATE_STORAGE)) setMapViewState(key, value);
+
+    const tree = $('#mapViewTree');
+    if (value) {
+      state.mapViewFilters = {};
+    } else {
+      const disabled = {};
+      for (const input of tree?.querySelectorAll('.map-view-checkbox[data-map-filter-key]') || []) {
+        const key = String(input.dataset.mapFilterKey || '');
+        if (key) disabled[key] = false;
+      }
+      state.mapViewFilters = disabled;
+    }
+    persistMapViewFilters();
+
+    for (const input of tree?.querySelectorAll('.map-view-checkbox') || []) {
+      input.checked = value;
+      input.indeterminate = false;
+    }
+    syncMapViewTreeCheckboxes();
+    void refreshMapFromViewTree();
+  }
+
   function addMapControls() {
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
     state.topologyHours = statisticsPeriodValue(state.topologyHours);
@@ -1951,16 +1980,23 @@
       });
     }
 
-    const allButton = $('#mapViewAllButton');
-    if (allButton && allButton.dataset.bound !== '1') {
-      allButton.dataset.bound = '1';
-      allButton.addEventListener('click', event => {
+    const selectAllButton = $('#mapViewSelectAllButton');
+    if (selectAllButton && selectAllButton.dataset.bound !== '1') {
+      selectAllButton.dataset.bound = '1';
+      selectAllButton.addEventListener('click', event => {
         event.preventDefault();
         event.stopPropagation();
-        for (const key of Object.keys(MAP_VIEW_STATE_STORAGE)) setMapViewState(key, true);
-        state.mapViewFilters = {};
-        persistMapViewFilters();
-        void refreshMapFromViewTree();
+        setAllMapView(true);
+      });
+    }
+
+    const clearAllButton = $('#mapViewClearAllButton');
+    if (clearAllButton && clearAllButton.dataset.bound !== '1') {
+      clearAllButton.dataset.bound = '1';
+      clearAllButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setAllMapView(false);
       });
     }
 
@@ -5768,6 +5804,16 @@
     'Estatísticas da rede':'Network statistics',
     'Clientes / versões APRS':'APRS clients / versions',
     'Software / dispositivos APRS':'APRS software / devices',
+    'Mostrar aplicativos APRS':'Show APRS applications',
+    'Mostrar dispositivos':'Show devices',
+    'Mostrar não identificados':'Show unidentified',
+    'Aplicativo APRS':'APRS application',
+    'Dispositivo / Hardware':'Device / Hardware',
+    'Indeterminado':'Undetermined',
+    'Categoria':'Category',
+    'Selecionar tudo':'Select all',
+    'Remover tudo':'Clear all',
+    'Filtros do ranking de software e dispositivos':'Software and device ranking filters',
     'Distribuição pelo identificador TOCALL do último pacote de cada estação. Quando o software/versão não puder ser determinado com segurança, ele fica como Não identificado.':'Distribution based on the TOCALL identifier in each station\'s latest packet. When software/version cannot be determined reliably, it remains Unidentified.',
     'Indicadores e estatísticas da topologia observada no APRS-IS, com comparação histórica e replay no mapa.':'Observed APRS-IS topology indicators and statistics with historical comparison and map replay.',
     'Período':'Period',
@@ -6595,66 +6641,175 @@
     } catch (err) { toast(err.message, 'error'); }
   });
 
+  function clientStatsCategoryLabel(category) {
+    return ({
+      application: ui('Aplicativo APRS', 'APRS application'),
+      device: ui('Dispositivo / Hardware', 'Device / Hardware'),
+      unknown: ui('Indeterminado', 'Undetermined'),
+    })[String(category || 'unknown')] || ui('Indeterminado', 'Undetermined');
+  }
+
+  function clientStatsCategoryVisible(category) {
+    const key = String(category || 'unknown');
+    if (key === 'application') return !!state.clientStatsShowApps;
+    if (key === 'device') return !!state.clientStatsShowDevices;
+    return !!state.clientStatsShowUnknown;
+  }
+
+  function bindClientStatsFilters() {
+    const controls = [
+      ['#clientStatsShowApps', 'clientStatsShowApps', 'pt2vhf_stats_show_apps'],
+      ['#clientStatsShowDevices', 'clientStatsShowDevices', 'pt2vhf_stats_show_devices'],
+      ['#clientStatsShowUnknown', 'clientStatsShowUnknown', 'pt2vhf_stats_show_unknown'],
+    ];
+    for (const [selector, stateKey, storageKey] of controls) {
+      const input = $(selector);
+      if (!input) continue;
+      input.checked = !!state[stateKey];
+      if (input.dataset.bound === '1') continue;
+      input.dataset.bound = '1';
+      input.addEventListener('change', () => {
+        state[stateKey] = !!input.checked;
+        localStorage.setItem(storageKey, input.checked ? '1' : '0');
+        renderClientVersionStats(state.clientVersionStats);
+      });
+    }
+  }
+
   function renderClientVersionStats(stats) {
     const box = $('#clientVersionStatsContent');
     if (!box) return;
-    const data = stats || {};
+    state.clientVersionStats = stats || state.clientVersionStats || {};
+    const data = state.clientVersionStats;
     const items = Array.isArray(data.items) ? data.items : [];
     const identified = Number(data.identified_stations || 0);
     const unidentified = Number(data.unidentified_stations || 0);
     const total = Number(data.total_stations || 0);
     const topLimit = Math.max(1, Number(data.top_limit || 20));
-    const topItems = items.slice(0, topLimit);
-    const own = data.own_client || null;
-    const ownInTop = !!own && topItems.some(item => item.identifier === own.identifier);
-    const visibleItems = [...topItems];
-    if (own && !ownInTop && Number(own.stations || 0) > 0) visibleItems.push({ ...own, force_own_row: true });
 
-    if (!items.length) {
+    const enabledCategories = [
+      state.clientStatsShowApps ? 'application' : '',
+      state.clientStatsShowDevices ? 'device' : '',
+      state.clientStatsShowUnknown ? 'unknown' : '',
+    ].filter(Boolean);
+
+    if (!enabledCategories.length) {
       box.innerHTML = '<span class="hint">' +
         escapeHtml(ui(
-          total ? 'Nenhum software/dispositivo pôde ser identificado com segurança neste período.' : 'Sem estações no período selecionado.',
-          total ? 'No software/device could be identified reliably in this period.' : 'No stations in the selected period.'
-        )) + '</span>' +
-        (unidentified ? '<div class="client-version-unidentified">' +
-          escapeHtml(ui('Não identificado: ', 'Unidentified: ')) +
-          unidentified.toLocaleString(currentLocale()) + '</div>' : '');
+          'Selecione pelo menos uma categoria para exibir o ranking.',
+          'Select at least one category to display the ranking.'
+        )) + '</span>';
       return;
     }
 
+    const candidates = items
+      .map(item => ({ ...item, category: ['application','device'].includes(String(item.category || '')) ? String(item.category) : 'unknown' }))
+      .filter(item => clientStatsCategoryVisible(item.category));
+
+    if (state.clientStatsShowUnknown && unidentified > 0) {
+      candidates.push({
+        rank: null,
+        identifier: '',
+        identifiers: [],
+        aliases: [],
+        friendly_name: ui('Não identificado', 'Unidentified'),
+        category: 'unknown',
+        stations: unidentified,
+        percent: 0,
+        is_own_client: false,
+        unidentified_bucket: true,
+      });
+    }
+
+    candidates.sort((a,b) => {
+      const count = Number(b.stations || 0) - Number(a.stations || 0);
+      if (count) return count;
+      return String(a.friendly_name || a.identifier || '').localeCompare(
+        String(b.friendly_name || b.identifier || ''),
+        currentLocale()
+      );
+    });
+
+    const visibleTotal = candidates.reduce((sum, item) => sum + Number(item.stations || 0), 0);
+    const ranked = candidates.map((item, index) => ({
+      ...item,
+      rank: index + 1,
+      percent: visibleTotal ? (Number(item.stations || 0) / visibleTotal) * 100 : 0,
+    }));
+    const topItems = ranked.slice(0, topLimit);
+    const ownRanked = ranked.find(item => item.is_own_client) || null;
+    const ownInTop = !!ownRanked && topItems.some(item => item.is_own_client);
+    const visibleItems = [...topItems];
+    if (ownRanked && !ownInTop && Number(ownRanked.stations || 0) > 0) {
+      visibleItems.push({ ...ownRanked, force_own_row: true });
+    }
+
+    if (!visibleItems.length) {
+      box.innerHTML = '<span class="hint">' +
+        escapeHtml(ui(
+          total ? 'Nenhum item das categorias selecionadas foi identificado neste período.' : 'Sem estações no período selecionado.',
+          total ? 'No item from the selected categories was identified in this period.' : 'No stations in the selected period.'
+        )) + '</span>';
+      return;
+    }
+
+    const showCategoryColumn = enabledCategories.length > 1;
     const rowHtml = item => {
       const rank = item.rank ? String(item.rank) + 'º' : '—';
       const name = item.friendly_name || item.identifier || ui('Não identificado', 'Unidentified');
       const ownClass = item.is_own_client || item.force_own_row ? ' class="client-version-own-row"' : '';
+      const categoryCell = showCategoryColumn
+        ? '<td><span class="client-version-category client-version-category-' +
+          escapeHtml(item.category || 'unknown') + '">' +
+          escapeHtml(clientStatsCategoryLabel(item.category)) + '</span></td>'
+        : '';
       return '<tr' + ownClass + '><td><strong>' + escapeHtml(rank) + '</strong></td><td>' +
-        '<span class="client-version-name">' + escapeHtml(name) + '</span></td><td>' +
+        '<span class="client-version-name">' + escapeHtml(name) + '</span></td>' +
+        categoryCell + '<td>' +
         Number(item.stations || 0).toLocaleString(currentLocale()) + '</td><td>' +
         Number(item.percent || 0).toLocaleString(currentLocale(), {maximumFractionDigits:1}) + '%</td></tr>';
     };
 
+    const categoryHeader = showCategoryColumn
+      ? '<th>' + escapeHtml(ui('Categoria', 'Category')) + '</th>'
+      : '';
+
+    const own = data.own_client || null;
+    const ownFilteredOut = own && !clientStatsCategoryVisible(own.category || 'application');
+
+    const counts = data.category_counts || {};
+    const appCount = Number(counts.application || 0);
+    const deviceCount = Number(counts.device || 0);
+    const unknownCount = Number(counts.unknown || 0) + unidentified;
+
     box.innerHTML =
       '<table class="client-version-table"><thead><tr><th>#</th><th>' +
       escapeHtml(ui('Software / dispositivo', 'Software / device')) +
-      '</th><th>' + escapeHtml(ui('Estações', 'Stations')) +
+      '</th>' + categoryHeader +
+      '<th>' + escapeHtml(ui('Estações', 'Stations')) +
       '</th><th>%</th></tr></thead><tbody>' +
       visibleItems.map(rowHtml).join('') +
       '</tbody></table>' +
-      (own && !ownInTop && Number(own.stations || 0) <= 0
+      (own && !ownFilteredOut && !ownRanked && Number(own.stations || 0) <= 0
         ? '<div class="client-version-unidentified">' +
           escapeHtml(ui('PT2VHF APRS Client ainda não foi observado neste período.', 'PT2VHF APRS Client has not been observed in this period yet.')) +
           '</div>' : '') +
       '<div class="client-version-unidentified">' +
       escapeHtml(ui(
-        'Identificadas: ' + identified.toLocaleString(currentLocale()) +
-          ' · Não identificado: ' + unidentified.toLocaleString(currentLocale()) +
+        'Aplicativos: ' + appCount.toLocaleString(currentLocale()) +
+          ' · Dispositivos: ' + deviceCount.toLocaleString(currentLocale()) +
+          ' · Indeterminados: ' + unknownCount.toLocaleString(currentLocale()) +
+          ' · Visíveis no ranking: ' + visibleTotal.toLocaleString(currentLocale()) +
           ' · Total: ' + total.toLocaleString(currentLocale()),
-        'Identified: ' + identified.toLocaleString(currentLocale()) +
-          ' · Unidentified: ' + unidentified.toLocaleString(currentLocale()) +
+        'Applications: ' + appCount.toLocaleString(currentLocale()) +
+          ' · Devices: ' + deviceCount.toLocaleString(currentLocale()) +
+          ' · Undetermined: ' + unknownCount.toLocaleString(currentLocale()) +
+          ' · Visible in ranking: ' + visibleTotal.toLocaleString(currentLocale()) +
           ' · Total: ' + total.toLocaleString(currentLocale())
       )) +
       '<br><span>' + escapeHtml(ui(
-        'Identificação: APRS Device Identification (aprsorg/aprs-deviceid).',
-        'Identification: APRS Device Identification (aprsorg/aprs-deviceid).'
+        'Identificação: APRS Device Identification (aprsorg/aprs-deviceid). Percentuais são recalculados apenas sobre as categorias visíveis.',
+        'Identification: APRS Device Identification (aprsorg/aprs-deviceid). Percentages are recalculated only across visible categories.'
       )) + '</span></div>';
   }
 
@@ -6808,6 +6963,8 @@
     if (group) group.outerHTML = renderStationStatsTable(stationStatsRows);
   });
 
+  bindClientStatsFilters();
+  document.addEventListener('pt2vhf-language-changed', () => renderClientVersionStats(state.clientVersionStats));
   $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
   $('#analysisPeriod')?.addEventListener('change', async event => {
     state.topologyHours = statisticsPeriodValue(event.target.value);
