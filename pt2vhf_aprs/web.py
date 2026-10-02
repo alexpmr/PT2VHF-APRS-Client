@@ -505,7 +505,8 @@ def create_app() -> Flask:
 
     @app.get("/api/tnc/ports")
     def api_tnc_ports():
-        return jsonify({"ok": True, "ports": tnc_service.available_ports()})
+        force = str(request.args.get("refresh") or "").strip().lower() in {"1", "true", "yes", "on"}
+        return jsonify({"ok": True, "ports": tnc_service.available_ports(force=force)})
 
     @app.post("/api/tnc/connect")
     def api_tnc_connect():
