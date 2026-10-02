@@ -83,6 +83,9 @@ if 'id="connectionStatus"' in html:
     raise SystemExit("v1.8.10 validation failed: legacy separate connectionStatus still present")
 if html.count('id="connectButton"') != 1:
     raise SystemExit("v1.8.10 validation failed: expected one unified connectButton")
+for callsign in ("PU5AAG", "PY4EI", "PU2MUS", "PP5PK", "PT2YW", "PT2PAG"):
+    if html.count(callsign) != 1:
+        raise SystemExit(f"v1.8.10 validation failed: contributor {callsign} missing or duplicated")
 
 js = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
 if "button.textContent === ui('Desconectar'" in js:
