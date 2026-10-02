@@ -202,44 +202,20 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
-- **TNC / RF — Radtel RT-950 Pro em TNC UART não aparece na lista de portas**
-  - Corrigir a enumeração de portas seriais no Windows para que o PT2VHF APRS Client liste **todas as portas COM disponíveis**, inclusive interfaces UART de rádios/TNCs que não coincidam com adaptadores já conhecidos.
-  - Cenário reportado: **Radtel RT-950 Pro** configurado em **TNC UART**. O Windows reconhece as interfaces seriais, mas o Client não apresenta a porta do rádio na seleção do TNC.
-  - Na máquina do usuário, o Gerenciador de Dispositivos mostra pelo menos:
-    - **USB-Enhanced-SERIAL CH9102 (COM6)**;
-    - **USB-SERIAL CH340 (COM10)**.
-  - Hoje o Client reconhece apenas uma das portas disponíveis, associada a outro equipamento LoRa/receptor de satélite, enquanto a porta do Radtel não fica disponível para seleção.
-  - Remover qualquer filtro excessivamente restritivo por **VID/PID, fabricante, descrição, chipset ou nome amigável** que possa ocultar portas COM válidas.
-  - Suportar explicitamente interfaces seriais baseadas em **CH9102/CH9102F/CH9102X** e **CH340/CH341**, além de CDC/USB Serial genérico quando o Windows fornecer uma porta COM utilizável.
-  - Exibir na lista o formato **COMx — nome amigável/dispositivo**, por exemplo `COM6 — USB-Enhanced-SERIAL CH9102`.
-  - Exibir também uma seção **Equipamentos seriais detectados**, separada da simples seleção de porta, mostrando explicitamente cada dispositivo encontrado pelo Windows.
-  - Para cada equipamento detectado, mostrar quando disponível:
-    - **Porta COM**;
-    - **nome amigável/descrição**;
-    - **fabricante**;
-    - **chipset/interface USB-Serial**;
-    - **VID/PID**;
-    - **número de série USB**;
-    - **HWID**;
-    - status **disponível / ocupada / acesso negado / desconectada**.
-  - Quando houver indícios suficientes, apresentar uma identificação amigável do equipamento, por exemplo **Radtel RT-950 Pro / TNC UART**, sem depender exclusivamente do nome genérico do chipset.
-  - Quando não for possível determinar o modelo real, deixar explícito algo como **“Equipamento não identificado — CH9102”** ou **“USB Serial — CH340”**, evitando inventar o nome do rádio.
-  - Permitir selecionar o equipamento diretamente nessa lista; ao selecionar, preencher automaticamente a porta COM correspondente na configuração do TNC.
-  - Atualizar a lista de equipamentos em tempo real ao conectar/desconectar USB, ou pelo botão **Atualizar / Reescanear portas**.
-  - Destacar visualmente qual equipamento está atualmente configurado e qual está efetivamente conectado pelo Client.
-  - Se o mesmo equipamento expuser mais de uma interface serial, agrupar ou identificar claramente cada interface para evitar escolha da COM errada.
-  - Adicionar botão **Atualizar / Reescanear portas** na aba TNC / RF, sem necessidade de reiniciar o Client após conectar/desconectar o rádio.
-  - Permitir também **entrada manual da porta COM** como fallback, caso a enumeração automática não consiga identificá-la.
-  - Ao tentar abrir uma porta, diferenciar claramente:
-    - porta inexistente;
-    - porta ocupada por outro programa;
-    - acesso negado;
-    - baud rate incompatível;
-    - porta aberta mas sem resposta KISS/TNC;
-    - desconexão física durante o uso.
-  - Registrar no diagnóstico a lista completa retornada pelo Windows/pyserial, incluindo **device, description, manufacturer, hwid, VID, PID e serial number** quando disponíveis.
-  - Não presumir que apenas uma porta USB serial seja o TNC; permitir que o usuário escolha explicitamente entre múltiplas COMs.
-  - Validar o fluxo com o **Radtel RT-950 Pro em TNC UART** e adicionar teste/regressão de enumeração para múltiplas portas seriais simultâneas.
+## Concluído na v1.8.7
+
+- **TNC / RF — descoberta serial:** combina pyserial, Windows CIM/PnP e SERIALCOMM para listar todas as COMs encontradas.
+- **Equipamentos seriais detectados:** nova tabela com porta, equipamento/descrição, chipset/interface, fabricante, VID/PID, número de série/HWID e estado.
+- **CH9102/CH340/CH341:** identificação explícita dessas interfaces, além de CP210x, FTDI e CDC/ACM.
+- **Radtel RT-950 Pro:** identificação nominal somente quando houver evidência nos metadados; CH9102 genérico não é rotulado como Radtel.
+- **TNC UART:** orientação condicional para RT-950 Pro e 115200 bps quando o modelo for identificado.
+- **Porta manual:** campo COM editável com datalist, permitindo informar uma porta não enumerada.
+- **Reescanear:** atualização manual e periódica dos dispositivos enquanto TNC / RF estiver aberto.
+- **Seleção direta:** botão Usar em cada equipamento preenche a COM correspondente.
+- **Diagnóstico:** mudanças na enumeração serial registram device, descrição, fabricante, HWID, VID/PID, serial e fontes utilizadas.
+- **Erros de conexão:** mensagens específicas para porta inexistente/desconectada e porta ocupada/acesso negado.
+- **Testes:** regressão com COM6/CH9102 e COM10/CH340 simultâneos, descoberta nativa, interface e fallback manual.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.6
 
