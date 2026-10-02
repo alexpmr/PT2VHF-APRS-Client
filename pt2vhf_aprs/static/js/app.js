@@ -7290,7 +7290,7 @@
   let stationStatsSort = { key: 'packets', dir: 'desc' };
 
   function stationStatsValue(row, key) {
-    if (['packets','interactions','sent','received','peers'].includes(key)) return Number(row?.[key] || 0);
+    if (['packets','rf_packets','aprsis_packets','interactions','sent','received','peers'].includes(key)) return Number(row?.[key] || 0);
     if (key === 'last_seen') return new Date(row?.last_seen || 0).getTime() || 0;
     return String(row?.[key] || '').toLocaleLowerCase(currentLocale());
   }
@@ -7316,6 +7316,8 @@
       ? sorted.map(row => `<tr>
           <td><button type="button" class="stats-map-link" data-map-callsign="${escapeHtml(row.callsign || '')}">${escapeHtml(row.callsign || '')}</button></td>
           <td>${Number(row.packets || 0).toLocaleString(currentLocale())}</td>
+          <td>${Number(row.rf_packets || 0).toLocaleString(currentLocale())}</td>
+          <td>${Number(row.aprsis_packets || 0).toLocaleString(currentLocale())}</td>
           <td>${Number(row.interactions || 0).toLocaleString(currentLocale())}</td>
           <td>${Number(row.sent || 0).toLocaleString(currentLocale())}</td>
           <td>${Number(row.received || 0).toLocaleString(currentLocale())}</td>
@@ -7323,7 +7325,7 @@
           <td>${escapeHtml(row.last_seen ? fmtDate(row.last_seen) : '')}</td>
           <td>${escapeHtml(row.application || '')}</td>
         </tr>`).join('')
-      : `<tr><td colspan="8" class="hint">${escapeHtml(ui('Sem dados.', 'No data.'))}</td></tr>`;
+      : `<tr><td colspan="10" class="hint">${escapeHtml(ui('Sem dados.', 'No data.'))}</td></tr>`;
 
     return `<div class="topology-stat-group station-ranking-group">
       <h4>${escapeHtml(ui('Estações - atividade e interações', 'Stations - activity and interactions'))}</h4>
@@ -7336,6 +7338,8 @@
           <thead><tr>
             ${th('callsign', ui('Indicativo', 'Callsign'))}
             ${th('packets', ui('Pacotes úteis', 'Useful packets'))}
+            ${th('rf_packets', ui('RF', 'RF'))}
+            ${th('aprsis_packets', ui('APRS-IS', 'APRS-IS'))}
             ${th('interactions', ui('Interações', 'Interactions'))}
             ${th('sent', ui('Enviadas', 'Sent'))}
             ${th('received', ui('Recebidas', 'Received'))}
@@ -7366,7 +7370,24 @@
         ? `<span class="stats-evidence">${escapeHtml(ui('evidência', 'evidence'))}: ${escapeHtml(value)}</span>`
         : '';
 
+      const reception = data.reception_media || {};
+      const receptionSummary =
+        '<div class="topology-stat-group reception-media-summary"><h4>' + ui('Recepção RF × APRS-IS', 'RF × APRS-IS reception') + '</h4>' +
+        '<div class="topology-stat-cards">' +
+          '<div><span>' + ui('Pacotes RF', 'RF packets') + '</span><strong>' + Number(reception.rf_packets || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+          '<div><span>' + ui('Estações únicas RF', 'Unique RF stations') + '</span><strong>' + Number(reception.rf_unique_stations || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+          '<div><span>' + ui('Frames RF recebidos', 'RF frames received') + '</span><strong>' + Number(reception.rf_frames_received || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+          '<div><span>' + ui('Pacotes APRS-IS', 'APRS-IS packets') + '</span><strong>' + Number(reception.aprsis_packets || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+          '<div><span>' + ui('Estações nos dois meios', 'Stations on both media') + '</span><strong>' + Number(reception.both_media_stations || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+          '<div><span>' + ui('Pacotes lógicos sem duplicar meios', 'Logical packets without cross-medium duplicates') + '</span><strong>' + Number(reception.logical_packets_deduplicated || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+        '</div>' +
+        '<div class="hint">' + ui(
+          'RF e APRS-IS são preservados como evidências separadas. O total lógico correlaciona a mesma transmissão observada pelos dois meios em uma janela curta.',
+          'RF and APRS-IS are preserved as separate evidence. The logical total correlates the same transmission seen through both media in a short window.'
+        ) + '</div></div>';
+
       box.innerHTML =
+        receptionSummary +
         renderStationStatsTable(data.station_rankings || []) +
 
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
