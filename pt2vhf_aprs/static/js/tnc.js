@@ -456,13 +456,17 @@
     updateSerialProfileHint();
   }
 
-  async function loadPorts({force = false, quiet = false} = {}) {
+  async function loadPorts({force = false, quiet = false, quick = false} = {}) {
     const input = field('tncSerialPort');
     const list = field('tncSerialPortList');
     if (!input || !list) return;
     const wanted = String(input.value || lastConfig?.serial_port || '').trim();
     try {
-      const data = await requestJson(`/api/tnc/ports${force ? '?refresh=1' : ''}`);
+      const params = new URLSearchParams();
+      if (force) params.set('refresh', '1');
+      if (quick) params.set('quick', '1');
+      const suffix = params.toString() ? `?${params.toString()}` : '';
+      const data = await requestJson(`/api/tnc/ports${suffix}`);
       const ports = data.ports || [];
       list.innerHTML = '';
       for (const port of ports) {
@@ -652,7 +656,9 @@
     if ($('.tab.active[data-tab="tnc"]')) {
       refreshData();
       serialPollTick += 1;
-      if (serialPollTick % 2 === 0 && val('tncTransport', 'tcp') === 'serial') void loadPorts({quiet:true});
+      if (serialPollTick % 10 === 0 && val('tncTransport', 'tcp') === 'serial') {
+        void loadPorts({quiet:true, quick:true});
+      }
     }
   }, 3000);
   window.addEventListener('beforeunload', () => { if (pollTimer) clearInterval(pollTimer); });
