@@ -212,6 +212,41 @@
   - Preservar responsividade em telas menores e em **1360×768**.
   - Adicionar teste de regressão garantindo que os títulos das seções recebam a classe/estilo padronizado.
 
+- **TNC / RF + Estatísticas — estações recebidas por RF não aparecem nas telas**
+  - Corrigir a ingestão/contabilização de **estações efetivamente recebidas via RF pelo TNC/KISS**, pois atualmente elas podem ser recebidas/processadas sem aparecer corretamente na aba **TNC / RF** e nas **Estatísticas**.
+  - Toda estação recebida por RF deve ser registrada como **ouvida por RF**, independentemente de a mesma estação também existir no APRS-IS.
+  - Na aba **TNC / RF**, garantir que a tabela/lista de estações ouvidas por RF mostre:
+    - indicativo;
+    - última recepção RF;
+    - quantidade de pacotes RF;
+    - path observado;
+    - recepção direta ou via digipeater, quando identificável;
+    - RSSI/SNR/DCD e demais métricas somente quando fornecidas pelo TNC;
+    - distância/posição quando houver posição válida;
+    - tempo desde a última recepção.
+  - Não classificar como **RF** uma estação conhecida apenas por APRS-IS; a origem deve ser baseada no meio pelo qual o pacote entrou no Client.
+  - Quando o mesmo indicativo for recebido por **RF e APRS-IS**, manter os dois fatos de recepção e permitir distinguir **RF × Internet/APRS-IS**, sem duplicar artificialmente a estação nos totais globais.
+  - Nas **Estatísticas**, incluir corretamente o tráfego RF em:
+    - estações recebidas por RF;
+    - estações únicas por RF;
+    - pacotes RF;
+    - RF × APRS-IS;
+    - digipeaters/iGates observados;
+    - paths/hops, quando disponíveis;
+    - atividade por período.
+  - Respeitar o período/filtros selecionados em Estatísticas.
+  - Revisar se o pipeline TNC/KISS grava corretamente a origem/meio do pacote antes de alimentar banco, tabelas e agregações.
+  - Garantir que pacotes recebidos via RF e depois também vistos no APRS-IS não percam a marcação de recepção RF.
+  - Evitar dupla contagem quando o mesmo pacote aparecer nos dois meios; preservar, porém, a evidência de que houve recepção RF.
+  - Adicionar diagnóstico específico para facilitar validação, incluindo contagem de pacotes RX via TNC/KISS e quantidade de estações RF únicas observadas.
+  - Adicionar testes de regressão com:
+    - estação recebida apenas por RF;
+    - mesma estação recebida por RF e APRS-IS;
+    - recepção direta RF;
+    - recepção RF via digipeater;
+    - pacote duplicado RF/APRS-IS;
+    - atualização das tabelas TNC/RF e Estatísticas.
+
 ## Concluído na v1.8.10
 
 - **Conexão APRS-IS:** indicador de estado e botão Conectar/Desconectar consolidados em um único componente no cabeçalho.
