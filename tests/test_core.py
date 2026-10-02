@@ -841,9 +841,10 @@ def test_update_check_cache_is_five_minutes():
     web_source = (root / "pt2vhf_aprs" / "web.py").read_text(encoding="utf-8")
     js_source = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
     # O cache HTTP interno continua curto para verificações manuais/forçadas,
-    # enquanto o polling automático da interface ocorre a cada 30 minutos.
+    # enquanto a cadência automática é configurável pela interface.
     assert "UPDATE_CACHE_SECONDS = 5 * 60" in web_source
-    assert "30 * 60 * 1000" in js_source
+    assert "function updateCheckMinutes()" in js_source
+    assert "updateCheckIntervalMs()" in js_source
 
 
 def test_updater_asset_name_contains_version():
@@ -1592,8 +1593,8 @@ def test_v177_message_cleanup_map_defaults_and_update_cadence():
 
     assert 'name="topology_width" id="topologyWidth" type="range" min="1" max="10" step="1" value="1"' in html
     assert html.count('value="#ffff00"') >= 2
-    assert "30 * 60 * 1000" in js
-    assert "5 * 60 * 1000" not in js
+    assert "function updateCheckMinutes()" in js
+    assert "updateCheckIntervalMs()" in js
 
 
 def test_v177_legacy_build_patch_does_not_restore_global_history_button():
@@ -1735,7 +1736,7 @@ def test_v1713_object_symbols_activity_and_version_status():
 
     assert "Versão atualizada" in js
     assert "Versão ${data.latest_version} disponível" in js
-    assert "30 * 60 * 1000" in js
+    assert "function rescheduleUpdateChecks()" in js
 
     assert "animation: stationTxPulse 1s ease-out;" in css
     assert "animation: stationTxRing 1s ease-out forwards;" in css
