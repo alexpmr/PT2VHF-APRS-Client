@@ -202,50 +202,19 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
-- **Configuração — destacar visualmente os blocos/seções**
-  - Na aba **Configuração**, deixar o **nome/título de cada bloco** em **laranja** para separar melhor visualmente as áreas.
-  - Aumentar o tamanho da fonte dos títulos em relação ao conteúdo normal da seção.
-  - Manter o padrão consistente em todos os blocos, por exemplo Estação APRS, APRS-IS, Mapa/Topologia, Mensagens/Aparência, Aplicativo, Atualizações, Backup/Dados, Saúde do aplicativo e demais seções existentes.
-  - Usar espaçamento e hierarquia visual coerentes para que cada bloco fique claramente delimitado sem aumentar excessivamente a altura da página.
-  - Garantir boa legibilidade nos temas **claro e escuro**.
-  - Não alterar os nomes nem a estrutura funcional das opções; a mudança é de **organização visual/hierarquia**.
-  - Preservar responsividade em telas menores e em **1360×768**.
-  - Adicionar teste de regressão garantindo que os títulos das seções recebam a classe/estilo padronizado.
+## Concluído na v1.8.11
 
-- **TNC / RF + Estatísticas — estações recebidas por RF não aparecem nas telas**
-  - Corrigir a ingestão/contabilização de **estações efetivamente recebidas via RF pelo TNC/KISS**, pois atualmente elas podem ser recebidas/processadas sem aparecer corretamente na aba **TNC / RF** e nas **Estatísticas**.
-  - Toda estação recebida por RF deve ser registrada como **ouvida por RF**, independentemente de a mesma estação também existir no APRS-IS.
-  - Na aba **TNC / RF**, garantir que a tabela/lista de estações ouvidas por RF mostre:
-    - indicativo;
-    - última recepção RF;
-    - quantidade de pacotes RF;
-    - path observado;
-    - recepção direta ou via digipeater, quando identificável;
-    - RSSI/SNR/DCD e demais métricas somente quando fornecidas pelo TNC;
-    - distância/posição quando houver posição válida;
-    - tempo desde a última recepção.
-  - Não classificar como **RF** uma estação conhecida apenas por APRS-IS; a origem deve ser baseada no meio pelo qual o pacote entrou no Client.
-  - Quando o mesmo indicativo for recebido por **RF e APRS-IS**, manter os dois fatos de recepção e permitir distinguir **RF × Internet/APRS-IS**, sem duplicar artificialmente a estação nos totais globais.
-  - Nas **Estatísticas**, incluir corretamente o tráfego RF em:
-    - estações recebidas por RF;
-    - estações únicas por RF;
-    - pacotes RF;
-    - RF × APRS-IS;
-    - digipeaters/iGates observados;
-    - paths/hops, quando disponíveis;
-    - atividade por período.
-  - Respeitar o período/filtros selecionados em Estatísticas.
-  - Revisar se o pipeline TNC/KISS grava corretamente a origem/meio do pacote antes de alimentar banco, tabelas e agregações.
-  - Garantir que pacotes recebidos via RF e depois também vistos no APRS-IS não percam a marcação de recepção RF.
-  - Evitar dupla contagem quando o mesmo pacote aparecer nos dois meios; preservar, porém, a evidência de que houve recepção RF.
-  - Adicionar diagnóstico específico para facilitar validação, incluindo contagem de pacotes RX via TNC/KISS e quantidade de estações RF únicas observadas.
-  - Adicionar testes de regressão com:
-    - estação recebida apenas por RF;
-    - mesma estação recebida por RF e APRS-IS;
-    - recepção direta RF;
-    - recepção RF via digipeater;
-    - pacote duplicado RF/APRS-IS;
-    - atualização das tabelas TNC/RF e Estatísticas.
+- **RF / origem de recepção:** pacotes persistidos passam a registrar explicitamente `RF` ou `APRS-IS`.
+- **Evidência dupla:** o mesmo indicativo pode ter recepções RF e APRS-IS preservadas simultaneamente.
+- **Deduplicação entre meios:** impressão lógica correlaciona a mesma transmissão RF/APRS-IS em janela curta para o total consolidado.
+- **TNC / RF:** tabela de estações ouvidas passa a combinar `tnc_heard` com histórico persistente de pacotes RF.
+- **Tabela RF:** mostra recepções, pacotes RF persistidos, distância, direta/via digi quando conhecida, tipo e path.
+- **Estatísticas:** novo resumo RF × APRS-IS, com pacotes, estações únicas, frames RF, estações nos dois meios e total lógico.
+- **Ranking de estações:** novas colunas RF e APRS-IS.
+- **Diagnóstico:** eventos `tnc_rf_station_heard` e `tnc_rf_rx_summary`.
+- **Configuração:** títulos dos blocos em laranja, fonte maior e hierarquia visual reforçada nos temas claro/escuro.
+- **Testes:** RF-only, RF+APRS-IS, deduplicação, fallback TNC/RF, Estatísticas e estilo da Configuração.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.10
 
