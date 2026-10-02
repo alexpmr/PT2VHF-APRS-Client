@@ -212,6 +212,22 @@
   - Remover qualquer filtro excessivamente restritivo por **VID/PID, fabricante, descrição, chipset ou nome amigável** que possa ocultar portas COM válidas.
   - Suportar explicitamente interfaces seriais baseadas em **CH9102/CH9102F/CH9102X** e **CH340/CH341**, além de CDC/USB Serial genérico quando o Windows fornecer uma porta COM utilizável.
   - Exibir na lista o formato **COMx — nome amigável/dispositivo**, por exemplo `COM6 — USB-Enhanced-SERIAL CH9102`.
+  - Exibir também uma seção **Equipamentos seriais detectados**, separada da simples seleção de porta, mostrando explicitamente cada dispositivo encontrado pelo Windows.
+  - Para cada equipamento detectado, mostrar quando disponível:
+    - **Porta COM**;
+    - **nome amigável/descrição**;
+    - **fabricante**;
+    - **chipset/interface USB-Serial**;
+    - **VID/PID**;
+    - **número de série USB**;
+    - **HWID**;
+    - status **disponível / ocupada / acesso negado / desconectada**.
+  - Quando houver indícios suficientes, apresentar uma identificação amigável do equipamento, por exemplo **Radtel RT-950 Pro / TNC UART**, sem depender exclusivamente do nome genérico do chipset.
+  - Quando não for possível determinar o modelo real, deixar explícito algo como **“Equipamento não identificado — CH9102”** ou **“USB Serial — CH340”**, evitando inventar o nome do rádio.
+  - Permitir selecionar o equipamento diretamente nessa lista; ao selecionar, preencher automaticamente a porta COM correspondente na configuração do TNC.
+  - Atualizar a lista de equipamentos em tempo real ao conectar/desconectar USB, ou pelo botão **Atualizar / Reescanear portas**.
+  - Destacar visualmente qual equipamento está atualmente configurado e qual está efetivamente conectado pelo Client.
+  - Se o mesmo equipamento expuser mais de uma interface serial, agrupar ou identificar claramente cada interface para evitar escolha da COM errada.
   - Adicionar botão **Atualizar / Reescanear portas** na aba TNC / RF, sem necessidade de reiniciar o Client após conectar/desconectar o rádio.
   - Permitir também **entrada manual da porta COM** como fallback, caso a enumeração automática não consiga identificá-la.
   - Ao tentar abrir uma porta, diferenciar claramente:
