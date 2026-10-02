@@ -1339,56 +1339,60 @@ def _extract_info(packet: dict[str, Any]) -> str:
     return ""
 
 
+def _interaction_calls_conn(conn: sqlite3.Connection) -> set[str]:
+    rows = conn.execute(
+        """
+        SELECT from_call AS callsign
+          FROM messages
+         WHERE direction='in' AND message_type='message'
+        UNION
+        SELECT to_call AS callsign
+          FROM messages
+         WHERE direction='out' AND status IN ('ACK','REJ')
+        UNION
+        SELECT peer AS callsign
+          FROM aprs_queries
+         WHERE direction='in'
+            OR (direction='out' AND response_at IS NOT NULL AND status='RESPONDIDA')
+        """
+    ).fetchall()
+    return {
+        str(row["callsign"] or "").upper().strip()
+        for row in rows
+        if str(row["callsign"] or "").strip()
+    }
+
+
 def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     cfg = get_config()
     own_lat = cfg.get("latitude")
     own_lon = cfg.get("longitude")
     q = "%" + filter_text.upper().strip() + "%"
     with connection() as conn:
+        interaction_calls = _interaction_calls_conn(conn)
         rows = conn.execute(
             """
             SELECT s.*,
-                   CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite,
-                   CASE WHEN
-                        COALESCE(s.message_capable,0)=1
-                        OR EXISTS (
-                            SELECT 1 FROM messages m
-                            WHERE m.direction='in'
-                              AND m.message_type='message'
-                              AND UPPER(m.from_call)=UPPER(s.callsign)
-                        )
-                        OR EXISTS (
-                            SELECT 1 FROM messages m
-                            WHERE m.direction='out'
-                              AND UPPER(m.to_call)=UPPER(s.callsign)
-                              AND UPPER(COALESCE(m.status,'')) IN ('ACK','REJ')
-                        )
-                        OR EXISTS (
-                            SELECT 1 FROM aprs_queries q
-                            WHERE UPPER(q.peer)=UPPER(s.callsign)
-                              AND (
-                                  q.direction='in'
-                                  OR (
-                                      q.direction='out'
-                                      AND q.response_at IS NOT NULL
-                                      AND UPPER(COALESCE(q.status,''))='RESPONDIDA'
-                                  )
-                              )
-                        )
-                   THEN 1 ELSE 0 END AS interaction_evidence
-            FROM stations s
-            LEFT JOIN favorites f ON UPPER(f.callsign)=UPPER(s.callsign)
-            WHERE UPPER(s.callsign) LIKE ? OR UPPER(COALESCE(s.name,'')) LIKE ? OR UPPER(COALESCE(s.info,'')) LIKE ?
-            ORDER BY favorite DESC, s.last_heard DESC
+                   CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
+              FROM stations s
+              LEFT JOIN favorites f ON f.callsign=s.callsign
+             WHERE UPPER(s.callsign) LIKE ?
+                OR UPPER(COALESCE(s.name,'')) LIKE ?
+                OR UPPER(COALESCE(s.info,'')) LIKE ?
+             ORDER BY favorite DESC, s.last_heard DESC
             """,
             (q, q, q),
         ).fetchall()
         issues = _station_position_issues_conn(conn)
+
     result = []
     own_valid = _valid_geo_position(own_lat, own_lon)
     for row in rows:
         item = dict(row)
         call = str(item.get("callsign") or "").upper().strip()
+        item["interaction_evidence"] = 1 if (
+            bool(item.get("message_capable")) or call in interaction_calls
+        ) else 0
         issue = issues.get(call)
         valid = _valid_geo_position(item.get("latitude"), item.get("longitude")) and issue is None
         item["position_valid"] = bool(valid)
@@ -3012,27 +3016,7 @@ def _build_map_data_uncached() -> dict[str, Any]:
         # Resolve interaction evidence once for the whole dataset. The previous
         # query ran three correlated EXISTS subqueries for every station, which
         # becomes very expensive as messages/aprs_queries grow.
-        interaction_rows = conn.execute(
-            """
-            SELECT from_call AS callsign
-              FROM messages
-             WHERE direction='in' AND message_type='message'
-            UNION
-            SELECT to_call AS callsign
-              FROM messages
-             WHERE direction='out' AND status IN ('ACK','REJ')
-            UNION
-            SELECT peer AS callsign
-              FROM aprs_queries
-             WHERE direction='in'
-                OR (direction='out' AND response_at IS NOT NULL AND status='RESPONDIDA')
-            """
-        ).fetchall()
-        interaction_calls = {
-            str(row["callsign"] or "").upper().strip()
-            for row in interaction_rows
-            if str(row["callsign"] or "").strip()
-        }
+        interaction_calls = _interaction_calls_conn(conn)
 
         station_rows = conn.execute(
             """
