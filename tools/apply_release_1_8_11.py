@@ -93,7 +93,7 @@ if "INSERT INTO packets(timestamp, from_call, packet_format, raw) VALUES" in db_
     raise SystemExit("v1.8.11 validation failed: legacy packet insert without medium remains")
 
 tnc_js = (ROOT / "pt2vhf_aprs/static/js/tnc.js").read_text(encoding="utf-8")
-if 'colspan="6"' in tnc_js and "Nenhuma estação ouvida pelo TNC" in tnc_js:
-    raise SystemExit("v1.8.11 validation failed: old RF-heard table colspan remains")
+if '<tr><td colspan="6">' + "${tr('Nenhuma estação ouvida pelo TNC.')}" in tnc_js:
+    raise SystemExit("v1.8.11 validation failed: old RF-heard empty-row colspan remains")
 
 print("v1.8.11 RF reception/statistics and settings hierarchy validation OK")
