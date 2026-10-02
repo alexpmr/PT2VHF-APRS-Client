@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.4": {
+        "title": "Alertas de recursos e barra do Mapa alinhada à esquerda",
+        "items": [
+            "Monitora separadamente CPU e memória do PT2VHF APRS Client e do sistema operacional.",
+            "Exibe popup não bloqueante somente após condição crítica sustentada, com padrão de 90% e persistência de 30 segundos.",
+            "Aplica histerese de recuperação e cooldown padrão de 10 minutos para evitar alertas repetitivos ou oscilantes.",
+            "Registra cada alerta crítico no log de diagnóstico com métricas do aplicativo e do sistema.",
+            "Permite configurar ativação, limites de CPU/memória, persistência e cooldown em Configuração → Saúde do aplicativo.",
+            "A barra da aba Mapa com Histórico, período, Ver, velocidade, tipo de mapa, Camadas e KML passa a ficar alinhada à esquerda.",
+            "Inclui traduções PT-BR, EN, ES e FR e testes de regressão para pico curto, condição sustentada, cooldown, recuperação e novo episódio.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.3": {
         "title": "Ranking separado de aplicativos/dispositivos e controles rápidos do Mapa",
         "items": [
