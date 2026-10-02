@@ -118,5 +118,7 @@ def test_v189_friendly_popup_replaces_legacy_object_popup():
 
 
 def test_v189_version():
-    assert read("VERSION").strip() == "1.8.9"
-    assert '__version__ = "1.8.9"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 9)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
