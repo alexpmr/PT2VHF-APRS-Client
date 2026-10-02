@@ -3124,9 +3124,29 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   border-radius: 10px;
   background: var(--panel);
 }
+.analysis-client-version-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
 .analysis-client-version-heading h3 {
   margin: 0 0 4px;
   font-size: 14px;
+}
+
+.client-version-filters {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+}
+.client-version-filters .check-field {
+  margin: 0;
+  min-height: 28px;
+  white-space: nowrap;
 }
 .analysis-client-version-heading p {
   margin: 0 0 12px;
@@ -3151,8 +3171,8 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   text-transform: uppercase;
   letter-spacing: .04em;
 }
-.client-version-table td:nth-child(2),
-.client-version-table td:nth-child(3) {
+.client-version-table th:nth-last-child(-n+2),
+.client-version-table td:nth-last-child(-n+2) {
   width: 120px;
   text-align: right;
 }
@@ -3178,6 +3198,28 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   margin-top: 2px;
   color: var(--muted);
   font-size: 9px;
+}
+.client-version-category {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(127,127,127,.08);
+  font-size: max(9px, calc(var(--statistics-font-size, 13px) - 3px));
+  white-space: nowrap;
+}
+.client-version-category-application {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.client-version-category-device {
+  color: var(--text);
+}
+.client-version-category-unknown {
+  opacity: .78;
 }
 .client-version-own-row td {
   border-top: 2px solid var(--accent);
@@ -3301,6 +3343,14 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   min-height: 25px;
   padding: 2px 8px;
   font-size: 10px;
+}
+.map-view-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+#mapViewClearAllButton {
+  color: var(--warn);
 }
 .map-view-tree {
   max-height: calc(min(70vh, 620px) - 44px);
