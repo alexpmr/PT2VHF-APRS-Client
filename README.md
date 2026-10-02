@@ -1,33 +1,51 @@
-# PT2VHF APRS Client - v1.8.9
+# PT2VHF APRS Client - v1.8.10
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.9** adiciona **checagem de atualização configurável** e transforma os popups de **objetos APRS** em fichas amigáveis, com apresentação contextual para radiossondas, meteorologia, AIS, repetidores e outros objetos.
+A **v1.8.10** unifica o **estado da conexão APRS-IS com a ação Conectar/Desconectar** e adiciona uma seção de **Agradecimentos / Colaboradores** na aba Sobre.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.9**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.10**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Setup_x64_v1.8.9.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Portable_x64_v1.8.9.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Setup_ARM64_v1.8.9.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Portable_ARM64_v1.8.9.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Setup_x64_v1.8.10.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Portable_x64_v1.8.10.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Setup_ARM64_v1.8.10.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Portable_ARM64_v1.8.10.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_x86_64_v1.8.9.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/pt2vhf-aprs-client_1.8.9_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Linux_x86_64_v1.8.9.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_x86_64_v1.8.10.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/pt2vhf-aprs-client_1.8.10_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Linux_x86_64_v1.8.10.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_macOS_arm64_v1.8.9.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_macOS_x86_64_v1.8.9.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_macOS_arm64_v1.8.10.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_macOS_x86_64_v1.8.10.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Manual_v1.8.9.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Manual_v1.8.10.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.10
+
+- **Conexão APRS-IS:** o cabeçalho passa a ter um único componente para mostrar o estado atual e executar a ação de conectar/desconectar.
+- Estados exibidos diretamente: **Desconectado, Conectando…, Reconectando…, Conectado e verificado, Conectado sem verificação e Conexão perdida**.
+- A ação disponível usa os estados reais do backend (`wanted`, `connected`, `verified`) e não depende mais do texto exibido.
+- O controle usa indicador visual, texto principal e uma linha secundária com a ação/contexto.
+- Cliques concorrentes são bloqueados enquanto a ação está em andamento.
+- A aba **Sobre** ganha uma seção **Agradecimentos / Colaboradores**.
+- Colaboradores reconhecidos nesta versão:
+  - **PU5AAG — Adriano**
+  - **PY4EI — Allan**
+  - **PU2MUS — Marco**
+  - **PP5PK — Daniel Kondlatsch**
+  - **PT2YW — Ywstter**
+  - **PT2PAG — Paulo Galvão**
+- A seção agradece sugestões, testes, validações e ajustes que ajudam na evolução contínua do software.
+- Textos atualizados em **PT-BR, EN, ES e FR**.
 
 ## Novidades da v1.8.9
 
