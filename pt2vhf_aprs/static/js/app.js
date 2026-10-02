@@ -2939,6 +2939,8 @@
       if (state.topologyEnabled) await loadTopology();
     } catch (err) {
       console.warn(err);
+      const tree = $('#mapViewTree');
+      if (tree && !tree.querySelector('.map-view-node')) renderMapViewTree([], []);
     } finally {
       state.mapLoadBusy = false;
       state.mapLoadLastAt = Date.now();
