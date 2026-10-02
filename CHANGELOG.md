@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.6 - 2026-10-02
+
+- Corrige regressão da **v1.8.5** em que os **itens/camadas do mapa podiam desaparecer**.
+- Restaura a geometria global de **header, abas e `main`** usada pelo Leaflet, removendo a compactação global introduzida para telas baixas.
+- Mantém a adaptação para **1360×768** restrita à **aba Mensagens** e ao **popup de estação**, sem alterar a altura estrutural do mapa.
+- O menu **Mapa → Ver** agora é renderizado imediatamente, antes da primeira resposta de `/api/map-data`.
+- Adiciona sincronização de viewport do Leaflet após **resize** e **orientationchange**.
+- Adiciona recuperação única para um estado de visibilidade totalmente desabilitado de forma não intencional.
+- O comando **Remover tudo** passa a ser marcado explicitamente para que a recuperação automática não desfaça uma escolha deliberada do usuário.
+- O menu **Ver** continua disponível mesmo quando ocorre falha temporária ao carregar os dados do mapa.
+- Preserva a seleção por mensagem **Automático / APRS-IS / RF direto / RF personalizado** da v1.8.5.
+- Novos testes de regressão cobrem categorias do mapa, recuperação de visibilidade e estabilidade da geometria.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.5 - 2026-10-02
 
 - Adiciona **Rota de envio** por mensagem com **Automático, APRS-IS, RF direto e RF personalizado**.
