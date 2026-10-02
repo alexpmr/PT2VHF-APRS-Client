@@ -1203,7 +1203,7 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
                     str(packet.get("comment") or ""),
                     str(packet.get("status") or ""),
                     json.dumps(packet.get("path") or [], ensure_ascii=False),
-                    json.dumps(weather, ensure_ascii=False),
+                    json.dumps(weather, ensure_ascii=False, default=str),
                     alive,
                     fmt,
                     str(packet.get("raw") or ""),
@@ -2069,7 +2069,7 @@ def aprs_object_friendly_details(item: dict[str, Any]) -> dict[str, Any]:
         ])
     if pressure in (None, ""):
         pressure = _object_first_number(text, [
-            r"\b(?:PRESS(?:URE)?|PRESSAO|PRESSÃO)\s*[:=]?\s*(\d{3,4}(?:[.,]\d+)?)"
+            r"\b(?:PRESS(?:URE)?|PRESSAO|PRESSÃO)\s*[:=]?\s*(\d{1,4}(?:[.,]\d+)?)"
         ])
 
     flight_state = ""
