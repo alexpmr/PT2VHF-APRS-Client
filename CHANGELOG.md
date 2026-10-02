@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.12 - 2026-10-02
+
+- Corrige falha de inicialização em instalações atualizadas a partir de banco antigo: **`sqlite3.OperationalError: no such column: medium`**.
+- A migração da tabela `packets` passa a adicionar primeiro as colunas **`medium`** e **`rx_fingerprint`** e somente depois criar os índices que dependem delas.
+- O hotfix é **não destrutivo**: preserva mensagens, estações, logs, tracklogs e demais dados existentes.
+- Adiciona teste de regressão que recria explicitamente um banco legado sem `medium`, executa `init_db()` e confirma a migração automática.
+- O teste confirma também a criação posterior dos índices `idx_packets_medium_time`, `idx_packets_medium_call_time` e `idx_packets_fingerprint_time`.
+- Mantém integralmente as melhorias da v1.8.11: recepção **RF × APRS-IS** nas Estatísticas, estações RF na aba TNC/RF e títulos laranja/maiores na Configuração.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.11 - 2026-10-02
 
 - Corrige a perda da origem de recepção nos pacotes: cada entrada persistida passa a registrar explicitamente **RF** ou **APRS-IS**.
