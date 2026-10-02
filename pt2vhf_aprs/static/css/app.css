@@ -3738,3 +3738,52 @@ html[data-theme="light"] .object-popup-type {
 html[data-theme="light"] .object-popup-raw {
   background: rgba(20,40,55,.055);
 }
+
+/* v1.8.11 - hierarquia visual da Configuração e resumo RF/APRS-IS */
+#tab-config .config-card > h3,
+#tab-config .config-card .config-card-heading h3 {
+  margin-bottom: 16px;
+  color: #ff8a3d;
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: .01em;
+}
+html[data-theme="light"] #tab-config .config-card > h3,
+html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
+  color: #c85f00;
+}
+#tab-config .config-card + .config-card {
+  margin-top: 2px;
+}
+.topology-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+.topology-stat-cards > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(127,127,127,.055);
+}
+.topology-stat-cards span {
+  color: var(--muted);
+  font-size: 10px;
+}
+.topology-stat-cards strong {
+  color: var(--text);
+  font-size: 15px;
+}
+@media (max-width: 900px) {
+  #tab-config .config-card > h3,
+  #tab-config .config-card .config-card-heading h3 { font-size: 17px; }
+  .topology-stat-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 560px) {
+  .topology-stat-cards { grid-template-columns: 1fr; }
+}
