@@ -217,6 +217,22 @@
   - Atualizar traduções PT-BR, EN, ES e FR.
   - Adicionar testes de regressão cobrindo transições **desconectado → conectando → conectado/verificado → desconectado**, conexão sem verificação e perda/reconexão.
 
+- **Sobre — agradecimento aos radioamadores colaboradores**
+  - Adicionar na aba **Sobre** uma seção de **Agradecimentos / Colaboradores**, reconhecendo os radioamadores que vêm contribuindo com a evolução do PT2VHF APRS Client por meio de sugestões, testes, validações e ajustes.
+  - Incluir nominalmente:
+    - **PU5AAG — Adriano**
+    - **PY4EI — Allan**
+    - **PU2MUS — Marco**
+    - **PP5PK — Daniel Kondlatsch**
+    - **PT2YW — Ywstter**
+    - **PT2PAG — Paulo Galvão**
+  - Usar um texto cordial, deixando claro que essas contribuições ajudam a melhorar continuamente o software.
+  - Manter os indicativos em destaque e os nomes associados de forma legível.
+  - Preparar a seção para receber novos colaboradores futuramente sem exigir alteração estrutural da tela.
+  - Atualizar traduções PT-BR, EN, ES e FR, preservando os nomes e indicativos sem tradução.
+  - Garantir que a seção seja exibida de forma consistente tanto no tema claro quanto no escuro.
+  - Adicionar teste de regressão verificando a presença dos colaboradores e da seção de agradecimentos na aba Sobre.
+
 ## Concluído na v1.8.9
 
 - **Atualizações:** intervalo automático padrão de 15 minutos, configurável entre 5 e 1.440 minutos.
