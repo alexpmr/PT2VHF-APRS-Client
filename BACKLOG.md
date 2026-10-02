@@ -202,15 +202,19 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
-- **REGRESSÃO v1.8.5 — itens/camadas do mapa desapareceram**
-  - Corrigir regressão introduzida após a v1.8.5 em que os **itens do mapa deixaram de aparecer**.
-  - Verificar especialmente o controle **Mapa → Ver** e sua árvore/lista de itens, incluindo estações, digipeaters, iGates, objetos APRS, tracklogs, enlaces RF, enlaces Internet/APRS-IS e pacotes em movimento.
-  - Confirmar se o problema é apenas de interface/visibilidade ou se os estados/filtros também deixaram de ser carregados/aplicados.
-  - Restaurar todos os itens e seletores existentes na v1.8.4, preservando as melhorias da v1.8.5.
-  - Garantir que **Selecionar tudo / Remover tudo**, filtros pai/filho e persistência das seleções continuem funcionando.
-  - Validar que trocar de tipo de mapa, camada, período ou resolução de tela não faça os itens desaparecerem.
-  - Adicionar teste de regressão específico para garantir que o menu **Ver** seja renderizado com todas as categorias esperadas e que os estados persistidos sejam restaurados corretamente.
-  - Tratar como **prioridade alta**, pois afeta diretamente a visualização e operação do mapa.
+## Concluído na v1.8.6
+
+- **Correção crítica do Mapa:** restaurados os itens/camadas que podiam desaparecer após a v1.8.5.
+- **Geometria do Leaflet:** removida a alteração global de altura de header/abas/main em telas baixas; o mapa volta a usar a estrutura estável da v1.8.4.
+- **1360×768:** a compactação permanece apenas em Mensagens e no popup da estação, sem alterar globalmente a área do mapa.
+- **Mapa → Ver:** árvore básica é renderizada imediatamente, mesmo antes da primeira resposta do backend.
+- **Viewport:** Leaflet executa invalidateSize e recarga visual após resize/orientationchange.
+- **Recuperação de estado:** estado totalmente desabilitado por regressão é recuperado uma única vez.
+- **Remover tudo:** passa a registrar intenção explícita para que a recuperação automática não reverta uma escolha do usuário.
+- **Falha temporária de dados:** o menu Ver permanece disponível mesmo se /api/map-data falhar.
+- **Testes:** novas regressões cobrem as oito categorias do menu Ver, viewport, recuperação e persistência.
+- **Compatibilidade:** preservada a seleção de rota/path de mensagens da v1.8.5.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.5
 
