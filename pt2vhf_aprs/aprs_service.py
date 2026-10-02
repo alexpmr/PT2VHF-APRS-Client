@@ -626,21 +626,61 @@ class APRSService:
                 self._status.last_tx_at = db.utc_now_iso()
         db.add_aprs_log("TX", mask_sensitive_log_line(line))
 
-    def queue_message_parts(self, destination: str, text: str) -> dict[str, Any]:
-        status = self.status()
-        if not status["connected"]:
-            raise ConnectionError("Cliente APRS-IS desconectado.")
-        if not status["verified"]:
-            raise PermissionError("Conexão APRS-IS não verificada; informe um passcode válido para transmitir.")
-
+    def queue_message_parts(self, destination: str, text: str, route: str = "auto", path: str = "") -> dict[str, Any]:
         cfg = db.get_config()
         source = full_callsign(cfg)
         destination = str(destination or "").upper().strip()
         if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", destination):
             raise ValueError("Indicativo de destino inválido.")
 
+        requested_route = str(route or "auto").lower().strip().replace("-", "_")
+        aliases = {
+            "automatico": "auto", "automático": "auto",
+            "aprsis": "aprs_is", "aprs_is": "aprs_is",
+            "rf": "rf_direct", "rf_direto": "rf_direct", "rf_direct": "rf_direct",
+            "rf_personalizado": "rf_custom", "rf_custom": "rf_custom",
+        }
+        requested_route = aliases.get(requested_route, requested_route)
+        if requested_route not in {"auto", "aprs_is", "rf_direct", "rf_custom"}:
+            raise ValueError("Rota de mensagem inválida.")
+
+        aprs_status = self.status()
+        from .tnc_service import get_tnc_config, normalize_message_rf_path, service as tnc_service
+        tnc_status = tnc_service.status()
+        tnc_cfg = get_tnc_config()
+        rf_ready = bool(
+            tnc_status.get("connected")
+            and not tnc_status.get("tx_paused")
+            and tnc_cfg.get("auto_tx_enabled")
+            and tnc_cfg.get("tx_confirmed")
+        )
+        aprs_ready = bool(aprs_status.get("connected") and aprs_status.get("verified"))
+
+        selected_route = requested_route
+        if requested_route == "auto":
+            # Mantém o comportamento histórico: APRS-IS é a primeira escolha.
+            selected_route = "aprs_is" if aprs_ready else ("rf_direct" if rf_ready else "auto")
+
+        if selected_route == "auto":
+            raise ConnectionError("Nenhuma rota de envio disponível: APRS-IS não está conectado/verificado e RF/TNC não está pronto para TX.")
+        if selected_route == "aprs_is" and not aprs_ready:
+            raise ConnectionError("APRS-IS desconectado ou não verificado. Escolha RF ou reconecte o APRS-IS.")
+        if selected_route in {"rf_direct", "rf_custom"} and not rf_ready:
+            raise ConnectionError("RF/TNC indisponível para TX. Conecte e habilite/ confirme TX em TNC / RF ou escolha APRS-IS.")
+
+        rf_path_items: list[str] = []
+        if selected_route == "rf_custom":
+            rf_path_items = normalize_message_rf_path(path)
+            if not rf_path_items:
+                raise ValueError("Informe um path para RF personalizado, por exemplo WIDE1-1 ou WIDE1-1,WIDE2-1.")
+        elif selected_route == "rf_direct":
+            rf_path_items = []
+
+        medium = "APRS-IS" if selected_route == "aprs_is" else "RF"
+        effective_path = "TCPIP*" if medium == "APRS-IS" else ",".join(rf_path_items)
+
         parts = split_aprs_message_parts(text)
-        dedupe_key = destination + "\0" + " ".join(parts)
+        dedupe_key = destination + "\0" + selected_route + "\0" + effective_path + "\0" + " ".join(parts)
         now = time.monotonic()
         with self._tx_guard:
             self._recent_tx = {k: v for k, v in self._recent_tx.items() if now - v[0] <= 5.0}
@@ -650,35 +690,63 @@ class APRSService:
                 result["duplicate"] = True
                 return result
 
-            message_ids = []
-            packets = []
-            pending_rows = []
+            message_ids: list[str] = []
+            packets: list[dict[str, Any]] = []
+            pending_rows: list[dict[str, Any]] = []
             group_id = f"{int(time.time() * 1000)}-{self._msg_counter:03d}"
             for index, part in enumerate(parts):
                 self._msg_counter = (self._msg_counter + 1) % 1000
                 msg_id = f"{self._msg_counter:03d}"
-                packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
+                if medium == "APRS-IS":
+                    packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
+                    status_text = "Na fila"
+                else:
+                    suffix = ("," + effective_path) if effective_path else ""
+                    packet = f"{source}>{APP_TOCALL}{suffix}::{destination:<9}:{part}{{{msg_id}"
+                    status_text = "Na fila RF"
                 message_ids.append(msg_id)
-                packets.append({"packet": packet, "msg_id": msg_id})
+                packets.append({"packet": packet, "msg_id": msg_id, "part": part})
                 pending_rows.append({
                     "from_call": source,
                     "to_call": destination,
                     "message": part,
                     "msg_id": msg_id,
-                    "status": "Na fila",
+                    "status": status_text,
                     "raw": packet,
                     "message_group_id": group_id,
                     "part_index": index + 1,
                     "part_count": len(parts),
                     "retry_count": 0,
+                    "tx_medium": medium,
+                    "tx_path": effective_path,
                 })
 
             row_ids = db.add_outgoing_message_parts(pending_rows)
-            result = {"row_ids": row_ids, "message_ids": message_ids, "parts": parts, "part_count": len(parts), "group_id": group_id, "queued": True, "duplicate": False}
+            result = {
+                "row_ids": row_ids,
+                "message_ids": message_ids,
+                "parts": parts,
+                "part_count": len(parts),
+                "group_id": group_id,
+                "queued": True,
+                "duplicate": False,
+                "route": selected_route,
+                "medium": medium,
+                "path": effective_path,
+            }
             self._recent_tx[dedupe_key] = (now, dict(result))
 
-        self._ensure_tx_worker()
-        self._tx_queue.put({"packets": packets, "group_id": group_id})
+        if medium == "APRS-IS":
+            self._ensure_tx_worker()
+            self._tx_queue.put({"packets": packets, "group_id": group_id})
+        else:
+            try:
+                for item in packets:
+                    tnc_service.queue_local_message(destination, item["part"], item["msg_id"], effective_path)
+            except Exception:
+                for msg_id in message_ids:
+                    db.mark_message_status(msg_id, "Falhou", destination)
+                raise
         return result
 
     def send_message(self, destination: str, text: str) -> int:
@@ -730,11 +798,7 @@ class APRSService:
             "group_id": group_id,
         }
 
-    def retry_message(self, row_id: int) -> dict[str, Any]:
-        status = self.status()
-        if not status["connected"] or not status["verified"]:
-            raise ConnectionError("Retry exige conexão APRS-IS conectada e verificada.")
-
+    def retry_message(self, row_id: int, route: str = "auto", path: str = "") -> dict[str, Any]:
         original = db.get_message(row_id)
         if not original or original.get("direction") != "out" or original.get("message_type") != "message":
             raise ValueError("Mensagem de saída não encontrada.")
@@ -745,25 +809,69 @@ class APRSService:
         if retry_count >= max_retries:
             raise ValueError("A mensagem já atingiu o limite configurado de tentativas.")
 
-        source = full_callsign(cfg)
+        requested_route = str(route or "auto").lower().strip().replace("-", "_")
+        if requested_route == "auto":
+            requested_route = "rf_custom" if str(original.get("tx_medium") or "").upper() == "RF" and str(original.get("tx_path") or "").strip() else (
+                "rf_direct" if str(original.get("tx_medium") or "").upper() == "RF" else "aprs_is"
+            )
+            if not path:
+                path = str(original.get("tx_path") or "")
+
         destination = str(original.get("to_call") or "").upper().strip()
         part = str(original.get("message") or "")
+        source = full_callsign(cfg)
         self._msg_counter = (self._msg_counter + 1) % 1000
         msg_id = f"{self._msg_counter:03d}"
-        packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
-        self._send_raw(packet)
+
+        from .tnc_service import get_tnc_config, normalize_message_rf_path, service as tnc_service
+        aliases = {"aprsis":"aprs_is","rf":"rf_direct","rf_direto":"rf_direct","rf_personalizado":"rf_custom"}
+        requested_route = aliases.get(requested_route, requested_route)
+        if requested_route not in {"aprs_is", "rf_direct", "rf_custom"}:
+            raise ValueError("Rota de retry inválida.")
+
+        medium = "APRS-IS" if requested_route == "aprs_is" else "RF"
+        effective_path = "TCPIP*"
+        if medium == "APRS-IS":
+            status = self.status()
+            if not status.get("connected") or not status.get("verified"):
+                raise ConnectionError("Retry por APRS-IS exige conexão conectada e verificada.")
+            packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
+            self._send_raw(packet)
+            status_text = "Reenviada"
+        else:
+            tnc_status = tnc_service.status()
+            tnc_cfg = get_tnc_config()
+            if not tnc_status.get("connected") or tnc_status.get("tx_paused") or not tnc_cfg.get("auto_tx_enabled") or not tnc_cfg.get("tx_confirmed"):
+                raise ConnectionError("Retry por RF exige TNC conectado e TX RF habilitado/confirmado.")
+            path_items = normalize_message_rf_path(path) if requested_route == "rf_custom" else []
+            if requested_route == "rf_custom" and not path_items:
+                raise ValueError("Informe o path do retry RF personalizado.")
+            effective_path = ",".join(path_items)
+            result = tnc_service.queue_local_message(destination, part, msg_id, effective_path)
+            packet = str(result.get("raw") or "")
+            status_text = "Na fila RF"
+
         db.mark_message_retried(int(original["id"]))
         new_row = db.add_message(
             "out", source, destination, part,
             msg_id=msg_id,
-            status="Reenviada",
+            status=status_text,
             raw=packet,
             message_group_id=original.get("message_group_id"),
             part_index=original.get("part_index"),
             part_count=original.get("part_count"),
             retry_count=retry_count + 1,
+            tx_medium=medium,
+            tx_path=effective_path,
         )
-        return {"id": new_row, "message_id": msg_id, "retry_count": retry_count + 1}
+        return {
+            "id": new_row,
+            "message_id": msg_id,
+            "retry_count": retry_count + 1,
+            "route": requested_route,
+            "medium": medium,
+            "path": effective_path,
+        }
 
     def send_bulletin(self, text: str, bulletin_id: str = "0", group: str = "") -> int:
         status = self.status()
