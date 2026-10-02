@@ -202,6 +202,16 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+- **Atualizações — intervalo configurável de checagem**
+  - Alterar o intervalo padrão de verificação de nova versão para **15 minutos**.
+  - Adicionar em **Configuração → Atualizações** um campo/seletor para o usuário definir o intervalo de checagem.
+  - Usar **15 minutos como padrão** em novas instalações.
+  - Preservar o valor configurado entre reinicializações.
+  - Aplicar a alteração do intervalo sem exigir reinício do aplicativo.
+  - Definir limites seguros para evitar consultas excessivamente frequentes ao GitHub; exibir as opções/intervalo de forma clara na interface.
+  - Manter a checagem manual pelo botão de versão/atualização independentemente do intervalo automático.
+  - Atualizar traduções PT-BR, EN, ES e FR e adicionar teste de regressão para persistência e agendamento do intervalo.
+
 ## Concluído na v1.8.8
 
 - **CPU / Mapa:** eliminada a possibilidade de múltiplas gerações pesadas de `/api/map-data` executarem simultaneamente.
