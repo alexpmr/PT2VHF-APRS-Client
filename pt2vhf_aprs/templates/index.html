@@ -985,6 +985,15 @@
             <button id="resetLogsTypography" type="button" class="btn secondary typography-reset">Restaurar padrão</button>
           </div>
           <div class="appearance-group">
+            <h4>Saúde do aplicativo</h4>
+            <label class="check-field"><input name="resource_alert_enabled" type="checkbox" checked><span>Alertar quando CPU ou memória estiverem críticas</span></label>
+            <label class="field"><span>CPU crítica (%)</span><input name="resource_cpu_critical_percent" type="number" min="70" max="100" step="1" value="90"></label>
+            <label class="field"><span>Memória crítica (%)</span><input name="resource_memory_critical_percent" type="number" min="70" max="100" step="1" value="90"></label>
+            <label class="field"><span>Persistência para alertar (segundos)</span><input name="resource_alert_sustain_seconds" type="number" min="10" max="300" step="5" value="30"></label>
+            <label class="field"><span>Cooldown entre alertas (minutos)</span><input name="resource_alert_cooldown_minutes" type="number" min="1" max="120" step="1" value="10"></label>
+            <small class="hint">O alerta só aparece após uso crítico sustentado. A recuperação usa histerese para evitar avisos oscilando.</small>
+          </div>
+          <div class="appearance-group">
             <h4>Estatísticas</h4>
             <label class="field"><span>Tamanho da fonte</span><div class="range-field-row">
               <input name="statistics_font_size" id="statisticsFontSize" type="range" min="11" max="20" step="1" value="13">
@@ -1348,6 +1357,18 @@
         <button id="updateModalClose" type="button" class="btn secondary">Depois</button>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="resourceCriticalAlert" class="resource-critical-alert hidden" role="alert" aria-live="assertive" aria-atomic="true">
+  <div class="resource-critical-header">
+    <div><span class="resource-critical-eyebrow">Saúde do aplicativo</span><strong id="resourceCriticalAlertTitle">Recursos críticos</strong></div>
+    <button id="resourceCriticalAlertClose" type="button" class="resource-critical-close" aria-label="Fechar">×</button>
+  </div>
+  <div id="resourceCriticalAlertBody" class="resource-critical-body"></div>
+  <div class="resource-critical-actions">
+    <a class="btn secondary" href="/api/diagnostics/log" download>Baixar log de diagnóstico</a>
+    <button id="resourceCriticalAlertOk" type="button" class="btn primary">OK</button>
   </div>
 </div>
 
