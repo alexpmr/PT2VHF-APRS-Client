@@ -68,8 +68,13 @@
       <span id="versionStatusText">Verificando versão…</span>
     </a>
     <div id="tncHeaderStatus" class="status disconnected tnc-header-status" title="Estado TNC / RF"><span class="dot"></span><span>TNC offline</span></div>
-    <div id="connectionStatus" class="status disconnected"><span class="dot"></span><span>Desconectado</span></div>
-    <button id="connectButton" class="btn primary">Conectar</button>
+    <button id="connectButton" type="button" class="connection-control disconnected" data-action="connect" title="Clique para conectar ao APRS-IS">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="connection-control-copy">
+        <strong id="connectionControlStatus">Desconectado</strong>
+        <small id="connectionControlAction">Clique para conectar</small>
+      </span>
+    </button>
   </div>
 </header>
 
@@ -1128,6 +1133,18 @@
           <h3 id="aboutPromoteTitle"></h3>
           <p id="aboutPromoteText"></p>
           <button id="aboutPromoteButton" type="button" class="btn primary"></button>
+        </article>
+        <article class="about-card about-contributors-card">
+          <h3 id="aboutContributorsTitle">Agradecimentos / Colaboradores</h3>
+          <p id="aboutContributorsText">Agradecimento aos radioamadores que contribuem com sugestões, testes, validações e ajustes que ajudam na evolução contínua do PT2VHF APRS Client.</p>
+          <div class="about-contributors-list" aria-label="Radioamadores colaboradores">
+            <div class="about-contributor"><strong>PU5AAG</strong><span>Adriano</span></div>
+            <div class="about-contributor"><strong>PY4EI</strong><span>Allan</span></div>
+            <div class="about-contributor"><strong>PU2MUS</strong><span>Marco</span></div>
+            <div class="about-contributor"><strong>PP5PK</strong><span>Daniel Kondlatsch</span></div>
+            <div class="about-contributor"><strong>PT2YW</strong><span>Ywstter</span></div>
+            <div class="about-contributor"><strong>PT2PAG</strong><span>Paulo Galvão</span></div>
+          </div>
         </article>
       </div>
     </div>
