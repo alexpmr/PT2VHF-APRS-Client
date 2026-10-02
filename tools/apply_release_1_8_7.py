@@ -59,6 +59,7 @@ checks = {
     "pt2vhf_aprs/version_notes.py": ['"1.8.7"'],
     "CHANGELOG.md": ["## 1.8.7 - 2026-10-02"],
     "README.md": ["# PT2VHF APRS Client - v1.8.7", "## Novidades da v1.8.7"],
+    "requirements.txt": ["pyserial>=3.5,<4.0"],
 }
 
 for rel, needles in checks.items():
