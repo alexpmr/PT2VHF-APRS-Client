@@ -3569,3 +3569,62 @@ html[data-theme="light"] .map-view-tree-header {
   text-align: left;
   justify-self: start;
 }
+
+/* v1.8.9 - popups amigáveis de objetos APRS */
+.object-friendly-popup {
+  min-width: 285px;
+  max-width: 390px;
+}
+.object-popup-type {
+  display: inline-flex;
+  margin: -2px 0 9px;
+  padding: 3px 7px;
+  border: 1px solid rgba(59,166,255,.28);
+  border-radius: 999px;
+  background: rgba(59,166,255,.07);
+  color: #b7d9ff;
+  font-size: 10px;
+  font-weight: 800;
+}
+.object-popup-primary-label {
+  color: var(--accent) !important;
+}
+.object-popup-primary-value {
+  color: var(--text);
+  font-weight: 800;
+}
+.object-popup-technical {
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+.object-popup-technical summary {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+}
+.object-popup-technical[open] summary {
+  margin-bottom: 8px;
+}
+.object-popup-raw {
+  display: block;
+  max-width: 260px;
+  max-height: 92px;
+  overflow: auto;
+  padding: 5px 6px;
+  border-radius: 5px;
+  background: rgba(0,0,0,.18);
+  font: 10px/1.35 Consolas, "Courier New", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+html[data-theme="light"] .object-popup-type {
+  color: #165f98;
+  border-color: rgba(22,95,152,.24);
+  background: rgba(22,95,152,.06);
+}
+html[data-theme="light"] .object-popup-raw {
+  background: rgba(20,40,55,.055);
+}
