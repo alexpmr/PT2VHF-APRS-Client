@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.11": {
+        "title": "Recepção RF nas Estatísticas e organização visual da Configuração",
+        "items": [
+            "Pacotes passam a preservar explicitamente o meio de entrada RF ou APRS-IS.",
+            "A lista de estações ouvidas por RF usa evidência persistente e mostra recepções, pacotes RF, distância, path e recepção direta/via digi quando conhecida.",
+            "Estatísticas ganha resumo RF × APRS-IS e colunas RF/APRS-IS no ranking de estações.",
+            "A mesma transmissão observada pelos dois meios é correlacionada em um total lógico deduplicado sem apagar a evidência de cada meio.",
+            "Novos diagnósticos registram novas estações RF e resumos periódicos do RX TNC/KISS.",
+            "Os títulos dos blocos da aba Configuração passam a usar laranja e fonte maior para reforçar a hierarquia visual.",
+            "Inclui regressões para RF-only, RF+APRS-IS, deduplicação entre meios e estilo da Configuração.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.10": {
         "title": "Controle único de conexão e agradecimentos aos colaboradores",
         "items": [
