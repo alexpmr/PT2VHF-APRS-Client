@@ -202,6 +202,14 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+## Concluído na v1.8.12
+
+- **Migração de banco legado:** corrigida a inicialização quando a tabela `packets` ainda não possuía a coluna `medium`.
+- **Ordem segura de schema:** `medium` e `rx_fingerprint` são adicionadas antes da criação dos índices dependentes.
+- **Sem perda de dados:** a atualização preserva mensagens, estações, logs, tracklogs e histórico existente.
+- **Teste de regressão:** schema legado sem `medium` é criado em banco temporário e migrado automaticamente por `init_db()`.
+- **Produção:** hotfix completo Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## Concluído na v1.8.11
 
 - **RF / origem de recepção:** pacotes persistidos passam a registrar explicitamente `RF` ou `APRS-IS`.
