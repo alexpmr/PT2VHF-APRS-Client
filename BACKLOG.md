@@ -202,6 +202,16 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+- **REGRESSÃO v1.8.5 — itens/camadas do mapa desapareceram**
+  - Corrigir regressão introduzida após a v1.8.5 em que os **itens do mapa deixaram de aparecer**.
+  - Verificar especialmente o controle **Mapa → Ver** e sua árvore/lista de itens, incluindo estações, digipeaters, iGates, objetos APRS, tracklogs, enlaces RF, enlaces Internet/APRS-IS e pacotes em movimento.
+  - Confirmar se o problema é apenas de interface/visibilidade ou se os estados/filtros também deixaram de ser carregados/aplicados.
+  - Restaurar todos os itens e seletores existentes na v1.8.4, preservando as melhorias da v1.8.5.
+  - Garantir que **Selecionar tudo / Remover tudo**, filtros pai/filho e persistência das seleções continuem funcionando.
+  - Validar que trocar de tipo de mapa, camada, período ou resolução de tela não faça os itens desaparecerem.
+  - Adicionar teste de regressão específico para garantir que o menu **Ver** seja renderizado com todas as categorias esperadas e que os estados persistidos sejam restaurados corretamente.
+  - Tratar como **prioridade alta**, pois afeta diretamente a visualização e operação do mapa.
+
 ## Concluído na v1.8.5
 
 - **Mensagens — rota por envio:** opções Automático, APRS-IS, RF direto e RF personalizado.
