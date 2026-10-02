@@ -202,6 +202,21 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+- **Conexão APRS-IS — unificar botão Conectar/Desconectar com o indicador de estado**
+  - Mesclar o botão atual **Conectar/Desconectar** com a informação de status **Conectado e verificado / Conectado sem verificação / Desconectado / Reconectando / Conexão perdida**.
+  - Usar **um único componente clicável** no cabeçalho para representar simultaneamente o estado da conexão e a ação disponível.
+  - Quando estiver **desconectado**, o componente deve indicar claramente **Desconectado** e permitir **Conectar** ao clicar.
+  - Quando estiver **conectado e verificado**, exibir **Conectado e verificado** e permitir **Desconectar** ao clicar.
+  - Quando estiver **conectado sem verificação**, exibir esse estado explicitamente e manter a ação de **Desconectar**.
+  - Durante tentativa/reconexão, mostrar estado intermediário como **Conectando… / Reconectando…**, evitando múltiplos cliques concorrentes.
+  - Em caso de **conexão perdida**, refletir imediatamente o estado e permitir nova tentativa de conexão.
+  - Manter feedback visual por cor/ícone, sem depender apenas da cor para indicar o estado.
+  - O texto principal deve priorizar o **estado atual**; a ação disponível pode aparecer como tooltip, subtítulo ou texto complementar.
+  - Remover redundâncias visuais no cabeçalho após a fusão dos dois componentes.
+  - Preservar a validação dos campos obrigatórios antes de conectar e o comportamento atual de reconexão.
+  - Atualizar traduções PT-BR, EN, ES e FR.
+  - Adicionar testes de regressão cobrindo transições **desconectado → conectando → conectado/verificado → desconectado**, conexão sem verificação e perda/reconexão.
+
 ## Concluído na v1.8.9
 
 - **Atualizações:** intervalo automático padrão de 15 minutos, configurável entre 5 e 1.440 minutos.
