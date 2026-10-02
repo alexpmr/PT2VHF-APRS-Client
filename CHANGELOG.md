@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.8.8 - 2026-10-02
+
+- Otimiza profundamente **Mapa / SQLite** após diagnóstico de saturação do servidor interno e alto uso de CPU.
+- `/api/map-data` passa a usar **single-flight global**: somente uma geração pesada do mapa pode executar por vez.
+- Chamadas concorrentes recebem imediatamente o **último snapshot válido em cache**, em vez de iniciar novas consultas SQLite iguais.
+- Na primeira carga, se outra geração já estiver ocupando o mapa, o backend evita enfileirar vários workers e sinaliza estado ocupado sem substituir o mapa atual.
+- Remove os **EXISTS correlacionados por estação** usados para descobrir capacidade/interação em Mapa e Estações.
+- A evidência de interação passa a ser calculada em uma consulta consolidada por conjuntos e reutilizada pelas duas telas.
+- Adiciona índices SQLite específicos para mensagens recebidas, ACK/REJ enviados e queries APRS respondidas.
+- O endpoint de mapa passa a registrar `map_data_build` com duração e quantidade de estações, objetos e pontos de tracklog.
+- O refresh completo do mapa passa de **10 s para 15 s**; animações/tráfego continuam em cadência própria.
+- O frontend preserva o mapa atual quando o backend sinaliza que a primeira geração ainda está ocupada.
+- A descoberta serial automática fica mais leve: **Windows CIM/PowerShell deixa de rodar no polling periódico**.
+- O polling serial automático passa a usar fontes leves a cada **30 s**; a varredura CIM/PnP completa fica para abertura/reescan completo.
+- A varredura serial completa ganha cache de **60 s**, preservando a identificação avançada de CH9102/CH340 e Radtel da v1.8.7.
+- Inclui testes de concorrência que falham se múltiplos builds pesados de `map_data` forem iniciados simultaneamente.
+- Inclui regressões para cache stale-while-busy, índices SQLite e polling serial leve.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.7 - 2026-10-02
 
 - Amplia a descoberta de portas seriais do **TNC / RF**, combinando **pyserial**, **Windows CIM/PnP** e o registro **SERIALCOMM**.
