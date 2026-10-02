@@ -1756,10 +1756,10 @@ def test_v1715_infrastructure_interaction_requires_evidence():
     assert '${interactionDisabled}>Enviar mensagem</button>' in js
     assert "station-interaction-disabled-note" in js
 
-    assert "m.direction='in'" in database
-    assert "UPPER(COALESCE(m.status,'')) IN ('ACK','REJ')" in database
-    assert "q.response_at IS NOT NULL" in database
-    assert "AS interaction_evidence" in database
+    assert "WHERE direction='in' AND message_type='message'" in database
+    assert "WHERE direction='out' AND status IN ('ACK','REJ')" in database
+    assert "response_at IS NOT NULL AND status='RESPONDIDA'" in database
+    assert 'item["interaction_evidence"]' in database
 
     assert ".station-popup .btn:disabled" in css
     assert ".station-interaction-disabled-note" in css
