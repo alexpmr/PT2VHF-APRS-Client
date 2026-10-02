@@ -376,7 +376,7 @@ class APRSService:
 
         # v1.6.14: log, pacote, topologia e estação/track são gravados juntos.
         # Evita 3-4 conexões e commits SQLite independentes para cada RX.
-        db.process_received_packet(line, parsed, from_call, fmt)
+        db.process_received_packet(line, parsed, from_call, fmt, medium="APRS-IS")
         self._maybe_resolve_nonmessage_query_response(from_call, parsed, line)
 
         msg = parse_message_line(line, parsed)
@@ -402,7 +402,7 @@ class APRSService:
             parsed = {"raw": line}
         fmt = str(parsed.get("format") or "")
         from_call = str(parsed.get("from") or extract_source(line) or "")
-        db.process_received_packet(line, parsed, from_call, fmt)
+        db.process_received_packet(line, parsed, from_call, fmt, medium="RF")
         self._maybe_resolve_nonmessage_query_response(from_call, parsed, line)
         msg = parse_message_line(line, parsed)
         if msg:
