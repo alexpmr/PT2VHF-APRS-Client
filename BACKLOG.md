@@ -202,6 +202,16 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+- **Configuração — destacar visualmente os blocos/seções**
+  - Na aba **Configuração**, deixar o **nome/título de cada bloco** em **laranja** para separar melhor visualmente as áreas.
+  - Aumentar o tamanho da fonte dos títulos em relação ao conteúdo normal da seção.
+  - Manter o padrão consistente em todos os blocos, por exemplo Estação APRS, APRS-IS, Mapa/Topologia, Mensagens/Aparência, Aplicativo, Atualizações, Backup/Dados, Saúde do aplicativo e demais seções existentes.
+  - Usar espaçamento e hierarquia visual coerentes para que cada bloco fique claramente delimitado sem aumentar excessivamente a altura da página.
+  - Garantir boa legibilidade nos temas **claro e escuro**.
+  - Não alterar os nomes nem a estrutura funcional das opções; a mudança é de **organização visual/hierarquia**.
+  - Preservar responsividade em telas menores e em **1360×768**.
+  - Adicionar teste de regressão garantindo que os títulos das seções recebam a classe/estilo padronizado.
+
 ## Concluído na v1.8.10
 
 - **Conexão APRS-IS:** indicador de estado e botão Conectar/Desconectar consolidados em um único componente no cabeçalho.
