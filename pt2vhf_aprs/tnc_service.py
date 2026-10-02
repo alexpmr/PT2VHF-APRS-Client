@@ -5,6 +5,8 @@ import json
 import queue
 import re
 import socket
+import subprocess
+import sys
 import threading
 import time
 from collections import defaultdict, deque
@@ -99,6 +101,245 @@ def normalize_message_rf_path(value: str) -> list[str]:
         call, ssid = split_call(item)
         normalized.append(call + (f"-{ssid}" if ssid else ""))
     return normalized
+
+
+
+_SERIAL_CHIPSETS = (
+    ("CH9102", re.compile(r"\bCH9102[A-Z0-9-]*\b", re.I)),
+    ("CH341", re.compile(r"\bCH341[A-Z0-9-]*\b", re.I)),
+    ("CH340", re.compile(r"\bCH340[A-Z0-9-]*\b", re.I)),
+    ("CP210x", re.compile(r"\bCP210[0-9A-Z-]*\b", re.I)),
+    ("FTDI", re.compile(r"\b(?:FTDI|FT232|FT231|FT2232|FT4232)\b", re.I)),
+    ("CDC/ACM", re.compile(r"\b(?:CDC|ACM|USB SERIAL DEVICE)\b", re.I)),
+)
+
+
+def _serial_text(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def _serial_chipset(*values: Any) -> str:
+    haystack = " ".join(_serial_text(value) for value in values if value).upper()
+    for label, pattern in _SERIAL_CHIPSETS:
+        if pattern.search(haystack):
+            return label
+    return ""
+
+
+def _parse_vid_pid(*values: Any) -> tuple[str, str]:
+    haystack = " ".join(_serial_text(value) for value in values if value).upper()
+    match = re.search(r"VID[_:=]?([0-9A-F]{4}).*?PID[_:=]?([0-9A-F]{4})", haystack)
+    if match:
+        return match.group(1), match.group(2)
+    return "", ""
+
+
+def _friendly_serial_equipment(record: dict[str, Any]) -> tuple[str, str]:
+    combined = " ".join(
+        _serial_text(record.get(key))
+        for key in ("description", "product", "manufacturer", "name", "hwid", "pnp_device_id")
+        if record.get(key)
+    )
+    upper = combined.upper()
+    chipset = _serial_chipset(combined)
+    if "RADTEL" in upper and ("950" in upper or "RT-950" in upper or "RT950" in upper):
+        return "Radtel RT-950 Pro / TNC UART", chipset
+    if "RADTEL" in upper:
+        return "Radtel — interface serial", chipset
+    description = _serial_text(record.get("description") or record.get("name"))
+    generic = {
+        "", "N/A", "USB SERIAL PORT", "USB-SERIAL", "USB SERIAL DEVICE",
+        "COMMUNICATIONS PORT", "SERIAL PORT",
+    }
+    if description.upper() not in generic and description:
+        return description, chipset
+    if chipset:
+        return f"USB Serial — {chipset}", chipset
+    return "Equipamento serial não identificado", chipset
+
+
+def _windows_registry_serial_ports() -> list[dict[str, Any]]:
+    if sys.platform != "win32":
+        return []
+    try:
+        import winreg  # type: ignore
+    except Exception:
+        return []
+    result: list[dict[str, Any]] = []
+    try:
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DEVICEMAP\SERIALCOMM")
+    except OSError:
+        return result
+    try:
+        index = 0
+        while True:
+            try:
+                name, value, _ = winreg.EnumValue(key, index)
+            except OSError:
+                break
+            index += 1
+            device = _serial_text(value)
+            if device:
+                result.append({
+                    "device": device,
+                    "description": _serial_text(name),
+                    "source": "windows_registry",
+                })
+    finally:
+        try:
+            winreg.CloseKey(key)
+        except Exception:
+            pass
+    return result
+
+
+def _windows_cim_serial_ports() -> list[dict[str, Any]]:
+    """Enumera PnP serial via Windows/CIM como fallback ao pyserial."""
+    if sys.platform != "win32":
+        return []
+    script = r"""
+$ErrorActionPreference='SilentlyContinue'
+$items = @()
+Get-CimInstance Win32_PnPEntity | Where-Object { $_.Name -match '\(COM[0-9]+\)' } | ForEach-Object {
+  if ($_.Name -match '\((COM[0-9]+)\)') {
+    $items += [PSCustomObject]@{
+      device = $Matches[1]
+      name = [string]$_.Name
+      description = [string]$_.Description
+      manufacturer = [string]$_.Manufacturer
+      pnp_device_id = [string]$_.PNPDeviceID
+      pnp_status = [string]$_.Status
+      config_manager_error_code = [int]$_.ConfigManagerErrorCode
+      source = 'windows_cim'
+    }
+  }
+}
+$items | ConvertTo-Json -Compress
+"""
+    try:
+        completed = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            check=False,
+        )
+        text = (completed.stdout or "").strip()
+        if completed.returncode != 0 or not text:
+            return []
+        parsed = json.loads(text)
+        if isinstance(parsed, dict):
+            parsed = [parsed]
+        return [dict(item) for item in parsed if isinstance(item, dict) and item.get("device")]
+    except Exception:
+        return []
+
+
+def _pyserial_ports() -> list[dict[str, Any]]:
+    if list_ports is None:
+        return []
+    result: list[dict[str, Any]] = []
+    try:
+        ports = list_ports.comports(include_links=True)
+    except TypeError:
+        ports = list_ports.comports()
+    except Exception:
+        return result
+    try:
+        for port in ports:
+            vid = getattr(port, "vid", None)
+            pid = getattr(port, "pid", None)
+            result.append({
+                "device": _serial_text(getattr(port, "device", "")),
+                "description": _serial_text(getattr(port, "description", "")),
+                "name": _serial_text(getattr(port, "name", "")),
+                "hwid": _serial_text(getattr(port, "hwid", "")),
+                "manufacturer": _serial_text(getattr(port, "manufacturer", "")),
+                "product": _serial_text(getattr(port, "product", "")),
+                "interface": _serial_text(getattr(port, "interface", "")),
+                "serial_number": _serial_text(getattr(port, "serial_number", "")),
+                "location": _serial_text(getattr(port, "location", "")),
+                "vid": f"{int(vid):04X}" if vid is not None else "",
+                "pid": f"{int(pid):04X}" if pid is not None else "",
+                "source": "pyserial",
+            })
+    except Exception:
+        return result
+    return [item for item in result if item.get("device")]
+
+
+def _merge_serial_ports(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: dict[str, dict[str, Any]] = {}
+    source_sets: dict[str, set[str]] = defaultdict(set)
+    for raw in records:
+        device = _serial_text(raw.get("device")).upper()
+        if not device:
+            continue
+        item = merged.setdefault(device, {
+            "device": device,
+            "description": "",
+            "name": "",
+            "manufacturer": "",
+            "product": "",
+            "interface": "",
+            "serial_number": "",
+            "location": "",
+            "hwid": "",
+            "pnp_device_id": "",
+            "pnp_status": "",
+            "config_manager_error_code": 0,
+            "vid": "",
+            "pid": "",
+        })
+        source = _serial_text(raw.get("source"))
+        if source:
+            source_sets[device].add(source)
+        for key in (
+            "description", "name", "manufacturer", "product", "interface",
+            "serial_number", "location", "hwid", "pnp_device_id", "pnp_status",
+        ):
+            value = _serial_text(raw.get(key))
+            if value and not item.get(key):
+                item[key] = value
+        try:
+            error_code = int(raw.get("config_manager_error_code") or 0)
+        except (TypeError, ValueError):
+            error_code = 0
+        if error_code and not item.get("config_manager_error_code"):
+            item["config_manager_error_code"] = error_code
+        vid = _serial_text(raw.get("vid")).upper()
+        pid = _serial_text(raw.get("pid")).upper()
+        parsed_vid, parsed_pid = _parse_vid_pid(
+            raw.get("hwid"), raw.get("pnp_device_id"), raw.get("name"), raw.get("description")
+        )
+        item["vid"] = item.get("vid") or vid or parsed_vid
+        item["pid"] = item.get("pid") or pid or parsed_pid
+
+    def sort_key(item: dict[str, Any]) -> tuple[int, str]:
+        match = re.fullmatch(r"COM(\d+)", str(item.get("device") or ""), re.I)
+        return (int(match.group(1)) if match else 99999, str(item.get("device") or ""))
+
+    result: list[dict[str, Any]] = []
+    for device, item in merged.items():
+        friendly, chipset = _friendly_serial_equipment(item)
+        item["equipment"] = friendly
+        item["chipset"] = chipset
+        item["sources"] = sorted(source_sets.get(device) or [])
+        result.append(item)
+    return sorted(result, key=sort_key)
+
+
+def _serial_connection_error(port: str, exc: Exception) -> Exception:
+    text = str(exc or "").strip()
+    lower = text.lower()
+    if any(token in lower for token in ("could not open port", "access is denied", "permissionerror", "permission denied")):
+        return PermissionError(
+            f"Não foi possível abrir {port}: a porta está ocupada por outro programa ou o Windows negou o acesso."
+        )
+    if any(token in lower for token in ("file not found", "cannot find", "no such file", "not found")):
+        return ConnectionError(f"Porta serial {port} inexistente ou desconectada.")
+    return ConnectionError(f"Falha ao abrir a porta serial {port}: {text or exc.__class__.__name__}.")
 
 
 def _ensure_schema() -> None:
@@ -788,6 +1029,10 @@ class TNCService:
         self._recent_is_to_rf: dict[str, float] = {}
         self._source_activity: dict[str, deque[float]] = defaultdict(deque)
         self._tx_activity: deque[float] = deque()
+        self._ports_lock = threading.Lock()
+        self._ports_cache: list[dict[str, Any]] = []
+        self._ports_cache_at = 0.0
+        self._ports_signature = ""
 
     def status(self) -> dict[str, Any]:
         with self._status_lock:
@@ -812,20 +1057,59 @@ class TNCService:
             if hasattr(self._status, key):
                 setattr(self._status, key, int(getattr(self._status, key) or 0) + int(amount))
 
-    def available_ports(self) -> list[dict[str, str]]:
-        if list_ports is None:
-            return []
-        result = []
-        try:
-            for port in list_ports.comports():
-                result.append({
-                    "device": str(port.device or ""),
-                    "description": str(port.description or ""),
-                    "hwid": str(port.hwid or ""),
-                })
-        except Exception:
-            return []
-        return result
+    def available_ports(self, *, force: bool = False) -> list[dict[str, Any]]:
+        now = time.monotonic()
+        with self._ports_lock:
+            if not force and self._ports_cache and now - self._ports_cache_at < 5.0:
+                return [dict(item) for item in self._ports_cache]
+
+        records: list[dict[str, Any]] = []
+        records.extend(_pyserial_ports())
+        if sys.platform == "win32":
+            records.extend(_windows_cim_serial_ports())
+            records.extend(_windows_registry_serial_ports())
+        ports = _merge_serial_ports(records)
+
+        cfg = get_tnc_config()
+        status = self.status()
+        configured = _serial_text(cfg.get("serial_port")).upper()
+        connected_port = ""
+        if status.get("connected") and str(status.get("transport") or "") == "serial":
+            endpoint = str(status.get("endpoint") or "")
+            connected_port = endpoint.split("@", 1)[0].strip().upper()
+
+        for item in ports:
+            device = str(item.get("device") or "").upper()
+            item["configured"] = bool(configured and device == configured)
+            item["connected"] = bool(connected_port and device == connected_port)
+            code = int(item.get("config_manager_error_code") or 0)
+            if item["connected"]:
+                item["status"] = "connected"
+                item["status_label"] = "Conectado pelo Client"
+            elif code:
+                item["status"] = "device_error"
+                item["status_label"] = f"Erro do dispositivo (código {code})"
+            elif item["configured"]:
+                item["status"] = "configured"
+                item["status_label"] = "Configurado"
+            else:
+                item["status"] = "detected"
+                item["status_label"] = "Detectado"
+
+        signature = json.dumps(
+            [{key: item.get(key) for key in ("device", "description", "manufacturer", "vid", "pid", "serial_number")} for item in ports],
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        with self._ports_lock:
+            changed = signature != self._ports_signature
+            self._ports_signature = signature
+            self._ports_cache = [dict(item) for item in ports]
+            self._ports_cache_at = now
+
+        if changed or force:
+            diag.log_event("tnc_serial_scan", force=force, count=len(ports), ports=ports)
+        return ports
 
     def start_if_configured(self) -> None:
         cfg = get_tnc_config()
@@ -886,12 +1170,15 @@ class TNCService:
             return sock
         if serial is None:
             raise RuntimeError("pyserial não está instalado; KISS Serial indisponível.")
-        return serial.Serial(
-            port=cfg["serial_port"],
-            baudrate=int(cfg["serial_baud"]),
-            timeout=1.0,
-            write_timeout=2.0,
-        )
+        try:
+            return serial.Serial(
+                port=cfg["serial_port"],
+                baudrate=int(cfg["serial_baud"]),
+                timeout=1.0,
+                write_timeout=2.0,
+            )
+        except Exception as exc:
+            raise _serial_connection_error(str(cfg["serial_port"]), exc) from exc
 
     def _close_transport(self) -> None:
         with self._transport_lock:
