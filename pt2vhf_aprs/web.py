@@ -27,6 +27,7 @@ from .tnc_service import (
     save_tnc_config,
     service as tnc_service,
     tnc_statistics,
+    tnc_reception_stats,
 )
 from .version_notes import notes_for
 
@@ -749,6 +750,7 @@ def create_app() -> Flask:
             hours = 0
         payload = db.topology_stats(hours)
         payload["comparison"] = db.topology_period_comparison(hours)
+        payload["reception_media"] = tnc_reception_stats(hours)
         return jsonify(payload)
 
     @app.get("/api/topology/timeline")
