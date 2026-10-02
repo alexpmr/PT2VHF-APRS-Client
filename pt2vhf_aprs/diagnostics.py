@@ -28,6 +28,8 @@ _metrics_lock = threading.Lock()
 _metrics_started = time.monotonic()
 _metrics_prev_wall: float | None = None
 _metrics_prev_cpu: float | None = None
+_resource_alert_lock = threading.Lock()
+_resource_alert_state: dict[str, dict[str, Any]] = {}
 
 
 def _utc_now() -> str:
@@ -254,6 +256,12 @@ def system_metrics() -> dict[str, Any]:
             "cpu_percent": 0.0,
             "memory_mb": 0.0,
             "memory_percent": 0.0,
+            "app_cpu_percent": 0.0,
+            "app_memory_mb": 0.0,
+            "app_memory_percent": 0.0,
+            "system_cpu_percent": 0.0,
+            "system_memory_percent": 0.0,
+            "system_memory_available_mb": 0.0,
             "process_count": 1,
             "thread_count": len(threading.enumerate()),
             "uptime_seconds": max(0.0, time.monotonic() - _metrics_started),
@@ -291,18 +299,86 @@ def system_metrics() -> dict[str, Any]:
         _metrics_prev_wall = now
         _metrics_prev_cpu = cpu_total
 
+    system_cpu_percent = 0.0
+    system_memory_percent = 0.0
+    system_memory_available_mb = 0.0
     try:
-        total_memory = max(1, int(psutil.virtual_memory().total))
+        system_cpu_percent = min(100.0, max(0.0, float(psutil.cpu_percent(interval=None))))
+    except Exception:
+        system_cpu_percent = 0.0
+    try:
+        vm = psutil.virtual_memory()
+        total_memory = max(1, int(vm.total))
         memory_percent = min(100.0, (rss_total / total_memory) * 100.0)
+        system_memory_percent = min(100.0, max(0.0, float(vm.percent)))
+        system_memory_available_mb = max(0.0, float(vm.available) / (1024 * 1024))
     except Exception:
         memory_percent = 0.0
-
+    app_memory_mb = rss_total / (1024 * 1024)
     return {
         "cpu_percent": round(cpu_percent, 1),
-        "memory_mb": round(rss_total / (1024 * 1024), 1),
+        "memory_mb": round(app_memory_mb, 1),
         "memory_percent": round(memory_percent, 1),
+        "app_cpu_percent": round(cpu_percent, 1),
+        "app_memory_mb": round(app_memory_mb, 1),
+        "app_memory_percent": round(memory_percent, 1),
+        "system_cpu_percent": round(system_cpu_percent, 1),
+        "system_memory_percent": round(system_memory_percent, 1),
+        "system_memory_available_mb": round(system_memory_available_mb, 1),
         "process_count": alive,
         "thread_count": thread_total,
         "uptime_seconds": round(max(0.0, now - _metrics_started), 1),
         "available": True,
     }
+
+
+def evaluate_resource_alerts(
+    metrics: dict[str, Any], *, enabled: bool = True,
+    cpu_threshold: float = 90.0, memory_threshold: float = 90.0,
+    sustain_seconds: float = 30.0, cooldown_seconds: float = 600.0,
+    hysteresis_points: float = 5.0, now: float | None = None,
+    tracker_state: dict[str, dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Avalia alertas críticos sustentados com cooldown e histerese."""
+    current = float(time.monotonic() if now is None else now)
+    sustain = max(1.0, float(sustain_seconds))
+    cooldown = max(0.0, float(cooldown_seconds))
+    hysteresis = max(0.0, float(hysteresis_points))
+    store = tracker_state if tracker_state is not None else _resource_alert_state
+    specs = (
+        ("app_cpu", "cpu", "app", "app_cpu_percent", float(cpu_threshold)),
+        ("system_cpu", "cpu", "system", "system_cpu_percent", float(cpu_threshold)),
+        ("app_memory", "memory", "app", "app_memory_percent", float(memory_threshold)),
+        ("system_memory", "memory", "system", "system_memory_percent", float(memory_threshold)),
+    )
+    due: list[dict[str, Any]] = []
+    with _resource_alert_lock:
+        if not enabled:
+            store.clear()
+            return due
+        for key, resource, scope, metric_key, threshold in specs:
+            value = max(0.0, float(metrics.get(metric_key) or 0.0))
+            item = store.setdefault(key, {"since": None, "last_alert": None, "critical": False})
+            since = item.get("since")
+            last_alert = item.get("last_alert")
+            critical = bool(item.get("critical"))
+            recovery_threshold = max(0.0, threshold - hysteresis)
+            if value >= threshold:
+                if since is None:
+                    since = current
+                    item["since"] = current
+                sustained_for = max(0.0, current - float(since))
+                cooldown_ready = last_alert is None or (current - float(last_alert)) >= cooldown
+                if sustained_for >= sustain and cooldown_ready:
+                    item["critical"] = True
+                    item["last_alert"] = current
+                    due.append({"key": key, "resource": resource, "scope": scope, "value": round(value, 1), "threshold": round(threshold, 1), "sustained_seconds": round(sustained_for, 1)})
+                continue
+            if critical:
+                if value <= recovery_threshold:
+                    item["since"] = None
+                    item["last_alert"] = None
+                    item["critical"] = False
+            else:
+                item["since"] = None
+    return due
