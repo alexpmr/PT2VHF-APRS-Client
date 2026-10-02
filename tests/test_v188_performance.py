@@ -173,5 +173,7 @@ def test_v188_frontend_reduces_full_map_and_serial_polling():
 
 
 def test_v188_version():
-    assert read("VERSION").strip() == "1.8.8"
-    assert '__version__ = "1.8.8"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 8)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
