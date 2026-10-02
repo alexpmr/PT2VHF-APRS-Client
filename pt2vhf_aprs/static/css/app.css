@@ -1239,15 +1239,8 @@ html[data-theme="light"] .resource-critical-row strong { color:#a92831; }
 }
 
 @media (max-height: 800px) and (min-width: 901px) {
-  .app-header {
-    height: 78px;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .brand-logo { width: 96px; height: 64px; }
-  .tabs { height: 43px; }
-  main { height: calc(100vh - 121px); }
-  body.map-context-visible main { height: calc(100vh - 162px); }
+  /* Mantém a geometria global (header/abas/main) estável para o Leaflet.
+     A compactação de baixa altura fica restrita a Mensagens e ao popup. */
   #tab-messages > .panel-header {
     min-height: 64px;
     padding: 8px 16px;
@@ -1280,11 +1273,6 @@ html[data-theme="light"] .resource-critical-row strong { color:#a92831; }
 }
 
 @media (max-height: 650px) and (min-width: 901px) {
-  .app-header { height: 68px; }
-  .brand-logo { width: 82px; height: 56px; }
-  .tabs { height: 39px; }
-  main { height: calc(100vh - 107px); }
-  body.map-context-visible main { height: calc(100vh - 148px); }
   .message-composer {
     flex-basis: 155px;
     max-height: 40%;
