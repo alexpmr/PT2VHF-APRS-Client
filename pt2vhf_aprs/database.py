@@ -2813,6 +2813,8 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
             f"""
             SELECT UPPER(TRIM(p.from_call)) AS callsign,
                    COUNT(*) AS packets,
+                   SUM(CASE WHEN UPPER(COALESCE(p.medium,'APRS-IS'))='RF' THEN 1 ELSE 0 END) AS rf_packets,
+                   SUM(CASE WHEN UPPER(COALESCE(p.medium,'APRS-IS'))='APRS-IS' THEN 1 ELSE 0 END) AS aprsis_packets,
                    MAX(p.timestamp) AS last_seen
             FROM packets p
             WHERE {" AND ".join(active_clauses)}
@@ -2829,6 +2831,8 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
                 "rank": rank,
                 "callsign": row["callsign"],
                 "packets": packet_count,
+                "rf_packets": int(row["rf_packets"] or 0),
+                "aprsis_packets": int(row["aprsis_packets"] or 0),
                 "percent": round((packet_count * 100.0 / eligible_packets), 1) if eligible_packets else 0.0,
                 "last_seen": row["last_seen"],
             })
@@ -2868,6 +2872,8 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         active = active_by_call.get(call)
         manual = manual_by_call.get(call) or {}
         packets = int(active["packets"] or 0) if active is not None else 0
+        rf_packets = int(active["rf_packets"] or 0) if active is not None else 0
+        aprsis_packets = int(active["aprsis_packets"] or 0) if active is not None else 0
         interactions = int(manual.get("interactions") or 0)
         meta = station_meta.get(call) or {}
         application = str(
@@ -2883,6 +2889,14 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         station_rankings.append({
             "callsign": call,
             "packets": packets,
+            "rf_packets": rf_packets,
+            "aprsis_packets": aprsis_packets,
+            "media": (
+                "RF + APRS-IS" if rf_packets and aprsis_packets
+                else "RF" if rf_packets
+                else "APRS-IS" if aprsis_packets
+                else ""
+            ),
             "interactions": interactions,
             "sent": int(manual.get("sent") or 0),
             "received": int(manual.get("received") or 0),
