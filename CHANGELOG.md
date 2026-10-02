@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.5 - 2026-10-02
+
+- Adiciona **Rota de envio** por mensagem com **Automático, APRS-IS, RF direto e RF personalizado**.
+- O modo **Automático** mantém **APRS-IS como prioridade** e usa RF direto apenas quando o APRS-IS não está disponível e o TNC/RF está pronto.
+- **RF personalizado** permite informar paths como `WIDE1-1` e `WIDE1-1,WIDE2-1`, com validação de sintaxe/SSID e bloqueio de `*` digitado manualmente.
+- Mensagens RF reutilizam o **TNC/KISS existente** e respeitam conexão, pausa de TX, habilitação e confirmação de transmissão.
+- O histórico de mensagens passa a armazenar e exibir o **meio efetivo (APRS-IS ou RF)** e o **path transmitido**.
+- Retry preserva a rota/path original por padrão; escolher uma rota explícita no compositor permite substituir o transporte do retry.
+- Melhora a responsividade para **1360×768 @ 100%** e outras telas de baixa altura.
+- O popup da estação recebe proteção adicional de altura, rolagem interna e ações sticky para evitar controles escondidos.
+- A aba Mensagens reduz cabeçalho, espaçamentos e compositor em baixa altura, mantendo lista e campo de envio acessíveis.
+- Inclui traduções **PT-BR, EN, ES e FR** e novos testes de regressão.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.4 - 2026-10-02
 
 - Adiciona monitoramento separado de **CPU e memória do PT2VHF APRS Client** e do **sistema operacional**.
