@@ -131,6 +131,7 @@ DEFAULT_CONFIG = {
     "connect_on_start": 1,
     "open_browser_on_start": 0,
     "check_updates_on_start": 1,
+    "update_check_minutes": 15,
     "auto_download_updates": 0,
     "install_updates_on_exit": 0,
     "message_retry_seconds": 60,
@@ -241,6 +242,7 @@ def init_db() -> None:
                 connect_on_start INTEGER NOT NULL DEFAULT 1,
                 open_browser_on_start INTEGER NOT NULL DEFAULT 0,
                 check_updates_on_start INTEGER NOT NULL DEFAULT 1,
+                update_check_minutes INTEGER NOT NULL DEFAULT 15,
                 auto_download_updates INTEGER NOT NULL DEFAULT 0,
                 install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
@@ -314,13 +316,22 @@ def init_db() -> None:
             CREATE TABLE IF NOT EXISTS aprs_objects (
                 name TEXT PRIMARY KEY,
                 source_callsign TEXT,
+                first_heard TEXT,
                 last_heard TEXT NOT NULL,
                 latitude REAL NOT NULL,
                 longitude REAL NOT NULL,
                 altitude REAL,
+                max_altitude REAL,
+                speed REAL,
+                course REAL,
                 symbol_table TEXT,
                 symbol TEXT,
                 info TEXT,
+                comment TEXT,
+                status TEXT,
+                path TEXT,
+                weather_json TEXT,
+                alive INTEGER NOT NULL DEFAULT 1,
                 packet_format TEXT,
                 raw TEXT
             );
@@ -567,6 +578,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN altitude_source TEXT NOT NULL DEFAULT 'manual'")
         if "check_updates_on_start" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN check_updates_on_start INTEGER NOT NULL DEFAULT 1")
+        if "update_check_minutes" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN update_check_minutes INTEGER NOT NULL DEFAULT 15")
         if "auto_download_updates" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN auto_download_updates INTEGER NOT NULL DEFAULT 1")
         if "install_updates_on_exit" not in config_columns:
@@ -605,6 +618,27 @@ def init_db() -> None:
             conn.execute("ALTER TABLE messages ADD COLUMN tx_medium TEXT")
         if "tx_path" not in message_columns:
             conn.execute("ALTER TABLE messages ADD COLUMN tx_path TEXT")
+
+        object_columns = {row["name"] for row in conn.execute("PRAGMA table_info(aprs_objects)").fetchall()}
+        object_migrations = {
+            "first_heard": "TEXT",
+            "max_altitude": "REAL",
+            "speed": "REAL",
+            "course": "REAL",
+            "comment": "TEXT",
+            "status": "TEXT",
+            "path": "TEXT",
+            "weather_json": "TEXT",
+            "alive": "INTEGER NOT NULL DEFAULT 1",
+        }
+        for column, definition in object_migrations.items():
+            if column not in object_columns:
+                conn.execute(f"ALTER TABLE aprs_objects ADD COLUMN {column} {definition}")
+        conn.execute(
+            "UPDATE aprs_objects SET first_heard=COALESCE(first_heard,last_heard), "
+            "max_altitude=COALESCE(max_altitude,altitude) "
+            "WHERE first_heard IS NULL OR max_altitude IS NULL"
+        )
 
         row = conn.execute("SELECT id FROM config WHERE id=1").fetchone()
         if not row:
@@ -664,6 +698,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
     merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
     merged["check_updates_on_start"] = 1 if bool(merged["check_updates_on_start"]) else 0
+    merged["update_check_minutes"] = max(5, min(1440, int(merged["update_check_minutes"] or 15)))
     merged["auto_download_updates"] = 0
     merged["install_updates_on_exit"] = 0
     merged["message_retry_seconds"] = max(15, min(3600, int(merged["message_retry_seconds"] or 60)))
@@ -1117,32 +1152,59 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
             or ""
         ).strip()
         if object_name:
+            weather = packet.get("weather") if isinstance(packet.get("weather"), dict) else {}
+            alive_raw = packet.get("alive")
+            alive = 1 if alive_raw is None else (1 if bool(alive_raw) else 0)
+            altitude = packet.get("altitude")
             conn.execute(
                 """INSERT INTO aprs_objects(
-                       name,source_callsign,last_heard,latitude,longitude,altitude,
-                       symbol_table,symbol,info,packet_format,raw
-                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                       name,source_callsign,first_heard,last_heard,latitude,longitude,
+                       altitude,max_altitude,speed,course,symbol_table,symbol,info,
+                       comment,status,path,weather_json,alive,packet_format,raw
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON CONFLICT(name) DO UPDATE SET
                        source_callsign=excluded.source_callsign,
+                       first_heard=COALESCE(aprs_objects.first_heard,excluded.first_heard),
                        last_heard=excluded.last_heard,
                        latitude=excluded.latitude,
                        longitude=excluded.longitude,
                        altitude=excluded.altitude,
+                       max_altitude=CASE
+                           WHEN excluded.altitude IS NULL THEN aprs_objects.max_altitude
+                           WHEN aprs_objects.max_altitude IS NULL THEN excluded.altitude
+                           ELSE MAX(aprs_objects.max_altitude,excluded.altitude)
+                       END,
+                       speed=excluded.speed,
+                       course=excluded.course,
                        symbol_table=excluded.symbol_table,
                        symbol=excluded.symbol,
                        info=excluded.info,
+                       comment=excluded.comment,
+                       status=excluded.status,
+                       path=excluded.path,
+                       weather_json=excluded.weather_json,
+                       alive=excluded.alive,
                        packet_format=excluded.packet_format,
                        raw=excluded.raw""",
                 (
                     object_name,
                     callsign,
                     now,
+                    now,
                     float(packet.get("latitude")),
                     float(packet.get("longitude")),
-                    packet.get("altitude"),
+                    altitude,
+                    altitude,
+                    packet.get("speed"),
+                    packet.get("course"),
                     packet.get("symbol_table"),
                     packet.get("symbol"),
                     _extract_info(packet),
+                    str(packet.get("comment") or ""),
+                    str(packet.get("status") or ""),
+                    json.dumps(packet.get("path") or [], ensure_ascii=False),
+                    json.dumps(weather, ensure_ascii=False),
+                    alive,
                     fmt,
                     str(packet.get("raw") or ""),
                 ),
@@ -3067,8 +3129,9 @@ def _build_map_data_uncached() -> dict[str, Any]:
 
         objects: list[dict[str, Any]] = []
         for row in conn.execute(
-            """SELECT name,source_callsign,last_heard,latitude,longitude,altitude,
-                      symbol_table,symbol,info,packet_format,raw
+            """SELECT name,source_callsign,first_heard,last_heard,latitude,longitude,
+                      altitude,max_altitude,speed,course,symbol_table,symbol,info,
+                      comment,status,path,weather_json,alive,packet_format,raw
                  FROM aprs_objects
                 ORDER BY last_heard DESC
                 LIMIT 5000"""
