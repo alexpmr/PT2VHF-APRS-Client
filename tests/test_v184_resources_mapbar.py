@@ -89,5 +89,7 @@ def test_v184_system_and_app_metrics_are_distinct():
 
 
 def test_v184_version():
-    assert read("VERSION").strip() == "1.8.4"
-    assert '__version__ = "1.8.4"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 4)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
