@@ -69,5 +69,7 @@ def test_v185_low_height_layout_targets_1360x768_class_displays():
 
 
 def test_v185_version():
-    assert read("VERSION").strip() == "1.8.5"
-    assert '__version__ = "1.8.5"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 5)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
