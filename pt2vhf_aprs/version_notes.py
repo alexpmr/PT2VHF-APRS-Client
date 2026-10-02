@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.8": {
+        "title": "Desempenho do mapa, SQLite e polling serial",
+        "items": [
+            "Mapa /api/map-data passa a usar single-flight global e cache de snapshot para impedir consultas pesadas concorrentes.",
+            "Chamadas simultâneas usam o último mapa válido em vez de ocupar vários workers do servidor.",
+            "Remove consultas EXISTS correlacionadas por estação em Mapa e Estações.",
+            "Adiciona índices SQLite para mensagens, ACK/REJ e queries APRS usadas na evidência de interação.",
+            "O diagnóstico passa a registrar duração e tamanho de cada geração do mapa.",
+            "Refresh completo do mapa passa a 15 segundos, preservando o polling independente do tráfego animado.",
+            "CIM/PowerShell deixa de participar do polling serial periódico; varredura completa permanece disponível ao reescanear.",
+            "Polling serial automático passa a 30 segundos com fontes leves e cache de 60 segundos para scans completos.",
+            "Inclui testes de concorrência, cache stale-while-busy e regressões de desempenho.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.7": {
         "title": "Descoberta avançada de equipamentos seriais no TNC / RF",
         "items": [
