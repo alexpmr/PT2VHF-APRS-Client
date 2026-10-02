@@ -202,44 +202,20 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
-- **Atualizações — intervalo configurável de checagem**
-  - Alterar o intervalo padrão de verificação de nova versão para **15 minutos**.
-  - Adicionar em **Configuração → Atualizações** um campo/seletor para o usuário definir o intervalo de checagem.
-  - Usar **15 minutos como padrão** em novas instalações.
-  - Preservar o valor configurado entre reinicializações.
-  - Aplicar a alteração do intervalo sem exigir reinício do aplicativo.
-  - Definir limites seguros para evitar consultas excessivamente frequentes ao GitHub; exibir as opções/intervalo de forma clara na interface.
-  - Manter a checagem manual pelo botão de versão/atualização independentemente do intervalo automático.
-  - Atualizar traduções PT-BR, EN, ES e FR e adicionar teste de regressão para persistência e agendamento do intervalo.
+## Concluído na v1.8.9
 
-- **Mapa — popup amigável para balões meteorológicos / radiossondas**
-  - Ao clicar em um **balão meteorológico/radiossonda** no mapa, substituir a exibição predominantemente bruta por um popup **formatado, amigável e orientado à leitura rápida**.
-  - Organizar os dados em seções, exibindo quando disponíveis:
-    - **identificação** do balão/sonda;
-    - **modelo/tipo** da radiossonda;
-    - **data e hora da última recepção** e tempo decorrido;
-    - **latitude e longitude**;
-    - **altitude atual**;
-    - **velocidade vertical** (subindo/descendo);
-    - **velocidade horizontal**;
-    - **direção/curso**;
-    - **temperatura**;
-    - **umidade**;
-    - **pressão atmosférica**;
-    - **frequência** da radiossonda, quando conhecida;
-    - **status do voo**, por exemplo subindo, descendo, pousada ou sem atualização;
-    - **distância e direção em relação à estação do usuário**, quando calculáveis;
-    - **origem dos dados / estação receptora / iGate**, quando disponível;
-    - **último path APRS observado**;
-    - outras telemetrias úteis presentes no pacote.
-  - Converter valores para unidades amigáveis e consistentes, por exemplo **m, km, km/h, m/s, °C, hPa e MHz**.
-  - Evitar mostrar campos vazios, nulos ou códigos internos sem interpretação.
-  - Manter uma área secundária **“Dados técnicos”** ou **“Ver pacote bruto”** para quem quiser consultar o APRS/raw original.
-  - Destacar visualmente informações importantes, como **altitude**, **subindo/descendo**, **velocidade vertical** e **última atualização**.
-  - Quando houver histórico suficiente, mostrar também **altitude máxima observada**, tendência de subida/descida e tempo desde o primeiro/último ponto conhecido.
-  - Reutilizar o mesmo componente de informações amigáveis em outras telas onde o mesmo balão/radiossonda for aberto, evitando divergência de dados.
-  - Manter compatibilidade com os diferentes formatos/fontes de balões já reconhecidos pelo Client.
-  - Atualizar traduções PT-BR, EN, ES e FR e adicionar teste de regressão para o popup formatado.
+- **Atualizações:** intervalo automático padrão de 15 minutos, configurável entre 5 e 1.440 minutos.
+- **Persistência:** intervalo salvo no SQLite e aplicado imediatamente sem reinício.
+- **Agendamento:** removido o timer fixo de 30 minutos; o scheduler é reprogramado ao salvar a configuração.
+- **Objetos APRS:** armazenamento ampliado com primeira recepção, altitude máxima, velocidade, curso, path, meteorologia, comentário, status e estado ativo/inativo.
+- **Balões/radiossondas:** popup amigável com dados de voo e meteorologia quando disponíveis.
+- **WX:** popup contextual com temperatura, umidade, pressão, vento, rajada e chuva.
+- **AIS:** popup com MMSI, velocidade, curso e destino quando presentes.
+- **Repetidores/infraestrutura:** frequência, offset e CTCSS quando detectáveis.
+- **Outros objetos:** apresentação genérica organizada, omitindo campos ausentes e sem inferências forçadas.
+- **Dados técnicos:** formato APRS, path e pacote bruto permanecem acessíveis em seção recolhível.
+- **Idiomas/Testes:** PT-BR, EN, ES e FR; regressões de configuração, scheduler, persistência e normalização de objetos.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.8
 
