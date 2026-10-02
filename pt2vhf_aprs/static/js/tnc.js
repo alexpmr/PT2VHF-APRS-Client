@@ -34,7 +34,18 @@
       'interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'immediately blocks new transmissions without stopping RX monitoring.',
       'Internet→RF só considera mensagens cujo destino tenha sido ouvido':'Internet→RF only considers messages whose destination was heard',
       'diretamente':'directly','por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'over RF within the configured window. Generic Internet traffic is not dumped onto the channel.',
-      'Liberar novamente a transmissão automática em RF com a configuração atual?':'Resume automatic RF transmission with the current configuration?'
+      'Liberar novamente a transmissão automática em RF com a configuração atual?':'Resume automatic RF transmission with the current configuration?',
+      'Equipamentos seriais detectados':'Detected serial devices','Portas encontradas pelo pyserial e, no Windows, também pela enumeração nativa do sistema.':'Ports found by pyserial and, on Windows, by native system enumeration too.',
+      'Reescanear':'Rescan','Equipamento':'Device','Interface':'Interface','Fabricante':'Manufacturer','Nº de série / HWID':'Serial no. / HWID','Status':'Status','Usar':'Use',
+      'Aguardando leitura das portas seriais.':'Waiting for serial port scan.','Nenhum equipamento serial lido ainda.':'No serial device read yet.',
+      'O Client não atribui um modelo de rádio apenas pelo chipset USB. Quando o Windows não informar o modelo real, a interface é mostrada de forma genérica, por exemplo USB Serial — CH9102.':'The Client does not assign a radio model from the USB chipset alone. When Windows does not report the real model, the interface is shown generically, for example USB Serial — CH9102.',
+      'Selecione um equipamento detectado abaixo ou informe manualmente uma porta COM.':'Select a detected device below or manually enter a COM port.',
+      'Conectado pelo Client':'Connected by Client','Configurado':'Configured','Erro do dispositivo':'Device error','Detectado':'Detected',
+      'equipamento/porta detectado':'device/port detected','equipamentos/portas detectados':'devices/ports detected',
+      'Nenhuma porta serial detectada pelo sistema.':'No serial port detected by the system.','Nenhum equipamento serial detectado. Você ainda pode informar a COM manualmente.':'No serial device detected. You can still enter the COM port manually.',
+      'Equipamento serial não identificado':'Unidentified serial device','Não foi possível listar as portas seriais:':'Could not list serial ports:',
+      'Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.':'Radtel RT-950 Pro detected: in TNC UART mode, normally use 115200 bps with TNC Type/KISS enabled on the radio.',
+      'Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.':'CH9102 interface detected. If this port belongs to a Radtel RT-950 Pro in TNC UART mode, set 115200 bps and enable TNC/KISS on the radio.'
     },
     es: {
       'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS Serial/TCP, monitor AX.25, Digipeater, iGate y análisis adaptativo de quién habla con quién.',
@@ -65,7 +76,18 @@
       'interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'bloquea inmediatamente nuevas transmisiones sin detener el monitor RX.',
       'Internet→RF só considera mensagens cujo destino tenha sido ouvido':'Internet→RF solo considera mensajes cuyo destino haya sido oído',
       'diretamente':'directamente','por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'por RF dentro de la ventana configurada. El tráfico genérico de Internet no se vuelca al canal.',
-      'Liberar novamente a transmissão automática em RF com a configuração atual?':'¿Reanudar la transmisión RF automática con la configuración actual?'
+      'Liberar novamente a transmissão automática em RF com a configuração atual?':'¿Reanudar la transmisión RF automática con la configuración actual?',
+      'Equipamentos seriais detectados':'Equipos serie detectados','Portas encontradas pelo pyserial e, no Windows, também pela enumeração nativa do sistema.':'Puertos encontrados por pyserial y, en Windows, también por la enumeración nativa del sistema.',
+      'Reescanear':'Volver a buscar','Equipamento':'Equipo','Interface':'Interfaz','Fabricante':'Fabricante','Nº de série / HWID':'N.º de serie / HWID','Status':'Estado','Usar':'Usar',
+      'Aguardando leitura das portas seriais.':'Esperando lectura de puertos serie.','Nenhum equipamento serial lido ainda.':'Aún no se ha leído ningún equipo serie.',
+      'O Client não atribui um modelo de rádio apenas pelo chipset USB. Quando o Windows não informar o modelo real, a interface é mostrada de forma genérica, por exemplo USB Serial — CH9102.':'El Client no asigna un modelo de radio solo por el chipset USB. Si Windows no informa el modelo real, la interfaz se muestra de forma genérica, por ejemplo USB Serial — CH9102.',
+      'Selecione um equipamento detectado abaixo ou informe manualmente uma porta COM.':'Seleccione un equipo detectado abajo o introduzca manualmente un puerto COM.',
+      'Conectado pelo Client':'Conectado por el Client','Configurado':'Configurado','Erro do dispositivo':'Error del dispositivo','Detectado':'Detectado',
+      'equipamento/porta detectado':'equipo/puerto detectado','equipamentos/portas detectados':'equipos/puertos detectados',
+      'Nenhuma porta serial detectada pelo sistema.':'No se detectó ningún puerto serie.','Nenhum equipamento serial detectado. Você ainda pode informar a COM manualmente.':'No se detectó ningún equipo serie. Aún puede introducir el puerto COM manualmente.',
+      'Equipamento serial não identificado':'Equipo serie no identificado','Não foi possível listar as portas seriais:':'No fue posible listar los puertos serie:',
+      'Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.':'Radtel RT-950 Pro detectado: en modo TNC UART, use normalmente 115200 bps y TNC Type/KISS habilitado en la radio.',
+      'Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.':'Interfaz CH9102 detectada. Si este puerto pertenece a un Radtel RT-950 Pro en TNC UART, configure 115200 bps y habilite TNC/KISS en la radio.'
     },
     fr: {
       'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS série/TCP, moniteur AX.25, Digipeater, iGate et analyse adaptative des communications.',
@@ -96,7 +118,18 @@
       'interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'bloque immédiatement les nouvelles transmissions sans arrêter le moniteur RX.',
       'Internet→RF só considera mensagens cujo destino tenha sido ouvido':'Internet→RF ne considère que les messages dont le destinataire a été entendu',
       'diretamente':'directement','por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.':'en RF dans la fenêtre configurée. Le trafic Internet générique n’est pas injecté sur le canal.',
-      'Liberar novamente a transmissão automática em RF com a configuração atual?':'Reprendre la transmission RF automatique avec la configuration actuelle ?'
+      'Liberar novamente a transmissão automática em RF com a configuração atual?':'Reprendre la transmission RF automatique avec la configuration actuelle ?',
+      'Equipamentos seriais detectados':'Équipements série détectés','Portas encontradas pelo pyserial e, no Windows, também pela enumeração nativa do sistema.':'Ports trouvés par pyserial et, sous Windows, également par l’énumération native du système.',
+      'Reescanear':'Réanalyser','Equipamento':'Équipement','Interface':'Interface','Fabricante':'Fabricant','Nº de série / HWID':'N° de série / HWID','Status':'État','Usar':'Utiliser',
+      'Aguardando leitura das portas seriais.':'En attente de l’analyse des ports série.','Nenhum equipamento serial lido ainda.':'Aucun équipement série lu pour le moment.',
+      'O Client não atribui um modelo de rádio apenas pelo chipset USB. Quando o Windows não informar o modelo real, a interface é mostrada de forma genérica, por exemplo USB Serial — CH9102.':'Le Client n’attribue pas un modèle de radio à partir du seul chipset USB. Si Windows n’indique pas le modèle réel, l’interface est affichée de façon générique, par exemple USB Serial — CH9102.',
+      'Selecione um equipamento detectado abaixo ou informe manualmente uma porta COM.':'Sélectionnez un équipement détecté ci-dessous ou saisissez manuellement un port COM.',
+      'Conectado pelo Client':'Connecté par le Client','Configurado':'Configuré','Erro do dispositivo':'Erreur du périphérique','Detectado':'Détecté',
+      'equipamento/porta detectado':'équipement/port détecté','equipamentos/portas detectados':'équipements/ports détectés',
+      'Nenhuma porta serial detectada pelo sistema.':'Aucun port série détecté par le système.','Nenhum equipamento serial detectado. Você ainda pode informar a COM manualmente.':'Aucun équipement série détecté. Vous pouvez toujours saisir manuellement le port COM.',
+      'Equipamento serial não identificado':'Équipement série non identifié','Não foi possível listar as portas seriais:':'Impossible de lister les ports série :',
+      'Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.':'Radtel RT-950 Pro détecté : en mode TNC UART, utilisez normalement 115200 bps avec TNC Type/KISS activé sur la radio.',
+      'Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.':'Interface CH9102 détectée. Si ce port appartient à un Radtel RT-950 Pro en TNC UART, réglez 115200 bps et activez TNC/KISS sur la radio.'
     }
   };
 
