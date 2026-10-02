@@ -1655,7 +1655,8 @@ def test_v1710_unified_map_items_objects_and_internet_handoff():
     assert 'id="mapPeriodHours"' in html
     assert 'id="mapItemsButton"' in html
     assert 'id="mapViewTree"' in html
-    assert 'id="mapViewAllButton"' in html
+    assert 'id="mapViewSelectAllButton"' in html
+    assert 'id="mapViewClearAllButton"' in html
     assert 'id="mapTypeQuick"' in html
     assert '<option value="osm">OSM</option>' in html
     assert '<option value="topo">Topográfico</option>' in html
@@ -1773,7 +1774,8 @@ def test_v1716_hierarchical_map_filters_and_device_roles():
     assert 'id="mapItemsButton"' in html
     assert '>Ver ▾</button>' in html
     assert 'id="mapViewTree"' in html
-    assert 'id="mapViewAllButton"' in html
+    assert 'id="mapViewSelectAllButton"' in html
+    assert 'id="mapViewClearAllButton"' in html
     assert 'id="mapItemStations"' not in html
     assert 'id="mapItemObjects"' not in html
 
