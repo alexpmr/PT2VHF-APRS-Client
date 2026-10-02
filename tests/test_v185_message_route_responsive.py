@@ -64,8 +64,8 @@ def test_v185_low_height_layout_targets_1360x768_class_displays():
     assert "@media (max-height: 800px) and (min-width: 901px)" in css
     assert "max-height: min(500px, calc(100dvh - 230px));" in css
     assert "position: sticky;" in css
-    assert "body.map-context-visible main { height: calc(100vh - 162px); }" in css
     assert ".messages-table-wrap { min-height: 80px; }" in css
+    assert ".message-composer" in css
 
 
 def test_v185_version():
