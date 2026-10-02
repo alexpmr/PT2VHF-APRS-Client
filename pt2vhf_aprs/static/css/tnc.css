@@ -35,3 +35,20 @@
 @media(max-width:1250px){.tnc-status-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.tnc-config-grid,.tnc-data-grid{grid-template-columns:1fr}.tnc-optimizer-card,.tnc-save-card{grid-column:auto}.tnc-status-grid{grid-template-columns:repeat(2,1fr)}.tnc-actions{justify-content:flex-start}}
 @media(max-width:620px){.tnc-status-grid{grid-template-columns:1fr}.tnc-actions{display:grid;grid-template-columns:1fr 1fr}.tnc-actions .btn{width:100%}}
+
+/* v1.8.7 - descoberta e identificação de equipamentos seriais */
+.tnc-serial-devices-card{grid-column:1/-1}
+.tnc-serial-devices-wrap{max-height:300px;margin-top:9px}
+.tnc-serial-devices-table{min-width:1120px}
+.tnc-serial-devices-table th:nth-child(1){min-width:72px}
+.tnc-serial-devices-table th:nth-child(2){min-width:210px}
+.tnc-serial-devices-table th:nth-child(3){min-width:130px}
+.tnc-serial-devices-table th:nth-child(4){min-width:140px}
+.tnc-serial-devices-table th:nth-child(5){min-width:95px}
+.tnc-serial-devices-table th:nth-child(6){min-width:210px}
+.tnc-serial-devices-table th:nth-child(7){min-width:125px}
+.tnc-serial-source{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+.tnc-serial-id{max-width:260px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tnc-use-serial{min-height:27px;padding:3px 9px;font-size:10px}
+#tncSerialProfileHint{margin-top:9px;padding:8px 10px;border-left:3px solid var(--accent);background:rgba(59,166,255,.07);border-radius:5px}
+#tncSerialPort{font-family:Consolas,"Courier New",monospace}
