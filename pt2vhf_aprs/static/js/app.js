@@ -143,6 +143,8 @@
     updateInfo: null,
     updateDownloading: false,
     versionCheckInProgress: false,
+    updateCheckTimer: null,
+    updateSchedulerReady: false,
     messageSending: false,
     mapHistoryOpen: localStorage.getItem('pt2vhf_map_history_open') === '1',
   };
@@ -363,6 +365,39 @@
       btn.disabled = !!state.updateDownloading;
     }
     refreshPendingUpdateStatus();
+  }
+
+  function updateCheckMinutes() {
+    const value = Number(state.currentConfig?.update_check_minutes ?? 15);
+    return Math.min(1440, Math.max(5, Number.isFinite(value) ? Math.round(value) : 15));
+  }
+
+  function updateCheckIntervalMs() {
+    return updateCheckMinutes() * 60 * 1000;
+  }
+
+  function rescheduleUpdateChecks() {
+    if (!state.updateSchedulerReady) return;
+    if (state.updateCheckTimer) {
+      clearTimeout(state.updateCheckTimer);
+      state.updateCheckTimer = null;
+    }
+    if (!state.currentConfig?.check_updates_on_start) return;
+
+    const run = async () => {
+      state.updateCheckTimer = null;
+      try {
+        if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
+      } catch (err) {
+        console.warn('Verificação automática de atualização:', err);
+      } finally {
+        if (state.updateSchedulerReady && state.currentConfig?.check_updates_on_start) {
+          state.updateCheckTimer = setTimeout(run, updateCheckIntervalMs());
+        }
+      }
+    };
+
+    state.updateCheckTimer = setTimeout(run, updateCheckIntervalMs());
   }
 
   function openLatestRelease() {
@@ -5213,6 +5248,7 @@
         configStatus.classList.remove('unsaved');
       }
       updateUpdateSettingsUi();
+      if (state.updateSchedulerReady) rescheduleUpdateChecks();
     } catch (err) { toast(err.message, 'error'); }
     finally { state.configLoading = false; }
   }
@@ -7346,6 +7382,8 @@
     await Promise.allSettled([loadFavorites(), loadMessages(), checkIncomingPersonalMessages(), pollTrafficEvents()]);
     if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
     else updateUpdateSettingsUi();
+    state.updateSchedulerReady = true;
+    rescheduleUpdateChecks();
     updateUpdateSettingsUi();
     await showWhatsNewAfterUpdate();
     loadTrafficOverview().catch(err => console.warn('Replay overview:', err));
@@ -7380,9 +7418,6 @@
       if (state.activeTab === 'messages') await loadMessages();
     }, 5000);
     schedulePolling(checkIncomingPersonalMessages, 5000);
-    schedulePolling(async () => {
-      if (state.currentConfig?.check_updates_on_start) await refreshVersionStatus(false);
-    }, 30 * 60 * 1000);
     schedulePolling(async () => {
       if (state.activeTab === 'stations') await loadStations();
     }, 10000);
