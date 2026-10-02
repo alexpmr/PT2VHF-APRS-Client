@@ -12,6 +12,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from . import APP_TOCALL
 from . import database as db
 from . import diagnostics as diag
 
@@ -81,6 +82,23 @@ def split_call(value: str) -> tuple[str, int]:
     if not (0 <= ssid <= 15):
         raise ValueError("SSID AX.25 deve ficar entre 0 e 15.")
     return match.group("call").upper(), ssid
+
+
+def normalize_message_rf_path(value: str) -> list[str]:
+    """Valida path manual de mensagem RF sem aceitar marcas de hop já repetido."""
+    text = str(value or "").upper().strip().strip(",")
+    if not text:
+        return []
+    parts = [item.strip() for item in text.replace(";", ",").split(",") if item.strip()]
+    if len(parts) > 8:
+        raise ValueError("Path RF excede o limite de 8 hops/endereço intermediários.")
+    normalized: list[str] = []
+    for item in parts:
+        if "*" in item:
+            raise ValueError("Não use * no path de transmissão; o marcador é adicionado pelos digipeaters.")
+        call, ssid = split_call(item)
+        normalized.append(call + (f"-{ssid}" if ssid else ""))
+    return normalized
 
 
 def _ensure_schema() -> None:
@@ -1012,6 +1030,49 @@ class TNCService:
         self._tx_seq += 1
         self._tx_queue.put((int(priority), self._tx_seq, bytes(frame), reason, raw_tnc2))
         return True
+
+    def queue_local_message(self, destination: str, text: str, msg_id: str, path: str = "") -> dict[str, Any]:
+        """Enfileira uma mensagem APRS originada localmente para transmissão RF."""
+        status = self.status()
+        cfg = get_tnc_config()
+        if not status.get("connected"):
+            raise ConnectionError("TNC/RF desconectado. Conecte o TNC ou escolha APRS-IS.")
+        if self._tx_paused or status.get("tx_paused"):
+            raise PermissionError("TX RF está pausado. Libere a transmissão no painel TNC / RF.")
+        if not cfg.get("auto_tx_enabled") or not cfg.get("tx_confirmed"):
+            raise PermissionError("TX RF não está habilitado e confirmado em TNC / RF.")
+
+        source = self._own_call()
+        if not source:
+            raise ValueError("Configure o indicativo/SSID local antes de transmitir por RF.")
+        split_call(destination)
+        destination = normalize_call(destination)
+        path_items = normalize_message_rf_path(path)
+        clean = " ".join(str(text or "").replace("\r", " ").replace("\n", " ").split())
+        if not clean:
+            raise ValueError("Mensagem RF vazia.")
+        msg_id = str(msg_id or "").strip()
+        if not re.fullmatch(r"[A-Za-z0-9]{1,5}", msg_id):
+            raise ValueError("ID APRS da mensagem RF inválido.")
+
+        info = f":{destination:<9}:{clean}{{{msg_id}"
+        frame = encode_ax25(source, APP_TOCALL, info, path_items)
+        header = f"{source}>{APP_TOCALL}" + (("," + ",".join(path_items)) if path_items else "")
+        raw_tnc2 = f"{header}:{info}"
+        if not self._enqueue(frame, f"Mensagem local RF para {destination}", raw_tnc2=raw_tnc2, priority=1):
+            raise PermissionError("A mensagem RF foi bloqueada pelas regras de transmissão do TNC.")
+        record_decision(
+            "message_rf", "queued",
+            f"Mensagem local para {destination}; path {','.join(path_items) if path_items else 'direto'}.",
+            source=source, destination=destination, raw_tnc2=raw_tnc2,
+        )
+        return {
+            "queued": True,
+            "source": source,
+            "destination": destination,
+            "path": ",".join(path_items),
+            "raw": raw_tnc2,
+        }
 
     def _source_rate_allowed(self, source: str, cfg: dict[str, Any]) -> bool:
         now = time.monotonic()
