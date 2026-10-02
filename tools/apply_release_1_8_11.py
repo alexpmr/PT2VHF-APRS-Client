@@ -35,6 +35,7 @@ checks = {
         "def tnc_reception_stats(",
         "rf_unique_stations",
         "logical_packets_deduplicated",
+        "LAG(timestamp) OVER",
         '"tnc_rf_station_heard"',
         '"tnc_rf_rx_summary"',
     ],
