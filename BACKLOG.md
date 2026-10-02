@@ -214,6 +214,23 @@
   - Evitar que controles inferiores fiquem encobertos pela barra de tarefas do Windows ou exijam rolagem da página inteira para serem alcançados.
   - Adicionar testes/regressão visual para pelo menos **1360×768 @ 100%**, e preferencialmente também **1280×720 @ 100%**, preservando o comportamento normal em resoluções maiores.
 
+- **Mensagens — seleção de rota/path por envio**
+  - Adicionar no compositor de mensagens uma opção **Rota de envio** para escolher como cada mensagem APRS será transmitida.
+  - Manter **Automático** como padrão, preservando o comportamento atual quando o usuário não fizer nenhuma escolha.
+  - Disponibilizar pelo menos as opções:
+    - **Automático**;
+    - **APRS-IS**;
+    - **RF direto** — sem digipeater/path;
+    - **RF personalizado** — permitir informar path como `WIDE1-1`, `WIDE2-1` ou `WIDE1-1,WIDE2-1`.
+  - A escolha deve valer **somente para a mensagem que está sendo enviada**, sem alterar o path/configuração global do TNC/iGate.
+  - Quando **RF personalizado** estiver selecionado, validar sintaxe AX.25/APRS do path antes do envio e bloquear combinações inválidas.
+  - Exibir claramente na interface qual rota/path será usada antes do envio.
+  - Registrar no histórico/log da mensagem o meio utilizado (**APRS-IS** ou **RF**) e o **path efetivamente transmitido**.
+  - Em reenvio/retry de uma mensagem, preservar a rota/path original por padrão, com opção de alterar antes de reenviar.
+  - Se a rota escolhida não estiver disponível (ex.: RF sem TNC conectado), informar o motivo e permitir trocar para APRS-IS/Automático sem perder o texto.
+  - Para mensagens enviadas por **APRS-IS**, manter o cabeçalho compatível com o comportamento atual do cliente; para RF, usar o path selecionado no frame AX.25/TNC2.
+  - Garantir que ACK/REJ, status de entrega e animação/topologia consigam diferenciar corretamente mensagens enviadas por Internet e por RF.
+
 ## Concluído na v1.8.4
 
 - **Saúde da aplicação:** monitoramento separado de CPU/RAM do aplicativo e do sistema operacional.
