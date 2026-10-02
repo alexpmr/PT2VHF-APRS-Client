@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.9": {
+        "title": "Atualizações configuráveis e popups amigáveis de objetos APRS",
+        "items": [
+            "Checagem automática de novas versões passa a 15 minutos por padrão, com intervalo configurável entre 5 e 1.440 minutos.",
+            "O novo intervalo é persistido e aplicado sem reiniciar o Client.",
+            "Objetos APRS passam a preservar mais telemetria estruturada, incluindo velocidade, curso, path, meteorologia, primeira recepção e altitude máxima.",
+            "Balões/radiossondas recebem popup amigável com dados de voo e meteorologia quando disponíveis.",
+            "WX, AIS, repetidores, DMR, D-Star, alertas, itens APRS e outros objetos usam apresentação contextual.",
+            "Dados técnicos ficam recolhidos e preservam formato APRS, path e pacote bruto.",
+            "Campos ausentes são omitidos e objetos não identificados usam apresentação genérica sem inferências forçadas.",
+            "Traduções PT-BR, EN, ES e FR atualizadas.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.8": {
         "title": "Desempenho do mapa, SQLite e polling serial",
         "items": [
