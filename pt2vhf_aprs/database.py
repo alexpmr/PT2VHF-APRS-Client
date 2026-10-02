@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -410,9 +411,14 @@ def init_db() -> None:
                 timestamp TEXT NOT NULL,
                 from_call TEXT,
                 packet_format TEXT,
-                raw TEXT NOT NULL
+                raw TEXT NOT NULL,
+                medium TEXT NOT NULL DEFAULT 'APRS-IS',
+                rx_fingerprint TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_packets_time ON packets(timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_packets_medium_time ON packets(medium, timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_packets_medium_call_time ON packets(medium, from_call, timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_packets_fingerprint_time ON packets(rx_fingerprint, timestamp DESC);
 
             CREATE TABLE IF NOT EXISTS aprs_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -498,6 +504,15 @@ def init_db() -> None:
             conn.execute("ALTER TABLE tracks ADD COLUMN rssi REAL")
         if "snr" not in track_columns:
             conn.execute("ALTER TABLE tracks ADD COLUMN snr REAL")
+
+        packet_columns = {row["name"] for row in conn.execute("PRAGMA table_info(packets)").fetchall()}
+        if "medium" not in packet_columns:
+            conn.execute("ALTER TABLE packets ADD COLUMN medium TEXT NOT NULL DEFAULT 'APRS-IS'")
+        if "rx_fingerprint" not in packet_columns:
+            conn.execute("ALTER TABLE packets ADD COLUMN rx_fingerprint TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_medium_time ON packets(medium, timestamp DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_medium_call_time ON packets(medium, from_call, timestamp DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_fingerprint_time ON packets(rx_fingerprint, timestamp DESC)")
 
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
         if "open_browser_on_start" not in config_columns:
@@ -1116,11 +1131,42 @@ def _position_is_plausible(
 
 
 
-def _record_packet_conn(conn: sqlite3.Connection, raw: str, from_call: str | None = None,
-                        packet_format: str | None = None) -> None:
+def _packet_reception_fingerprint(raw: str, from_call: str | None = None) -> str:
+    """Impressão lógica que ignora path APRS para correlacionar RF e APRS-IS próximos."""
+    text = str(raw or "").strip()
+    header, sep, info = text.partition(":")
+    source = str(from_call or "").upper().strip()
+    destination = ""
+    if ">" in header:
+        left, right = header.split(">", 1)
+        source = source or left.upper().strip()
+        destination = right.split(",", 1)[0].upper().strip()
+    canonical = f"{source}>{destination}:{info if sep else text}"
+    return hashlib.sha1(canonical.encode("utf-8", errors="replace")).hexdigest()
+
+
+def _record_packet_conn(
+    conn: sqlite3.Connection,
+    raw: str,
+    from_call: str | None = None,
+    packet_format: str | None = None,
+    *,
+    medium: str = "APRS-IS",
+) -> None:
+    medium = str(medium or "APRS-IS").upper().strip()
+    if medium not in {"RF", "APRS-IS"}:
+        medium = "APRS-IS"
     conn.execute(
-        "INSERT INTO packets(timestamp, from_call, packet_format, raw) VALUES (?, ?, ?, ?)",
-        (utc_now_iso(), from_call, packet_format, raw),
+        """INSERT INTO packets(timestamp, from_call, packet_format, raw, medium, rx_fingerprint)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (
+            utc_now_iso(),
+            from_call,
+            packet_format,
+            raw,
+            medium,
+            _packet_reception_fingerprint(raw, from_call),
+        ),
     )
     if _retention_due("packets"):
         deleted = _trim_history_table(conn, "packets", PACKET_RETENTION)
@@ -1128,9 +1174,15 @@ def _record_packet_conn(conn: sqlite3.Connection, raw: str, from_call: str | Non
             diag.log_event("retention_sweep", table="packets", deleted=deleted)
 
 
-def record_packet(raw: str, from_call: str | None = None, packet_format: str | None = None) -> None:
+def record_packet(
+    raw: str,
+    from_call: str | None = None,
+    packet_format: str | None = None,
+    *,
+    medium: str = "APRS-IS",
+) -> None:
     with connection() as conn:
-        _record_packet_conn(conn, raw, from_call, packet_format)
+        _record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
 
 
 def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> None:
@@ -3845,12 +3897,14 @@ def process_received_packet(
     parsed: dict[str, Any],
     from_call: str | None = None,
     packet_format: str | None = None,
+    *,
+    medium: str = "APRS-IS",
 ) -> None:
     """Persiste o pipeline RX principal em uma única conexão/transação SQLite."""
     started = time.monotonic()
     with connection() as conn:
         _add_aprs_log_conn(conn, "RX", raw)
-        _record_packet_conn(conn, raw, from_call, packet_format)
+        _record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
         _record_topology_from_raw_conn(conn, raw)
         if parsed and parsed.get("from"):
             _upsert_station_conn(conn, parsed)
@@ -3863,6 +3917,7 @@ def process_received_packet(
             duration_ms=round(elapsed_ms, 1),
             from_call=from_call or "",
             packet_format=packet_format or "",
+            medium=str(medium or "APRS-IS").upper(),
         )
 
 def list_aprs_log(filter_text: str = "", direction: str = "ALL", limit: int = 1000) -> list[dict[str, Any]]:
