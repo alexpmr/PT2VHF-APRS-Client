@@ -2783,6 +2783,7 @@
     state.mapLoadBusy = true;
     try {
       const data = await api('/api/map-data');
+      if (data?._meta?.source === 'busy-empty') return;
       const allStations = Array.isArray(data.stations) ? data.stations : [];
       const allObjects = Array.isArray(data.objects) ? data.objects : [];
       const periodStations = allStations.filter(stationMatchesMapPeriod);
@@ -7371,7 +7372,7 @@
     schedulePolling(refreshSystemMetrics, 2000);
     schedulePolling(async () => {
       if (state.activeTab === 'map') await loadMapData();
-    }, 10000);
+    }, 15000);
     schedulePolling(async () => {
       if (state.activeTab === 'map') await pollTrafficEvents();
     }, 3000);
