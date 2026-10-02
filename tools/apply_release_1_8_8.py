@@ -51,6 +51,7 @@ checks = {
     "pt2vhf_aprs/version_notes.py": ['"1.8.8"'],
     "CHANGELOG.md": ["## 1.8.8 - 2026-10-02"],
     "README.md": ["# PT2VHF APRS Client - v1.8.8", "## Novidades da v1.8.8"],
+    "BACKLOG.md": ["## Concluído na v1.8.8"],
 }
 
 for rel, needles in checks.items():
