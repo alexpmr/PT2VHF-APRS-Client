@@ -3636,6 +3636,15 @@
     return status || '';
   }
 
+  function messageTransportLabel(message) {
+    if (message?.direction !== 'out') return '';
+    const medium = String(message?.tx_medium || '').toUpperCase();
+    const path = String(message?.tx_path || '').trim();
+    if (medium === 'RF') return path ? `RF · ${path}` : ui('RF direto', 'Direct RF');
+    if (medium === 'APRS-IS') return 'APRS-IS';
+    return '';
+  }
+
   function messageGroupSummary(message) {
     const groupId = String(message?.message_group_id || '');
     const total = Number(message?.part_count || 0);
@@ -3847,6 +3856,7 @@
           <div class="chat-bubble-text">${escapeHtml(message.message || '')}</div>
           <div class="chat-bubble-meta">
             <span>${escapeHtml(fmtDate(message.timestamp))}</span>
+            ${messageTransportLabel(message) ? `<span class="message-transport-badge">${escapeHtml(messageTransportLabel(message))}</span>` : ''}
             ${status ? `<span class="${message.status === 'ACK' ? 'status-ack' : message.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(status)}</span>` : ''}
             ${messageGroupSummary(message) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(message))}</span>` : ''}
             ${retryButtonHtml(message)}
@@ -3883,6 +3893,7 @@
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
         <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">
           ${escapeHtml(messageStatusLabel(m.status))}
+          ${messageTransportLabel(m) ? `<span class="message-transport-badge">${escapeHtml(messageTransportLabel(m))}</span>` : ''}
           ${messageGroupSummary(m) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(m))}</span>` : ''}
           ${retryButtonHtml(m)}
         </td>
@@ -4040,9 +4051,22 @@
 
   async function retryMessagePart(rowId) {
     if (!rowId) return;
+    const route = $('#messageRoute')?.value || 'auto';
+    const path = String($('#messagePath')?.value || '').trim().toUpperCase();
+    if (route === 'rf_custom' && !path) {
+      toast(ui('Informe o path RF personalizado antes do retry.', 'Enter the custom RF path before retrying.'), 'error');
+      return;
+    }
     try {
-      await api(`/api/messages/${rowId}/retry`, { method:'POST' });
-      toast(ui('Parte reenviada com novo ID APRS.', 'Part retried with a new APRS ID.'), 'ok');
+      const result = await api(`/api/messages/${rowId}/retry`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ route, path })
+      });
+      const routeText = result.medium === 'RF'
+        ? (result.path ? `RF · ${result.path}` : ui('RF direto', 'Direct RF'))
+        : 'APRS-IS';
+      toast(ui(`Parte reenviada com novo ID APRS via ${routeText}.`, `Part retried with a new APRS ID via ${routeText}.`), 'ok');
       await loadMessages({ scrollToNewest:true });
     } catch (err) { toast(err.message, 'error'); }
   }
@@ -4477,6 +4501,25 @@
     }
   }
 
+  function updateMessageRouteMode() {
+    const type = $('#messageType')?.value || 'message';
+    const route = $('#messageRoute')?.value || 'auto';
+    const isMessage = type === 'message';
+    const custom = isMessage && route === 'rf_custom';
+    $('#messageRouteField')?.classList.toggle('hidden', !isMessage);
+    $('#messagePathField')?.classList.toggle('hidden', !custom);
+    const hint = $('#messageRouteHint');
+    if (hint) {
+      hint.textContent = route === 'auto'
+        ? ui('Automático prioriza APRS-IS e usa RF direto somente se necessário.', 'Automatic prioritizes APRS-IS and uses direct RF only when needed.')
+        : route === 'aprs_is'
+          ? ui('A mensagem será enviada somente pelo APRS-IS.', 'The message will be sent only through APRS-IS.')
+          : route === 'rf_direct'
+            ? ui('A mensagem será transmitida por RF sem digipeater/path.', 'The message will be transmitted by RF without a digipeater/path.')
+            : ui('A mensagem será transmitida por RF usando o path informado.', 'The message will be transmitted by RF using the entered path.');
+    }
+  }
+
   function updateMessageComposerMode() {
     const type = $('#messageType').value;
     const isMessage = type === 'message';
@@ -4486,6 +4529,7 @@
     $('#messageDestinationField').classList.toggle('hidden', !isMessage);
     $('#bulletinIdField').classList.toggle('hidden', isMessage || isAnnouncement);
     $('#bulletinGroupField').classList.toggle('hidden', !isGroup);
+    updateMessageRouteMode();
 
     const messageInput = $('#messageText');
     if (isMessage) messageInput.removeAttribute('maxlength');
@@ -4513,12 +4557,15 @@
     const message = $('#messageText').value.trim();
     const bulletinId = type === 'announcement' ? 'A' : $('#bulletinId').value;
     const group = $('#bulletinGroup').value.trim().toUpperCase();
+    const route = $('#messageRoute')?.value || 'auto';
+    const path = String($('#messagePath')?.value || '').trim().toUpperCase();
 
     if (!message) return toast('Informe a mensagem.', 'error');
     if (type === 'message' && !to) return toast('Informe o indicativo de destino.', 'error');
+    if (type === 'message' && route === 'rf_custom' && !path) return toast(ui('Informe o path RF personalizado.', 'Enter the custom RF path.'), 'error');
     if (type === 'group_bulletin' && !group) return toast('Informe o grupo do boletim.', 'error');
 
-    const payload = { type, to, message, bulletin_id: bulletinId, group };
+    const payload = { type, to, message, bulletin_id: bulletinId, group, route, path };
     const button = $('#sendMessageButton');
     state.messageSending = true;
     if (button) {
@@ -4537,9 +4584,12 @@
         if (result.duplicate) {
           toast(ui('Esta mesma mensagem já estava na fila; o envio duplicado foi bloqueado.', 'This message was already queued; duplicate sending was blocked.'), 'ok');
         } else {
+          const routeText = result.medium === 'RF'
+            ? (result.path ? `RF · ${result.path}` : ui('RF direto', 'Direct RF'))
+            : 'APRS-IS';
           toast(count > 1
-            ? ui(`Mensagem colocada na fila em ${count} partes APRS.`, `Message queued in ${count} APRS parts.`)
-            : ui('Mensagem colocada na fila de transmissão.', 'Message queued for transmission.'), 'ok');
+            ? ui(`Mensagem colocada na fila em ${count} partes APRS via ${routeText}.`, `Message queued in ${count} APRS parts via ${routeText}.`)
+            : ui(`Mensagem colocada na fila via ${routeText}.`, `Message queued via ${routeText}.`), 'ok');
         }
       } else {
         toast(
@@ -4560,6 +4610,10 @@
   }
 
   $('#messageType').addEventListener('change', updateMessageComposerMode);
+  $('#messageRoute')?.addEventListener('change', updateMessageRouteMode);
+  $('#messagePath')?.addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9,-]/g, '');
+  });
   $('#bulletinGroup').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); });
   $('#sendMessageButton')?.addEventListener('click', event => { event.preventDefault(); void sendMessage(); });
   $('#messageText').addEventListener('input', updateMessageCharCounter);
