@@ -109,6 +109,8 @@
       logs: { key: 'timestamp', dir: 'desc', type: 'text' }
     },
     connected: false,
+    connectionWanted: false,
+    connectionActionBusy: false,
     symbolTable: '/',
     configLoaded: false,
     myMessagesOnly: false,
@@ -803,6 +805,8 @@
         project: 'O PT2VHF APRS Client é um cliente APRS moderno e multiplataforma para mapa, mensagens, estatísticas e análise da rede.',
         contactTitle: 'Contato / Sugestões / Dúvidas / Melhorias',
         contact: 'Sugestões, dúvidas, relatos de problemas e ideias de melhoria são bem-vindos.',
+        contributorsTitle: 'Agradecimentos / Colaboradores',
+        contributors: 'Um agradecimento especial aos radioamadores que contribuem com sugestões, testes, validações e ajustes que ajudam na evolução contínua do PT2VHF APRS Client.',
         promoteTitle: 'Divulgue o projeto na rede APRS',
         promote: 'Você pode enviar manualmente um Announcement APRS para divulgar o cliente. A mensagem poderá ser revisada antes do envio.',
         promoteButton: 'Divulgar PT2VHF APRS Client na rede APRS',
@@ -823,6 +827,8 @@
         project: 'PT2VHF APRS Client is a modern cross-platform APRS client for maps, messaging, statistics and network analysis.',
         contactTitle: 'Contact / Suggestions / Questions / Improvements',
         contact: 'Suggestions, questions, bug reports and improvement ideas are welcome.',
+        contributorsTitle: 'Acknowledgements / Contributors',
+        contributors: 'Special thanks to the amateur radio operators who contribute suggestions, testing, validation and adjustments that help PT2VHF APRS Client evolve continuously.',
         promoteTitle: 'Promote the project on the APRS network',
         promote: 'You can manually send an APRS Announcement to promote the client. The message can be reviewed before sending.',
         promoteButton: 'Promote PT2VHF APRS Client on APRS',
@@ -843,6 +849,8 @@
         project: 'PT2VHF APRS Client es un cliente APRS moderno y multiplataforma para mapas, mensajes, estadísticas y análisis de la red.',
         contactTitle: 'Contacto / Sugerencias / Dudas / Mejoras',
         contact: 'Son bienvenidas las sugerencias, dudas, informes de problemas e ideas de mejora.',
+        contributorsTitle: 'Agradecimientos / Colaboradores',
+        contributors: 'Un agradecimiento especial a los radioaficionados que contribuyen con sugerencias, pruebas, validaciones y ajustes que ayudan a la evolución continua de PT2VHF APRS Client.',
         promoteTitle: 'Divulgar el proyecto en la red APRS',
         promote: 'Puede enviar manualmente un Announcement APRS para divulgar el cliente. El mensaje puede revisarse antes del envío.',
         promoteButton: 'Divulgar PT2VHF APRS Client en APRS',
@@ -863,6 +871,8 @@
         project: 'PT2VHF APRS Client est un client APRS moderne et multiplateforme pour la carte, les messages, les statistiques et l’analyse du réseau.',
         contactTitle: 'Contact / Suggestions / Questions / Améliorations',
         contact: 'Les suggestions, questions, signalements de problèmes et idées d’amélioration sont les bienvenus.',
+        contributorsTitle: 'Remerciements / Contributeurs',
+        contributors: 'Un grand merci aux radioamateurs qui contribuent par leurs suggestions, tests, validations et ajustements à l’évolution continue de PT2VHF APRS Client.',
         promoteTitle: 'Promouvoir le projet sur le réseau APRS',
         promote: 'Vous pouvez envoyer manuellement une annonce APRS pour promouvoir le client. Le message peut être vérifié avant l’envoi.',
         promoteButton: 'Promouvoir PT2VHF APRS Client sur APRS',
@@ -901,6 +911,8 @@
     if ($('#aboutProjectText')) $('#aboutProjectText').textContent = copy.project;
     if ($('#aboutContactTitle')) $('#aboutContactTitle').textContent = copy.contactTitle;
     if ($('#aboutContactText')) $('#aboutContactText').textContent = copy.contact;
+    if ($('#aboutContributorsTitle')) $('#aboutContributorsTitle').textContent = copy.contributorsTitle;
+    if ($('#aboutContributorsText')) $('#aboutContributorsText').textContent = copy.contributors;
     if ($('#aboutPromoteTitle')) $('#aboutPromoteTitle').textContent = copy.promoteTitle;
     if ($('#aboutPromoteText')) $('#aboutPromoteText').textContent = copy.promote;
     if ($('#aboutPromoteButton')) $('#aboutPromoteButton').textContent = copy.promoteButton;
@@ -3721,18 +3733,93 @@
     }
   }
 
+  function connectionControlView(status = {}) {
+    const connected = !!status.connected;
+    const verified = !!status.verified;
+    const wanted = !!status.wanted;
+    const rawState = String(status.state || '').trim();
+
+    if (connected && verified) {
+      return {
+        kind: 'connected',
+        label: ui('Conectado e verificado', 'Connected and verified'),
+        action: 'disconnect',
+        hint: ui('Clique para desconectar', 'Click to disconnect'),
+      };
+    }
+    if (connected && /autenticando/i.test(rawState)) {
+      return {
+        kind: 'connecting',
+        label: ui('Conectando…', 'Connecting…'),
+        action: 'disconnect',
+        hint: ui('Autenticando no APRS-IS', 'Authenticating with APRS-IS'),
+      };
+    }
+    if (connected) {
+      return {
+        kind: 'unverified',
+        label: ui('Conectado sem verificação', 'Connected without verification'),
+        action: 'disconnect',
+        hint: ui('Clique para desconectar', 'Click to disconnect'),
+      };
+    }
+    if (wanted && /conexão perdida/i.test(rawState)) {
+      return {
+        kind: 'lost',
+        label: ui('Conexão perdida', 'Connection lost'),
+        action: 'disconnect',
+        hint: ui('Reconectando automaticamente', 'Reconnecting automatically'),
+      };
+    }
+    if (wanted && /reconect/i.test(rawState)) {
+      return {
+        kind: 'connecting',
+        label: ui('Reconectando…', 'Reconnecting…'),
+        action: 'disconnect',
+        hint: ui('Clique para desconectar', 'Click to disconnect'),
+      };
+    }
+    if (wanted) {
+      return {
+        kind: 'connecting',
+        label: ui('Conectando…', 'Connecting…'),
+        action: 'disconnect',
+        hint: ui('Clique para desconectar', 'Click to disconnect'),
+      };
+    }
+    return {
+      kind: 'disconnected',
+      label: ui('Desconectado', 'Disconnected'),
+      action: 'connect',
+      hint: status.last_error
+        ? ui('Clique para tentar novamente', 'Click to try again')
+        : ui('Clique para conectar', 'Click to connect'),
+    };
+  }
+
+  function renderConnectionControl(status = {}) {
+    const button = $('#connectButton');
+    if (!button) return;
+    const view = connectionControlView(status);
+    button.classList.remove('connected', 'unverified', 'disconnected', 'connecting', 'lost');
+    button.classList.add(view.kind);
+    button.dataset.action = view.action;
+    button.setAttribute('aria-label', view.label + '. ' + view.hint);
+    const statusText = $('#connectionControlStatus');
+    const actionText = $('#connectionControlAction');
+    if (statusText) statusText.textContent = view.label;
+    if (actionText) actionText.textContent = state.connectionActionBusy ? ui('Aguarde…', 'Please wait…') : view.hint;
+    button.disabled = !!state.connectionActionBusy;
+    const detail = String(status.last_error || status.server_message || status.state || '').trim();
+    button.title = detail ? (view.label + ' — ' + detail) : (view.label + ' — ' + view.hint);
+  }
+
   async function refreshStatus() {
     try {
       const s = await api('/api/status');
       state.connected = !!s.connected;
-      const el = $('#connectionStatus');
-      el.classList.remove('connected', 'unverified', 'disconnected');
-      if (s.connected && s.verified) el.classList.add('connected');
-      else if (s.connected) el.classList.add('unverified');
-      else el.classList.add('disconnected');
-      el.querySelector('span:last-child').textContent = translateConnectionState(s.state || (s.connected ? 'Conectado' : 'Desconectado'));
-      el.title = s.last_error || s.server_message || '';
-      $('#connectButton').textContent = s.connected || s.wanted ? ui('Desconectar', 'Disconnect') : ui('Conectar', 'Connect');
+      state.connectionWanted = !!s.wanted;
+      renderConnectionControl(s);
       if (!s.connected && !s.wanted && s.last_error && s.last_error !== state.lastConnectionErrorShown) {
         state.lastConnectionErrorShown = s.last_error;
         toast(ui('Falha na conexão APRS-IS: ', 'APRS-IS connection failed: ') + s.last_error, 'error');
@@ -3762,8 +3849,16 @@
   }
 
   $('#connectButton').addEventListener('click', async () => {
+    if (state.connectionActionBusy) return;
+    const button = $('#connectButton');
+    const action = button?.dataset.action || (state.connected || state.connectionWanted ? 'disconnect' : 'connect');
     try {
-      if (state.connected || $('#connectButton').textContent === ui('Desconectar', 'Disconnect')) {
+      state.connectionActionBusy = true;
+      if (button) button.disabled = true;
+      const actionText = $('#connectionControlAction');
+      if (actionText) actionText.textContent = ui('Aguarde…', 'Please wait…');
+
+      if (action === 'disconnect') {
         await api('/api/disconnect', { method: 'POST' });
       } else {
         const missing = missingRequiredStationFields();
@@ -3779,13 +3874,15 @@
         }
         await api('/api/connect', { method: 'POST' });
       }
-      await refreshStatus();
     } catch (err) {
       if (/Preencha os campos obrigatórios/i.test(String(err.message || ''))) {
         showRequiredFieldsModal(missingRequiredStationFields());
       } else {
         toast(err.message, 'error');
       }
+    } finally {
+      state.connectionActionBusy = false;
+      await refreshStatus();
     }
   });
 
@@ -6330,6 +6427,8 @@
   function translateConnectionState(value) {
     const map = {
       'Desconectado':'Disconnected',
+      'Conectando…':'Connecting…',
+      'Reconectando…':'Reconnecting…',
       'Desconectando...':'Disconnecting...',
       'Conectado; autenticando...':'Connected; authenticating...',
       'Conectado e verificado':'Connected and verified',
