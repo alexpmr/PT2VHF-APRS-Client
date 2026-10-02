@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.4 - 2026-10-02
+
+- Adiciona monitoramento separado de **CPU e memória do PT2VHF APRS Client** e do **sistema operacional**.
+- Define como padrão **90% para CPU** e **90% para memória**, com alerta somente após **30 segundos de condição crítica sustentada**.
+- O alerta aparece em **popup não bloqueante**, indicando recurso, escopo, valor atual, limite, duração e horário.
+- Implementa **histerese de 5 pontos percentuais** para recuperação e **cooldown padrão de 10 minutos**.
+- Registra cada alerta no **log de diagnóstico**, incluindo versão, plataforma e métricas do aplicativo e do sistema.
+- Adiciona em **Configuração → Saúde do aplicativo** opções para ativação, limites, persistência e cooldown.
+- Na aba **Mapa**, a barra com **Histórico, período (Completo etc.), Ver, Velocidade, Tipo de mapa, Camadas e Exportar KML** passa a ficar **alinhada à esquerda**.
+- Inclui traduções em **PT-BR, English, Español e Français** e testes de regressão.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.3 - 2026-10-01
 
 - Em **Estatísticas → Software / dispositivos APRS**, separa as identificações em **Aplicativo APRS**, **Dispositivo / Hardware** e **Indeterminado**.
