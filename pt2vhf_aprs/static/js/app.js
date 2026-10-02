@@ -3394,21 +3394,61 @@
     }
   }
 
-  function resourceLevel(value) {
+  function resourceLevel(value, criticalThreshold = 90) {
     const n = Number(value || 0);
-    if (n >= 85) return 'critical';
-    if (n >= 65) return 'warn';
+    const critical = Math.min(100, Math.max(70, Number(criticalThreshold || 90)));
+    const warning = Math.max(60, critical - 20);
+    if (n >= critical) return 'critical';
+    if (n >= warning) return 'warn';
     return 'normal';
   }
+
+  function hideResourceCriticalAlert() {
+    $('#resourceCriticalAlert')?.classList.add('hidden');
+  }
+
+  function showResourceCriticalAlert(metrics) {
+    const alerts = Array.isArray(metrics?.critical_alerts) ? metrics.critical_alerts : [];
+    if (!alerts.length) return;
+    const card = $('#resourceCriticalAlert');
+    const title = $('#resourceCriticalAlertTitle');
+    const body = $('#resourceCriticalAlertBody');
+    if (!card || !title || !body) return;
+
+    title.textContent = ui('CPU/memória em nível crítico', 'CPU/memory at critical level');
+    const rows = alerts.map(alert => {
+      const resource = alert.resource === 'memory' ? ui('Memória', 'Memory') : 'CPU';
+      const scope = alert.scope === 'system' ? ui('Sistema', 'System') : 'PT2VHF APRS Client';
+      const value = Math.max(0, Number(alert.value || 0)).toFixed(1);
+      const threshold = Math.max(0, Number(alert.threshold || 0)).toFixed(0);
+      return `<div class="resource-critical-row"><strong>${escapeHtml(resource)} — ${escapeHtml(scope)}</strong><span>${value}% · ${escapeHtml(ui('Limite', 'Threshold'))}: ${threshold}%</span></div>`;
+    }).join('');
+    const sustained = Math.max(0, ...alerts.map(item => Number(item.sustained_seconds || 0)));
+    const when = new Date().toLocaleTimeString(currentLocale(), { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    body.innerHTML = rows +
+      `<p><strong>${escapeHtml(ui('Uso crítico sustentado', 'Sustained critical usage'))}:</strong> ${Math.round(sustained)} s</p>` +
+      `<p>${escapeHtml(ui('Isso pode causar lentidão, travamentos, atrasos no mapa ou no processamento de pacotes.', 'This may cause slowdowns, freezes, map delays, or packet-processing delays.'))}</p>` +
+      `<p class="resource-critical-time">${escapeHtml(ui('Horário do alerta', 'Alert time'))}: ${escapeHtml(when)}</p>`;
+    card.classList.remove('hidden');
+  }
+
+  $('#resourceCriticalAlertClose')?.addEventListener('click', hideResourceCriticalAlert);
+  $('#resourceCriticalAlertOk')?.addEventListener('click', hideResourceCriticalAlert);
 
   async function refreshSystemMetrics() {
     if (state.systemMetricsBusy) return;
     state.systemMetricsBusy = true;
     try {
       const m = await api('/api/system-metrics');
-      const cpu = Math.max(0, Number(m.cpu_percent || 0));
-      const memMb = Math.max(0, Number(m.memory_mb || 0));
-      const memPct = Math.max(0, Number(m.memory_percent || 0));
+      const cpu = Math.max(0, Number(m.app_cpu_percent ?? m.cpu_percent ?? 0));
+      const memMb = Math.max(0, Number(m.app_memory_mb ?? m.memory_mb ?? 0));
+      const memPct = Math.max(0, Number(m.app_memory_percent ?? m.memory_percent ?? 0));
+      const systemCpu = Math.max(0, Number(m.system_cpu_percent || 0));
+      const systemMemPct = Math.max(0, Number(m.system_memory_percent || 0));
+      const systemMemAvailableMb = Math.max(0, Number(m.system_memory_available_mb || 0));
+      const alertSettings = m.alert_settings || {};
+      const cpuCritical = Number(alertSettings.cpu_critical_percent || 90);
+      const memoryCritical = Number(alertSettings.memory_critical_percent || 90);
       const root = $('#systemResourceMeter');
       const cpuValue = $('#headerCpuUsage');
       const memValue = $('#headerMemoryUsage');
@@ -3420,16 +3460,18 @@
       if (memValue) memValue.textContent = `${memMb.toFixed(0)} MB`;
       if (cpuBar) cpuBar.style.width = `${Math.min(100, cpu)}%`;
       if (memBar) memBar.style.width = `${Math.min(100, memPct)}%`;
-      if (cpuMetric) cpuMetric.dataset.level = resourceLevel(cpu);
-      if (memMetric) memMetric.dataset.level = resourceLevel(memPct);
+      if (cpuMetric) cpuMetric.dataset.level = resourceLevel(cpu, cpuCritical);
+      if (memMetric) memMetric.dataset.level = resourceLevel(memPct, memoryCritical);
       if (root) {
         const uptime = Number(m.uptime_seconds || 0);
         const h = Math.floor(uptime / 3600);
         const min = Math.floor((uptime % 3600) / 60);
         const sec = Math.floor(uptime % 60);
         root.title = [
-          `CPU total do app: ${cpu.toFixed(1)}%`,
-          `RAM: ${memMb.toFixed(1)} MB (${memPct.toFixed(1)}%)`,
+          `CPU do APRS Client: ${cpu.toFixed(1)}%`,
+          `CPU do sistema: ${systemCpu.toFixed(1)}%`,
+          `RAM do APRS Client: ${memMb.toFixed(1)} MB (${memPct.toFixed(1)}%)`,
+          `RAM do sistema: ${systemMemPct.toFixed(1)}% · disponível ${systemMemAvailableMb.toFixed(0)} MB`,
           `Processos: ${Number(m.process_count || 0)}`,
           `Threads: ${Number(m.thread_count || 0)}`,
           `Requests HTTP ativos: ${Number(m.active_requests || 0)}`,
@@ -3437,6 +3479,7 @@
           `Uptime: ${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
         ].join('\n');
       }
+      showResourceCriticalAlert(m);
     } catch (_) {
     } finally {
       state.systemMetricsBusy = false;
@@ -5086,6 +5129,7 @@
     data.connect_on_start = !!form.elements.connect_on_start?.checked;
     data.open_browser_on_start = !!form.elements.open_browser_on_start?.checked;
     data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
+    data.resource_alert_enabled = !!form.elements.resource_alert_enabled?.checked;
     data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
     data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
     data.traffic_animation_enabled = !!form.elements.traffic_animation_enabled?.checked;
@@ -5948,6 +5992,25 @@
     'Resultado da última query':'Latest query result',
     'Nenhuma query registrada para esta estação.':'No query is recorded for this station.',
     'Nenhuma query executada recentemente para esta estação.':'No query has been run recently for this station.'
+  }).forEach(([key, value]) => EN_TEXT.set(key, value));
+
+  Object.entries({
+    'Saúde do aplicativo':'Application health',
+    'Alertar quando CPU ou memória estiverem críticas':'Alert when CPU or memory is critical',
+    'CPU crítica (%)':'Critical CPU (%)',
+    'Memória crítica (%)':'Critical memory (%)',
+    'Persistência para alertar (segundos)':'Sustained time before alert (seconds)',
+    'Cooldown entre alertas (minutos)':'Cooldown between alerts (minutes)',
+    'O alerta só aparece após uso crítico sustentado. A recuperação usa histerese para evitar avisos oscilando.':'The alert only appears after sustained critical usage. Recovery uses hysteresis to prevent oscillating alerts.',
+    'Recursos críticos':'Critical resources',
+    'Baixar log de diagnóstico':'Download diagnostic log',
+    'CPU/memória em nível crítico':'CPU/memory at critical level',
+    'Memória':'Memory',
+    'Sistema':'System',
+    'Limite':'Threshold',
+    'Uso crítico sustentado':'Sustained critical usage',
+    'Isso pode causar lentidão, travamentos, atrasos no mapa ou no processamento de pacotes.':'This may cause slowdowns, freezes, map delays, or packet-processing delays.',
+    'Horário do alerta':'Alert time',
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
   const LANGUAGE_META = {
