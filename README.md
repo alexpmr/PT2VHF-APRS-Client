@@ -1,33 +1,45 @@
-# PT2VHF APRS Client - v1.8.5
+# PT2VHF APRS Client - v1.8.6
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.5** adiciona **rota/path por mensagem** (APRS-IS ou RF) e melhora a interface para **1360×768 e outras telas de baixa altura**, mantendo integralmente os recursos da v1.8.4.
+A **v1.8.6** corrige a regressão dos **itens/camadas do mapa** observada após a v1.8.5, mantendo a seleção de rota/path por mensagem e as demais melhorias anteriores.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.5**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.6**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Setup_x64_v1.8.5.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Portable_x64_v1.8.5.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Setup_ARM64_v1.8.5.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Portable_ARM64_v1.8.5.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Setup_x64_v1.8.6.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Portable_x64_v1.8.6.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Setup_ARM64_v1.8.6.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Portable_ARM64_v1.8.6.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_x86_64_v1.8.5.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/pt2vhf-aprs-client_1.8.5_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Linux_x86_64_v1.8.5.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_x86_64_v1.8.6.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/pt2vhf-aprs-client_1.8.6_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Linux_x86_64_v1.8.6.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_macOS_arm64_v1.8.5.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_macOS_x86_64_v1.8.5.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_macOS_arm64_v1.8.6.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_macOS_x86_64_v1.8.6.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Manual_v1.8.5.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Manual_v1.8.6.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.6
+
+- Corrige a regressão em que **itens/camadas do mapa podiam desaparecer** após a v1.8.5.
+- Restaura a geometria global estável do mapa, evitando alterações de altura de `header`, abas e `main` em telas baixas.
+- Mantém a otimização para **1360×768** na aba Mensagens e no popup de estação sem interferir na área do Leaflet.
+- **Mapa → Ver** é montado imediatamente com Estações, Digipeaters, iGates, Objetos APRS, Tracklogs, Enlaces RF, Enlaces iGate/APRS-IS e Pacotes em movimento.
+- O mapa recalcula o viewport após redimensionamento/orientação e recarrega os itens visíveis.
+- Inclui recuperação única de um estado de visibilidade totalmente desabilitado por regressão, sem desfazer um **Remover tudo** explicitamente acionado.
+- O menu **Ver** permanece acessível mesmo durante uma falha temporária de `/api/map-data`.
+- Preserva **Automático / APRS-IS / RF direto / RF personalizado** e path por mensagem da v1.8.5.
+- Inclui testes de regressão específicos para os itens do mapa.
 
 ## Novidades da v1.8.5
 
