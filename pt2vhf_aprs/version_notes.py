@@ -3,6 +3,22 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.5": {
+        "title": "Rota/path por mensagem e interface otimizada para 1360×768",
+        "items": [
+            "Adiciona Rota de envio no compositor de mensagens: Automático, APRS-IS, RF direto e RF personalizado.",
+            "RF personalizado aceita path por mensagem, como WIDE1-1 ou WIDE1-1,WIDE2-1, com validação AX.25 antes do envio.",
+            "O modo Automático preserva APRS-IS como primeira escolha e usa RF direto somente quando necessário e disponível.",
+            "Mensagens e retries registram o meio efetivo (APRS-IS/RF) e o path usado no histórico local.",
+            "Retry preserva a rota original por padrão; uma seleção explícita no compositor pode substituir a rota/path.",
+            "Mensagens RF usam o TNC/KISS existente, respeitando conexão, pausa de TX e confirmação de transmissão.",
+            "A interface ganhou regras responsivas por altura para 1360×768 e outras telas baixas.",
+            "Popup de estação passa a limitar melhor sua altura e mantém as ações acessíveis com rolagem e barra de ações sticky.",
+            "A aba Mensagens reduz cabeçalho/compositor em baixa altura para manter lista, destinatário e envio visíveis.",
+            "Inclui traduções PT-BR, EN, ES e FR e testes de regressão para paths, rotas e layout de baixa altura.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.4": {
         "title": "Alertas de recursos e barra do Mapa alinhada à esquerda",
         "items": [
