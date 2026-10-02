@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.12": {
+        "title": "Hotfix de migração para bancos existentes",
+        "items": [
+            "Corrige o erro no such column: medium ao iniciar com banco criado por versões anteriores.",
+            "As colunas medium e rx_fingerprint agora são migradas antes da criação dos índices dependentes.",
+            "A atualização preserva o banco existente; não é necessário apagar histórico, mensagens, estações, logs ou tracklogs.",
+            "Inclui regressão que recria um schema legado de packets e valida a migração completa.",
+            "Mantém RF × APRS-IS nas Estatísticas, estações RF em TNC/RF e a organização visual da Configuração da v1.8.11.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.11": {
         "title": "Recepção RF nas Estatísticas e organização visual da Configuração",
         "items": [
