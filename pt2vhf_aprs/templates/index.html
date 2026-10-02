@@ -304,6 +304,23 @@
         <datalist id="destinationList"></datalist>
       </label>
 
+      <label id="messageRouteField" class="field message-route-field">
+        <span>Rota de envio</span>
+        <select id="messageRoute">
+          <option value="auto" selected>Automático</option>
+          <option value="aprs_is">APRS-IS</option>
+          <option value="rf_direct">RF direto</option>
+          <option value="rf_custom">RF personalizado</option>
+        </select>
+        <small id="messageRouteHint">Automático prioriza APRS-IS e usa RF direto somente se necessário.</small>
+      </label>
+
+      <label id="messagePathField" class="field message-path-field hidden">
+        <span>Path RF</span>
+        <input id="messagePath" type="text" maxlength="63" autocomplete="off" placeholder="Ex.: WIDE1-1,WIDE2-1">
+        <small>Válido apenas para RF personalizado.</small>
+      </label>
+
       <label id="bulletinIdField" class="field bulletin-id-field hidden">
         <span>Linha</span>
         <select id="bulletinId">
