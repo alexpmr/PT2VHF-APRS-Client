@@ -846,7 +846,12 @@ def create_app() -> Flask:
     @app.post("/api/messages/<int:row_id>/retry")
     def api_retry_message(row_id: int):
         try:
-            result = service.retry_message(row_id)
+            data = request.get_json(silent=True) or {}
+            result = service.retry_message(
+                row_id,
+                route=data.get("route", "auto"),
+                path=data.get("path", ""),
+            )
             return jsonify({"ok": True, **result})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
@@ -863,7 +868,12 @@ def create_app() -> Flask:
             message_type = str(data.get("type") or "message").lower()
 
             if message_type == "message":
-                result = service.queue_message_parts(data.get("to", ""), data.get("message", ""))
+                result = service.queue_message_parts(
+                    data.get("to", ""),
+                    data.get("message", ""),
+                    route=data.get("route", "auto"),
+                    path=data.get("path", ""),
+                )
             elif message_type in {"bulletin", "group_bulletin", "announcement"}:
                 group = data.get("group", "") if message_type == "group_bulletin" else ""
                 bulletin_id = data.get("bulletin_id", "A" if message_type == "announcement" else "0")
@@ -883,6 +893,9 @@ def create_app() -> Flask:
                     "part_count": result["part_count"],
                     "queued": bool(result.get("queued")),
                     "duplicate": bool(result.get("duplicate")),
+                    "route": result.get("route"),
+                    "medium": result.get("medium"),
+                    "path": result.get("path"),
                     "type": message_type,
                 })
             return jsonify({"ok": True, "id": row_id, "type": message_type})
