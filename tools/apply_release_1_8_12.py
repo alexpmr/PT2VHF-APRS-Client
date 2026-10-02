@@ -86,7 +86,7 @@ try:
                 row["name"] for row in migrated.execute("PRAGMA index_list(packets)").fetchall()
             }
             row = migrated.execute(
-                "SELECT medium FROM packets WHERE from_call='PT2OLD'"
+                "SELECT medium,raw FROM packets WHERE from_call='PT2OLD'"
             ).fetchone()
 
         if not {"medium", "rx_fingerprint"} <= columns:
@@ -100,6 +100,8 @@ try:
             raise SystemExit("v1.8.12 validation failed: packet indexes missing after migration")
         if not row or row["medium"] != "APRS-IS":
             raise SystemExit("v1.8.12 validation failed: legacy packet default medium")
+        if row["raw"] != "PT2OLD>APRS:>legacy":
+            raise SystemExit("v1.8.12 validation failed: legacy packet data was not preserved")
 finally:
     db.DB_PATH = original
     db.invalidate_map_data_cache(drop_payload=True)
