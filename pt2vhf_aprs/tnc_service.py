@@ -128,6 +128,11 @@ def _serial_chipset(*values: Any) -> str:
 
 def _parse_vid_pid(*values: Any) -> tuple[str, str]:
     haystack = " ".join(_serial_text(value) for value in values if value).upper()
+    # pyserial: "USB VID:PID=1A86:55D4"
+    match = re.search(r"VID:PID=([0-9A-F]{4}):([0-9A-F]{4})", haystack)
+    if match:
+        return match.group(1), match.group(2)
+    # Windows PnP: "USB\\VID_1A86&PID_55D4\\..."
     match = re.search(r"VID[_:=]?([0-9A-F]{4}).*?PID[_:=]?([0-9A-F]{4})", haystack)
     if match:
         return match.group(1), match.group(2)
