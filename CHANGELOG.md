@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.8.7 - 2026-10-02
+
+- Amplia a descoberta de portas seriais do **TNC / RF**, combinando **pyserial**, **Windows CIM/PnP** e o registro **SERIALCOMM**.
+- Passa a listar todas as portas COM encontradas por qualquer uma das fontes, inclusive interfaces **CH9102/CH9102F/CH9102X, CH340/CH341, CP210x, FTDI e CDC/ACM**.
+- Adiciona a seção **Equipamentos seriais detectados**, mostrando porta, identificação/descrição, interface/chipset, fabricante, VID:PID, número de série/HWID e estado.
+- Evita atribuir um modelo de rádio apenas pelo chipset USB; **Radtel RT-950 Pro** só é identificado nominalmente quando os metadados realmente indicam o modelo.
+- Adiciona seleção direta do equipamento detectado e preenchimento automático da porta COM.
+- A porta serial passa a aceitar **digitação manual**, permitindo usar uma COM mesmo quando a enumeração automática não fornecer metadados completos.
+- Adiciona **Reescanear** e atualização periódica da lista de equipamentos enquanto a aba TNC / RF estiver aberta.
+- Para interfaces **CH9102**, exibe orientação condicional para o **Radtel RT-950 Pro em TNC UART**; quando o rádio for identificado nominalmente, seleciona **115200 bps** como baud rate.
+- A abertura serial passa a apresentar mensagens mais claras para porta inexistente/desconectada e para porta ocupada/acesso negado pelo Windows.
+- Cada alteração da lista de portas é registrada no diagnóstico com device, descrição, fabricante, HWID, VID/PID, número de série e fontes de enumeração.
+- Inclui regressão específica com **COM6/CH9102 e COM10/CH340 simultâneos**, além dos testes de interface e fallback nativo.
+- Mantém integralmente mapas, APRS-IS/RF, mensagens com path individual e demais recursos da série 1.8.x.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.6 - 2026-10-02
 
 - Corrige regressão da **v1.8.5** em que os **itens/camadas do mapa podiam desaparecer**.
