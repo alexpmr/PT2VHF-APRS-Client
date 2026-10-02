@@ -1,33 +1,47 @@
-# PT2VHF APRS Client - v1.8.6
+# PT2VHF APRS Client - v1.8.7
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.6** corrige a regressão dos **itens/camadas do mapa** observada após a v1.8.5, mantendo a seleção de rota/path por mensagem e as demais melhorias anteriores.
+A **v1.8.7** amplia o **TNC / RF** com descoberta avançada de portas COM e uma nova visão dos **equipamentos seriais detectados**, incluindo suporte aprimorado ao cenário do Radtel RT-950 Pro em TNC UART.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.6**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.7**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Setup_x64_v1.8.6.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Portable_x64_v1.8.6.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Setup_ARM64_v1.8.6.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Portable_ARM64_v1.8.6.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Setup_x64_v1.8.7.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Portable_x64_v1.8.7.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Setup_ARM64_v1.8.7.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Portable_ARM64_v1.8.7.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_x86_64_v1.8.6.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/pt2vhf-aprs-client_1.8.6_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Linux_x86_64_v1.8.6.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_x86_64_v1.8.7.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/pt2vhf-aprs-client_1.8.7_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Linux_x86_64_v1.8.7.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_macOS_arm64_v1.8.6.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_macOS_x86_64_v1.8.6.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_macOS_arm64_v1.8.7.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_macOS_x86_64_v1.8.7.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.6/PT2VHF_APRS_Client_Manual_v1.8.6.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Manual_v1.8.7.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.7
+
+- **Descoberta serial avançada:** combina pyserial, Windows CIM/PnP e SERIALCOMM para encontrar portas COM que estejam visíveis ao Windows.
+- Nova seção **Equipamentos seriais detectados** na aba TNC / RF, mostrando porta, descrição/equipamento, interface/chipset, fabricante, VID:PID, número de série/HWID e estado.
+- Reconhecimento explícito de interfaces **CH9102/CH9102F/CH9102X, CH340/CH341, CP210x, FTDI e CDC/ACM**.
+- **Porta COM editável:** além da seleção dos equipamentos encontrados, é possível digitar manualmente uma COM.
+- Botões **Atualizar portas / Reescanear** e atualização periódica enquanto a aba TNC / RF estiver aberta.
+- Um equipamento detectado pode ser selecionado diretamente pelo botão **Usar**, preenchendo a porta serial correspondente.
+- **Radtel RT-950 Pro:** o Client só usa o nome do rádio quando os metadados do sistema realmente o identificarem; um CH9102 genérico não é automaticamente chamado de Radtel.
+- Para **CH9102**, a interface mostra orientação condicional sobre o RT-950 Pro em **TNC UART**; quando o modelo for identificado, o baud rate é ajustado para **115200 bps**.
+- A enumeração serial passa a ser registrada no diagnóstico com as diferentes fontes e metadados disponíveis.
+- Inclui testes de regressão com **COM6/CH9102 e COM10/CH340 simultâneos**.
+- Mantém integralmente os recursos de mapa da v1.8.6 e as rotas de mensagem APRS-IS/RF da v1.8.5.
 
 ## Novidades da v1.8.6
 
