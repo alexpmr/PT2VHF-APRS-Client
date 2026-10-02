@@ -552,7 +552,9 @@ def test_v162_replay_update_and_settings_ui():
     assert "favorite-star" in js
     assert "map-line-legend" in js
     assert "analysisPeriod" in js
-    assert "30 * 60 * 1000" in js
+    assert "function updateCheckMinutes()" in js
+    assert "function rescheduleUpdateChecks()" in js
+    assert "updateCheckIntervalMs()" in js
     assert "AbortController" in js
     assert "showWhatsNewAfterUpdate" in js
     assert "stationIsVisible" in js
