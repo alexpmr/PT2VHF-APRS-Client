@@ -41,6 +41,83 @@ h1 { margin: 0; font-size: 20px; }
 .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 3px rgba(240,92,99,.12); }
 .status.connected .dot { background: var(--ok); box-shadow: 0 0 0 3px rgba(56,199,118,.12); }
 .status.unverified .dot { background: var(--warn); box-shadow: 0 0 0 3px rgba(244,189,80,.12); }
+
+/* v1.8.10 - controle único de conexão APRS-IS */
+.connection-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 168px;
+  min-height: 42px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease, opacity .15s ease;
+}
+.connection-control:hover:not(:disabled) { border-color: #476074; }
+.connection-control:disabled { opacity: .65; cursor: wait; }
+.connection-control .dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(240,92,99,.12);
+}
+.connection-control-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+.connection-control-copy strong {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.connection-control-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.connection-control.connected {
+  border-color: rgba(56,199,118,.42);
+  background: rgba(56,199,118,.08);
+}
+.connection-control.connected .dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px rgba(56,199,118,.12);
+}
+.connection-control.unverified {
+  border-color: rgba(244,189,80,.42);
+  background: rgba(244,189,80,.08);
+}
+.connection-control.unverified .dot,
+.connection-control.connecting .dot {
+  background: var(--warn);
+  box-shadow: 0 0 0 3px rgba(244,189,80,.12);
+}
+.connection-control.connecting {
+  border-color: rgba(244,189,80,.34);
+}
+.connection-control.lost {
+  border-color: rgba(240,92,99,.45);
+  background: rgba(240,92,99,.08);
+}
+.connection-control.lost .dot,
+.connection-control.disconnected .dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(240,92,99,.12);
+}
 .btn { border: 1px solid var(--line); color: var(--text); background: var(--panel-2); border-radius: 8px; padding: 9px 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .btn:hover { border-color: #476074; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #06131e; font-weight: 700; }
@@ -3358,6 +3435,37 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
 .about-card h3 { margin: 0 0 9px; }
 .about-card p { color: var(--muted); line-height: 1.55; }
 .about-contact-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 14px; }
+.about-contributors-card { grid-column: 1 / -1; }
+.about-contributors-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 9px;
+  margin-top: 14px;
+}
+.about-contributor {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(59,166,255,.05);
+}
+.about-contributor strong {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+.about-contributor span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .promotion-packet-preview {
   margin-top: 10px;
   padding: 10px 12px;
@@ -3386,6 +3494,8 @@ html[data-theme="light"] .station-query-result { background: rgba(22,120,200,.04
   .about-hero { align-items: flex-start; flex-direction: column; }
   .about-logo { width: min(320px, 100%); }
   .about-grid { grid-template-columns: 1fr; }
+  .about-contributors-list { grid-template-columns: 1fr; }
+  .connection-control { min-width: 146px; }
 }
 
 
