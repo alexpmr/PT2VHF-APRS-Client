@@ -1270,6 +1270,19 @@
     addMapControls();
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
+
+    if (!window._pt2vhfMapViewportSyncBound) {
+      window._pt2vhfMapViewportSyncBound = true;
+      const syncViewport = debounce(() => {
+        if (state.activeTab !== 'map' || !state.map) return;
+        state.map.invalidateSize({ animate: false });
+        void loadMapData();
+      }, 120);
+      window.addEventListener('resize', syncViewport);
+      window.addEventListener('orientationchange', syncViewport);
+    }
+
+    requestAnimationFrame(() => state.map?.invalidateSize({ animate: false }));
     await loadMapData();
     if (state.elevationEnabled) setElevationEnabled(true, { persist: false });
     if (state.weatherRadarEnabled) void setWeatherRadarEnabled(true, { force: true, quiet: true });
@@ -1684,6 +1697,25 @@
     localStorage.setItem(MAP_VIEW_STATE_STORAGE[key], state[key] ? '1' : '0');
   }
 
+  function repairMapVisibilityStateV186() {
+    const repairKey = 'pt2vhf_map_visibility_repair_v186';
+    if (localStorage.getItem(repairKey) === '1') return false;
+
+    const keys = Object.keys(MAP_VIEW_STATE_STORAGE);
+    const allDisabled = keys.every(key => state[key] === false);
+    const explicitlyCleared = localStorage.getItem('pt2vhf_map_view_all_cleared') === '1';
+
+    if (allDisabled && !explicitlyCleared) {
+      for (const key of keys) setMapViewState(key, true);
+      state.mapViewFilters = {};
+      persistMapViewFilters();
+      state.topologyEnabled = true;
+    }
+
+    localStorage.setItem(repairKey, '1');
+    return allDisabled && !explicitlyCleared;
+  }
+
   function mapDeviceClassLabel(value) {
     const key = String(value || 'unknown').toLowerCase();
     const labels = MAP_DEVICE_CLASS_LABELS[key] || MAP_DEVICE_CLASS_LABELS.unknown;
@@ -1885,6 +1917,7 @@
 
   function setAllMapView(enabled) {
     const value = !!enabled;
+    localStorage.setItem('pt2vhf_map_view_all_cleared', value ? '0' : '1');
     for (const key of Object.keys(MAP_VIEW_STATE_STORAGE)) setMapViewState(key, value);
 
     const tree = $('#mapViewTree');
@@ -1911,7 +1944,12 @@
   function addMapControls() {
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
     state.topologyHours = statisticsPeriodValue(state.topologyHours);
+    const repairedVisibility = repairMapVisibilityStateV186();
     state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
+    renderMapViewTree([], []);
+    if (repairedVisibility) {
+      console.warn('Visibilidade do mapa recuperada automaticamente após estado totalmente desabilitado.');
+    }
 
     const period = $('#mapPeriodHours');
     if (period) period.value = String(state.mapPeriodHours);
