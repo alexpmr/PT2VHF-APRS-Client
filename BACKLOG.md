@@ -202,6 +202,29 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+- **TNC / RF — Radtel RT-950 Pro em TNC UART não aparece na lista de portas**
+  - Corrigir a enumeração de portas seriais no Windows para que o PT2VHF APRS Client liste **todas as portas COM disponíveis**, inclusive interfaces UART de rádios/TNCs que não coincidam com adaptadores já conhecidos.
+  - Cenário reportado: **Radtel RT-950 Pro** configurado em **TNC UART**. O Windows reconhece as interfaces seriais, mas o Client não apresenta a porta do rádio na seleção do TNC.
+  - Na máquina do usuário, o Gerenciador de Dispositivos mostra pelo menos:
+    - **USB-Enhanced-SERIAL CH9102 (COM6)**;
+    - **USB-SERIAL CH340 (COM10)**.
+  - Hoje o Client reconhece apenas uma das portas disponíveis, associada a outro equipamento LoRa/receptor de satélite, enquanto a porta do Radtel não fica disponível para seleção.
+  - Remover qualquer filtro excessivamente restritivo por **VID/PID, fabricante, descrição, chipset ou nome amigável** que possa ocultar portas COM válidas.
+  - Suportar explicitamente interfaces seriais baseadas em **CH9102/CH9102F/CH9102X** e **CH340/CH341**, além de CDC/USB Serial genérico quando o Windows fornecer uma porta COM utilizável.
+  - Exibir na lista o formato **COMx — nome amigável/dispositivo**, por exemplo `COM6 — USB-Enhanced-SERIAL CH9102`.
+  - Adicionar botão **Atualizar / Reescanear portas** na aba TNC / RF, sem necessidade de reiniciar o Client após conectar/desconectar o rádio.
+  - Permitir também **entrada manual da porta COM** como fallback, caso a enumeração automática não consiga identificá-la.
+  - Ao tentar abrir uma porta, diferenciar claramente:
+    - porta inexistente;
+    - porta ocupada por outro programa;
+    - acesso negado;
+    - baud rate incompatível;
+    - porta aberta mas sem resposta KISS/TNC;
+    - desconexão física durante o uso.
+  - Registrar no diagnóstico a lista completa retornada pelo Windows/pyserial, incluindo **device, description, manufacturer, hwid, VID, PID e serial number** quando disponíveis.
+  - Não presumir que apenas uma porta USB serial seja o TNC; permitir que o usuário escolha explicitamente entre múltiplas COMs.
+  - Validar o fluxo com o **Radtel RT-950 Pro em TNC UART** e adicionar teste/regressão de enumeração para múltiplas portas seriais simultâneas.
+
 ## Concluído na v1.8.6
 
 - **Correção crítica do Mapa:** restaurados os itens/camadas que podiam desaparecer após a v1.8.5.
