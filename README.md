@@ -1,33 +1,48 @@
-# PT2VHF APRS Client - v1.8.8
+# PT2VHF APRS Client - v1.8.9
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.8** concentra-se em **desempenho e estabilidade**, reduzindo fortemente a carga de CPU causada por consultas concorrentes do Mapa/SQLite e tornando o polling serial mais leve.
+A **v1.8.9** adiciona **checagem de atualização configurável** e transforma os popups de **objetos APRS** em fichas amigáveis, com apresentação contextual para radiossondas, meteorologia, AIS, repetidores e outros objetos.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.8**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.9**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Setup_x64_v1.8.8.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Portable_x64_v1.8.8.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Setup_ARM64_v1.8.8.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Portable_ARM64_v1.8.8.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Setup_x64_v1.8.9.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Portable_x64_v1.8.9.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Setup_ARM64_v1.8.9.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Portable_ARM64_v1.8.9.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_x86_64_v1.8.8.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/pt2vhf-aprs-client_1.8.8_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Linux_x86_64_v1.8.8.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_x86_64_v1.8.9.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/pt2vhf-aprs-client_1.8.9_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Linux_x86_64_v1.8.9.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_macOS_arm64_v1.8.8.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_macOS_x86_64_v1.8.8.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_macOS_arm64_v1.8.9.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_macOS_x86_64_v1.8.9.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Manual_v1.8.8.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.9/PT2VHF_APRS_Client_Manual_v1.8.9.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.9
+
+- **Atualizações:** checagem automática a cada **15 minutos** por padrão.
+- **Configuração → Atualizações:** novo intervalo ajustável entre **5 e 1.440 minutos**, persistido no banco e aplicado sem reiniciar.
+- A verificação manual continua disponível independentemente do intervalo automático.
+- **Objetos APRS:** popups passam a exibir informações formatadas e amigáveis, omitindo campos vazios.
+- **Balões/radiossondas:** altitude atual e máxima observada, estado de voo, velocidade vertical/horizontal, curso, frequência e meteorologia quando disponíveis.
+- **Estações meteorológicas:** temperatura, umidade, pressão, vento, rajada e chuva quando presentes.
+- **AIS/embarcações:** MMSI, velocidade, curso e destino quando informados.
+- **Repetidores/infraestrutura:** frequência, offset e CTCSS quando detectáveis.
+- Objetos passam a preservar **primeira recepção, altitude máxima, velocidade, curso, path, meteorologia, comentário e status**.
+- Todo popup mantém **Dados técnicos** recolhidos, com formato APRS, path e pacote bruto.
+- Objetos não identificados recebem apresentação genérica organizada, sem inventar significado para campos ausentes.
+- Traduções atualizadas para PT-BR, EN, ES e FR.
 
 ## Novidades da v1.8.8
 
