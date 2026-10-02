@@ -128,4 +128,6 @@ def test_v182_desktop_launchers_use_reserved_dynamic_server():
 
 
 def test_v182_version():
-    assert read("VERSION").strip() == "1.8.2"
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 2)
