@@ -1,33 +1,44 @@
-# PT2VHF APRS Client - v1.8.3
+# PT2VHF APRS Client - v1.8.4
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.3** melhora a análise de adoção APRS e os controles do mapa: separa **aplicativos APRS** de **dispositivos/hardware** nas Estatísticas e adiciona ações explícitas **Selecionar tudo / Remover tudo** em Mapa → Ver, mantendo todos os recursos da v1.8.2.
+A **v1.8.4** adiciona alerta preventivo de **CPU/memória crítica**, com persistência, histerese, cooldown e diagnóstico, e alinha à esquerda a barra contextual da aba **Mapa**, mantendo integralmente os recursos da v1.8.3.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.3**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.4**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Setup_x64_v1.8.3.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Portable_x64_v1.8.3.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Setup_ARM64_v1.8.3.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Portable_ARM64_v1.8.3.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Setup_x64_v1.8.4.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Portable_x64_v1.8.4.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Setup_ARM64_v1.8.4.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Portable_ARM64_v1.8.4.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_x86_64_v1.8.3.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/pt2vhf-aprs-client_1.8.3_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Linux_x86_64_v1.8.3.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_x86_64_v1.8.4.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/pt2vhf-aprs-client_1.8.4_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Linux_x86_64_v1.8.4.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_macOS_arm64_v1.8.3.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_macOS_x86_64_v1.8.3.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_macOS_arm64_v1.8.4.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_macOS_x86_64_v1.8.4.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Manual_v1.8.3.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Manual_v1.8.4.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.4
+
+- **Saúde do aplicativo:** monitora separadamente CPU/RAM do PT2VHF APRS Client e do sistema operacional.
+- **Alertas críticos:** padrão de 90% para CPU e memória, exigindo 30 s de condição sustentada antes do popup.
+- **Popup não bloqueante:** informa recurso, escopo, valor, limite, duração e horário, com acesso ao log de diagnóstico.
+- **Antirruído:** histerese de 5 pontos percentuais e cooldown padrão de 10 min; após recuperação, um novo alerta exige novo período crítico sustentado.
+- **Configuração:** limites, persistência, cooldown e ativação ajustáveis em **Saúde do aplicativo**.
+- **Mapa:** barra contextual com Histórico, período/Completo, Ver, Velocidade, Tipo de mapa, Camadas e KML alinhada à esquerda.
+- Novos textos traduzidos para **Português, English, Español e Français**.
+- Mantém integralmente Estatísticas, TNC/RF, mapas/camadas, mensagens, atualização integrada e demais recursos da v1.8.3.
 
 ## Novidades da v1.8.3
 
