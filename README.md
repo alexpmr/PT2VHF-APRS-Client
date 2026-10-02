@@ -1,33 +1,45 @@
-# PT2VHF APRS Client - v1.8.11
+# PT2VHF APRS Client - v1.8.12
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.11** corrige a contabilização de **estações recebidas por RF** em TNC/RF e Estatísticas e melhora a organização visual dos blocos da aba Configuração.
+A **v1.8.12** corrige a migração de bancos existentes que podia impedir a inicialização com o erro **no such column: medium**, preservando integralmente os dados e as melhorias RF da v1.8.11.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.11**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.12**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Setup_x64_v1.8.11.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Portable_x64_v1.8.11.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Setup_ARM64_v1.8.11.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Portable_ARM64_v1.8.11.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Setup_x64_v1.8.12.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Portable_x64_v1.8.12.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Setup_ARM64_v1.8.12.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Portable_ARM64_v1.8.12.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_x86_64_v1.8.11.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/pt2vhf-aprs-client_1.8.11_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Linux_x86_64_v1.8.11.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_x86_64_v1.8.12.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/pt2vhf-aprs-client_1.8.12_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Linux_x86_64_v1.8.12.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_macOS_arm64_v1.8.11.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_macOS_x86_64_v1.8.11.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_macOS_arm64_v1.8.12.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_macOS_x86_64_v1.8.12.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Manual_v1.8.11.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Manual_v1.8.12.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.12
+
+- Corrige a falha de inicialização **`sqlite3.OperationalError: no such column: medium`** em bancos criados por versões anteriores.
+- A migração agora adiciona **`medium`** e **`rx_fingerprint`** à tabela `packets` **antes** de criar os índices que usam essas colunas.
+- **Não é necessário apagar ou recriar o banco.** Mensagens, estações, logs, tracklogs e histórico existente são preservados.
+- Adiciona teste de regressão que parte de um schema legado realista, executa `init_db()` e confirma a migração completa.
+- Mantém integralmente a v1.8.11:
+  - estações recebidas por RF em **TNC / RF**;
+  - resumo e colunas **RF × APRS-IS** em Estatísticas;
+  - deduplicação lógica entre os dois meios;
+  - títulos maiores e laranja na aba **Configuração**.
 
 ## Novidades da v1.8.11
 
