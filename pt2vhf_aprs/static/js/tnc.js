@@ -27,7 +27,7 @@
       'Salvar TNC / RF':'Save TNC / RF','Monitor TNC':'TNC monitor','Frames AX.25/APRS recebidos e transmitidos.':'Received and transmitted AX.25/APRS frames.','Atualizar':'Refresh',
       'Hora':'Time','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'TNC2 packet','Sem frames.':'No frames.',
       'Decisões Digi / iGate':'Digi / iGate decisions','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit of what was sent, suppressed or blocked.','Ação':'Action','Decisão':'Decision','Motivo':'Reason','Sem decisões.':'No decisions.',
-      'Estações ouvidas por RF':'Stations heard over RF','Presença local usada pelo iGate inteligente.':'Local presence used by the smart iGate.','Estação':'Station','Última RF':'Last RF','Direta':'Direct','Contagem':'Count','Último tipo':'Last type','Nenhuma estação ouvida pelo TNC.':'No stations heard by the TNC.',
+      'Estações ouvidas por RF':'Stations heard over RF','Presença local usada pelo iGate inteligente.':'Local presence used by the smart iGate.','Estação':'Station','Última RF':'Last RF','Direta':'Direct','Contagem':'Count','Recepções':'Receptions','Pacotes RF':'RF packets','Distância':'Distance','Último tipo':'Last type','Nenhuma estação ouvida pelo TNC.':'No stations heard by the TNC.',
       'Quem fala com quem':'Who talks to whom','Grafo textual consolidado das interações RF e APRS-IS.':'Consolidated textual graph of RF and APRS-IS interactions.','Meio':'Medium','Interações':'Interactions','Última':'Last','Aguardando interações.':'Waiting for interactions.',
       'Ativado':'Enabled','Desconectado':'Disconnected','Observação':'Observation','TX automático desligado':'Automatic TX off','não detectada agora':'not detected now','Configuração TNC / RF salva.':'TNC / RF settings saved.','Sim':'Yes','Via digi':'Via digi',
       'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão':'Automatic TX, Digipeater and Internet→RF iGate are off by default. The button',
@@ -63,7 +63,7 @@
       'Aguardando dados.':'Esperando datos.','Aplicar configuração':'Aplicar configuración','Salvar TNC / RF':'Guardar TNC / RF','Monitor TNC':'Monitor TNC','Frames AX.25/APRS recebidos e transmitidos.':'Tramas AX.25/APRS recibidas y transmitidas.','Atualizar':'Actualizar',
       'Hora':'Hora','Dir.':'Dir.','Origem':'Origen','Destino':'Destino','Tipo':'Tipo','Pacote TNC2':'Paquete TNC2','Sem frames.':'Sin tramas.',
       'Decisões Digi / iGate':'Decisiones Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Auditoría de lo enviado, suprimido o bloqueado.','Ação':'Acción','Decisão':'Decisión','Motivo':'Motivo','Sem decisões.':'Sin decisiones.',
-      'Estações ouvidas por RF':'Estaciones oídas por RF','Presença local usada pelo iGate inteligente.':'Presencia local usada por el iGate inteligente.','Estação':'Estación','Última RF':'Última RF','Direta':'Directa','Contagem':'Conteo','Último tipo':'Último tipo','Nenhuma estação ouvida pelo TNC.':'Ninguna estación oída por el TNC.',
+      'Estações ouvidas por RF':'Estaciones oídas por RF','Presença local usada pelo iGate inteligente.':'Presencia local usada por el iGate inteligente.','Estação':'Estación','Última RF':'Última RF','Direta':'Directa','Contagem':'Conteo','Recepções':'Recepciones','Pacotes RF':'Paquetes RF','Distância':'Distancia','Último tipo':'Último tipo','Nenhuma estação ouvida pelo TNC.':'Ninguna estación oída por el TNC.',
       'Quem fala com quem':'Quién habla con quién','Grafo textual consolidado das interações RF e APRS-IS.':'Grafo textual consolidado de interacciones RF y APRS-IS.','Meio':'Medio','Interações':'Interacciones','Última':'Última','Aguardando interações.':'Esperando interacciones.',
       'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão PARAR TX interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'TX automático, Digipeater e iGate Internet→RF vienen desactivados por defecto. DETENER TX bloquea inmediatamente nuevas transmisiones sin detener el monitor RX.',
       'O digi usa supressão de duplicatas, bloqueio de loop, limite de hops e fila com prioridade para mensagens/ACK/REJ.':'El digi usa supresión de duplicados, bloqueo de bucles, límite de hops y cola con prioridad para mensajes/ACK/REJ.',
@@ -105,7 +105,7 @@
       'Aguardando dados.':'En attente de données.','Aplicar configuração':'Appliquer la configuration','Salvar TNC / RF':'Enregistrer TNC / RF','Monitor TNC':'Moniteur TNC','Frames AX.25/APRS recebidos e transmitidos.':'Trames AX.25/APRS reçues et transmises.','Atualizar':'Actualiser',
       'Hora':'Heure','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'Paquet TNC2','Sem frames.':'Aucune trame.',
       'Decisões Digi / iGate':'Décisions Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit de ce qui a été envoyé, supprimé ou bloqué.','Ação':'Action','Decisão':'Décision','Motivo':'Motif','Sem decisões.':'Aucune décision.',
-      'Estações ouvidas por RF':'Stations entendues en RF','Presença local usada pelo iGate inteligente.':'Présence locale utilisée par l’iGate intelligent.','Estação':'Station','Última RF':'Dernière RF','Direta':'Directe','Contagem':'Nombre','Último tipo':'Dernier type','Nenhuma estação ouvida pelo TNC.':'Aucune station entendue par le TNC.',
+      'Estações ouvidas por RF':'Stations entendues en RF','Presença local usada pelo iGate inteligente.':'Présence locale utilisée par l’iGate intelligent.','Estação':'Station','Última RF':'Dernière RF','Direta':'Directe','Contagem':'Nombre','Recepções':'Réceptions','Pacotes RF':'Paquets RF','Distância':'Distance','Último tipo':'Dernier type','Nenhuma estação ouvida pelo TNC.':'Aucune station entendue par le TNC.',
       'Quem fala com quem':'Qui parle à qui','Grafo textual consolidado das interações RF e APRS-IS.':'Graphe textuel consolidé des interactions RF et APRS-IS.','Meio':'Média','Interações':'Interactions','Última':'Dernière','Aguardando interações.':'En attente d’interactions.',
       'TX automático, Digipeater e iGate Internet→RF vêm desligados por padrão. O botão PARAR TX interrompe imediatamente novas transmissões sem derrubar o monitor RX.':'Le TX automatique, le Digipeater et l’iGate Internet→RF sont désactivés par défaut. ARRÊTER TX bloque immédiatement les nouvelles transmissions sans arrêter le moniteur RX.',
       'O digi usa supressão de duplicatas, bloqueio de loop, limite de hops e fila com prioridade para mensagens/ACK/REJ.':'Le digi utilise la suppression des doublons, le blocage des boucles, une limite de hops et une file prioritaire pour les messages/ACK/REJ.',
@@ -523,10 +523,25 @@
 
   function renderHeard(rows = []) {
     const body = $('#tncHeardBody'); if (!body) return;
-    if (!rows.length) { body.innerHTML = `<tr><td colspan="6">${tr('Nenhuma estação ouvida pelo TNC.')}</td></tr>`; return; }
-    body.innerHTML = rows.map(row => `<tr><td><strong>${esc(row.callsign)}</strong></td><td>${esc(humanTime(row.last_heard))}</td>
-      <td><span class="tnc-badge ${row.direct?'good':'warn'}">${row.direct?tr('Sim'):tr('Via digi')}</span></td><td>${Number(row.heard_count||0).toLocaleString()}</td>
-      <td>${esc(row.last_packet_type)}</td><td>${esc((row.path || []).map(p => typeof p === 'string' ? p : (p.value || '') + (p.repeated ? '*' : '')).join(', '))}</td></tr>`).join('');
+    if (!rows.length) { body.innerHTML = `<tr><td colspan="8">${tr('Nenhuma estação ouvida pelo TNC.')}</td></tr>`; return; }
+    body.innerHTML = rows.map(row => {
+      const directLabel = row.direct_known === false ? '—' : (row.direct ? tr('Sim') : tr('Via digi'));
+      const directClass = row.direct_known === false ? '' : (row.direct ? 'good' : 'warn');
+      const distance = Number.isFinite(Number(row.distance_km))
+        ? `${Number(row.distance_km).toLocaleString(undefined,{maximumFractionDigits:2})} km`
+        : '—';
+      const path = (row.path || []).map(p => typeof p === 'string' ? p : (p.value || '') + (p.repeated ? '*' : '')).join(', ');
+      return `<tr>
+        <td><strong>${esc(row.callsign)}</strong></td>
+        <td>${esc(humanTime(row.last_heard))}</td>
+        <td><span class="tnc-badge ${directClass}">${esc(directLabel)}</span></td>
+        <td>${Number(row.heard_count||0).toLocaleString()}</td>
+        <td>${Number(row.rf_packet_count||0).toLocaleString()}</td>
+        <td>${esc(distance)}</td>
+        <td>${esc(row.last_packet_type || '')}</td>
+        <td>${esc(path)}</td>
+      </tr>`;
+    }).join('');
   }
 
   function renderOptimizer(report = {}) {
