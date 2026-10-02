@@ -1,33 +1,48 @@
-# PT2VHF APRS Client - v1.8.7
+# PT2VHF APRS Client - v1.8.8
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.7** amplia o **TNC / RF** com descoberta avançada de portas COM e uma nova visão dos **equipamentos seriais detectados**, incluindo suporte aprimorado ao cenário do Radtel RT-950 Pro em TNC UART.
+A **v1.8.8** concentra-se em **desempenho e estabilidade**, reduzindo fortemente a carga de CPU causada por consultas concorrentes do Mapa/SQLite e tornando o polling serial mais leve.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.7**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.8**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Setup_x64_v1.8.7.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Portable_x64_v1.8.7.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Setup_ARM64_v1.8.7.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Portable_ARM64_v1.8.7.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Setup_x64_v1.8.8.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Portable_x64_v1.8.8.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Setup_ARM64_v1.8.8.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Portable_ARM64_v1.8.8.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_x86_64_v1.8.7.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/pt2vhf-aprs-client_1.8.7_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Linux_x86_64_v1.8.7.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_x86_64_v1.8.8.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/pt2vhf-aprs-client_1.8.8_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Linux_x86_64_v1.8.8.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_macOS_arm64_v1.8.7.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_macOS_x86_64_v1.8.7.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_macOS_arm64_v1.8.8.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_macOS_x86_64_v1.8.8.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.7/PT2VHF_APRS_Client_Manual_v1.8.7.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.8/PT2VHF_APRS_Client_Manual_v1.8.8.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.8
+
+- **Mapa muito mais leve:** `/api/map-data` passa a usar single-flight global para impedir várias consultas SQLite pesadas ao mesmo tempo.
+- Quando outra geração do mapa já está em andamento, o Client reutiliza o **último snapshot válido** em vez de ocupar outro worker do servidor.
+- A consulta de interação de estações foi reestruturada para eliminar `EXISTS` correlacionados executados estação por estação.
+- As abas **Mapa** e **Estações** compartilham a mesma estratégia de evidência de interação baseada em conjuntos.
+- Novos índices SQLite aceleram mensagens recebidas, ACK/REJ enviados e respostas a queries APRS.
+- O diagnóstico registra a duração de cada geração do mapa, além de quantidade de estações, objetos e pontos de tracklog.
+- O refresh completo do mapa passa a ocorrer a cada **15 segundos**; o tráfego/animação continua com atualização independente.
+- O Client preserva o mapa já exibido quando o backend estiver ocupado preparando o primeiro snapshot.
+- **TNC / RF mais leve:** a enumeração CIM/PowerShell deixa de rodar no polling periódico.
+- A atualização automática das portas seriais usa fontes leves a cada **30 segundos**; a varredura completa permanece disponível em **Reescanear**.
+- A identificação avançada de CH9102/CH340 e do Radtel RT-950 Pro da v1.8.7 é preservada.
+- Inclui testes de concorrência para impedir que múltiplas chamadas pesadas de `map_data` voltem a saturar os workers do servidor.
 
 ## Novidades da v1.8.7
 
