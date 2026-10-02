@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.8.9 - 2026-10-02
+
+- A checagem automática de nova versão passa a usar **15 minutos como padrão**.
+- Adiciona em **Configuração → Atualizações** o campo **Intervalo de verificação (minutos)**, persistido no SQLite e aplicável sem reiniciar o Client.
+- O intervalo é limitado entre **5 e 1.440 minutos**; a verificação manual continua independente.
+- O agendador de update passa a ser reprogramado imediatamente ao salvar a configuração, sem manter o antigo timer fixo de 30 minutos.
+- Objetos APRS passam a armazenar, quando disponíveis, **primeira recepção, altitude máxima observada, velocidade, curso, path, meteorologia, comentário, status e estado ativo/inativo**.
+- Novo normalizador de objetos prepara campos amigáveis para **balões/radiossondas, RDZSonDe, estações meteorológicas, AIS/embarcações, repetidores, DMR, D-Star, alertas, itens APRS e outros objetos**.
+- Balões/radiossondas podem exibir altitude atual/máxima, subida/descida, velocidade vertical/horizontal, curso, frequência, temperatura, umidade e pressão.
+- Objetos WX podem exibir temperatura, umidade, pressão, vento, rajada e chuva quando esses dados estiverem disponíveis.
+- AIS pode exibir MMSI, velocidade, curso e destino quando presentes.
+- Repetidores e objetos de infraestrutura podem exibir frequência, offset e CTCSS quando detectáveis.
+- Todos os popups de objetos passam a ter apresentação amigável e uma seção recolhível **Dados técnicos**, com formato APRS, path e pacote bruto.
+- O popup omite campos vazios e não inventa valores ausentes; objetos desconhecidos recebem apresentação genérica organizada.
+- Traduções atualizadas para PT-BR, EN, ES e FR.
+- Inclui testes de persistência/agendamento do intervalo e regressões de normalização/popup de objetos.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.8 - 2026-10-02
 
 - Otimiza profundamente **Mapa / SQLite** após diagnóstico de saturação do servidor interno e alto uso de CPU.
