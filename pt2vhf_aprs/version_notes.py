@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.6": {
+        "title": "Correção dos itens do mapa e estabilidade do viewport",
+        "items": [
+            "Corrige a regressão da v1.8.5 em que itens/camadas do mapa podiam deixar de aparecer.",
+            "Restaura a geometria global de header/abas/main usada pelo mapa, evitando redimensionamento global em telas de baixa altura.",
+            "Mantém as otimizações para 1360×768 restritas à aba Mensagens e ao popup de estação.",
+            "O menu Mapa → Ver é renderizado imediatamente, antes mesmo da primeira carga de dados do backend.",
+            "O Leaflet recalcula o viewport após resize/orientationchange e recarrega os dados visíveis.",
+            "Inclui recuperação única para estado de visibilidade totalmente desabilitado por regressão, preservando Remover tudo quando acionado explicitamente pelo usuário.",
+            "O menu Ver permanece disponível mesmo se uma carga de /api/map-data falhar temporariamente.",
+            "Preserva integralmente a seleção de rota/path por mensagem introduzida na v1.8.5.",
+            "Adiciona testes específicos para categorias do mapa, persistência, recuperação e estabilidade do viewport.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.5": {
         "title": "Rota/path por mensagem e interface otimizada para 1360×768",
         "items": [
