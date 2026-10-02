@@ -513,7 +513,9 @@
           <label class="field tnc-tcp-field"><span>Host</span><input id="tncTcpHost" name="tcp_host" value="127.0.0.1"></label>
           <label class="field tnc-tcp-field"><span>Porta TCP</span><input id="tncTcpPort" name="tcp_port" type="number" min="1" max="65535" value="8001"></label>
           <label class="field tnc-serial-field"><span>Porta serial</span>
-            <select id="tncSerialPort" name="serial_port"><option value="">Selecione…</option></select>
+            <input id="tncSerialPort" name="serial_port" list="tncSerialPortList" autocomplete="off" placeholder="Ex.: COM6">
+            <datalist id="tncSerialPortList"></datalist>
+            <small>Selecione um equipamento detectado abaixo ou informe manualmente uma porta COM.</small>
           </label>
           <label class="field tnc-serial-field"><span>Baud rate</span>
             <select id="tncSerialBaud" name="serial_baud">
@@ -523,6 +525,38 @@
           </label>
         </div>
         <p class="hint">Compatível com TNC físico em KISS e softwares como Dire Wolf por KISS TCP. APRS-IS e RF podem operar de forma independente.</p>
+        <p id="tncSerialProfileHint" class="hint tnc-serial-field hidden"></p>
+      </article>
+
+      <article class="config-card tnc-serial-devices-card tnc-serial-field hidden">
+        <div class="tnc-card-heading">
+          <div>
+            <h3>Equipamentos seriais detectados</h3>
+            <p>Portas encontradas pelo pyserial e, no Windows, também pela enumeração nativa do sistema.</p>
+          </div>
+          <button id="tncRescanDevices" type="button" class="btn secondary">Reescanear</button>
+        </div>
+        <div id="tncSerialScanSummary" class="hint">Aguardando leitura das portas seriais.</div>
+        <div class="tnc-table-wrap tnc-serial-devices-wrap">
+          <table class="tnc-serial-devices-table">
+            <thead>
+              <tr>
+                <th>Porta</th>
+                <th>Equipamento</th>
+                <th>Interface</th>
+                <th>Fabricante</th>
+                <th>VID:PID</th>
+                <th>Nº de série / HWID</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tncSerialDevicesBody">
+              <tr><td colspan="8">Nenhum equipamento serial lido ainda.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">O Client não atribui um modelo de rádio apenas pelo chipset USB. Quando o Windows não informar o modelo real, a interface é mostrada de forma genérica, por exemplo <strong>USB Serial — CH9102</strong>.</p>
       </article>
 
       <article class="config-card">
