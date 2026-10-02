@@ -176,8 +176,10 @@
   }
 
   let lastConfig = null;
+  let lastSerialPorts = [];
   let initialized = false;
   let pollTimer = null;
+  let serialPollTick = 0;
 
   async function requestJson(url, options = {}) {
     const response = await fetch(url, {
@@ -313,14 +315,16 @@
       tncIgateTx: cfg.igate_tx_enabled,
     };
     for (const [id, value] of Object.entries(booleans)) if (field(id)) field(id).checked = !!value;
-    if (field('tncSerialPort') && cfg.serial_port) field('tncSerialPort').dataset.selected = cfg.serial_port;
+    if (field('tncSerialPort') && cfg.serial_port) field('tncSerialPort').value = cfg.serial_port;
     syncTransportFields();
+    updateSerialProfileHint();
   }
 
   function syncTransportFields() {
     const serialMode = val('tncTransport', 'tcp') === 'serial';
     $$('.tnc-serial-field').forEach(el => el.classList.toggle('hidden', !serialMode));
     $$('.tnc-tcp-field').forEach(el => el.classList.toggle('hidden', serialMode));
+    if (serialMode) void loadPorts({quiet:true});
   }
 
   function applyRolePreset() {
@@ -348,28 +352,99 @@
     }
   }
 
-  async function loadPorts() {
-    const select = field('tncSerialPort');
-    if (!select) return;
-    const wanted = select.value || select.dataset.selected || lastConfig?.serial_port || '';
+  function serialStatusBadge(port) {
+    const status = String(port?.status || 'detected');
+    const labels = {
+      connected: tr('Conectado pelo Client'),
+      configured: tr('Configurado'),
+      device_error: port?.status_label || tr('Erro do dispositivo'),
+      detected: tr('Detectado'),
+    };
+    const cls = status === 'connected' ? 'good' : (status === 'device_error' ? 'bad' : (status === 'configured' ? 'warn' : ''));
+    return `<span class="tnc-badge ${cls}">${esc(labels[status] || port?.status_label || status)}</span>`;
+  }
+
+  function updateSerialProfileHint(port = null) {
+    const hint = $('#tncSerialProfileHint');
+    if (!hint) return;
+    const device = String(val('tncSerialPort') || '').trim().toUpperCase();
+    const item = port || lastSerialPorts.find(row => String(row.device || '').toUpperCase() === device);
+    if (!device) {
+      hint.textContent = '';
+      hint.classList.add('hidden');
+      return;
+    }
+    const equipment = String(item?.equipment || '');
+    const chipset = String(item?.chipset || '');
+    if (/RADTEL.*950|RT-950|RT950/i.test(equipment)) {
+      hint.textContent = tr('Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.');
+      hint.classList.remove('hidden');
+      if (field('tncSerialBaud')) field('tncSerialBaud').value = '115200';
+      return;
+    }
+    if (chipset === 'CH9102') {
+      hint.textContent = tr('Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.');
+      hint.classList.remove('hidden');
+      return;
+    }
+    hint.textContent = '';
+    hint.classList.add('hidden');
+  }
+
+  function renderSerialDevices(ports = []) {
+    lastSerialPorts = Array.isArray(ports) ? ports : [];
+    const body = $('#tncSerialDevicesBody');
+    const summary = $('#tncSerialScanSummary');
+    if (summary) summary.textContent = lastSerialPorts.length
+      ? `${lastSerialPorts.length} ${lastSerialPorts.length === 1 ? tr('equipamento/porta detectado') : tr('equipamentos/portas detectados')}.`
+      : tr('Nenhuma porta serial detectada pelo sistema.');
+    if (!body) return;
+    if (!lastSerialPorts.length) {
+      body.innerHTML = `<tr><td colspan="8">${esc(tr('Nenhum equipamento serial detectado. Você ainda pode informar a COM manualmente.'))}</td></tr>`;
+      updateSerialProfileHint();
+      return;
+    }
+    body.innerHTML = lastSerialPorts.map(port => {
+      const vidpid = [port.vid, port.pid].filter(Boolean).join(':') || '—';
+      const serialHwid = [port.serial_number, port.hwid || port.pnp_device_id].filter(Boolean).join(' · ') || '—';
+      const iface = port.chipset || port.interface || port.product || port.description || '—';
+      const source = Array.isArray(port.sources) ? port.sources.join(', ') : '';
+      return `<tr data-serial-device="${esc(port.device)}">
+        <td><strong>${esc(port.device)}</strong></td>
+        <td><strong>${esc(port.equipment || port.description || tr('Equipamento serial não identificado'))}</strong><small class="tnc-serial-source">${esc(source)}</small></td>
+        <td>${esc(iface)}</td>
+        <td>${esc(port.manufacturer || '—')}</td>
+        <td><code>${esc(vidpid)}</code></td>
+        <td class="tnc-serial-id" title="${esc(serialHwid)}">${esc(serialHwid)}</td>
+        <td>${serialStatusBadge(port)}</td>
+        <td><button type="button" class="btn secondary tnc-use-serial" data-tnc-use-port="${esc(port.device)}">${esc(tr('Usar'))}</button></td>
+      </tr>`;
+    }).join('');
+    updateSerialProfileHint();
+  }
+
+  async function loadPorts({force = false, quiet = false} = {}) {
+    const input = field('tncSerialPort');
+    const list = field('tncSerialPortList');
+    if (!input || !list) return;
+    const wanted = String(input.value || lastConfig?.serial_port || '').trim();
     try {
-      const data = await requestJson('/api/tnc/ports');
-      select.innerHTML = `<option value="">${tr('Selecione…')}</option>`;
-      for (const port of data.ports || []) {
+      const data = await requestJson(`/api/tnc/ports${force ? '?refresh=1' : ''}`);
+      const ports = data.ports || [];
+      list.innerHTML = '';
+      for (const port of ports) {
         const opt = document.createElement('option');
         opt.value = port.device;
-        opt.textContent = port.description && port.description !== port.device
-          ? `${port.device} — ${port.description}` : port.device;
-        select.appendChild(opt);
+        opt.label = port.equipment && port.equipment !== port.device
+          ? `${port.device} — ${port.equipment}`
+          : (port.description ? `${port.device} — ${port.description}` : port.device);
+        list.appendChild(opt);
       }
-      if (wanted && !Array.from(select.options).some(o => o.value === wanted)) {
-        const opt = document.createElement('option');
-        opt.value = wanted; opt.textContent = wanted + ' — não detectada agora';
-        select.appendChild(opt);
-      }
-      select.value = wanted;
+      input.value = wanted;
+      renderSerialDevices(ports);
+      if (!quiet) showError('');
     } catch (error) {
-      showError('Não foi possível listar as portas seriais: ' + error.message);
+      if (!quiet) showError(tr('Não foi possível listar as portas seriais:') + ' ' + error.message);
     }
   }
 
@@ -484,7 +559,18 @@
     initialized = true;
     field('tncTransport')?.addEventListener('change', syncTransportFields);
     field('tncRole')?.addEventListener('change', applyRolePreset);
-    $('#tncRefreshPorts')?.addEventListener('click', loadPorts);
+    field('tncSerialPort')?.addEventListener('input', () => updateSerialProfileHint());
+    $('#tncRefreshPorts')?.addEventListener('click', () => loadPorts({force:true}));
+    $('#tncRescanDevices')?.addEventListener('click', () => loadPorts({force:true}));
+    $('#tncSerialDevicesBody')?.addEventListener('click', event => {
+      const button = event.target.closest?.('[data-tnc-use-port]');
+      if (!button) return;
+      const port = String(button.dataset.tncUsePort || '').trim();
+      if (!port || !field('tncSerialPort')) return;
+      field('tncSerialPort').value = port;
+      updateSerialProfileHint(lastSerialPorts.find(item => String(item.device || '').toUpperCase() === port.toUpperCase()));
+      field('tncSerialPort').focus();
+    });
     $('#tncRefreshData')?.addEventListener('click', refreshData);
     $('#tncSave')?.addEventListener('click', async () => {
       try { await saveConfig(); await refreshData(); } catch (error) { showError(error.message); }
@@ -530,7 +616,11 @@
   initialLoad();
   pollTimer = setInterval(() => {
     refreshStatus();
-    if ($('.tab.active[data-tab="tnc"]')) refreshData();
+    if ($('.tab.active[data-tab="tnc"]')) {
+      refreshData();
+      serialPollTick += 1;
+      if (serialPollTick % 2 === 0 && val('tncTransport', 'tcp') === 'serial') void loadPorts({quiet:true});
+    }
   }, 3000);
   window.addEventListener('beforeunload', () => { if (pollTimer) clearInterval(pollTimer); });
 })();
