@@ -15,6 +15,8 @@ checks = {
         "def _build_map_data_uncached(",
         "def map_data(*, force: bool = False)",
         "_map_data_build_lock = threading.Lock()",
+        "_map_data_cache_db_path",
+        "invalidate_map_data_cache(drop_payload=False)",
         "MAP_DATA_CACHE_SECONDS = 15.0",
         'source="stale-cache"',
         "map_data_singleflight_busy",
