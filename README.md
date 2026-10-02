@@ -1,33 +1,46 @@
-# PT2VHF APRS Client - v1.8.10
+# PT2VHF APRS Client - v1.8.11
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.10** unifica o **estado da conexão APRS-IS com a ação Conectar/Desconectar** e adiciona uma seção de **Agradecimentos / Colaboradores** na aba Sobre.
+A **v1.8.11** corrige a contabilização de **estações recebidas por RF** em TNC/RF e Estatísticas e melhora a organização visual dos blocos da aba Configuração.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.10**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.11**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Setup_x64_v1.8.10.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Portable_x64_v1.8.10.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Setup_ARM64_v1.8.10.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Portable_ARM64_v1.8.10.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Setup_x64_v1.8.11.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Portable_x64_v1.8.11.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Setup_ARM64_v1.8.11.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Portable_ARM64_v1.8.11.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_x86_64_v1.8.10.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/pt2vhf-aprs-client_1.8.10_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Linux_x86_64_v1.8.10.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_x86_64_v1.8.11.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/pt2vhf-aprs-client_1.8.11_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Linux_x86_64_v1.8.11.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_macOS_arm64_v1.8.10.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_macOS_x86_64_v1.8.10.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_macOS_arm64_v1.8.11.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_macOS_x86_64_v1.8.11.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.10/PT2VHF_APRS_Client_Manual_v1.8.10.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.11/PT2VHF_APRS_Client_Manual_v1.8.11.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.11
+
+- **RF × APRS-IS:** cada pacote recebido passa a preservar explicitamente o meio de entrada.
+- Pacotes vindos do **TNC/KISS** são marcados como **RF**; pacotes recebidos do servidor continuam marcados como **APRS-IS**.
+- **TNC / RF → Estações ouvidas por RF** passa a usar também o histórico persistente, evitando que estações RF desapareçam da tabela.
+- A tabela mostra **Recepções, Pacotes RF, Distância, direta/via digi quando conhecida, último tipo e path**.
+- **Estatísticas** ganha um resumo **Recepção RF × APRS-IS**, com pacotes, estações únicas, frames RF e estações observadas nos dois meios.
+- O ranking de estações mostra colunas separadas **RF** e **APRS-IS**.
+- A mesma transmissão observada pelos dois meios é correlacionada em um **total lógico deduplicado**, sem apagar a evidência individual de RF e Internet.
+- Novos eventos de diagnóstico ajudam a validar o RX TNC/KISS e as estações RF observadas.
+- Na aba **Configuração**, os títulos dos blocos ficam **laranja e maiores**, com melhor hierarquia visual nos temas claro e escuro.
+- Inclui testes específicos para RF-only, RF+APRS-IS, deduplicação entre meios, tabela TNC/RF e estilo da Configuração.
 
 ## Novidades da v1.8.10
 
