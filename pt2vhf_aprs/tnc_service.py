@@ -559,15 +559,16 @@ def record_decision(
         )
 
 
-def update_heard(packet: dict[str, Any], raw_tnc2: str) -> None:
+def update_heard(packet: dict[str, Any], raw_tnc2: str) -> bool:
     source = str(packet.get("source") or "").upper().strip()
     if not source:
-        return
+        return False
     path = packet.get("path") or []
     direct = 1 if not any(bool(item.get("repeated")) for item in path) else 0
     packet_type = packet_priority_kind(packet.get("info_text") or "")
     now = utc_now_iso()
     with db.connection() as conn:
+        existed = conn.execute("SELECT 1 FROM tnc_heard WHERE callsign=?", (source,)).fetchone() is not None
         conn.execute(
             """INSERT INTO tnc_heard(callsign,last_heard,last_direct_heard,direct,path,heard_count,last_packet_type,last_raw)
                VALUES(?,?,?,?,?,1,?,?)
@@ -581,6 +582,7 @@ def update_heard(packet: dict[str, Any], raw_tnc2: str) -> None:
                  last_raw=excluded.last_raw""",
             (source, now, now if direct else None, direct, json.dumps(path, ensure_ascii=False), packet_type, raw_tnc2),
         )
+    return not existed
 
 
 def record_edge(source: str, destination: str, medium: str, text: str = "") -> None:
@@ -631,21 +633,178 @@ def list_decisions(limit: int = 250) -> list[dict[str, Any]]:
 
 
 def heard_stations(limit: int = 250) -> list[dict[str, Any]]:
+    """Lista estações com evidência RF persistida no TNC e/ou no pipeline APRS."""
     _ensure_schema()
+    db.init_db()
     limit = max(1, min(int(limit or 250), 2000))
+    cfg = db.get_config()
+    own_lat, own_lon = cfg.get("latitude"), cfg.get("longitude")
+    own_valid = db._valid_geo_position(own_lat, own_lon)
+
     with db.connection() as conn:
-        rows = conn.execute(
-            "SELECT * FROM tnc_heard ORDER BY last_heard DESC LIMIT ?", (limit,)
+        heard_rows = conn.execute(
+            "SELECT * FROM tnc_heard ORDER BY last_heard DESC"
         ).fetchall()
-    result = []
-    for row in rows:
+        rf_rows = conn.execute(
+            """SELECT UPPER(TRIM(from_call)) AS callsign,
+                      MAX(timestamp) AS last_rf_packet,
+                      COUNT(*) AS rf_packet_count
+                 FROM packets
+                WHERE medium='RF'
+                  AND from_call IS NOT NULL
+                  AND TRIM(from_call) <> ''
+                GROUP BY UPPER(TRIM(from_call))"""
+        ).fetchall()
+        station_rows = conn.execute(
+            """SELECT callsign,latitude,longitude,last_heard
+                 FROM stations
+                WHERE callsign IS NOT NULL"""
+        ).fetchall()
+
+    merged: dict[str, dict[str, Any]] = {}
+    for row in heard_rows:
         item = dict(row)
+        call = str(item.get("callsign") or "").upper().strip()
+        if not call:
+            continue
         try:
             item["path"] = json.loads(item.get("path") or "[]")
         except Exception:
             item["path"] = []
-        result.append(item)
+        item["rf_packet_count"] = 0
+        item["rf_evidence"] = "tnc_heard"
+        item["direct_known"] = True
+        merged[call] = item
+
+    for row in rf_rows:
+        call = str(row["callsign"] or "").upper().strip()
+        if not call:
+            continue
+        item = merged.setdefault(call, {
+            "callsign": call,
+            "last_heard": str(row["last_rf_packet"] or ""),
+            "last_direct_heard": None,
+            "direct": 0,
+            "path": [],
+            "heard_count": 0,
+            "last_packet_type": "",
+            "last_raw": "",
+            "rf_evidence": "packets",
+            "direct_known": False,
+        })
+        item["rf_packet_count"] = int(row["rf_packet_count"] or 0)
+        if str(row["last_rf_packet"] or "") > str(item.get("last_heard") or ""):
+            item["last_heard"] = str(row["last_rf_packet"] or "")
+        if item.get("rf_evidence") == "tnc_heard":
+            item["rf_evidence"] = "tnc_heard+packets"
+
+    station_by_call = {
+        str(row["callsign"] or "").upper().strip(): dict(row)
+        for row in station_rows
+        if str(row["callsign"] or "").strip()
+    }
+    for call, item in merged.items():
+        station = station_by_call.get(call) or {}
+        item["latitude"] = station.get("latitude")
+        item["longitude"] = station.get("longitude")
+        item["distance_km"] = None
+        if own_valid and db._valid_geo_position(item.get("latitude"), item.get("longitude")):
+            item["distance_km"] = round(db.haversine_km(
+                float(own_lat), float(own_lon),
+                float(item["latitude"]), float(item["longitude"]),
+            ), 2)
+
+    result = sorted(
+        merged.values(),
+        key=lambda item: str(item.get("last_heard") or ""),
+        reverse=True,
+    )[:limit]
     return result
+
+
+def tnc_reception_stats(hours: int = 24) -> dict[str, Any]:
+    """Resumo RF/APRS-IS preservando os dois meios e um total lógico deduplicado."""
+    _ensure_schema()
+    db.init_db()
+    hours = int(hours or 0)
+    cutoff = None
+    if hours > 0:
+        hours = max(1, min(hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).replace(microsecond=0).isoformat()
+
+    packet_where = "WHERE 1=1"
+    packet_params: list[Any] = []
+    frame_where = "WHERE direction='RX'"
+    frame_params: list[Any] = []
+    if cutoff:
+        packet_where += " AND timestamp>=?"
+        packet_params.append(cutoff)
+        frame_where += " AND timestamp>=?"
+        frame_params.append(cutoff)
+
+    with db.connection() as conn:
+        medium_rows = conn.execute(
+            f"""SELECT medium, COUNT(*) AS packets,
+                       COUNT(DISTINCT UPPER(TRIM(from_call))) AS stations
+                  FROM packets
+                  {packet_where}
+                 GROUP BY medium""",
+            packet_params,
+        ).fetchall()
+        by_medium = {
+            str(row["medium"] or "APRS-IS").upper(): {
+                "packets": int(row["packets"] or 0),
+                "stations": int(row["stations"] or 0),
+            }
+            for row in medium_rows
+        }
+        both_stations = int(conn.execute(
+            f"""SELECT COUNT(*) FROM (
+                    SELECT UPPER(TRIM(from_call)) AS callsign
+                      FROM packets
+                      {packet_where}
+                     AND from_call IS NOT NULL AND TRIM(from_call)<>''
+                     GROUP BY UPPER(TRIM(from_call))
+                    HAVING SUM(CASE WHEN medium='RF' THEN 1 ELSE 0 END)>0
+                       AND SUM(CASE WHEN medium='APRS-IS' THEN 1 ELSE 0 END)>0
+                )""",
+            packet_params,
+        ).fetchone()[0] or 0)
+        logical_packets = int(conn.execute(
+            f"""SELECT COUNT(*) FROM (
+                    SELECT COALESCE(NULLIF(rx_fingerprint,''), 'id:' || id) AS fp,
+                           CAST(strftime('%s', timestamp) / 10 AS INTEGER) AS bucket
+                      FROM packets
+                      {packet_where}
+                     GROUP BY fp, bucket
+                )""",
+            packet_params,
+        ).fetchone()[0] or 0)
+        frame_row = conn.execute(
+            f"""SELECT COUNT(*) AS frames,
+                       COUNT(DISTINCT UPPER(TRIM(source))) AS stations
+                  FROM tnc_frames
+                  {frame_where}""",
+            frame_params,
+        ).fetchone()
+        direct_stations = int(conn.execute(
+            "SELECT COUNT(*) FROM tnc_heard" + (" WHERE last_direct_heard>=?" if cutoff else ""),
+            ([cutoff] if cutoff else []),
+        ).fetchone()[0] or 0)
+
+    rf = by_medium.get("RF", {"packets": 0, "stations": 0})
+    aprsis = by_medium.get("APRS-IS", {"packets": 0, "stations": 0})
+    return {
+        "hours": 0 if cutoff is None else hours,
+        "rf_packets": int(rf["packets"]),
+        "rf_unique_stations": max(int(rf["stations"]), int(frame_row["stations"] or 0)),
+        "rf_frames_received": int(frame_row["frames"] or 0),
+        "rf_direct_stations": direct_stations,
+        "aprsis_packets": int(aprsis["packets"]),
+        "aprsis_unique_stations": int(aprsis["stations"]),
+        "both_media_stations": both_stations,
+        "logical_packets_deduplicated": logical_packets,
+    }
 
 
 def top_edges(hours: int = 24, limit: int = 30) -> list[dict[str, Any]]:
@@ -1430,7 +1589,20 @@ class TNCService:
             path=packet["path_text"], packet_type=kind,
             reason="Duplicado observado" if duplicate else "",
         )
-        update_heard(packet, packet["tnc2"])
+        new_rf_station = update_heard(packet, packet["tnc2"])
+        if new_rf_station:
+            diag.log_event(
+                "tnc_rf_station_heard",
+                callsign=source,
+                direct=not any(bool(item.get("repeated")) for item in (packet.get("path") or [])),
+                path=packet.get("path_text") or [],
+            )
+        if int(self.status().get("frames_rx") or 0) % 100 == 0:
+            try:
+                summary = tnc_reception_stats(24)
+                diag.log_event("tnc_rf_rx_summary", **summary)
+            except Exception as exc:
+                diag.log_event("tnc_rf_summary_error", error=str(exc))
 
         if duplicate:
             self._increment_status("duplicates_suppressed")
