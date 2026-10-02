@@ -212,6 +212,35 @@
   - Manter a checagem manual pelo botão de versão/atualização independentemente do intervalo automático.
   - Atualizar traduções PT-BR, EN, ES e FR e adicionar teste de regressão para persistência e agendamento do intervalo.
 
+- **Mapa — popup amigável para balões meteorológicos / radiossondas**
+  - Ao clicar em um **balão meteorológico/radiossonda** no mapa, substituir a exibição predominantemente bruta por um popup **formatado, amigável e orientado à leitura rápida**.
+  - Organizar os dados em seções, exibindo quando disponíveis:
+    - **identificação** do balão/sonda;
+    - **modelo/tipo** da radiossonda;
+    - **data e hora da última recepção** e tempo decorrido;
+    - **latitude e longitude**;
+    - **altitude atual**;
+    - **velocidade vertical** (subindo/descendo);
+    - **velocidade horizontal**;
+    - **direção/curso**;
+    - **temperatura**;
+    - **umidade**;
+    - **pressão atmosférica**;
+    - **frequência** da radiossonda, quando conhecida;
+    - **status do voo**, por exemplo subindo, descendo, pousada ou sem atualização;
+    - **distância e direção em relação à estação do usuário**, quando calculáveis;
+    - **origem dos dados / estação receptora / iGate**, quando disponível;
+    - **último path APRS observado**;
+    - outras telemetrias úteis presentes no pacote.
+  - Converter valores para unidades amigáveis e consistentes, por exemplo **m, km, km/h, m/s, °C, hPa e MHz**.
+  - Evitar mostrar campos vazios, nulos ou códigos internos sem interpretação.
+  - Manter uma área secundária **“Dados técnicos”** ou **“Ver pacote bruto”** para quem quiser consultar o APRS/raw original.
+  - Destacar visualmente informações importantes, como **altitude**, **subindo/descendo**, **velocidade vertical** e **última atualização**.
+  - Quando houver histórico suficiente, mostrar também **altitude máxima observada**, tendência de subida/descida e tempo desde o primeiro/último ponto conhecido.
+  - Reutilizar o mesmo componente de informações amigáveis em outras telas onde o mesmo balão/radiossonda for aberto, evitando divergência de dados.
+  - Manter compatibilidade com os diferentes formatos/fontes de balões já reconhecidos pelo Client.
+  - Atualizar traduções PT-BR, EN, ES e FR e adicionar teste de regressão para o popup formatado.
+
 ## Concluído na v1.8.8
 
 - **CPU / Mapa:** eliminada a possibilidade de múltiplas gerações pesadas de `/api/map-data` executarem simultaneamente.
