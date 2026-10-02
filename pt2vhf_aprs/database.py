@@ -57,6 +57,17 @@ _topology_cache: dict[int, tuple[float, list[dict[str, Any]]]] = {}
 TOPOLOGY_CACHE_SECONDS = 2.0
 TOPOLOGY_QUERY_MAX_SECONDS = 2.5
 
+# /api/map-data is one of the most requested and expensive read paths.
+# Keep one builder at a time for the whole process; concurrent callers receive
+# the latest valid snapshot instead of starting identical SQLite work.
+_map_data_build_lock = threading.Lock()
+_map_data_cache_lock = threading.Lock()
+_map_data_cache_payload: dict[str, Any] | None = None
+_map_data_cache_at = 0.0
+_map_data_cache_build_ms = 0.0
+MAP_DATA_CACHE_SECONDS = 15.0
+MAP_DATA_INITIAL_WAIT_SECONDS = 0.75
+
 APRS_DEVICE_ID_PATH = Path(__file__).resolve().parent / "data" / "aprs_device_ids.json"
 _aprs_device_id_lock = threading.Lock()
 _aprs_device_id_entries: list[dict[str, Any]] | None = None
@@ -358,6 +369,9 @@ def init_db() -> None:
             );
             CREATE INDEX IF NOT EXISTS idx_messages_time ON messages(timestamp DESC);
             CREATE INDEX IF NOT EXISTS idx_messages_from ON messages(from_call);
+            CREATE INDEX IF NOT EXISTS idx_messages_to ON messages(to_call);
+            CREATE INDEX IF NOT EXISTS idx_messages_interaction_in ON messages(direction,message_type,from_call);
+            CREATE INDEX IF NOT EXISTS idx_messages_interaction_out ON messages(direction,status,to_call);
 
             CREATE TABLE IF NOT EXISTS aprs_queries (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -377,6 +391,7 @@ def init_db() -> None:
             );
             CREATE INDEX IF NOT EXISTS idx_aprs_queries_peer_time ON aprs_queries(peer, id DESC);
             CREATE INDEX IF NOT EXISTS idx_aprs_queries_pending ON aprs_queries(direction, status, peer, query_type);
+            CREATE INDEX IF NOT EXISTS idx_aprs_queries_interaction ON aprs_queries(direction,status,response_at,peer);
 
             CREATE TABLE IF NOT EXISTS packets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2953,7 +2968,9 @@ def summary_counts() -> dict[str, int]:
 def clear_tracklogs() -> int:
     with connection() as conn:
         cur = conn.execute("DELETE FROM tracks")
-        return max(0, int(cur.rowcount or 0))
+        deleted = max(0, int(cur.rowcount or 0))
+    invalidate_map_data_cache(drop_payload=True)
+    return deleted
 
 
 def clear_stations() -> dict[str, int]:
@@ -2961,60 +2978,84 @@ def clear_stations() -> dict[str, int]:
         tracks_cur = conn.execute("DELETE FROM tracks")
         topology_cur = conn.execute("DELETE FROM topology_edges")
         stations_cur = conn.execute("DELETE FROM stations")
-        return {
+        result = {
             "stations": max(0, int(stations_cur.rowcount or 0)),
             "tracks": max(0, int(tracks_cur.rowcount or 0)),
             "topology": max(0, int(topology_cur.rowcount or 0)),
         }
+    invalidate_map_data_cache(drop_payload=True)
+    return result
 
 
-def map_data() -> dict[str, Any]:
+def _map_data_result(payload: dict[str, Any], *, source: str, age_ms: float = 0.0, busy: bool = False) -> dict[str, Any]:
+    result = dict(payload)
+    result["_meta"] = {
+        "source": source,
+        "cache_age_ms": round(max(0.0, age_ms), 1),
+        "build_ms": round(max(0.0, float(_map_data_cache_build_ms)), 1),
+        "busy": bool(busy),
+    }
+    return result
+
+
+def invalidate_map_data_cache(*, drop_payload: bool = False) -> None:
+    global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms
+    with _map_data_cache_lock:
+        _map_data_cache_at = 0.0
+        if drop_payload:
+            _map_data_cache_payload = None
+            _map_data_cache_build_ms = 0.0
+
+
+def _build_map_data_uncached() -> dict[str, Any]:
     with connection() as conn:
+        # Resolve interaction evidence once for the whole dataset. The previous
+        # query ran three correlated EXISTS subqueries for every station, which
+        # becomes very expensive as messages/aprs_queries grow.
+        interaction_rows = conn.execute(
+            """
+            SELECT from_call AS callsign
+              FROM messages
+             WHERE direction='in' AND message_type='message'
+            UNION
+            SELECT to_call AS callsign
+              FROM messages
+             WHERE direction='out' AND status IN ('ACK','REJ')
+            UNION
+            SELECT peer AS callsign
+              FROM aprs_queries
+             WHERE direction='in'
+                OR (direction='out' AND response_at IS NOT NULL AND status='RESPONDIDA')
+            """
+        ).fetchall()
+        interaction_calls = {
+            str(row["callsign"] or "").upper().strip()
+            for row in interaction_rows
+            if str(row["callsign"] or "").strip()
+        }
+
         station_rows = conn.execute(
             """
             SELECT s.*,
-                   CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite,
-                   CASE WHEN
-                        COALESCE(s.message_capable,0)=1
-                        OR EXISTS (
-                            SELECT 1 FROM messages m
-                            WHERE m.direction='in'
-                              AND m.message_type='message'
-                              AND UPPER(m.from_call)=UPPER(s.callsign)
-                        )
-                        OR EXISTS (
-                            SELECT 1 FROM messages m
-                            WHERE m.direction='out'
-                              AND UPPER(m.to_call)=UPPER(s.callsign)
-                              AND UPPER(COALESCE(m.status,'')) IN ('ACK','REJ')
-                        )
-                        OR EXISTS (
-                            SELECT 1 FROM aprs_queries q
-                            WHERE UPPER(q.peer)=UPPER(s.callsign)
-                              AND (
-                                  q.direction='in'
-                                  OR (
-                                      q.direction='out'
-                                      AND q.response_at IS NOT NULL
-                                      AND UPPER(COALESCE(q.status,''))='RESPONDIDA'
-                                  )
-                              )
-                        )
-                   THEN 1 ELSE 0 END AS interaction_evidence
-            FROM stations s
-            LEFT JOIN favorites f ON UPPER(f.callsign)=UPPER(s.callsign)
-            WHERE s.latitude IS NOT NULL AND s.longitude IS NOT NULL
-            ORDER BY favorite DESC, s.last_heard DESC
+                   CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
+              FROM stations s
+              LEFT JOIN favorites f ON f.callsign=s.callsign
+             WHERE s.latitude IS NOT NULL AND s.longitude IS NOT NULL
+             ORDER BY favorite DESC, s.last_heard DESC
             """
         ).fetchall()
+
         issues = _station_position_issues_conn(conn)
-        stations = []
+        stations: list[dict[str, Any]] = []
         valid_calls: set[str] = set()
         for row in station_rows:
             item = dict(row)
             call = str(item.get("callsign") or "").upper().strip()
             if call in issues or not _valid_geo_position(item.get("latitude"), item.get("longitude")):
                 continue
+            item["interaction_evidence"] = 1 if (
+                bool(item.get("message_capable")) or call in interaction_calls
+            ) else 0
             item["position_valid"] = True
             item["position_issue"] = ""
             item.update(aprs_map_device_metadata(
@@ -3025,29 +3066,25 @@ def map_data() -> dict[str, Any]:
             stations.append(item)
             valid_calls.add(call)
 
-        # Últimos 10 mil pontos; o frontend agrupa por estação. Evita travar após meses de operação.
+        # Últimos 10 mil pontos; o frontend agrupa por estação.
         tracks = [
-            dict(r)
-            for r in conn.execute(
+            dict(row)
+            for row in conn.execute(
                 """SELECT callsign,timestamp,latitude,longitude,speed,course,altitude,
                           path,raw,rssi,snr
-                   FROM tracks ORDER BY id DESC LIMIT 10000"""
+                     FROM tracks
+                    ORDER BY id DESC
+                    LIMIT 10000"""
             ).fetchall()
         ]
-    tracks = [
-        row
-        for row in reversed(tracks)
-        if str(row.get("callsign") or "").upper().strip() in valid_calls
-        and _valid_geo_position(row.get("latitude"), row.get("longitude"))
-    ]
-    with connection() as conn:
-        objects = []
+
+        objects: list[dict[str, Any]] = []
         for row in conn.execute(
             """SELECT name,source_callsign,last_heard,latitude,longitude,altitude,
                       symbol_table,symbol,info,packet_format,raw
-               FROM aprs_objects
-               ORDER BY last_heard DESC
-               LIMIT 5000"""
+                 FROM aprs_objects
+                ORDER BY last_heard DESC
+                LIMIT 5000"""
         ).fetchall():
             if not _valid_geo_position(row["latitude"], row["longitude"]):
                 continue
@@ -3060,7 +3097,69 @@ def map_data() -> dict[str, Any]:
                 str(item.get("packet_format") or "object"),
             ))
             objects.append(item)
+
+    tracks = [
+        row
+        for row in reversed(tracks)
+        if str(row.get("callsign") or "").upper().strip() in valid_calls
+        and _valid_geo_position(row.get("latitude"), row.get("longitude"))
+    ]
     return {"stations": stations, "objects": objects, "tracks": tracks}
+
+
+def map_data(*, force: bool = False) -> dict[str, Any]:
+    global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms
+
+    now = time.monotonic()
+    with _map_data_cache_lock:
+        cached = _map_data_cache_payload
+        cached_at = float(_map_data_cache_at)
+    age = now - cached_at if cached is not None and cached_at > 0 else float("inf")
+    if not force and cached is not None and age < MAP_DATA_CACHE_SECONDS:
+        return _map_data_result(cached, source="cache", age_ms=age * 1000.0)
+
+    owner = _map_data_build_lock.acquire(blocking=False)
+    if not owner:
+        # Never queue another expensive map query behind an existing one.
+        # Serving a stale snapshot is preferable to consuming another Waitress worker.
+        if cached is not None:
+            return _map_data_result(cached, source="stale-cache", age_ms=age * 1000.0, busy=True)
+        owner = _map_data_build_lock.acquire(timeout=MAP_DATA_INITIAL_WAIT_SECONDS)
+        if not owner:
+            diag.log_event("map_data_singleflight_busy", cache_available=False)
+            return _map_data_result(
+                {"stations": [], "objects": [], "tracks": []},
+                source="busy-empty",
+                busy=True,
+            )
+
+    try:
+        # Another thread may have completed the build while this caller waited.
+        now = time.monotonic()
+        with _map_data_cache_lock:
+            cached = _map_data_cache_payload
+            cached_at = float(_map_data_cache_at)
+        age = now - cached_at if cached is not None and cached_at > 0 else float("inf")
+        if not force and cached is not None and age < MAP_DATA_CACHE_SECONDS:
+            return _map_data_result(cached, source="cache-after-wait", age_ms=age * 1000.0)
+
+        started = time.monotonic()
+        payload = _build_map_data_uncached()
+        build_ms = (time.monotonic() - started) * 1000.0
+        with _map_data_cache_lock:
+            _map_data_cache_payload = payload
+            _map_data_cache_at = time.monotonic()
+            _map_data_cache_build_ms = build_ms
+        diag.log_event(
+            "map_data_build",
+            duration_ms=round(build_ms, 1),
+            stations=len(payload.get("stations") or []),
+            objects=len(payload.get("objects") or []),
+            tracks=len(payload.get("tracks") or []),
+        )
+        return _map_data_result(payload, source="fresh", age_ms=0.0)
+    finally:
+        _map_data_build_lock.release()
 
 
 def geographic_export_data(hours: int = 0) -> dict[str, Any]:
