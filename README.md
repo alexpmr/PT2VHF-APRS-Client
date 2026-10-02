@@ -1,33 +1,46 @@
-# PT2VHF APRS Client - v1.8.4
+# PT2VHF APRS Client - v1.8.5
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.4** adiciona alerta preventivo de **CPU/memória crítica**, com persistência, histerese, cooldown e diagnóstico, e alinha à esquerda a barra contextual da aba **Mapa**, mantendo integralmente os recursos da v1.8.3.
+A **v1.8.5** adiciona **rota/path por mensagem** (APRS-IS ou RF) e melhora a interface para **1360×768 e outras telas de baixa altura**, mantendo integralmente os recursos da v1.8.4.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.4**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.5**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Setup_x64_v1.8.4.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Portable_x64_v1.8.4.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Setup_ARM64_v1.8.4.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Portable_ARM64_v1.8.4.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Setup_x64_v1.8.5.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Portable_x64_v1.8.5.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Setup_ARM64_v1.8.5.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Portable_ARM64_v1.8.5.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_x86_64_v1.8.4.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/pt2vhf-aprs-client_1.8.4_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Linux_x86_64_v1.8.4.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_x86_64_v1.8.5.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/pt2vhf-aprs-client_1.8.5_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Linux_x86_64_v1.8.5.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_macOS_arm64_v1.8.4.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_macOS_x86_64_v1.8.4.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_macOS_arm64_v1.8.5.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_macOS_x86_64_v1.8.5.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.4/PT2VHF_APRS_Client_Manual_v1.8.4.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.5/PT2VHF_APRS_Client_Manual_v1.8.5.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.5
+
+- **Mensagens → Rota de envio:** Automático, APRS-IS, RF direto e RF personalizado.
+- **Automático:** preserva APRS-IS como primeira escolha; RF direto é usado apenas quando necessário e disponível.
+- **RF personalizado:** path por mensagem, como `WIDE1-1` ou `WIDE1-1,WIDE2-1`, validado antes do envio.
+- As mensagens RF reutilizam o **TNC/KISS** existente e respeitam a política de TX do painel **TNC / RF**.
+- O histórico mostra **APRS-IS ou RF** e o **path efetivamente usado**.
+- O **Retry** preserva a rota original por padrão; uma rota explícita selecionada no compositor pode substituir a rota/path.
+- **1360×768:** cabeçalho, aba Mensagens e popup da estação agora se adaptam melhor à altura disponível.
+- O popup da estação usa rolagem interna e mantém as ações acessíveis em telas baixas.
+- Traduções atualizadas em **Português, English, Español e Français**.
+- Mantém integralmente alertas de CPU/RAM, Estatísticas, mapas/camadas, TNC/RF, atualização integrada e demais recursos da v1.8.4.
 
 ## Novidades da v1.8.4
 
