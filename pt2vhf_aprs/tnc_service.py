@@ -769,13 +769,20 @@ def tnc_reception_stats(hours: int = 24) -> dict[str, Any]:
             packet_params,
         ).fetchone()[0] or 0)
         logical_packets = int(conn.execute(
-            f"""SELECT COUNT(*) FROM (
-                    SELECT COALESCE(NULLIF(rx_fingerprint,''), 'id:' || id) AS fp,
-                           CAST(strftime('%s', timestamp) / 10 AS INTEGER) AS bucket
+            f"""WITH ordered AS (
+                    SELECT id,timestamp,
+                           COALESCE(NULLIF(rx_fingerprint,''), 'id:' || id) AS fp,
+                           LAG(timestamp) OVER (
+                               PARTITION BY COALESCE(NULLIF(rx_fingerprint,''), 'id:' || id)
+                               ORDER BY timestamp,id
+                           ) AS previous_timestamp
                       FROM packets
                       {packet_where}
-                     GROUP BY fp, bucket
-                )""",
+                )
+                SELECT COUNT(*)
+                  FROM ordered
+                 WHERE previous_timestamp IS NULL
+                    OR (strftime('%s', timestamp) - strftime('%s', previous_timestamp)) > 10""",
             packet_params,
         ).fetchone()[0] or 0)
         frame_row = conn.execute(
