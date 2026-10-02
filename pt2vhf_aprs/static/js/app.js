@@ -6067,6 +6067,21 @@
     'Horário do alerta':'Alert time',
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
+  Object.entries({
+    'Rota de envio':'Send route',
+    'Automático':'Automatic',
+    'RF direto':'Direct RF',
+    'RF personalizado':'Custom RF',
+    'Path RF':'RF path',
+    'Válido apenas para RF personalizado.':'Only valid for custom RF.',
+    'Automático prioriza APRS-IS e usa RF direto somente se necessário.':'Automatic prioritizes APRS-IS and uses direct RF only when needed.',
+    'A mensagem será enviada somente pelo APRS-IS.':'The message will be sent only through APRS-IS.',
+    'A mensagem será transmitida por RF sem digipeater/path.':'The message will be transmitted by RF without a digipeater/path.',
+    'A mensagem será transmitida por RF usando o path informado.':'The message will be transmitted by RF using the entered path.',
+    'Informe o path RF personalizado.':'Enter the custom RF path.',
+    'Informe o path RF personalizado antes do retry.':'Enter the custom RF path before retrying.',
+  }).forEach(([key, value]) => EN_TEXT.set(key, value));
+
   const LANGUAGE_META = {
     'pt-BR': { label: 'Português', flag: '/static/img/flag_br.svg', alt: 'Brasil', htmlLang: 'pt-BR' },
     en: { label: 'English', flag: '/static/img/flag_england.svg', alt: 'England', htmlLang: 'en' },
