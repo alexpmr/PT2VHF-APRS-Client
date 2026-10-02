@@ -3641,7 +3641,7 @@
     const medium = String(message?.tx_medium || '').toUpperCase();
     const path = String(message?.tx_path || '').trim();
     if (medium === 'RF') return path ? `RF · ${path}` : ui('RF direto', 'Direct RF');
-    if (medium === 'APRS-IS') return 'APRS-IS';
+    if (medium === 'APRS-IS') return path ? `APRS-IS · ${path}` : 'APRS-IS';
     return '';
   }
 
