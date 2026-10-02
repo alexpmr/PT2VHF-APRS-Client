@@ -2782,6 +2782,165 @@
     return r * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(Math.max(0, 1 - h)));
   }
 
+  function objectTypeLabel(object) {
+    const key = String(object?.map_family_key || object?.map_subtype || 'other-object');
+    const labels = {
+      ais: ui('AIS / Embarcação', 'AIS / Vessel'),
+      rdzsonde: 'RDZSonDe',
+      balloon: ui('Balão / Radiossonda', 'Balloon / Radiosonde'),
+      weather: ui('Estação meteorológica', 'Weather station'),
+      repeater: ui('Repetidor', 'Repeater'),
+      dmr: 'DMR',
+      'd-star': 'D-Star',
+      alert: ui('Alerta', 'Alert'),
+      'aprs-item': ui('Item APRS', 'APRS item'),
+      'other-object': ui('Objeto APRS', 'APRS object'),
+    };
+    return labels[key] || String(object?.map_family_label || ui('Objeto APRS', 'APRS object'));
+  }
+
+  function objectBearingDegrees(from, to) {
+    const lat1 = Number(from?.latitude), lon1 = Number(from?.longitude);
+    const lat2 = Number(to?.latitude), lon2 = Number(to?.longitude);
+    if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return null;
+    const rad = value => value * Math.PI / 180;
+    const deg = value => value * 180 / Math.PI;
+    const p1 = rad(lat1), p2 = rad(lat2), dl = rad(lon2 - lon1);
+    const y = Math.sin(dl) * Math.cos(p2);
+    const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+    return (deg(Math.atan2(y, x)) + 360) % 360;
+  }
+
+  function objectCardinal(degrees) {
+    if (!Number.isFinite(degrees)) return '';
+    const names = ['N','NE','E','SE','S','SW','W','NW'];
+    return names[Math.round(degrees / 45) % 8];
+  }
+
+  function friendlyObjectPopupHtml(object, objectSymbol) {
+    const details = object?.friendly_details || {};
+    const rows = [];
+    const add = (label, value, primary = false, html = false) => {
+      if (value === null || value === undefined || value === '' || value === '—') return;
+      rows.push({ label, value: String(value), primary, html });
+    };
+    const number = value => {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const subtype = String(details.subtype || object?.map_family_key || 'other-object');
+    const lastDate = fmtDate(object.last_heard);
+    const lastRelative = formatRelativeLastHeard(object.last_heard);
+    const lastMarkup = `${escapeHtml(lastDate)}${lastRelative ? ` — ${escapeHtml(lastRelative)}` : ''}`;
+    const firstDate = object.first_heard ? fmtDate(object.first_heard) : '';
+
+    add(ui('Tipo', 'Type'), objectTypeLabel(object));
+    add(ui('Origem', 'Source'), object.source_callsign || '');
+    add(ui('Última recepção', 'Last heard'), lastMarkup, true, true);
+    add(ui('Primeira recepção', 'First heard'), firstDate);
+    add(ui('Posição', 'Position'), `${fmtNum(object.latitude, 6)}, ${fmtNum(object.longitude, 6)}`);
+
+    const own = { latitude: state.currentConfig?.latitude, longitude: state.currentConfig?.longitude };
+    const distance = mapDistanceKm(own, object);
+    const bearing = objectBearingDegrees(own, object);
+    if (distance > 0 && Number.isFinite(bearing)) {
+      add(ui('Distância / direção', 'Distance / bearing'),
+        `${distance.toFixed(distance >= 100 ? 1 : 2)} km · ${bearing.toFixed(0)}° ${objectCardinal(bearing)}`);
+    }
+
+    const altitude = number(object.altitude);
+    const maxAltitude = number(object.max_altitude);
+    const verticalSpeed = number(details.vertical_speed_ms);
+    const speed = number(details.speed_kmh);
+    const course = number(details.course_deg);
+    const frequency = number(details.frequency_mhz);
+    const temp = number(details.temperature_c);
+    const humidity = number(details.humidity_percent);
+    const pressure = number(details.pressure_hpa);
+
+    if (['balloon','rdzsonde'].includes(subtype)) {
+      const flightLabels = {
+        ascending: ui('Subindo', 'Ascending'),
+        descending: ui('Descendo', 'Descending'),
+        level: ui('Estável', 'Level'),
+        inactive: ui('Inativo / encerrado', 'Inactive / ended'),
+      };
+      add(ui('Estado do voo', 'Flight status'), flightLabels[String(details.flight_state || '')] || '', true);
+      if (altitude !== null) add(ui('Altitude atual', 'Current altitude'), `${fmtNum(altitude, 1)} m`, true);
+      if (maxAltitude !== null) add(ui('Altitude máxima observada', 'Maximum observed altitude'), `${fmtNum(maxAltitude, 1)} m`);
+      if (verticalSpeed !== null) add(ui('Velocidade vertical', 'Vertical speed'), `${fmtNum(verticalSpeed, 2)} m/s`, true);
+      if (speed !== null) add(ui('Velocidade horizontal', 'Horizontal speed'), `${fmtNum(speed, 1)} km/h`);
+      if (course !== null) add(ui('Curso', 'Course'), `${fmtNum(course, 0)}°`);
+      if (frequency !== null) add(ui('Frequência', 'Frequency'), `${fmtNum(frequency, 4)} MHz`);
+      if (temp !== null) add(ui('Temperatura', 'Temperature'), `${fmtNum(temp, 1)} °C`);
+      if (humidity !== null) add(ui('Umidade', 'Humidity'), `${fmtNum(humidity, 0)} %`);
+      if (pressure !== null) add(ui('Pressão', 'Pressure'), `${fmtNum(pressure, 1)} hPa`);
+    } else if (subtype === 'weather') {
+      if (temp !== null) add(ui('Temperatura', 'Temperature'), `${fmtNum(temp, 1)} °C`, true);
+      if (humidity !== null) add(ui('Umidade', 'Humidity'), `${fmtNum(humidity, 0)} %`);
+      if (pressure !== null) add(ui('Pressão', 'Pressure'), `${fmtNum(pressure, 1)} hPa`);
+      const wind = number(details.wind_speed_kmh);
+      const gust = number(details.wind_gust_kmh);
+      const windDir = number(details.wind_direction_deg);
+      const rain1h = number(details.rain_1h_mm);
+      const rain24h = number(details.rain_24h_mm);
+      if (wind !== null) add(ui('Vento', 'Wind'), `${fmtNum(wind, 1)} km/h${windDir !== null ? ` · ${fmtNum(windDir, 0)}°` : ''}`, true);
+      if (gust !== null) add(ui('Rajada', 'Wind gust'), `${fmtNum(gust, 1)} km/h`);
+      if (rain1h !== null) add(ui('Chuva 1 h', 'Rain 1 h'), `${fmtNum(rain1h, 1)} mm`);
+      if (rain24h !== null) add(ui('Chuva 24 h', 'Rain 24 h'), `${fmtNum(rain24h, 1)} mm`);
+      if (altitude !== null) add(ui('Altitude', 'Altitude'), `${fmtNum(altitude, 1)} m`);
+    } else if (subtype === 'ais') {
+      add('MMSI', details.mmsi || '');
+      if (speed !== null) add(ui('Velocidade', 'Speed'), `${fmtNum(speed, 1)} km/h`, true);
+      if (course !== null) add(ui('Curso', 'Course'), `${fmtNum(course, 0)}°`);
+      add(ui('Destino', 'Destination'), details.destination || '');
+    } else {
+      if (frequency !== null) add(ui('Frequência', 'Frequency'), `${fmtNum(frequency, 4)} MHz`, true);
+      const offset = number(details.offset_khz);
+      const tone = number(details.tone_hz);
+      if (offset !== null) add('Offset', `${fmtNum(offset, 1)} kHz`);
+      if (tone !== null) add('CTCSS', `${fmtNum(tone, 1)} Hz`);
+      if (altitude !== null) add(ui('Altitude', 'Altitude'), `${fmtNum(altitude, 1)} m`);
+      if (speed !== null) add(ui('Velocidade', 'Speed'), `${fmtNum(speed, 1)} km/h`);
+      if (course !== null) add(ui('Curso', 'Course'), `${fmtNum(course, 0)}°`);
+      if (temp !== null) add(ui('Temperatura', 'Temperature'), `${fmtNum(temp, 1)} °C`);
+      if (humidity !== null) add(ui('Umidade', 'Humidity'), `${fmtNum(humidity, 0)} %`);
+      if (pressure !== null) add(ui('Pressão', 'Pressure'), `${fmtNum(pressure, 1)} hPa`);
+    }
+
+    const descriptive = String(object.comment || object.status || object.info || '').trim();
+    if (descriptive) add(ui('Informação', 'Information'), descriptive);
+
+    const rowHtml = rows.map(row => `
+      <strong class="${row.primary ? 'object-popup-primary-label' : ''}">${escapeHtml(row.label)}</strong>
+      <span class="${row.primary ? 'object-popup-primary-value' : ''}">${row.html ? row.value : escapeHtml(row.value)}</span>
+    `).join('');
+
+    const path = Array.isArray(details.path) ? details.path.join(',') : '';
+    const technicalRows = [
+      [ui('Formato APRS', 'APRS format'), object.packet_format || ''],
+      ['Path', path],
+      [ui('Pacote bruto', 'Raw packet'), object.raw || ''],
+    ].filter(([,value]) => String(value || '').trim());
+
+    const technicalHtml = technicalRows.length
+      ? `<details class="object-popup-technical">
+          <summary>${escapeHtml(ui('Dados técnicos', 'Technical data'))}</summary>
+          <div class="popup-grid">${technicalRows.map(([label,value]) =>
+            `<strong>${escapeHtml(label)}</strong><span class="${label === ui('Pacote bruto', 'Raw packet') ? 'object-popup-raw' : ''}">${escapeHtml(value)}</span>`
+          ).join('')}</div>
+        </details>`
+      : '';
+
+    return `<div class="station-popup object-friendly-popup">
+      <h3>${objectSymbol} ${escapeHtml(String(object.name || '').trim())}</h3>
+      <div class="object-popup-type">${escapeHtml(objectTypeLabel(object))}</div>
+      <div class="popup-grid">${rowHtml}</div>
+      ${technicalHtml}
+    </div>`;
+  }
+
   function splitTrackSegments(rows) {
     const segments = [];
     let current = [];
@@ -2909,11 +3068,11 @@
           marker.setLatLng(latlng).setIcon(icon);
         }
         marker.setZIndexOffset(1400);
-        marker.bindPopup(`<div class="station-popup"><h3>${objectSymbol} ${escapeHtml(name)}</h3>
-          <div class="popup-grid"><strong>Tipo</strong><span>Objeto APRS</span>
-          <strong>Origem</strong><span>${escapeHtml(object.source_callsign || '')}</span>
-          <strong>Última recepção</strong><span>${escapeHtml(fmtDate(object.last_heard))}</span>
-          <strong>Informação</strong><span>${escapeHtml(object.info || '')}</span></div></div>`);
+        marker.bindPopup(friendlyObjectPopupHtml(object, objectSymbol), {
+          maxWidth: 430,
+          keepInView: true,
+          autoPan: true,
+        });
       }
 
       const grouped = new Map();
