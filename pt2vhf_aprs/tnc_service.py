@@ -635,7 +635,6 @@ def list_decisions(limit: int = 250) -> list[dict[str, Any]]:
 def heard_stations(limit: int = 250) -> list[dict[str, Any]]:
     """Lista estações com evidência RF persistida no TNC e/ou no pipeline APRS."""
     _ensure_schema()
-    db.init_db()
     limit = max(1, min(int(limit or 250), 2000))
     cfg = db.get_config()
     own_lat, own_lon = cfg.get("latitude"), cfg.get("longitude")
@@ -725,7 +724,6 @@ def heard_stations(limit: int = 250) -> list[dict[str, Any]]:
 def tnc_reception_stats(hours: int = 24) -> dict[str, Any]:
     """Resumo RF/APRS-IS preservando os dois meios e um total lógico deduplicado."""
     _ensure_schema()
-    db.init_db()
     hours = int(hours or 0)
     cutoff = None
     if hours > 0:
@@ -787,8 +785,13 @@ def tnc_reception_stats(hours: int = 24) -> dict[str, Any]:
                   {frame_where}""",
             frame_params,
         ).fetchone()
+        direct_sql = (
+            "SELECT COUNT(*) FROM tnc_heard WHERE last_direct_heard>=?"
+            if cutoff
+            else "SELECT COUNT(*) FROM tnc_heard WHERE last_direct_heard IS NOT NULL"
+        )
         direct_stations = int(conn.execute(
-            "SELECT COUNT(*) FROM tnc_heard" + (" WHERE last_direct_heard>=?" if cutoff else ""),
+            direct_sql,
             ([cutoff] if cutoff else []),
         ).fetchone()[0] or 0)
 
