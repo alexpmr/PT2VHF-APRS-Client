@@ -1958,6 +1958,154 @@ def aprs_object_map_metadata(
     }
 
 
+def _object_first_number(text: str, patterns: list[str]) -> float | None:
+    source = str(text or "")
+    for pattern in patterns:
+        match = re.search(pattern, source, re.I)
+        if not match:
+            continue
+        try:
+            return float(str(match.group(1)).replace(",", "."))
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _object_first_text(text: str, patterns: list[str]) -> str:
+    source = str(text or "")
+    for pattern in patterns:
+        match = re.search(pattern, source, re.I)
+        if match:
+            return re.sub(r"\s+", " ", str(match.group(1) or "").strip())
+    return ""
+
+
+def _object_path(value: Any, raw: str = "") -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return [str(item).strip() for item in parsed if str(item).strip()]
+        except Exception:
+            pass
+        return [item.strip() for item in value.split(",") if item.strip()]
+    line = str(raw or "").strip()
+    if ">" in line and ":" in line:
+        header = line.split(":", 1)[0].split(">", 1)[1]
+        parts = [part.strip() for part in header.split(",") if part.strip()]
+        return parts[1:] if len(parts) > 1 else []
+    return []
+
+
+def aprs_object_friendly_details(item: dict[str, Any]) -> dict[str, Any]:
+    """Normaliza metadados úteis de objetos APRS para apresentação amigável."""
+    info = str(item.get("info") or "")
+    comment = str(item.get("comment") or "")
+    status = str(item.get("status") or "")
+    raw = str(item.get("raw") or "")
+    text = " | ".join(part for part in (info, comment, status, raw) if part)
+    subtype = str(item.get("map_family_key") or item.get("map_subtype") or "other-object")
+
+    try:
+        weather = json.loads(str(item.get("weather_json") or "{}"))
+        if not isinstance(weather, dict):
+            weather = {}
+    except Exception:
+        weather = {}
+
+    frequency = _object_first_number(text, [
+        r"\b(?:FREQ(?:UENCY)?|FRQ)\s*[:=#-]?\s*(\d{2,4}(?:[.,]\d{1,5})?)\s*(?:MHZ)?\b",
+        r"\b(\d{3}(?:[.,]\d{2,5}))\s*MHZ\b",
+    ])
+    vertical_speed = _object_first_number(text, [
+        r"\b(?:VSPD|VSPEED|VERTICAL(?:\s+SPEED)?|CLB|ASCENT|SUBIDA)\s*[:=]?\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:M/S|MPS)?\b",
+    ])
+    descent = _object_first_number(text, [
+        r"\b(?:DESCENT|DESCIDA)\s*[:=]?\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:M/S|MPS)?\b",
+    ])
+    if vertical_speed is None and descent is not None:
+        vertical_speed = -abs(descent)
+
+    mmsi = _object_first_text(text, [r"\bMMSI\s*[:=#-]?\s*(\d{7,9})\b"])
+    destination = _object_first_text(text, [
+        r"\b(?:DEST(?:INATION)?|DESTINO)\s*[:=]\s*([^|;,]+)"
+    ])
+    offset = _object_first_number(text, [
+        r"\b(?:OFFSET|OFF)\s*[:=]?\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:KHZ)?\b"
+    ])
+    tone = _object_first_number(text, [
+        r"\b(?:CTCSS|TONE|TOM)\s*[:=]?\s*(\d{2,3}(?:[.,]\d+)?)\b"
+    ])
+
+    speed = item.get("speed")
+    course = item.get("course")
+    if speed in (None, ""):
+        speed = _object_first_number(text, [
+            r"\b(?:SOG|SPEED|SPD|VELOCIDADE)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(?:KM/H|KPH)?\b"
+        ])
+    if course in (None, ""):
+        course = _object_first_number(text, [
+            r"\b(?:COG|COURSE|HEADING|HDG|CURSO)\s*[:=]?\s*(\d{1,3}(?:[.,]\d+)?)\b"
+        ])
+
+    temperature = weather.get("temperature")
+    humidity = weather.get("humidity")
+    pressure = weather.get("pressure")
+    wind_speed = weather.get("wind_speed")
+    wind_gust = weather.get("wind_gust")
+    wind_direction = weather.get("wind_direction")
+    rain_1h = weather.get("rain_1h")
+    rain_24h = weather.get("rain_24h")
+
+    if temperature in (None, ""):
+        temperature = _object_first_number(text, [
+            r"\b(?:TEMP(?:ERATURE)?|TEMPERATURA)\s*[:=]?\s*(-?\d+(?:[.,]\d+)?)"
+        ])
+    if humidity in (None, ""):
+        humidity = _object_first_number(text, [
+            r"\b(?:HUM(?:IDITY)?|UMIDADE|UR)\s*[:=]?\s*(\d{1,3}(?:[.,]\d+)?)"
+        ])
+    if pressure in (None, ""):
+        pressure = _object_first_number(text, [
+            r"\b(?:PRESS(?:URE)?|PRESSAO|PRESSÃO)\s*[:=]?\s*(\d{3,4}(?:[.,]\d+)?)"
+        ])
+
+    flight_state = ""
+    if vertical_speed is not None:
+        if vertical_speed > 0.2:
+            flight_state = "ascending"
+        elif vertical_speed < -0.2:
+            flight_state = "descending"
+        else:
+            flight_state = "level"
+    elif int(item.get("alive") if item.get("alive") is not None else 1) == 0:
+        flight_state = "inactive"
+
+    return {
+        "subtype": subtype,
+        "frequency_mhz": frequency,
+        "vertical_speed_ms": vertical_speed,
+        "flight_state": flight_state,
+        "speed_kmh": speed,
+        "course_deg": course,
+        "mmsi": mmsi,
+        "destination": destination,
+        "offset_khz": offset,
+        "tone_hz": tone,
+        "temperature_c": temperature,
+        "humidity_percent": humidity,
+        "pressure_hpa": pressure,
+        "wind_speed_kmh": wind_speed,
+        "wind_gust_kmh": wind_gust,
+        "wind_direction_deg": wind_direction,
+        "rain_1h_mm": rain_1h,
+        "rain_24h_mm": rain_24h,
+        "path": _object_path(item.get("path"), raw),
+    }
+
+
 APRS_CLIENT_CANONICAL_NAMES = {
     "aprsdroid": "APRSdroid",
     "brandmeister dmr": "BrandMeister DMR",
@@ -3146,6 +3294,7 @@ def _build_map_data_uncached() -> dict[str, Any]:
                 str(item.get("symbol") or ""),
                 str(item.get("packet_format") or "object"),
             ))
+            item["friendly_details"] = aprs_object_friendly_details(item)
             objects.append(item)
 
     tracks = [
