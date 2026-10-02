@@ -17,6 +17,7 @@ def reset_map_cache():
         db._map_data_cache_payload = None
         db._map_data_cache_at = 0.0
         db._map_data_cache_build_ms = 0.0
+        db._map_data_cache_db_path = str(db.DB_PATH)
 
 
 def test_v188_interaction_query_is_set_based_not_correlated_per_station():
@@ -117,6 +118,7 @@ def test_v188_concurrent_map_call_uses_stale_snapshot_immediately(monkeypatch):
     with db._map_data_cache_lock:
         db._map_data_cache_payload = {"stations": [{"callsign": "OLD"}], "objects": [], "tracks": []}
         db._map_data_cache_at = time.monotonic() - 120.0
+        db._map_data_cache_db_path = str(db.DB_PATH)
 
     build_started = threading.Event()
     release_build = threading.Event()
