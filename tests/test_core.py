@@ -1871,7 +1871,7 @@ def test_v1718_partial_tree_selection_keeps_parent_enabled():
     # Child selection must no longer leave Objects/Stations/Digis/iGates
     # globally disabled while some descendants remain selected.
     change_start = js.index("tree.addEventListener('change'")
-    change_end = js.index("const allButton = $('#mapViewAllButton')", change_start)
+    change_end = js.index("const selectAllButton = $('#mapViewSelectAllButton')", change_start)
     change_block = js[change_start:change_end]
     assert "syncMapViewTreeCheckboxes();" in change_block
     assert "for (const descendant" in change_block
