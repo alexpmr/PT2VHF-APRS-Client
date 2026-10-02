@@ -1,33 +1,44 @@
-# PT2VHF APRS Client - v1.8.2
+# PT2VHF APRS Client - v1.8.3
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.2** amplia a série 1.8 com **porta local automática**, categoria **AIS** em Mapa → Ver → Objetos e ajustes de interface, mantendo a integração **TNC / RF**, os mapas sem API key e todos os recursos da v1.8.1.
+A **v1.8.3** melhora a análise de adoção APRS e os controles do mapa: separa **aplicativos APRS** de **dispositivos/hardware** nas Estatísticas e adiciona ações explícitas **Selecionar tudo / Remover tudo** em Mapa → Ver, mantendo todos os recursos da v1.8.2.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.2**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.3**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Setup_x64_v1.8.2.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Portable_x64_v1.8.2.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Setup_ARM64_v1.8.2.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Portable_ARM64_v1.8.2.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Setup_x64_v1.8.3.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Portable_x64_v1.8.3.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Setup_ARM64_v1.8.3.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Portable_ARM64_v1.8.3.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_x86_64_v1.8.2.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/pt2vhf-aprs-client_1.8.2_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Linux_x86_64_v1.8.2.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_x86_64_v1.8.3.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/pt2vhf-aprs-client_1.8.3_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Linux_x86_64_v1.8.3.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_macOS_arm64_v1.8.2.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_macOS_x86_64_v1.8.2.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_macOS_arm64_v1.8.3.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_macOS_x86_64_v1.8.3.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.2/PT2VHF_APRS_Client_Manual_v1.8.2.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.3/PT2VHF_APRS_Client_Manual_v1.8.3.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.3
+
+- **Estatísticas → Software / dispositivos APRS:** filtros separados para **Aplicativos APRS**, **Dispositivos/Hardware** e **Não identificados**.
+- O ranking e os percentuais são recalculados sobre o conjunto visível, permitindo analisar **somente aplicativos APRS**.
+- Clientes como **PT2VHF APRS Client, UI-View, WinAPRS, APRSdroid e Dire Wolf** deixam de competir diretamente com rádios D-STAR, rigs, HTs e trackers quando o filtro de dispositivos está desligado.
+- Itens ambíguos ficam como **Indeterminados**, evitando classificação forçada.
+- **Mapa → Ver:** o antigo botão **Tudo** foi substituído por **Selecionar tudo** e **Remover tudo**.
+- As ações globais incluem categorias, subcategorias e filtros dinâmicos, com persistência da escolha.
+- Novos controles traduzidos em **Português, English, Español e Français**.
+- Mantém integralmente a porta dinâmica, AIS, TNC/RF, mapas sem API key e demais recursos da v1.8.2.
 
 ## Novidades da v1.8.2
 

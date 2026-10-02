@@ -105,7 +105,10 @@
       <div id="mapItemsMenu" class="map-items-menu map-view-tree-menu hidden" role="menu">
         <div class="map-view-tree-header">
           <strong>Ver</strong>
-          <button id="mapViewAllButton" type="button" class="btn secondary map-view-all-button">Tudo</button>
+          <div class="map-view-bulk-actions">
+            <button id="mapViewSelectAllButton" type="button" class="btn secondary map-view-all-button">Selecionar tudo</button>
+            <button id="mapViewClearAllButton" type="button" class="btn secondary map-view-all-button">Remover tudo</button>
+          </div>
         </div>
         <div id="mapViewTree" class="map-view-tree" aria-label="Camadas e filtros do mapa"></div>
       </div>
@@ -439,7 +442,12 @@
         <div class="analysis-client-version-heading">
           <div>
             <h3>Software / dispositivos APRS</h3>
-            <p id="clientVersionStatsHint">Distribuição pelo software/dispositivo identificado no último pacote de cada estação, usando a base APRS Device Identification. A interface mostra apenas o nome amigável do aplicativo.</p>
+            <p id="clientVersionStatsHint">Distribuição pelo software/dispositivo identificado no último pacote de cada estação, usando a base APRS Device Identification.</p>
+          </div>
+          <div class="client-version-filters" aria-label="Filtros do ranking de software e dispositivos">
+            <label class="check-field compact"><input id="clientStatsShowApps" type="checkbox" checked><span>Mostrar aplicativos APRS</span></label>
+            <label class="check-field compact"><input id="clientStatsShowDevices" type="checkbox" checked><span>Mostrar dispositivos</span></label>
+            <label class="check-field compact"><input id="clientStatsShowUnknown" type="checkbox" checked><span>Mostrar não identificados</span></label>
           </div>
         </div>
         <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Atualizar estatísticas.</span></div>

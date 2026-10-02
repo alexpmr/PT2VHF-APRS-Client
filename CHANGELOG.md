@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.8.3 - 2026-10-01
+
+- Em **Estatísticas → Software / dispositivos APRS**, separa as identificações em **Aplicativo APRS**, **Dispositivo / Hardware** e **Indeterminado**.
+- Adiciona filtros persistentes **Mostrar aplicativos APRS**, **Mostrar dispositivos** e **Mostrar não identificados**.
+- O ranking, posição e percentual passam a ser recalculados **somente sobre as categorias atualmente visíveis**.
+- Isso permite comparar diretamente clientes como **PT2VHF APRS Client, UI-View, WinAPRS, APRSdroid e Dire Wolf** sem rádios D-STAR, rigs, HTs e trackers concorrendo no mesmo ranking.
+- A classificação usa a base local **APRS Device Identification / TOCALL** e metadados conhecidos; identificações ambíguas permanecem **Indeterminadas**.
+- Quando categorias diferentes estão misturadas, a tabela mostra discretamente a categoria de cada item.
+- Em **Mapa → Ver**, substitui o botão **Tudo** pelas ações **Selecionar tudo** e **Remover tudo**.
+- As ações globais atualizam imediatamente categorias, subcategorias, estados intermediários e preferências persistidas.
+- Inclui **AIS**, **Balão/Radiosonda** e demais filtros dinâmicos no comportamento global de Mapa → Ver.
+- Traduz os novos controles em **PT-BR, English, Español e Français**.
+- Adiciona testes de regressão para classificação de aplicativos/hardware, recálculo de percentuais e ações globais do Mapa.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.2 - 2026-10-01
 
 - O servidor web interno passa a usar **porta dinâmica**, começando em **8080** e avançando para **8081, 8082, 8083...** quando houver conflito.
