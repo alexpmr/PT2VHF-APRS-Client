@@ -141,6 +141,11 @@ DEFAULT_CONFIG = {
     "highlight_station_activity": 1,
     "traffic_animation_enabled": 1,
     "message_popup_seconds": 5,
+    "resource_alert_enabled": 1,
+    "resource_cpu_critical_percent": 90,
+    "resource_memory_critical_percent": 90,
+    "resource_alert_sustain_seconds": 30,
+    "resource_alert_cooldown_minutes": 10,
     "app_theme": "dark",
     "messages_font_family": "system",
     "messages_font_size": 12,
@@ -246,6 +251,11 @@ def init_db() -> None:
                 highlight_station_activity INTEGER NOT NULL DEFAULT 1,
                 traffic_animation_enabled INTEGER NOT NULL DEFAULT 1,
                 message_popup_seconds INTEGER NOT NULL DEFAULT 5,
+                resource_alert_enabled INTEGER NOT NULL DEFAULT 1,
+                resource_cpu_critical_percent INTEGER NOT NULL DEFAULT 90,
+                resource_memory_critical_percent INTEGER NOT NULL DEFAULT 90,
+                resource_alert_sustain_seconds INTEGER NOT NULL DEFAULT 30,
+                resource_alert_cooldown_minutes INTEGER NOT NULL DEFAULT 10,
                 app_theme TEXT NOT NULL DEFAULT 'dark',
                 messages_font_family TEXT NOT NULL DEFAULT 'system',
                 messages_font_size INTEGER NOT NULL DEFAULT 12,
@@ -497,6 +507,16 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN traffic_animation_enabled INTEGER NOT NULL DEFAULT 1")
         if "message_popup_seconds" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN message_popup_seconds INTEGER NOT NULL DEFAULT 5")
+        if "resource_alert_enabled" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN resource_alert_enabled INTEGER NOT NULL DEFAULT 1")
+        if "resource_cpu_critical_percent" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN resource_cpu_critical_percent INTEGER NOT NULL DEFAULT 90")
+        if "resource_memory_critical_percent" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN resource_memory_critical_percent INTEGER NOT NULL DEFAULT 90")
+        if "resource_alert_sustain_seconds" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN resource_alert_sustain_seconds INTEGER NOT NULL DEFAULT 30")
+        if "resource_alert_cooldown_minutes" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN resource_alert_cooldown_minutes INTEGER NOT NULL DEFAULT 10")
         if "app_theme" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN app_theme TEXT NOT NULL DEFAULT 'dark'")
         if "messages_font_family" not in config_columns:
@@ -645,6 +665,11 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0
     merged["traffic_animation_enabled"] = 1 if bool(merged["traffic_animation_enabled"]) else 0
     merged["message_popup_seconds"] = int(merged["message_popup_seconds"] or 5)
+    merged["resource_alert_enabled"] = 1 if bool(merged["resource_alert_enabled"]) else 0
+    merged["resource_cpu_critical_percent"] = int(merged["resource_cpu_critical_percent"] or 90)
+    merged["resource_memory_critical_percent"] = int(merged["resource_memory_critical_percent"] or 90)
+    merged["resource_alert_sustain_seconds"] = int(merged["resource_alert_sustain_seconds"] or 30)
+    merged["resource_alert_cooldown_minutes"] = int(merged["resource_alert_cooldown_minutes"] or 10)
     merged["app_theme"] = str(merged["app_theme"] or "dark").lower().strip()
     merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
     merged["messages_font_size"] = int(merged["messages_font_size"] or 12)
@@ -705,6 +730,14 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Opacidade do relevo deve estar entre 10% e 100%.")
     if not (1 <= merged["message_popup_seconds"] <= 60):
         raise ValueError("Duração do aviso de mensagem deve estar entre 1 e 60 segundos.")
+    if not (70 <= merged["resource_cpu_critical_percent"] <= 100):
+        raise ValueError("Limite crítico de CPU deve estar entre 70% e 100%.")
+    if not (70 <= merged["resource_memory_critical_percent"] <= 100):
+        raise ValueError("Limite crítico de memória deve estar entre 70% e 100%.")
+    if not (10 <= merged["resource_alert_sustain_seconds"] <= 300):
+        raise ValueError("Persistência do alerta deve estar entre 10 e 300 segundos.")
+    if not (1 <= merged["resource_alert_cooldown_minutes"] <= 120):
+        raise ValueError("Cooldown do alerta deve estar entre 1 e 120 minutos.")
 
     if merged["app_theme"] not in {"dark", "light"}:
         raise ValueError("Tema da aplicação inválido.")
