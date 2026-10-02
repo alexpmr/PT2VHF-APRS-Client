@@ -93,5 +93,7 @@ def test_v1810_about_acknowledgements_are_localized_in_four_languages():
 
 
 def test_v1810_version():
-    assert read("VERSION").strip() == "1.8.10"
-    assert '__version__ = "1.8.10"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 10)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
