@@ -202,6 +202,20 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
+## Concluído na v1.8.8
+
+- **CPU / Mapa:** eliminada a possibilidade de múltiplas gerações pesadas de `/api/map-data` executarem simultaneamente.
+- **Single-flight:** somente uma thread constrói o snapshot do mapa; chamadas concorrentes reutilizam o último resultado válido.
+- **SQLite:** removidos `EXISTS` correlacionados por estação nas rotas de Mapa e Estações.
+- **Interações:** cálculo consolidado de estações com mensagens/ACK/REJ/queries respondidas.
+- **Índices:** adicionados índices específicos para os caminhos críticos de interação.
+- **Polling do mapa:** refresh completo passa de 10 s para 15 s; tráfego animado mantém atualização independente.
+- **Diagnóstico:** novo evento `map_data_build` registra tempo de geração e volume retornado.
+- **TNC serial:** CIM/PowerShell removido do polling automático; polling leve a cada 30 s e scan completo sob demanda.
+- **Cache serial:** scan completo pode ser reutilizado por 60 s sem perder os metadados avançados.
+- **Testes:** regressões de single-flight, stale-cache, índices SQLite e polling serial leve.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## Concluído na v1.8.7
 
 - **TNC / RF — descoberta serial:** combina pyserial, Windows CIM/PnP e SERIALCOMM para listar todas as COMs encontradas.
