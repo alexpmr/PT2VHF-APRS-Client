@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.3": {
+        "title": "Ranking separado de aplicativos/dispositivos e controles rápidos do Mapa",
+        "items": [
+            "Estatísticas → Software / dispositivos APRS passa a separar Aplicativos APRS, Dispositivos/Hardware e itens Indeterminados.",
+            "Adiciona filtros persistentes para mostrar/ocultar Aplicativos APRS, Dispositivos e Não identificados.",
+            "O ranking e os percentuais são recalculados apenas sobre as categorias visíveis, permitindo comparar somente clientes APRS.",
+            "PT2VHF APRS Client, APRSdroid, Dire Wolf, UI-View e WinAPRS ficam no grupo de aplicativos quando identificados; rádios D-STAR, rigs, HTs e trackers ficam no grupo de dispositivos.",
+            "Identificações ambíguas permanecem Indeterminadas em vez de contaminar o ranking de software.",
+            "Mapa → Ver substitui o botão genérico Tudo por Selecionar tudo e Remover tudo.",
+            "As ações em Mapa → Ver atualizam imediatamente pais, filhos, filtros dinâmicos e preferências persistidas.",
+            "Novos controles e categorias possuem tradução em PT-BR, EN, ES e FR.",
+            "Adiciona regressões para classificação APRS, filtros, percentuais visíveis e ações globais do Mapa.",
+            "Release completa de produção para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.2": {
         "title": "Porta local automática, filtro AIS e ajustes de interface",
         "items": [
