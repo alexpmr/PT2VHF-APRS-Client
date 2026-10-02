@@ -80,5 +80,7 @@ def test_v183_translations_cover_new_controls():
 
 
 def test_v183_version():
-    assert read("VERSION").strip() == "1.8.3"
-    assert '__version__ = "1.8.3"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 3)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
