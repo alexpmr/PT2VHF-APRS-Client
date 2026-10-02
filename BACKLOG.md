@@ -131,7 +131,6 @@
 
 - **TNC / RF — próximos passos após a v1.8.0**
   - Adicionar protocolo **AGWPE** como alternativa a KISS, mantendo KISS Serial/TCP como base estável.
-  - Integrar envio de mensagens e ACK da própria estação diretamente pelo RF/TNC na aba Mensagens, com escolha explícita de transporte **APRS-IS / RF / Automático**.
   - Consumir RSSI/SNR, DCD, ocupação de canal e demais métricas somente quando o modem/TNC realmente as fornecer.
   - Evoluir o grafo textual “Quem fala com quem” para visualização gráfica interativa no Mapa/Estatísticas.
   - Criar simulador de transporte KISS completo para cenários de múltiplos digis/iGates e testes de congestionamento sem rádio físico.
@@ -203,33 +202,19 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
-- **Interface — compatibilidade com telas 1360×768 / baixa altura**
-  - Garantir funcionamento confortável do PT2VHF APRS Client em **1360×768 com escala do Windows em 100%**, sem exigir que o usuário altere resolução ou escala do sistema.
-  - Tornar o layout responsivo também pela **altura disponível da janela**, e não apenas pela largura.
-  - No **Mapa**, garantir que o popup de informações da estação nunca ultrapasse a área visível da aplicação nem fique escondido atrás da barra de tarefas.
-  - Aplicar ao popup de estação **altura máxima baseada no viewport**, reposicionamento automático quando estiver próximo às bordas e **rolagem interna** quando o conteúdo exceder a altura disponível.
-  - Manter sempre visíveis e acessíveis o botão **Fechar/X** e as ações do popup, como Mensagem, Query/Consulta, Ping/Trace e demais comandos disponíveis.
-  - Em telas de baixa altura, reduzir de forma responsiva espaçamentos/margens verticais antes de ocultar ou comprimir conteúdo importante.
-  - Na aba **Mensagens**, garantir que a lista de mensagens e a área de composição/destinatário caibam no viewport, com a lista assumindo a rolagem necessária sem empurrar o campo de envio para fora da tela.
-  - Evitar que controles inferiores fiquem encobertos pela barra de tarefas do Windows ou exijam rolagem da página inteira para serem alcançados.
-  - Adicionar testes/regressão visual para pelo menos **1360×768 @ 100%**, e preferencialmente também **1280×720 @ 100%**, preservando o comportamento normal em resoluções maiores.
+## Concluído na v1.8.5
 
-- **Mensagens — seleção de rota/path por envio**
-  - Adicionar no compositor de mensagens uma opção **Rota de envio** para escolher como cada mensagem APRS será transmitida.
-  - Manter **Automático** como padrão, preservando o comportamento atual quando o usuário não fizer nenhuma escolha.
-  - Disponibilizar pelo menos as opções:
-    - **Automático**;
-    - **APRS-IS**;
-    - **RF direto** — sem digipeater/path;
-    - **RF personalizado** — permitir informar path como `WIDE1-1`, `WIDE2-1` ou `WIDE1-1,WIDE2-1`.
-  - A escolha deve valer **somente para a mensagem que está sendo enviada**, sem alterar o path/configuração global do TNC/iGate.
-  - Quando **RF personalizado** estiver selecionado, validar sintaxe AX.25/APRS do path antes do envio e bloquear combinações inválidas.
-  - Exibir claramente na interface qual rota/path será usada antes do envio.
-  - Registrar no histórico/log da mensagem o meio utilizado (**APRS-IS** ou **RF**) e o **path efetivamente transmitido**.
-  - Em reenvio/retry de uma mensagem, preservar a rota/path original por padrão, com opção de alterar antes de reenviar.
-  - Se a rota escolhida não estiver disponível (ex.: RF sem TNC conectado), informar o motivo e permitir trocar para APRS-IS/Automático sem perder o texto.
-  - Para mensagens enviadas por **APRS-IS**, manter o cabeçalho compatível com o comportamento atual do cliente; para RF, usar o path selecionado no frame AX.25/TNC2.
-  - Garantir que ACK/REJ, status de entrega e animação/topologia consigam diferenciar corretamente mensagens enviadas por Internet e por RF.
+- **Mensagens — rota por envio:** opções Automático, APRS-IS, RF direto e RF personalizado.
+- **Automático:** mantém APRS-IS como prioridade e usa RF direto somente quando APRS-IS não estiver disponível e o TNC/RF estiver pronto.
+- **RF personalizado:** path por mensagem com validação AX.25, incluindo WIDE1-1 e WIDE1-1,WIDE2-1.
+- **TNC/KISS:** mensagens RF reutilizam o transporte existente e respeitam conexão, pausa e confirmação de TX.
+- **Histórico:** grava e exibe meio efetivo e path transmitido em cada mensagem de saída.
+- **Retry:** preserva a rota/path original por padrão e aceita substituição por seleção explícita do compositor.
+- **Responsividade:** otimizações específicas de baixa altura para 1360×768 @ 100% e resoluções equivalentes.
+- **Popup de estação:** limite de altura, rolagem interna e área de ações sticky em telas baixas.
+- **Mensagens:** cabeçalho/compositor compactados por altura para manter lista, destinatário e envio acessíveis.
+- **Idiomas/Testes:** PT-BR, EN, ES e FR; testes de path, rota, persistência e layout.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.4
 
