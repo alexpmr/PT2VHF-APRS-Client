@@ -203,25 +203,17 @@
   - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
   - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
 
-- **Saúde da aplicação — alerta de CPU/memória crítica**
-  - Exibir um **popup não bloqueante** quando o consumo de **CPU** ou **memória RAM** atingir nível crítico a ponto de poder comprometer o funcionamento do PT2VHF APRS Client.
-  - Reutilizar as métricas já exibidas no cabeçalho, garantindo que o popup e os gauges usem a mesma fonte de dados.
-  - Não disparar por pico isolado: exigir que o nível crítico permaneça acima do limite por um período mínimo antes de alertar.
-  - Aplicar **cooldown** entre alertas do mesmo tipo para evitar repetição excessiva enquanto a condição continuar crítica.
-  - Informar no popup:
-    - recurso afetado (**CPU** ou **Memória**);
-    - valor atual observado;
-    - tempo aproximado em condição crítica;
-    - impacto possível, como lentidão, travamentos, atraso na atualização do mapa ou processamento de pacotes;
-    - horário do alerta.
-  - Disponibilizar botões **OK/Fechar** e, quando existir a futura área de Diagnóstico, atalho **Ver diagnóstico**.
-  - Diferenciar visualmente **atenção** e **crítico**, mas reservar popup somente para nível crítico; nível de atenção pode permanecer apenas nos gauges.
-  - Definir limites conservadores e configuráveis internamente, evitando alertar apenas porque o computador tem CPU alta por outra aplicação quando o cliente continua responsivo.
-  - Para memória, considerar tanto o consumo do próprio processo quanto a disponibilidade do sistema quando esses dados estiverem disponíveis.
-  - Registrar o evento no log/diagnóstico com uso de CPU, RAM, versão da aplicação e plataforma.
-  - Após o uso voltar a nível seguro, permitir novo alerta somente se uma nova condição crítica sustentada ocorrer.
-  - Traduzir o popup e os estados em **PT-BR, EN, ES e FR**.
-  - Adicionar testes de regressão para pico curto sem alerta, condição crítica sustentada, cooldown, recuperação e novo alerta após recuperação.
+## Concluído na v1.8.4
+
+- **Saúde da aplicação:** monitoramento separado de CPU/RAM do aplicativo e do sistema operacional.
+- **Limites padrão:** CPU crítica em 90% e memória crítica em 90%, após 30 segundos sustentados.
+- **Popup:** aviso não bloqueante com recurso, escopo, valor, limite, duração e horário.
+- **Antirruído:** histerese de 5 pontos percentuais e cooldown padrão de 10 minutos.
+- **Configuração:** ativação, limites, persistência e cooldown ajustáveis.
+- **Diagnóstico:** alertas críticos registrados com versão, plataforma e métricas do aplicativo/sistema.
+- **Mapa:** barra contextual com Histórico, Completo/período e demais controles alinhada à esquerda.
+- **Idiomas/Testes:** PT-BR, EN, ES e FR; regressões de pico curto, condição sustentada, cooldown, recuperação e alinhamento.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.8.3
 
