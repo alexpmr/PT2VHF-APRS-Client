@@ -351,6 +351,8 @@ def init_db() -> None:
                 part_count INTEGER,
                 retry_count INTEGER NOT NULL DEFAULT 0,
                 read_at TEXT,
+                tx_medium TEXT,
+                tx_path TEXT,
                 timestamp TEXT NOT NULL,
                 raw TEXT
             );
@@ -583,6 +585,10 @@ def init_db() -> None:
         if "read_at" not in message_columns:
             conn.execute("ALTER TABLE messages ADD COLUMN read_at TEXT")
             conn.execute("UPDATE messages SET read_at=timestamp WHERE direction='in'")
+        if "tx_medium" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN tx_medium TEXT")
+        if "tx_path" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN tx_path TEXT")
 
         row = conn.execute("SELECT id FROM config WHERE id=1").fetchone()
         if not row:
@@ -3311,18 +3317,21 @@ def aprs_query_detail(query_id: int) -> dict[str, Any] | None:
 def add_message(direction: str, from_call: str, to_call: str, message: str, msg_id: str | None = None,
                 status: str = "", raw: str | None = None, message_type: str = "message",
                 message_group_id: str | None = None, part_index: int | None = None,
-                part_count: int | None = None, retry_count: int = 0) -> int:
+                part_count: int | None = None, retry_count: int = 0,
+                tx_medium: str | None = None, tx_path: str | None = None) -> int:
     message_type = str(message_type or "message").strip().lower()
     if message_type not in {"message", "bulletin", "group_bulletin"}:
         message_type = "message"
     with connection() as conn:
         cur = conn.execute(
             """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,
-                                    message_group_id,part_index,part_count,retry_count,timestamp,raw)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                                    message_group_id,part_index,part_count,retry_count,tx_medium,tx_path,timestamp,raw)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 direction, from_call.upper(), to_call.upper(), message, message_type, msg_id, status,
-                message_group_id, part_index, part_count, max(0, int(retry_count or 0)), utc_now_iso(), raw,
+                message_group_id, part_index, part_count, max(0, int(retry_count or 0)),
+                str(tx_medium or "").upper() or None, str(tx_path or "").upper() or None,
+                utc_now_iso(), raw,
             ),
         )
         return int(cur.lastrowid)
@@ -3337,8 +3346,8 @@ def add_outgoing_message_parts(rows: list[dict[str, Any]]) -> list[int]:
         for row in rows:
             cur = conn.execute(
                 """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,
-                                        message_group_id,part_index,part_count,retry_count,timestamp,raw)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                                        message_group_id,part_index,part_count,retry_count,tx_medium,tx_path,timestamp,raw)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     "out",
                     str(row.get("from_call") or "").upper(),
@@ -3351,6 +3360,8 @@ def add_outgoing_message_parts(rows: list[dict[str, Any]]) -> list[int]:
                     row.get("part_index"),
                     row.get("part_count"),
                     max(0, int(row.get("retry_count") or 0)),
+                    str(row.get("tx_medium") or "").upper() or None,
+                    str(row.get("tx_path") or "").upper() or None,
                     utc_now_iso(),
                     row.get("raw"),
                 ),
