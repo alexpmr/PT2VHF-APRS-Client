@@ -469,3 +469,49 @@
 - **Sobre:** nova aba com Alex/PT2VHF, contatos, tiny.cc/aprs e envio manual de Announcement APRS BLNA.
 - **Idiomas:** cobertura PT/EN/ES/FR ampliada em áreas estáticas e dinâmicas, com atualização imediata na troca de idioma.
 
+
+## Backlog — AIS no mapa
+
+- **Popup amigável ao clicar em objeto AIS**
+  - Ao clicar em uma embarcação/objeto AIS no mapa, abrir um popup formatado e legível, em vez de exibir dados crus.
+  - Exibir apenas campos disponíveis; não mostrar linhas vazias, `null` ou placeholders desnecessários.
+  - Mostrar, quando disponíveis:
+    - nome da embarcação;
+    - MMSI;
+    - indicativo/callsign;
+    - tipo de embarcação em texto legível;
+    - status de navegação;
+    - latitude/longitude;
+    - velocidade sobre o fundo (SOG), em nós e opcionalmente km/h;
+    - rumo sobre o fundo (COG);
+    - proa/heading;
+    - destino informado;
+    - ETA;
+    - calado;
+    - dimensões da embarcação;
+    - tempo desde a última atualização;
+    - fonte dos dados.
+  - Converter códigos AIS numéricos para descrições amigáveis sempre que possível.
+  - Organizar as informações em seções compactas e consistentes com os demais popups do mapa.
+
+- **Imagem da embarcação**
+  - Tentar exibir uma **foto real da embarcação** quando houver fonte pública confiável na internet.
+  - Priorizar a identificação por:
+    1. MMSI;
+    2. nome da embarcação;
+    3. callsign;
+    4. modelo/classe/tipo.
+  - Carregar a imagem de forma assíncrona para que o popup textual abra imediatamente.
+  - Usar cache local/temporário para evitar consultas repetidas para a mesma embarcação.
+  - Identificar claramente a imagem como **Foto da embarcação** quando houver correspondência confiável.
+
+- **Fallback visual**
+  - Se não houver foto real disponível, tentar exibir uma **imagem/ilustração do mesmo modelo ou classe/tipo de embarcação**.
+  - Quando for apenas uma representação do modelo/tipo, identificar explicitamente como **Imagem ilustrativa do modelo/tipo**, sem sugerir que seja a embarcação exata.
+  - Se nenhuma imagem adequada estiver disponível, manter somente o popup textual, sem erro técnico intrusivo.
+
+- **Comportamento e robustez**
+  - A ausência ou falha da fonte de imagem não deve impedir a abertura do popup AIS.
+  - Não bloquear a interface enquanto a imagem é consultada.
+  - Preferir fontes públicas e estáveis, com identificação clara de origem quando apropriado.
+
