@@ -73,6 +73,8 @@ for rel, needles in checks.items():
 app = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
 if "30 * 60 * 1000" in app:
     raise SystemExit("v1.8.9 validation failed: fixed 30-minute update cadence remains")
+if "friendlyObjectPopupHtml(object, objectSymbol)" not in app:
+    raise SystemExit("v1.8.9 validation failed: contextual APRS object popup missing")
 
 database = (ROOT / "pt2vhf_aprs/database.py").read_text(encoding="utf-8")
 if "json.dumps(weather, ensure_ascii=False, default=str)" not in database:
