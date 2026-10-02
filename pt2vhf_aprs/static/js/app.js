@@ -7421,7 +7421,12 @@
 
       if ($('#analysisMetricPeriod')) $('#analysisMetricPeriod').textContent = topologyPeriodLabel();
       if ($('#analysisMetricEdges')) $('#analysisMetricEdges').textContent = Number(data.edges || 0).toLocaleString(currentLocale());
-      if ($('#analysisMetricPackets')) $('#analysisMetricPackets').textContent = Number(data.packets || 0).toLocaleString(currentLocale());
+      if ($('#analysisMetricPackets')) {
+        const logicalPackets = Number(data.reception_media?.logical_packets_deduplicated);
+        $('#analysisMetricPackets').textContent = Number.isFinite(logicalPackets)
+          ? logicalPackets.toLocaleString(currentLocale())
+          : Number(data.packets || 0).toLocaleString(currentLocale());
+      }
       if ($('#analysisMetricEvents')) $('#analysisMetricEvents').textContent = Number(data.comparison?.current_events || 0).toLocaleString(currentLocale());
       renderClientVersionStats(data.client_versions);
     } catch (err) {
