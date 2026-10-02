@@ -1873,6 +1873,47 @@ def _canonical_client_family(value: str) -> tuple[str, str]:
     return display_key, display
 
 
+APRS_APPLICATION_CLASSES = {"software", "app", "daemon", "service"}
+APRS_DEVICE_CLASSES = {
+    "network", "rig", "dstar", "digi", "gadget", "wx",
+    "igate", "satellite", "ht", "tracker",
+}
+APRS_APPLICATION_NAME_HINTS = (
+    "dire wolf", "direwolf", "ui-view", "uiview", "winaprs",
+    "aprsdroid", "xastir", "yaac", "aprsisce", "pinpoint",
+    "pt2vhf aprs client",
+)
+
+
+def _aprs_client_category(resolved: dict[str, Any]) -> str:
+    """Classifica uma identificação APRS sem misturar software e hardware."""
+    device_class = str(resolved.get("class") or "").strip().lower()
+    os_name = str(resolved.get("os") or "").strip().lower()
+    friendly = " ".join(
+        part for part in (
+            str(resolved.get("friendly_name") or ""),
+            str(resolved.get("model") or ""),
+            str(resolved.get("vendor") or ""),
+        ) if part
+    ).casefold()
+
+    if device_class in APRS_APPLICATION_CLASSES:
+        return "application"
+    if device_class in APRS_DEVICE_CLASSES:
+        return "device"
+
+    if os_name:
+        if "embedded" in os_name or "firmware" in os_name:
+            return "device"
+        if any(token in os_name for token in ("windows", "linux", "android", "ios", "mac", "cross-platform")):
+            return "application"
+
+    if any(hint in friendly for hint in APRS_APPLICATION_NAME_HINTS):
+        return "application"
+
+    return "unknown"
+
+
 def client_version_stats(hours: int = 0) -> dict[str, Any]:
     """Distribuição de software/dispositivo APRS consolidada por família de cliente."""
     hours = int(hours or 0)
@@ -1920,6 +1961,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
                 "identifiers": set(),
                 "aliases": set(),
                 "meta": resolved,
+                "categories": set(),
                 "is_own_client": False,
             }
             grouped[friendly_key] = bucket
@@ -1927,6 +1969,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
         bucket["stations"] = int(bucket["stations"]) + 1
         bucket["identifiers"].add(tocall)
         bucket["aliases"].add(source_name)
+        bucket["categories"].add(_aprs_client_category(resolved))
         if tocall == APP_TOCALL:
             # Quando o próprio cliente fizer parte de um grupo consolidado,
             # seus metadados passam a ser a referência visual desse grupo.
@@ -1939,6 +1982,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
         key=lambda bucket: (-int(bucket["stations"]), str(bucket["friendly_name"]).casefold()),
     )
 
+    category_counts = {"application": 0, "device": 0, "unknown": 0}
     items: list[dict[str, Any]] = []
     for rank, bucket in enumerate(ranked, start=1):
         identifiers = sorted(str(value) for value in bucket["identifiers"])
@@ -1946,6 +1990,14 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
         identifier = APP_TOCALL if is_own and APP_TOCALL in identifiers else identifiers[0]
         meta = dict(bucket["meta"] or {})
         count = int(bucket["stations"])
+        concrete_categories = {str(value) for value in bucket.get("categories", set()) if str(value) in {"application", "device"}}
+        if len(concrete_categories) == 1:
+            category = next(iter(concrete_categories))
+        elif len(concrete_categories) > 1:
+            category = "unknown"
+        else:
+            category = "unknown"
+        category_counts[category] += count
         items.append({
             "rank": rank,
             "identifier": identifier,
@@ -1956,6 +2008,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
             "model": meta.get("model") or "",
             "class": meta.get("class") or "",
             "os": meta.get("os") or "",
+            "category": category,
             "stations": count,
             "percent": round((count / identified_total) * 100.0, 1) if identified_total else 0.0,
             "is_own_client": is_own,
@@ -1974,6 +2027,7 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
             "model": own_meta.get("model") or "PT2VHF APRS Client",
             "class": own_meta.get("class") or "software",
             "os": own_meta.get("os") or "",
+            "category": "application",
             "stations": 0,
             "percent": 0.0,
             "is_own_client": True,
@@ -1984,6 +2038,10 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
         "total_stations": len(rows),
         "identified_stations": identified_total,
         "unidentified_stations": unidentified,
+        "category_counts": {
+            **category_counts,
+            "unidentified": unidentified,
+        },
         "top_limit": 20,
         "own_identifier": APP_TOCALL,
         "own_client": own_client,
