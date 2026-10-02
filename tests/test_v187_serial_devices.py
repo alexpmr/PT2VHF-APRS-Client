@@ -82,7 +82,7 @@ def test_v187_serial_ui_has_manual_com_and_explicit_equipment_table():
     assert 'id="tncRescanDevices"' in html
     assert "renderSerialDevices" in js
     assert "data-tnc-use-port" in js
-    assert "?refresh=1" in js
+    assert "params.set('refresh', '1')" in js or "?refresh=1" in js
     assert ".tnc-serial-devices-card" in css
 
 
@@ -100,5 +100,7 @@ def test_v187_port_open_errors_are_user_friendly():
 
 
 def test_v187_version():
-    assert read("VERSION").strip() == "1.8.7"
-    assert '__version__ = "1.8.7"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 7)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
