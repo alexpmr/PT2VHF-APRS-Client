@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.10": {
+        "title": "Controle único de conexão e agradecimentos aos colaboradores",
+        "items": [
+            "O cabeçalho passa a usar um único componente para estado e ação da conexão APRS-IS.",
+            "O controle mostra Desconectado, Conectando, Reconectando, Conectado e verificado, Conectado sem verificação e Conexão perdida.",
+            "A ação Conectar/Desconectar usa wanted/connected/verified do backend e não depende mais do texto do botão.",
+            "Cliques concorrentes são bloqueados durante a execução da ação, preservando validação de configuração e reconexão.",
+            "A aba Sobre ganha uma seção de Agradecimentos / Colaboradores.",
+            "São reconhecidos PU5AAG Adriano, PY4EI Allan, PU2MUS Marco, PP5PK Daniel Kondlatsch, PT2YW Ywstter e PT2PAG Paulo Galvão.",
+            "Textos atualizados em PT-BR, EN, ES e FR.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.9": {
         "title": "Atualizações configuráveis e popups amigáveis de objetos APRS",
         "items": [
