@@ -1062,17 +1062,38 @@ class TNCService:
             if hasattr(self._status, key):
                 setattr(self._status, key, int(getattr(self._status, key) or 0) + int(amount))
 
-    def available_ports(self, *, force: bool = False) -> list[dict[str, Any]]:
+    def available_ports(self, *, force: bool = False, full_scan: bool = True) -> list[dict[str, Any]]:
         now = time.monotonic()
         with self._ports_lock:
-            if not force and self._ports_cache and now - self._ports_cache_at < 5.0:
-                return [dict(item) for item in self._ports_cache]
+            cached_snapshot = [dict(item) for item in self._ports_cache]
+            cached_age = now - self._ports_cache_at if self._ports_cache_at else float("inf")
+            if full_scan and not force and cached_snapshot and cached_age < 60.0:
+                return cached_snapshot
 
+        # Lightweight sources are safe for periodic polling.
         records: list[dict[str, Any]] = []
         records.extend(_pyserial_ports())
         if sys.platform == "win32":
-            records.extend(_windows_cim_serial_ports())
             records.extend(_windows_registry_serial_ports())
+
+        if full_scan and sys.platform == "win32":
+            # CIM/PnP is intentionally reserved for an explicit/deep scan.
+            # Spawning PowerShell every few seconds can consume substantial CPU.
+            records.extend(_windows_cim_serial_ports())
+        elif cached_snapshot:
+            # Preserve richer metadata learned by the last deep scan, but only
+            # for COM ports that still exist in the lightweight sources.
+            present = {
+                _serial_text(item.get("device")).upper()
+                for item in records
+                if _serial_text(item.get("device"))
+            }
+            for item in cached_snapshot:
+                if _serial_text(item.get("device")).upper() in present:
+                    cached = dict(item)
+                    cached["source"] = "cached_metadata"
+                    records.append(cached)
+
         ports = _merge_serial_ports(records)
 
         cfg = get_tnc_config()
@@ -1113,7 +1134,13 @@ class TNCService:
             self._ports_cache_at = now
 
         if changed or force:
-            diag.log_event("tnc_serial_scan", force=force, count=len(ports), ports=ports)
+            diag.log_event(
+                "tnc_serial_scan",
+                force=force,
+                full_scan=full_scan,
+                count=len(ports),
+                ports=ports,
+            )
         return ports
 
     def start_if_configured(self) -> None:
