@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.7": {
+        "title": "Descoberta avançada de equipamentos seriais no TNC / RF",
+        "items": [
+            "A descoberta serial combina pyserial, Windows CIM/PnP e SERIALCOMM para encontrar mais portas COM.",
+            "Nova seção Equipamentos seriais detectados mostra porta, equipamento, chipset/interface, fabricante, VID/PID, serial/HWID e estado.",
+            "Suporte explícito de identificação de interfaces CH9102/CH340/CH341, CP210x, FTDI e CDC/ACM.",
+            "A porta COM pode ser escolhida pela lista de equipamentos ou digitada manualmente.",
+            "Novo botão Reescanear e atualização periódica enquanto a aba TNC / RF está aberta.",
+            "Radtel RT-950 Pro só recebe identificação nominal quando os metadados do sistema indicam o modelo.",
+            "CH9102 recebe orientação condicional para Radtel RT-950 Pro em TNC UART; quando identificado, usa 115200 bps.",
+            "Mensagens de erro de abertura serial foram detalhadas e a enumeração completa é registrada no diagnóstico.",
+            "Inclui testes com múltiplas portas simultâneas, incluindo COM6/CH9102 e COM10/CH340.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.6": {
         "title": "Correção dos itens do mapa e estabilidade do viewport",
         "items": [
