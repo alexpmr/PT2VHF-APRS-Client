@@ -416,9 +416,6 @@ def init_db() -> None:
                 rx_fingerprint TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_packets_time ON packets(timestamp DESC);
-            CREATE INDEX IF NOT EXISTS idx_packets_medium_time ON packets(medium, timestamp DESC);
-            CREATE INDEX IF NOT EXISTS idx_packets_medium_call_time ON packets(medium, from_call, timestamp DESC);
-            CREATE INDEX IF NOT EXISTS idx_packets_fingerprint_time ON packets(rx_fingerprint, timestamp DESC);
 
             CREATE TABLE IF NOT EXISTS aprs_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
