@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import platform
 import re
 import threading
 import time
@@ -367,6 +368,40 @@ def create_app() -> Flask:
             payload["tnc_connected"] = False
             payload["tnc_tx_queue"] = 0
             payload["tnc_tx_paused"] = False
+
+        cfg = db.get_config()
+        alert_settings = {
+            "enabled": bool(cfg.get("resource_alert_enabled", 1)),
+            "cpu_critical_percent": int(cfg.get("resource_cpu_critical_percent") or 90),
+            "memory_critical_percent": int(cfg.get("resource_memory_critical_percent") or 90),
+            "sustain_seconds": int(cfg.get("resource_alert_sustain_seconds") or 30),
+            "cooldown_minutes": int(cfg.get("resource_alert_cooldown_minutes") or 10),
+            "hysteresis_points": 5,
+        }
+        payload["alert_settings"] = alert_settings
+        alerts = diag.evaluate_resource_alerts(
+            payload,
+            enabled=alert_settings["enabled"],
+            cpu_threshold=alert_settings["cpu_critical_percent"],
+            memory_threshold=alert_settings["memory_critical_percent"],
+            sustain_seconds=alert_settings["sustain_seconds"],
+            cooldown_seconds=alert_settings["cooldown_minutes"] * 60,
+            hysteresis_points=alert_settings["hysteresis_points"],
+        )
+        payload["critical_alerts"] = alerts
+        if alerts:
+            diag.log_event(
+                "resource_critical_alert",
+                version=__version__,
+                platform=platform.platform(),
+                alerts=alerts,
+                app_cpu_percent=payload.get("app_cpu_percent"),
+                app_memory_mb=payload.get("app_memory_mb"),
+                app_memory_percent=payload.get("app_memory_percent"),
+                system_cpu_percent=payload.get("system_cpu_percent"),
+                system_memory_percent=payload.get("system_memory_percent"),
+                system_memory_available_mb=payload.get("system_memory_available_mb"),
+            )
         return jsonify(payload)
 
     @app.get("/api/status")
