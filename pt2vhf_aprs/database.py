@@ -65,6 +65,7 @@ _map_data_cache_lock = threading.Lock()
 _map_data_cache_payload: dict[str, Any] | None = None
 _map_data_cache_at = 0.0
 _map_data_cache_build_ms = 0.0
+_map_data_cache_db_path = ""
 MAP_DATA_CACHE_SECONDS = 15.0
 MAP_DATA_INITIAL_WAIT_SECONDS = 0.75
 
@@ -1317,6 +1318,7 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
 def upsert_station(packet: dict[str, Any]) -> None:
     with connection() as conn:
         _upsert_station_conn(conn, packet)
+    invalidate_map_data_cache(drop_payload=False)
 
 def _extract_info(packet: dict[str, Any]) -> str:
     for key in ("comment", "status"):
@@ -3003,9 +3005,10 @@ def _map_data_result(payload: dict[str, Any], *, source: str, age_ms: float = 0.
 
 
 def invalidate_map_data_cache(*, drop_payload: bool = False) -> None:
-    global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms
+    global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms, _map_data_cache_db_path
     with _map_data_cache_lock:
         _map_data_cache_at = 0.0
+        _map_data_cache_db_path = str(DB_PATH)
         if drop_payload:
             _map_data_cache_payload = None
             _map_data_cache_build_ms = 0.0
@@ -3092,12 +3095,17 @@ def _build_map_data_uncached() -> dict[str, Any]:
 
 
 def map_data(*, force: bool = False) -> dict[str, Any]:
-    global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms
+    global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms, _map_data_cache_db_path
 
     now = time.monotonic()
+    db_key = str(DB_PATH)
     with _map_data_cache_lock:
-        cached = _map_data_cache_payload
-        cached_at = float(_map_data_cache_at)
+        if _map_data_cache_db_path != db_key:
+            cached = None
+            cached_at = 0.0
+        else:
+            cached = _map_data_cache_payload
+            cached_at = float(_map_data_cache_at)
     age = now - cached_at if cached is not None and cached_at > 0 else float("inf")
     if not force and cached is not None and age < MAP_DATA_CACHE_SECONDS:
         return _map_data_result(cached, source="cache", age_ms=age * 1000.0)
@@ -3121,8 +3129,12 @@ def map_data(*, force: bool = False) -> dict[str, Any]:
         # Another thread may have completed the build while this caller waited.
         now = time.monotonic()
         with _map_data_cache_lock:
-            cached = _map_data_cache_payload
-            cached_at = float(_map_data_cache_at)
+            if _map_data_cache_db_path != db_key:
+                cached = None
+                cached_at = 0.0
+            else:
+                cached = _map_data_cache_payload
+                cached_at = float(_map_data_cache_at)
         age = now - cached_at if cached is not None and cached_at > 0 else float("inf")
         if not force and cached is not None and age < MAP_DATA_CACHE_SECONDS:
             return _map_data_result(cached, source="cache-after-wait", age_ms=age * 1000.0)
@@ -3134,6 +3146,7 @@ def map_data(*, force: bool = False) -> dict[str, Any]:
             _map_data_cache_payload = payload
             _map_data_cache_at = time.monotonic()
             _map_data_cache_build_ms = build_ms
+            _map_data_cache_db_path = db_key
         diag.log_event(
             "map_data_build",
             duration_ms=round(build_ms, 1),
@@ -3629,6 +3642,8 @@ def process_received_packet(
         _record_topology_from_raw_conn(conn, raw)
         if parsed and parsed.get("from"):
             _upsert_station_conn(conn, parsed)
+    if parsed and parsed.get("from"):
+        invalidate_map_data_cache(drop_payload=False)
     elapsed_ms = (time.monotonic() - started) * 1000
     if elapsed_ms >= 250:
         diag.log_event(
