@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.17": {
+        "title": "Mensagens agendadas, zoom configurável e TNC mais claro",
+        "items": [
+            "Adiciona mensagens programadas com envio único ou recorrência semanal.",
+            "Agendamentos podem usar estação específica, lista de estações, boletim APRS ou grupo APRS.",
+            "Listas reutilizáveis de destinatários permitem enviar individualmente para vários indicativos com intervalo configurável.",
+            "Permite editar, ativar/desativar, excluir e Executar agora, além de mostrar próxima/última execução e resultado.",
+            "Falhas podem pular a ocorrência ou ser tentadas novamente após período configurável.",
+            "Agendamentos e listas ficam persistidos no SQLite com proteção contra execução duplicada da mesma ocorrência.",
+            "Configuração ganha step do zoom em 0,05 / 0,10 / 0,25 / 0,50 / 1,00, aplicado imediatamente ao Leaflet.",
+            "TNC/RF deixa de tratar serial aberta sem KISS válido como estado de sucesso e passa a sinalizar atenção.",
+            "Mantém aberta a validação física específica do Kenwood TM-D700 em modo PKT.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.16": {
         "title": "Filtros compartilhados, Conteúdo e zoom mais fino",
         "items": [
