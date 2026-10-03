@@ -24,8 +24,11 @@ def test_v1723_relief_cutoff_and_map_layers():
     assert "/api/layers/elevation/tile/" in js
 
     # Terrarium decoding and live cutoff.
-    assert "(raw[i] * 256 + raw[i + 1] + raw[i + 2] / 256) - 32768" in js
-    assert "altitude >= threshold" in js
+    assert "(raw[offset] * 256 + raw[offset + 1] + raw[offset + 2] / 256) - 32768" in js
+    assert "if (altitude < threshold) continue;" in js
+    assert "function elevationGridFromTerrarium(canvas)" in js
+    assert "function elevationHillshadeFactor(grid, x, y)" in js
+    assert "const shade = elevationHillshadeFactor(grid, x, y);" in js
     assert "function setElevationThreshold" in js
     assert "function setElevationSliderMax" in js
     assert "function redrawElevationTiles" in js
