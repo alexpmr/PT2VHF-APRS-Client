@@ -86,8 +86,15 @@ def calculate_next_run(schedule: dict[str, Any], *, after: datetime | None = Non
     return None
 
 
-def _recipient_calls(schedule: dict[str, Any]) -> list[str]:
+def _recipient_calls(schedule: dict[str, Any], *, use_retry_targets: bool = True) -> list[str]:
     target_type = str(schedule.get("target_type") or "station")
+    retry_targets = [
+        str(item).upper().strip()
+        for item in schedule.get("retry_targets") or []
+        if str(item).strip()
+    ]
+    if use_retry_targets and retry_targets and target_type in {"station", "list"}:
+        return list(dict.fromkeys(retry_targets))
     if target_type == "station":
         call = str(schedule.get("target") or "").upper().strip()
         return [call] if call else []
@@ -147,6 +154,7 @@ class ScheduledMessageService:
                     error="A execução anterior foi interrompida pelo encerramento do Client.",
                     next_run_at=next_run,
                     enabled=True,
+                    retry_targets=[],
                 )
             else:
                 db.complete_scheduled_message(
@@ -173,7 +181,7 @@ class ScheduledMessageService:
 
         def _run() -> None:
             with self._manual_lock:
-                ok, summary, error = self._execute(schedule, manual=True)
+                ok, summary, error, _retry_targets = self._execute(schedule, manual=True)
                 db.complete_scheduled_message(
                     int(schedule["id"]),
                     status="concluído manual" if ok else "falhou manual",
@@ -181,6 +189,7 @@ class ScheduledMessageService:
                     summary=summary,
                     next_run_at=schedule.get("next_run_at"),
                     enabled=bool(schedule.get("enabled")),
+                    retry_targets=schedule.get("retry_targets") or [],
                 )
 
         threading.Thread(
@@ -214,18 +223,19 @@ class ScheduledMessageService:
         row_id = aprs_service.send_bulletin(message, bulletin_id=bulletin_id, group="")
         return {"id": row_id, "type": str(schedule.get("message_type") or "bulletin")}
 
-    def _execute(self, schedule: dict[str, Any], *, manual: bool = False) -> tuple[bool, str, str]:
+    def _execute(self, schedule: dict[str, Any], *, manual: bool = False) -> tuple[bool, str, str, list[str]]:
         schedule_id = int(schedule["id"])
-        targets = _recipient_calls(schedule)
+        targets = _recipient_calls(schedule, use_retry_targets=not manual)
         target_type = str(schedule.get("target_type") or "station")
         if target_type in {"station", "list"} and not targets:
             error = "Nenhum destinatário válido configurado."
             if manual:
                 diag.log_event("scheduled_message_manual_failed", schedule_id=schedule_id, error=error)
-            return False, "", error
+            return False, "", error, []
 
         successes: list[str] = []
         failures: list[str] = []
+        retry_targets: list[str] = []
         items: list[str | None] = targets if target_type in {"station", "list"} else [None]
         interval = max(1, min(120, int(schedule.get("interval_seconds") or 3)))
         continue_on_error = bool(schedule.get("continue_on_error", True))
@@ -237,7 +247,13 @@ class ScheduledMessageService:
             except Exception as exc:
                 label = destination or target_type
                 failures.append(f"{label}: {exc}")
+                if destination:
+                    retry_targets.append(destination)
                 if not continue_on_error:
+                    for remaining in items[index + 1:]:
+                        if remaining:
+                            retry_targets.append(remaining)
+                            failures.append(f"{remaining}: não tentado após falha anterior")
                     break
             if index + 1 < len(items) and not self._stop.is_set():
                 self._stop.wait(interval)
@@ -250,6 +266,7 @@ class ScheduledMessageService:
         if failure_detail:
             summary += f" · Falhas: {failure_detail}"
         error = failure_detail
+        retry_targets = list(dict.fromkeys(retry_targets))
         ok = not failures
         diag.log_event(
             "scheduled_message_executed",
@@ -259,11 +276,11 @@ class ScheduledMessageService:
             failures=len(failures),
             target_type=target_type,
         )
-        return ok, summary, error
+        return ok, summary, error, retry_targets
 
     def _execute_claimed(self, schedule: dict[str, Any]) -> None:
         schedule_id = int(schedule["id"])
-        ok, summary, error = self._execute(schedule, manual=False)
+        ok, summary, error, retry_targets = self._execute(schedule, manual=False)
         now = _utc_now()
 
         if ok:
@@ -275,6 +292,7 @@ class ScheduledMessageService:
                     summary=summary,
                     next_run_at=next_run,
                     enabled=True,
+                    retry_targets=[],
                 )
             else:
                 db.complete_scheduled_message(
@@ -283,6 +301,7 @@ class ScheduledMessageService:
                     summary=summary,
                     next_run_at=None,
                     enabled=False,
+                    retry_targets=[],
                 )
             return
 
@@ -295,6 +314,7 @@ class ScheduledMessageService:
                 summary=summary,
                 next_run_at=retry_at.isoformat(timespec="seconds"),
                 enabled=True,
+                retry_targets=retry_targets,
             )
         elif str(schedule.get("schedule_type")) == "weekly":
             next_run = calculate_next_run(schedule, after=now + timedelta(seconds=1))
@@ -305,6 +325,7 @@ class ScheduledMessageService:
                 summary=summary,
                 next_run_at=next_run,
                 enabled=True,
+                retry_targets=[],
             )
         else:
             db.complete_scheduled_message(
@@ -314,6 +335,7 @@ class ScheduledMessageService:
                 summary=summary,
                 next_run_at=None,
                 enabled=False,
+                retry_targets=[],
             )
 
 
