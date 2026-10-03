@@ -1,5 +1,15 @@
 window.PT2VHF_I18N = {
   es: {
+    "Mostrar mensagens": "Mostrar mensajes",
+    "Mostrar boletins": "Mostrar boletines",
+    "Ordenar": "Ordenar",
+    "Ícone / tipo": "Icono / tipo",
+    "Evitar DMR/D-Star e SSIDs -12 a -15": "Evitar DMR/D-Star y SSID -12 a -15",
+    "Mensagem rápida para": "Mensaje rápido para",
+    "Selecione Enviar mensagem em uma estação da lista.": "Seleccione Enviar mensaje en una estación de la lista.",
+    "Usar último texto": "Usar último texto",
+    "O texto permanece disponível para a próxima estação. A lista, filtros e posição de rolagem não mudam após o envio.": "El texto permanece disponible para la siguiente estación. La lista, los filtros y la posición de desplazamiento no cambian después del envío.",
+    "Ação": "Acción",
     "Rota de envio": "Ruta de envío",
     "Automático": "Automático",
     "RF direto": "RF directo",
@@ -408,6 +418,16 @@ window.PT2VHF_I18N = {
     "Replay da Rede": "Replay de la red"
   },
   fr: {
+    "Mostrar mensagens": "Afficher les messages",
+    "Mostrar boletins": "Afficher les bulletins",
+    "Ordenar": "Trier",
+    "Ícone / tipo": "Icône / type",
+    "Evitar DMR/D-Star e SSIDs -12 a -15": "Éviter DMR/D-Star et les SSID -12 à -15",
+    "Mensagem rápida para": "Message rapide pour",
+    "Selecione Enviar mensagem em uma estação da lista.": "Sélectionnez Envoyer un message sur une station de la liste.",
+    "Usar último texto": "Utiliser le dernier texte",
+    "O texto permanece disponível para a próxima estação. A lista, filtros e posição de rolagem não mudam após o envio.": "Le texte reste disponible pour la station suivante. La liste, les filtres et la position de défilement ne changent pas après l’envoi.",
+    "Ação": "Action",
     "Rota de envio": "Route d’envoi",
     "Automático": "Automatique",
     "RF direto": "RF direct",
