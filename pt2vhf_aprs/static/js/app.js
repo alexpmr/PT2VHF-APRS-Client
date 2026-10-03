@@ -8181,6 +8181,7 @@
 
   setupSortableTable('messagesTable', 'messages', renderMessages);
   setupSortableTable('stationsTable', 'stations', renderStations);
+  setupSharedFilterMenus();
   setupExternalLinksForEmbeddedWindow();
   tabSetup();
 
