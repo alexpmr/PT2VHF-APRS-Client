@@ -3,6 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.16": {
+        "title": "Filtros compartilhados, Conteúdo e zoom mais fino",
+        "items": [
+            "Corrige o indicativo de Adriano para PP5AU.",
+            "O mapa passa a usar zoom em passos de 0,10 e roda do mouse mais gradual.",
+            "Mensagens ganha menu Conteúdo com Mensagens, Boletins, Grupos e Telemetria, além de Marcar tudo e Desmarcar tudo.",
+            "Estações e Mensagens passam a ter o mesmo menu Ver de tipos de estação usado pelo Mapa.",
+            "Mapa, Estações e Mensagens compartilham o mesmo estado central de filtros.",
+            "Mensagens não classificáveis permanecem visíveis por segurança.",
+            "Um catálogo completo de estações evita interferência do filtro textual da aba Estações na classificação das Mensagens.",
+            "Os botões Ver e Conteúdo sinalizam visualmente quando há filtros ativos.",
+            "Mantém o diagnóstico TNC/RF da v1.8.15 e a pendência de validação física do TM-D700 em PKT.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.15": {
         "title": "Mensagens, zoom, estações e diagnóstico TNC/RF",
         "items": [
