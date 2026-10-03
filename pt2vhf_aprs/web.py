@@ -18,6 +18,7 @@ from . import database as db
 from . import diagnostics as diag
 from . import updater
 from .aprs_service import full_callsign, service
+from .scheduled_messages import prepare_schedule_payload, service as scheduled_message_service
 from .local_server import runtime_info as local_server_runtime_info
 from .tnc_service import (
     get_tnc_config,
@@ -276,6 +277,7 @@ def create_app() -> Flask:
     app.config["JSON_SORT_KEYS"] = False
     db.init_db()
     diag.configure(db.DB_PATH.parent)
+    scheduled_message_service.start()
     diag.log_event("flask_app_created", version=__version__)
     try:
         # Chegar até aqui confirma que a versão atual iniciou e abriu o banco.
@@ -867,6 +869,87 @@ def create_app() -> Flask:
     def api_clear_messages():
         deleted = db.clear_messages()
         return jsonify({"ok": True, "deleted": deleted})
+
+    @app.get("/api/messages/scheduled")
+    def api_scheduled_messages():
+        return jsonify(db.list_scheduled_messages())
+
+    @app.post("/api/messages/scheduled")
+    def api_create_scheduled_message():
+        try:
+            payload = prepare_schedule_payload(request.get_json(force=True) or {})
+            saved = db.save_scheduled_message(payload)
+            scheduled_message_service.wake()
+            return jsonify({"ok": True, "schedule": saved})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.put("/api/messages/scheduled/<int:schedule_id>")
+    def api_update_scheduled_message(schedule_id: int):
+        try:
+            existing = db.get_scheduled_message(schedule_id)
+            if not existing:
+                return jsonify({"ok": False, "error": "Agendamento não encontrado."}), 404
+            payload = prepare_schedule_payload(request.get_json(force=True) or {}, existing)
+            saved = db.save_scheduled_message(payload, schedule_id)
+            scheduled_message_service.wake()
+            return jsonify({"ok": True, "schedule": saved})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.delete("/api/messages/scheduled/<int:schedule_id>")
+    def api_delete_scheduled_message(schedule_id: int):
+        deleted = db.delete_scheduled_message(schedule_id)
+        return jsonify({"ok": bool(deleted), "deleted": deleted})
+
+    @app.post("/api/messages/scheduled/<int:schedule_id>/toggle")
+    def api_toggle_scheduled_message(schedule_id: int):
+        try:
+            schedule = db.get_scheduled_message(schedule_id)
+            if not schedule:
+                return jsonify({"ok": False, "error": "Agendamento não encontrado."}), 404
+            enabled = bool((request.get_json(silent=True) or {}).get("enabled", not schedule.get("enabled")))
+            if enabled:
+                payload = prepare_schedule_payload({**schedule, "enabled": True}, schedule)
+                next_run_at = payload.get("next_run_at")
+            else:
+                next_run_at = None
+            db.set_scheduled_enabled(schedule_id, enabled, next_run_at)
+            scheduled_message_service.wake()
+            return jsonify({"ok": True, "schedule": db.get_scheduled_message(schedule_id)})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/messages/scheduled/<int:schedule_id>/run-now")
+    def api_run_scheduled_message_now(schedule_id: int):
+        try:
+            scheduled_message_service.execute_now(schedule_id)
+            return jsonify({"ok": True, "queued": True})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/messages/recipient-groups")
+    def api_recipient_groups():
+        return jsonify(db.list_recipient_groups())
+
+    @app.post("/api/messages/recipient-groups")
+    def api_create_recipient_group():
+        try:
+            return jsonify({"ok": True, "group": db.save_recipient_group(request.get_json(force=True) or {})})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.put("/api/messages/recipient-groups/<int:group_id>")
+    def api_update_recipient_group(group_id: int):
+        try:
+            return jsonify({"ok": True, "group": db.save_recipient_group(request.get_json(force=True) or {}, group_id)})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.delete("/api/messages/recipient-groups/<int:group_id>")
+    def api_delete_recipient_group(group_id: int):
+        deleted = db.delete_recipient_group(group_id)
+        return jsonify({"ok": bool(deleted), "deleted": deleted})
 
     @app.post("/api/messages/send")
     def api_send_message():
