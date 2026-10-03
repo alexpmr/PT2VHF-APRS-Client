@@ -4155,6 +4155,13 @@ def save_scheduled_message(data: dict[str, Any], schedule_id: int | None = None)
         raise ValueError("Informe um destino APRS válido.")
     if target_type == "list" and not targets and not recipient_group_id:
         raise ValueError("Informe os destinatários ou selecione uma lista salva.")
+    if target_type == "group":
+        aprs_group = str(data.get("aprs_group") or target or "").upper().strip()
+        bulletin_id = str(data.get("bulletin_id") or "0").upper().strip()[:1]
+        if not re.fullmatch(r"[A-Z0-9]{1,5}", aprs_group):
+            raise ValueError("Informe um grupo APRS válido com 1 a 5 caracteres.")
+        if not bulletin_id.isdigit():
+            raise ValueError("Boletim de grupo deve usar linha BLN0 a BLN9; anúncios BLN[A-Z] não usam grupo.")
     run_at_utc = str(data.get("run_at_utc") or "").strip() or None
     weekday = data.get("weekday")
     weekday = int(weekday) if weekday not in ("", None) else None
