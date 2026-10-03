@@ -534,6 +534,7 @@ def init_db() -> None:
                 target_type TEXT NOT NULL DEFAULT 'station',
                 target TEXT NOT NULL DEFAULT '',
                 targets_json TEXT NOT NULL DEFAULT '[]',
+                retry_targets_json TEXT NOT NULL DEFAULT '[]',
                 recipient_group_id INTEGER,
                 message_type TEXT NOT NULL DEFAULT 'message',
                 message TEXT NOT NULL DEFAULT '',
@@ -559,6 +560,10 @@ def init_db() -> None:
                 ON scheduled_messages(enabled, next_run_at);
             """
         )
+
+        scheduled_columns = {row["name"] for row in conn.execute("PRAGMA table_info(scheduled_messages)").fetchall()}
+        if "retry_targets_json" not in scheduled_columns:
+            conn.execute("ALTER TABLE scheduled_messages ADD COLUMN retry_targets_json TEXT NOT NULL DEFAULT '[]'")
 
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
         if "open_browser_on_start" not in config_columns:
@@ -4111,6 +4116,7 @@ def _scheduled_row(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
     item["enabled"] = bool(item.get("enabled"))
     item["continue_on_error"] = bool(item.get("continue_on_error"))
     item["targets"] = _json_callsigns(item.pop("targets_json", "[]"))
+    item["retry_targets"] = _json_callsigns(item.pop("retry_targets_json", "[]"))
     return item
 
 
@@ -4184,6 +4190,7 @@ def save_scheduled_message(data: dict[str, Any], schedule_id: int | None = None)
         "target_type": target_type,
         "target": target,
         "targets_json": json.dumps(targets, ensure_ascii=False),
+        "retry_targets_json": "[]",
         "recipient_group_id": int(recipient_group_id) if recipient_group_id else None,
         "message_type": message_type,
         "message": message,
@@ -4263,10 +4270,14 @@ def complete_scheduled_message(
     summary: str = "",
     next_run_at: str | None = None,
     enabled: bool | None = None,
+    retry_targets: list[str] | None = None,
 ) -> None:
     now = utc_now_iso()
     fields = ["last_run_at=?", "last_status=?", "last_error=?", "last_summary=?", "next_run_at=?", "updated_at=?"]
     values: list[Any] = [now, str(status), str(error)[:1000], str(summary)[:4000], next_run_at, now]
+    if retry_targets is not None:
+        fields.append("retry_targets_json=?")
+        values.append(json.dumps(_json_callsigns(retry_targets), ensure_ascii=False))
     if enabled is not None:
         fields.append("enabled=?")
         values.append(1 if enabled else 0)
