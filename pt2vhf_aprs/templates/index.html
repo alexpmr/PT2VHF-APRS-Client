@@ -238,18 +238,37 @@
         <p>Filtre pelo indicativo de origem. O filtro aceita trechos, como <code>PT2</code> ou <code>PY2A</code>.</p>
       </div>
       <div class="message-header-controls">
-        <label class="check-field message-telemetry-check" title="Mostra ou oculta mensagens APRS individuais sem apagar o histórico">
-          <input id="showNormalMessages" type="checkbox" checked>
-          <span>Mostrar mensagens</span>
-        </label>
-        <label class="check-field message-telemetry-check" title="Mostra ou oculta boletins e boletins de grupo sem apagar o histórico">
-          <input id="showBulletinMessages" type="checkbox" checked>
-          <span>Mostrar boletins</span>
-        </label>
-        <label class="check-field message-telemetry-check" title="Oculta mensagens APRS de telemetria como PARM., UNIT., EQNS., BITS. e T#nnn">
-          <input id="hideTelemetryMessages" type="checkbox" checked>
-          <span>Ocultar telemetria</span>
-        </label>
+        <div class="map-items-control message-content-filter-control">
+          <button id="messageContentFilterButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Conteúdo 3/4 ▾</button>
+          <div id="messageContentFilterMenu" class="map-items-menu message-content-filter-menu hidden" role="menu">
+            <div class="map-view-tree-header">
+              <strong>Conteúdo</strong>
+              <div class="map-view-bulk-actions">
+                <button id="messageContentSelectAllButton" type="button" class="btn secondary map-view-all-button">Marcar tudo</button>
+                <button id="messageContentClearAllButton" type="button" class="btn secondary map-view-all-button">Desmarcar tudo</button>
+              </div>
+            </div>
+            <div class="message-content-filter-options">
+              <label><input type="checkbox" data-message-content-filter="message" checked><span>Mensagens</span></label>
+              <label><input type="checkbox" data-message-content-filter="bulletin" checked><span>Boletins</span></label>
+              <label><input type="checkbox" data-message-content-filter="group" checked><span>Grupos</span></label>
+              <label><input type="checkbox" data-message-content-filter="telemetry"><span>Telemetria</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="map-items-control shared-view-control">
+          <button id="messageViewButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Ver ▾</button>
+          <div id="messageViewMenu" class="map-items-menu map-view-tree-menu hidden" role="menu">
+            <div class="map-view-tree-header">
+              <strong>Ver</strong>
+              <div class="map-view-bulk-actions">
+                <button id="messageViewSelectAllButton" type="button" class="btn secondary map-view-all-button">Selecionar tudo</button>
+                <button id="messageViewClearAllButton" type="button" class="btn secondary map-view-all-button">Remover tudo</button>
+              </div>
+            </div>
+            <div id="messageViewTree" class="map-view-tree" aria-label="Filtros de estações das mensagens"></div>
+          </div>
+        </div>
         <button id="groupMessagesButton" type="button" class="btn secondary" aria-pressed="false">Agrupar por remetente</button>
         <button id="myMessagesButton" type="button" class="btn secondary" aria-pressed="false">Minhas mensagens</button>
         <button id="unreadMessagesButton" type="button" class="btn secondary" aria-pressed="false">Não lidas</button>
@@ -373,6 +392,19 @@
       <div class="station-header-controls">
         <button id="clearTracklogsButton" type="button" class="btn secondary">Limpar tracklogs</button>
         <button id="clearStationsButton" type="button" class="btn danger">Limpar estações</button>
+        <div class="map-items-control shared-view-control">
+          <button id="stationViewButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Ver ▾</button>
+          <div id="stationViewMenu" class="map-items-menu map-view-tree-menu hidden" role="menu">
+            <div class="map-view-tree-header">
+              <strong>Ver</strong>
+              <div class="map-view-bulk-actions">
+                <button id="stationViewSelectAllButton" type="button" class="btn secondary map-view-all-button">Selecionar tudo</button>
+                <button id="stationViewClearAllButton" type="button" class="btn secondary map-view-all-button">Remover tudo</button>
+              </div>
+            </div>
+            <div id="stationViewTree" class="map-view-tree" aria-label="Filtros da lista de estações"></div>
+          </div>
+        </div>
         <label class="field compact station-sort-field">
           <span>Ordenar</span>
           <select id="stationSortMode">
@@ -1185,7 +1217,7 @@
           <h3 id="aboutContributorsTitle">Agradecimentos / Colaboradores</h3>
           <p id="aboutContributorsText">Agradecimento aos radioamadores que contribuem com sugestões, testes, validações e ajustes que ajudam na evolução contínua do PT2VHF APRS Client.</p>
           <div class="about-contributors-list" aria-label="Radioamadores colaboradores">
-            <div class="about-contributor"><strong>PP5UA</strong><span>Adriano</span></div>
+            <div class="about-contributor"><strong>PP5AU</strong><span>Adriano</span></div>
             <div class="about-contributor"><strong>PY4EI</strong><span>Allan</span></div>
             <div class="about-contributor"><strong>PU2MUS</strong><span>Marco</span></div>
             <div class="about-contributor"><strong>PP5PK</strong><span>Daniel Kondlatsch</span></div>
