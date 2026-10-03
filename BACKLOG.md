@@ -169,7 +169,7 @@
 
 
 - **Sobre — corrigir indicativo de colaborador**
-  - Alterar o indicativo exibido na aba **Sobre** de **PU5AAG** para **PP5UA**.
+  - Alterar o indicativo exibido na aba **Sobre** de **PP5UA** para **PP5UA**.
   - Manter o nome associado ao colaborador e revisar referências duplicadas no projeto para evitar divergências.
 
 
@@ -286,7 +286,7 @@
 - **Concorrência:** múltiplos cliques são bloqueados enquanto uma ação de conexão está em andamento.
 - **Interface:** removida a redundância do indicador separado; estado + ação + contexto ficam no mesmo controle.
 - **Sobre:** adicionada seção Agradecimentos / Colaboradores.
-- **Colaboradores:** PU5AAG Adriano, PY4EI Allan, PU2MUS Marco, PP5PK Daniel Kondlatsch, PT2YW Ywstter e PT2PAG Paulo Galvão.
+- **Colaboradores:** PP5UA Adriano, PY4EI Allan, PU2MUS Marco, PP5PK Daniel Kondlatsch, PT2YW Ywstter e PT2PAG Paulo Galvão.
 - **Idiomas/Testes:** PT-BR, EN, ES e FR; regressões de estado, ação e presença dos colaboradores.
 - **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
