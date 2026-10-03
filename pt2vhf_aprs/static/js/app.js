@@ -803,6 +803,8 @@
         subtitle: 'Sobre o projeto, o autor e como contribuir com sugestões.',
         author: 'Criado por Alex, PT2VHF, radioamador e idealizador do PT2VHF APRS Client.',
         project: 'O PT2VHF APRS Client é um cliente APRS moderno e multiplataforma para mapa, mensagens, estatísticas e análise da rede.',
+        aprsTitle: 'O que é APRS?',
+        aprs: 'APRS (Automatic Packet Reporting System) é um sistema digital do radioamadorismo usado para compartilhar em tempo real posição, mensagens, telemetria, dados meteorológicos e outras informações, tanto por rádio (RF) quanto pela rede APRS-IS.',
         contactTitle: 'Contato / Sugestões / Dúvidas / Melhorias',
         contact: 'Sugestões, dúvidas, relatos de problemas e ideias de melhoria são bem-vindos.',
         contributorsTitle: 'Agradecimentos / Colaboradores',
@@ -825,6 +827,8 @@
         subtitle: 'About the project, its author and how to contribute suggestions.',
         author: 'Created by Alex, PT2VHF, amateur radio operator and creator of PT2VHF APRS Client.',
         project: 'PT2VHF APRS Client is a modern cross-platform APRS client for maps, messaging, statistics and network analysis.',
+        aprsTitle: 'What is APRS?',
+        aprs: 'APRS (Automatic Packet Reporting System) is a digital amateur-radio system used to share position, messages, telemetry, weather data and other information in real time, both over radio (RF) and through the APRS-IS network.',
         contactTitle: 'Contact / Suggestions / Questions / Improvements',
         contact: 'Suggestions, questions, bug reports and improvement ideas are welcome.',
         contributorsTitle: 'Acknowledgements / Contributors',
@@ -847,6 +851,8 @@
         subtitle: 'Sobre el proyecto, su autor y cómo aportar sugerencias.',
         author: 'Creado por Alex, PT2VHF, radioaficionado e impulsor de PT2VHF APRS Client.',
         project: 'PT2VHF APRS Client es un cliente APRS moderno y multiplataforma para mapas, mensajes, estadísticas y análisis de la red.',
+        aprsTitle: '¿Qué es APRS?',
+        aprs: 'APRS (Automatic Packet Reporting System) es un sistema digital de radioafición utilizado para compartir en tiempo real posición, mensajes, telemetría, datos meteorológicos y otra información, tanto por radio (RF) como a través de la red APRS-IS.',
         contactTitle: 'Contacto / Sugerencias / Dudas / Mejoras',
         contact: 'Son bienvenidas las sugerencias, dudas, informes de problemas e ideas de mejora.',
         contributorsTitle: 'Agradecimientos / Colaboradores',
@@ -869,6 +875,8 @@
         subtitle: 'À propos du projet, de son auteur et des suggestions.',
         author: 'Créé par Alex, PT2VHF, radioamateur et créateur de PT2VHF APRS Client.',
         project: 'PT2VHF APRS Client est un client APRS moderne et multiplateforme pour la carte, les messages, les statistiques et l’analyse du réseau.',
+        aprsTitle: 'Qu’est-ce que l’APRS ?',
+        aprs: 'L’APRS (Automatic Packet Reporting System) est un système numérique de radioamateur permettant de partager en temps réel la position, des messages, de la télémétrie, des données météo et d’autres informations, par radio (RF) comme via le réseau APRS-IS.',
         contactTitle: 'Contact / Suggestions / Questions / Améliorations',
         contact: 'Les suggestions, questions, signalements de problèmes et idées d’amélioration sont les bienvenus.',
         contributorsTitle: 'Remerciements / Contributeurs',
@@ -909,6 +917,8 @@
     if ($('#aboutSubtitle')) $('#aboutSubtitle').textContent = copy.subtitle;
     if ($('#aboutAuthorText')) $('#aboutAuthorText').textContent = copy.author;
     if ($('#aboutProjectText')) $('#aboutProjectText').textContent = copy.project;
+    if ($('#aboutAprsTitle')) $('#aboutAprsTitle').textContent = copy.aprsTitle;
+    if ($('#aboutAprsText')) $('#aboutAprsText').textContent = copy.aprs;
     if ($('#aboutContactTitle')) $('#aboutContactTitle').textContent = copy.contactTitle;
     if ($('#aboutContactText')) $('#aboutContactText').textContent = copy.contact;
     if ($('#aboutContributorsTitle')) $('#aboutContributorsTitle').textContent = copy.contributorsTitle;
