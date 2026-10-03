@@ -1,5 +1,15 @@
 # Backlog
 
+## Concluído na v1.8.14
+
+- **Mensagens:** Automático / APRS-IS / RF direto / RF personalizado por envio, com path RF personalizado e retry preservando a rota.
+- **Responsividade:** 1360×768 e 1280×720 cobertos pelas regras de baixa altura, mantendo Mensagens e ações do popup acessíveis.
+- **Interações:** alvos identificados como não interativos e sem evidência de capacidade bidirecional ficam com Mensagem, Posição, Status, Ouvidos, Ping/ACK e Trace desabilitados.
+- **Mapa — Elevação/Relevo:** DEM Terrarium real com corte por altitude, hillshade derivado do próprio DEM, slider vertical, máximo padrão de 3.000 m, faixa de 100 a 9.000 m, persistência e opacidade independente.
+- **Sobre:** logo, projeto, contatos, tiny.cc/aprs, divulgação APRS, colaboradores e explicação explícita de APRS em PT-BR/EN/ES/FR.
+- **Compatibilidade:** preservados o hotfix de migração SQLite da v1.8.12 e todos os recursos posteriores.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## Concluído na v1.8.13
 
 - **Mensagens — rota por envio:** consolidado Automático / APRS-IS / RF direto / RF personalizado, com path por mensagem e retry preservando a rota.
