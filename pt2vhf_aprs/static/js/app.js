@@ -102,6 +102,10 @@
     userLocationAccuracy: null,
     messages: [],
     stations: [],
+    stationDisplayOrder: [],
+    stationQuickSelectedCallsign: '',
+    stationLastQuickMessage: localStorage.getItem('pt2vhf_station_last_quick_message') || '',
+    stationExcludeNonMessageable: localStorage.getItem('pt2vhf_station_exclude_nonmessageable') !== '0',
     logs: [],
     sort: {
       messages: { key: 'timestamp', dir: 'asc', type: 'text' },
@@ -116,6 +120,8 @@
     myMessagesOnly: false,
     unreadMessagesOnly: false,
     hideTelemetryMessages: true,
+    showNormalMessages: true,
+    showBulletinMessages: true,
     groupMessages: false,
     selectedConversation: '',
     ownCallsign: '',
@@ -1295,7 +1301,13 @@
     try {
       [saved, cfg] = await Promise.all([api('/api/map-state'), api('/api/config')]);
     } catch (_) {}
-    state.map = L.map('map', { preferCanvas: true }).setView([saved.latitude, saved.longitude], saved.zoom);
+    state.map = L.map('map', {
+      preferCanvas: true,
+      zoomSnap: 0.25,
+      zoomDelta: 0.25,
+      wheelPxPerZoomLevel: 120,
+      wheelDebounceTime: 25
+    }).setView([saved.latitude, saved.longitude], Number(saved.zoom));
 
     const elevationPane = state.map.createPane('pt2vhfElevationPane');
     elevationPane.classList.add('pt2vhf-elevation-pane');
@@ -2015,6 +2027,7 @@
     if (!state.packetsEnabled) clearTrafficReplayLayers();
     await loadMapData();
     if (!state.topologyEnabled) clearTopologyLines();
+    if (state.stations.length) renderStations();
     updateMapLegend();
   }
 
@@ -3953,6 +3966,11 @@
         type,
         dir: current.key === key && current.dir === 'asc' ? 'desc' : 'asc'
       };
+      if (datasetName === 'stations') {
+        state.stationDisplayOrder = [];
+        const mode = $('#stationSortMode');
+        if (mode && [...mode.options].some(option => option.value === key)) mode.value = key;
+      }
       renderFn();
     }));
   }
@@ -4078,6 +4096,12 @@
     let rows = state.hideTelemetryMessages
       ? state.messages.filter(message => !isTelemetryMessage(message))
       : [...state.messages];
+    if (!state.showNormalMessages) {
+      rows = rows.filter(message => String(message?.message_type || 'message') !== 'message');
+    }
+    if (!state.showBulletinMessages) {
+      rows = rows.filter(message => !['bulletin', 'group_bulletin', 'announcement'].includes(String(message?.message_type || '')));
+    }
     if (state.unreadMessagesOnly) rows = rows.filter(isUnreadPersonalMessage);
     return rows;
   }
@@ -4293,10 +4317,30 @@
   $('#messageFilter').addEventListener('input', loadMessagesDebounced);
 
   const telemetryPreference = localStorage.getItem('pt2vhf_hide_telemetry');
+  const normalMessagesPreference = localStorage.getItem('pt2vhf_show_normal_messages');
+  const bulletinMessagesPreference = localStorage.getItem('pt2vhf_show_bulletin_messages');
   state.hideTelemetryMessages = telemetryPreference === null ? true : telemetryPreference !== '0';
+  state.showNormalMessages = normalMessagesPreference === null ? true : normalMessagesPreference !== '0';
+  state.showBulletinMessages = bulletinMessagesPreference === null ? true : bulletinMessagesPreference !== '0';
   state.groupMessages = localStorage.getItem('pt2vhf_group_messages') === '1';
+  const normalMessagesToggle = $('#showNormalMessages');
+  const bulletinMessagesToggle = $('#showBulletinMessages');
   const telemetryToggle = $('#hideTelemetryMessages');
+  if (normalMessagesToggle) normalMessagesToggle.checked = state.showNormalMessages;
+  if (bulletinMessagesToggle) bulletinMessagesToggle.checked = state.showBulletinMessages;
   if (telemetryToggle) telemetryToggle.checked = state.hideTelemetryMessages;
+
+  normalMessagesToggle?.addEventListener('change', () => {
+    state.showNormalMessages = normalMessagesToggle.checked;
+    localStorage.setItem('pt2vhf_show_normal_messages', state.showNormalMessages ? '1' : '0');
+    renderMessages();
+  });
+
+  bulletinMessagesToggle?.addEventListener('change', () => {
+    state.showBulletinMessages = bulletinMessagesToggle.checked;
+    localStorage.setItem('pt2vhf_show_bulletin_messages', state.showBulletinMessages ? '1' : '0');
+    renderMessages();
+  });
   telemetryToggle?.addEventListener('change', () => {
     state.hideTelemetryMessages = telemetryToggle.checked;
     localStorage.setItem('pt2vhf_hide_telemetry', state.hideTelemetryMessages ? '1' : '0');
@@ -5289,46 +5333,122 @@
     toggleFavorite(star.dataset.favoriteCallsign || '');
   });
 
+  function stationSymbolType(station) {
+    const symbol = `${String(station?.symbol_table || '/')}${String(station?.symbol || '>')}`;
+    const family = String(
+      station?.map_family_label
+      || station?.device_model
+      || station?.device_class
+      || ''
+    ).trim();
+    return family ? `${symbol} · ${family}` : symbol;
+  }
+
+  function stationMessagingSafety(station) {
+    const call = normalizedCall(station?.callsign);
+    const ssidMatch = call.match(/-(\d{1,2})$/);
+    const ssid = ssidMatch ? Number(ssidMatch[1]) : null;
+    const descriptor = [
+      station?.map_family_key,
+      station?.map_family_label,
+      station?.device_model,
+      station?.device_class,
+      station?.name,
+      station?.info,
+      call
+    ].map(value => String(value || '').toUpperCase()).join(' ');
+    const digitalVoice = /\bDMR\b|\bD-?STAR\b|\bDSTAR\b/.test(descriptor);
+    const infrastructureSsid = [12, 13, 14, 15].includes(ssid);
+    const caution = digitalVoice || infrastructureSsid;
+    const interaction = stationInteractionProfile(station);
+    if (!interaction.enabled) {
+      return { blocked: true, caution: true, reason: interaction.reason || ui('Interação APRS indisponível.', 'APRS interaction unavailable.') };
+    }
+    if (state.stationExcludeNonMessageable && caution) {
+      const reason = digitalVoice
+        ? ui('Envio rápido bloqueado: estação identificada como DMR/D-Star.', 'Quick send blocked: station identified as DMR/D-Star.')
+        : ui(`Envio rápido bloqueado: SSID -${ssid} está na faixa de infraestrutura (-12 a -15).`, `Quick send blocked: SSID -${ssid} is in the infrastructure range (-12 to -15).`);
+      return { blocked: true, caution: true, reason };
+    }
+    return {
+      blocked: false,
+      caution,
+      reason: caution ? ui('Revise o destino antes de enviar: estação marcada como DMR/D-Star ou SSID de infraestrutura.', 'Review the destination before sending: station marked as DMR/D-Star or infrastructure SSID.') : ''
+    };
+  }
+
   async function loadStations(options = {}) {
     try {
       const viewport = $('.stations-table-wrap');
       const previousScrollTop = viewport?.scrollTop || 0;
-      const atNewest = previousScrollTop <= 12;
       const filter = $('#stationFilter').value.trim();
       state.stations = await api(`/api/stations?filter=${encodeURIComponent(filter)}`);
       renderStations();
-
-      if (viewport && state.sort.stations.key === 'last_heard' && state.sort.stations.dir === 'desc') {
-        if (options.scrollToNewest || atNewest) viewport.scrollTop = 0;
-        else viewport.scrollTop = previousScrollTop;
+      if (viewport) {
+        if (options.scrollToNewest && state.sort.stations.key === 'last_heard' && state.sort.stations.dir === 'desc' && previousScrollTop <= 12) {
+          viewport.scrollTop = 0;
+        } else {
+          viewport.scrollTop = previousScrollTop;
+        }
       }
     } catch (err) { console.warn(err); }
   }
 
   function renderStations() {
     const spec = state.sort.stations;
-    const favoriteRows = state.stations.filter(s => isFavorite(s.callsign) || Number(s.favorite || 0) === 1);
-    const otherRows = state.stations.filter(s => !(isFavorite(s.callsign) || Number(s.favorite || 0) === 1));
-    const rows = [...sortedData(favoriteRows, spec), ...sortedData(otherRows, spec)];
-    $('#stationsTable tbody').innerHTML = rows.map(s => `
+    const prepared = state.stations
+      .filter(stationMatchesViewFilter)
+      .map(station => ({ ...station, symbol_type: stationSymbolType(station) }));
+    const favoriteRows = prepared.filter(s => isFavorite(s.callsign) || Number(s.favorite || 0) === 1);
+    const otherRows = prepared.filter(s => !(isFavorite(s.callsign) || Number(s.favorite || 0) === 1));
+    const sortedRows = [...sortedData(favoriteRows, spec), ...sortedData(otherRows, spec)];
+
+    const available = new Set(sortedRows.map(row => normalizedCall(row.callsign)));
+    state.stationDisplayOrder = state.stationDisplayOrder.filter(call => available.has(call));
+    const ordered = new Set(state.stationDisplayOrder);
+    for (const row of sortedRows) {
+      const call = normalizedCall(row.callsign);
+      if (!ordered.has(call)) {
+        state.stationDisplayOrder.push(call);
+        ordered.add(call);
+      }
+    }
+    const byCall = new Map(sortedRows.map(row => [normalizedCall(row.callsign), row]));
+    const rows = state.stationDisplayOrder.map(call => byCall.get(call)).filter(Boolean);
+
+    const count = $('#stationTotalCount');
+    if (count) count.textContent = String(rows.length);
+
+    $('#stationsTable tbody').innerHTML = rows.map(s => {
+      const safety = stationMessagingSafety(s);
+      const caution = safety.caution
+        ? `<span class="station-message-caution" title="${escapeHtml(safety.reason)}">⚠</span>`
+        : '';
+      const disabled = safety.blocked
+        ? ` disabled aria-disabled="true" title="${escapeHtml(safety.reason)}"`
+        : ` title="${escapeHtml(ui('Enviar mensagem sem sair da lista', 'Send a message without leaving the list'))}"`;
+      return `
       <tr class="station-row${isFavorite(s.callsign) ? ' station-favorite' : ''}" data-callsign="${escapeHtml(s.callsign)}" tabindex="0" title="${escapeHtml(ui('Abrir esta estação no mapa', 'Open this station on the map'))}">
-        <td>${favoriteStarHtml(s.callsign)}${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.callsign)}</td>
+        <td>${favoriteStarHtml(s.callsign)} ${escapeHtml(s.callsign)} ${caution}</td>
+        <td class="station-symbol-type">${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} <span>${escapeHtml(s.symbol_type)}</span></td>
         <td class="station-last-heard">${escapeHtml(fmtDate(s.last_heard))}</td>
         <td>${fmtNum(s.distance_km, 1, ' km')}</td>
         <td>${fmtNum(s.speed, 1, ' km/h')}</td>
         <td>${fmtNum(s.course, 0, '°')}</td>
         <td>${fmtNum(s.altitude, 1, ' m')}</td>
         <td>${escapeHtml(s.info || '')}</td>
-      </tr>`).join('');
+        <td class="station-list-actions"><button type="button" class="btn secondary station-list-message-button" data-callsign="${escapeHtml(s.callsign)}"${disabled}>${escapeHtml(ui('Mensagem', 'Message'))}</button></td>
+      </tr>`;
+    }).join('');
 
     $$('#stationsTable tbody .station-row').forEach(row => {
       const open = () => focusStationOnMap(row.dataset.callsign);
       row.addEventListener('click', event => {
-        if (event.target.closest('.favorite-star')) return;
+        if (event.target.closest('.favorite-star, .station-list-message-button')) return;
         open();
       });
       row.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.station-list-message-button')) {
           e.preventDefault();
           open();
         }
@@ -5337,6 +5457,111 @@
 
     updateSortIndicators('stationsTable', spec);
   }
+
+  function selectedQuickMessageStation() {
+    const call = normalizedCall(state.stationQuickSelectedCallsign);
+    return state.stations.find(station => normalizedCall(station.callsign) === call) || null;
+  }
+
+  function openStationQuickMessage(callsign) {
+    const call = normalizedCall(callsign);
+    const station = state.stations.find(item => normalizedCall(item.callsign) === call);
+    if (!station) return;
+    const safety = stationMessagingSafety(station);
+    if (safety.blocked) {
+      toast(safety.reason, 'error');
+      return;
+    }
+    state.stationQuickSelectedCallsign = call;
+    $('#stationQuickMessageCall').textContent = call;
+    $('#stationQuickMessageHint').textContent = safety.reason || ui('Envio rápido sem sair da lista de estações.', 'Quick send without leaving the station list.');
+    const input = $('#stationQuickMessageText');
+    if (input && !input.value && state.stationLastQuickMessage) input.value = state.stationLastQuickMessage;
+    $('#stationQuickMessagePanel')?.classList.remove('hidden');
+    input?.focus();
+  }
+
+  async function sendStationQuickMessage() {
+    const station = selectedQuickMessageStation();
+    if (!station) return toast(ui('Selecione uma estação para a mensagem rápida.', 'Select a station for quick messaging.'), 'error');
+    const safety = stationMessagingSafety(station);
+    if (safety.blocked) return toast(safety.reason, 'error');
+    const input = $('#stationQuickMessageText');
+    const message = String(input?.value || '').trim();
+    if (!message) return toast(ui('Informe a mensagem.', 'Enter the message.'), 'error');
+    const button = $('#stationQuickMessageSend');
+    if (button) button.disabled = true;
+    try {
+      const result = await api('/api/messages/send', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type:'message', to:station.callsign, message, route:'auto', path:'', bulletin_id:'0', group:'' })
+      });
+      state.stationLastQuickMessage = message;
+      localStorage.setItem('pt2vhf_station_last_quick_message', message);
+      const count = Number(result.part_count || 1);
+      toast(
+        count > 1
+          ? ui(`Mensagem para ${station.callsign} colocada na fila em ${count} partes.`, `Message to ${station.callsign} queued in ${count} parts.`)
+          : ui(`Mensagem para ${station.callsign} colocada na fila.`, `Message to ${station.callsign} queued.`),
+        'ok'
+      );
+      void loadMessages({ scrollToNewest:false });
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('.station-list-message-button');
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openStationQuickMessage(button.dataset.callsign || '');
+  });
+
+  $('#stationQuickMessageSend')?.addEventListener('click', event => {
+    event.preventDefault();
+    void sendStationQuickMessage();
+  });
+  $('#stationQuickMessageText')?.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void sendStationQuickMessage();
+    }
+  });
+  $('#stationQuickReuseLast')?.addEventListener('click', () => {
+    const input = $('#stationQuickMessageText');
+    if (!input) return;
+    input.value = state.stationLastQuickMessage || '';
+    input.focus();
+  });
+  $('#stationQuickMessageClose')?.addEventListener('click', () => {
+    $('#stationQuickMessagePanel')?.classList.add('hidden');
+  });
+
+  const stationExcludeToggle = $('#stationExcludeNonMessageable');
+  if (stationExcludeToggle) stationExcludeToggle.checked = state.stationExcludeNonMessageable;
+  stationExcludeToggle?.addEventListener('change', () => {
+    state.stationExcludeNonMessageable = stationExcludeToggle.checked;
+    localStorage.setItem('pt2vhf_station_exclude_nonmessageable', state.stationExcludeNonMessageable ? '1' : '0');
+    renderStations();
+  });
+
+  const stationSortMode = $('#stationSortMode');
+  if (stationSortMode) stationSortMode.value = state.sort.stations.key;
+  stationSortMode?.addEventListener('change', () => {
+    const key = stationSortMode.value || 'last_heard';
+    state.sort.stations = {
+      key,
+      type: key === 'distance_km' ? 'number' : 'text',
+      dir: key === 'last_heard' ? 'desc' : 'asc'
+    };
+    state.stationDisplayOrder = [];
+    renderStations();
+  });
 
   async function focusStationOnMap(callsign) {
     const call = normalizedCall(callsign);
@@ -5427,7 +5652,10 @@
   $('#clearStationsButton')?.addEventListener('click', clearAllStations);
   $('#clearTracklogsButton')?.addEventListener('click', clearMapTracklogs);
 
-  $('#stationFilter').addEventListener('input', debounce(() => loadStations({ scrollToNewest: true }), 250));
+  $('#stationFilter').addEventListener('input', debounce(() => {
+    state.stationDisplayOrder = [];
+    loadStations({ scrollToNewest: true });
+  }, 250));
 
   function calculateAprsPasscode(callsign) {
     const base = String(callsign || '').trim().toUpperCase().split('-')[0];
