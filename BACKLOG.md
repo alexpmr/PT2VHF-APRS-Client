@@ -565,3 +565,26 @@
   - Não bloquear a interface enquanto a imagem é consultada.
   - Preferir fontes públicas e estáveis, com identificação clara de origem quando apropriado.
 
+
+## Backlog — Cobertura RF em mapa de calor
+
+- Substituir os círculos individuais da camada de **Cobertura RF** por um **heatmap**.
+- Cada ponto de recepção RF deve contribuir para a intensidade visual da área.
+- Pontos próximos devem **se mesclar automaticamente**, formando manchas contínuas de cobertura.
+- O comportamento deve ser **dependente do zoom**:
+  - em zoom mais afastado, agrupar/mesclar mais os pontos, formando áreas amplas;
+  - em zoom mais próximo, reduzir o raio de influência para revelar detalhes locais;
+  - recalcular/redesenhar a camada quando o nível de zoom mudar.
+- A intensidade poderá considerar, quando disponível:
+  - quantidade de recepções;
+  - SNR;
+  - RSSI;
+  - período atualmente selecionado no mapa.
+- Áreas com maior densidade e/ou melhor qualidade RF devem aparecer mais intensas.
+- Evitar marcadores circulares individuais sobrepostos, reduzindo poluição visual.
+- Manter o filtro temporal e demais filtros já existentes da cobertura.
+- Não gerar qualquer tráfego adicional no APRS/rádio; usar exclusivamente os dados de recepção já registrados.
+- Preparar a arquitetura para permitir futuramente alternância entre:
+  - **Mapa de calor**
+  - **Pontos individuais**
+
