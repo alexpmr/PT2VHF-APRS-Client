@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.14": {
+        "title": "Backlogs consolidados: APRS explicado e relevo DEM sombreado",
+        "items": [
+            "Fecha integralmente os cinco backlogs consolidados: rota por mensagem, responsividade, bloqueio de interações sem suporte bidirecional, elevação/DEM e aba Sobre.",
+            "A aba Sobre passa a explicar explicitamente o que é APRS, incluindo posição, mensagens, telemetria, meteorologia, RF e APRS-IS.",
+            "A explicação de APRS acompanha o idioma selecionado em Português, English, Español e Français.",
+            "Relevo com corte passa a aplicar hillshade calculado diretamente sobre as altitudes do DEM Terrarium, preservando o corte por cota e a opacidade configurável.",
+            "Mantém slider vertical, máximo padrão de 3.000 m, limite configurável de 100 a 9.000 m e persistência da última cota, máximo e opacidade.",
+            "Mantém Automático / APRS-IS / RF direto / RF personalizado por mensagem e as regras de baixa altura para 1360×768 e 1280×720.",
+            "Mantém desabilitadas Mensagem, queries, Ping/ACK e Trace para alvos identificados como não interativos sem evidência de capacidade bidirecional.",
+            "Preserva o hotfix de migração SQLite da v1.8.12 e todas as funcionalidades da série 1.8.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.13": {
         "title": "Consolidação dos backlogs de mensagens, responsividade, interação e mapa",
         "items": [
