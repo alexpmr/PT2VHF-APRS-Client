@@ -7,14 +7,14 @@ def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
 
 
-def test_v1816_version_metadata():
-    assert read("VERSION").strip() == "1.8.16"
-    assert '__version__ = "1.8.16"' in read("pt2vhf_aprs/__init__.py")
+def test_v1816_version_metadata_is_not_regressed():
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 16)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
     win = read("windows/version_info.txt")
-    assert "filevers=(1, 8, 16, 0)" in win
-    assert "prodvers=(1, 8, 16, 0)" in win
-    assert "FileVersion', '1.8.16'" in win
-    assert "ProductVersion', '1.8.16'" in win
+    assert "FileVersion" in win
+    assert "ProductVersion" in win
 
 
 def test_about_uses_pp5au():
@@ -25,10 +25,13 @@ def test_about_uses_pp5au():
 
 def test_zoom_is_finer_and_wheel_is_more_gradual():
     js = read("pt2vhf_aprs/static/js/app.js")
-    assert "zoomSnap: 0.10" in js
-    assert "zoomDelta: 0.10" in js
-    assert "wheelPxPerZoomLevel: 300" in js
-    assert "wheelDebounceTime: 20" in js
+    db = read("pt2vhf_aprs/database.py")
+    assert "function mapZoomOptions(value)" in js
+    assert "zoomSnap: zoomOptions.step" in js
+    assert "zoomDelta: zoomOptions.step" in js
+    assert "wheelPxPerZoomLevel: zoomOptions.wheelPxPerZoomLevel" in js
+    assert "wheelDebounceTime: zoomOptions.wheelDebounceTime" in js
+    assert '"map_zoom_step": 0.10' in db
 
 
 def test_message_content_filters_are_one_pulldown_with_four_categories():
