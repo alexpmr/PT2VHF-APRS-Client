@@ -292,7 +292,7 @@ def init_db() -> None:
                 id INTEGER PRIMARY KEY CHECK (id = 1),
                 latitude REAL NOT NULL DEFAULT -14.2350,
                 longitude REAL NOT NULL DEFAULT -51.9253,
-                zoom INTEGER NOT NULL DEFAULT 4,
+                zoom REAL NOT NULL DEFAULT 4,
                 updated_at TEXT NOT NULL
             );
 
@@ -868,11 +868,11 @@ def get_map_state() -> dict[str, Any]:
         return dict(row)
 
 
-def save_map_state(latitude: float, longitude: float, zoom: int) -> None:
+def save_map_state(latitude: float, longitude: float, zoom: float) -> None:
     with connection() as conn:
         conn.execute(
             "UPDATE map_state SET latitude=?, longitude=?, zoom=?, updated_at=? WHERE id=1",
-            (float(latitude), float(longitude), int(zoom), utc_now_iso()),
+            (float(latitude), float(longitude), float(zoom), utc_now_iso()),
         )
 
 
