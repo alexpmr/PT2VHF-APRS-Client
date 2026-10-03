@@ -195,6 +195,17 @@
   - Considerar opção de **“Executar agora”** para testar uma mensagem agendada sem alterar a próxima ocorrência.
   - Respeitar fuso horário local do sistema e tratar corretamente mudança de data/horário.
   - Incluir testes de regressão para envio único, recorrência semanal, reinício do Client, rota indisponível e prevenção de duplicidade.
+  - Permitir também **destinos múltiplos e tipos APRS diferentes**, mantendo o agendamento como uma única definição lógica:
+    - **Destino específico**: um único indicativo.
+    - **Lista/grupo de estações previamente informado**: vários indicativos configurados pelo usuário, com envio individual para cada estação.
+    - **Boletim APRS**: envio como bulletin/announcement conforme o formato suportado pelo Client.
+    - **Grupo APRS**: envio destinado a um grupo configurado.
+  - Para listas de estações, permitir salvar e nomear conjuntos reutilizáveis de destinatários, por exemplo **“Grupo local”**, **“APRS Thursday”** ou **“Amigos”**.
+  - Em envios recorrentes para múltiplos destinos, controlar cada destinatário separadamente para evitar duplicidades e permitir visualizar sucesso/falha por estação.
+  - Aplicar intervalo configurável entre envios para listas grandes, evitando rajadas excessivas e respeitando limitações operacionais de APRS/RF.
+  - Permitir escolher se uma falha em um destinatário deve **continuar com os demais** ou interromper aquela execução.
+  - Registrar no histórico o resultado de cada destinatário, além de um resumo da execução do agendamento.
+  - As mesmas opções de recorrência devem funcionar para **destino individual, lista de estações, boletim e grupo APRS**.
   - Caso de uso informado por **PY2FDG - Fábio Guilherme (Itapetininga/SP)**: deixar previamente configurada uma participação no **APRS Thursday** para ser enviada automaticamente mesmo quando não for possível estar junto ao rádio no horário.
 
 
