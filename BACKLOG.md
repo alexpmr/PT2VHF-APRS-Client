@@ -121,6 +121,15 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens — filtros de exibição**
+  - Na aba **Mensagens**, adicionar opções independentes para **mostrar/ocultar boletins** e **mostrar/ocultar mensagens**.
+  - Usar comportamento e apresentação consistentes com o filtro já existente de **telemetria**.
+  - Permitir combinar os filtros livremente, sem excluir ou alterar os dados armazenados; o efeito deve ser apenas visual.
+  - Persistir a preferência do usuário entre execuções.
+  - Atualizar imediatamente a lista ao alterar qualquer opção, sem exigir recarregar a aba.
+
+
+
 - **Sobre — corrigir indicativo de colaborador**
   - Alterar o indicativo exibido na aba **Sobre** de **PU5AAG** para **PP5UA**.
   - Manter o nome associado ao colaborador e revisar referências duplicadas no projeto para evitar divergências.
