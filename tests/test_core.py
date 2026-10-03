@@ -1835,7 +1835,7 @@ def test_v1717_map_ver_groups_by_family_not_callsign():
     assert "children:" not in grouped
 
     objects_start = js.index("function objectMapNodes(objects)")
-    objects_end = js.index("function renderMapViewTree", objects_start)
+    objects_end = js.index("function sharedStationViewNodes", objects_start)
     object_nodes = js[objects_start:objects_end]
     assert "source_callsign" not in object_nodes
     assert "object.name" not in object_nodes
@@ -1862,12 +1862,13 @@ def test_v1718_partial_tree_selection_keeps_parent_enabled():
     root = Path(__file__).resolve().parent.parent
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
 
-    start = js.index("function syncMapViewTreeCheckboxes()")
-    end = js.index("async function refreshMapFromViewTree()", start)
+    start = js.index("function syncSingleViewTreeCheckboxes(")
+    end = js.index("function syncMapViewTreeCheckboxes()", start)
     block = js[start:end]
 
     assert "own.checked = some;" in block
     assert "own.indeterminate = some && !all;" in block
+    assert "if (updateState)" in block
     assert "setMapViewState(own.dataset.mapStateKey, some)" in block
     assert "setMapViewFilter(own.dataset.mapFilterKey, some)" in block
 
@@ -1876,6 +1877,7 @@ def test_v1718_partial_tree_selection_keeps_parent_enabled():
     change_start = js.index("tree.addEventListener('change'")
     change_end = js.index("const selectAllButton = $('#mapViewSelectAllButton')", change_start)
     change_block = js[change_start:change_end]
+    assert "syncSingleViewTreeCheckboxes(tree, true);" in change_block
     assert "syncMapViewTreeCheckboxes();" in change_block
     assert "for (const descendant" in change_block
 
