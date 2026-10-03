@@ -2210,6 +2210,7 @@
       };
       apply(input);
       for (const descendant of node?.querySelectorAll(':scope > .map-view-children .map-view-checkbox') || []) apply(descendant);
+      syncSingleViewTreeCheckboxes(tree, true);
       syncMapViewTreeCheckboxes();
       renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : state.stations);
       void refreshMapFromViewTree();
