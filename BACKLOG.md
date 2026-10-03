@@ -134,6 +134,13 @@
 
 ## Pendências para próximas versões
 
+- **Sobre — corrigir indicativo de colaborador para PP5AU**
+  - Alterar o indicativo exibido para **Adriano** na aba **Sobre** de **PP5UA** para **PP5AU**.
+  - Revisar referências associadas no projeto, testes, documentação e notas de versão futuras para evitar divergências.
+  - Não alterar o nome do colaborador.
+
+
+
 - **TNC / RF — Kenwood TM-D700 conecta pela serial, mas não recebe nem transmite (relato de PU2MUS - Marco)**
   - **Diagnóstico incorporado na v1.8.15:** o Client agora separa serial aberta, bytes recebidos, frame KISS reconhecido, AX.25 válido e TX entregue ao transporte.
   - **Ainda pendente:** confirmar em hardware real qual protocolo/configuração do TM-D700 em modo PKT entrega RX/TX compatível com o Client e implementar qualquer adaptação específica necessária sem ativar o digipeater interno.
