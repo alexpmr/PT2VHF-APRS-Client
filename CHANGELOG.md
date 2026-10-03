@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.8.15 - 2026-10-03
+
+- **Sobre:** corrige o indicativo de Adriano para **PP5UA**.
+- **Mensagens:** adiciona filtros persistentes e independentes para **Mostrar mensagens**, **Mostrar boletins** e **Ocultar telemetria**.
+- **Mapa:** habilita zoom fracionário mais gradual com passos de **0,25**, rolagem mais suave e persistência do nível intermediário no SQLite.
+- **Estações:** adiciona ordenação explícita por **Ícone / tipo**, mantém a ordem visual durante atualizações e acrescenta estações novas ao final da lista corrente.
+- **Mensagem rápida pela lista:** permite selecionar uma estação e enviar mensagem sem sair da aba Estações, mantendo texto, filtros e posição de rolagem para o próximo destinatário.
+- **Proteção de destinatários:** opção para evitar envio rápido a estações identificadas como **DMR, D-Star ou SSIDs -12 a -15**, mantendo aviso visual.
+- **Mapa × Estações:** a lista de Estações passa a respeitar os mesmos filtros do menu **Ver**, inclusive DMR/D-Star.
+- **TNC/RF:** passa a diferenciar transporte serial aberto de RX KISS/AX.25 efetivo e TX entregue ao transporte.
+- O diagnóstico TNC registra **bytes RX/TX**, **frames KISS**, **frames AX.25 inválidos**, último erro RX e estados como aguardando, bytes sem KISS e RX ativo.
+- **Kenwood TM-D700:** documenta o uso relatado em **modo PKT** e deixa explícito que o Client não deve forçar o modo TNC/digipeater interno; entregar bytes à serial não é tratado como confirmação de emissão RF.
+- Mantém em aberto a validação física específica do TM-D700 em PKT caso seja necessária adaptação de protocolo/configuração.
+- Inclui suíte de regressão e validador de produção da v1.8.15.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.14 - 2026-10-02
 
 - Fecha integralmente os cinco backlogs consolidados na linha 1.8.
