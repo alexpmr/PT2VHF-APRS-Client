@@ -151,6 +151,24 @@
 
 ## Pendências para próximas versões
 
+- **TNC / RF — tornar mais clara a indicação de serial conectada sem KISS operacional**
+  - Relato/indicação de usuário na v1.8.16: a interface mostra **“Serial conectada”** no topo e no quadro Transporte, enquanto **RX KISS/AX.25 permanece em 0** e o diagnóstico informa que há bytes chegando, porém nenhum frame KISS válido foi reconhecido.
+  - Evitar que **“Serial conectada”** seja interpretado como **TNC/RF operacional**.
+  - Quando a porta estiver aberta, houver bytes recebidos, mas nenhum frame KISS válido, exibir estado mais explícito, por exemplo **“Serial conectada — sem KISS”** ou **“Protocolo/KISS não reconhecido”**.
+  - Refletir esse estado também no indicador compacto do cabeçalho, não apenas no diagnóstico detalhado da aba TNC / RF.
+  - Diferenciar visualmente pelo menos:
+    - **Desconectado**
+    - **Serial conectada — aguardando dados**
+    - **Serial conectada — bytes sem KISS**
+    - **RX KISS/AX.25 ativo**
+    - **Erro/protocolo incompatível**
+  - Não usar cor/estado de sucesso pleno enquanto ainda não houver frame KISS/AX.25 válido recebido.
+  - Manter claro que **porta aberta ≠ TNC operacional ≠ RF transmitido/recebido**.
+  - Preservar o detalhamento de bytes recebidos, frames KISS, AX.25 inválidos e último erro já existente.
+  - Incluir teste de regressão para o cenário observado na captura: **serial conectada + bytes RX > 0 + frames KISS = 0**.
+
+
+
 - **TNC / RF — Kenwood TM-D700 conecta pela serial, mas não recebe nem transmite (relato de PU2MUS - Marco)**
   - **Diagnóstico incorporado na v1.8.15:** o Client agora separa serial aberta, bytes recebidos, frame KISS reconhecido, AX.25 válido e TX entregue ao transporte.
   - **Ainda pendente:** confirmar em hardware real qual protocolo/configuração do TM-D700 em modo PKT entrega RX/TX compatível com o Client e implementar qualquer adaptação específica necessária sem ativar o digipeater interno.
