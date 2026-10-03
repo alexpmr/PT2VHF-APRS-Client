@@ -1015,6 +1015,42 @@ html[data-theme="light"] .resource-critical-row strong { color:#a92831; }
   opacity: .55;
   cursor: not-allowed;
 }
+.message-content-filter-control > .btn,
+.shared-view-control > .btn {
+  min-height: 32px;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+.message-content-filter-control > .btn.active-filter,
+.shared-view-control > .btn.active-filter {
+  border-color: var(--accent);
+  background: rgba(59,166,255,.16);
+  color: #d8efff;
+}
+.message-content-filter-menu {
+  width: min(360px, calc(100vw - 16px));
+  max-width: 360px;
+  padding: 0;
+  overflow: hidden;
+}
+.message-content-filter-options {
+  display: grid;
+  gap: 2px;
+  padding: 7px;
+}
+.message-content-filter-options label {
+  min-height: 34px;
+  padding: 5px 8px;
+}
+#messageContentClearAllButton,
+#stationViewClearAllButton,
+#messageViewClearAllButton {
+  color: var(--warn);
+}
+html[data-theme="light"] .message-content-filter-control > .btn.active-filter,
+html[data-theme="light"] .shared-view-control > .btn.active-filter {
+  color: #174c70;
+}
 #stationsTable tbody .station-row {
   cursor: pointer;
 }
