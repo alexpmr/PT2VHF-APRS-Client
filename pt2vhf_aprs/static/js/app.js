@@ -102,6 +102,7 @@
     userLocationAccuracy: null,
     messages: [],
     stations: [],
+    stationCatalog: [],
     stationDisplayOrder: [],
     stationQuickSelectedCallsign: '',
     stationLastQuickMessage: localStorage.getItem('pt2vhf_station_last_quick_message') || '',
@@ -2014,7 +2015,7 @@
     ];
 
     tree.innerHTML = nodes.map(node => mapViewNodeHtml(node, 0)).join('');
-    renderAuxViewTrees(stations);
+    renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : stations);
     syncMapViewTreeCheckboxes();
   }
 
@@ -2050,7 +2051,7 @@
       if (key) setMapViewFilter(key, value);
     }
     syncMapViewTreeCheckboxes();
-    renderAuxViewTrees(state.stations);
+    renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : state.stations);
     void refreshMapFromViewTree();
   }
 
@@ -2060,7 +2061,7 @@
     await loadMapData();
     if (!state.topologyEnabled) clearTopologyLines();
     if (state.stations.length) {
-      renderAuxViewTrees(state.stations);
+      renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : state.stations);
       renderStations();
       renderMessages();
     }
@@ -2177,7 +2178,7 @@
       apply(input);
       for (const descendant of node?.querySelectorAll(':scope > .map-view-children .map-view-checkbox') || []) apply(descendant);
       syncMapViewTreeCheckboxes();
-      renderAuxViewTrees(state.stations);
+      renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : state.stations);
       void refreshMapFromViewTree();
     });
 
@@ -4257,8 +4258,9 @@
     const calls = [normalizedCall(message?.from_call), normalizedCall(message?.to_call)]
       .filter(call => call && call !== own && !/^BLN[A-Z0-9]{0,6}$/.test(call));
     const unique = [...new Set(calls)];
+    const catalog = state.stationCatalog.length ? state.stationCatalog : state.stations;
     return unique
-      .map(call => state.stations.find(station => normalizedCall(station.callsign) === call))
+      .map(call => catalog.find(station => normalizedCall(station.callsign) === call))
       .filter(Boolean);
   }
 
@@ -5620,8 +5622,18 @@
       const viewport = $('.stations-table-wrap');
       const previousScrollTop = viewport?.scrollTop || 0;
       const filter = $('#stationFilter').value.trim();
-      state.stations = await api(`/api/stations?filter=${encodeURIComponent(filter)}`);
-      renderAuxViewTrees(state.stations);
+      if (filter) {
+        const [visibleRows, catalogRows] = await Promise.all([
+          api(`/api/stations?filter=${encodeURIComponent(filter)}`),
+          api('/api/stations?filter=')
+        ]);
+        state.stations = visibleRows;
+        state.stationCatalog = catalogRows;
+      } else {
+        state.stations = await api('/api/stations?filter=');
+        state.stationCatalog = state.stations;
+      }
+      renderAuxViewTrees(state.stationCatalog);
       renderStations();
       renderMessages();
       if (viewport) {
