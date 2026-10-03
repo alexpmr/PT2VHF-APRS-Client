@@ -17,7 +17,7 @@ checks = {
         'class="connection-control disconnected"',
         'id="aboutContributorsTitle"',
         'id="aboutContributorsText"',
-        "PU5AAG",
+        "PP5UA",
         "PY4EI",
         "PU2MUS",
         "PP5PK",
@@ -83,7 +83,7 @@ if 'id="connectionStatus"' in html:
     raise SystemExit("v1.8.10 validation failed: legacy separate connectionStatus still present")
 if html.count('id="connectButton"') != 1:
     raise SystemExit("v1.8.10 validation failed: expected one unified connectButton")
-for callsign in ("PU5AAG", "PY4EI", "PU2MUS", "PP5PK", "PT2YW", "PT2PAG"):
+for callsign in ("PP5UA", "PY4EI", "PU2MUS", "PP5PK", "PT2YW", "PT2PAG"):
     if html.count(callsign) != 1:
         raise SystemExit(f"v1.8.10 validation failed: contributor {callsign} missing or duplicated")
 
