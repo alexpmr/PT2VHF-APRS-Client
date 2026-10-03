@@ -1,33 +1,49 @@
-# PT2VHF APRS Client - v1.8.15
+# PT2VHF APRS Client - v1.8.16
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.15** amplia a operação diária: adiciona filtros independentes em Mensagens, zoom fracionário, fluxo rápido de mensagens pela lista de Estações, sincronização dos filtros Mapa/Estações e diagnóstico TNC/RF que diferencia porta serial aberta de tráfego KISS/AX.25 efetivo.
+A **v1.8.16** consolida filtros compartilhados entre Mapa, Estações e Mensagens, reúne o filtro de conteúdo de Mensagens em um menu único, refina o zoom para passos de 0,10 e corrige o indicativo de Adriano para PP5AU.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.15**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.16**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_Setup_x64_v1.8.15.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_Portable_x64_v1.8.15.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_Setup_ARM64_v1.8.15.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_Portable_ARM64_v1.8.15.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Setup_x64_v1.8.16.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Portable_x64_v1.8.16.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Setup_ARM64_v1.8.16.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Portable_ARM64_v1.8.16.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_x86_64_v1.8.15.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/pt2vhf-aprs-client_1.8.15_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_Linux_x86_64_v1.8.15.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_x86_64_v1.8.16.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/pt2vhf-aprs-client_1.8.16_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Linux_x86_64_v1.8.16.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_macOS_arm64_v1.8.15.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_macOS_x86_64_v1.8.15.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_macOS_arm64_v1.8.16.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_macOS_x86_64_v1.8.16.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.15/PT2VHF_APRS_Client_Manual_v1.8.15.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Manual_v1.8.16.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.16
+
+- **Sobre:** Adriano corrigido para **PP5AU**.
+- **Mapa:** zoom refinado para passos de **0,10**, com roda do mouse mais gradual.
+- **Mensagens → Conteúdo:** novo menu pulldown com **Mensagens, Boletins, Grupos e Telemetria**.
+- O menu Conteúdo inclui **Marcar tudo** e **Desmarcar tudo**, aplica o filtro imediatamente e persiste a seleção.
+- **Grupos:** boletins de grupo podem ser mostrados/ocultados separadamente dos boletins gerais.
+- **Estações → Ver:** mesma árvore de tipos/categorias usada no Mapa, incluindo **Selecionar tudo / Remover tudo**.
+- **Mensagens → Ver:** mesma árvore compartilhada, filtrando mensagens conforme as estações envolvidas.
+- **Sincronização:** Mapa, Estações e Mensagens usam o mesmo estado central do menu **Ver**.
+- Mensagens sem classificação segura de estação permanecem visíveis para evitar ocultação indevida.
+- O catálogo completo de estações é mantido separado do filtro textual da aba Estações.
+- Os botões **Ver** e **Conteúdo** indicam quando há filtros ativos.
+- Mantém o diagnóstico TNC/RF da v1.8.15 e a pendência de validação física do **Kenwood TM-D700 em PKT**.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.8.15
 
