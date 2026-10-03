@@ -2093,6 +2093,114 @@
     void refreshMapFromViewTree();
   }
 
+  function bindFloatingMenu(buttonId, menuId, minWidth = 320) {
+    const button = document.getElementById(buttonId);
+    const menu = document.getElementById(menuId);
+    if (!button || !menu || button.dataset.popupBound === '1') return;
+    button.dataset.popupBound = '1';
+
+    const positionMenu = () => {
+      if (menu.classList.contains('hidden')) return;
+      const rect = button.getBoundingClientRect();
+      const margin = 6;
+      const width = Math.max(minWidth, menu.offsetWidth || minWidth);
+      const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+      const left = Math.min(Math.max(margin, rect.left), maxLeft);
+      const maxTop = Math.max(margin, window.innerHeight - Math.min(menu.offsetHeight || 520, 620) - margin);
+      const top = Math.min(rect.bottom + 5, maxTop);
+      menu.style.left = `${Math.round(left)}px`;
+      menu.style.top = `${Math.round(top)}px`;
+    };
+
+    const closeMenu = () => {
+      menu.classList.add('hidden');
+      button.setAttribute('aria-expanded', 'false');
+    };
+
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const willOpen = menu.classList.contains('hidden');
+      document.querySelectorAll('.map-items-menu:not(.hidden)').forEach(other => {
+        if (other !== menu) other.classList.add('hidden');
+      });
+      document.querySelectorAll('[aria-haspopup="true"][aria-expanded="true"]').forEach(otherButton => {
+        if (otherButton !== button) otherButton.setAttribute('aria-expanded', 'false');
+      });
+      if (willOpen) {
+        menu.classList.remove('hidden');
+        button.setAttribute('aria-expanded', 'true');
+        requestAnimationFrame(positionMenu);
+      } else closeMenu();
+    });
+
+    menu.addEventListener('click', event => event.stopPropagation());
+    document.addEventListener('click', closeMenu);
+    window.addEventListener('resize', positionMenu);
+    window.addEventListener('scroll', positionMenu, true);
+  }
+
+  function bindSharedViewTree(treeId, selectAllId, clearAllId) {
+    const tree = document.getElementById(treeId);
+    if (!tree || tree.dataset.sharedBound === '1') return;
+    tree.dataset.sharedBound = '1';
+
+    tree.addEventListener('click', event => {
+      const expand = event.target.closest('[data-map-tree-expand]');
+      if (!expand) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const id = String(expand.dataset.mapTreeExpand || '');
+      const node = expand.closest('.map-view-node');
+      const children = node?.querySelector(':scope > .map-view-children');
+      if (!children) return;
+      const willExpand = children.classList.contains('hidden');
+      children.classList.toggle('hidden', !willExpand);
+      expand.textContent = willExpand ? '▾' : '▸';
+      expand.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+      if (willExpand) state.mapViewExpanded.add(id);
+      else state.mapViewExpanded.delete(id);
+      localStorage.setItem('pt2vhf_map_view_expanded', JSON.stringify([...state.mapViewExpanded]));
+    });
+
+    tree.addEventListener('change', event => {
+      const input = event.target.closest('.map-view-checkbox');
+      if (!input) return;
+      const value = !!input.checked;
+      const node = input.closest('.map-view-node');
+      const apply = target => {
+        if (target.dataset.mapStateKey) setMapViewState(target.dataset.mapStateKey, value);
+        if (target.dataset.mapFilterKey) setMapViewFilter(target.dataset.mapFilterKey, value);
+        target.checked = value;
+        target.indeterminate = false;
+      };
+      apply(input);
+      for (const descendant of node?.querySelectorAll(':scope > .map-view-children .map-view-checkbox') || []) apply(descendant);
+      syncMapViewTreeCheckboxes();
+      renderAuxViewTrees(state.stations);
+      void refreshMapFromViewTree();
+    });
+
+    document.getElementById(selectAllId)?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      setAllSharedStationView(true, tree);
+    });
+    document.getElementById(clearAllId)?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      setAllSharedStationView(false, tree);
+    });
+  }
+
+  function setupSharedFilterMenus() {
+    bindFloatingMenu('messageContentFilterButton', 'messageContentFilterMenu', 300);
+    bindFloatingMenu('stationViewButton', 'stationViewMenu', 360);
+    bindFloatingMenu('messageViewButton', 'messageViewMenu', 360);
+    bindSharedViewTree('stationViewTree', 'stationViewSelectAllButton', 'stationViewClearAllButton');
+    bindSharedViewTree('messageViewTree', 'messageViewSelectAllButton', 'messageViewClearAllButton');
+  }
+
   function addMapControls() {
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
     state.topologyHours = statisticsPeriodValue(state.topologyHours);
