@@ -121,6 +121,20 @@
 
 ## Pendências para próximas versões
 
+- **TNC / RF — Kenwood TM-D700 conecta pela serial, mas não recebe nem transmite (relato de PU2MUS - Marco)**
+  - Cenário relatado: o **Kenwood TM-D700** conecta pela porta serial e o Client indica estado **Conectado**, porém pacotes recebidos no rádio (ex.: de um **TH-D75**) não entram no PT2VHF APRS Client, mesmo com a portadora sendo percebida pelo equipamento.
+  - No mesmo cenário, não há evidência de transmissão efetiva de pacotes APRS pelo rádio a partir do Client.
+  - O TM-D700 está sendo usado em **modo PKT**. **Não assumir que o rádio deve ser colocado em modo TNC**, pois nesse equipamento esse modo passa a acionar o TNC/digipeater interno e altera o comportamento operacional desejado.
+  - Diferenciar claramente **porta serial aberta/conectada** de **TNC/RF operacional**: o estado “Conectado” só deve representar transporte serial disponível; a interface deve indicar separadamente se houve RX de frame válido e se o caminho de TX foi confirmado.
+  - Adicionar diagnóstico de RX mostrando bytes recebidos, frames reconhecidos/descartados, erros de framing/protocolo e horário do último frame válido.
+  - Adicionar diagnóstico de TX mostrando tentativa de envio, bytes/frame entregues à serial, eventual resposta/erro do equipamento e horário da última transmissão solicitada.
+  - Revisar parâmetros e protocolo usados com o TM-D700 em **PKT**, incluindo baud rate, modo de framing esperado e comandos de inicialização necessários, sem interferir no digipeater interno.
+  - Criar indicação visual como **Serial conectada / RX aguardando / RX ativo / TX aguardando / TX ativo / protocolo incompatível** para evitar falso positivo de funcionamento.
+  - Incluir teste/simulador de regressão para serial conectada sem frames e para RX/TX válidos, preservando compatibilidade com os TNCs KISS já suportados.
+  - Quando possível, permitir captura de diagnóstico suficiente para comparar o que chega da serial com o que o rádio está recebendo pelo ar.
+
+
+
 - **Estações — fluxo de mensagens em lote e filtros consistentes (sugestão de PU2MUS - Marco)**
   - Na aba/lista de **Estações**, permitir **ordenar e agrupar por tipo/ícone APRS**, facilitando localizar, por exemplo, somente estações móveis.
   - Ao selecionar uma estação, oferecer acesso direto à ação **Enviar mensagem**, sem exigir mudança de tela ou perda da posição atual da lista.
