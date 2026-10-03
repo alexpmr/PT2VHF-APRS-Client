@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.8.16 - 2026-10-03
+
+- **Sobre:** corrige o indicativo de Adriano para **PP5AU**.
+- **Mapa:** refina o zoom para passos de **0,10**, com `zoomSnap=0.10`, `zoomDelta=0.10`, `wheelPxPerZoomLevel=300` e `wheelDebounceTime=20`.
+- **Mensagens → Conteúdo:** substitui os controles separados por um único menu pulldown com **Mensagens, Boletins, Grupos e Telemetria**.
+- O menu Conteúdo inclui **Marcar tudo** e **Desmarcar tudo**, aplica as mudanças imediatamente e persiste as preferências.
+- **Boletins de grupo** passam a ser controlados separadamente dos boletins gerais.
+- **Estações → Ver:** adiciona a árvore de categorias/tipos de estação usada pelo Mapa, com **Selecionar tudo / Remover tudo**.
+- **Mensagens → Ver:** adiciona a mesma árvore de tipos de estação e filtra mensagens conforme as estações envolvidas.
+- **Mapa, Estações e Mensagens** usam o mesmo estado central de filtros, evitando divergência entre as abas.
+- Mensagens cuja estação não possa ser classificada com segurança permanecem visíveis por padrão.
+- Um catálogo completo de estações é mantido separadamente do filtro textual da aba Estações, evitando que a busca local altere a classificação das Mensagens.
+- Os botões **Ver** e **Conteúdo** indicam visualmente quando existem filtros ativos.
+- Inclui regressões específicas para zoom, filtros de conteúdo, menus compartilhados e PP5AU.
+- Mantém o diagnóstico TNC/RF da v1.8.15 e a pendência de validação física do Kenwood TM-D700 em modo PKT.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.15 - 2026-10-03
 
 - **Sobre:** corrige o indicativo de Adriano para **PP5AU**.
