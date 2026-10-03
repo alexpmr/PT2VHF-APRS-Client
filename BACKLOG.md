@@ -588,3 +588,20 @@
   - **Mapa de calor**
   - **Pontos individuais**
 
+
+## Backlog — Zoom do mapa com passos intermediários
+
+- Reduzir o tamanho do **step de zoom** do mapa, permitindo níveis intermediários entre os níveis atuais.
+- Objetivo: tornar o zoom mais suave e permitir enquadramento mais preciso, especialmente para análise de cobertura RF, tracklogs, topologia e objetos AIS.
+- Preferir **zoom fracionário**, quando suportado pelo motor de mapa.
+- Valor inicial recomendado:
+  - `zoomDelta`: **0,25**;
+  - `zoomSnap`: **0,05** ou **0,10**.
+- Aplicar o mesmo comportamento a:
+  - botões `+` / `-`;
+  - roda do mouse;
+  - gestos de zoom, quando aplicável;
+  - controles programáticos que alterem o zoom.
+- Manter compatibilidade com todos os tipos de mapa-base e overlays.
+- Validar desempenho do heatmap de Cobertura RF com níveis fracionários de zoom.
+
