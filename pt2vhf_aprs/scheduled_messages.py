@@ -242,8 +242,14 @@ class ScheduledMessageService:
             if index + 1 < len(items) and not self._stop.is_set():
                 self._stop.wait(interval)
 
+        success_detail = ", ".join(successes)
+        failure_detail = " | ".join(failures)
         summary = f"{len(successes)} sucesso(s), {len(failures)} falha(s)"
-        error = " | ".join(failures)
+        if success_detail:
+            summary += f" · OK: {success_detail}"
+        if failure_detail:
+            summary += f" · Falhas: {failure_detail}"
+        error = failure_detail
         ok = not failures
         diag.log_event(
             "scheduled_message_executed",
