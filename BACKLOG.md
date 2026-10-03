@@ -121,6 +121,20 @@
 
 ## Pendências para próximas versões
 
+- **Estações — fluxo de mensagens em lote e filtros consistentes (sugestão de PU2MUS - Marco)**
+  - Na aba/lista de **Estações**, permitir **ordenar e agrupar por tipo/ícone APRS**, facilitando localizar, por exemplo, somente estações móveis.
+  - Ao selecionar uma estação, oferecer acesso direto à ação **Enviar mensagem**, sem exigir mudança de tela ou perda da posição atual da lista.
+  - Após enviar uma mensagem, **manter a lista, ordenação, filtros, rolagem e estação de referência** exatamente como estavam, permitindo seguir para a próxima estação.
+  - Permitir **reutilizar/copiar rapidamente o texto da mensagem anterior** para o próximo destinatário, útil para mensagens repetitivas como saudações ou avisos.
+  - Enquanto o usuário percorre a lista, **não reordenar automaticamente as estações já exibidas** por causa de novas recepções; novas estações devem ser acrescentadas ao final da visualização corrente, evitando que o alvo "ande" na lista.
+  - Prever opção de **filtrar/excluir estações que não devem receber mensagem APRS convencional**, especialmente estações identificadas como **DMR**, **D-STAR** ou com SSIDs **-12, -13, -14 e -15**, mesmo quando utilizarem ícone de estação móvel.
+  - Sempre que possível, sinalizar visualmente esses casos na lista para ajudar a identificar configuração/ícone potencialmente inadequado e evitar envio acidental.
+  - Corrigir a integração com o menu **Ver**: ao ocultar categorias como **D-STAR** e **DMR**, elas devem desaparecer também da **lista de Estações**, e não somente do mapa.
+  - Os filtros da lista e do mapa devem permanecer sincronizados, salvo quando houver uma opção explícita para filtragem independente.
+  - Preservar desempenho com listas grandes e atualização contínua de estações.
+
+
+
 - **Mapa — zoom mais gradual**
   - Aumentar a granularidade do zoom do mapa, principalmente ao usar a **roda do mouse**, permitindo níveis intermediários entre o enquadramento atual muito próximo e muito afastado.
   - Ajustar o comportamento do Leaflet para aceitar **passos fracionários de zoom** quando suportado, em vez de saltos inteiros excessivamente grandes.
