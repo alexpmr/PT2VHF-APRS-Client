@@ -134,6 +134,24 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens — menu suspenso unificado de filtros**
+  - Substituir os controles separados atuais por um **menu pulldown** de filtros na aba **Mensagens**.
+  - Dentro do menu, disponibilizar opções independentes para **mostrar/esconder**:
+    - **Mensagens**
+    - **Boletins**
+    - **Grupos**
+    - **Telemetria**
+  - Adicionar os botões **Marcar tudo** e **Desmarcar tudo** no próprio menu.
+  - Ao marcar/desmarcar qualquer item, aplicar o filtro **imediatamente**, sem exigir recarregar a aba.
+  - **Marcar tudo** deve habilitar todas as categorias; **Desmarcar tudo** deve ocultar todas as categorias.
+  - Manter os dados armazenados intactos; o filtro deve afetar somente a visualização.
+  - Persistir a seleção entre execuções do Client.
+  - Diferenciar corretamente **boletins gerais** de **boletins de grupo**, permitindo que **Grupos** seja controlado separadamente.
+  - Atualizar também a visualização agrupada por remetente/conversa para respeitar os mesmos filtros.
+  - Exibir no botão/menu um indicativo visual quando nem todas as categorias estiverem habilitadas.
+
+
+
 - **Mapa — refinar novamente o step do zoom**
   - O ajuste da v1.8.15 com `zoomSnap: 0.25`, `zoomDelta: 0.25` e `wheelPxPerZoomLevel: 120` ainda ficou pouco perceptível no uso real.
   - Reduzir os passos de zoom para **0,10**, usando inicialmente `zoomSnap: 0.10` e `zoomDelta: 0.10`.
