@@ -52,3 +52,19 @@
 .tnc-use-serial{min-height:27px;padding:3px 9px;font-size:10px}
 #tncSerialProfileHint{margin-top:9px;padding:8px 10px;border-left:3px solid var(--accent);background:rgba(59,166,255,.07);border-radius:5px}
 #tncSerialPort{font-family:Consolas,"Courier New",monospace}
+
+
+.tnc-transport-diagnostic{
+  margin:-4px 0 14px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--panel);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45
+}
+.tnc-transport-diagnostic strong{color:var(--text)}
+.tnc-transport-diagnostic[data-state="good"]{border-color:rgba(56,199,118,.45);background:rgba(56,199,118,.06)}
+.tnc-transport-diagnostic[data-state="warn"]{border-color:rgba(244,189,80,.48);background:rgba(244,189,80,.07);color:#e5d3aa}
+.tnc-transport-diagnostic[data-state="idle"]{opacity:.85}
