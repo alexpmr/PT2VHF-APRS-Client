@@ -151,6 +151,26 @@
 
 ## Pendências para próximas versões
 
+- **Configuração — step/sensibilidade do zoom do mapa (sugestão de PU2MUS - Marco)**
+  - Adicionar na aba **Configuração** um campo para o usuário ajustar a **granularidade/sensibilidade do zoom do mapa**.
+  - O ajuste deve controlar o comportamento hoje definido diretamente no Leaflet, incluindo principalmente o **step de zoom** e a sensibilidade da **roda do mouse**.
+  - Usar como referência os valores atuais da v1.8.16:
+    - `zoomSnap: 0.10`
+    - `zoomDelta: 0.10`
+    - `wheelPxPerZoomLevel: 300`
+    - `wheelDebounceTime: 20`
+  - Expor uma configuração simples para o usuário, preferencialmente com níveis compreensíveis como **Mais fino / Fino / Padrão / Rápido**, ou um controle numérico acompanhado de explicação clara.
+  - Se houver controle numérico, validar limites seguros para evitar zoom excessivamente sensível ou lento demais.
+  - Aplicar a alteração imediatamente ao mapa, sem exigir reiniciar o Client.
+  - Persistir o valor entre execuções.
+  - Disponibilizar opção **Restaurar padrão**.
+  - Manter coerência entre roda do mouse, touchpad e botões **+ / −**.
+  - Preservar os limites mínimo/máximo do mapa e compatibilidade com marcadores, tracklogs, radar, relevo/DEM, topologia e demais camadas.
+  - Incluir tradução PT-BR, EN, ES e FR e teste de regressão.
+  - Crédito da sugestão: **PU2MUS - Marco**.
+
+
+
 - **Mensagens — agendamento/programação de envio (sugestão de PY2FDG - Fábio Guilherme)**
   - Adicionar na aba **Mensagens** a possibilidade de criar **mensagens programadas/agendadas** para envio automático em data e horário definidos.
   - Permitir pelo menos dois modos:
