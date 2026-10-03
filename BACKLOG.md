@@ -134,6 +134,19 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens — adicionar menu Ver igual ao Mapa e Estações**
+  - Adicionar na aba **Mensagens** o mesmo menu **Ver** utilizado nas abas **Mapa** e **Estações**.
+  - Reutilizar as mesmas categorias e subcategorias de tipos de estação, com as ações **Selecionar tudo** e **Remover tudo**.
+  - Aplicar o filtro às mensagens exibidas conforme as estações envolvidas no tráfego, considerando remetente e destinatário quando houver identificação suficiente.
+  - Manter esse filtro separado do menu de conteúdo da aba Mensagens (**Mensagens / Boletins / Grupos / Telemetria**); os dois filtros devem funcionar em conjunto.
+  - Sincronizar o estado do menu **Ver** entre **Mapa, Estações e Mensagens**: qualquer alteração em uma das abas deve refletir nas demais.
+  - Reutilizar a mesma lógica e o mesmo estado central de filtros para evitar divergências entre as três telas.
+  - Aplicar as mudanças imediatamente, sem recarregar a aba.
+  - Preservar agrupamento por remetente/conversa, mensagens não lidas, favoritos, posição de rolagem e demais filtros já ativos.
+  - Quando uma mensagem não puder ser associada com segurança a uma categoria de estação, mantê-la visível por padrão ou tratá-la em uma categoria neutra/“Outros”, evitando ocultação indevida.
+
+
+
 - **Estações — adicionar menu Ver igual ao Mapa**
   - Adicionar na aba **Estações** o mesmo menu **Ver** disponível na aba **Mapa**.
   - Reutilizar a mesma estrutura de categorias e subcategorias do Mapa para filtrar quais tipos de estação aparecem na lista.
