@@ -260,22 +260,69 @@
 
   function setStatus(payload = {}) {
     const status = payload.status || payload;
+    const connected = !!status.connected;
+    const serial = connected && String(status.transport || '') === 'serial';
+    const rxState = String(status.rx_state || (connected ? 'waiting' : 'disconnected'));
+    const txState = String(status.tx_state || (connected ? 'waiting' : 'disconnected'));
+    const bytesRx = Number(status.transport_bytes_rx || 0);
+    const bytesTx = Number(status.transport_bytes_tx || 0);
+    const kissFrames = Number(status.kiss_frames_rx || 0);
+    const invalidFrames = Number(status.invalid_frames_rx || 0);
+
+    const transportLabel = !connected
+      ? tr('Desconectado')
+      : serial
+        ? tr('Serial conectada')
+        : tr('KISS TCP conectado');
+
+    let rxDetail = tr('Aguardando dados do TNC.');
+    let diagnosticState = 'waiting';
+    if (!connected) {
+      rxDetail = tr('Transporte desconectado.');
+      diagnosticState = 'idle';
+    } else if (rxState === 'active') {
+      rxDetail = `${tr('RX ativo')} · ${status.last_rx_at ? `${tr('Última')}: ${humanTime(status.last_rx_at)}` : ''}`;
+      diagnosticState = 'good';
+    } else if (rxState === 'bytes_without_kiss') {
+      rxDetail = `${bytesRx.toLocaleString()} ${tr('bytes recebidos pela serial, mas nenhum frame KISS válido foi reconhecido.')}`;
+      diagnosticState = 'warn';
+    } else if (rxState === 'invalid') {
+      rxDetail = `${kissFrames.toLocaleString()} KISS · ${invalidFrames.toLocaleString()} ${tr('frame(s) AX.25 inválido(s)')}${status.last_rx_error ? ` · ${status.last_rx_error}` : ''}`;
+      diagnosticState = 'warn';
+    }
+
+    let txDetail = tr('Nenhum frame entregue ao TNC nesta conexão.');
+    if (!connected) {
+      txDetail = tr('Transporte desconectado.');
+    } else if (txState === 'delivered') {
+      txDetail = `${bytesTx.toLocaleString()} ${tr('bytes entregues ao transporte')} · ${status.last_tx_at ? `${tr('Última')}: ${humanTime(status.last_tx_at)}` : ''} · ${tr('emissão RF não confirmada pelo Client')}`;
+    }
+
     const header = $('#tncHeaderStatus');
     if (header) {
-      header.className = `${statusClass(!!status.connected, !!status.tx_paused)} tnc-header-status`;
+      header.className = `${statusClass(connected, !!status.tx_paused)} tnc-header-status`;
       const text = header.querySelector('span:last-child');
-      if (text) text.textContent = status.connected ? (status.tx_paused ? `TNC · ${tr('PARAR TX')}` : `TNC ${tr('Ativado').toLowerCase()}`) : 'TNC offline';
-      header.title = [status.state, status.endpoint, status.last_error].filter(Boolean).join(' · ');
+      if (text) {
+        text.textContent = !connected
+          ? 'TNC offline'
+          : rxState === 'active'
+            ? `TNC · ${tr('RX ativo')}`
+            : serial
+              ? `TNC · ${tr('Serial conectada')}`
+              : `TNC ${tr('Ativado').toLowerCase()}`;
+      }
+      header.title = [status.state, status.endpoint, rxDetail, status.last_error].filter(Boolean).join(' · ');
     }
+
     const pairs = [
-      ['#tncMetricState', status.connected ? tr('Ativado') : tr('Desconectado')],
+      ['#tncMetricState', transportLabel],
       ['#tncMetricEndpoint', status.endpoint || '—'],
       ['#tncMetricRx', Number(status.frames_rx || 0).toLocaleString()],
       ['#tncMetricTx', Number(status.frames_tx || 0).toLocaleString()],
       ['#tncMetricDuplicates', Number(status.duplicates_suppressed || 0).toLocaleString()],
       ['#tncMetricQueue', Number(status.tx_queue || 0).toLocaleString()],
-      ['#tncMetricLastRx', status.last_rx_at ? `${tr('Última')}: ${humanTime(status.last_rx_at)}` : '—'],
-      ['#tncMetricLastTx', status.last_tx_at ? `${tr('Última')}: ${humanTime(status.last_tx_at)}` : '—'],
+      ['#tncMetricLastRx', rxDetail],
+      ['#tncMetricLastTx', txDetail],
       ['#tncMetricTxState', status.tx_paused ? tr('PARAR TX') : (lastConfig?.auto_tx_enabled ? tr('Ativado') : tr('Desligado'))],
       ['#tncMetricOptimizer', optimizerLabel(status.optimizer_mode || lastConfig?.optimizer_mode)],
       ['#tncMetricRole', roleLabel(status.role || lastConfig?.role)],
@@ -284,8 +331,28 @@
       const el = $(selector);
       if (el) el.textContent = value;
     }
-    $('#tncConnect')?.toggleAttribute('disabled', !!status.connected);
-    $('#tncDisconnect')?.toggleAttribute('disabled', !status.connected);
+
+    const diagnostic = $('#tncTransportDiagnostic');
+    const diagnosticText = $('#tncTransportDiagnosticText');
+    if (diagnostic) diagnostic.dataset.state = diagnosticState;
+    if (diagnosticText) {
+      if (!connected) {
+        diagnosticText.textContent = tr('Desconectado.');
+      } else if (rxState === 'active') {
+        diagnosticText.textContent = tr('Transporte operacional: frames KISS/AX.25 válidos estão chegando ao Client.');
+      } else if (rxState === 'bytes_without_kiss') {
+        diagnosticText.textContent = tr('A porta está aberta e há bytes chegando, mas não em KISS reconhecível. Verifique modo PKT/KISS, protocolo e baud rate; não mude o rádio para TNC interno apenas para fazer o indicador ficar ativo.');
+      } else if (rxState === 'invalid') {
+        diagnosticText.textContent = tr('Há frames KISS chegando, mas o conteúdo AX.25 não está sendo validado. Consulte o erro exibido e revise o modo/protocolo do equipamento.');
+      } else {
+        diagnosticText.textContent = serial
+          ? tr('Porta serial aberta; aguardando o primeiro byte/frame. “Conectado” confirma apenas a abertura da porta.')
+          : tr('KISS TCP conectado; aguardando o primeiro frame válido.');
+      }
+    }
+
+    $('#tncConnect')?.toggleAttribute('disabled', connected);
+    $('#tncDisconnect')?.toggleAttribute('disabled', !connected);
     $('#tncEmergencyStop')?.toggleAttribute('disabled', !!status.tx_paused);
     $('#tncResumeTx')?.toggleAttribute('disabled', !status.tx_paused);
   }
