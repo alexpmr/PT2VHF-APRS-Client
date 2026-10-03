@@ -6,7 +6,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
     "1.8.15": {
         "title": "Mensagens, zoom, estações e diagnóstico TNC/RF",
         "items": [
-            "Corrige o indicativo de Adriano para PP5UA na aba Sobre.",
+            "Corrige o indicativo de Adriano para PP5AU na aba Sobre.",
             "Adiciona filtros persistentes para mostrar/ocultar mensagens e boletins, mantendo o filtro de telemetria.",
             "O mapa passa a aceitar zoom fracionário em passos de 0,25 e persiste o nível intermediário.",
             "A lista de Estações ganha ordenação por ícone/tipo, ordem visual estável e novas estações adicionadas ao final da visualização corrente.",
@@ -75,7 +75,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "A ação Conectar/Desconectar usa wanted/connected/verified do backend e não depende mais do texto do botão.",
             "Cliques concorrentes são bloqueados durante a execução da ação, preservando validação de configuração e reconexão.",
             "A aba Sobre ganha uma seção de Agradecimentos / Colaboradores.",
-            "São reconhecidos PP5UA Adriano, PY4EI Allan, PU2MUS Marco, PP5PK Daniel Kondlatsch, PT2YW Ywstter e PT2PAG Paulo Galvão.",
+            "São reconhecidos PP5AU Adriano, PY4EI Allan, PU2MUS Marco, PP5PK Daniel Kondlatsch, PT2YW Ywstter e PT2PAG Paulo Galvão.",
             "Textos atualizados em PT-BR, EN, ES e FR.",
             "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
         ],
