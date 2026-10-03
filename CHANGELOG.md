@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.8.17 - 2026-10-03
+
+- **Mensagens programadas:** nova área **Agendadas** na aba Mensagens, com envio único ou recorrência semanal.
+- Os agendamentos suportam **estação específica, lista de estações, boletim APRS e grupo APRS**.
+- Para estações/listas, mantém seleção de rota **Automático, APRS-IS, RF direto e RF personalizado**, incluindo path RF personalizado.
+- **Listas de destinatários:** permite criar conjuntos reutilizáveis de indicativos, nomeá-los e usá-los em agendamentos.
+- Em listas, adiciona intervalo configurável entre destinos e opção de continuar com os demais quando um destino falhar.
+- **Falhas e retries:** permite pular a ocorrência ou tentar novamente depois de um período configurável.
+- Cada execução registra próxima/última execução, status, erro e resumo com resultado por destino; **Executar agora** testa o agendamento sem alterar a ocorrência futura.
+- Agendamentos e listas ficam persistidos no SQLite e a reivindicação da ocorrência devida é atômica para evitar disparos duplicados após reinicialização.
+- **Configuração → Mapa:** adiciona **Step do zoom do mapa** com 0,05 / 0,10 / 0,25 / 0,50 / 1,00, aplicação imediata e persistência.
+- A sensibilidade da roda/touchpad acompanha automaticamente o step escolhido; há botão **Restaurar zoom padrão**.
+- **TNC/RF:** serial aberta sem KISS válido passa a ser estado de atenção, não sucesso. Cabeçalho e painel distinguem aguardando dados, bytes sem KISS, AX.25 inválido e RX KISS ativo.
+- O indicador verde fica reservado para transporte com RX KISS/AX.25 realmente ativo.
+- Novos textos cobertos em PT-BR, EN, ES e FR.
+- Inclui suíte de regressão v1.8.17 com testes funcionais de SQLite, recorrência semanal, zoom configurável e indicação TNC.
+- Mantém aberta a validação física específica do Kenwood TM-D700 em modo PKT.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.16 - 2026-10-03
 
 - **Sobre:** corrige o indicativo de Adriano para **PP5AU**.
