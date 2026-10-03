@@ -121,6 +121,12 @@
 
 ## Pendências para próximas versões
 
+- **Sobre — corrigir indicativo de colaborador**
+  - Alterar o indicativo exibido na aba **Sobre** de **PU5AAG** para **PP5UA**.
+  - Manter o nome associado ao colaborador e revisar referências duplicadas no projeto para evitar divergências.
+
+
+
 - **Builds — Linux ARM64**
   - **Windows ARM64 foi incorporado na v1.7.7** com Setup e Portable nativos; manter apenas acompanhamento de compatibilidade/estabilidade.
   - Adicionar geração oficial de artefatos **Linux ARM64**, priorizando **TAR.GZ** e, quando suportado pelo pipeline, também **AppImage** e **DEB arm64**.
