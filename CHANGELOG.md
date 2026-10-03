@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8.14 - 2026-10-02
+
+- Fecha integralmente os cinco backlogs consolidados na linha 1.8.
+- **Sobre → O que é APRS?:** adiciona explicação explícita de APRS, cobrindo posição, mensagens, telemetria, meteorologia, RF e APRS-IS.
+- A explicação acompanha **PT-BR, English, Español e Français** e muda imediatamente com o idioma da interface.
+- **Mapa → Relevo com corte:** passa a aplicar **hillshade calculado diretamente do DEM Terrarium**, usando gradiente local de altitude e iluminação de relevo.
+- O hillshade preserva o corte por cota, o slider vertical, máximo padrão de **3.000 m**, faixa configurável de **100 a 9.000 m** e opacidade persistente.
+- Mantém **Automático / APRS-IS / RF direto / RF personalizado** por mensagem.
+- Mantém a responsividade de baixa altura para **1360×768 e 1280×720**.
+- Mantém bloqueadas Mensagem, Posição, Status, Ouvidos, Ping/ACK e Trace para alvos identificados como não interativos sem evidência de suporte bidirecional.
+- Preserva integralmente o hotfix SQLite da v1.8.12 e a consolidação da v1.8.13.
+- Adiciona testes e validador de produção específicos da v1.8.14.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.13 - 2026-10-02
 
 - Consolida e valida **Mensagens → Rota de envio** com **Automático, APRS-IS, RF direto e RF personalizado**, incluindo path por mensagem e retry preservando a rota original.
