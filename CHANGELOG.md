@@ -14,6 +14,7 @@
 - Um catálogo completo de estações é mantido separadamente do filtro textual da aba Estações, evitando que a busca local altere a classificação das Mensagens.
 - Os botões **Ver** e **Conteúdo** indicam visualmente quando existem filtros ativos.
 - Inclui regressões específicas para zoom, filtros de conteúdo, menus compartilhados e PP5AU.
+- Atualiza dois testes legados da árvore **Ver** para validar os helpers compartilhados sem depender da posição das funções no arquivo.
 - Mantém o diagnóstico TNC/RF da v1.8.15 e a pendência de validação física do Kenwood TM-D700 em modo PKT.
 - Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
