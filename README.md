@@ -1,33 +1,44 @@
-# PT2VHF APRS Client - v1.8.12
+# PT2VHF APRS Client - v1.8.13
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.12** corrige a migração de bancos existentes que podia impedir a inicialização com o erro **no such column: medium**, preservando integralmente os dados e as melhorias RF da v1.8.11.
+A **v1.8.13** consolida e protege contra regressão os backlogs de rota por mensagem, responsividade em telas baixas, bloqueio de interações sem capacidade bidirecional, relevo/elevação baseado em DEM e aba Sobre, mantendo integralmente o hotfix SQLite da v1.8.12.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.12**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.13**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Setup_x64_v1.8.12.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Portable_x64_v1.8.12.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Setup_ARM64_v1.8.12.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Portable_ARM64_v1.8.12.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_Setup_x64_v1.8.13.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_Portable_x64_v1.8.13.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_Setup_ARM64_v1.8.13.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_Portable_ARM64_v1.8.13.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_x86_64_v1.8.12.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/pt2vhf-aprs-client_1.8.12_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Linux_x86_64_v1.8.12.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_x86_64_v1.8.13.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/pt2vhf-aprs-client_1.8.13_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_Linux_x86_64_v1.8.13.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_macOS_arm64_v1.8.12.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_macOS_x86_64_v1.8.12.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_macOS_arm64_v1.8.13.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_macOS_x86_64_v1.8.13.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.12/PT2VHF_APRS_Client_Manual_v1.8.12.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.13/PT2VHF_APRS_Client_Manual_v1.8.13.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.13
+
+- **Mensagens → Rota de envio:** consolida **Automático, APRS-IS, RF direto e RF personalizado**, incluindo path por mensagem e retry preservando a rota original.
+- **Responsividade:** mantém a compactação específica de Mensagens e popup em telas baixas; a regra cobre **1360×768** e **1280×720** sem alterar a geometria global do mapa.
+- **Estações sem capacidade bidirecional:** objetos/itens e infraestrutura sem evidência de suporte interativo ficam com **Mensagem, Posição, Status, Ouvidos, Ping/ACK e Trace desabilitados**.
+- **Mapa → Camadas → Relevo com corte:** consolida DEM real, slider vertical, cota persistente, máximo padrão de **3.000 m**, limite configurável de **100 a 9.000 m** e opacidade independente.
+- **Sobre:** consolida logo, apresentação do projeto, contatos, **tiny.cc/aprs**, divulgação por Announcement APRS, colaboradores e textos dinâmicos em **PT-BR, English, Español e Français**.
+- **Migração SQLite:** preserva integralmente o hotfix da v1.8.12 para bancos antigos.
+- **Testes:** nova suíte v1.8.13 impede regressão dos cinco requisitos consolidados e o validador de produção foi atualizado.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.8.12
 
