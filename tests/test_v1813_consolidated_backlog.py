@@ -7,14 +7,11 @@ def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
 
 
-def test_v1813_version_metadata():
-    assert read("VERSION").strip() == "1.8.13"
-    assert '__version__ = "1.8.13"' in read("pt2vhf_aprs/__init__.py")
-    win = read("windows/version_info.txt")
-    assert "filevers=(1, 8, 13, 0)" in win
-    assert "prodvers=(1, 8, 13, 0)" in win
-    assert "FileVersion', '1.8.13'" in win
-    assert "ProductVersion', '1.8.13'" in win
+def test_v1813_consolidation_remains_covered_in_newer_versions():
+    current = read("VERSION").strip()
+    version = tuple(int(part) for part in current.split("."))
+    assert version >= (1, 8, 13)
+    assert f'__version__ = "{current}"' in read("pt2vhf_aprs/__init__.py")
 
 
 def test_v1813_message_route_backlog_is_present():
