@@ -1955,15 +1955,11 @@
       }));
   }
 
-  function renderMapViewTree(stations = [], objects = []) {
-    const tree = $('#mapViewTree');
-    if (!tree) return;
-
+  function sharedStationViewNodes(stations = []) {
     const stationRows = stations.filter(item => stationMapRole(item) === 'station');
     const digiRows = stations.filter(item => stationMapRole(item) === 'digi');
     const igateRows = stations.filter(item => stationMapRole(item) === 'igate');
-
-    const nodes = [
+    return [
       {
         id: 'root:stations',
         label: ui('Estações', 'Stations'),
@@ -1985,6 +1981,25 @@
         count: igateRows.length,
         children: groupedMapNodes(igateRows, 'igate'),
       },
+    ];
+  }
+
+  function renderAuxViewTrees(stations = state.stations) {
+    const nodes = sharedStationViewNodes(Array.isArray(stations) ? stations : []);
+    for (const selector of ['#stationViewTree', '#messageViewTree']) {
+      const tree = $(selector);
+      if (!tree) continue;
+      tree.innerHTML = nodes.map(node => mapViewNodeHtml(node, 0)).join('');
+    }
+    syncMapViewTreeCheckboxes();
+  }
+
+  function renderMapViewTree(stations = [], objects = []) {
+    const tree = $('#mapViewTree');
+    if (!tree) return;
+
+    const nodes = [
+      ...sharedStationViewNodes(stations),
       {
         id: 'root:objects',
         label: ui('Objetos APRS', 'APRS objects'),
@@ -1999,11 +2014,11 @@
     ];
 
     tree.innerHTML = nodes.map(node => mapViewNodeHtml(node, 0)).join('');
+    renderAuxViewTrees(stations);
     syncMapViewTreeCheckboxes();
   }
 
-  function syncMapViewTreeCheckboxes() {
-    const tree = $('#mapViewTree');
+  function syncSingleViewTreeCheckboxes(tree) {
     if (!tree) return;
     const nodes = [...tree.querySelectorAll('.map-view-node')].reverse();
     for (const node of nodes) {
@@ -2013,15 +2028,30 @@
 
       const all = children.every(input => input.checked && !input.indeterminate);
       const some = children.some(input => input.checked || input.indeterminate);
-
-      // Em uma árvore com seleção parcial, o pai representa a existência de
-      // qualquer filho ativo. O estado intermediário não pode desligar o grupo.
       own.checked = some;
       own.indeterminate = some && !all;
 
       if (own.dataset.mapStateKey) setMapViewState(own.dataset.mapStateKey, some);
       if (own.dataset.mapFilterKey) setMapViewFilter(own.dataset.mapFilterKey, some);
     }
+  }
+
+  function syncMapViewTreeCheckboxes() {
+    for (const selector of ['#mapViewTree', '#stationViewTree', '#messageViewTree']) {
+      syncSingleViewTreeCheckboxes($(selector));
+    }
+  }
+
+  function setAllSharedStationView(enabled, tree) {
+    const value = !!enabled;
+    for (const key of ['stationsEnabled', 'digisEnabled', 'igatesEnabled']) setMapViewState(key, value);
+    for (const input of tree?.querySelectorAll('.map-view-checkbox[data-map-filter-key]') || []) {
+      const key = String(input.dataset.mapFilterKey || '');
+      if (key) setMapViewFilter(key, value);
+    }
+    syncMapViewTreeCheckboxes();
+    renderAuxViewTrees(state.stations);
+    void refreshMapFromViewTree();
   }
 
   async function refreshMapFromViewTree() {
