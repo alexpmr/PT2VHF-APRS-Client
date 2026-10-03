@@ -3914,3 +3914,128 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
 @media (max-width: 560px) {
   .topology-stat-cards { grid-template-columns: 1fr; }
 }
+
+
+/* v1.8.17 - scheduled messages */
+.scheduled-messages-button.active-filter {
+  border-color: var(--accent);
+  background: rgba(59,166,255,.16);
+  color: #d8efff;
+}
+.scheduled-messages-button span {
+  display: inline-grid;
+  min-width: 18px;
+  place-items: center;
+  margin-left: 4px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: rgba(127,127,127,.18);
+  font-size: 10px;
+}
+.scheduled-messages-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 18px 16px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  max-height: min(72vh, 760px);
+  overflow: auto;
+}
+.scheduled-messages-panel.hidden { display: none !important; }
+.scheduled-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.scheduled-panel-header h3,
+.scheduled-panel-header p,
+.scheduled-editor h4,
+.recipient-groups-card h4 { margin: 0; }
+.scheduled-panel-header p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.scheduled-panel-actions,
+.scheduled-editor-actions,
+.recipient-group-actions,
+.scheduled-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.scheduled-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, .8fr);
+  gap: 12px;
+  align-items: start;
+}
+.scheduled-editor,
+.recipient-groups-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel-2);
+}
+.scheduled-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.scheduled-form-grid .field,
+.recipient-groups-card .field {
+  min-width: 0;
+}
+.scheduled-form-grid textarea,
+.recipient-groups-card textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+}
+.scheduled-targets-field,
+.scheduled-message-field {
+  grid-column: span 2;
+}
+.scheduled-enabled-field { min-height: 38px; }
+.scheduled-table-wrap {
+  max-height: 300px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+#scheduledMessagesTable {
+  min-width: 1050px;
+}
+#scheduledMessagesTable th,
+#scheduledMessagesTable td {
+  vertical-align: top;
+}
+#scheduledMessagesTable .scheduled-row-actions {
+  min-width: 300px;
+}
+#scheduledMessagesTable .scheduled-row-actions .btn {
+  min-height: 28px;
+  padding: 4px 7px;
+  font-size: 10px;
+}
+#scheduledMessagesTable tr.scheduled-disabled {
+  opacity: .62;
+}
+@media (max-width: 1100px) {
+  .scheduled-layout { grid-template-columns: 1fr; }
+  .scheduled-form-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+}
+@media (max-width: 720px) {
+  .scheduled-messages-panel { margin: 0 8px 10px; padding: 10px; }
+  .scheduled-panel-header { flex-direction: column; }
+  .scheduled-form-grid { grid-template-columns: 1fr; }
+  .scheduled-targets-field,
+  .scheduled-message-field { grid-column: auto; }
+}
