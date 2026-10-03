@@ -134,6 +134,18 @@
 
 ## Pendências para próximas versões
 
+- **Estações — adicionar menu Ver igual ao Mapa**
+  - Adicionar na aba **Estações** o mesmo menu **Ver** disponível na aba **Mapa**.
+  - Reutilizar a mesma estrutura de categorias e subcategorias do Mapa para filtrar quais tipos de estação aparecem na lista.
+  - Incluir também as ações **Selecionar tudo** e **Remover tudo**.
+  - Aplicar o filtro imediatamente na tabela de Estações, sem recarregar a aba.
+  - Manter **Mapa e Estações sincronizados**: alterar uma categoria no menu Ver de uma aba deve refletir na outra.
+  - Reutilizar, sempre que possível, o mesmo estado e a mesma lógica de filtro já existentes no Mapa, evitando duas implementações divergentes.
+  - Preservar ordenação, posição de rolagem, favoritos e fluxo de mensagem rápida quando o filtro for alterado.
+  - Persistir a seleção atual conforme o comportamento já usado pelo menu Ver do Mapa.
+
+
+
 - **Mensagens — menu suspenso unificado de filtros**
   - Substituir os controles separados atuais por um **menu pulldown** de filtros na aba **Mensagens**.
   - Dentro do menu, disponibilizar opções independentes para **mostrar/esconder**:
