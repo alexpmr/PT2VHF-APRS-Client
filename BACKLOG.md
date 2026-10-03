@@ -1,5 +1,22 @@
 # Backlog
 
+## Concluído na v1.8.16
+
+- **Sobre:** indicativo de Adriano corrigido definitivamente para **PP5AU** na interface, testes e documentação ativa.
+- **Mapa — zoom:** refinado para `zoomSnap: 0.10`, `zoomDelta: 0.10`, `wheelPxPerZoomLevel: 300` e `wheelDebounceTime: 20`, produzindo níveis intermediários bem mais finos.
+- **Mensagens — Conteúdo:** filtros reunidos em um único menu pulldown com **Mensagens, Boletins, Grupos e Telemetria**.
+- **Mensagens — ações globais:** adicionados **Marcar tudo** e **Desmarcar tudo**, com aplicação imediata e persistência das preferências.
+- **Mensagens — grupos:** boletins de grupo passam a ter filtro próprio, separado dos boletins gerais.
+- **Estações — Ver:** adicionada a mesma árvore de categorias/tipos de estação usada pelo Mapa, com **Selecionar tudo / Remover tudo**.
+- **Mensagens — Ver:** adicionada a mesma árvore de tipos de estação, aplicada às estações envolvidas nas mensagens.
+- **Filtros compartilhados:** **Mapa, Estações e Mensagens** passam a usar o mesmo estado central de categorias de estação; uma alteração em uma aba é refletida nas demais.
+- **Mensagens — segurança do filtro:** quando uma mensagem não puder ser associada com segurança a uma estação conhecida, ela permanece visível por padrão.
+- **Catálogo de estações:** criado catálogo completo separado do filtro textual da aba Estações para evitar que o filtro de pesquisa interfira na classificação das Mensagens.
+- **Interface:** botões **Ver** e **Conteúdo** indicam visualmente quando há filtros ativos.
+- **Regressão:** adicionada suíte específica da v1.8.16 para zoom, filtros de conteúdo, menus Ver compartilhados e PP5AU.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
+
 ## Concluído na v1.8.15
 
 - **Sobre:** corrigido o indicativo de Adriano para **PP5UA** na aba Sobre, testes e referências do projeto.
@@ -133,67 +150,6 @@
 - Correção do pipeline do ícone Windows para não depender do JPEG oficial inválido.
 
 ## Pendências para próximas versões
-
-- **Mensagens — adicionar menu Ver igual ao Mapa e Estações**
-  - Adicionar na aba **Mensagens** o mesmo menu **Ver** utilizado nas abas **Mapa** e **Estações**.
-  - Reutilizar as mesmas categorias e subcategorias de tipos de estação, com as ações **Selecionar tudo** e **Remover tudo**.
-  - Aplicar o filtro às mensagens exibidas conforme as estações envolvidas no tráfego, considerando remetente e destinatário quando houver identificação suficiente.
-  - Manter esse filtro separado do menu de conteúdo da aba Mensagens (**Mensagens / Boletins / Grupos / Telemetria**); os dois filtros devem funcionar em conjunto.
-  - Sincronizar o estado do menu **Ver** entre **Mapa, Estações e Mensagens**: qualquer alteração em uma das abas deve refletir nas demais.
-  - Reutilizar a mesma lógica e o mesmo estado central de filtros para evitar divergências entre as três telas.
-  - Aplicar as mudanças imediatamente, sem recarregar a aba.
-  - Preservar agrupamento por remetente/conversa, mensagens não lidas, favoritos, posição de rolagem e demais filtros já ativos.
-  - Quando uma mensagem não puder ser associada com segurança a uma categoria de estação, mantê-la visível por padrão ou tratá-la em uma categoria neutra/“Outros”, evitando ocultação indevida.
-
-
-
-- **Estações — adicionar menu Ver igual ao Mapa**
-  - Adicionar na aba **Estações** o mesmo menu **Ver** disponível na aba **Mapa**.
-  - Reutilizar a mesma estrutura de categorias e subcategorias do Mapa para filtrar quais tipos de estação aparecem na lista.
-  - Incluir também as ações **Selecionar tudo** e **Remover tudo**.
-  - Aplicar o filtro imediatamente na tabela de Estações, sem recarregar a aba.
-  - Manter **Mapa e Estações sincronizados**: alterar uma categoria no menu Ver de uma aba deve refletir na outra.
-  - Reutilizar, sempre que possível, o mesmo estado e a mesma lógica de filtro já existentes no Mapa, evitando duas implementações divergentes.
-  - Preservar ordenação, posição de rolagem, favoritos e fluxo de mensagem rápida quando o filtro for alterado.
-  - Persistir a seleção atual conforme o comportamento já usado pelo menu Ver do Mapa.
-
-
-
-- **Mensagens — menu suspenso unificado de filtros**
-  - Substituir os controles separados atuais por um **menu pulldown** de filtros na aba **Mensagens**.
-  - Dentro do menu, disponibilizar opções independentes para **mostrar/esconder**:
-    - **Mensagens**
-    - **Boletins**
-    - **Grupos**
-    - **Telemetria**
-  - Adicionar os botões **Marcar tudo** e **Desmarcar tudo** no próprio menu.
-  - Ao marcar/desmarcar qualquer item, aplicar o filtro **imediatamente**, sem exigir recarregar a aba.
-  - **Marcar tudo** deve habilitar todas as categorias; **Desmarcar tudo** deve ocultar todas as categorias.
-  - Manter os dados armazenados intactos; o filtro deve afetar somente a visualização.
-  - Persistir a seleção entre execuções do Client.
-  - Diferenciar corretamente **boletins gerais** de **boletins de grupo**, permitindo que **Grupos** seja controlado separadamente.
-  - Atualizar também a visualização agrupada por remetente/conversa para respeitar os mesmos filtros.
-  - Exibir no botão/menu um indicativo visual quando nem todas as categorias estiverem habilitadas.
-
-
-
-- **Mapa — refinar novamente o step do zoom**
-  - O ajuste da v1.8.15 com `zoomSnap: 0.25`, `zoomDelta: 0.25` e `wheelPxPerZoomLevel: 120` ainda ficou pouco perceptível no uso real.
-  - Reduzir os passos de zoom para **0,10**, usando inicialmente `zoomSnap: 0.10` e `zoomDelta: 0.10`.
-  - Tornar a roda do mouse bem mais gradual, usando inicialmente `wheelPxPerZoomLevel: 300`.
-  - Manter `wheelDebounceTime` em torno de **20 ms**, sujeito a ajuste após teste prático.
-  - Objetivo: permitir enquadramentos intermediários mais finos e evitar a sensação de que o mapa fica apenas "perto demais" ou "longe demais".
-  - Validar também com touchpad e mouse convencional, preservando o ponto sob o cursor e sem introduzir oscilação ou perda de desempenho.
-  - Se o resultado ficar bom, considerar expor futuramente a **sensibilidade/step do zoom** em Configuração, em vez de deixar esses valores fixos no código.
-
-
-
-- **Sobre — corrigir indicativo de colaborador para PP5AU**
-  - Alterar o indicativo exibido para **Adriano** na aba **Sobre** de **PP5UA** para **PP5AU**.
-  - Revisar referências associadas no projeto, testes, documentação e notas de versão futuras para evitar divergências.
-  - Não alterar o nome do colaborador.
-
-
 
 - **TNC / RF — Kenwood TM-D700 conecta pela serial, mas não recebe nem transmite (relato de PU2MUS - Marco)**
   - **Diagnóstico incorporado na v1.8.15:** o Client agora separa serial aberta, bytes recebidos, frame KISS reconhecido, AX.25 válido e TX entregue ao transporte.
