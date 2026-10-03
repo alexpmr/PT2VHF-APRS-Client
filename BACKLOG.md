@@ -151,6 +151,34 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens — agendamento/programação de envio (sugestão de PY2FDG - Fábio Guilherme)**
+  - Adicionar na aba **Mensagens** a possibilidade de criar **mensagens programadas/agendadas** para envio automático em data e horário definidos.
+  - Permitir pelo menos dois modos:
+    - **Envio único** em uma data/hora específica.
+    - **Envio recorrente** por dia da semana e horário, útil para atividades como o **APRS Thursday**.
+  - Permitir configurar previamente:
+    - destinatário/indicativo;
+    - texto da mensagem;
+    - tipo de mensagem quando aplicável;
+    - rota de envio (**Automático, APRS-IS, RF direto ou RF personalizado**);
+    - path RF personalizado quando aplicável;
+    - data/hora;
+    - recorrência.
+  - Criar uma área de **Mensagens agendadas** onde o usuário possa visualizar, editar, ativar/desativar e excluir os agendamentos.
+  - Exibir claramente **próxima execução**, **última execução**, status do último envio e eventual erro.
+  - Persistir os agendamentos localmente para que sobrevivam ao fechamento/reabertura do Client.
+  - Ao chegar o horário programado, executar o envio somente se o Client estiver em condição válida para a rota escolhida.
+  - Se a rota necessária estiver indisponível, registrar a falha e definir uma política configurável de **tentar novamente / pular ocorrência**, evitando envios duplicados.
+  - Para mensagens recorrentes, impedir que uma reinicialização próxima ao horário cause envio duplicado da mesma ocorrência.
+  - Registrar cada disparo no histórico normal de Mensagens e também em log/diagnóstico do agendamento.
+  - Exibir indicação visual quando houver agendamentos ativos.
+  - Considerar opção de **“Executar agora”** para testar uma mensagem agendada sem alterar a próxima ocorrência.
+  - Respeitar fuso horário local do sistema e tratar corretamente mudança de data/horário.
+  - Incluir testes de regressão para envio único, recorrência semanal, reinício do Client, rota indisponível e prevenção de duplicidade.
+  - Caso de uso informado por **PY2FDG - Fábio Guilherme (Itapetininga/SP)**: deixar previamente configurada uma participação no **APRS Thursday** para ser enviada automaticamente mesmo quando não for possível estar junto ao rádio no horário.
+
+
+
 - **TNC / RF — tornar mais clara a indicação de serial conectada sem KISS operacional**
   - Relato/indicação de usuário na v1.8.16: a interface mostra **“Serial conectada”** no topo e no quadro Transporte, enquanto **RX KISS/AX.25 permanece em 0** e o diagnóstico informa que há bytes chegando, porém nenhum frame KISS válido foi reconhecido.
   - Evitar que **“Serial conectada”** seja interpretado como **TNC/RF operacional**.
