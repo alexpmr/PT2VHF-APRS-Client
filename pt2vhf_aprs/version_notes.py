@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.13": {
+        "title": "Consolidação dos backlogs de mensagens, responsividade, interação e mapa",
+        "items": [
+            "Consolida e protege por regressão a seleção de rota por mensagem: Automático, APRS-IS, RF direto e RF personalizado.",
+            "Valida a interface de baixa altura usada em 1360×768 e 1280×720, mantendo Mensagens e ações do popup acessíveis sem alterar a geometria global do mapa.",
+            "Mantém bloqueadas as interações APRS para objetos/itens e infraestrutura sem evidência de capacidade bidirecional, incluindo mensagens, queries, Ping/ACK e Trace.",
+            "Consolida Relevo com corte baseado em DEM real, slider vertical, máximo padrão de 3.000 m configurável de 100 a 9.000 m e opacidade persistente.",
+            "Consolida a aba Sobre com apresentação do projeto, contatos, tiny.cc/aprs, divulgação APRS e traduções PT-BR, EN, ES e FR.",
+            "Preserva o hotfix de migração SQLite da v1.8.12 e adiciona testes para impedir regressão dos cinco requisitos consolidados.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.12": {
         "title": "Hotfix de migração para bancos existentes",
         "items": [
