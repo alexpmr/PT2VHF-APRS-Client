@@ -89,7 +89,7 @@ Os arquivos abaixo apontam diretamente para a **release v1.8.14**, evitando link
 - Cliques concorrentes são bloqueados enquanto a ação está em andamento.
 - A aba **Sobre** ganha uma seção **Agradecimentos / Colaboradores**.
 - Colaboradores reconhecidos nesta versão:
-  - **PU5AAG — Adriano**
+  - **PP5UA — Adriano**
   - **PY4EI — Allan**
   - **PU2MUS — Marco**
   - **PP5PK — Daniel Kondlatsch**
