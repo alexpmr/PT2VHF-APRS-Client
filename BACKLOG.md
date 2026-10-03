@@ -1,5 +1,25 @@
 # Backlog
 
+## Concluído na v1.8.17
+
+- **Configuração — zoom (sugestão de PU2MUS/Marco):** o step do mapa deixa de ser fixo e passa a ser configurável em **0,05 / 0,10 / 0,25 / 0,50 / 1,00**, com aplicação imediata, persistência no SQLite e botão **Restaurar zoom padrão**.
+- A sensibilidade da roda/touchpad é ajustada automaticamente junto com o step escolhido, mantendo os botões **+ / −** coerentes com a mesma granularidade.
+- **Mensagens programadas (sugestão de PY2FDG/Fábio Guilherme):** adicionada área **Agendadas** na aba Mensagens com envio **único** ou **semanal recorrente**, usando o fuso local do sistema.
+- Os agendamentos podem enviar para **estação específica**, **lista de estações**, **boletim APRS** ou **grupo APRS**.
+- Para estações/listas, são preservadas as rotas **Automático, APRS-IS, RF direto e RF personalizado**, incluindo path RF quando aplicável.
+- **Listas reutilizáveis de destinatários:** o usuário pode nomear e salvar conjuntos de indicativos e reutilizá-los em agendamentos futuros.
+- Em listas, há **intervalo configurável entre destinos** e opção para continuar com os demais quando um envio falhar.
+- Cada execução registra resumo e resultado por destino; mensagens individuais continuam aparecendo no histórico normal da aba Mensagens.
+- **Falha de rota:** política configurável entre **pular ocorrência** ou **tentar novamente** após período definido.
+- **Persistência e duplicidade:** agendamentos ficam no SQLite; a execução devida é reivindicada de forma atômica para evitar disparo duplicado após reinicialização próxima ao horário.
+- A tela mostra **próxima execução, última execução, status/erro**, além de editar, ativar/desativar, excluir e **Executar agora** sem alterar a próxima ocorrência programada.
+- **TNC/RF — indicação de estado:** porta serial aberta deixa de aparecer como sucesso pleno enquanto não houver KISS válido. O cabeçalho e a aba distinguem **aguardando dados, bytes sem KISS, AX.25 inválido e RX KISS ativo**.
+- O estado sem KISS usa indicação visual de **atenção**, reservando o estado verde/sucesso para RX KISS/AX.25 realmente ativo.
+- **Idiomas:** novos controles e estados cobertos em PT-BR, EN, ES e FR.
+- **Regressão:** adicionada suíte v1.8.17 com testes funcionais de SQLite para configuração do zoom, listas/agendamentos, recorrência semanal e indicação TNC.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
+
 ## Concluído na v1.8.16
 
 - **Sobre:** indicativo de Adriano corrigido definitivamente para **PP5AU** na interface, testes e documentação ativa.
@@ -150,83 +170,6 @@
 - Correção do pipeline do ícone Windows para não depender do JPEG oficial inválido.
 
 ## Pendências para próximas versões
-
-- **Configuração — step/sensibilidade do zoom do mapa (sugestão de PU2MUS - Marco)**
-  - Adicionar na aba **Configuração** um campo para o usuário ajustar a **granularidade/sensibilidade do zoom do mapa**.
-  - O ajuste deve controlar o comportamento hoje definido diretamente no Leaflet, incluindo principalmente o **step de zoom** e a sensibilidade da **roda do mouse**.
-  - Usar como referência os valores atuais da v1.8.16:
-    - `zoomSnap: 0.10`
-    - `zoomDelta: 0.10`
-    - `wheelPxPerZoomLevel: 300`
-    - `wheelDebounceTime: 20`
-  - Expor uma configuração simples para o usuário, preferencialmente com níveis compreensíveis como **Mais fino / Fino / Padrão / Rápido**, ou um controle numérico acompanhado de explicação clara.
-  - Se houver controle numérico, validar limites seguros para evitar zoom excessivamente sensível ou lento demais.
-  - Aplicar a alteração imediatamente ao mapa, sem exigir reiniciar o Client.
-  - Persistir o valor entre execuções.
-  - Disponibilizar opção **Restaurar padrão**.
-  - Manter coerência entre roda do mouse, touchpad e botões **+ / −**.
-  - Preservar os limites mínimo/máximo do mapa e compatibilidade com marcadores, tracklogs, radar, relevo/DEM, topologia e demais camadas.
-  - Incluir tradução PT-BR, EN, ES e FR e teste de regressão.
-  - Crédito da sugestão: **PU2MUS - Marco**.
-
-
-
-- **Mensagens — agendamento/programação de envio (sugestão de PY2FDG - Fábio Guilherme)**
-  - Adicionar na aba **Mensagens** a possibilidade de criar **mensagens programadas/agendadas** para envio automático em data e horário definidos.
-  - Permitir pelo menos dois modos:
-    - **Envio único** em uma data/hora específica.
-    - **Envio recorrente** por dia da semana e horário, útil para atividades como o **APRS Thursday**.
-  - Permitir configurar previamente:
-    - destinatário/indicativo;
-    - texto da mensagem;
-    - tipo de mensagem quando aplicável;
-    - rota de envio (**Automático, APRS-IS, RF direto ou RF personalizado**);
-    - path RF personalizado quando aplicável;
-    - data/hora;
-    - recorrência.
-  - Criar uma área de **Mensagens agendadas** onde o usuário possa visualizar, editar, ativar/desativar e excluir os agendamentos.
-  - Exibir claramente **próxima execução**, **última execução**, status do último envio e eventual erro.
-  - Persistir os agendamentos localmente para que sobrevivam ao fechamento/reabertura do Client.
-  - Ao chegar o horário programado, executar o envio somente se o Client estiver em condição válida para a rota escolhida.
-  - Se a rota necessária estiver indisponível, registrar a falha e definir uma política configurável de **tentar novamente / pular ocorrência**, evitando envios duplicados.
-  - Para mensagens recorrentes, impedir que uma reinicialização próxima ao horário cause envio duplicado da mesma ocorrência.
-  - Registrar cada disparo no histórico normal de Mensagens e também em log/diagnóstico do agendamento.
-  - Exibir indicação visual quando houver agendamentos ativos.
-  - Considerar opção de **“Executar agora”** para testar uma mensagem agendada sem alterar a próxima ocorrência.
-  - Respeitar fuso horário local do sistema e tratar corretamente mudança de data/horário.
-  - Incluir testes de regressão para envio único, recorrência semanal, reinício do Client, rota indisponível e prevenção de duplicidade.
-  - Permitir também **destinos múltiplos e tipos APRS diferentes**, mantendo o agendamento como uma única definição lógica:
-    - **Destino específico**: um único indicativo.
-    - **Lista/grupo de estações previamente informado**: vários indicativos configurados pelo usuário, com envio individual para cada estação.
-    - **Boletim APRS**: envio como bulletin/announcement conforme o formato suportado pelo Client.
-    - **Grupo APRS**: envio destinado a um grupo configurado.
-  - Para listas de estações, permitir salvar e nomear conjuntos reutilizáveis de destinatários, por exemplo **“Grupo local”**, **“APRS Thursday”** ou **“Amigos”**.
-  - Em envios recorrentes para múltiplos destinos, controlar cada destinatário separadamente para evitar duplicidades e permitir visualizar sucesso/falha por estação.
-  - Aplicar intervalo configurável entre envios para listas grandes, evitando rajadas excessivas e respeitando limitações operacionais de APRS/RF.
-  - Permitir escolher se uma falha em um destinatário deve **continuar com os demais** ou interromper aquela execução.
-  - Registrar no histórico o resultado de cada destinatário, além de um resumo da execução do agendamento.
-  - As mesmas opções de recorrência devem funcionar para **destino individual, lista de estações, boletim e grupo APRS**.
-  - Caso de uso informado por **PY2FDG - Fábio Guilherme (Itapetininga/SP)**: deixar previamente configurada uma participação no **APRS Thursday** para ser enviada automaticamente mesmo quando não for possível estar junto ao rádio no horário.
-
-
-
-- **TNC / RF — tornar mais clara a indicação de serial conectada sem KISS operacional**
-  - Relato/indicação de usuário na v1.8.16: a interface mostra **“Serial conectada”** no topo e no quadro Transporte, enquanto **RX KISS/AX.25 permanece em 0** e o diagnóstico informa que há bytes chegando, porém nenhum frame KISS válido foi reconhecido.
-  - Evitar que **“Serial conectada”** seja interpretado como **TNC/RF operacional**.
-  - Quando a porta estiver aberta, houver bytes recebidos, mas nenhum frame KISS válido, exibir estado mais explícito, por exemplo **“Serial conectada — sem KISS”** ou **“Protocolo/KISS não reconhecido”**.
-  - Refletir esse estado também no indicador compacto do cabeçalho, não apenas no diagnóstico detalhado da aba TNC / RF.
-  - Diferenciar visualmente pelo menos:
-    - **Desconectado**
-    - **Serial conectada — aguardando dados**
-    - **Serial conectada — bytes sem KISS**
-    - **RX KISS/AX.25 ativo**
-    - **Erro/protocolo incompatível**
-  - Não usar cor/estado de sucesso pleno enquanto ainda não houver frame KISS/AX.25 válido recebido.
-  - Manter claro que **porta aberta ≠ TNC operacional ≠ RF transmitido/recebido**.
-  - Preservar o detalhamento de bytes recebidos, frames KISS, AX.25 inválidos e último erro já existente.
-  - Incluir teste de regressão para o cenário observado na captura: **serial conectada + bytes RX > 0 + frames KISS = 0**.
-
-
 
 - **TNC / RF — Kenwood TM-D700 conecta pela serial, mas não recebe nem transmite (relato de PU2MUS - Marco)**
   - **Diagnóstico incorporado na v1.8.15:** o Client agora separa serial aberta, bytes recebidos, frame KISS reconhecido, AX.25 válido e TX entregue ao transporte.
