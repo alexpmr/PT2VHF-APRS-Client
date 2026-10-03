@@ -40,6 +40,8 @@ h1 { margin: 0; font-size: 20px; }
 .status { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
 .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 3px rgba(240,92,99,.12); }
 .status.connected .dot { background: var(--ok); box-shadow: 0 0 0 3px rgba(56,199,118,.12); }
+.status.warning { color: var(--warn); }
+.status.warning .dot { background: var(--warn); box-shadow: 0 0 0 3px rgba(244,189,80,.12); }
 .status.unverified .dot { background: var(--warn); box-shadow: 0 0 0 3px rgba(244,189,80,.12); }
 
 /* v1.8.10 - controle único de conexão APRS-IS */
