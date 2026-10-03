@@ -43,10 +43,11 @@ def test_message_tab_has_independent_persistent_display_filters():
 def test_map_supports_fractional_gradual_zoom_and_persists_it():
     js = read("pt2vhf_aprs/static/js/app.js")
     db = read("pt2vhf_aprs/database.py")
-    assert "zoomSnap: 0.10" in js
-    assert "zoomDelta: 0.10" in js
-    assert "wheelPxPerZoomLevel: 300" in js
-    assert "wheelDebounceTime: 20" in js
+    assert "function mapZoomOptions(value)" in js
+    assert "zoomSnap: zoomOptions.step" in js
+    assert "zoomDelta: zoomOptions.step" in js
+    assert "wheelPxPerZoomLevel: zoomOptions.wheelPxPerZoomLevel" in js
+    assert "wheelDebounceTime: zoomOptions.wheelDebounceTime" in js
     assert "Number(saved.zoom)" in js
     assert "zoom REAL NOT NULL DEFAULT 4" in db
     assert "zoom: float" in db
