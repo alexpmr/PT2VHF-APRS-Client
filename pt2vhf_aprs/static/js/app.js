@@ -2059,7 +2059,11 @@
     if (!state.packetsEnabled) clearTrafficReplayLayers();
     await loadMapData();
     if (!state.topologyEnabled) clearTopologyLines();
-    if (state.stations.length) renderStations();
+    if (state.stations.length) {
+      renderAuxViewTrees(state.stations);
+      renderStations();
+      renderMessages();
+    }
     updateMapLegend();
   }
 
@@ -5415,7 +5419,9 @@
       const previousScrollTop = viewport?.scrollTop || 0;
       const filter = $('#stationFilter').value.trim();
       state.stations = await api(`/api/stations?filter=${encodeURIComponent(filter)}`);
+      renderAuxViewTrees(state.stations);
       renderStations();
+      renderMessages();
       if (viewport) {
         if (options.scrollToNewest && state.sort.stations.key === 'last_heard' && state.sort.stations.dir === 'desc' && previousScrollTop <= 12) {
           viewport.scrollTop = 0;
