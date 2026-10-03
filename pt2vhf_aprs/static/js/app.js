@@ -1993,6 +1993,7 @@
       tree.innerHTML = nodes.map(node => mapViewNodeHtml(node, 0)).join('');
     }
     syncMapViewTreeCheckboxes();
+    updateSharedViewButtons();
   }
 
   function renderMapViewTree(stations = [], objects = []) {
@@ -2043,15 +2044,45 @@
     }
   }
 
+  function sharedStationViewFullyEnabled() {
+    if (!state.stationsEnabled || !state.digisEnabled || !state.igatesEnabled) return false;
+    return !Object.entries(state.mapViewFilters).some(([key, enabled]) =>
+      enabled === false && /^(station|digi|igate):/.test(String(key || ''))
+    );
+  }
+
+  function updateSharedViewButtons() {
+    const filtered = !sharedStationViewFullyEnabled();
+    for (const selector of ['#stationViewButton', '#messageViewButton']) {
+      const button = $(selector);
+      if (!button) continue;
+      button.classList.toggle('active-filter', filtered);
+      button.textContent = filtered ? `${ui('Ver', 'View')} • ▾` : `${ui('Ver', 'View')} ▾`;
+      button.title = filtered
+        ? ui('Há filtros de estação ativos.', 'Station filters are active.')
+        : ui('Todas as categorias de estação estão visíveis.', 'All station categories are visible.');
+    }
+  }
+
   function setAllSharedStationView(enabled, tree) {
     const value = !!enabled;
     for (const key of ['stationsEnabled', 'digisEnabled', 'igatesEnabled']) setMapViewState(key, value);
-    for (const input of tree?.querySelectorAll('.map-view-checkbox[data-map-filter-key]') || []) {
-      const key = String(input.dataset.mapFilterKey || '');
-      if (key) setMapViewFilter(key, value);
+
+    if (value) {
+      for (const key of Object.keys(state.mapViewFilters)) {
+        if (/^(station|digi|igate):/.test(String(key || ''))) delete state.mapViewFilters[key];
+      }
+      persistMapViewFilters();
+    } else {
+      for (const input of tree?.querySelectorAll('.map-view-checkbox[data-map-filter-key]') || []) {
+        const key = String(input.dataset.mapFilterKey || '');
+        if (key) setMapViewFilter(key, false);
+      }
     }
+
     syncMapViewTreeCheckboxes();
     renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : state.stations);
+    updateSharedViewButtons();
     void refreshMapFromViewTree();
   }
 
