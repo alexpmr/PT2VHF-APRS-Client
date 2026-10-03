@@ -146,6 +146,7 @@ DEFAULT_CONFIG = {
     "topology_igate_color": "#ffff00",
     "topology_width": 1,
     "map_brightness": 100,
+    "map_zoom_step": 0.10,
     "weather_radar_opacity": 55,
     "elevation_threshold": 1000,
     "elevation_slider_max": 3000,
@@ -257,6 +258,7 @@ def init_db() -> None:
                 topology_igate_color TEXT NOT NULL DEFAULT '#ffff00',
                 topology_width INTEGER NOT NULL DEFAULT 1,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
+                map_zoom_step REAL NOT NULL DEFAULT 0.10,
                 weather_radar_opacity INTEGER NOT NULL DEFAULT 55,
                 elevation_threshold INTEGER NOT NULL DEFAULT 1000,
                 elevation_slider_max INTEGER NOT NULL DEFAULT 3000,
@@ -511,6 +513,53 @@ def init_db() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_medium_call_time ON packets(medium, from_call, timestamp DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_fingerprint_time ON packets(rx_fingerprint, timestamp DESC)")
 
+        conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS recipient_groups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                callsigns_json TEXT NOT NULL DEFAULT '[]',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS scheduled_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL DEFAULT '',
+                enabled INTEGER NOT NULL DEFAULT 1,
+                schedule_type TEXT NOT NULL DEFAULT 'once',
+                run_at_utc TEXT,
+                weekday INTEGER,
+                time_local TEXT,
+                target_type TEXT NOT NULL DEFAULT 'station',
+                target TEXT NOT NULL DEFAULT '',
+                targets_json TEXT NOT NULL DEFAULT '[]',
+                recipient_group_id INTEGER,
+                message_type TEXT NOT NULL DEFAULT 'message',
+                message TEXT NOT NULL DEFAULT '',
+                route TEXT NOT NULL DEFAULT 'auto',
+                path TEXT NOT NULL DEFAULT '',
+                bulletin_id TEXT NOT NULL DEFAULT '0',
+                aprs_group TEXT NOT NULL DEFAULT '',
+                interval_seconds INTEGER NOT NULL DEFAULT 3,
+                retry_policy TEXT NOT NULL DEFAULT 'skip',
+                retry_minutes INTEGER NOT NULL DEFAULT 10,
+                continue_on_error INTEGER NOT NULL DEFAULT 1,
+                next_run_at TEXT,
+                last_run_at TEXT,
+                last_status TEXT NOT NULL DEFAULT '',
+                last_error TEXT NOT NULL DEFAULT '',
+                last_summary TEXT NOT NULL DEFAULT '',
+                last_occurrence_key TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(recipient_group_id) REFERENCES recipient_groups(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_scheduled_messages_due
+                ON scheduled_messages(enabled, next_run_at);
+            """
+        )
+
         config_columns = {row["name"] for row in conn.execute("PRAGMA table_info(config)").fetchall()}
         if "open_browser_on_start" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN open_browser_on_start INTEGER NOT NULL DEFAULT 0")
@@ -530,6 +579,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN topology_width INTEGER NOT NULL DEFAULT 1")
         if "map_brightness" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN map_brightness INTEGER NOT NULL DEFAULT 100")
+        if "map_zoom_step" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN map_zoom_step REAL NOT NULL DEFAULT 0.10")
         if "weather_radar_opacity" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN weather_radar_opacity INTEGER NOT NULL DEFAULT 55")
         if "elevation_threshold" not in config_columns:
@@ -725,6 +776,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["topology_igate_color"] = str(merged["topology_igate_color"] or "#ffff00").lower().strip()
     merged["topology_width"] = int(merged["topology_width"] or 1)
     merged["map_brightness"] = int(merged["map_brightness"] or 100)
+    merged["map_zoom_step"] = round(float(merged["map_zoom_step"] if merged["map_zoom_step"] not in ("", None) else 0.10), 2)
     merged["weather_radar_opacity"] = int(merged["weather_radar_opacity"] or 55)
     merged["elevation_threshold"] = int(merged["elevation_threshold"] if merged["elevation_threshold"] not in ("", None) else 1000)
     merged["elevation_slider_max"] = int(merged["elevation_slider_max"] if merged["elevation_slider_max"] not in ("", None) else 3000)
@@ -781,6 +833,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Cor do tracklog inválida.")
     if not (1 <= merged["track_width"] <= 10):
         raise ValueError("Espessura do tracklog deve estar entre 1 e 10.")
+    if merged["map_zoom_step"] not in {0.05, 0.10, 0.25, 0.50, 1.00}:
+        raise ValueError("Step do zoom deve ser 0,05, 0,10, 0,25, 0,50 ou 1,00.")
     if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_color"]):
         raise ValueError("Cor dos enlaces RF da topologia inválida.")
     if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_igate_color"]):
@@ -3983,3 +4037,232 @@ def shutdown_maintenance() -> dict[str, int]:
         "cancelled_queued_messages": cancelled,
         "checkpointed_frames": checkpointed,
     }
+
+
+# --- Scheduled APRS messages (v1.8.17) ---
+
+def _json_callsigns(value: Any) -> list[str]:
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except Exception:
+            value = re.split(r"[,;\s]+", value)
+    if not isinstance(value, (list, tuple)):
+        return []
+    result: list[str] = []
+    for item in value:
+        call = str(item or "").upper().strip()
+        if not call or not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", call):
+            continue
+        if call not in result:
+            result.append(call)
+    return result[:200]
+
+
+def list_recipient_groups() -> list[dict[str, Any]]:
+    with connection() as conn:
+        rows = conn.execute("SELECT * FROM recipient_groups ORDER BY name COLLATE NOCASE").fetchall()
+    result = []
+    for row in rows:
+        item = dict(row)
+        item["callsigns"] = _json_callsigns(item.pop("callsigns_json", "[]"))
+        result.append(item)
+    return result
+
+
+def save_recipient_group(data: dict[str, Any], group_id: int | None = None) -> dict[str, Any]:
+    name = str(data.get("name") or "").strip()
+    callsigns = _json_callsigns(data.get("callsigns") or data.get("callsigns_json") or [])
+    if not name:
+        raise ValueError("Informe um nome para a lista de destinatários.")
+    if not callsigns:
+        raise ValueError("Informe pelo menos um indicativo válido.")
+    now = utc_now_iso()
+    payload = json.dumps(callsigns, ensure_ascii=False)
+    with connection() as conn:
+        if group_id:
+            cur = conn.execute(
+                "UPDATE recipient_groups SET name=?,callsigns_json=?,updated_at=? WHERE id=?",
+                (name, payload, now, int(group_id)),
+            )
+            if not cur.rowcount:
+                raise ValueError("Lista de destinatários não encontrada.")
+            ident = int(group_id)
+        else:
+            cur = conn.execute(
+                "INSERT INTO recipient_groups(name,callsigns_json,created_at,updated_at) VALUES(?,?,?,?)",
+                (name, payload, now, now),
+            )
+            ident = int(cur.lastrowid)
+        row = conn.execute("SELECT * FROM recipient_groups WHERE id=?", (ident,)).fetchone()
+    item = dict(row)
+    item["callsigns"] = _json_callsigns(item.pop("callsigns_json", "[]"))
+    return item
+
+
+def delete_recipient_group(group_id: int) -> int:
+    with connection() as conn:
+        cur = conn.execute("DELETE FROM recipient_groups WHERE id=?", (int(group_id),))
+        return int(cur.rowcount or 0)
+
+
+def _scheduled_row(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
+    item = dict(row)
+    item["enabled"] = bool(item.get("enabled"))
+    item["continue_on_error"] = bool(item.get("continue_on_error"))
+    item["targets"] = _json_callsigns(item.pop("targets_json", "[]"))
+    return item
+
+
+def list_scheduled_messages() -> list[dict[str, Any]]:
+    with connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM scheduled_messages ORDER BY enabled DESC, COALESCE(next_run_at,'9999') ASC, id DESC"
+        ).fetchall()
+    return [_scheduled_row(row) for row in rows]
+
+
+def get_scheduled_message(schedule_id: int) -> dict[str, Any] | None:
+    with connection() as conn:
+        row = conn.execute("SELECT * FROM scheduled_messages WHERE id=?", (int(schedule_id),)).fetchone()
+    return _scheduled_row(row) if row else None
+
+
+def save_scheduled_message(data: dict[str, Any], schedule_id: int | None = None) -> dict[str, Any]:
+    now = utc_now_iso()
+    schedule_type = str(data.get("schedule_type") or "once").lower().strip()
+    target_type = str(data.get("target_type") or "station").lower().strip()
+    message_type = str(data.get("message_type") or "message").lower().strip()
+    route = str(data.get("route") or "auto").lower().strip()
+    retry_policy = str(data.get("retry_policy") or "skip").lower().strip()
+    if schedule_type not in {"once", "weekly"}:
+        raise ValueError("Tipo de agendamento inválido.")
+    if target_type not in {"station", "list", "bulletin", "group"}:
+        raise ValueError("Tipo de destino inválido.")
+    if message_type not in {"message", "bulletin", "announcement", "group_bulletin"}:
+        raise ValueError("Tipo de mensagem inválido.")
+    if route not in {"auto", "aprs_is", "rf_direct", "rf_custom"}:
+        raise ValueError("Rota de envio inválida.")
+    if retry_policy not in {"skip", "retry"}:
+        raise ValueError("Política de falha inválida.")
+    message = str(data.get("message") or "").strip()
+    if not message:
+        raise ValueError("Informe a mensagem.")
+    target = str(data.get("target") or "").upper().strip()
+    targets = _json_callsigns(data.get("targets") or [])
+    recipient_group_id = data.get("recipient_group_id") or None
+    if target_type == "station" and not _json_callsigns([target]):
+        raise ValueError("Informe um destino APRS válido.")
+    if target_type == "list" and not targets and not recipient_group_id:
+        raise ValueError("Informe os destinatários ou selecione uma lista salva.")
+    run_at_utc = str(data.get("run_at_utc") or "").strip() or None
+    weekday = data.get("weekday")
+    weekday = int(weekday) if weekday not in ("", None) else None
+    time_local = str(data.get("time_local") or "").strip() or None
+    if schedule_type == "once" and not run_at_utc:
+        raise ValueError("Informe a data e hora do envio único.")
+    if schedule_type == "weekly":
+        if weekday is None or weekday < 0 or weekday > 6:
+            raise ValueError("Dia da semana inválido.")
+        if not time_local or not re.fullmatch(r"\d{2}:\d{2}", time_local):
+            raise ValueError("Horário semanal inválido.")
+
+    fields = {
+        "name": str(data.get("name") or "").strip(),
+        "enabled": 1 if bool(data.get("enabled", True)) else 0,
+        "schedule_type": schedule_type,
+        "run_at_utc": run_at_utc,
+        "weekday": weekday,
+        "time_local": time_local,
+        "target_type": target_type,
+        "target": target,
+        "targets_json": json.dumps(targets, ensure_ascii=False),
+        "recipient_group_id": int(recipient_group_id) if recipient_group_id else None,
+        "message_type": message_type,
+        "message": message,
+        "route": route,
+        "path": str(data.get("path") or "").upper().strip(),
+        "bulletin_id": str(data.get("bulletin_id") or "0").upper().strip()[:1],
+        "aprs_group": str(data.get("aprs_group") or "").upper().strip()[:5],
+        "interval_seconds": max(1, min(120, int(data.get("interval_seconds") or 3))),
+        "retry_policy": retry_policy,
+        "retry_minutes": max(1, min(1440, int(data.get("retry_minutes") or 10))),
+        "continue_on_error": 1 if bool(data.get("continue_on_error", True)) else 0,
+        "next_run_at": str(data.get("next_run_at") or "").strip() or None,
+    }
+    with connection() as conn:
+        if schedule_id:
+            assignments = ",".join(f"{key}=?" for key in fields)
+            cur = conn.execute(
+                f"UPDATE scheduled_messages SET {assignments},updated_at=? WHERE id=?",
+                [*fields.values(), now, int(schedule_id)],
+            )
+            if not cur.rowcount:
+                raise ValueError("Agendamento não encontrado.")
+            ident = int(schedule_id)
+        else:
+            keys = list(fields)
+            cur = conn.execute(
+                f"INSERT INTO scheduled_messages({','.join(keys)},created_at,updated_at) "
+                f"VALUES({','.join('?' for _ in keys)},?,?)",
+                [*fields.values(), now, now],
+            )
+            ident = int(cur.lastrowid)
+        row = conn.execute("SELECT * FROM scheduled_messages WHERE id=?", (ident,)).fetchone()
+    return _scheduled_row(row)
+
+
+def delete_scheduled_message(schedule_id: int) -> int:
+    with connection() as conn:
+        cur = conn.execute("DELETE FROM scheduled_messages WHERE id=?", (int(schedule_id),))
+        return int(cur.rowcount or 0)
+
+
+def set_scheduled_enabled(schedule_id: int, enabled: bool, next_run_at: str | None = None) -> int:
+    with connection() as conn:
+        cur = conn.execute(
+            "UPDATE scheduled_messages SET enabled=?,next_run_at=?,updated_at=? WHERE id=?",
+            (1 if enabled else 0, next_run_at, utc_now_iso(), int(schedule_id)),
+        )
+        return int(cur.rowcount or 0)
+
+
+def claim_due_scheduled_message(now_iso: str) -> dict[str, Any] | None:
+    with connection() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            "SELECT * FROM scheduled_messages WHERE enabled=1 AND next_run_at IS NOT NULL "
+            "AND next_run_at<=? ORDER BY next_run_at,id LIMIT 1",
+            (str(now_iso),),
+        ).fetchone()
+        if not row:
+            return None
+        schedule_id = int(row["id"])
+        occurrence = str(row["next_run_at"] or "")
+        conn.execute(
+            "UPDATE scheduled_messages SET next_run_at=NULL,last_occurrence_key=?,last_status='running',"
+            "last_error='',updated_at=? WHERE id=? AND next_run_at=?",
+            (occurrence, utc_now_iso(), schedule_id, occurrence),
+        )
+        fresh = conn.execute("SELECT * FROM scheduled_messages WHERE id=?", (schedule_id,)).fetchone()
+    return _scheduled_row(fresh) if fresh else None
+
+
+def complete_scheduled_message(
+    schedule_id: int,
+    *,
+    status: str,
+    error: str = "",
+    summary: str = "",
+    next_run_at: str | None = None,
+    enabled: bool | None = None,
+) -> None:
+    now = utc_now_iso()
+    fields = ["last_run_at=?", "last_status=?", "last_error=?", "last_summary=?", "next_run_at=?", "updated_at=?"]
+    values: list[Any] = [now, str(status), str(error)[:1000], str(summary)[:4000], next_run_at, now]
+    if enabled is not None:
+        fields.append("enabled=?")
+        values.append(1 if enabled else 0)
+    values.append(int(schedule_id))
+    with connection() as conn:
+        conn.execute(f"UPDATE scheduled_messages SET {','.join(fields)} WHERE id=?", values)
