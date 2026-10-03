@@ -83,6 +83,8 @@ def test_v1812_medium_indexes_are_created_only_after_packet_column_migration():
     assert migration.index('ALTER TABLE packets ADD COLUMN rx_fingerprint') < migration.index('idx_packets_fingerprint_time')
 
 
-def test_v1812_version():
-    assert read("VERSION").strip() == "1.8.12"
-    assert '__version__ = "1.8.12"' in read("pt2vhf_aprs/__init__.py")
+def test_v1812_migration_remains_covered_in_newer_versions():
+    version = tuple(int(part) for part in read("VERSION").strip().split("."))
+    assert version >= (1, 8, 12)
+    init_source = read("pt2vhf_aprs/__init__.py")
+    assert f'__version__ = "{read("VERSION").strip()}"' in init_source
