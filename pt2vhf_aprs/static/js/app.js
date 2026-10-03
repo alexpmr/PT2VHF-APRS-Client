@@ -2020,7 +2020,7 @@
     syncMapViewTreeCheckboxes();
   }
 
-  function syncSingleViewTreeCheckboxes(tree) {
+  function syncSingleViewTreeCheckboxes(tree, updateState = false) {
     if (!tree) return;
     const nodes = [...tree.querySelectorAll('.map-view-node')].reverse();
     for (const node of nodes) {
@@ -2033,14 +2033,16 @@
       own.checked = some;
       own.indeterminate = some && !all;
 
-      if (own.dataset.mapStateKey) setMapViewState(own.dataset.mapStateKey, some);
-      if (own.dataset.mapFilterKey) setMapViewFilter(own.dataset.mapFilterKey, some);
+      if (updateState) {
+        if (own.dataset.mapStateKey) setMapViewState(own.dataset.mapStateKey, some);
+        if (own.dataset.mapFilterKey) setMapViewFilter(own.dataset.mapFilterKey, some);
+      }
     }
   }
 
   function syncMapViewTreeCheckboxes() {
     for (const selector of ['#mapViewTree', '#stationViewTree', '#messageViewTree']) {
-      syncSingleViewTreeCheckboxes($(selector));
+      syncSingleViewTreeCheckboxes($(selector), false);
     }
   }
 
@@ -2305,6 +2307,7 @@
         // Recalcula os pais a partir dos filhos. Isso garante que marcar apenas
         // RDZSonDe, DMR, D-Star etc. mantenha "Objetos APRS" ativo em estado
         // intermediário, em vez de bloquear todos os objetos.
+        syncSingleViewTreeCheckboxes(tree, true);
         syncMapViewTreeCheckboxes();
         void refreshMapFromViewTree();
       });
