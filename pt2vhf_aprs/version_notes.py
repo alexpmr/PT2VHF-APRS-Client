@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.15": {
+        "title": "Mensagens, zoom, estações e diagnóstico TNC/RF",
+        "items": [
+            "Corrige o indicativo de Adriano para PP5UA na aba Sobre.",
+            "Adiciona filtros persistentes para mostrar/ocultar mensagens e boletins, mantendo o filtro de telemetria.",
+            "O mapa passa a aceitar zoom fracionário em passos de 0,25 e persiste o nível intermediário.",
+            "A lista de Estações ganha ordenação por ícone/tipo, ordem visual estável e novas estações adicionadas ao final da visualização corrente.",
+            "Adiciona mensagem rápida diretamente na lista de Estações, preservando texto, filtros e rolagem entre destinatários.",
+            "Adiciona proteção opcional para DMR, D-Star e SSIDs -12 a -15 e sincroniza a lista com os filtros do menu Ver.",
+            "TNC/RF diferencia serial conectada, bytes recebidos, KISS reconhecido, AX.25 válido e TX entregue ao transporte.",
+            "O diagnóstico do Kenwood TM-D700 documenta o modo PKT e evita tratar porta aberta como RX/TX RF confirmado.",
+            "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.14": {
         "title": "Backlogs consolidados: APRS explicado e relevo DEM sombreado",
         "items": [
