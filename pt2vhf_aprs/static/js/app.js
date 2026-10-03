@@ -8635,7 +8635,7 @@
   });
   $('#newScheduledMessageButton')?.addEventListener('click', resetScheduledForm);
   $('#cancelScheduledEditButton')?.addEventListener('click', resetScheduledForm);
-  $('#scheduledMessageForm')?.addEventListener('submit', saveScheduledMessage);
+  $('#saveScheduledMessageButton')?.addEventListener('click', saveScheduledMessage);
   $('#scheduledScheduleType')?.addEventListener('change', updateScheduledFormVisibility);
   $('#scheduledTargetType')?.addEventListener('change', updateScheduledFormVisibility);
   $('#scheduledRoute')?.addEventListener('change', updateScheduledFormVisibility);
