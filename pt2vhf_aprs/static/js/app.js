@@ -4128,16 +4128,40 @@
     return !own || normalizedCall(message.to_call) === own;
   }
 
+  function messageContentCategory(message) {
+    if (isTelemetryMessage(message)) return 'telemetry';
+    const type = String(message?.message_type || 'message');
+    if (type === 'group_bulletin') return 'group';
+    if (type === 'bulletin' || type === 'announcement') return 'bulletin';
+    return 'message';
+  }
+
+  function messageContentCategoryEnabled(message) {
+    const category = messageContentCategory(message);
+    if (category === 'telemetry') return !!state.showTelemetryMessages;
+    if (category === 'group') return !!state.showGroupMessages;
+    if (category === 'bulletin') return !!state.showBulletinMessages;
+    return !!state.showNormalMessages;
+  }
+
+  function messageRelevantStations(message) {
+    const own = normalizedCall(state.ownCallsign);
+    const calls = [normalizedCall(message?.from_call), normalizedCall(message?.to_call)]
+      .filter(call => call && call !== own && !/^BLN[A-Z0-9]{0,6}$/.test(call));
+    const unique = [...new Set(calls)];
+    return unique
+      .map(call => state.stations.find(station => normalizedCall(station.callsign) === call))
+      .filter(Boolean);
+  }
+
+  function messageMatchesStationView(message) {
+    const stations = messageRelevantStations(message);
+    if (!stations.length) return true;
+    return stations.some(stationMatchesViewFilter);
+  }
+
   function visibleMessages() {
-    let rows = state.hideTelemetryMessages
-      ? state.messages.filter(message => !isTelemetryMessage(message))
-      : [...state.messages];
-    if (!state.showNormalMessages) {
-      rows = rows.filter(message => String(message?.message_type || 'message') !== 'message');
-    }
-    if (!state.showBulletinMessages) {
-      rows = rows.filter(message => !['bulletin', 'group_bulletin', 'announcement'].includes(String(message?.message_type || '')));
-    }
+    let rows = state.messages.filter(message => messageContentCategoryEnabled(message) && messageMatchesStationView(message));
     if (state.unreadMessagesOnly) rows = rows.filter(isUnreadPersonalMessage);
     return rows;
   }
@@ -4352,43 +4376,113 @@
   const loadMessagesDebounced = debounce(loadMessages, 250);
   $('#messageFilter').addEventListener('input', loadMessagesDebounced);
 
-  const telemetryPreference = localStorage.getItem('pt2vhf_hide_telemetry');
-  const normalMessagesPreference = localStorage.getItem('pt2vhf_show_normal_messages');
-  const bulletinMessagesPreference = localStorage.getItem('pt2vhf_show_bulletin_messages');
-  state.hideTelemetryMessages = telemetryPreference === null ? true : telemetryPreference !== '0';
-  state.showNormalMessages = normalMessagesPreference === null ? true : normalMessagesPreference !== '0';
-  state.showBulletinMessages = bulletinMessagesPreference === null ? true : bulletinMessagesPreference !== '0';
-  state.groupMessages = localStorage.getItem('pt2vhf_group_messages') === '1';
-  const normalMessagesToggle = $('#showNormalMessages');
-  const bulletinMessagesToggle = $('#showBulletinMessages');
-  const telemetryToggle = $('#hideTelemetryMessages');
-  if (normalMessagesToggle) normalMessagesToggle.checked = state.showNormalMessages;
-  if (bulletinMessagesToggle) bulletinMessagesToggle.checked = state.showBulletinMessages;
-  if (telemetryToggle) telemetryToggle.checked = state.hideTelemetryMessages;
+  function readMessageContentFilters() {
+    try {
+      const stored = JSON.parse(localStorage.getItem('pt2vhf_message_content_filters_v2') || 'null');
+      if (stored && typeof stored === 'object') {
+        return {
+          message: stored.message !== false,
+          bulletin: stored.bulletin !== false,
+          group: stored.group !== false,
+          telemetry: stored.telemetry === true,
+        };
+      }
+    } catch (_) {}
 
-  normalMessagesToggle?.addEventListener('change', () => {
-    state.showNormalMessages = normalMessagesToggle.checked;
-    localStorage.setItem('pt2vhf_show_normal_messages', state.showNormalMessages ? '1' : '0');
-    renderMessages();
-  });
+    const oldTelemetry = localStorage.getItem('pt2vhf_hide_telemetry');
+    const oldMessage = localStorage.getItem('pt2vhf_show_normal_messages');
+    const oldBulletin = localStorage.getItem('pt2vhf_show_bulletin_messages');
+    return {
+      message: oldMessage === null ? true : oldMessage !== '0',
+      bulletin: oldBulletin === null ? true : oldBulletin !== '0',
+      group: oldBulletin === null ? true : oldBulletin !== '0',
+      telemetry: oldTelemetry === '0',
+    };
+  }
 
-  bulletinMessagesToggle?.addEventListener('change', () => {
-    state.showBulletinMessages = bulletinMessagesToggle.checked;
-    localStorage.setItem('pt2vhf_show_bulletin_messages', state.showBulletinMessages ? '1' : '0');
-    renderMessages();
-  });
-  telemetryToggle?.addEventListener('change', () => {
-    state.hideTelemetryMessages = telemetryToggle.checked;
+  function currentMessageContentFilters() {
+    return {
+      message: !!state.showNormalMessages,
+      bulletin: !!state.showBulletinMessages,
+      group: !!state.showGroupMessages,
+      telemetry: !!state.showTelemetryMessages,
+    };
+  }
+
+  function persistMessageContentFilters() {
+    localStorage.setItem('pt2vhf_message_content_filters_v2', JSON.stringify(currentMessageContentFilters()));
+    state.hideTelemetryMessages = !state.showTelemetryMessages;
     localStorage.setItem('pt2vhf_hide_telemetry', state.hideTelemetryMessages ? '1' : '0');
+    localStorage.setItem('pt2vhf_show_normal_messages', state.showNormalMessages ? '1' : '0');
+    localStorage.setItem('pt2vhf_show_bulletin_messages', state.showBulletinMessages && state.showGroupMessages ? '1' : '0');
+  }
+
+  function updateMessageContentFilterUi() {
+    const values = currentMessageContentFilters();
+    for (const input of $$('#messageContentFilterMenu [data-message-content-filter]')) {
+      input.checked = !!values[input.dataset.messageContentFilter];
+    }
+    const active = Object.values(values).filter(Boolean).length;
+    const button = $('#messageContentFilterButton');
+    if (button) {
+      button.textContent = `${ui('Conteúdo', 'Content')} ${active}/4 ▾`;
+      button.classList.toggle('active-filter', active < 4);
+      button.title = active === 4
+        ? ui('Todas as categorias de conteúdo estão visíveis.', 'All content categories are visible.')
+        : ui(`${active} de 4 categorias de conteúdo visíveis.`, `${active} of 4 content categories visible.`);
+    }
+  }
+
+  function applyMessageContentFilterValue(key, enabled) {
+    const value = !!enabled;
+    if (key === 'message') state.showNormalMessages = value;
+    else if (key === 'bulletin') state.showBulletinMessages = value;
+    else if (key === 'group') state.showGroupMessages = value;
+    else if (key === 'telemetry') state.showTelemetryMessages = value;
+    persistMessageContentFilters();
+    updateMessageContentFilterUi();
     renderMessages();
     updateUnread();
-    const hiddenCount = state.messages.filter(isTelemetryMessage).length;
-    toast(
-      state.hideTelemetryMessages
-        ? ui(`Telemetria oculta (${hiddenCount} registro(s) nesta lista).`, `Telemetry hidden (${hiddenCount} record(s) in this list).`)
-        : ui('Telemetria visível.', 'Telemetry visible.'),
-      'ok'
-    );
+  }
+
+  function setAllMessageContentFilters(enabled) {
+    const value = !!enabled;
+    state.showNormalMessages = value;
+    state.showBulletinMessages = value;
+    state.showGroupMessages = value;
+    state.showTelemetryMessages = value;
+    persistMessageContentFilters();
+    updateMessageContentFilterUi();
+    renderMessages();
+    updateUnread();
+  }
+
+  const contentFilters = readMessageContentFilters();
+  state.showNormalMessages = contentFilters.message;
+  state.showBulletinMessages = contentFilters.bulletin;
+  state.showGroupMessages = contentFilters.group;
+  state.showTelemetryMessages = contentFilters.telemetry;
+  state.hideTelemetryMessages = !state.showTelemetryMessages;
+  state.groupMessages = localStorage.getItem('pt2vhf_group_messages') === '1';
+  persistMessageContentFilters();
+  updateMessageContentFilterUi();
+
+  $('#messageContentFilterMenu')?.addEventListener('change', event => {
+    const input = event.target.closest('[data-message-content-filter]');
+    if (!input) return;
+    applyMessageContentFilterValue(String(input.dataset.messageContentFilter || ''), input.checked);
+  });
+
+  $('#messageContentSelectAllButton')?.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    setAllMessageContentFilters(true);
+  });
+
+  $('#messageContentClearAllButton')?.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    setAllMessageContentFilters(false);
   });
 
   function updateGroupMessagesButton() {
