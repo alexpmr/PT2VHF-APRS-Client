@@ -121,6 +121,16 @@
 
 ## Pendências para próximas versões
 
+- **Mapa — zoom mais gradual**
+  - Aumentar a granularidade do zoom do mapa, principalmente ao usar a **roda do mouse**, permitindo níveis intermediários entre o enquadramento atual muito próximo e muito afastado.
+  - Ajustar o comportamento do Leaflet para aceitar **passos fracionários de zoom** quando suportado, em vez de saltos inteiros excessivamente grandes.
+  - Tornar o zoom por scroll mais suave e previsível, preservando o ponto sob o cursor como referência sempre que possível.
+  - Manter os botões **+ / −** coerentes com a nova granularidade de zoom.
+  - Preservar os limites mínimo e máximo atuais do mapa e a compatibilidade das camadas, marcadores, tracklogs, radar, relevo/DEM e topologia.
+  - Validar o comportamento com mouse convencional e touchpad, evitando zoom rápido demais, oscilação ou perda de desempenho.
+
+
+
 - **Mensagens — filtros de exibição**
   - Na aba **Mensagens**, adicionar opções independentes para **mostrar/ocultar boletins** e **mostrar/ocultar mensagens**.
   - Usar comportamento e apresentação consistentes com o filtro já existente de **telemetria**.
