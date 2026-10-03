@@ -1477,22 +1477,68 @@
     return `${ui('Ativado', 'Enabled')} · ≥ ${elevationMetersText(state.mapConfig.elevation_threshold)}`;
   }
 
-  function renderElevationTile(canvas) {
+  function elevationGridFromTerrarium(canvas) {
     const raw = canvas?._pt2vhfElevationRaw;
-    if (!raw) return;
+    if (!raw) return null;
+    if (canvas._pt2vhfElevationMeters?.length === 256 * 256) {
+      return canvas._pt2vhfElevationMeters;
+    }
+    const grid = new Float32Array(256 * 256);
+    for (let pixel = 0, offset = 0; pixel < grid.length; pixel += 1, offset += 4) {
+      grid[pixel] = (raw[offset] * 256 + raw[offset + 1] + raw[offset + 2] / 256) - 32768;
+    }
+    canvas._pt2vhfElevationMeters = grid;
+    return grid;
+  }
+
+  function elevationHillshadeFactor(grid, x, y) {
+    const left = grid[y * 256 + Math.max(0, x - 1)];
+    const right = grid[y * 256 + Math.min(255, x + 1)];
+    const up = grid[Math.max(0, y - 1) * 256 + x];
+    const down = grid[Math.min(255, y + 1) * 256 + x];
+    const dzdx = (right - left) * 0.5;
+    const dzdy = (down - up) * 0.5;
+
+    // Normal aproximada da superfície e luz vindo de noroeste.
+    // A escala suaviza diferenças abruptas do DEM e evita sombreado excessivo.
+    const terrainScale = 120;
+    let nx = -dzdx / terrainScale;
+    let ny = -dzdy / terrainScale;
+    let nz = 1;
+    const normalLength = Math.hypot(nx, ny, nz) || 1;
+    nx /= normalLength;
+    ny /= normalLength;
+    nz /= normalLength;
+
+    const lx = -0.55;
+    const ly = -0.55;
+    const lz = Math.sqrt(1 - lx * lx - ly * ly);
+    const illumination = nx * lx + ny * ly + nz * lz;
+    return Math.max(0.55, Math.min(1.22, 0.70 + illumination * 0.45));
+  }
+
+  function renderElevationTile(canvas) {
+    const grid = elevationGridFromTerrarium(canvas);
+    if (!grid) return;
     const ctx = canvas.getContext('2d');
     const out = ctx.createImageData(256, 256);
     const dst = out.data;
     const threshold = Number(state.mapConfig.elevation_threshold) || 0;
     const alpha = Math.max(0, Math.min(255, Math.round((Number(state.mapConfig.elevation_opacity) || 55) / 100 * 255)));
-    for (let i = 0; i < raw.length; i += 4) {
-      const altitude = (raw[i] * 256 + raw[i + 1] + raw[i + 2] / 256) - 32768;
-      if (altitude >= threshold) {
+
+    for (let y = 0; y < 256; y += 1) {
+      for (let x = 0; x < 256; x += 1) {
+        const pixel = y * 256 + x;
+        const altitude = grid[pixel];
+        if (altitude < threshold) continue;
+
         const rise = Math.max(0, Math.min(1, (altitude - threshold) / 2500));
-        dst[i] = Math.round(224 + 22 * rise);
-        dst[i + 1] = Math.round(172 - 55 * rise);
-        dst[i + 2] = Math.round(62 - 25 * rise);
-        dst[i + 3] = alpha;
+        const shade = elevationHillshadeFactor(grid, x, y);
+        const offset = pixel * 4;
+        dst[offset] = Math.round((224 + 22 * rise) * shade);
+        dst[offset + 1] = Math.round((172 - 55 * rise) * shade);
+        dst[offset + 2] = Math.round((62 - 25 * rise) * shade);
+        dst[offset + 3] = alpha;
       }
     }
     ctx.putImageData(out, 0, 0);
