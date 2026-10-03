@@ -173,7 +173,15 @@ class ScheduledMessageService:
 
         def _run() -> None:
             with self._manual_lock:
-                self._execute(schedule, manual=True)
+                ok, summary, error = self._execute(schedule, manual=True)
+                db.complete_scheduled_message(
+                    int(schedule["id"]),
+                    status="concluído manual" if ok else "falhou manual",
+                    error=error,
+                    summary=summary,
+                    next_run_at=schedule.get("next_run_at"),
+                    enabled=bool(schedule.get("enabled")),
+                )
 
         threading.Thread(
             target=_run,
