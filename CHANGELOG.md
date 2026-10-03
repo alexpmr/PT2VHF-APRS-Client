@@ -62,7 +62,7 @@
 - A validação dos campos obrigatórios antes da conexão e o comportamento atual de reconexão APRS-IS são preservados.
 - Remove a redundância visual do antigo indicador separado + botão independente no cabeçalho.
 - A aba **Sobre** ganha uma seção **Agradecimentos / Colaboradores** dedicada aos radioamadores que ajudam na evolução do software com sugestões, testes, validações e ajustes.
-- Colaboradores incluídos: **PU5AAG — Adriano; PY4EI — Allan; PU2MUS — Marco; PP5PK — Daniel Kondlatsch; PT2YW — Ywstter; PT2PAG — Paulo Galvão**.
+- Colaboradores incluídos: **PP5UA — Adriano; PY4EI — Allan; PU2MUS — Marco; PP5PK — Daniel Kondlatsch; PT2YW — Ywstter; PT2PAG — Paulo Galvão**.
 - A seção de agradecimentos é preparada para receber novos colaboradores futuramente e mantém indicativos em destaque.
 - Textos da conexão e dos agradecimentos disponíveis em **PT-BR, EN, ES e FR**.
 - Inclui testes de regressão para estados do controle de conexão, eliminação do indicador redundante e presença dos seis colaboradores.
