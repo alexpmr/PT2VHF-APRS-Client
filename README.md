@@ -1,33 +1,51 @@
-# PT2VHF APRS Client - v1.8.16
+# PT2VHF APRS Client - v1.8.17
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.16** consolida filtros compartilhados entre Mapa, Estações e Mensagens, reúne o filtro de conteúdo de Mensagens em um menu único, refina o zoom para passos de 0,10 e corrige o indicativo de Adriano para PP5AU.
+A **v1.8.17** adiciona mensagens programadas persistentes, torna o step do zoom configurável e deixa o estado TNC/RF mais explícito quando a serial está aberta sem tráfego KISS/AX.25 válido.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.16**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.8.17**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Setup_x64_v1.8.16.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Portable_x64_v1.8.16.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Setup_ARM64_v1.8.16.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Portable_ARM64_v1.8.16.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_Setup_x64_v1.8.17.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_Portable_x64_v1.8.17.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_Setup_ARM64_v1.8.17.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_Portable_ARM64_v1.8.17.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_x86_64_v1.8.16.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/pt2vhf-aprs-client_1.8.16_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Linux_x86_64_v1.8.16.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_x86_64_v1.8.17.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/pt2vhf-aprs-client_1.8.17_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_Linux_x86_64_v1.8.17.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_macOS_arm64_v1.8.16.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_macOS_x86_64_v1.8.16.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_macOS_arm64_v1.8.17.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_macOS_x86_64_v1.8.17.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.16/PT2VHF_APRS_Client_Manual_v1.8.16.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.17/PT2VHF_APRS_Client_Manual_v1.8.17.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.8.17
+
+- **Mensagens → Agendadas:** crie envio único ou recorrência semanal sem precisar estar junto ao rádio no horário.
+- O destino pode ser **uma estação**, **uma lista de estações**, **boletim APRS** ou **grupo APRS**.
+- Para estação/lista, escolha **Automático, APRS-IS, RF direto ou RF personalizado**, incluindo path RF personalizado.
+- **Listas de destinatários:** salve conjuntos de indicativos com nome e reutilize em diferentes agendamentos.
+- Em listas, configure intervalo entre destinatários e escolha se uma falha deve interromper ou continuar os demais envios.
+- Se a rota estiver indisponível, escolha entre **pular a ocorrência** ou **tentar novamente** após o período definido.
+- A tela mostra **próxima execução, última execução, status e erro**, além de editar, ativar/desativar, excluir e **Executar agora**.
+- Agendamentos e listas são persistidos no SQLite e protegidos contra disparo duplicado da mesma ocorrência após reinicialização.
+- **Configuração → Mapa → Step do zoom:** escolha **0,05 / 0,10 / 0,25 / 0,50 / 1,00**; a alteração é aplicada imediatamente e fica persistida após salvar.
+- A sensibilidade da roda/touchpad é ajustada junto com o step escolhido; **Restaurar zoom padrão** volta para 0,10.
+- **TNC/RF:** serial conectada sem KISS válido passa a aparecer como estado de atenção. O Client diferencia **aguardando dados, bytes sem KISS, AX.25 inválido e RX KISS ativo**.
+- O indicador verde/sucesso fica reservado para RX KISS/AX.25 realmente ativo.
+- Novos controles e estados acompanham PT-BR, English, Español e Français.
+- A validação física específica do **Kenwood TM-D700 em modo PKT** continua pendente para teste com o equipamento real.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.8.16
 
