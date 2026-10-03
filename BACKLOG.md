@@ -134,6 +134,17 @@
 
 ## Pendências para próximas versões
 
+- **Mapa — refinar novamente o step do zoom**
+  - O ajuste da v1.8.15 com `zoomSnap: 0.25`, `zoomDelta: 0.25` e `wheelPxPerZoomLevel: 120` ainda ficou pouco perceptível no uso real.
+  - Reduzir os passos de zoom para **0,10**, usando inicialmente `zoomSnap: 0.10` e `zoomDelta: 0.10`.
+  - Tornar a roda do mouse bem mais gradual, usando inicialmente `wheelPxPerZoomLevel: 300`.
+  - Manter `wheelDebounceTime` em torno de **20 ms**, sujeito a ajuste após teste prático.
+  - Objetivo: permitir enquadramentos intermediários mais finos e evitar a sensação de que o mapa fica apenas "perto demais" ou "longe demais".
+  - Validar também com touchpad e mouse convencional, preservando o ponto sob o cursor e sem introduzir oscilação ou perda de desempenho.
+  - Se o resultado ficar bom, considerar expor futuramente a **sensibilidade/step do zoom** em Configuração, em vez de deixar esses valores fixos no código.
+
+
+
 - **Sobre — corrigir indicativo de colaborador para PP5AU**
   - Alterar o indicativo exibido para **Adriano** na aba **Sobre** de **PP5UA** para **PP5AU**.
   - Revisar referências associadas no projeto, testes, documentação e notas de versão futuras para evitar divergências.
