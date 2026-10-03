@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.8.13 - 2026-10-02
+
+- Consolida e valida **Mensagens → Rota de envio** com **Automático, APRS-IS, RF direto e RF personalizado**, incluindo path por mensagem e retry preservando a rota original.
+- Reforça a regressão de **responsividade em telas baixas**, cobrindo a regra usada em **1360×768** e **1280×720**, com compositor de Mensagens compacto e ações do popup de estação acessíveis.
+- Consolida o bloqueio de interações para **objetos/itens APRS e infraestrutura sem evidência de capacidade bidirecional**, desabilitando Mensagem, Posição, Status, Ouvidos, Ping/ACK e Trace.
+- Consolida **Mapa → Camadas → Relevo com corte**, usando DEM real, slider vertical, cota persistente, máximo padrão de 3.000 m configurável de 100 a 9.000 m e opacidade independente.
+- Consolida a aba **Sobre**, com identidade do projeto, contatos, tiny.cc/aprs, divulgação APRS e traduções PT-BR/EN/ES/FR.
+- Mantém integralmente a correção de migração SQLite da **v1.8.12** para bancos existentes.
+- Adiciona suíte de regressão dedicada aos cinco requisitos consolidados e atualiza o validador de produção para a v1.8.13.
+- Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.12 - 2026-10-02
 
 - Corrige falha de inicialização em instalações atualizadas a partir de banco antigo: **`sqlite3.OperationalError: no such column: medium`**.
