@@ -1050,6 +1050,7 @@
     if (tab === 'messages') {
       $('.tab[data-tab="messages"]')?.classList.remove('has-unread');
       loadMessages({ scrollToNewest: true });
+      void loadScheduledMessages();
     }
     if (tab === 'stations') loadStations({ scrollToNewest: true });
     if (tab === 'log') loadLog(true);
@@ -8284,6 +8285,358 @@
     updateTrafficAnimationUi();
   });
 
+  function splitScheduledCallsigns(value) {
+    return [...new Set(String(value || '')
+      .toUpperCase()
+      .split(/[,;\s]+/)
+      .map(item => item.trim())
+      .filter(item => /^[A-Z0-9]{1,6}(?:-[0-9]{1,2})?$/.test(item)))];
+  }
+
+  function toLocalDateTimeInput(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+  }
+
+  function scheduledTargetLabel(schedule) {
+    const type = String(schedule?.target_type || 'station');
+    if (type === 'station') return String(schedule?.target || '');
+    if (type === 'list') {
+      const group = state.recipientGroups.find(item => Number(item.id) === Number(schedule?.recipient_group_id));
+      const count = Array.isArray(schedule?.targets) ? schedule.targets.length : 0;
+      return group ? `${group.name}${count ? ` +${count}` : ''}` : ui(`Lista (${count})`, `List (${count})`);
+    }
+    if (type === 'group') return `BLN${schedule?.bulletin_id || '0'}${schedule?.aprs_group || schedule?.target || ''}`;
+    return String(schedule?.message_type || '') === 'announcement'
+      ? `BLN${schedule?.bulletin_id || 'A'}`
+      : `BLN${schedule?.bulletin_id || '0'}`;
+  }
+
+  function scheduledRecurrenceLabel(schedule) {
+    if (String(schedule?.schedule_type) === 'weekly') {
+      const weekdaysPt = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+      const weekdaysEn = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const labels = state.language === 'pt-BR' ? weekdaysPt : weekdaysEn;
+      return `${labels[Number(schedule.weekday) || 0]} ${schedule.time_local || ''}`;
+    }
+    return ui('Único', 'Once');
+  }
+
+  function updateScheduledMessagesButton() {
+    const active = state.scheduledMessages.filter(item => item.enabled).length;
+    const count = $('#scheduledMessagesCount');
+    if (count) count.textContent = String(active);
+    const button = $('#scheduledMessagesButton');
+    if (button) {
+      button.classList.toggle('active-filter', active > 0);
+      button.setAttribute('aria-expanded', state.scheduledPanelOpen ? 'true' : 'false');
+      button.title = active
+        ? ui(`${active} agendamento(s) ativo(s).`, `${active} active schedule(s).`)
+        : ui('Nenhum agendamento ativo.', 'No active schedules.');
+    }
+  }
+
+  function renderRecipientGroupOptions() {
+    const options = state.recipientGroups.map(group =>
+      `<option value="${Number(group.id)}">${escapeHtml(group.name)} (${(group.callsigns || []).length})</option>`
+    ).join('');
+    const scheduled = $('#scheduledRecipientGroup');
+    const editor = $('#recipientGroupSelect');
+    if (scheduled) {
+      const selected = scheduled.value;
+      scheduled.innerHTML = `<option value="">— ${escapeHtml(ui('Sem lista salva', 'No saved list'))} —</option>${options}`;
+      if ([...scheduled.options].some(option => option.value === selected)) scheduled.value = selected;
+    }
+    if (editor) {
+      const selected = editor.value;
+      editor.innerHTML = `<option value="">— ${escapeHtml(ui('Nova lista', 'New list'))} —</option>${options}`;
+      if ([...editor.options].some(option => option.value === selected)) editor.value = selected;
+    }
+  }
+
+  async function loadRecipientGroups() {
+    try {
+      state.recipientGroups = await api('/api/messages/recipient-groups');
+      renderRecipientGroupOptions();
+    } catch (err) {
+      console.warn('Recipient groups:', err);
+    }
+  }
+
+  function renderScheduledMessages() {
+    const tbody = $('#scheduledMessagesTable tbody');
+    if (!tbody) return;
+    updateScheduledMessagesButton();
+    if (!state.scheduledMessages.length) {
+      tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(ui('Nenhuma mensagem programada.', 'No scheduled messages.'))}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = state.scheduledMessages.map(schedule => {
+      const status = String(schedule.last_status || (schedule.enabled ? ui('Aguardando', 'Waiting') : ui('Desativado', 'Disabled')));
+      const statusClass = schedule.last_status === 'concluído' ? 'status-ack' : (schedule.last_status === 'falhou' || schedule.last_status === 'interrompido' ? 'status-rej' : '');
+      const title = schedule.last_error || schedule.last_summary || '';
+      return `<tr data-schedule-id="${Number(schedule.id)}" class="${schedule.enabled ? '' : 'scheduled-disabled'}">
+        <td><strong>${escapeHtml(schedule.name || `#${schedule.id}`)}</strong></td>
+        <td>${escapeHtml(scheduledRecurrenceLabel(schedule))}</td>
+        <td>${escapeHtml(scheduledTargetLabel(schedule))}</td>
+        <td>${escapeHtml(schedule.next_run_at ? fmtDate(schedule.next_run_at) : '—')}</td>
+        <td>${escapeHtml(schedule.last_run_at ? fmtDate(schedule.last_run_at) : '—')}</td>
+        <td class="${statusClass}" title="${escapeHtml(title)}">${escapeHtml(status)}</td>
+        <td class="scheduled-row-actions">
+          <button type="button" class="btn secondary" data-schedule-action="edit">${escapeHtml(ui('Editar', 'Edit'))}</button>
+          <button type="button" class="btn secondary" data-schedule-action="run">${escapeHtml(ui('Executar agora', 'Run now'))}</button>
+          <button type="button" class="btn secondary" data-schedule-action="toggle">${escapeHtml(schedule.enabled ? ui('Desativar', 'Disable') : ui('Ativar', 'Enable'))}</button>
+          <button type="button" class="btn danger" data-schedule-action="delete">${escapeHtml(ui('Excluir', 'Delete'))}</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function loadScheduledMessages() {
+    try {
+      state.scheduledMessages = await api('/api/messages/scheduled');
+      renderScheduledMessages();
+    } catch (err) {
+      console.warn('Scheduled messages:', err);
+    }
+  }
+
+  function updateScheduledFormVisibility() {
+    const scheduleType = $('#scheduledScheduleType')?.value || 'once';
+    $('#scheduledRunAtField')?.classList.toggle('hidden', scheduleType !== 'once');
+    $('#scheduledWeekdayField')?.classList.toggle('hidden', scheduleType !== 'weekly');
+    $('#scheduledTimeField')?.classList.toggle('hidden', scheduleType !== 'weekly');
+
+    const targetType = $('#scheduledTargetType')?.value || 'station';
+    $('#scheduledTargetField')?.classList.toggle('hidden', targetType !== 'station');
+    $('#scheduledRecipientGroupField')?.classList.toggle('hidden', targetType !== 'list');
+    $('#scheduledTargetsField')?.classList.toggle('hidden', targetType !== 'list');
+    $('#scheduledBulletinIdField')?.classList.toggle('hidden', !['bulletin','group'].includes(targetType));
+    $('#scheduledAprsGroupField')?.classList.toggle('hidden', targetType !== 'group');
+    $('#scheduledRouteField')?.classList.toggle('hidden', !['station','list'].includes(targetType));
+    $('#scheduledIntervalField')?.classList.toggle('hidden', targetType !== 'list');
+
+    const route = $('#scheduledRoute')?.value || 'auto';
+    $('#scheduledPathField')?.classList.toggle('hidden', !['station','list'].includes(targetType) || route !== 'rf_custom');
+
+    const retry = $('#scheduledRetryPolicy')?.value || 'skip';
+    $('#scheduledRetryMinutesField')?.classList.toggle('hidden', retry !== 'retry');
+  }
+
+  function defaultScheduledDateTime() {
+    const date = new Date(Date.now() + 5 * 60 * 1000);
+    date.setSeconds(0, 0);
+    return toLocalDateTimeInput(date.toISOString());
+  }
+
+  function resetScheduledForm() {
+    const form = $('#scheduledMessageForm');
+    form?.reset();
+    if ($('#scheduledMessageId')) $('#scheduledMessageId').value = '';
+    if ($('#scheduledEnabled')) $('#scheduledEnabled').checked = true;
+    if ($('#scheduledScheduleType')) $('#scheduledScheduleType').value = 'once';
+    if ($('#scheduledRunAt')) $('#scheduledRunAt').value = defaultScheduledDateTime();
+    if ($('#scheduledWeekday')) $('#scheduledWeekday').value = String(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+    if ($('#scheduledTimeLocal')) $('#scheduledTimeLocal').value = '09:00';
+    if ($('#scheduledTargetType')) $('#scheduledTargetType').value = 'station';
+    if ($('#scheduledRoute')) $('#scheduledRoute').value = 'auto';
+    if ($('#scheduledBulletinId')) $('#scheduledBulletinId').value = '0';
+    if ($('#scheduledInterval')) $('#scheduledInterval').value = '3';
+    if ($('#scheduledRetryPolicy')) $('#scheduledRetryPolicy').value = 'skip';
+    if ($('#scheduledRetryMinutes')) $('#scheduledRetryMinutes').value = '10';
+    if ($('#scheduledContinueOnError')) $('#scheduledContinueOnError').checked = true;
+    updateScheduledFormVisibility();
+  }
+
+  function editScheduledMessage(scheduleId) {
+    const schedule = state.scheduledMessages.find(item => Number(item.id) === Number(scheduleId));
+    if (!schedule) return;
+    $('#scheduledMessageId').value = String(schedule.id);
+    $('#scheduledName').value = schedule.name || '';
+    $('#scheduledEnabled').checked = !!schedule.enabled;
+    $('#scheduledScheduleType').value = schedule.schedule_type || 'once';
+    $('#scheduledRunAt').value = toLocalDateTimeInput(schedule.run_at_utc);
+    $('#scheduledWeekday').value = String(schedule.weekday ?? 0);
+    $('#scheduledTimeLocal').value = schedule.time_local || '09:00';
+    $('#scheduledTargetType').value = schedule.target_type || 'station';
+    $('#scheduledTarget').value = schedule.target || '';
+    $('#scheduledRecipientGroup').value = schedule.recipient_group_id ? String(schedule.recipient_group_id) : '';
+    $('#scheduledTargets').value = (schedule.targets || []).join(', ');
+    $('#scheduledBulletinId').value = schedule.bulletin_id || '0';
+    $('#scheduledAprsGroup').value = schedule.aprs_group || '';
+    $('#scheduledRoute').value = schedule.route || 'auto';
+    $('#scheduledPath').value = schedule.path || '';
+    $('#scheduledInterval').value = String(schedule.interval_seconds || 3);
+    $('#scheduledRetryPolicy').value = schedule.retry_policy || 'skip';
+    $('#scheduledRetryMinutes').value = String(schedule.retry_minutes || 10);
+    $('#scheduledContinueOnError').checked = schedule.continue_on_error !== false;
+    $('#scheduledMessageText').value = schedule.message || '';
+    updateScheduledFormVisibility();
+    $('#scheduledMessageForm')?.scrollIntoView?.({ behavior:'smooth', block:'nearest' });
+  }
+
+  function scheduledFormPayload() {
+    const scheduleType = $('#scheduledScheduleType').value;
+    const targetType = $('#scheduledTargetType').value;
+    const bulletinId = $('#scheduledBulletinId').value || '0';
+    const payload = {
+      name: $('#scheduledName').value.trim(),
+      enabled: $('#scheduledEnabled').checked,
+      schedule_type: scheduleType,
+      run_at_utc: scheduleType === 'once' && $('#scheduledRunAt').value ? new Date($('#scheduledRunAt').value).toISOString() : null,
+      weekday: scheduleType === 'weekly' ? Number($('#scheduledWeekday').value) : null,
+      time_local: scheduleType === 'weekly' ? $('#scheduledTimeLocal').value : null,
+      target_type: targetType,
+      target: targetType === 'station' ? $('#scheduledTarget').value.trim().toUpperCase() : '',
+      targets: targetType === 'list' ? splitScheduledCallsigns($('#scheduledTargets').value) : [],
+      recipient_group_id: targetType === 'list' && $('#scheduledRecipientGroup').value ? Number($('#scheduledRecipientGroup').value) : null,
+      message_type: targetType === 'group' ? 'group_bulletin' : (targetType === 'bulletin' ? (/^[A-Z]$/.test(bulletinId) ? 'announcement' : 'bulletin') : 'message'),
+      message: $('#scheduledMessageText').value.trim(),
+      route: ['station','list'].includes(targetType) ? $('#scheduledRoute').value : 'aprs_is',
+      path: ['station','list'].includes(targetType) ? $('#scheduledPath').value.trim().toUpperCase() : '',
+      bulletin_id: bulletinId,
+      aprs_group: targetType === 'group' ? $('#scheduledAprsGroup').value.trim().toUpperCase() : '',
+      interval_seconds: Number($('#scheduledInterval').value || 3),
+      retry_policy: $('#scheduledRetryPolicy').value,
+      retry_minutes: Number($('#scheduledRetryMinutes').value || 10),
+      continue_on_error: $('#scheduledContinueOnError').checked
+    };
+    if (targetType === 'group') payload.target = payload.aprs_group;
+    return payload;
+  }
+
+  async function saveScheduledMessage(event) {
+    event?.preventDefault?.();
+    const id = Number($('#scheduledMessageId').value || 0);
+    let payload;
+    try {
+      payload = scheduledFormPayload();
+    } catch (err) {
+      toast(err.message, 'error');
+      return;
+    }
+    try {
+      const result = await api(id ? `/api/messages/scheduled/${id}` : '/api/messages/scheduled', {
+        method: id ? 'PUT' : 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      toast(id ? ui('Agendamento atualizado.', 'Schedule updated.') : ui('Agendamento criado.', 'Schedule created.'), 'ok');
+      resetScheduledForm();
+      await loadScheduledMessages();
+      return result;
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function saveRecipientGroup() {
+    const selected = Number($('#recipientGroupSelect').value || 0);
+    const payload = {
+      name: $('#recipientGroupName').value.trim(),
+      callsigns: splitScheduledCallsigns($('#recipientGroupCallsigns').value)
+    };
+    try {
+      await api(selected ? `/api/messages/recipient-groups/${selected}` : '/api/messages/recipient-groups', {
+        method: selected ? 'PUT' : 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      toast(selected ? ui('Lista atualizada.', 'List updated.') : ui('Lista salva.', 'List saved.'), 'ok');
+      $('#recipientGroupName').value = '';
+      $('#recipientGroupCallsigns').value = '';
+      $('#recipientGroupSelect').value = '';
+      await loadRecipientGroups();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  $('#scheduledMessagesButton')?.addEventListener('click', async () => {
+    state.scheduledPanelOpen = !state.scheduledPanelOpen;
+    $('#scheduledMessagesPanel')?.classList.toggle('hidden', !state.scheduledPanelOpen);
+    updateScheduledMessagesButton();
+    if (state.scheduledPanelOpen) {
+      await Promise.allSettled([loadRecipientGroups(), loadScheduledMessages()]);
+      if (!$('#scheduledRunAt')?.value) resetScheduledForm();
+    }
+  });
+  $('#closeScheduledMessagesButton')?.addEventListener('click', () => {
+    state.scheduledPanelOpen = false;
+    $('#scheduledMessagesPanel')?.classList.add('hidden');
+    updateScheduledMessagesButton();
+  });
+  $('#newScheduledMessageButton')?.addEventListener('click', resetScheduledForm);
+  $('#cancelScheduledEditButton')?.addEventListener('click', resetScheduledForm);
+  $('#scheduledMessageForm')?.addEventListener('submit', saveScheduledMessage);
+  $('#scheduledScheduleType')?.addEventListener('change', updateScheduledFormVisibility);
+  $('#scheduledTargetType')?.addEventListener('change', updateScheduledFormVisibility);
+  $('#scheduledRoute')?.addEventListener('change', updateScheduledFormVisibility);
+  $('#scheduledRetryPolicy')?.addEventListener('change', updateScheduledFormVisibility);
+
+  $('#scheduledMessagesTable tbody')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-schedule-action]');
+    const row = button?.closest('[data-schedule-id]');
+    if (!button || !row) return;
+    const id = Number(row.dataset.scheduleId);
+    const action = button.dataset.scheduleAction;
+    if (action === 'edit') return editScheduledMessage(id);
+    if (action === 'run') {
+      try {
+        await api(`/api/messages/scheduled/${id}/run-now`, { method:'POST' });
+        toast(ui('Execução imediata iniciada.', 'Immediate execution started.'), 'ok');
+        setTimeout(() => { void loadScheduledMessages(); void loadMessages(); }, 1200);
+      } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'toggle') {
+      const schedule = state.scheduledMessages.find(item => Number(item.id) === id);
+      try {
+        await api(`/api/messages/scheduled/${id}/toggle`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ enabled: !schedule?.enabled })
+        });
+        await loadScheduledMessages();
+      } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'delete') {
+      if (!window.confirm(ui('Excluir este agendamento?', 'Delete this schedule?'))) return;
+      try {
+        await api(`/api/messages/scheduled/${id}`, { method:'DELETE' });
+        await loadScheduledMessages();
+      } catch (err) { toast(err.message, 'error'); }
+    }
+  });
+
+  $('#recipientGroupSelect')?.addEventListener('change', () => {
+    const id = Number($('#recipientGroupSelect').value || 0);
+    const group = state.recipientGroups.find(item => Number(item.id) === id);
+    $('#recipientGroupName').value = group?.name || '';
+    $('#recipientGroupCallsigns').value = (group?.callsigns || []).join(', ');
+  });
+  $('#saveRecipientGroupButton')?.addEventListener('click', saveRecipientGroup);
+  $('#deleteRecipientGroupButton')?.addEventListener('click', async () => {
+    const id = Number($('#recipientGroupSelect').value || 0);
+    if (!id) return toast(ui('Selecione uma lista para excluir.', 'Select a list to delete.'), 'error');
+    if (!window.confirm(ui('Excluir esta lista de destinatários?', 'Delete this recipient list?'))) return;
+    try {
+      await api(`/api/messages/recipient-groups/${id}`, { method:'DELETE' });
+      $('#recipientGroupName').value = '';
+      $('#recipientGroupCallsigns').value = '';
+      await loadRecipientGroups();
+      await loadScheduledMessages();
+    } catch (err) { toast(err.message, 'error'); }
+  });
+
+  resetScheduledForm();
+  void loadRecipientGroups();
+  void loadScheduledMessages();
+
   $('#resetConfigButton')?.addEventListener('click', async () => {
     if (!window.confirm(ui('Restaurar TODA a configuração para os padrões atuais? Mensagens, estações, logs e tracklogs serão preservados.', 'Restore ALL settings to current defaults? Messages, stations, logs and tracklogs will be preserved.'))) return;
     try {
@@ -8353,6 +8706,9 @@
     schedulePolling(async () => {
       if (state.activeTab === 'messages') await loadMessages();
     }, 5000);
+    schedulePolling(async () => {
+      if (state.activeTab === 'messages') await loadScheduledMessages();
+    }, 15000);
     schedulePolling(checkIncomingPersonalMessages, 5000);
     schedulePolling(async () => {
       if (state.activeTab === 'stations') await loadStations();
