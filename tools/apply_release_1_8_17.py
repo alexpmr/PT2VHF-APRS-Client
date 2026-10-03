@@ -19,6 +19,7 @@ for rel in (
     "pt2vhf_aprs/database.py",
     "pt2vhf_aprs/scheduled_messages.py",
     "pt2vhf_aprs/web.py",
+    "tests/test_v1817_scheduler_zoom_tnc.py",
 ):
     ast.parse(read(rel), filename=rel)
 
@@ -49,6 +50,7 @@ checks = {
         "interval_seconds",
         "retry_policy",
         "continue_on_error",
+        "retry_targets",
     ],
     "pt2vhf_aprs/web.py": [
         "scheduled_message_service.start()",
@@ -93,6 +95,7 @@ checks = {
         "test_recipient_group_and_schedule_roundtrip_in_sqlite",
         "test_weekly_schedule_calculates_future_occurrence",
         "test_tnc_connected_without_valid_kiss_is_warning_not_success",
+        "test_list_retry_contains_only_failed_destinations",
     ],
 }
 
