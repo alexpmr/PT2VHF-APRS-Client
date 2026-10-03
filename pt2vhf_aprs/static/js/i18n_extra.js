@@ -1,5 +1,13 @@
 window.PT2VHF_I18N = {
   es: {
+    "Conteúdo": "Contenido",
+    "Marcar tudo": "Marcar todo",
+    "Desmarcar tudo": "Desmarcar todo",
+    "Grupos": "Grupos",
+    "Ver": "Ver",
+    "Há filtros de estação ativos.": "Hay filtros de estación activos.",
+    "Todas as categorias de estação estão visíveis.": "Todas las categorías de estación están visibles.",
+    "Todas as categorias de conteúdo estão visíveis.": "Todas las categorías de contenido están visibles.",
     "Mostrar mensagens": "Mostrar mensajes",
     "Mostrar boletins": "Mostrar boletines",
     "Ordenar": "Ordenar",
@@ -418,6 +426,14 @@ window.PT2VHF_I18N = {
     "Replay da Rede": "Replay de la red"
   },
   fr: {
+    "Conteúdo": "Contenu",
+    "Marcar tudo": "Tout cocher",
+    "Desmarcar tudo": "Tout décocher",
+    "Grupos": "Groupes",
+    "Ver": "Voir",
+    "Há filtros de estação ativos.": "Des filtres de station sont actifs.",
+    "Todas as categorias de estação estão visíveis.": "Toutes les catégories de station sont visibles.",
+    "Todas as categorias de conteúdo estão visíveis.": "Toutes les catégories de contenu sont visibles.",
     "Mostrar mensagens": "Afficher les messages",
     "Mostrar boletins": "Afficher les bulletins",
     "Ordenar": "Trier",
