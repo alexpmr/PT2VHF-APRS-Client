@@ -271,9 +271,9 @@
     box.classList.toggle('hidden', !error);
   }
 
-  function statusClass(connected, paused) {
-    if (paused) return 'status disconnected';
-    return connected ? 'status connected' : 'status disconnected';
+  function statusClass(connected, paused, rxState = 'waiting') {
+    if (paused || !connected) return 'status disconnected';
+    return rxState === 'active' ? 'status connected' : 'status warning';
   }
 
   function humanTime(value) {
@@ -308,8 +308,16 @@
     const transportLabel = !connected
       ? tr('Desconectado')
       : serial
-        ? tr('Serial conectada')
-        : tr('KISS TCP conectado');
+        ? (rxState === 'active'
+          ? tr('Serial operacional — RX KISS ativo')
+          : rxState === 'bytes_without_kiss'
+            ? tr('Serial conectada — sem KISS')
+            : rxState === 'invalid'
+              ? tr('Serial conectada — AX.25 inválido')
+              : tr('Serial conectada — aguardando dados'))
+        : (rxState === 'active'
+          ? tr('KISS TCP operacional — RX ativo')
+          : tr('KISS TCP conectado — aguardando frames'));
 
     let rxDetail = tr('Aguardando dados do TNC.');
     let diagnosticState = 'waiting';
@@ -336,16 +344,20 @@
 
     const header = $('#tncHeaderStatus');
     if (header) {
-      header.className = `${statusClass(connected, !!status.tx_paused)} tnc-header-status`;
+      header.className = `${statusClass(connected, !!status.tx_paused, rxState)} tnc-header-status`;
       const text = header.querySelector('span:last-child');
       if (text) {
         text.textContent = !connected
           ? 'TNC offline'
           : rxState === 'active'
-            ? `TNC · ${tr('RX ativo')}`
-            : serial
-              ? `TNC · ${tr('Serial conectada')}`
-              : `TNC ${tr('Ativado').toLowerCase()}`;
+            ? `TNC · ${tr('RX KISS ativo')}`
+            : serial && rxState === 'bytes_without_kiss'
+              ? `TNC · ${tr('Serial sem KISS')}`
+              : serial && rxState === 'invalid'
+                ? `TNC · ${tr('AX.25 inválido')}`
+                : serial
+                  ? `TNC · ${tr('Serial aguardando')}`
+                  : `TNC · ${tr('KISS aguardando')}`;
       }
       header.title = [status.state, status.endpoint, rxDetail, status.last_error].filter(Boolean).join(' · ');
     }
