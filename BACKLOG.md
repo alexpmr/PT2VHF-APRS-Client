@@ -1,5 +1,15 @@
 # Backlog
 
+## Concluído na v1.8.13
+
+- **Mensagens — rota por envio:** consolidado Automático / APRS-IS / RF direto / RF personalizado, com path por mensagem e retry preservando a rota.
+- **Responsividade:** consolidadas as regras de baixa altura aplicáveis a 1360×768 e 1280×720, mantendo Mensagens e ações do popup acessíveis.
+- **Interação APRS:** objetos/itens e infraestrutura sem evidência de comunicação bidirecional permanecem com Mensagem, queries, Ping/ACK e Trace desabilitados.
+- **Mapa — Relevo com corte:** consolidado DEM real, slider vertical, máximo padrão de 3.000 m configurável entre 100 e 9.000 m, persistência e opacidade independente.
+- **Sobre:** consolidada a apresentação do projeto, contatos, tiny.cc/aprs, divulgação APRS e traduções PT-BR/EN/ES/FR.
+- **Regressão:** nova suíte v1.8.13 valida os cinco requisitos acima e preserva o hotfix SQLite da v1.8.12.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
 ## Política de versões a partir da próxima geração
 
 - A próxima versão completa será **v1.7**.
@@ -142,25 +152,6 @@
   - Incluir atalhos para **Mostrar log**, **Enviar mensagem**, **Ping/ACK**, **Trace**, **Posição**, **Status** e histórico de queries.
   - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
   - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
-
-- **Mapa — camada Elevação mínima com corte por altitude**
-  - Replicar no **PT2VHF APRS Client** o comportamento final validado no **Traffic Analyzer**.
-  - Adicionar em **Camadas** uma sobreposição analítica chamada **Elevação mínima**, baseada em dados reais de DEM.
-  - Quando ativada, exibir somente o terreno cuja altitude seja **maior ou igual à cota mínima selecionada**; todo o terreno abaixo do limite fica transparente.
-  - O controle vertical deve aparecer **somente enquanto a camada Elevação mínima estiver ligada**.
-  - Posicionar o controle na **lateral direita do mapa**, centralizado verticalmente, sem depender da camada Relevo sombreado.
-  - O slider deve representar altitude: mover para cima aumenta a cota mínima; mover para baixo reduz a cota.
-  - Exibir acima do slider o valor atual da cota em metros, por exemplo **1.000 m**.
-  - Atualizar imediatamente a área destacada durante o movimento do slider.
-  - Usar **3.000 m como limite máximo padrão** do slider.
-  - O **campo numérico inferior do próprio controle** deve informar e alterar o **limite máximo do range do slider**, e não a cota mínima atual.
-  - Permitir no campo inferior limite configurável de **100 a 9.000 m**; ao mudar o valor, atualizar imediatamente o máximo do slider e a indicação superior da escala.
-  - Se o novo limite máximo ficar abaixo da cota mínima atual, ajustar automaticamente a cota ao novo máximo.
-  - A altura normal do slider deverá ser de aproximadamente **390 px**; em janelas de menor altura, usar aproximadamente **255 px**, mantendo adaptação responsiva.
-  - Manter controle separado de **opacidade** da camada.
-  - Persistir a última cota mínima, o limite máximo configurado e a opacidade escolhida.
-  - Estações APRS, objetos, tracklogs, enlaces, animações e radar devem permanecer acima da camada de elevação.
-  - A implementação deve usar dados reais de elevação/DEM; não inferir altitude a partir do mapa topográfico visual.
 
 - **Mapa — consolidar controles na barra superior**
   - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
