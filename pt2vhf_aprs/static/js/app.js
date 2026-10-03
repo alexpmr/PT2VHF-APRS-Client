@@ -45,6 +45,7 @@
       topology_igate_color: '#ffff00',
       topology_width: 1,
       map_brightness: 100,
+      map_zoom_step: 0.10,
       weather_radar_opacity: 55,
       elevation_threshold: 1000,
       elevation_slider_max: 3000,
@@ -157,6 +158,9 @@
     updateCheckTimer: null,
     updateSchedulerReady: false,
     messageSending: false,
+    scheduledMessages: [],
+    recipientGroups: [],
+    scheduledPanelOpen: false,
     mapHistoryOpen: localStorage.getItem('pt2vhf_map_history_open') === '1',
   };
 
@@ -1242,6 +1246,35 @@
     root.style.setProperty('--statistics-font-size', `${statisticsSize}px`);
   }
 
+  function normalizeMapZoomStep(value) {
+    const requested = Number(value);
+    const allowed = [0.05, 0.10, 0.25, 0.50, 1.00];
+    return allowed.includes(requested) ? requested : 0.10;
+  }
+
+  function mapZoomOptions(value) {
+    const step = normalizeMapZoomStep(value);
+    return {
+      step,
+      wheelPxPerZoomLevel: Math.max(60, Math.min(600, Math.round(30 / step))),
+      wheelDebounceTime: 20
+    };
+  }
+
+  function applyMapZoomPreferences(value) {
+    const options = mapZoomOptions(value);
+    state.mapConfig.map_zoom_step = options.step;
+    if (state.map) {
+      state.map.options.zoomSnap = options.step;
+      state.map.options.zoomDelta = options.step;
+      state.map.options.wheelPxPerZoomLevel = options.wheelPxPerZoomLevel;
+      state.map.options.wheelDebounceTime = options.wheelDebounceTime;
+    }
+    const input = $('#configForm')?.elements.namedItem('map_zoom_step');
+    if (input && Number(input.value) !== options.step) input.value = options.step.toFixed(2);
+    return options;
+  }
+
   function applyMapPreferences(cfg = {}) {
     state.mapConfig = {
       map_type: localStorage.getItem('pt2vhf_map_type_quick') || cfg.map_type || state.mapConfig.map_type || 'osm',
@@ -1251,12 +1284,14 @@
       topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#ffff00',
       topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 1),
       map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100),
+      map_zoom_step: normalizeMapZoomStep(cfg.map_zoom_step ?? state.mapConfig.map_zoom_step ?? 0.10),
       weather_radar_opacity: Math.min(100, Math.max(10, Number(cfg.weather_radar_opacity || state.mapConfig.weather_radar_opacity || 55))),
       elevation_threshold: Math.max(0, Math.round(Number(cfg.elevation_threshold ?? state.mapConfig.elevation_threshold ?? 1000))),
       elevation_slider_max: Math.min(9000, Math.max(100, Math.round(Number(cfg.elevation_slider_max ?? state.mapConfig.elevation_slider_max ?? 3000)))),
       elevation_opacity: Math.min(100, Math.max(10, Math.round(Number(cfg.elevation_opacity ?? state.mapConfig.elevation_opacity ?? 55))))
     };
     state.mapConfig.elevation_threshold = Math.min(state.mapConfig.elevation_threshold, state.mapConfig.elevation_slider_max);
+    applyMapZoomPreferences(state.mapConfig.map_zoom_step);
 
     if (state.map) {
       applyBaseMap(state.mapConfig.map_type);
@@ -1304,12 +1339,13 @@
     try {
       [saved, cfg] = await Promise.all([api('/api/map-state'), api('/api/config')]);
     } catch (_) {}
+    const zoomOptions = mapZoomOptions(cfg.map_zoom_step ?? 0.10);
     state.map = L.map('map', {
       preferCanvas: true,
-      zoomSnap: 0.10,
-      zoomDelta: 0.10,
-      wheelPxPerZoomLevel: 300,
-      wheelDebounceTime: 20
+      zoomSnap: zoomOptions.step,
+      zoomDelta: zoomOptions.step,
+      wheelPxPerZoomLevel: zoomOptions.wheelPxPerZoomLevel,
+      wheelDebounceTime: zoomOptions.wheelDebounceTime
     }).setView([saved.latitude, saved.longitude], Number(saved.zoom));
 
     const elevationPane = state.map.createPane('pt2vhfElevationPane');
@@ -6212,6 +6248,7 @@
     const widthValue = $('#trackWidthValue');
     const brightnessInput = form.elements.namedItem('map_brightness');
     const brightnessValue = $('#mapBrightnessValue');
+    const zoomStepInput = form.elements.namedItem('map_zoom_step');
     const radarOpacityInput = form.elements.namedItem('weather_radar_opacity');
     const radarOpacityValue = $('#weatherRadarOpacityValue');
     const elevationMaxInput = form.elements.namedItem('elevation_slider_max');
@@ -6228,6 +6265,7 @@
     if (colorInput && colorText) colorText.value = colorInput.value || '#3ba6ff';
     if (widthInput && widthValue) widthValue.textContent = `${widthInput.value || 2} px`;
     if (brightnessInput && brightnessValue) brightnessValue.textContent = `${brightnessInput.value || 100}%`;
+    if (zoomStepInput) zoomStepInput.value = normalizeMapZoomStep(zoomStepInput.value || state.mapConfig.map_zoom_step || 0.10).toFixed(2);
     if (radarOpacityInput && radarOpacityValue) radarOpacityValue.textContent = `${radarOpacityInput.value || 55}%`;
     if (elevationMaxInput && elevationMaxValue) elevationMaxValue.textContent = elevationMetersText(elevationMaxInput.value || 3000);
     if (elevationOpacityInput && elevationOpacityValue) elevationOpacityValue.textContent = `${elevationOpacityInput.value || 55}%`;
@@ -6272,6 +6310,28 @@
     if (out) out.textContent = `${e.target.value}%`;
     const tilePane = state.map?.getPane('tilePane');
     if (tilePane) tilePane.style.filter = `brightness(${e.target.value}%)`;
+  });
+
+  $('#mapZoomStep')?.addEventListener('change', e => {
+    const options = applyMapZoomPreferences(e.target.value);
+    e.target.value = options.step.toFixed(2);
+    markConfigDirty();
+    toast(ui(
+      `Step do zoom aplicado: ${options.step.toLocaleString(currentLocale(), {minimumFractionDigits:2, maximumFractionDigits:2})}.`,
+      `Map zoom step applied: ${options.step.toFixed(2)}.`
+    ), 'ok');
+  });
+
+  $('#resetMapZoomButton')?.addEventListener('click', () => {
+    const input = $('#mapZoomStep');
+    if (!input) return;
+    input.value = '0.10';
+    applyMapZoomPreferences(0.10);
+    markConfigDirty();
+    toast(ui(
+      'Zoom restaurado para o padrão 0,10. Clique em Salvar configuração para persistir.',
+      'Zoom restored to the 0.10 default. Click Save configuration to persist.'
+    ), 'ok');
   });
 
   $('#weatherRadarOpacity')?.addEventListener('input', e => {
