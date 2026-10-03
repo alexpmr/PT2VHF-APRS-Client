@@ -2,7 +2,7 @@
 
 ## 1.8.15 - 2026-10-03
 
-- **Sobre:** corrige o indicativo de Adriano para **PP5UA**.
+- **Sobre:** corrige o indicativo de Adriano para **PP5AU**.
 - **Mensagens:** adiciona filtros persistentes e independentes para **Mostrar mensagens**, **Mostrar boletins** e **Ocultar telemetria**.
 - **Mapa:** habilita zoom fracionário mais gradual com passos de **0,25**, rolagem mais suave e persistência do nível intermediário no SQLite.
 - **Estações:** adiciona ordenação explícita por **Ícone / tipo**, mantém a ordem visual durante atualizações e acrescenta estações novas ao final da lista corrente.
@@ -78,7 +78,7 @@
 - A validação dos campos obrigatórios antes da conexão e o comportamento atual de reconexão APRS-IS são preservados.
 - Remove a redundância visual do antigo indicador separado + botão independente no cabeçalho.
 - A aba **Sobre** ganha uma seção **Agradecimentos / Colaboradores** dedicada aos radioamadores que ajudam na evolução do software com sugestões, testes, validações e ajustes.
-- Colaboradores incluídos: **PP5UA — Adriano; PY4EI — Allan; PU2MUS — Marco; PP5PK — Daniel Kondlatsch; PT2YW — Ywstter; PT2PAG — Paulo Galvão**.
+- Colaboradores incluídos: **PP5AU — Adriano; PY4EI — Allan; PU2MUS — Marco; PP5PK — Daniel Kondlatsch; PT2YW — Ywstter; PT2PAG — Paulo Galvão**.
 - A seção de agradecimentos é preparada para receber novos colaboradores futuramente e mantém indicativos em destaque.
 - Textos da conexão e dos agradecimentos disponíveis em **PT-BR, EN, ES e FR**.
 - Inclui testes de regressão para estados do controle de conexão, eliminação do indicador redundante e presença dos seis colaboradores.
