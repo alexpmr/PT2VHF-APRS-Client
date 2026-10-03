@@ -83,7 +83,7 @@ checks = {
         "function statusClass(connected, paused, rxState = 'waiting')",
         "Serial conectada — sem KISS",
         "Serial operacional — RX KISS ativo",
-        "TNC · Serial sem KISS",
+        "tr('Serial sem KISS')",
     ],
     "pt2vhf_aprs/static/css/app.css": [
         ".status.warning",
