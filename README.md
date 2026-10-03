@@ -31,7 +31,7 @@ Os arquivos abaixo apontam diretamente para a **release v1.8.15**, evitando link
 
 ## Novidades da v1.8.15
 
-- **Sobre:** indicativo de Adriano corrigido para **PP5UA**.
+- **Sobre:** indicativo de Adriano corrigido para **PP5AU**.
 - **Mensagens:** filtros persistentes para **Mostrar mensagens**, **Mostrar boletins** e **Ocultar telemetria**.
 - **Mapa:** zoom mais gradual, com níveis intermediários em passos de **0,25** e rolagem menos abrupta.
 - O nível de zoom fracionário passa a ser salvo e restaurado pelo banco local.
@@ -105,7 +105,7 @@ Os arquivos abaixo apontam diretamente para a **release v1.8.15**, evitando link
 - Cliques concorrentes são bloqueados enquanto a ação está em andamento.
 - A aba **Sobre** ganha uma seção **Agradecimentos / Colaboradores**.
 - Colaboradores reconhecidos nesta versão:
-  - **PP5UA — Adriano**
+  - **PP5AU — Adriano**
   - **PY4EI — Allan**
   - **PU2MUS — Marco**
   - **PP5PK — Daniel Kondlatsch**
