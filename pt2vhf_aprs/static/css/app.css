@@ -428,6 +428,13 @@ html[data-theme="light"] .map-context-bar .topology-control select {
 }
 .tab-panel { display: none; height: 100%; }
 .tab-panel.active { display: block; }
+#tab-stations.active {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+#tab-stations > .panel-header { flex: 0 0 auto; }
 #tab-messages.active {
   display: flex;
   flex-direction: column;
@@ -517,7 +524,11 @@ html[data-theme="light"] .map-context-bar .topology-control select {
   overflow-y: auto;
   overflow-x: auto;
 }
-.stations-table-wrap { height: calc(100% - 78px); }
+.stations-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
 .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
 .data-table th { position: sticky; top: 0; z-index: 2; text-align: left; background: #19222b; color: #c9d5de; border-bottom: 1px solid var(--line); padding: 10px 11px; cursor: pointer; white-space: nowrap; user-select: none; }
 .data-table th:hover { background: #202c36; }
@@ -897,7 +908,7 @@ html[data-theme="light"] .resource-critical-row strong { color:#a92831; }
 }
 
 #stationsTable th[data-key="distance_km"],
-#stationsTable td:nth-child(3) {
+#stationsTable td:nth-child(4) {
   white-space: nowrap;
   min-width: 105px;
 }
@@ -984,6 +995,7 @@ html[data-theme="light"] .resource-critical-row strong { color:#a92831; }
   display: flex;
   align-items: end;
   gap: 10px;
+  flex-wrap: wrap;
 }
 #groupMessagesButton,
 #myMessagesButton,
@@ -1307,6 +1319,85 @@ html[data-theme="light"] .resource-critical-row strong { color:#a92831; }
   display: flex;
   align-items: end;
   gap: 10px;
+  flex-wrap: wrap;
+}
+.station-sort-field { min-width: 165px !important; }
+.station-sort-field select {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: #0f151b;
+  color: var(--text);
+}
+.station-message-safety {
+  min-height: 38px;
+  max-width: 260px;
+  padding: 6px 9px;
+  align-items: center;
+}
+.station-message-safety input { accent-color: var(--accent); }
+.station-quick-message-panel {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #111820;
+}
+.station-quick-message-panel.hidden { display: none; }
+.station-quick-message-heading,
+.station-quick-message-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.station-quick-message-heading { justify-content: space-between; }
+.station-quick-message-heading div {
+  display: grid;
+  gap: 3px;
+}
+.station-quick-message-heading small,
+.station-quick-message-panel > small { color: var(--muted); }
+.station-quick-message-row textarea {
+  flex: 1 1 auto;
+  min-width: 240px;
+  min-height: 54px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #0f151b;
+  color: var(--text);
+  font: inherit;
+}
+.station-symbol-type {
+  white-space: nowrap;
+  min-width: 155px;
+}
+.station-symbol-type .aprs-symbol-wrap { vertical-align: middle; }
+.station-list-actions { white-space: nowrap; }
+.station-list-message-button { min-height: 30px; padding: 5px 9px; }
+.station-message-caution {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  color: #f4bd50;
+  cursor: help;
+}
+html[data-theme="light"] .station-sort-field select,
+html[data-theme="light"] .station-quick-message-row textarea {
+  background: #fff;
+  color: var(--text);
+}
+@media (max-width: 900px) {
+  .station-quick-message-heading,
+  .station-quick-message-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .station-quick-message-row textarea { min-width: 0; width: 100%; }
 }
 @media (max-width: 900px) {
   .station-header-controls {
