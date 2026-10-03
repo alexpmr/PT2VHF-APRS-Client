@@ -61,7 +61,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "A ação Conectar/Desconectar usa wanted/connected/verified do backend e não depende mais do texto do botão.",
             "Cliques concorrentes são bloqueados durante a execução da ação, preservando validação de configuração e reconexão.",
             "A aba Sobre ganha uma seção de Agradecimentos / Colaboradores.",
-            "São reconhecidos PU5AAG Adriano, PY4EI Allan, PU2MUS Marco, PP5PK Daniel Kondlatsch, PT2YW Ywstter e PT2PAG Paulo Galvão.",
+            "São reconhecidos PP5UA Adriano, PY4EI Allan, PU2MUS Marco, PP5PK Daniel Kondlatsch, PT2YW Ywstter e PT2PAG Paulo Galvão.",
             "Textos atualizados em PT-BR, EN, ES e FR.",
             "Release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.",
         ],
