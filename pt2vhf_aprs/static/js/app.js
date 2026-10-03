@@ -122,6 +122,8 @@
     hideTelemetryMessages: true,
     showNormalMessages: true,
     showBulletinMessages: true,
+    showGroupMessages: true,
+    showTelemetryMessages: false,
     groupMessages: false,
     selectedConversation: '',
     ownCallsign: '',
@@ -1303,10 +1305,10 @@
     } catch (_) {}
     state.map = L.map('map', {
       preferCanvas: true,
-      zoomSnap: 0.25,
-      zoomDelta: 0.25,
-      wheelPxPerZoomLevel: 120,
-      wheelDebounceTime: 25
+      zoomSnap: 0.10,
+      zoomDelta: 0.10,
+      wheelPxPerZoomLevel: 300,
+      wheelDebounceTime: 20
     }).setView([saved.latitude, saved.longitude], Number(saved.zoom));
 
     const elevationPane = state.map.createPane('pt2vhfElevationPane');
