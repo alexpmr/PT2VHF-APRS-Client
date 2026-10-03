@@ -272,6 +272,7 @@
         <button id="groupMessagesButton" type="button" class="btn secondary" aria-pressed="false">Agrupar por remetente</button>
         <button id="myMessagesButton" type="button" class="btn secondary" aria-pressed="false">Minhas mensagens</button>
         <button id="unreadMessagesButton" type="button" class="btn secondary" aria-pressed="false">Não lidas</button>
+        <button id="scheduledMessagesButton" type="button" class="btn secondary scheduled-messages-button" aria-expanded="false">Agendadas <span id="scheduledMessagesCount">0</span></button>
         <button id="clearMessagesButton" type="button" class="btn danger">Limpar</button>
         <label class="field compact">
           <span>Filtro por origem</span>
@@ -381,6 +382,134 @@
       </label>
       <button id="sendMessageButton" class="btn primary send-btn" title="Enviar mensagem">Enviar</button>
     </div>
+
+    <section id="scheduledMessagesPanel" class="scheduled-messages-panel hidden">
+      <div class="scheduled-panel-header">
+        <div>
+          <h3>Mensagens programadas</h3>
+          <p>Envio único ou recorrente para estação, lista de estações, boletim ou grupo APRS.</p>
+        </div>
+        <div class="scheduled-panel-actions">
+          <button id="newScheduledMessageButton" type="button" class="btn secondary">Novo agendamento</button>
+          <button id="closeScheduledMessagesButton" type="button" class="btn secondary">Fechar</button>
+        </div>
+      </div>
+
+      <div class="scheduled-layout">
+        <form id="scheduledMessageForm" class="scheduled-editor">
+          <input id="scheduledMessageId" type="hidden">
+          <h4>Agendamento</h4>
+          <div class="scheduled-form-grid">
+            <label class="field"><span>Nome</span><input id="scheduledName" type="text" maxlength="80" placeholder="Ex.: APRS Thursday"></label>
+            <label class="check-field scheduled-enabled-field"><input id="scheduledEnabled" type="checkbox" checked><span>Ativo</span></label>
+
+            <label class="field">
+              <span>Recorrência</span>
+              <select id="scheduledScheduleType">
+                <option value="once">Envio único</option>
+                <option value="weekly">Semanal</option>
+              </select>
+            </label>
+            <label id="scheduledRunAtField" class="field"><span>Data e hora</span><input id="scheduledRunAt" type="datetime-local"></label>
+            <label id="scheduledWeekdayField" class="field hidden">
+              <span>Dia da semana</span>
+              <select id="scheduledWeekday">
+                <option value="0">Segunda-feira</option>
+                <option value="1">Terça-feira</option>
+                <option value="2">Quarta-feira</option>
+                <option value="3">Quinta-feira</option>
+                <option value="4">Sexta-feira</option>
+                <option value="5">Sábado</option>
+                <option value="6">Domingo</option>
+              </select>
+            </label>
+            <label id="scheduledTimeField" class="field hidden"><span>Horário</span><input id="scheduledTimeLocal" type="time" value="09:00"></label>
+
+            <label class="field">
+              <span>Tipo de destino</span>
+              <select id="scheduledTargetType">
+                <option value="station">Estação específica</option>
+                <option value="list">Lista de estações</option>
+                <option value="bulletin">Boletim APRS</option>
+                <option value="group">Grupo APRS</option>
+              </select>
+            </label>
+            <label id="scheduledTargetField" class="field"><span>Destino</span><input id="scheduledTarget" type="text" maxlength="9" placeholder="Indicativo/SSID"></label>
+            <label id="scheduledRecipientGroupField" class="field hidden">
+              <span>Lista salva</span>
+              <select id="scheduledRecipientGroup"><option value="">— Sem lista salva —</option></select>
+            </label>
+            <label id="scheduledTargetsField" class="field scheduled-targets-field hidden">
+              <span>Indicativos adicionais</span>
+              <textarea id="scheduledTargets" rows="3" placeholder="PY2AAA-9, PU2BBB-7, PT2CCC"></textarea>
+              <small>Separe por vírgula, espaço ou ponto e vírgula.</small>
+            </label>
+            <label id="scheduledBulletinIdField" class="field hidden">
+              <span>Linha do boletim</span>
+              <select id="scheduledBulletinId">
+                <option value="0">BLN0</option><option value="1">BLN1</option><option value="2">BLN2</option>
+                <option value="3">BLN3</option><option value="4">BLN4</option><option value="5">BLN5</option>
+                <option value="6">BLN6</option><option value="7">BLN7</option><option value="8">BLN8</option><option value="9">BLN9</option>
+                <option value="A">BLNA (anúncio)</option>
+              </select>
+            </label>
+            <label id="scheduledAprsGroupField" class="field hidden"><span>Grupo APRS</span><input id="scheduledAprsGroup" type="text" maxlength="5" placeholder="Ex.: DF, WX"></label>
+
+            <label id="scheduledRouteField" class="field">
+              <span>Rota</span>
+              <select id="scheduledRoute">
+                <option value="auto">Automático</option>
+                <option value="aprs_is">APRS-IS</option>
+                <option value="rf_direct">RF direto</option>
+                <option value="rf_custom">RF personalizado</option>
+              </select>
+            </label>
+            <label id="scheduledPathField" class="field hidden"><span>Path RF</span><input id="scheduledPath" type="text" maxlength="63" placeholder="WIDE1-1,WIDE2-1"></label>
+            <label id="scheduledIntervalField" class="field hidden"><span>Intervalo entre destinos (s)</span><input id="scheduledInterval" type="number" min="1" max="120" value="3"></label>
+
+            <label class="field">
+              <span>Se a rota estiver indisponível</span>
+              <select id="scheduledRetryPolicy">
+                <option value="skip">Registrar falha e pular ocorrência</option>
+                <option value="retry">Tentar novamente depois</option>
+              </select>
+            </label>
+            <label id="scheduledRetryMinutesField" class="field hidden"><span>Tentar novamente após (min)</span><input id="scheduledRetryMinutes" type="number" min="1" max="1440" value="10"></label>
+            <label class="check-field"><input id="scheduledContinueOnError" type="checkbox" checked><span>Em lista, continuar com os demais se um destino falhar</span></label>
+
+            <label class="field scheduled-message-field">
+              <span>Mensagem</span>
+              <textarea id="scheduledMessageText" rows="4" maxlength="500" placeholder="Mensagem que será enviada automaticamente"></textarea>
+            </label>
+          </div>
+          <div class="scheduled-editor-actions">
+            <button id="saveScheduledMessageButton" type="submit" class="btn primary">Salvar agendamento</button>
+            <button id="cancelScheduledEditButton" type="button" class="btn secondary">Limpar formulário</button>
+          </div>
+          <small class="hint">Horários semanais usam o fuso local do sistema. Agendamentos ficam gravados no banco local.</small>
+        </form>
+
+        <aside class="recipient-groups-card">
+          <h4>Listas de destinatários</h4>
+          <label class="field"><span>Lista existente</span><select id="recipientGroupSelect"><option value="">— Nova lista —</option></select></label>
+          <label class="field"><span>Nome da lista</span><input id="recipientGroupName" type="text" maxlength="80" placeholder="Ex.: APRS Thursday"></label>
+          <label class="field"><span>Indicativos</span><textarea id="recipientGroupCallsigns" rows="5" placeholder="PY2AAA-9, PU2BBB-7, PT2CCC"></textarea></label>
+          <div class="recipient-group-actions">
+            <button id="saveRecipientGroupButton" type="button" class="btn secondary">Salvar lista</button>
+            <button id="deleteRecipientGroupButton" type="button" class="btn danger">Excluir lista</button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="scheduled-table-wrap table-wrap">
+        <table id="scheduledMessagesTable" class="data-table">
+          <thead><tr>
+            <th>Nome</th><th>Recorrência</th><th>Destino</th><th>Próxima execução</th><th>Última execução</th><th>Status</th><th>Ações</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
   </section>
 
   <section id="tab-stations" class="tab-panel">
@@ -942,6 +1071,17 @@
             </div>
           </label>
           <label class="field">
+            <span>Step do zoom do mapa</span>
+            <select name="map_zoom_step" id="mapZoomStep">
+              <option value="0.05">Muito fino — 0,05</option>
+              <option value="0.10" selected>Fino — 0,10 (padrão)</option>
+              <option value="0.25">Médio — 0,25</option>
+              <option value="0.50">Rápido — 0,50</option>
+              <option value="1.00">Clássico — 1,00</option>
+            </select>
+            <small>Ajusta imediatamente o passo dos botões +/− e a sensibilidade da roda/touchpad.</small>
+          </label>
+          <label class="field">
             <span>Opacidade da camada de clima</span>
             <div class="range-field-row">
               <input name="weather_radar_opacity" id="weatherRadarOpacity" type="range" min="10" max="100" step="5" value="55">
@@ -993,6 +1133,7 @@
           </label>
         </div>
         <div class="config-actions map-config-actions">
+          <button id="resetMapZoomButton" type="button" class="btn secondary">Restaurar zoom padrão</button>
           <button id="resetTopologyStyleButton" type="button" class="btn secondary">Restaurar topologia padrão</button>
           <span class="hint">Padrão: topologia amarela (#ffff00), 1 px.</span>
         </div>
