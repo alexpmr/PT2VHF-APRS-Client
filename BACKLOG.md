@@ -1,5 +1,18 @@
 # Backlog
 
+## Concluído na v1.8.15
+
+- **Sobre:** corrigido o indicativo de Adriano para **PP5UA** na aba Sobre, testes e referências do projeto.
+- **Mensagens — filtros de exibição:** adicionadas opções persistentes e independentes para **Mostrar mensagens**, **Mostrar boletins** e **Ocultar telemetria**, sem apagar o histórico.
+- **Mapa — zoom mais gradual:** Leaflet passa a usar zoom fracionário com `zoomSnap=0,25`, `zoomDelta=0,25` e roda do mouse mais progressiva; o zoom fracionário é persistido no SQLite.
+- **Estações — sugestão de PU2MUS/Marco:** ordenação por **Ícone / tipo**, lista estável durante a sessão, novas estações no fim da visualização corrente, envio rápido sem sair da aba, reutilização do último texto e proteção opcional para **DMR, D-Star e SSIDs -12 a -15**.
+- **Mapa × lista de Estações:** filtros do menu **Ver** também são aplicados à lista de Estações, eliminando a divergência em que DMR/D-Star desapareciam apenas do mapa.
+- **TNC/RF — diagnóstico de transporte:** a interface diferencia porta/serial conectada de RX KISS/AX.25 válido e de TX entregue ao transporte; contabiliza bytes RX/TX, frames KISS e frames AX.25 inválidos.
+- **Kenwood TM-D700:** documentado o cenário de uso em **modo PKT**, sem forçar o modo TNC/digipeater interno. O Client passa a alertar quando há bytes seriais sem frame KISS reconhecível e deixa explícito que entregar bytes à serial não confirma emissão RF.
+- **Regressão:** nova suíte v1.8.15 cobre os recursos acima e preserva os testes das versões anteriores.
+- **Produção:** release completa para Windows x64/ARM64, Linux x86_64, macOS ARM64/Intel e Manual PDF.
+
+
 ## Concluído na v1.8.14
 
 - **Mensagens:** Automático / APRS-IS / RF direto / RF personalizado por envio, com path RF personalizado e retry preservando a rota.
@@ -122,6 +135,8 @@
 ## Pendências para próximas versões
 
 - **TNC / RF — Kenwood TM-D700 conecta pela serial, mas não recebe nem transmite (relato de PU2MUS - Marco)**
+  - **Diagnóstico incorporado na v1.8.15:** o Client agora separa serial aberta, bytes recebidos, frame KISS reconhecido, AX.25 válido e TX entregue ao transporte.
+  - **Ainda pendente:** confirmar em hardware real qual protocolo/configuração do TM-D700 em modo PKT entrega RX/TX compatível com o Client e implementar qualquer adaptação específica necessária sem ativar o digipeater interno.
   - Cenário relatado: o **Kenwood TM-D700** conecta pela porta serial e o Client indica estado **Conectado**, porém pacotes recebidos no rádio (ex.: de um **TH-D75**) não entram no PT2VHF APRS Client, mesmo com a portadora sendo percebida pelo equipamento.
   - No mesmo cenário, não há evidência de transmissão efetiva de pacotes APRS pelo rádio a partir do Client.
   - O TM-D700 está sendo usado em **modo PKT**. **Não assumir que o rádio deve ser colocado em modo TNC**, pois nesse equipamento esse modo passa a acionar o TNC/digipeater interno e altera o comportamento operacional desejado.
@@ -132,45 +147,6 @@
   - Criar indicação visual como **Serial conectada / RX aguardando / RX ativo / TX aguardando / TX ativo / protocolo incompatível** para evitar falso positivo de funcionamento.
   - Incluir teste/simulador de regressão para serial conectada sem frames e para RX/TX válidos, preservando compatibilidade com os TNCs KISS já suportados.
   - Quando possível, permitir captura de diagnóstico suficiente para comparar o que chega da serial com o que o rádio está recebendo pelo ar.
-
-
-
-- **Estações — fluxo de mensagens em lote e filtros consistentes (sugestão de PU2MUS - Marco)**
-  - Na aba/lista de **Estações**, permitir **ordenar e agrupar por tipo/ícone APRS**, facilitando localizar, por exemplo, somente estações móveis.
-  - Ao selecionar uma estação, oferecer acesso direto à ação **Enviar mensagem**, sem exigir mudança de tela ou perda da posição atual da lista.
-  - Após enviar uma mensagem, **manter a lista, ordenação, filtros, rolagem e estação de referência** exatamente como estavam, permitindo seguir para a próxima estação.
-  - Permitir **reutilizar/copiar rapidamente o texto da mensagem anterior** para o próximo destinatário, útil para mensagens repetitivas como saudações ou avisos.
-  - Enquanto o usuário percorre a lista, **não reordenar automaticamente as estações já exibidas** por causa de novas recepções; novas estações devem ser acrescentadas ao final da visualização corrente, evitando que o alvo "ande" na lista.
-  - Prever opção de **filtrar/excluir estações que não devem receber mensagem APRS convencional**, especialmente estações identificadas como **DMR**, **D-STAR** ou com SSIDs **-12, -13, -14 e -15**, mesmo quando utilizarem ícone de estação móvel.
-  - Sempre que possível, sinalizar visualmente esses casos na lista para ajudar a identificar configuração/ícone potencialmente inadequado e evitar envio acidental.
-  - Corrigir a integração com o menu **Ver**: ao ocultar categorias como **D-STAR** e **DMR**, elas devem desaparecer também da **lista de Estações**, e não somente do mapa.
-  - Os filtros da lista e do mapa devem permanecer sincronizados, salvo quando houver uma opção explícita para filtragem independente.
-  - Preservar desempenho com listas grandes e atualização contínua de estações.
-
-
-
-- **Mapa — zoom mais gradual**
-  - Aumentar a granularidade do zoom do mapa, principalmente ao usar a **roda do mouse**, permitindo níveis intermediários entre o enquadramento atual muito próximo e muito afastado.
-  - Ajustar o comportamento do Leaflet para aceitar **passos fracionários de zoom** quando suportado, em vez de saltos inteiros excessivamente grandes.
-  - Tornar o zoom por scroll mais suave e previsível, preservando o ponto sob o cursor como referência sempre que possível.
-  - Manter os botões **+ / −** coerentes com a nova granularidade de zoom.
-  - Preservar os limites mínimo e máximo atuais do mapa e a compatibilidade das camadas, marcadores, tracklogs, radar, relevo/DEM e topologia.
-  - Validar o comportamento com mouse convencional e touchpad, evitando zoom rápido demais, oscilação ou perda de desempenho.
-
-
-
-- **Mensagens — filtros de exibição**
-  - Na aba **Mensagens**, adicionar opções independentes para **mostrar/ocultar boletins** e **mostrar/ocultar mensagens**.
-  - Usar comportamento e apresentação consistentes com o filtro já existente de **telemetria**.
-  - Permitir combinar os filtros livremente, sem excluir ou alterar os dados armazenados; o efeito deve ser apenas visual.
-  - Persistir a preferência do usuário entre execuções.
-  - Atualizar imediatamente a lista ao alterar qualquer opção, sem exigir recarregar a aba.
-
-
-
-- **Sobre — corrigir indicativo de colaborador**
-  - Alterar o indicativo exibido na aba **Sobre** de **PP5UA** para **PP5UA**.
-  - Manter o nome associado ao colaborador e revisar referências duplicadas no projeto para evitar divergências.
 
 
 
