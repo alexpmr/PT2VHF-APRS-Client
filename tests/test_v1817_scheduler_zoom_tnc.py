@@ -211,3 +211,36 @@ def test_group_schedule_cannot_use_announcement_letter():
     assert "Boletim de grupo" in read("pt2vhf_aprs/templates/index.html")
     assert "targetType === 'group'" in js
     assert "$('#scheduledBulletinId').value = '0';" in js
+
+
+def test_list_retry_contains_only_failed_destinations(monkeypatch):
+    service = scheduler.ScheduledMessageService()
+    sent = []
+
+    def fake_send(schedule, destination=None):
+        sent.append(destination)
+        if destination == "PU2FAIL-7":
+            raise ConnectionError("rota indisponível")
+        return {"queued": True}
+
+    monkeypatch.setattr(service, "_send_one", fake_send)
+    monkeypatch.setattr(scheduler.diag, "log_event", lambda *args, **kwargs: None)
+
+    schedule = {
+        "id": 99,
+        "target_type": "list",
+        "targets": ["PY2OK-9", "PU2FAIL-7", "PT2OK-1"],
+        "recipient_group_id": None,
+        "retry_targets": [],
+        "interval_seconds": 1,
+        "continue_on_error": True,
+    }
+    monkeypatch.setattr(service._stop, "wait", lambda _seconds: False)
+
+    ok, summary, error, retry_targets = service._execute(schedule, manual=False)
+    assert ok is False
+    assert sent == ["PY2OK-9", "PU2FAIL-7", "PT2OK-1"]
+    assert retry_targets == ["PU2FAIL-7"]
+    assert "PY2OK-9" in summary
+    assert "PT2OK-1" in summary
+    assert "PU2FAIL-7" in error
