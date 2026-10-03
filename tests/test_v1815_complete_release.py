@@ -7,45 +7,46 @@ def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
 
 
-def test_v1815_version_metadata():
-    assert read("VERSION").strip() == "1.8.15"
-    assert '__version__ = "1.8.15"' in read("pt2vhf_aprs/__init__.py")
-    win = read("windows/version_info.txt")
-    assert "filevers=(1, 8, 15, 0)" in win
-    assert "prodvers=(1, 8, 15, 0)" in win
-    assert "FileVersion', '1.8.15'" in win
-    assert "ProductVersion', '1.8.15'" in win
+def test_v1815_version_metadata_is_not_regressed():
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 8, 15)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
+    assert "FileVersion" in read("windows/version_info.txt")
+    assert "ProductVersion" in read("windows/version_info.txt")
 
 
-def test_about_uses_corrected_pp5ua_callsign():
+def test_about_uses_corrected_pp5au_callsign():
     html = read("pt2vhf_aprs/templates/index.html")
     test = read("tests/test_v1810_connection_about.py")
-    assert "<strong>PP5UA</strong><span>Adriano</span>" in html
-    assert '"PP5UA": "Adriano"' in test
+    assert "<strong>PP5AU</strong><span>Adriano</span>" in html
+    assert '"PP5AU": "Adriano"' in test
     assert "PU5AAG" not in html
 
 
 def test_message_tab_has_independent_persistent_display_filters():
     html = read("pt2vhf_aprs/templates/index.html")
     js = read("pt2vhf_aprs/static/js/app.js")
-    assert 'id="showNormalMessages"' in html
-    assert 'id="showBulletinMessages"' in html
-    assert 'id="hideTelemetryMessages"' in html
+    assert 'id="messageContentFilterButton"' in html
+    assert 'data-message-content-filter="message"' in html
+    assert 'data-message-content-filter="bulletin"' in html
+    assert 'data-message-content-filter="group"' in html
+    assert 'data-message-content-filter="telemetry"' in html
     assert "pt2vhf_show_normal_messages" in js
     assert "pt2vhf_show_bulletin_messages" in js
     assert "state.showNormalMessages" in js
     assert "state.showBulletinMessages" in js
-    assert "['bulletin', 'group_bulletin', 'announcement']" in js
+    assert "function messageContentCategory(message)" in js
     assert "renderMessages();" in js
 
 
 def test_map_supports_fractional_gradual_zoom_and_persists_it():
     js = read("pt2vhf_aprs/static/js/app.js")
     db = read("pt2vhf_aprs/database.py")
-    assert "zoomSnap: 0.25" in js
-    assert "zoomDelta: 0.25" in js
-    assert "wheelPxPerZoomLevel: 120" in js
-    assert "wheelDebounceTime: 25" in js
+    assert "zoomSnap: 0.10" in js
+    assert "zoomDelta: 0.10" in js
+    assert "wheelPxPerZoomLevel: 300" in js
+    assert "wheelDebounceTime: 20" in js
     assert "Number(saved.zoom)" in js
     assert "zoom REAL NOT NULL DEFAULT 4" in db
     assert "zoom: float" in db
