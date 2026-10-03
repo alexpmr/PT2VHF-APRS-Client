@@ -238,6 +238,14 @@
         <p>Filtre pelo indicativo de origem. O filtro aceita trechos, como <code>PT2</code> ou <code>PY2A</code>.</p>
       </div>
       <div class="message-header-controls">
+        <label class="check-field message-telemetry-check" title="Mostra ou oculta mensagens APRS individuais sem apagar o histórico">
+          <input id="showNormalMessages" type="checkbox" checked>
+          <span>Mostrar mensagens</span>
+        </label>
+        <label class="check-field message-telemetry-check" title="Mostra ou oculta boletins e boletins de grupo sem apagar o histórico">
+          <input id="showBulletinMessages" type="checkbox" checked>
+          <span>Mostrar boletins</span>
+        </label>
         <label class="check-field message-telemetry-check" title="Oculta mensagens APRS de telemetria como PARM., UNIT., EQNS., BITS. e T#nnn">
           <input id="hideTelemetryMessages" type="checkbox" checked>
           <span>Ocultar telemetria</span>
@@ -365,22 +373,52 @@
       <div class="station-header-controls">
         <button id="clearTracklogsButton" type="button" class="btn secondary">Limpar tracklogs</button>
         <button id="clearStationsButton" type="button" class="btn danger">Limpar estações</button>
+        <label class="field compact station-sort-field">
+          <span>Ordenar</span>
+          <select id="stationSortMode">
+            <option value="last_heard">Última recepção</option>
+            <option value="callsign">Indicativo</option>
+            <option value="symbol_type">Ícone / tipo</option>
+            <option value="distance_km">Distância</option>
+          </select>
+        </label>
+        <label class="check-field station-message-safety" title="Evita envio rápido para DMR, D-Star e SSIDs normalmente usados por infraestrutura">
+          <input id="stationExcludeNonMessageable" type="checkbox" checked>
+          <span>Evitar DMR/D-Star e SSIDs -12 a -15</span>
+        </label>
         <label class="field compact">
           <span>Filtro</span>
           <input id="stationFilter" type="text" placeholder="Indicativo, nome ou informação">
         </label>
       </div>
     </div>
+    <div id="stationQuickMessagePanel" class="station-quick-message-panel hidden">
+      <div class="station-quick-message-heading">
+        <div>
+          <strong>Mensagem rápida para <span id="stationQuickMessageCall">—</span></strong>
+          <small id="stationQuickMessageHint">Selecione Enviar mensagem em uma estação da lista.</small>
+        </div>
+        <button id="stationQuickMessageClose" type="button" class="btn secondary">Fechar</button>
+      </div>
+      <div class="station-quick-message-row">
+        <textarea id="stationQuickMessageText" rows="2" placeholder="Ex.: Bom dia, uma ótima semana, 73"></textarea>
+        <button id="stationQuickReuseLast" type="button" class="btn secondary">Usar último texto</button>
+        <button id="stationQuickMessageSend" type="button" class="btn primary">Enviar</button>
+      </div>
+      <small>O texto permanece disponível para a próxima estação. A lista, filtros e posição de rolagem não mudam após o envio.</small>
+    </div>
     <div class="table-wrap stations-table-wrap">
       <table id="stationsTable" class="data-table">
         <thead><tr>
           <th data-key="callsign">Indicativo <span class="sort-indicator"></span></th>
+          <th data-key="symbol_type">Ícone / tipo <span class="sort-indicator"></span></th>
           <th data-key="last_heard">Última recepção <span class="sort-indicator"></span></th>
           <th data-key="distance_km" data-type="number">Distância <span class="sort-indicator"></span></th>
           <th data-key="speed" data-type="number">Velocidade <span class="sort-indicator"></span></th>
           <th data-key="course" data-type="number">Curso <span class="sort-indicator"></span></th>
           <th data-key="altitude" data-type="number">Altitude <span class="sort-indicator"></span></th>
           <th data-key="info">Informação <span class="sort-indicator"></span></th>
+          <th>Ação</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -494,12 +532,16 @@
     </div>
 
     <div class="tnc-status-grid">
-      <div class="tnc-metric"><span>Estado</span><strong id="tncMetricState">Desconectado</strong><small id="tncMetricEndpoint">—</small></div>
-      <div class="tnc-metric"><span>RX RF</span><strong id="tncMetricRx">0</strong><small id="tncMetricLastRx">—</small></div>
-      <div class="tnc-metric"><span>TX RF</span><strong id="tncMetricTx">0</strong><small id="tncMetricLastTx">—</small></div>
+      <div class="tnc-metric"><span>Transporte</span><strong id="tncMetricState">Desconectado</strong><small id="tncMetricEndpoint">—</small></div>
+      <div class="tnc-metric"><span>RX KISS/AX.25</span><strong id="tncMetricRx">0</strong><small id="tncMetricLastRx">—</small></div>
+      <div class="tnc-metric"><span>TX entregue ao TNC</span><strong id="tncMetricTx">0</strong><small id="tncMetricLastTx">—</small></div>
       <div class="tnc-metric"><span>Duplicatas evitadas</span><strong id="tncMetricDuplicates">0</strong><small>janela configurável</small></div>
       <div class="tnc-metric"><span>Fila TX</span><strong id="tncMetricQueue">0</strong><small id="tncMetricTxState">TX automático desligado</small></div>
       <div class="tnc-metric"><span>Otimizador</span><strong id="tncMetricOptimizer">Observação</strong><small id="tncMetricRole">Monitor</small></div>
+    </div>
+    <div id="tncTransportDiagnostic" class="tnc-transport-diagnostic" data-state="idle">
+      <strong>Diagnóstico do transporte:</strong>
+      <span id="tncTransportDiagnosticText">Desconectado.</span>
     </div>
 
     <div id="tncError" class="tnc-error hidden" role="alert"></div>
@@ -530,6 +572,7 @@
           </label>
         </div>
         <p class="hint">Compatível com TNC físico em KISS e softwares como Dire Wolf por KISS TCP. APRS-IS e RF podem operar de forma independente.</p>
+        <p class="hint tnc-serial-field hidden"><strong>Kenwood TM-D700:</strong> quando usado pela serial neste fluxo, mantenha o rádio no modo <strong>PKT</strong> apropriado à interface. O Client não força o modo TNC/digipeater interno. “Serial conectada” não significa, por si só, que frames KISS/AX.25 estejam chegando ou que a emissão RF tenha sido confirmada.</p>
         <p id="tncSerialProfileHint" class="hint tnc-serial-field hidden"></p>
       </article>
 
@@ -1142,7 +1185,7 @@
           <h3 id="aboutContributorsTitle">Agradecimentos / Colaboradores</h3>
           <p id="aboutContributorsText">Agradecimento aos radioamadores que contribuem com sugestões, testes, validações e ajustes que ajudam na evolução contínua do PT2VHF APRS Client.</p>
           <div class="about-contributors-list" aria-label="Radioamadores colaboradores">
-            <div class="about-contributor"><strong>PU5AAG</strong><span>Adriano</span></div>
+            <div class="about-contributor"><strong>PP5UA</strong><span>Adriano</span></div>
             <div class="about-contributor"><strong>PY4EI</strong><span>Allan</span></div>
             <div class="about-contributor"><strong>PU2MUS</strong><span>Marco</span></div>
             <div class="about-contributor"><strong>PP5PK</strong><span>Daniel Kondlatsch</span></div>
