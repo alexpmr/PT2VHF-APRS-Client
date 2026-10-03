@@ -64,7 +64,7 @@ def test_v1810_connection_control_has_visual_state_styles():
 def test_v1810_about_lists_all_contributors():
     html = read("pt2vhf_aprs/templates/index.html")
     expected = {
-        "PP5UA": "Adriano",
+        "PP5AU": "Adriano",
         "PY4EI": "Allan",
         "PU2MUS": "Marco",
         "PP5PK": "Daniel Kondlatsch",
