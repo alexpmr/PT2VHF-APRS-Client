@@ -1181,8 +1181,15 @@ class TNCStatus:
     connected_since: str = ""
     last_rx_at: str = ""
     last_tx_at: str = ""
+    last_transport_rx_at: str = ""
+    last_transport_tx_at: str = ""
     frames_rx: int = 0
     frames_tx: int = 0
+    transport_bytes_rx: int = 0
+    transport_bytes_tx: int = 0
+    kiss_frames_rx: int = 0
+    invalid_frames_rx: int = 0
+    last_rx_error: str = ""
     duplicates_suppressed: int = 0
     tx_paused: bool = False
 
@@ -1218,6 +1225,24 @@ class TNCService:
         payload["igate_rx_enabled"] = bool(cfg["igate_rx_enabled"])
         payload["igate_tx_enabled"] = bool(cfg["igate_tx_enabled"])
         payload["optimizer_mode"] = cfg["optimizer_mode"]
+        connected_since = str(payload.get("connected_since") or "")
+        last_valid_rx = str(payload.get("last_rx_at") or "")
+        last_tx = str(payload.get("last_tx_at") or "")
+        valid_rx_this_session = bool(last_valid_rx and (not connected_since or last_valid_rx >= connected_since))
+        tx_this_session = bool(last_tx and (not connected_since or last_tx >= connected_since))
+        if not payload.get("connected"):
+            payload["rx_state"] = "disconnected"
+            payload["tx_state"] = "disconnected"
+        else:
+            if valid_rx_this_session:
+                payload["rx_state"] = "active"
+            elif int(payload.get("kiss_frames_rx") or 0) > 0 or int(payload.get("invalid_frames_rx") or 0) > 0:
+                payload["rx_state"] = "invalid"
+            elif int(payload.get("transport_bytes_rx") or 0) > 0:
+                payload["rx_state"] = "bytes_without_kiss"
+            else:
+                payload["rx_state"] = "waiting"
+            payload["tx_state"] = "delivered" if tx_this_session else "waiting"
         return payload
 
     def _set_status(self, **kwargs: Any) -> None:
@@ -1413,9 +1438,13 @@ class TNCService:
             if hasattr(transport, "sendall"):
                 transport.sendall(data)
             else:
-                transport.write(data)
+                written = transport.write(data)
+                if written is not None and int(written) < len(data):
+                    raise IOError(f"Escrita serial parcial: {written}/{len(data)} bytes.")
                 if hasattr(transport, "flush"):
                     transport.flush()
+            self._set_status(last_transport_tx_at=utc_now_iso())
+            self._increment_status("transport_bytes_tx", len(data))
 
     def _connection_loop(self) -> None:
         decoder = KissStreamDecoder()
@@ -1437,6 +1466,13 @@ class TNCService:
                     endpoint=endpoint,
                     connected_since=utc_now_iso(),
                     last_error="",
+                    last_transport_rx_at="",
+                    last_transport_tx_at="",
+                    transport_bytes_rx=0,
+                    transport_bytes_tx=0,
+                    kiss_frames_rx=0,
+                    invalid_frames_rx=0,
+                    last_rx_error="",
                 )
                 retry = 2
                 while self.status()["wanted"] and not self._stop.is_set():
@@ -1447,9 +1483,12 @@ class TNCService:
                         raise ConnectionError("KISS TCP encerrou a conexão.")
                     if not chunk:
                         continue
+                    self._set_status(last_transport_rx_at=utc_now_iso())
+                    self._increment_status("transport_bytes_rx", len(chunk))
                     for command, payload in decoder.feed(chunk):
                         if (command & 0x0F) != 0 or not payload:
                             continue
+                        self._increment_status("kiss_frames_rx")
                         self._handle_rf_frame(payload)
             except Exception as exc:
                 self._set_status(connected=False, state="TNC desconectado", last_error=str(exc))
@@ -1583,7 +1622,10 @@ class TNCService:
         try:
             packet = decode_ax25(frame)
         except Exception as exc:
+            self._increment_status("invalid_frames_rx")
+            self._set_status(last_rx_error=str(exc))
             record_decision("rx", "ignored", f"Frame AX.25 inválido: {exc}")
+            diag.log_event("tnc_invalid_ax25_frame", error=str(exc), frame_length=len(frame))
             return
 
         cfg = get_tnc_config()
@@ -1592,7 +1634,7 @@ class TNCService:
         source = packet["source"]
         destination = packet["destination"]
         kind = packet_priority_kind(packet["info_text"])
-        self._set_status(last_rx_at=utc_now_iso())
+        self._set_status(last_rx_at=utc_now_iso(), last_rx_error="")
         self._increment_status("frames_rx")
         record_frame(
             "RX", packet["tnc2"], source=source, destination=destination,
