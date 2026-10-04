@@ -297,7 +297,9 @@
   function setStatus(payload = {}) {
     const status = payload.status || payload;
     const connected = !!status.connected;
-    const serial = connected && String(status.transport || '') === 'serial';
+    const transportMode = String(status.transport || '');
+    const serial = connected && transportMode === 'serial';
+    const agwpe = connected && transportMode === 'agwpe';
     const rxState = String(status.rx_state || (connected ? 'waiting' : 'disconnected'));
     const txState = String(status.tx_state || (connected ? 'waiting' : 'disconnected'));
     const bytesRx = Number(status.transport_bytes_rx || 0);
@@ -315,9 +317,11 @@
             : rxState === 'invalid'
               ? tr('Serial conectada — AX.25 inválido')
               : tr('Serial conectada — aguardando dados'))
-        : (rxState === 'active'
-          ? tr('KISS TCP operacional — RX ativo')
-          : tr('KISS TCP conectado — aguardando frames'));
+        : agwpe
+          ? (rxState === 'active' ? 'AGWPE · ' + tr('RX ativo') : 'AGWPE · ' + tr('Aguardando dados do TNC.'))
+          : (rxState === 'active'
+            ? tr('KISS TCP operacional — RX ativo')
+            : tr('KISS TCP conectado — aguardando frames'));
 
     let rxDetail = tr('Aguardando dados do TNC.');
     let diagnosticState = 'waiting';
@@ -357,7 +361,7 @@
                 ? `TNC · ${tr('AX.25 inválido')}`
                 : serial
                   ? `TNC · ${tr('Serial aguardando')}`
-                  : `TNC · ${tr('KISS aguardando')}`;
+                  : agwpe ? 'TNC · AGWPE' : `TNC · ${tr('KISS aguardando')}`;
       }
       header.title = [status.state, status.endpoint, rxDetail, status.last_error].filter(Boolean).join(' · ');
     }
@@ -395,7 +399,9 @@
       } else {
         diagnosticText.textContent = serial
           ? tr('Porta serial aberta; aguardando o primeiro byte/frame. “Conectado” confirma apenas a abertura da porta.')
-          : tr('KISS TCP conectado; aguardando o primeiro frame válido.');
+          : agwpe
+            ? 'AGWPE conectado; aguardando frame AX.25 bruto (raw mode).'
+            : tr('KISS TCP conectado; aguardando o primeiro frame válido.');
       }
     }
 
@@ -416,6 +422,9 @@
       serial_baud: Number(val('tncSerialBaud', 9600)),
       tcp_host: String(val('tncTcpHost', '127.0.0.1')).trim(),
       tcp_port: Number(val('tncTcpPort', 8001)),
+      agwpe_host: String(val('tncAgwpeHost', '127.0.0.1')).trim(),
+      agwpe_port: Number(val('tncAgwpePort', 8000)),
+      agwpe_radio_port: Number(val('tncAgwpeRadioPort', 0)),
       auto_connect: checked('tncAutoConnect'),
       role: val('tncRole', 'monitor'),
       auto_tx_enabled: checked('tncAutoTxEnabled'),
@@ -442,6 +451,9 @@
       tncSerialBaud: cfg.serial_baud ?? 9600,
       tncTcpHost: cfg.tcp_host || '127.0.0.1',
       tncTcpPort: cfg.tcp_port ?? 8001,
+      tncAgwpeHost: cfg.agwpe_host || '127.0.0.1',
+      tncAgwpePort: cfg.agwpe_port ?? 8000,
+      tncAgwpeRadioPort: cfg.agwpe_radio_port ?? 0,
       tncRole: cfg.role || 'monitor',
       tncDigiProfile: cfg.digi_profile || 'fill',
       tncDigiAliases: cfg.digi_aliases || '',
@@ -469,9 +481,13 @@
   }
 
   function syncTransportFields() {
-    const serialMode = val('tncTransport', 'tcp') === 'serial';
-    $$('.tnc-serial-field').forEach(el => el.classList.toggle('hidden', !serialMode));
-    $$('.tnc-tcp-field').forEach(el => el.classList.toggle('hidden', serialMode));
+    const mode = val('tncTransport', 'tcp');
+    const serialMode = mode === 'serial';
+    const tcpMode = mode === 'tcp';
+    const agwpeMode = mode === 'agwpe';
+    $('.tnc-serial-field').forEach(el => el.classList.toggle('hidden', !serialMode));
+    $('.tnc-tcp-field').forEach(el => el.classList.toggle('hidden', !tcpMode));
+    $('.tnc-agwpe-field').forEach(el => el.classList.toggle('hidden', !agwpeMode));
     if (serialMode) void loadPorts({quiet:true});
   }
 
