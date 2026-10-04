@@ -17,6 +17,7 @@ from typing import Any
 from . import APP_TOCALL
 from . import database as db
 from . import diagnostics as diag
+from .agwpe_transport import AGWPEStreamDecoder, AGWPETransport, enable_raw_command, raw_tx_frame
 
 try:
     import serial  # type: ignore
@@ -36,6 +37,9 @@ TNC_DEFAULTS: dict[str, Any] = {
     "serial_baud": 9600,
     "tcp_host": "127.0.0.1",
     "tcp_port": 8001,
+    "agwpe_host": "127.0.0.1",
+    "agwpe_port": 8000,
+    "agwpe_radio_port": 0,
     "auto_connect": 0,
     "role": "monitor",
     "auto_tx_enabled": 0,
@@ -433,8 +437,8 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
     merged.update(dict(payload or {}))
 
     merged["transport"] = str(merged.get("transport") or "tcp").lower().strip()
-    if merged["transport"] not in {"tcp", "serial"}:
-        raise ValueError("Transporte TNC deve ser KISS TCP ou KISS Serial.")
+    if merged["transport"] not in {"tcp", "serial", "agwpe"}:
+        raise ValueError("Transporte TNC deve ser KISS TCP, KISS Serial ou AGWPE.")
 
     merged["serial_port"] = str(merged.get("serial_port") or "").strip()
     merged["serial_baud"] = int(merged.get("serial_baud") or 9600)
@@ -445,6 +449,12 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
     merged["tcp_port"] = int(merged.get("tcp_port") or 8001)
     if not (1 <= merged["tcp_port"] <= 65535):
         raise ValueError("Porta TCP do TNC inválida.")
+
+    merged["agwpe_host"] = str(merged.get("agwpe_host") or "127.0.0.1").strip()
+    merged["agwpe_port"] = int(merged.get("agwpe_port") or 8000)
+    merged["agwpe_radio_port"] = max(0, min(255, int(merged.get("agwpe_radio_port") or 0)))
+    if not (1 <= merged["agwpe_port"] <= 65535):
+        raise ValueError("Porta AGWPE inválida.")
 
     for key in (
         "auto_connect", "auto_tx_enabled", "tx_confirmed", "digi_enabled",
@@ -493,6 +503,8 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
         raise ValueError("Selecione a porta serial do TNC.")
     if strict and merged["transport"] == "tcp" and not merged["tcp_host"]:
         raise ValueError("Informe o host do KISS TCP.")
+    if strict and merged["transport"] == "agwpe" and not merged["agwpe_host"]:
+        raise ValueError("Informe o host do AGWPE.")
 
     return merged
 
@@ -1390,6 +1402,10 @@ class TNCService:
         record_decision("tx", "resumed", "TX automático liberado explicitamente pelo usuário.")
 
     def _open_transport(self, cfg: dict[str, Any]) -> Any:
+        if cfg["transport"] == "agwpe":
+            transport = AGWPETransport(cfg["agwpe_host"], int(cfg["agwpe_port"]))
+            transport.sendall(enable_raw_command())
+            return transport
         if cfg["transport"] == "tcp":
             sock = socket.create_connection((cfg["tcp_host"], int(cfg["tcp_port"])), timeout=8)
             sock.settimeout(1.0)
@@ -1422,7 +1438,7 @@ class TNCService:
             pass
 
     def _read_transport(self, transport: Any, cfg: dict[str, Any]) -> bytes | None:
-        if cfg["transport"] == "tcp":
+        if cfg["transport"] in {"tcp", "agwpe"}:
             try:
                 return transport.recv(8192)
             except socket.timeout:
@@ -1448,11 +1464,13 @@ class TNCService:
 
     def _connection_loop(self) -> None:
         decoder = KissStreamDecoder()
+        agw_decoder = AGWPEStreamDecoder()
         retry = 2
         while self.status()["wanted"] and not self._stop.is_set():
             cfg = get_tnc_config()
             endpoint = (
-                f"{cfg['tcp_host']}:{cfg['tcp_port']}" if cfg["transport"] == "tcp"
+                f"{cfg['agwpe_host']}:{cfg['agwpe_port']} / radio {cfg['agwpe_radio_port']}" if cfg["transport"] == "agwpe"
+                else f"{cfg['tcp_host']}:{cfg['tcp_port']}" if cfg["transport"] == "tcp"
                 else f"{cfg['serial_port']} @ {cfg['serial_baud']}"
             )
             try:
@@ -1479,17 +1497,24 @@ class TNCService:
                     chunk = self._read_transport(transport, cfg)
                     if chunk is None:
                         continue
-                    if cfg["transport"] == "tcp" and chunk == b"":
-                        raise ConnectionError("KISS TCP encerrou a conexão.")
+                    if cfg["transport"] in {"tcp", "agwpe"} and chunk == b"":
+                        raise ConnectionError(("AGWPE" if cfg["transport"] == "agwpe" else "KISS TCP") + " encerrou a conexão.")
                     if not chunk:
                         continue
                     self._set_status(last_transport_rx_at=utc_now_iso())
                     self._increment_status("transport_bytes_rx", len(chunk))
-                    for command, payload in decoder.feed(chunk):
-                        if (command & 0x0F) != 0 or not payload:
-                            continue
-                        self._increment_status("kiss_frames_rx")
-                        self._handle_rf_frame(payload)
+                    if cfg["transport"] == "agwpe":
+                        for agw_frame in agw_decoder.feed(chunk):
+                            if agw_frame.kind != "K" or not agw_frame.data:
+                                continue
+                            self._increment_status("kiss_frames_rx")
+                            self._handle_rf_frame(agw_frame.data)
+                    else:
+                        for command, payload in decoder.feed(chunk):
+                            if (command & 0x0F) != 0 or not payload:
+                                continue
+                            self._increment_status("kiss_frames_rx")
+                            self._handle_rf_frame(payload)
             except Exception as exc:
                 self._set_status(connected=False, state="TNC desconectado", last_error=str(exc))
                 diag.log_event("tnc_connection_error", error=str(exc), endpoint=endpoint)
@@ -1524,7 +1549,8 @@ class TNCService:
                 if len(self._tx_activity) >= 60:
                     record_decision("tx", "suppressed", "Limite local de 60 transmissões/min atingido.", raw_tnc2=raw_tnc2)
                     continue
-                self._write_transport(kiss_encode(frame))
+                wire = raw_tx_frame(frame, port=int(cfg.get("agwpe_radio_port") or 0)) if cfg.get("transport") == "agwpe" else kiss_encode(frame)
+                self._write_transport(wire)
                 self._tx_activity.append(time.monotonic())
                 self._set_status(last_tx_at=utc_now_iso())
                 self._increment_status("frames_tx")
