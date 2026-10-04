@@ -1,3 +1,14 @@
+## 1.10.0 - 2026-10-04
+
+- Perfil externo de estação via QRZ.com XML API, opt-in, com credenciais, cache e foto quando fornecida oficialmente.
+- Provedor AIS genérico/configurável por MMSI/IMO, sem scraping e com cache.
+- Metadados RF extensíveis: RSSI, SNR, DCD, frequência, canal e origem; DCD serial é lido quando exposto pelo driver.
+- Diagnóstico dedicado do Kenwood TM-D700 em PKT e protocolo formal de validação física.
+- Soak test integrado com perfis prolongados e relatório de possível memory leak.
+- Matriz de migração histórica integrada à CI.
+- Auditoria contínua de traduções com paridade ES/FR, validação de chamadas tr() e relatório de strings visíveis candidatas.
+- Mantidas todas as funções da v1.9.0 e builds Windows x64/ARM64, Linux x86_64/ARM64 e macOS ARM64/Intel.
+
 ## 1.9.0 - 2026-10-04
 
 - **Interface destacável:** Mensagens e Estações podem ser desacopladas e mantidas sobre o Mapa com arraste, redimensionamento, minimização, encaixe e persistência local de geometria.
