@@ -40,6 +40,8 @@ jobs:
           node --check pt2vhf_aprs\static\js\app.js
           node --check pt2vhf_aprs\static\js\tnc.js
           node --check pt2vhf_aprs\static\js\v1818.js
+          node --check pt2vhf_aprs\static\js\v190.js
+          node --check pt2vhf_aprs\static\js\v110.js
 
       - name: Run tests
         shell: pwsh
@@ -119,6 +121,8 @@ jobs:
           node --check pt2vhf_aprs\static\js\app.js
           node --check pt2vhf_aprs\static\js\tnc.js
           node --check pt2vhf_aprs\static\js\v1818.js
+          node --check pt2vhf_aprs\static\js\v190.js
+          node --check pt2vhf_aprs\static\js\v110.js
 
       - name: Run tests
         shell: pwsh
