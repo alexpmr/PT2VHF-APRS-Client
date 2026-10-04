@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tnc.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/v1818.css') }}">
 </head>
 <body>
 <header class="app-header">
@@ -715,11 +716,15 @@
             <select id="tncTransport" name="transport">
               <option value="tcp">KISS TCP</option>
               <option value="serial">KISS Serial</option>
+              <option value="agwpe">AGWPE TCP</option>
             </select>
           </label>
           <label class="check-field tnc-check"><input id="tncAutoConnect" name="auto_connect" type="checkbox"><span>Conectar TNC ao iniciar</span></label>
           <label class="field tnc-tcp-field"><span>Host</span><input id="tncTcpHost" name="tcp_host" value="127.0.0.1"></label>
           <label class="field tnc-tcp-field"><span>Porta TCP</span><input id="tncTcpPort" name="tcp_port" type="number" min="1" max="65535" value="8001"></label>
+          <label class="field tnc-agwpe-field"><span>Host AGWPE</span><input id="tncAgwpeHost" name="agwpe_host" value="127.0.0.1"></label>
+          <label class="field tnc-agwpe-field"><span>Porta AGWPE</span><input id="tncAgwpePort" name="agwpe_port" type="number" min="1" max="65535" value="8000"></label>
+          <label class="field tnc-agwpe-field"><span>Radio port</span><input id="tncAgwpeRadioPort" name="agwpe_radio_port" type="number" min="0" max="255" value="0"></label>
           <label class="field tnc-serial-field"><span>Porta serial</span>
             <input id="tncSerialPort" name="serial_port" list="tncSerialPortList" autocomplete="off" placeholder="Ex.: COM6">
             <datalist id="tncSerialPortList"></datalist>
@@ -1674,5 +1679,6 @@
 <script src="{{ url_for('static', filename='js/i18n_extra.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
+<script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
 </body>
 </html>

@@ -39,13 +39,20 @@ def main() -> int:
 ## Downloads
 
 ### Windows
-- `PT2VHF_APRS_Client_Setup_x64_v{version}.exe` - instalador recomendado.
-- `PT2VHF_APRS_Client_Portable_x64_v{version}.exe` - executável portátil.
+- `PT2VHF_APRS_Client_Setup_x64_v{version}.exe` - instalador x64 recomendado.
+- `PT2VHF_APRS_Client_Portable_x64_v{version}.exe` - portátil x64.
+- `PT2VHF_APRS_Client_Setup_ARM64_v{version}.exe` - instalador ARM64.
+- `PT2VHF_APRS_Client_Portable_ARM64_v{version}.exe` - portátil ARM64.
 
-### Linux
+### Linux x86_64
 - `PT2VHF_APRS_Client_x86_64_v{version}.AppImage` - AppImage portátil.
 - `PT2VHF_APRS_Client_Linux_x86_64_v{version}.tar.gz` - pacote portátil.
 - `pt2vhf-aprs-client_{version}_amd64.deb` - Debian/Ubuntu e derivados.
+
+### Linux ARM64
+- `PT2VHF_APRS_Client_arm64_v{version}.AppImage` - AppImage ARM64, quando suportado pelo AppImageKit.
+- `PT2VHF_APRS_Client_Linux_arm64_v{version}.tar.gz` - pacote portátil ARM64.
+- `pt2vhf-aprs-client_{version}_arm64.deb` - Debian/Ubuntu ARM64.
 
 ### macOS
 - `PT2VHF_APRS_Client_macOS_arm64_v{version}.dmg` - Apple Silicon.

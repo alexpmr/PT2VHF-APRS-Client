@@ -21,18 +21,37 @@ mkdir -p dist-linux
 "$VENV/bin/pip-licenses" --format=plain-vertical --with-license-file --no-license-path --output-file=dist-linux/THIRD_PARTY_LICENSES_Linux.txt
 
 version="$(tr -d '\r\n ' < VERSION)"
+machine="${PT2VHF_LINUX_ARCH:-$(uname -m)}"
+case "$machine" in
+  x86_64|amd64)
+    arch="x86_64"
+    deb_arch="amd64"
+    appimage_arch="x86_64"
+    ;;
+  aarch64|arm64)
+    arch="arm64"
+    deb_arch="arm64"
+    appimage_arch="aarch64"
+    ;;
+  *)
+    echo "Arquitetura Linux não suportada: $machine" >&2
+    exit 2
+    ;;
+esac
+binary_src="dist/PT2VHF_APRS_Client_Linux_x86_64"
+binary_name="PT2VHF_APRS_Client_Linux_${arch}_v${version}"
 mkdir -p dist-linux/package
-cp dist/PT2VHF_APRS_Client_Linux_x86_64 "dist-linux/package/PT2VHF_APRS_Client_Linux_x86_64_v${version}"
+cp "$binary_src" "dist-linux/package/$binary_name"
 cp docs/INSTALL_LINUX.md dist-linux/package/INSTALL_LINUX.md
 cp LICENSE dist-linux/package/LICENSE
 cp THIRD_PARTY_NOTICES.md dist-linux/package/THIRD_PARTY_NOTICES.md
 cp dist-linux/SBOM-Linux.cdx.json dist-linux/package/SBOM-Linux.cdx.json
 cp dist-linux/THIRD_PARTY_LICENSES_Linux.txt dist-linux/package/THIRD_PARTY_LICENSES_Linux.txt
-tar -czf "dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v${version}.tar.gz" -C dist-linux/package .
+tar -czf "dist-linux/PT2VHF_APRS_Client_Linux_${arch}_v${version}.tar.gz" -C dist-linux/package .
 
 appdir="dist-linux/AppDir"
 mkdir -p "$appdir/usr/bin" "$appdir/usr/share/applications" "$appdir/usr/share/icons/hicolor/256x256/apps"
-cp dist/PT2VHF_APRS_Client_Linux_x86_64 "$appdir/usr/bin/pt2vhf-aprs-client"
+cp "$binary_src" "$appdir/usr/bin/pt2vhf-aprs-client"
 chmod 0755 "$appdir/usr/bin/pt2vhf-aprs-client"
 
 # Ícone Linux derivado da logo APRS oficial.
@@ -69,16 +88,16 @@ cp "$appdir/pt2vhf-aprs-client.desktop" "$appdir/usr/share/applications/pt2vhf-a
 
 if command -v curl >/dev/null 2>&1; then
   curl -fsSL -o dist-linux/appimagetool.AppImage \
-    https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+    https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${appimage_arch}.AppImage
   chmod +x dist-linux/appimagetool.AppImage
-  ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 dist-linux/appimagetool.AppImage \
-    "$appdir" "dist-linux/PT2VHF_APRS_Client_x86_64_v${version}.AppImage"
+  ARCH="$appimage_arch" APPIMAGE_EXTRACT_AND_RUN=1 dist-linux/appimagetool.AppImage \
+    "$appdir" "dist-linux/PT2VHF_APRS_Client_${arch}_v${version}.AppImage"
 fi
 
 if command -v dpkg-deb >/dev/null 2>&1; then
   root="dist-linux/deb-root"
   mkdir -p "$root/DEBIAN" "$root/usr/local/bin" "$root/usr/share/applications" "$root/usr/share/doc/pt2vhf-aprs-client" "$root/usr/share/icons/hicolor/256x256/apps"
-  cp dist/PT2VHF_APRS_Client_Linux_x86_64 "$root/usr/local/bin/pt2vhf-aprs-client"
+  cp "$binary_src" "$root/usr/local/bin/pt2vhf-aprs-client"
   chmod 0755 "$root/usr/local/bin/pt2vhf-aprs-client"
   cp docs/INSTALL_LINUX.md "$root/usr/share/doc/pt2vhf-aprs-client/INSTALL_LINUX.md"
   cp LICENSE "$root/usr/share/doc/pt2vhf-aprs-client/LICENSE"
@@ -88,7 +107,7 @@ Package: pt2vhf-aprs-client
 Version: ${version}
 Section: hamradio
 Priority: optional
-Architecture: amd64
+Architecture: ${deb_arch}
 Maintainer: Alex, PT2VHF
 Description: Cliente APRS-IS com mapa, mensagens, estacoes, log e topologia observada.
  A interface usa janela integrada quando o ambiente Linux oferece um backend
@@ -104,7 +123,7 @@ Icon=pt2vhf-aprs-client
 Terminal=false
 Categories=Network;HamRadio;
 EOF
-  dpkg-deb --build "$root" "dist-linux/pt2vhf-aprs-client_${version}_amd64.deb"
+  dpkg-deb --build "$root" "dist-linux/pt2vhf-aprs-client_${version}_${deb_arch}.deb"
 fi
 
 echo "Artefatos Linux:"

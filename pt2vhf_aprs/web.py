@@ -31,6 +31,7 @@ from .tnc_service import (
     tnc_reception_stats,
 )
 from .version_notes import notes_for
+from .advanced_features import register_advanced_routes
 
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
@@ -276,6 +277,7 @@ def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["JSON_SORT_KEYS"] = False
     db.init_db()
+    register_advanced_routes(app)
     diag.configure(db.DB_PATH.parent)
     scheduled_message_service.start()
     diag.log_event("flask_app_created", version=__version__)
@@ -550,7 +552,7 @@ def create_app() -> Flask:
         try:
             before = get_tnc_config()
             saved = save_tnc_config(request.get_json(force=True) or {})
-            reconnect_keys = {"transport", "serial_port", "serial_baud", "tcp_host", "tcp_port"}
+            reconnect_keys = {"transport", "serial_port", "serial_baud", "tcp_host", "tcp_port", "agwpe_host", "agwpe_port", "agwpe_radio_port"}
             changed = any(before.get(key) != saved.get(key) for key in reconnect_keys)
             if changed and tnc_service.status().get("wanted"):
                 tnc_service.reconnect()

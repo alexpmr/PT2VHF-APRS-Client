@@ -8784,5 +8784,21 @@
   }
 
   boot();
+  // v1.8.18: API mínima para recursos externos da própria interface localizarem uma estação
+  // sem expor o restante do estado interno do mapa.
+  window.pt2vhfFocusStation = function(callsign, zoom = 12) {
+    try {
+      const call = normalizedCall(callsign);
+      const marker = state.markers?.get(call);
+      if (!marker || !state.map) return false;
+      const latlng = marker.getLatLng();
+      state.map.setView(latlng, Math.max(Number(state.map.getZoom() || 0), Number(zoom || 12)));
+      try { marker.openPopup(); } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
 })();
 

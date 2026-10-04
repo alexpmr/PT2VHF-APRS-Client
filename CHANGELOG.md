@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.8.18 - 2026-10-04
+
+- **TNC / RF — AGWPE:** adiciona transporte **AGWPE TCP** em modo raw AX.25, ao lado de KISS TCP e KISS Serial, com host, porta e radio port configuráveis.
+- **Busca rápida:** o Mapa ganha busca por indicativo completo/parcial, priorizando correspondência exata e favoritos, com acesso ao painel lateral da estação.
+- **Painel lateral:** nova visão responsiva de estação preserva o mapa visível e oferece atalhos para Mensagens e Log.
+- **Estatísticas — saúde da rede:** consolida pacotes, estações, RF × APRS-IS, duplicidade, ACK, RTT e estações novas/desaparecidas.
+- **Comparação temporal:** compara o período atual com o período imediatamente anterior de mesma duração, com delta absoluto e percentual sem divisão artificial por zero.
+- **Quem fala com quem:** o grafo deixa de ser apenas textual e ganha visualização SVG interativa baseada nas interações observadas.
+- **Exportação:** adiciona **CSV** compatível com Excel e **GeoJSON** para ferramentas GIS/QGIS.
+- **Diagnóstico:** adiciona resumo de integridade SQLite, plataforma, arquitetura, conexão e armazenamento, além de **pacote ZIP sanitizado** para suporte.
+- **Simulador KISS:** adiciona cenários de fragmentação, duplicidade e múltiplos hops para regressão sem rádio físico.
+- **Linux ARM64:** pipeline oficial para TAR.GZ, AppImage quando suportado pelo AppImageKit e DEB arm64; updater passa a selecionar assets da arquitetura correta.
+- **Segurança de atualização:** impede seleção cruzada de assets Linux x86_64 e ARM64.
+- **TM-D700:** mantém explicitamente a validação física RX/TX em modo PKT como pendência de hardware; diagnóstico e captura permanecem disponíveis.
+- **Métricas RF:** RSSI/SNR/DCD e ocupação de canal continuam sendo exibidos somente quando o equipamento/protocolo fornecer dados reais.
+- Inclui regressões específicas da v1.8.18 e mantém as suítes anteriores.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.8.17 - 2026-10-03
 
 - **Mensagens programadas:** nova área **Agendadas** na aba Mensagens, com envio único ou recorrência semanal.

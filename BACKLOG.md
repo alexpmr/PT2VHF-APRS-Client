@@ -1,5 +1,21 @@
 # Backlog
 
+## Concluído na v1.8.18
+
+- **TNC / RF — AGWPE:** transporte AGWPE TCP em raw AX.25, configurável por host, porta e radio port, preservando KISS TCP/Serial.
+- **Simulador KISS:** cenários de fragmentação, duplicidade e multi-hop para regressão sem rádio físico.
+- **Busca rápida:** pesquisa por indicativo completo/parcial no Mapa, priorizando correspondência exata e favoritos.
+- **Painel lateral de estação:** visão responsiva com dados principais e atalhos para Mensagens e Log.
+- **Quem fala com quem:** grafo visual SVG interativo derivado das interações observadas.
+- **Estatísticas:** painel de saúde da rede com RF × APRS-IS, duplicados, ACK, RTT e estações novas/desaparecidas.
+- **Comparação entre períodos:** período atual × anterior de mesma duração, com deltas absolutos e percentuais.
+- **Exportação:** CSV e GeoJSON por período.
+- **Diagnóstico:** resumo de integridade SQLite e pacote ZIP sanitizado para suporte.
+- **Linux ARM64:** pipeline oficial e updater consciente da arquitetura.
+- **Atualização:** seleção de pacote por arquitetura para impedir atualização Linux cruzada x86_64/ARM64.
+- **Idiomas:** novos recursos da v1.8.18 usam PT-BR/EN/ES/FR, preservando termos técnicos de protocolo.
+- **Produção:** Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## Concluído na v1.8.17
 
 - **Configuração — zoom (sugestão de PU2MUS/Marco):** o step do mapa deixa de ser fixo e passa a ser configurável em **0,05 / 0,10 / 0,25 / 0,50 / 1,00**, com aplicação imediata, persistência no SQLite e botão **Restaurar zoom padrão**.
@@ -171,103 +187,30 @@
 
 ## Pendências para próximas versões
 
-- **TNC / RF — Kenwood TM-D700 conecta pela serial, mas não recebe nem transmite (relato de PU2MUS - Marco)**
-  - **Diagnóstico incorporado na v1.8.15:** o Client agora separa serial aberta, bytes recebidos, frame KISS reconhecido, AX.25 válido e TX entregue ao transporte.
-  - **Ainda pendente:** confirmar em hardware real qual protocolo/configuração do TM-D700 em modo PKT entrega RX/TX compatível com o Client e implementar qualquer adaptação específica necessária sem ativar o digipeater interno.
-  - Cenário relatado: o **Kenwood TM-D700** conecta pela porta serial e o Client indica estado **Conectado**, porém pacotes recebidos no rádio (ex.: de um **TH-D75**) não entram no PT2VHF APRS Client, mesmo com a portadora sendo percebida pelo equipamento.
-  - No mesmo cenário, não há evidência de transmissão efetiva de pacotes APRS pelo rádio a partir do Client.
-  - O TM-D700 está sendo usado em **modo PKT**. **Não assumir que o rádio deve ser colocado em modo TNC**, pois nesse equipamento esse modo passa a acionar o TNC/digipeater interno e altera o comportamento operacional desejado.
-  - Diferenciar claramente **porta serial aberta/conectada** de **TNC/RF operacional**: o estado “Conectado” só deve representar transporte serial disponível; a interface deve indicar separadamente se houve RX de frame válido e se o caminho de TX foi confirmado.
-  - Adicionar diagnóstico de RX mostrando bytes recebidos, frames reconhecidos/descartados, erros de framing/protocolo e horário do último frame válido.
-  - Adicionar diagnóstico de TX mostrando tentativa de envio, bytes/frame entregues à serial, eventual resposta/erro do equipamento e horário da última transmissão solicitada.
-  - Revisar parâmetros e protocolo usados com o TM-D700 em **PKT**, incluindo baud rate, modo de framing esperado e comandos de inicialização necessários, sem interferir no digipeater interno.
-  - Criar indicação visual como **Serial conectada / RX aguardando / RX ativo / TX aguardando / TX ativo / protocolo incompatível** para evitar falso positivo de funcionamento.
-  - Incluir teste/simulador de regressão para serial conectada sem frames e para RX/TX válidos, preservando compatibilidade com os TNCs KISS já suportados.
-  - Quando possível, permitir captura de diagnóstico suficiente para comparar o que chega da serial com o que o rádio está recebendo pelo ar.
+- **Kenwood TM-D700 em modo PKT — validação física**
+  - O diagnóstico de transporte já separa serial aberta, bytes recebidos, framing, AX.25 válido e TX entregue.
+  - Ainda depende de teste com o rádio real para confirmar qual protocolo/configuração o TM-D700 entrega em PKT e se alguma adaptação específica é necessária.
+  - Não ativar o modo TNC/digipeater interno apenas para satisfazer o Client.
 
+- **Métricas RF dependentes do hardware**
+  - Consumir RSSI, SNR, DCD, ocupação de canal e métricas equivalentes quando o modem/TNC efetivamente as fornecer.
+  - Nunca sintetizar ou inferir valores ausentes.
 
+- **AIS — foto de embarcação**
+  - Manter como recurso opcional somente quando houver uma fonte pública confiável e associação inequívoca por MMSI.
+  - Não exibir fotografia baseada apenas em busca textual ambígua pelo nome da embarcação.
 
-- **Builds — Linux ARM64**
-  - **Windows ARM64 foi incorporado na v1.7.7** com Setup e Portable nativos; manter apenas acompanhamento de compatibilidade/estabilidade.
-  - Adicionar geração oficial de artefatos **Linux ARM64**, priorizando **TAR.GZ** e, quando suportado pelo pipeline, também **AppImage** e **DEB arm64**.
-  - Manter o build nativo **macOS ARM64** já existente e garantir paridade funcional com Intel x86_64.
-  - Atualizar o mecanismo de atualização automática para Linux ARM64 quando os artefatos correspondentes estiverem disponíveis.
-  - Não permitir atualização cruzada entre arquiteturas.
-  - Validar banco SQLite, WebView/interface, mapa, APRS-IS, updater e empacotamento antes de considerar Linux ARM64 estável.
-  - Documentar claramente no README/Release qual pacote deve ser usado em cada arquitetura.
-- **Portátil — validação prolongada de estabilidade**
-  - Manter acompanhamento em uso real do Windows Portable após as correções de CPU/topologia/SQLite já incorporadas.
-  - Registrar qualquer novo congelamento com diagnostics.log e verificar se há regressão no backend, WebView2, mapa ou contenção SQLite.
-  - Considerar encerrado somente após teste prolongado sem aumento anormal de CPU e sem timeout nas rotas interativas.
+- **Validação prolongada do Windows Portable**
+  - Continuar teste de campo após as correções de CPU/topologia/SQLite.
+  - Encerrar somente após uso prolongado sem crescimento anormal de CPU, congelamentos ou timeouts persistentes.
 
-- **Configurações — compatibilidade com banco antigo/inconsistente**
-  - Validar upgrade com banco de versão anterior, alterar configuração, salvar, reiniciar e confirmar persistência.
-  - Garantir migração automática de schema/defaults sem apagar mensagens, estações, logs ou tracklogs.
-  - Adicionar/confirmar teste de regressão para banco antigo ou parcialmente migrado.
+- **Compatibilidade ampla com bancos antigos/inconsistentes**
+  - A migração crítica de `packets.medium/rx_fingerprint` está coberta desde v1.8.12.
+  - Continuar expandindo a matriz de bancos históricos/parcialmente migrados, preservando mensagens, estações, logs e tracklogs.
 
-- **Idiomas — continuar revisão global de textos residuais**
-  - A aba **TNC / RF** foi revisada em PT-BR, EN, ES e FR na v1.8.1, incluindo textos estáticos, estados dinâmicos e mensagens técnicas conhecidas.
-  - Evitar exibir diretamente ao usuário mensagens técnicas do backend em português quando a interface estiver em outro idioma; mapear erros e estados conhecidos para chaves de tradução, preservando o detalhe técnico somente quando necessário para diagnóstico.
-  - Fazer uma **varredura completa em todas as abas e popups** do aplicativo para localizar textos estáticos ou dinâmicos que ainda não acompanham a troca de idioma.
-  - Revisar especialmente **Mapa, Mensagens, Estações, Log, Estatísticas, TNC / RF, Configuração, Sobre, atualização, exportação KML, queries APRS, popups e toasts**.
-  - Garantir que a mudança de idioma atualize imediatamente os componentes já abertos, sem exigir reinício ou recarregamento da aplicação.
-  - Manter **Português (Brasil)** como idioma padrão e usar fallback seguro somente quando uma chave ainda não existir, evitando misturar dois idiomas na mesma tela.
-  - Revisar terminologia técnica de APRS/TNC para não traduzir incorretamente termos de protocolo como **KISS, AX.25, APRS-IS, Digipeater, iGate, WIDE1-1, WIDEn-N, ACK/REJ, RFONLY, NOGATE e q-construct**.
-  - Adicionar testes de regressão que verifiquem as quatro línguas nas principais telas e detectem textos PT-BR inesperados quando EN/ES/FR estiverem ativos.
-
-- **TNC / RF — próximos passos após a v1.8.0**
-  - Adicionar protocolo **AGWPE** como alternativa a KISS, mantendo KISS Serial/TCP como base estável.
-  - Consumir RSSI/SNR, DCD, ocupação de canal e demais métricas somente quando o modem/TNC realmente as fornecer.
-  - Evoluir o grafo textual “Quem fala com quem” para visualização gráfica interativa no Mapa/Estatísticas.
-  - Criar simulador de transporte KISS completo para cenários de múltiplos digis/iGates e testes de congestionamento sem rádio físico.
-  - Ampliar políticas do otimizador automático somente após coleta de uso real, preservando compatibilidade APRS e logs auditáveis.
-
-- **Mapa — painel lateral de estação**
-  - Substituir progressivamente o popup grande da estação por um painel lateral fixo, preservando o mapa visível durante a consulta.
-  - Exibir Indicativo, última recepção, distância, software/dispositivo, posição, status, favorito, mensagens, Ping, Trace e estações ouvidas.
-  - Incluir atalhos para **Mostrar log**, **Enviar mensagem**, **Ping/ACK**, **Trace**, **Posição**, **Status** e histórico de queries.
-  - Em telas pequenas, transformar o painel lateral em painel inferior responsivo.
-  - Ao trocar de estação, atualizar o mesmo painel sem criar sobreposição adicional no mapa.
-
-- **Mapa — consolidar controles na barra superior**
-  - Aproveitar a nova barra acima do mapa para reunir os controles usados com maior frequência.
-  - Avaliar incluir seletor de mapa/base cartográfica, mostrar/ocultar tracklogs, mostrar/ocultar enlaces, animações, som e outros controles rápidos.
-  - Manter os controles menos usados em um menu **Mais ▾**, evitando poluir a barra.
-  - Garantir que nenhum controle volte a ficar sobreposto ao canvas do mapa ou à legenda.
-
-- **Busca rápida — localizar estação por indicativo**
-  - Adicionar campo de busca rápida por indicativo, com filtragem caractere por caractere.
-  - Aceitar indicativo completo ou parcial, incluindo SSID.
-  - Ao selecionar uma estação, abrir a aba **Mapa**, centralizar o marcador e aplicar um nível de zoom adequado.
-  - Integrar a seleção ao futuro painel lateral da estação.
-  - Priorizar favoritos e correspondências exatas nas sugestões.
-
-- **Estatísticas — qualidade da rede APRS**
-  - Adicionar painel específico de qualidade/saúde da rede observada.
-  - Exibir taxa de pacotes duplicados, tráfego **RF × APRS-IS**, estações únicas por hora/dia e distribuição por tipo de pacote.
-  - Incluir mensagens com ACK/sem ACK, RTT médio/mediano do Ping, estações novas no período e estações que deixaram de aparecer.
-  - Respeitar o período selecionado em Estatísticas e permitir análise **Completo, 1 h, 6 h, 24 h e 7 dias**.
-  - Evitar que telemetria de alta frequência distorça indicadores de atividade humana.
-
-- **Exportação — CSV e GeoJSON**
-  - Manter como próxima etapa a exportação tabular em **CSV** e geográfica em **GeoJSON**.
-  - Respeitar período e filtros ativos, preservando timestamp, indicativo, origem e atributos úteis.
-  - Garantir compatibilidade com Excel, QGIS e outras ferramentas de análise.
-
-- **Estatísticas — comparação entre períodos**
-  - Permitir comparar o período atual com o período imediatamente anterior de mesma duração.
-  - Exemplos: **últimas 24 h × 24 h anteriores** e **últimos 7 dias × semana anterior**.
-  - Mostrar variação absoluta e percentual de estações ativas, mensagens, tráfego, enlaces, digipeaters e iGates.
-  - Destacar novos enlaces, estações novas e estações que desapareceram.
-  - Evitar apresentar variação percentual quando a base anterior for zero; nesse caso, indicar **novo** ou equivalente.
-
-- **Diagnóstico — saúde da aplicação e pacote de suporte**
-  - Criar uma área de diagnóstico em **Ajuda** ou seção própria.
-  - Exibir integridade do banco SQLite, tamanho do banco, estado da conexão APRS-IS, WebView, CPU, RAM, filas de mensagens, serviços/threads principais e espaço em disco.
-  - Adicionar botão **Gerar pacote de diagnóstico**.
-  - O pacote deve incluir logs e informações técnicas úteis, removendo ou mascarando dados sensíveis antes da geração.
-  - Incluir versão da aplicação, plataforma, arquitetura, caminho do banco, status das migrações e erros recentes.
-  - Facilitar o envio desse ZIP em casos de travamento ou comportamento anormal.
+- **Idiomas — auditoria contínua**
+  - Os recursos novos devem sempre entrar cobertos em PT-BR, EN, ES e FR.
+  - Manter varredura de textos residuais do backend e componentes legados, sem traduzir incorretamente KISS, AX.25, APRS-IS, Digipeater, iGate, ACK/REJ e paths APRS.
 
 ## Concluído na v1.8.12
 
