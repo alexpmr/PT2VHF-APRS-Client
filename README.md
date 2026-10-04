@@ -34,6 +34,17 @@ Os arquivos abaixo apontam diretamente para a **release v1.10.0**, evitando link
 
 ## Novidades da v1.10.0
 
+- **QRZ.com:** enriquecimento opcional do perfil da estação via API XML, com foto principal quando fornecida, nome, cidade, estado/região, país, grid, link do indicativo, cache local e fallback seguro.
+- **AIS:** provedor externo configurável por MMSI/IMO, com cache e exibição de foto somente quando houver associação inequívoca.
+- **Métricas RF:** suporte extensível a RSSI, SNR, DCD, frequência, canal e origem; valores que o hardware não fornece permanecem explicitamente indisponíveis.
+- **TM-D700 em PKT:** diagnóstico específico e roteiro formal de validação física. A compatibilidade física só será declarada após RX/TX confirmados com rádio real.
+- **Soak test:** perfis de 24 h, 72 h e 7 dias, com CPU, RAM, threads, handles quando disponíveis, crescimento do banco e detecção de crescimento anormal de memória.
+- **Migração:** matriz automatizada de bancos históricos 1.6.x, 1.7.x, 1.8.0, 1.8.4, 1.8.10, 1.8.18, 1.9.0 e banco novo.
+- **Idiomas:** auditoria contínua PT-BR/EN/ES/FR, com paridade de dicionários, validação das chamadas de tradução e relatório de textos visíveis candidatos.
+- **Produção:** release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
+## Novidades da v1.9.0
+
 - **Mensagens e Estações destacáveis:** podem ser desacopladas da navegação, arrastadas e redimensionadas sobre o mapa, minimizadas e encaixadas novamente; posição e tamanho são preservados localmente.
 - **Busca Global:** pesquisa indicativos/SSID, objetos APRS, meteorologia, AIS, repetidores e texto de comentário/status.
 - **Organização de estações:** nome amigável, cor, nota e grupos definidos pelo usuário.
