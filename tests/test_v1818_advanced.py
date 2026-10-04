@@ -76,6 +76,3 @@ def test_tnc_transport_visibility_uses_collection_selector():
     assert "$$('.tnc-serial-field').forEach" in source
     assert "$$('.tnc-tcp-field').forEach" in source
     assert "$$('.tnc-agwpe-field').forEach" in source
-    assert "$('.tnc-serial-field').forEach" not in source
-    assert "$('.tnc-tcp-field').forEach" not in source
-    assert "$('.tnc-agwpe-field').forEach" not in source
