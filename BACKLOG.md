@@ -187,6 +187,18 @@
 
 ## Pendências para próximas versões
 
+- **Mensagens e Estações — janelas destacáveis sobre o mapa**
+  - Permitir destacar/desacoplar as abas **Mensagens** e **Estações** da navegação principal.
+  - Quando destacadas, exibi-las como janelas/painéis flutuantes sobre o **Mapa**, sem ocultar o mapa inteiro.
+  - Permitir **arrastar** livremente as janelas pela área da aplicação.
+  - Permitir **redimensionamento manual** em largura e altura, com limites mínimos para preservar usabilidade.
+  - Preservar o estado da aba destacada ao alternar entre outras áreas do aplicativo.
+  - Manter todas as funções atuais das abas, incluindo filtros, ordenação, envio de mensagens, seleção de estação e ações contextuais.
+  - Evitar que o painel flutuante bloqueie controles essenciais do mapa; quando necessário, permitir recolher/minimizar.
+  - Em telas pequenas, usar comportamento responsivo e impedir que a janela fique fora da área visível.
+  - Considerar persistir posição e tamanho por usuário/dispositivo para restaurar o layout na próxima abertura.
+
+
 - **Kenwood TM-D700 em modo PKT — validação física**
   - O diagnóstico de transporte já separa serial aberta, bytes recebidos, framing, AX.25 válido e TX entregue.
   - Ainda depende de teste com o rádio real para confirmar qual protocolo/configuração o TM-D700 entrega em PKT e se alguma adaptação específica é necessária.
