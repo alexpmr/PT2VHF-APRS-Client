@@ -222,6 +222,23 @@ def connection():
 def init_db() -> None:
     _configure_database_runtime()
     with connection() as conn:
+        # Preflight de schema: índices do bloco principal podem referenciar
+        # colunas adicionadas em versões posteriores. Em bancos legados,
+        # crie essas colunas antes de executar CREATE INDEX IF NOT EXISTS.
+        existing_tables = {
+            row["name"] for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+        }
+        if "messages" in existing_tables:
+            pre_message_columns = {
+                row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()
+            }
+            if "message_type" not in pre_message_columns:
+                conn.execute(
+                    "ALTER TABLE messages ADD COLUMN message_type TEXT NOT NULL DEFAULT 'message'"
+                )
+
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS config (
