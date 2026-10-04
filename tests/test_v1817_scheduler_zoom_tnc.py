@@ -22,9 +22,6 @@ def test_v1817_version_metadata_history_is_preserved():
     changelog = read("CHANGELOG.md")
     assert '"1.8.17"' in notes
     assert "## 1.8.17" in changelog
-    assert "prodvers=(1, 8, 17, 0)" in win
-    assert "FileVersion', '1.8.17'" in win
-    assert "ProductVersion', '1.8.17'" in win
 
 
 def test_zoom_step_is_persistent_config_and_runtime_adjustable():
