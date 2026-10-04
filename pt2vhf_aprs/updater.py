@@ -82,10 +82,13 @@ def desired_asset_name(version: str) -> str:
         arch = "arm64" if machine == "arm64" else "x86_64"
         return f"PT2VHF_APRS_Client_macOS_{arch}_v{version}.dmg"
     if mode == "linux-appimage":
-        return f"PT2VHF_APRS_Client_x86_64_v{version}.AppImage"
+        arch = "arm64" if machine == "arm64" else "x86_64"
+        return f"PT2VHF_APRS_Client_{arch}_v{version}.AppImage"
     if mode == "linux-deb":
-        return f"pt2vhf-aprs-client_{version}_amd64.deb"
-    return f"PT2VHF_APRS_Client_Linux_x86_64_v{version}.tar.gz"
+        arch = "arm64" if machine == "arm64" else "amd64"
+        return f"pt2vhf-aprs-client_{version}_{arch}.deb"
+    arch = "arm64" if machine == "arm64" else "x86_64"
+    return f"PT2VHF_APRS_Client_Linux_{arch}_v{version}.tar.gz"
 
 
 def install_supported(mode: str | None = None) -> bool:
@@ -98,9 +101,9 @@ def install_supported(mode: str | None = None) -> bool:
     if mode == "macos-dmg":
         return sys.platform == "darwin" and machine in {"arm64", "x86_64"} and bool(shutil.which("hdiutil"))
     if mode in {"linux-appimage", "linux-tar"}:
-        return sys.platform.startswith("linux") and machine == "x86_64"
+        return sys.platform.startswith("linux") and machine in {"x86_64", "arm64"}
     if mode == "linux-deb":
-        if not sys.platform.startswith("linux") or machine != "x86_64":
+        if not sys.platform.startswith("linux") or machine not in {"x86_64", "arm64"}:
             return False
         if hasattr(os, "geteuid") and os.geteuid() == 0:
             return True
