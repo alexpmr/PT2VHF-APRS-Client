@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 import json
 import re
 import sys
@@ -10,20 +9,77 @@ ROOT = Path(__file__).resolve().parents[1]
 JS_FILES = list((ROOT / "pt2vhf_aprs" / "static" / "js").glob("*.js"))
 HTML_FILES = list((ROOT / "pt2vhf_aprs" / "templates").glob("*.html"))
 
-TR_CALL = re.compile(r"\btr\(([^\n;]{1,800})\)")
 VISIBLE_HTML = re.compile(r">\s*([^<>{}\n][^<>{}\n]{2,120})\s*<")
 IGNORE_HTML = re.compile(r"^(?:[\s\d.,:+\-×/%°–—→←↑↓|]+|KISS|AX\.25|APRS(?:-IS)?|RF|AIS|CSV|GeoJSON|KML|TNC/?RF|AGWPE)$", re.I)
 
 
-def _split_args(raw: str) -> list[str]:
-    try:
-        node = ast.parse(f"f({raw})", mode="eval")
-        call = node.body
-        if isinstance(call, ast.Call):
-            return [ast.get_source_segment(f"f({raw})", arg) or "" for arg in call.args]
-    except Exception:
-        return []
-    return []
+def _iter_tr_calls(text: str):
+    index = 0
+    while True:
+        match = re.search(r"\btr\s*\(", text[index:])
+        if not match:
+            return
+        start = index + match.start()
+        pos = index + match.end()
+        depth = 1
+        quote = ""
+        escaped = False
+        while pos < len(text) and depth:
+            ch = text[pos]
+            if quote:
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == quote:
+                    quote = ""
+            else:
+                if ch in ("'", '"', "`"):
+                    quote = ch
+                elif ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth -= 1
+            pos += 1
+        if depth:
+            yield text[start:], ""
+            return
+        yield text[start:pos], text[index + match.end():pos - 1]
+        index = pos
+
+
+def _split_js_args(raw: str) -> list[str]:
+    args, buf = [], []
+    quote = ""
+    escaped = False
+    depth = 0
+    for ch in raw:
+        if quote:
+            buf.append(ch)
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == quote:
+                quote = ""
+            continue
+        if ch in ("'", '"', "`"):
+            quote = ch
+            buf.append(ch)
+        elif ch in "([{":
+            depth += 1
+            buf.append(ch)
+        elif ch in ")]}":
+            depth = max(0, depth - 1)
+            buf.append(ch)
+        elif ch == "," and depth == 0:
+            args.append("".join(buf).strip())
+            buf = []
+        else:
+            buf.append(ch)
+    if buf or raw.strip():
+        args.append("".join(buf).strip())
+    return args
 
 
 def _dictionary_keys() -> tuple[set[str], set[str]]:
@@ -44,11 +100,11 @@ def audit() -> dict:
     tr_count = 0
     for path in JS_FILES:
         text = path.read_text(encoding="utf-8", errors="replace")
-        for match in TR_CALL.finditer(text):
-            args = _split_args(match.group(1))
+        for snippet, raw_args in _iter_tr_calls(text):
+            args = _split_js_args(raw_args)
             tr_count += 1
             if len(args) < 4:
-                malformed.append({"file": str(path.relative_to(ROOT)), "snippet": match.group(0)[:180], "args": len(args)})
+                malformed.append({"file": str(path.relative_to(ROOT)), "snippet": snippet[:180], "args": len(args)})
 
     hardcoded = []
     for path in HTML_FILES:
