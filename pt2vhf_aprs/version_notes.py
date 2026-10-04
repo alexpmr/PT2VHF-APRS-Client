@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.8.18": {
+        "title": "AGWPE, análise avançada, exportações e Linux ARM64",
+        "items": [
+            "Adiciona AGWPE TCP como terceiro transporte TNC, preservando KISS TCP e KISS Serial.",
+            "Adiciona busca rápida por indicativo no Mapa e painel lateral responsivo de estação.",
+            "Estatísticas ganham saúde da rede, comparação com período anterior e grafo visual interativo de comunicação.",
+            "Adiciona exportações CSV e GeoJSON por período e pacote ZIP de diagnóstico sanitizado.",
+            "Inclui simulador KISS para fragmentação, duplicidade e cenários multi-hop sem rádio físico.",
+            "Pipeline de produção passa a gerar Linux ARM64 e o updater seleciona assets conforme a arquitetura.",
+            "Mantém a validação física específica do Kenwood TM-D700 em modo PKT como pendência de hardware real.",
+            "Métricas RSSI/SNR/DCD continuam condicionadas ao que o modem/TNC realmente fornecer; nenhum valor é inventado.",
+            "Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.17": {
         "title": "Mensagens agendadas, zoom configurável e TNC mais claro",
         "items": [
