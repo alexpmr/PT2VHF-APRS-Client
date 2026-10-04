@@ -3,6 +3,22 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.9.0": {
+        "title": "Painéis destacáveis, busca global, backup, alertas e operação avançada",
+        "items": [
+            "Mensagens e Estações podem ser destacadas sobre o mapa, arrastadas, redimensionadas, minimizadas e encaixadas novamente.",
+            "Busca Global localiza estações, objetos, WX, AIS e infraestrutura a partir de indicativo, nome, comentário ou status.",
+            "Estações ganham organização por nome amigável, cor, nota e grupos definidos pelo usuário.",
+            "Backup completo inclui banco, mensagens, estações, favoritos, tracklogs, agendamentos, grupos e preferências, com restauração validada.",
+            "Alertas configuráveis cobrem aparecimento/desaparecimento de estações, favoritos, mensagens, TNC, APRS-IS e integridade SQLite.",
+            "Timeline unificada reúne mensagens, posições, queries e tráfego RF.",
+            "Modo apresentação coloca o mapa em tela cheia para clubes, encontros e acompanhamento operacional.",
+            "TNC/RF ganha Testar TNC não destrutivo, preservando KISS Serial/TCP e AGWPE.",
+            "Mantém saúde da rede, comparação entre períodos, grafo de comunicação, CSV, GeoJSON, pacote de suporte e Linux ARM64.",
+            "A validação física do Kenwood TM-D700 em PKT permanece dependente do equipamento real.",
+            "Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.",
+        ],
+    },
     "1.8.18": {
         "title": "AGWPE, análise avançada, exportações e Linux ARM64",
         "items": [

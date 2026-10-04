@@ -1,36 +1,52 @@
-# PT2VHF APRS Client - v1.8.18
+# PT2VHF APRS Client - v1.9.0
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.8.18** amplia o TNC/RF com AGWPE, adiciona busca e painel lateral de estação, análise avançada da rede, CSV/GeoJSON, pacote de diagnóstico e builds oficiais Linux ARM64.
+A **v1.9.0** consolida a nova geração da interface operacional: painéis destacáveis de Mensagens e Estações sobre o mapa, busca global, backup/restauração completos, grupos e metadados de estações, alertas configuráveis, timeline unificada, modo apresentação e diagnóstico assistido do TNC. Mantém AGWPE, análise avançada da rede, CSV/GeoJSON e Linux ARM64.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.8.18**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.9.0**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_Setup_x64_v1.8.18.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_Portable_x64_v1.8.18.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_Setup_ARM64_v1.8.18.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_Portable_ARM64_v1.8.18.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_Setup_x64_v1.9.0.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_Portable_x64_v1.9.0.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_Setup_ARM64_v1.9.0.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_Portable_ARM64_v1.9.0.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_x86_64_v1.8.18.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/pt2vhf-aprs-client_1.8.18_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_Linux_x86_64_v1.8.18.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_arm64_v1.8.18.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/pt2vhf-aprs-client_1.8.18_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_Linux_arm64_v1.8.18.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_x86_64_v1.9.0.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/pt2vhf-aprs-client_1.9.0_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_Linux_x86_64_v1.9.0.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_arm64_v1.9.0.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/pt2vhf-aprs-client_1.9.0_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_Linux_arm64_v1.9.0.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_macOS_arm64_v1.8.18.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_macOS_x86_64_v1.8.18.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_macOS_arm64_v1.9.0.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_macOS_x86_64_v1.9.0.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.8.18/PT2VHF_APRS_Client_Manual_v1.8.18.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.9.0/PT2VHF_APRS_Client_Manual_v1.9.0.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.9.0
+
+- **Mensagens e Estações destacáveis:** podem ser desacopladas da navegação, arrastadas e redimensionadas sobre o mapa, minimizadas e encaixadas novamente; posição e tamanho são preservados localmente.
+- **Busca Global:** pesquisa indicativos/SSID, objetos APRS, meteorologia, AIS, repetidores e texto de comentário/status.
+- **Organização de estações:** nome amigável, cor, nota e grupos definidos pelo usuário.
+- **Backup completo:** exporta banco, mensagens, estações, favoritos, tracklogs, agendamentos, grupos e preferências; a restauração valida o SQLite e cria cópia pré-restauração.
+- **Alertas configuráveis:** estação/favorito apareceu, estação desapareceu, nova mensagem, queda de TNC/APRS-IS e problema de integridade do banco.
+- **Timeline unificada:** combina mensagens, posições, queries e tráfego RF em uma única sequência cronológica.
+- **Modo apresentação:** mapa em tela cheia com controles mínimos para clubes, encontros e acompanhamento operacional.
+- **TNC / RF:** botão **Testar TNC** executa diagnóstico não destrutivo do transporte, incluindo KISS Serial/TCP e AGWPE, sem declarar emissão RF quando apenas o transporte respondeu.
+- **Painel de saúde da rede:** preserva KPIs, comparação entre períodos e grafo “Quem fala com quem” introduzidos na v1.8.18.
+- **Exportações e suporte:** CSV, GeoJSON e pacote de diagnóstico sanitizado permanecem integrados.
+- **Linux ARM64:** permanece parte do pipeline oficial ao lado de Windows x64/ARM64, Linux x86_64 e macOS ARM64/Intel.
+- **TM-D700 em PKT:** continua explicitamente dependente de validação com hardware real; a aplicação não declara compatibilidade física ainda não comprovada.
+- Release completa com testes de regressão e Manual PDF.
 
 ## Novidades da v1.8.18
 

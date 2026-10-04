@@ -509,6 +509,105 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
     return merged
 
 
+
+def probe_transport(payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Teste não destrutivo do transporte configurado, sem transmitir RF."""
+    cfg = normalize_tnc_config(payload or get_tnc_config(), strict=False)
+    started = time.monotonic()
+    transport = str(cfg.get("transport") or "")
+    result: dict[str, Any] = {
+        "ok": False,
+        "transport": transport,
+        "endpoint": "",
+        "elapsed_ms": None,
+        "bytes_received": 0,
+        "protocol": "unknown",
+        "summary": "",
+    }
+    current_service = globals().get("service")
+    if current_service is not None:
+        try:
+            live = current_service.status()
+        except Exception:
+            live = {}
+        if live.get("connected"):
+            result.update({
+                "ok": True,
+                "endpoint": str(live.get("endpoint") or ""),
+                "bytes_received": int(live.get("transport_bytes_rx") or 0),
+                "protocol": "agwpe" if transport == "agwpe" else ("kiss" if int(live.get("kiss_frames_rx") or 0) > 0 else "transport-open"),
+                "summary": "TNC já está conectado; teste usa o estado da sessão atual para não disputar a porta/transporte.",
+                "live_status": live,
+                "elapsed_ms": 0.0,
+            })
+            return result
+    handle = None
+    try:
+        if transport == "serial":
+            if serial is None:
+                raise RuntimeError("pyserial não está instalado.")
+            if not cfg.get("serial_port"):
+                raise ValueError("Porta serial não configurada.")
+            result["endpoint"] = f"{cfg['serial_port']} @ {cfg['serial_baud']}"
+            handle = serial.Serial(
+                port=cfg["serial_port"],
+                baudrate=int(cfg["serial_baud"]),
+                timeout=0.35,
+                write_timeout=1.0,
+            )
+            waiting = int(getattr(handle, "in_waiting", 0) or 0)
+            sample = handle.read(min(max(waiting, 1), 4096)) if waiting else b""
+            result["bytes_received"] = len(sample)
+            if sample:
+                decoder = KissStreamDecoder()
+                frames = decoder.feed(sample)
+                result["protocol"] = "kiss" if frames else "bytes-unrecognized"
+            else:
+                result["protocol"] = "serial-open"
+            result["ok"] = True
+            result["summary"] = (
+                f"Serial aberta em {result['endpoint']}; "
+                + (f"{len(sample)} byte(s) lido(s), protocolo {result['protocol']}." if sample else "sem bytes disponíveis durante o teste.")
+            )
+        elif transport == "tcp":
+            result["endpoint"] = f"{cfg['tcp_host']}:{cfg['tcp_port']}"
+            handle = socket.create_connection((cfg["tcp_host"], int(cfg["tcp_port"])), timeout=3.0)
+            handle.settimeout(0.35)
+            try:
+                sample = handle.recv(4096)
+            except socket.timeout:
+                sample = b""
+            result["bytes_received"] = len(sample)
+            if sample:
+                decoder = KissStreamDecoder()
+                frames = decoder.feed(sample)
+                result["protocol"] = "kiss" if frames else "bytes-unrecognized"
+            else:
+                result["protocol"] = "kiss-tcp-open"
+            result["ok"] = True
+            result["summary"] = f"KISS TCP acessível em {result['endpoint']}."
+        elif transport == "agwpe":
+            result["endpoint"] = f"{cfg['agwpe_host']}:{cfg['agwpe_port']}"
+            handle = AGWPETransport(cfg["agwpe_host"], int(cfg["agwpe_port"]), timeout=3.0)
+            handle.sendall(enable_raw_command())
+            result["protocol"] = "agwpe"
+            result["ok"] = True
+            result["summary"] = f"AGWPE acessível em {result['endpoint']}; raw mode solicitado sem transmitir RF."
+        else:
+            raise ValueError(f"Transporte não suportado: {transport}")
+    except Exception as exc:
+        result["summary"] = str(exc)
+        result["error"] = str(exc)
+    finally:
+        try:
+            if handle is not None:
+                handle.close()
+        except Exception:
+            pass
+        result["elapsed_ms"] = round((time.monotonic() - started) * 1000.0, 1)
+    diag.log_event("tnc_transport_probe", **result)
+    return result
+
 def save_tnc_config(payload: dict[str, Any]) -> dict[str, Any]:
     cfg = normalize_tnc_config(payload, strict=True)
     _ensure_schema()
