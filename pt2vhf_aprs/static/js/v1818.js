@@ -44,7 +44,7 @@
     ];
     document.getElementById('v1818StationBody').innerHTML =
       '<div class="v1818-kv">' + fields.map(([k,v]) => '<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>').join('') + '</div>' +
-      '<div class="v1818-actions"><button type="button" id="v1818Message" class="btn primary">'+t('Enviar mensagem','Send message','Enviar mensaje','Envoyer un message')+'</button><button type="button" id="v1818Log" class="btn secondary">'+t('Mostrar log','Show log','Mostrar log','Afficher le journal')+'</button></div>';
+      '<div class="v1818-actions"><button type="button" id="v1818Message" class="btn primary">'+t('Enviar mensagem','Send message','Enviar mensaje','Envoyer un message')+'</button><button type="button" id="v1818Log" class="btn secondary">'+t('Mostrar log','Show log','Mostrar log','Afficher le journal')+'</button><button type="button" data-query="APRSP" class="btn secondary">'+t('Posição','Position','Posición','Position')+'</button><button type="button" data-query="APRSS" class="btn secondary">'+t('Status','Status','Estado','Statut')+'</button><button type="button" data-query="APRSD" class="btn secondary">'+t('Ouvidos','Heard','Oídos','Entendus')+'</button><button type="button" data-query="PINGACK" class="btn secondary">Ping/ACK</button><button type="button" data-query="APRST" class="btn secondary">Trace</button></div><div id="v1818QueryStatus" class="hint" aria-live="polite"></div>';
     panel.classList.remove('hidden');
     panel.querySelector('#v1818Message')?.addEventListener('click', () => {
       document.querySelector('[data-tab="messages"]')?.click();
@@ -56,6 +56,19 @@
       const input = document.getElementById('logFilter');
       if (input) { input.value = row.callsign; input.dispatchEvent(new Event('input', {bubbles:true})); }
     });
+    panel.querySelectorAll('[data-query]').forEach(btn => btn.addEventListener('click', async () => {
+      const out = panel.querySelector('#v1818QueryStatus');
+      btn.disabled = true;
+      if (out) out.textContent = t('Enviando consulta…','Sending query…','Enviando consulta…','Envoi de la requête…');
+      try {
+        const resp = await fetch('/api/queries/send', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({to:row.callsign, query_type:btn.dataset.query})});
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data?.error || resp.statusText);
+        if (out) out.textContent = t('Consulta enviada.','Query sent.','Consulta enviada.','Requête envoyée.');
+      } catch (err) {
+        if (out) out.textContent = String(err.message || err);
+      } finally { btn.disabled = false; }
+    }));
   }
 
   function installQuickSearch() {
