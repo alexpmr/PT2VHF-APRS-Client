@@ -541,7 +541,8 @@ def register_v190_routes(app) -> None:
 
     @app.get("/api/v190/alerts/state")
     def api_v190_alert_state():
-        settings = _json_setting("alerts", ALERT_DEFAULTS)\n        return jsonify(_alert_state(str(request.args.get("since") or ""), int(settings.get("disappear_minutes") or 60)))
+        settings = _json_setting("alerts", ALERT_DEFAULTS)
+        return jsonify(_alert_state(str(request.args.get("since") or ""), int(settings.get("disappear_minutes") or 60)))
 
     @app.post("/api/v190/tnc/test")
     def api_v190_tnc_test():
