@@ -205,6 +205,27 @@
 
 ## Pendências para próximas versões
 
+- **Perfil enriquecido da estação — QRZ.com e dados externos**
+  - Ao abrir os detalhes/características de uma estação, enriquecer o perfil com dados públicos externos quando disponíveis.
+  - Buscar no **QRZ.com**, de forma compatível com os termos de uso/API disponível, pelo menos:
+    - foto principal/avatar da estação;
+    - nome do radioamador;
+    - cidade;
+    - estado/região;
+    - país;
+    - grid locator;
+    - URL da página do indicativo;
+    - demais campos públicos úteis ao contexto APRS.
+  - Priorizar a foto principal como destaque visual no painel da estação, mantendo fallback para o ícone/símbolo APRS quando não houver foto.
+  - Diferenciar claramente dados recebidos via APRS dos dados externos do QRZ.com.
+  - Exibir a origem do dado e o horário da última atualização.
+  - Implementar cache local com expiração para reduzir chamadas externas e permitir uso temporário offline.
+  - Não sobrescrever dados APRS mais recentes com dados externos conflitantes; usar o QRZ.com apenas como enriquecimento de perfil.
+  - Tornar a integração configurável/opt-in caso seja necessária credencial, API key ou login.
+  - Prever arquitetura de provedores para permitir futuramente outras fontes públicas confiáveis além do QRZ.com.
+  - Tratar indicativos sem cadastro, chamadas especiais, objetos APRS, iGates/digipeaters automáticos e erros de consulta sem quebrar o painel.
+  - Não realizar scraping frágil; usar API/mecanismo oficialmente permitido pela fonte.
+
 - **Próxima versão — fechamento das pendências de validação e qualidade**
   - **Kenwood TM-D700 em modo PKT — validação física assistida**
     - Criar modo de diagnóstico específico para TM-D700, com registro dos comandos enviados, respostas recebidas, baud rate, framing/protocolo detectado, estado da porta e eventos de RX/TX.
