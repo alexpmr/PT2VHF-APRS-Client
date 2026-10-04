@@ -2,6 +2,15 @@
 
 O projeto publica versões oficiais para **Linux x86_64 / amd64** em .deb, AppImage e tar.gz.
 
+
+## Arquiteturas suportadas
+
+A partir da v1.8.18 existem pacotes oficiais para **x86_64/amd64** e **ARM64/aarch64**.
+
+- x86_64: use arquivos com `x86_64` ou `amd64`.
+- ARM64: use arquivos com `arm64`.
+- Não misture arquiteturas. O updater integrado seleciona o pacote correspondente à arquitetura em execução.
+
 ## Arquivos da Release
 
 - `PT2VHF_APRS_Client_x86_64_vX.Y.AppImage` — AppImage portátil.
