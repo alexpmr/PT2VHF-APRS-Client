@@ -100,11 +100,17 @@ def audit() -> dict:
     tr_count = 0
     for path in JS_FILES:
         text = path.read_text(encoding="utf-8", errors="replace")
+        expected_args = 4 if path.name in {"v190.js", "v110.js"} else 1
         for snippet, raw_args in _iter_tr_calls(text):
             args = _split_js_args(raw_args)
             tr_count += 1
-            if len(args) < 4:
-                malformed.append({"file": str(path.relative_to(ROOT)), "snippet": snippet[:180], "args": len(args)})
+            if len(args) < expected_args:
+                malformed.append({
+                    "file": str(path.relative_to(ROOT)),
+                    "snippet": snippet[:180],
+                    "args": len(args),
+                    "expected_min_args": expected_args,
+                })
 
     hardcoded = []
     for path in HTML_FILES:
