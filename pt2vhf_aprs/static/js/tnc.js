@@ -485,9 +485,9 @@
     const serialMode = mode === 'serial';
     const tcpMode = mode === 'tcp';
     const agwpeMode = mode === 'agwpe';
-    $('.tnc-serial-field').forEach(el => el.classList.toggle('hidden', !serialMode));
-    $('.tnc-tcp-field').forEach(el => el.classList.toggle('hidden', !tcpMode));
-    $('.tnc-agwpe-field').forEach(el => el.classList.toggle('hidden', !agwpeMode));
+    $$('.tnc-serial-field').forEach(el => el.classList.toggle('hidden', !serialMode));
+    $$('.tnc-tcp-field').forEach(el => el.classList.toggle('hidden', !tcpMode));
+    $$('.tnc-agwpe-field').forEach(el => el.classList.toggle('hidden', !agwpeMode));
     if (serialMode) void loadPorts({quiet:true});
   }
 
