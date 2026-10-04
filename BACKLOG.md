@@ -1,5 +1,23 @@
 # Backlog
 
+## Concluído na v1.9.0
+
+- **Painéis destacáveis:** Mensagens e Estações podem ficar sobre o mapa, com arraste, redimensionamento, minimização, encaixe e persistência de tamanho/posição.
+- **Busca Global:** estações, objetos, WX, AIS, repetidores e texto contextual.
+- **Favoritos/estações avançados:** nome amigável, cor, nota e grupos.
+- **Grupos de estações:** cadastro e associação persistentes, integrados à busca e organização.
+- **Backup completo:** snapshot SQLite versionado com restauração validada e cópia automática pré-restauração.
+- **Alertas configuráveis:** aparecimento/desaparecimento de estação, favorito, mensagem, TNC, APRS-IS e integridade SQLite.
+- **Timeline unificada:** mensagens, posições, queries e tráfego RF em uma sequência cronológica.
+- **Modo apresentação:** mapa em tela cheia para acompanhamento operacional/demonstrações.
+- **TNC / RF:** diagnóstico assistido preservado e botão **Testar TNC** não destrutivo para KISS Serial/TCP e AGWPE.
+- **TNC / RF — correção crítica:** eliminado o erro `$(...).forEach is not a function` que podia interromper a inicialização da aba.
+- **AGWPE:** consolidado como terceiro transporte.
+- **Estatísticas:** preservados saúde da rede, comparação de períodos e grafo “Quem fala com quem”.
+- **Exportação/diagnóstico:** CSV, GeoJSON e pacote ZIP de suporte.
+- **Linux ARM64:** mantido como build oficial e reconhecido pelo updater.
+- **Regressão:** adicionada suíte específica v1.9.0 e validador de produção.
+
 ## Concluído na v1.8.18
 
 - **TNC / RF — AGWPE:** transporte AGWPE TCP em raw AX.25, configurável por host, porta e radio port, preservando KISS TCP/Serial.

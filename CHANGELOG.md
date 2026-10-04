@@ -1,3 +1,18 @@
+## 1.9.0 - 2026-10-04
+
+- **Interface destacável:** Mensagens e Estações podem ser desacopladas e mantidas sobre o Mapa com arraste, redimensionamento, minimização, encaixe e persistência local de geometria.
+- **Busca Global:** pesquisa estações, objetos, WX, AIS, repetidores e texto contextual.
+- **Organização:** metadados de estação com nome amigável, cor, nota e grupos.
+- **Backup completo:** geração ZIP com snapshot SQLite e manifesto versionado; restauração valida integridade e cria backup pré-restauração.
+- **Alertas:** preferências independentes para estação/favorito apareceu, estação desapareceu, nova mensagem, TNC/APRS-IS desconectado e integridade do banco.
+- **Timeline:** visão cronológica única de mensagens, posições, queries e RX/TX RF.
+- **Modo apresentação:** mapa em tela cheia com controles mínimos.
+- **TNC / RF:** botão de teste não destrutivo para KISS Serial, KISS TCP e AGWPE.
+- **Correção crítica preservada:** mantém o hotfix que substitui `$().forEach()` por `$$().forEach()` nos campos de transporte do TNC/RF.
+- **Análise:** preserva saúde da rede, comparação de períodos, grafo interativo, CSV e GeoJSON.
+- **Plataformas:** pipeline completo com Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+- **Hardware:** TM-D700 em PKT continua sujeito a validação física; métricas RF seguem limitadas ao que o modem/TNC realmente fornecer.
+
 # Changelog
 
 ## 1.8.18 - 2026-10-04

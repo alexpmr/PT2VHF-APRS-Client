@@ -290,6 +290,8 @@ def _diagnostic_summary() -> dict[str, Any]:
         "aprs_is": service.status(),
         "tnc": tnc_service.status(),
         "local_server": local_server_runtime_info(),
+        "resources": diag.system_metrics(),
+        "active_requests": diag.active_requests(),
     }
 
 
@@ -299,6 +301,11 @@ def _support_zip() -> tuple[io.BytesIO, str]:
     memory = io.BytesIO()
     with zipfile.ZipFile(memory, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("diagnostic_summary.json", json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+        config = dict(db.get_config())
+        for key in ("passcode", "email"):
+            if config.get(key):
+                config[key] = "***"
+        archive.writestr("config_sanitized.json", json.dumps(config, ensure_ascii=False, indent=2, default=str))
         log_candidates = [
             Path(db.DB_PATH).parent / "diagnostics.log",
             Path(db.DB_PATH).parent.parent / "diagnostics.log",
