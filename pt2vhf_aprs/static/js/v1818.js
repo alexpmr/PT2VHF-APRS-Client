@@ -98,12 +98,7 @@
       input.value = btn.dataset.call;
       results.classList.add('hidden');
       openStation(btn.dataset.call);
-      try {
-        if (window.map && window.stationMarkers && window.stationMarkers[btn.dataset.call]) {
-          const marker = window.stationMarkers[btn.dataset.call];
-          window.map.setView(marker.getLatLng(), Math.max(window.map.getZoom(), 12));
-        }
-      } catch (_) {}
+      try { window.pt2vhfFocusStation?.(btn.dataset.call, 12); } catch (_) {}
     });
   }
 
