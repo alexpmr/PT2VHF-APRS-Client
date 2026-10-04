@@ -203,87 +203,21 @@
 - Aplicação dos patches acumulados também aos builds macOS e ao ambiente de captura do manual.
 - Correção do pipeline do ícone Windows para não depender do JPEG oficial inválido.
 
+## Concluído na v1.10.0
+
+- **QRZ.com:** perfil enriquecido opcional por API XML oficial, com foto principal quando disponibilizada, nome, cidade, estado/região, país, grid, link, cache e fallback.
+- **AIS:** provedor externo configurável por MMSI/IMO, cache e ausência de scraping por nome.
+- **Métricas RF:** arquitetura para RSSI, SNR, DCD, frequência, canal e origem; ausência de dado permanece explícita.
+- **TM-D700:** diagnóstico específico em PKT e roteiro de validação física. A validação física real permanece como requisito externo, não como pendência de software.
+- **Portable:** soak test de 24 h, 72 h e 7 dias com relatório automático e detecção de crescimento anormal de memória.
+- **Bancos antigos:** matriz automatizada de migração histórica integrada à CI.
+- **Idiomas:** auditoria contínua, paridade de dicionários e scanner de strings visíveis integrados à CI.
+
 ## Pendências para próximas versões
 
-- **Perfil enriquecido da estação — QRZ.com e dados externos**
-  - Ao abrir os detalhes/características de uma estação, enriquecer o perfil com dados públicos externos quando disponíveis.
-  - Buscar no **QRZ.com**, de forma compatível com os termos de uso/API disponível, pelo menos:
-    - foto principal/avatar da estação;
-    - nome do radioamador;
-    - cidade;
-    - estado/região;
-    - país;
-    - grid locator;
-    - URL da página do indicativo;
-    - demais campos públicos úteis ao contexto APRS.
-  - Priorizar a foto principal como destaque visual no painel da estação, mantendo fallback para o ícone/símbolo APRS quando não houver foto.
-  - Diferenciar claramente dados recebidos via APRS dos dados externos do QRZ.com.
-  - Exibir a origem do dado e o horário da última atualização.
-  - Implementar cache local com expiração para reduzir chamadas externas e permitir uso temporário offline.
-  - Não sobrescrever dados APRS mais recentes com dados externos conflitantes; usar o QRZ.com apenas como enriquecimento de perfil.
-  - Tornar a integração configurável/opt-in caso seja necessária credencial, API key ou login.
-  - Prever arquitetura de provedores para permitir futuramente outras fontes públicas confiáveis além do QRZ.com.
-  - Tratar indicativos sem cadastro, chamadas especiais, objetos APRS, iGates/digipeaters automáticos e erros de consulta sem quebrar o painel.
-  - Não realizar scraping frágil; usar API/mecanismo oficialmente permitido pela fonte.
-
-- **Próxima versão — fechamento das pendências de validação e qualidade**
-  - **Kenwood TM-D700 em modo PKT — validação física assistida**
-    - Criar modo de diagnóstico específico para TM-D700, com registro dos comandos enviados, respostas recebidas, baud rate, framing/protocolo detectado, estado da porta e eventos de RX/TX.
-    - Preparar roteiro de teste físico cobrindo abertura da porta, entrada/saída do modo TNC, recepção, decodificação AX.25/APRS, transmissão, PTT, reconexão e recuperação após desconexão do cabo.
-    - Não declarar compatibilidade plena antes de validação com hardware real.
-  - **Métricas RF — RSSI/SNR/DCD**
-    - Criar arquitetura genérica para anexar metadados do receptor aos pacotes APRS.
-    - Suportar RSSI, SNR, DCD, frequência/canal e origem da métrica quando o TNC/modem/radio realmente fornecer esses dados.
-    - Exibir valor indisponível quando o equipamento não fornecer a métrica, sem estimar ou inventar valores.
-    - Permitir provedores específicos por transporte/hardware futuramente.
-  - **AIS — foto da embarcação**
-    - Implementar camada de provedor externo por MMSI/IMO para obter foto e metadados enriquecidos.
-    - Tornar o provedor configurável e opcional.
-    - Usar apenas fontes/API com termos de uso compatíveis; não depender de scraping frágil.
-    - Implementar cache local com expiração e fallback elegante quando não houver imagem.
-  - **Windows Portable — soak test e estabilidade prolongada**
-    - Criar modo de soak test com coleta periódica de CPU, RAM, threads, handles quando disponível, tamanho do banco, filas, reconnects, erros Python/JavaScript, WebView2 e tempo de resposta.
-    - Executar perfis de 24 h, 72 h e 7 dias.
-    - Gerar relatório final automático com tendências e detecção de crescimento anormal/memory leak.
-    - Incluir regressão específica para mapa, radar, animações, mensagens, updater e TNC durante execução prolongada.
-  - **Migração de bancos antigos**
-    - Criar matriz de migração com bancos de versões históricas: 1.6.x, 1.7.x, 1.8.0, 1.8.4, 1.8.10, 1.8.18, 1.9.0 e banco novo.
-    - Testar bancos pequenos/grandes, com mensagens, favoritos, histórico longo e inconsistências controladas.
-    - Validar schema, contagens, leitura/escrita, integridade SQLite e preservação de estações, mensagens, posições, favoritos, configurações, objetos e agendamentos.
-    - Integrar a matriz à CI sempre que houver mudança de schema/migration.
-  - **Traduções — auditoria contínua**
-    - Criar verificação automática de cobertura PT-BR/EN/ES/FR.
-    - Falhar a CI quando faltar chave em qualquer idioma.
-    - Adicionar scanner de strings visíveis hardcoded em HTML/JavaScript fora do sistema de tradução.
-    - Gerar relatório de cobertura percentual e lista de pendências por idioma.
-    - Manter revisão humana periódica para qualidade textual, mesmo com 100% de cobertura técnica.
-  - **Critério de encerramento**
-    - Considerar as pendências acima concluídas apenas após testes automatizados/relatórios correspondentes e, no caso do TM-D700, teste físico real.
-
-- **Kenwood TM-D700 em modo PKT — validação física**
-  - O diagnóstico de transporte já separa serial aberta, bytes recebidos, framing, AX.25 válido e TX entregue.
-  - Ainda depende de teste com o rádio real para confirmar qual protocolo/configuração o TM-D700 entrega em PKT e se alguma adaptação específica é necessária.
-  - Não ativar o modo TNC/digipeater interno apenas para satisfazer o Client.
-
-- **Métricas RF dependentes do hardware**
-  - Consumir RSSI, SNR, DCD, ocupação de canal e métricas equivalentes quando o modem/TNC efetivamente as fornecer.
-  - Nunca sintetizar ou inferir valores ausentes.
-
-- **AIS — foto de embarcação**
-  - Manter como recurso opcional somente quando houver uma fonte pública confiável e associação inequívoca por MMSI.
-  - Não exibir fotografia baseada apenas em busca textual ambígua pelo nome da embarcação.
-
-- **Validação prolongada do Windows Portable**
-  - Continuar teste de campo após as correções de CPU/topologia/SQLite.
-  - Encerrar somente após uso prolongado sem crescimento anormal de CPU, congelamentos ou timeouts persistentes.
-
-- **Compatibilidade ampla com bancos antigos/inconsistentes**
-  - A migração crítica de `packets.medium/rx_fingerprint` está coberta desde v1.8.12.
-  - Continuar expandindo a matriz de bancos históricos/parcialmente migrados, preservando mensagens, estações, logs e tracklogs.
-
-- **Idiomas — auditoria contínua**
-  - Os recursos novos devem sempre entrar cobertos em PT-BR, EN, ES e FR.
-  - Manter varredura de textos residuais do backend e componentes legados, sem traduzir incorretamente KISS, AX.25, APRS-IS, Digipeater, iGate, ACK/REJ e paths APRS.
+- **Kenwood TM-D700 — teste físico externo**
+  - O software de diagnóstico está concluído.
+  - Encerrar a validação física somente quando houver um TM-D700 real, cabo/interface adequado e uma segunda estação/monitor RF para confirmar RX e TX no ar.
 
 ## Concluído na v1.8.12
 
