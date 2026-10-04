@@ -96,7 +96,7 @@
 
   function installAdvancedPanel() {
     if (document.getElementById('v1818AdvancedPanel')) return;
-    const statsSection = document.querySelector('section[data-panel="statistics"], #tab-statistics, [data-tab-panel="statistics"]');
+    const statsSection = document.querySelector('#tab-analysis');
     const host = statsSection || document.querySelector('main');
     if (!host) return;
     const panel = document.createElement('section');
@@ -132,15 +132,39 @@
           metric(t('Mensagens com ACK','Messages with ACK','Mensajes con ACK','Messages avec ACK'), q.acked_messages, q.ack_rate+'%') +
           metric(t('RTT mediano','Median RTT','RTT mediano','RTT médian'), q.query_rtt_median_ms == null ? '—' : q.query_rtt_median_ms+' ms') +
           metric(t('Novas estações','New stations','Nuevas estaciones','Nouvelles stations'), q.new_stations, fmtDelta('new_stations'));
-        const top = (g.edges || []).slice(0, 30);
-        panel.querySelector('#v1818Graph').innerHTML = top.length ? '<table><thead><tr><th>'+t('Origem','Source','Origen','Source')+'</th><th>'+t('Destino','Target','Destino','Destination')+'</th><th>'+t('Meio','Medium','Medio','Média')+'</th><th>'+t('Interações','Interactions','Interacciones','Interactions')+'</th></tr></thead><tbody>'+top.map(e=>'<tr><td><button data-call="'+esc(e.source)+'">'+esc(e.source)+'</button></td><td><button data-call="'+esc(e.target)+'">'+esc(e.target)+'</button></td><td>'+esc(e.kind)+'</td><td>'+esc(e.interactions)+'</td></tr>').join('')+'</tbody></table>' : '<p>—</p>';
+        const top = (g.edges || []).slice(0, 80);
+        const graphHost = panel.querySelector('#v1818Graph');
+        if (!top.length) {
+          graphHost.innerHTML = '<p>—</p>';
+        } else {
+          const nodeIds = Array.from(new Set(top.flatMap(e => [e.source,e.target]))).slice(0, 50);
+          const size = 760, cx = size/2, cy = size/2, radius = 285;
+          const pos = new Map(nodeIds.map((id,i) => [id, {
+            x: cx + Math.cos((Math.PI*2*i/nodeIds.length)-Math.PI/2)*radius,
+            y: cy + Math.sin((Math.PI*2*i/nodeIds.length)-Math.PI/2)*radius
+          }]));
+          const maxInteractions = Math.max(...top.map(e => Number(e.interactions || 1)), 1);
+          const lines = top.filter(e => pos.has(e.source) && pos.has(e.target)).map(e => {
+            const a=pos.get(e.source), b=pos.get(e.target);
+            const width = 0.8 + 4.2*(Number(e.interactions||1)/maxInteractions);
+            const dash = String(e.kind||'').toLowerCase().includes('igate') ? '6 4' : '';
+            return '<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" stroke="currentColor" stroke-opacity=".34" stroke-width="'+width.toFixed(2)+'" stroke-dasharray="'+dash+'"><title>'+esc(e.source+' → '+e.target+' · '+e.kind+' · '+e.interactions)+'</title></line>';
+          }).join('');
+          const nodes = nodeIds.map(id => {
+            const p=pos.get(id);
+            const degree=(g.nodes||[]).find(n=>n.id===id)?.degree || 1;
+            const r=Math.max(5,Math.min(13,5+Math.log10(1+degree)*3));
+            return '<g class="v1818-node" data-call="'+esc(id)+'" tabindex="0"><circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'"></circle><text x="'+(p.x+10)+'" y="'+(p.y+4)+'">'+esc(id)+'</text><title>'+esc(id+' · '+degree+' '+t('interações','interactions','interacciones','interactions'))+'</title></g>';
+          }).join('');
+          graphHost.innerHTML = '<svg class="v1818-network-svg" viewBox="0 0 '+size+' '+size+'" role="img" aria-label="'+esc(t('Grafo de comunicação APRS','APRS communication graph','Grafo de comunicación APRS','Graphe de communication APRS'))+'">'+lines+nodes+'</svg>';
+        }
       } catch (err) {
         panel.querySelector('#v1818Metrics').textContent = String(err.message || err);
       }
     };
     select.addEventListener('change', refresh);
     panel.querySelector('#v1818Graph').addEventListener('click', ev => {
-      const btn = ev.target.closest('button[data-call]');
+      const btn = ev.target.closest('[data-call]');
       if (btn) openStation(btn.dataset.call);
     });
     refresh();
