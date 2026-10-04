@@ -17,11 +17,11 @@ def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
 
 
-def test_v1817_version_metadata():
-    assert read("VERSION").strip() == "1.8.17"
-    assert '__version__ = "1.8.17"' in read("pt2vhf_aprs/__init__.py")
-    win = read("windows/version_info.txt")
-    assert "filevers=(1, 8, 17, 0)" in win
+def test_v1817_version_metadata_history_is_preserved():
+    notes = read("pt2vhf_aprs/version_notes.py")
+    changelog = read("CHANGELOG.md")
+    assert '"1.8.17"' in notes
+    assert "## 1.8.17" in changelog
     assert "prodvers=(1, 8, 17, 0)" in win
     assert "FileVersion', '1.8.17'" in win
     assert "ProductVersion', '1.8.17'" in win
