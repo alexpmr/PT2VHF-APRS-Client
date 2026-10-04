@@ -412,6 +412,18 @@ def _ensure_schema() -> None:
             CREATE INDEX IF NOT EXISTS idx_tnc_edges_activity ON tnc_edges(interactions DESC,last_seen DESC);
             """
         )
+        frame_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_frames)").fetchall()}
+        for name, ddl in (
+            ("rssi", "REAL"),
+            ("snr", "REAL"),
+            ("dcd", "INTEGER"),
+            ("frequency_hz", "REAL"),
+            ("channel", "TEXT"),
+            ("metric_source", "TEXT"),
+        ):
+            if name not in frame_columns:
+                conn.execute(f"ALTER TABLE tnc_frames ADD COLUMN {name} {ddl}")
+
         heard_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_heard)").fetchall()}
         if "last_direct_heard" not in heard_columns:
             conn.execute("ALTER TABLE tnc_heard ADD COLUMN last_direct_heard TEXT")
@@ -639,15 +651,25 @@ def record_frame(
     path: list[str] | None = None,
     packet_type: str = "",
     reason: str = "",
+    rssi: float | None = None,
+    snr: float | None = None,
+    dcd: bool | None = None,
+    frequency_hz: float | None = None,
+    channel: str = "",
+    metric_source: str = "",
 ) -> None:
     _ensure_schema()
     with db.connection() as conn:
         conn.execute(
-            """INSERT INTO tnc_frames(timestamp,direction,medium,source,destination,path,packet_type,raw_tnc2,reason)
-               VALUES(?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO tnc_frames(
+                 timestamp,direction,medium,source,destination,path,packet_type,raw_tnc2,reason,
+                 rssi,snr,dcd,frequency_hz,channel,metric_source
+               ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 utc_now_iso(), direction.upper(), medium.upper(), source.upper(), destination.upper(),
                 json.dumps(path or [], ensure_ascii=False), packet_type, raw_tnc2, reason,
+                rssi, snr, None if dcd is None else int(bool(dcd)), frequency_hz,
+                str(channel or ""), str(metric_source or ""),
             ),
         )
 
@@ -1336,6 +1358,17 @@ class TNCService:
         payload["igate_rx_enabled"] = bool(cfg["igate_rx_enabled"])
         payload["igate_tx_enabled"] = bool(cfg["igate_tx_enabled"])
         payload["optimizer_mode"] = cfg["optimizer_mode"]
+        payload["dcd"] = None
+        payload["rf_metric_source"] = ""
+        if payload.get("connected") and str(cfg.get("transport") or "") == "serial":
+            try:
+                with self._transport_lock:
+                    transport = self._transport
+                    if transport is not None and hasattr(transport, "cd"):
+                        payload["dcd"] = bool(transport.cd)
+                        payload["rf_metric_source"] = "serial_modem_status"
+            except Exception:
+                payload["dcd"] = None
         connected_since = str(payload.get("connected_since") or "")
         last_valid_rx = str(payload.get("last_rx_at") or "")
         last_tx = str(payload.get("last_tx_at") or "")
