@@ -205,6 +205,40 @@
 
 ## Pendências para próximas versões
 
+- **Próxima versão — fechamento das pendências de validação e qualidade**
+  - **Kenwood TM-D700 em modo PKT — validação física assistida**
+    - Criar modo de diagnóstico específico para TM-D700, com registro dos comandos enviados, respostas recebidas, baud rate, framing/protocolo detectado, estado da porta e eventos de RX/TX.
+    - Preparar roteiro de teste físico cobrindo abertura da porta, entrada/saída do modo TNC, recepção, decodificação AX.25/APRS, transmissão, PTT, reconexão e recuperação após desconexão do cabo.
+    - Não declarar compatibilidade plena antes de validação com hardware real.
+  - **Métricas RF — RSSI/SNR/DCD**
+    - Criar arquitetura genérica para anexar metadados do receptor aos pacotes APRS.
+    - Suportar RSSI, SNR, DCD, frequência/canal e origem da métrica quando o TNC/modem/radio realmente fornecer esses dados.
+    - Exibir valor indisponível quando o equipamento não fornecer a métrica, sem estimar ou inventar valores.
+    - Permitir provedores específicos por transporte/hardware futuramente.
+  - **AIS — foto da embarcação**
+    - Implementar camada de provedor externo por MMSI/IMO para obter foto e metadados enriquecidos.
+    - Tornar o provedor configurável e opcional.
+    - Usar apenas fontes/API com termos de uso compatíveis; não depender de scraping frágil.
+    - Implementar cache local com expiração e fallback elegante quando não houver imagem.
+  - **Windows Portable — soak test e estabilidade prolongada**
+    - Criar modo de soak test com coleta periódica de CPU, RAM, threads, handles quando disponível, tamanho do banco, filas, reconnects, erros Python/JavaScript, WebView2 e tempo de resposta.
+    - Executar perfis de 24 h, 72 h e 7 dias.
+    - Gerar relatório final automático com tendências e detecção de crescimento anormal/memory leak.
+    - Incluir regressão específica para mapa, radar, animações, mensagens, updater e TNC durante execução prolongada.
+  - **Migração de bancos antigos**
+    - Criar matriz de migração com bancos de versões históricas: 1.6.x, 1.7.x, 1.8.0, 1.8.4, 1.8.10, 1.8.18, 1.9.0 e banco novo.
+    - Testar bancos pequenos/grandes, com mensagens, favoritos, histórico longo e inconsistências controladas.
+    - Validar schema, contagens, leitura/escrita, integridade SQLite e preservação de estações, mensagens, posições, favoritos, configurações, objetos e agendamentos.
+    - Integrar a matriz à CI sempre que houver mudança de schema/migration.
+  - **Traduções — auditoria contínua**
+    - Criar verificação automática de cobertura PT-BR/EN/ES/FR.
+    - Falhar a CI quando faltar chave em qualquer idioma.
+    - Adicionar scanner de strings visíveis hardcoded em HTML/JavaScript fora do sistema de tradução.
+    - Gerar relatório de cobertura percentual e lista de pendências por idioma.
+    - Manter revisão humana periódica para qualidade textual, mesmo com 100% de cobertura técnica.
+  - **Critério de encerramento**
+    - Considerar as pendências acima concluídas apenas após testes automatizados/relatórios correspondentes e, no caso do TM-D700, teste físico real.
+
 - **Kenwood TM-D700 em modo PKT — validação física**
   - O diagnóstico de transporte já separa serial aberta, bytes recebidos, framing, AX.25 válido e TX entregue.
   - Ainda depende de teste com o rádio real para confirmar qual protocolo/configuração o TM-D700 entrega em PKT e se alguma adaptação específica é necessária.
