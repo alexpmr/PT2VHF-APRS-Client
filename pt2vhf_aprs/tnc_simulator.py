@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 from dataclasses import dataclass, field
 from typing import Iterable
 
@@ -53,6 +52,6 @@ class KISSSimulator:
     def multi_hop_demo() -> list[SimulatedPacket]:
         return [
             SimulatedPacket("PT2AAA-7", "APZVHF", "!1550.00S/04750.00W>demo", ["WIDE1-1", "WIDE2-1"]),
-            SimulatedPacket("PT2BBB", "APZVHF", ":PT2AAA-7:teste{01", ["PT2DIGI-1*", "WIDE2-1"]),
-            SimulatedPacket("PT2AAA-7", "APZVHF", ":PT2BBB  :ack01", ["PT2DIGI-1*", "PT2IGATE*"]),
+            SimulatedPacket("PT2BBB", "APZVHF", ":PT2AAA-7:teste{01", ["PT2DGI-1*", "WIDE2-1"]),
+            SimulatedPacket("PT2AAA-7", "APZVHF", ":PT2BBB  :ack01", ["PT2DGI-1*", "PT2IGT*"]),
         ]
