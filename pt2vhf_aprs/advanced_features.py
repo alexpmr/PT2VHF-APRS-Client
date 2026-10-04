@@ -69,6 +69,7 @@ def _window_counts(start: datetime, end: datetime) -> dict[str, Any]:
                       COUNT(DISTINCT NULLIF(from_call,'')) AS stations,
                       SUM(CASE WHEN UPPER(COALESCE(medium,''))='RF' THEN 1 ELSE 0 END) AS rf,
                       SUM(CASE WHEN UPPER(COALESCE(medium,''))='APRS-IS' THEN 1 ELSE 0 END) AS aprsis,
+                      SUM(CASE WHEN rx_fingerprint IS NOT NULL AND rx_fingerprint<>'' THEN 1 ELSE 0 END) AS fingerprinted,
                       COUNT(DISTINCT CASE WHEN rx_fingerprint IS NOT NULL AND rx_fingerprint<>'' THEN rx_fingerprint END) AS fingerprints
                FROM packets WHERE timestamp>=? AND timestamp<?""",
             (a, b),
@@ -101,8 +102,9 @@ def _window_counts(start: datetime, end: datetime) -> dict[str, Any]:
             (a, b, a),
         ).fetchone()[0]
     packets = int(packet["packets"] or 0)
+    fingerprinted = int(packet["fingerprinted"] or 0)
     fingerprints = int(packet["fingerprints"] or 0)
-    duplicates = max(0, packets - fingerprints) if fingerprints else 0
+    duplicates = max(0, fingerprinted - fingerprints) if fingerprinted else 0
     return {
         "packets": packets,
         "stations": int(packet["stations"] or 0),
@@ -301,11 +303,18 @@ def _support_zip() -> tuple[io.BytesIO, str]:
             Path(db.DB_PATH).parent / "diagnostics.log",
             Path(db.DB_PATH).parent.parent / "diagnostics.log",
         ]
+        config = db.get_config()
+        sensitive_values = [
+            str(config.get("passcode") or ""),
+            str(config.get("email") or ""),
+        ]
         for path in log_candidates:
             if path.exists() and path.is_file():
                 text = path.read_text(encoding="utf-8", errors="replace")
-                for secret in ("passcode", "password", "token"):
-                    text = text.replace(secret, f"{secret}_masked")
+                for value in sensitive_values:
+                    if value:
+                        text = text.replace(value, "***")
+                text = text.replace("passcode", "passcode(masked)")
                 archive.writestr("diagnostics.log", text[-2_000_000:])
                 break
     memory.seek(0)
