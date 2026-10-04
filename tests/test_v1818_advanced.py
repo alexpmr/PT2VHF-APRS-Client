@@ -34,3 +34,38 @@ def test_advanced_quality_and_comparison_on_empty_db():
     finally:
         db.DB_PATH = original
         db.invalidate_map_data_cache(drop_payload=True)
+
+
+def test_v1818_version_and_arm64_updater_metadata(monkeypatch):
+    from pt2vhf_aprs import updater
+    root = Path(__file__).resolve().parents[1]
+    assert (root / "VERSION").read_text(encoding="utf-8").strip() == "1.8.18"
+    win = (root / "windows" / "version_info.txt").read_text(encoding="utf-8")
+    assert "filevers=(1, 8, 18, 0)" in win
+    assert "prodvers=(1, 8, 18, 0)" in win
+
+    monkeypatch.setattr(updater, "_machine", lambda: "arm64")
+    monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-tar")
+    assert updater.desired_asset_name("1.8.18") == "PT2VHF_APRS_Client_Linux_arm64_v1.8.18.tar.gz"
+    monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-deb")
+    assert updater.desired_asset_name("1.8.18") == "pt2vhf-aprs-client_1.8.18_arm64.deb"
+    monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-appimage")
+    assert updater.desired_asset_name("1.8.18") == "PT2VHF_APRS_Client_arm64_v1.8.18.AppImage"
+
+
+def test_v1818_release_docs_and_routes_are_present():
+    root = Path(__file__).resolve().parents[1]
+    web = (root / "pt2vhf_aprs" / "advanced_features.py").read_text(encoding="utf-8")
+    ui = (root / "pt2vhf_aprs" / "static" / "js" / "v1818.js").read_text(encoding="utf-8")
+    for endpoint in (
+        "/api/v1818/stations/search",
+        "/api/v1818/network-quality",
+        "/api/v1818/period-compare",
+        "/api/v1818/topology-graph",
+        "/api/v1818/export.csv",
+        "/api/v1818/export.geojson",
+        "/api/v1818/diagnostics.zip",
+    ):
+        assert endpoint in web
+    assert "pt2vhfFocusStation" in ui
+    assert "v1818-network-svg" in ui
