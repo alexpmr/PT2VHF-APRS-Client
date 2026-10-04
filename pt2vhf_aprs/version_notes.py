@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.10.0": {
+        "title": "QRZ, AIS, métricas RF e qualidade contínua",
+        "items": [
+            "Perfis de estação podem ser enriquecidos pelo QRZ.com usando a API XML oficial, com foto, nome, cidade, região, país, grid e cache.",
+            "Fotos AIS passam por provedor externo configurável e associação por MMSI/IMO, sem scraping textual ambíguo.",
+            "A camada RF aceita RSSI, SNR, DCD, frequência, canal e fonte somente quando o equipamento/provedor realmente fornecer.",
+            "O TM-D700 ganha diagnóstico específico e roteiro de validação física; o Client não declara teste físico que não foi executado.",
+            "O Windows Portable ganha soak test com perfis de 24 h, 72 h e 7 dias e relatório de crescimento de memória.",
+            "A CI executa matriz de migração histórica e auditoria contínua de traduções PT-BR/EN/ES/FR.",
+            "Release completa multiplataforma com Manual PDF.",
+        ],
+    },
     "1.9.0": {
         "title": "Painéis destacáveis, busca global, backup, alertas e operação avançada",
         "items": [
