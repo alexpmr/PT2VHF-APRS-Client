@@ -2,6 +2,8 @@ name: Build Production Current Release
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: write
@@ -21,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.8.17 production release
+      - name: Validate v1.8.18 production release
         shell: pwsh
-        run: python tools\apply_release_1_8_17.py
+        run: python tools\apply_release_1_8_18.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -37,6 +39,7 @@ jobs:
           python -m compileall -q pt2vhf_aprs windows_app.py linux_app.py macos_app.py tools
           node --check pt2vhf_aprs\static\js\app.js
           node --check pt2vhf_aprs\static\js\tnc.js
+          node --check pt2vhf_aprs\static\js\v1818.js
 
       - name: Run tests
         shell: pwsh
@@ -99,9 +102,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.8.17 production release
+      - name: Validate v1.8.18 production release
         shell: pwsh
-        run: python tools\apply_release_1_8_17.py
+        run: python tools\apply_release_1_8_18.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -115,6 +118,7 @@ jobs:
           python -m compileall -q pt2vhf_aprs windows_app.py tools
           node --check pt2vhf_aprs\static\js\app.js
           node --check pt2vhf_aprs\static\js\tnc.js
+          node --check pt2vhf_aprs\static\js\v1818.js
 
       - name: Run tests
         shell: pwsh
@@ -174,9 +178,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.8.17 production release
+      - name: Validate v1.8.18 production release
         shell: bash
-        run: python tools/apply_release_1_8_17.py
+        run: python tools/apply_release_1_8_18.py
 
       - name: Build Linux packages
         shell: bash
@@ -192,6 +196,41 @@ jobs:
             dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v*.tar.gz
             dist-linux/PT2VHF_APRS_Client_x86_64_v*.AppImage
             dist-linux/pt2vhf-aprs-client_*_amd64.deb
+            dist-linux/SBOM-Linux.cdx.json
+            dist-linux/THIRD_PARTY_LICENSES_Linux.txt
+
+
+  linux-arm64:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Validate v1.8.18 production release
+        shell: bash
+        run: python tools/apply_release_1_8_18.py
+
+      - name: Build Linux ARM64 packages
+        shell: bash
+        run: |
+          chmod +x linux/build_linux.sh
+          PT2VHF_LINUX_ARCH=arm64 PYTHON_BIN=python3 bash linux/build_linux.sh
+
+      - name: Upload Linux ARM64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Linux-arm64
+          path: |
+            dist-linux/PT2VHF_APRS_Client_Linux_arm64_v*.tar.gz
+            dist-linux/PT2VHF_APRS_Client_arm64_v*.AppImage
+            dist-linux/pt2vhf-aprs-client_*_arm64.deb
             dist-linux/SBOM-Linux.cdx.json
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt
 
@@ -215,7 +254,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_8_17.py
+          python tools/apply_release_1_8_18.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -243,9 +282,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.8.17 production release
+      - name: Validate v1.8.18 production release
         shell: bash
-        run: python tools/apply_release_1_8_17.py
+        run: python tools/apply_release_1_8_18.py
 
       - name: Build macOS DMG
         shell: bash
@@ -281,9 +320,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.8.17 production release
+      - name: Validate v1.8.18 production release
         shell: bash
-        run: python tools/apply_release_1_8_17.py
+        run: python tools/apply_release_1_8_18.py
 
       - name: Generate versioned PDF manual
         shell: bash
@@ -312,6 +351,7 @@ jobs:
       - windows-x64
       - windows-arm64
       - linux-x64
+      - linux-arm64
       - linux-smoke
       - macos
       - manual-pdf
