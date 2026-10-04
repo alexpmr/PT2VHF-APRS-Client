@@ -69,3 +69,13 @@ def test_v1818_release_docs_and_routes_are_present():
         assert endpoint in web
     assert "pt2vhfFocusStation" in ui
     assert "v1818-network-svg" in ui
+
+
+def test_tnc_transport_visibility_uses_collection_selector():
+    source = (Path(__file__).resolve().parents[1] / "pt2vhf_aprs" / "static" / "js" / "tnc.js").read_text(encoding="utf-8")
+    assert "$$('.tnc-serial-field').forEach" in source
+    assert "$$('.tnc-tcp-field').forEach" in source
+    assert "$$('.tnc-agwpe-field').forEach" in source
+    assert "$('.tnc-serial-field').forEach" not in source
+    assert "$('.tnc-tcp-field').forEach" not in source
+    assert "$('.tnc-agwpe-field').forEach" not in source
