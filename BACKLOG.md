@@ -187,6 +187,81 @@
 
 ## Pendências para próximas versões
 
+- **Próxima versão maior — pacote sugerido para v1.9.0**
+  - **TNC / RF — estabilidade e compatibilidade**
+    - Consolidar a correção da inicialização/conexão do TNC após o erro de frontend `$(...).forEach is not a function`.
+    - Concluir e validar o suporte a **AGWPE** como alternativa a KISS Serial/TCP.
+    - Criar modo de **diagnóstico assistido do TNC**, mostrando pelo menos: bytes recebidos, framing detectado, KISS válido/inválido, AX.25 válido/inválido, último RX, último TX, protocolo detectado e indicação de incompatibilidade.
+    - Adicionar botão **Testar TNC** com bateria não destrutiva: abrir porta/conexão, verificar chegada de bytes, reconhecer protocolo/framing e validar entrega de frame ao transporte.
+    - Permitir exportar diagnóstico específico do TNC para suporte.
+    - Manter tratamento explícito para TM-D700, Radtel, Dire Wolf, TNCs USB genéricos e AGWPE sem inferir funcionamento RF quando só houver transporte aberto.
+
+  - **Interface — framework genérico de painéis destacáveis**
+    - Evoluir a ideia de Mensagens/Estações destacáveis para um componente reutilizável de painéis flutuantes.
+    - Começar por **Mensagens** e **Estações**.
+    - Preparar o mesmo framework para futura aplicação em **TNC / RF**, **Estatísticas** e **Log**.
+    - Cada painel deve permitir: destacar, encaixar novamente, arrastar, redimensionar, minimizar/recolher, restaurar e permanecer sobre o mapa.
+    - Persistir posição, tamanho e estado por usuário/dispositivo quando tecnicamente adequado.
+    - Impedir que painéis fiquem fora da área visível e preservar usabilidade em telas pequenas.
+
+  - **Busca global**
+    - Evoluir a busca rápida por indicativo para uma **Busca Global**.
+    - Permitir localizar por indicativo/SSID, objeto, estação meteorológica, AIS, digipeater, iGate e texto de comentário/status quando disponível.
+    - Nos resultados, mostrar contexto útil como última recepção, meio RF/APRS-IS, distância quando conhecida e ações rápidas.
+    - Ações previstas: **Ir para o mapa**, **Mensagem** e **Detalhes**.
+
+  - **Estatísticas — qualidade de rede APRS**
+    - Consolidar indicadores de qualidade/saúde da rede.
+    - Incluir taxa de duplicação, RF × APRS-IS, mensagens com ACK, sem ACK e REJ, RTT médio/mediano, estações novas/desaparecidas, digipeaters/iGates mais utilizados, distribuição de hops, paths mais usados, maiores distâncias RF/digi, volume por hora e horários de pico.
+    - Implementar comparação entre períodos: 1 h × 1 h anterior, 24 h × 24 h anteriores e 7 dias × 7 dias anteriores.
+    - Exibir variação absoluta, percentual, setas ↑/↓ e estado **novo** quando não houver base anterior.
+
+  - **Diagnóstico e suporte**
+    - Criar área **Ajuda → Diagnóstico**.
+    - Exibir versão, SO, arquitetura, banco SQLite, integridade, tamanho, contagens principais, estado APRS-IS, estado TNC, CPU, RAM, porta HTTP local, WebView, uptime, último erro e eventos críticos recentes.
+    - Adicionar botão **Gerar pacote de suporte**.
+    - O pacote deve incluir diagnóstico, logs, schema, configuração sanitizada e erros recentes.
+    - Não incluir passcode, senhas, tokens ou outros dados sensíveis.
+
+  - **Backup e recuperação**
+    - Criar **backup completo do ambiente**, não apenas da configuração.
+    - Incluir opções para configuração, mensagens, estações, favoritos, histórico, tracklogs, agendamentos, grupos e preferências.
+    - Adicionar **Criar backup completo** e **Restaurar backup**.
+    - Registrar a versão de origem do backup.
+    - Na restauração, validar versão/schema, migrar quando necessário e criar backup automático antes de sobrescrever dados existentes.
+
+  - **Favoritos avançados**
+    - Permitir nome amigável, cor, nota e grupo para estações favoritas.
+
+  - **Grupos de estações**
+    - Criar grupos definidos pelo usuário, por exemplo amigos, repetidores, infraestrutura, testes e APRS Thursday.
+    - Permitir usar grupos em filtros, busca, mensagens e visualização.
+
+  - **Alertas configuráveis**
+    - Permitir alertas para estação apareceu/desapareceu, favorito entrou, nova mensagem, queda do TNC, queda do APRS-IS, CPU alta e problemas de banco.
+    - Oferecer ativação individual por tipo e controle de ruído/cooldown.
+
+  - **Timeline unificada de eventos**
+    - Criar visão cronológica única reunindo mensagens, posições, conexões, RF, queries e alertas.
+    - Respeitar filtros de período e entidade.
+
+  - **Modo apresentação**
+    - Criar modo de mapa em tela cheia, com mínimo de controles e foco em estações, tráfego e mensagens.
+    - Pensado para clubes, encontros, demonstrações e acompanhamento operacional.
+
+  - **Plataformas e qualidade**
+    - Adicionar build oficial **Linux ARM64**.
+    - Concluir revisão global das traduções PT-BR, EN, ES e FR.
+    - Executar regressão completa em TNC/RF, mapa, mensagens, estações, estatísticas, updater, migração de banco e builds multiplataforma.
+
+  - **Fora de escopo por enquanto**
+    - Não priorizar IA embutida no aplicativo.
+    - Não automatizar agressivamente reescrita de paths APRS.
+    - Não reconfigurar rádio automaticamente.
+    - Evitar dependência de APIs pagas ou integrações externas de baixo valor.
+    - Evitar adicionar provedores de mapa sem ganho operacional claro.
+
+
 - **Mensagens e Estações — janelas destacáveis sobre o mapa**
   - Permitir destacar/desacoplar as abas **Mensagens** e **Estações** da navegação principal.
   - Quando destacadas, exibi-las como janelas/painéis flutuantes sobre o **Mapa**, sem ocultar o mapa inteiro.
