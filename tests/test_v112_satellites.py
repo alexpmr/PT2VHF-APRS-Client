@@ -116,7 +116,7 @@ def test_v112_windows_style_floating_panels_include_logs_and_restore():
 
 def test_v112_top_left_search_field_is_not_installed():
     js = read("pt2vhf_aprs/static/js/v190.js")
-    boot = js[js.rfind("async function boot"):]
+    boot = js[js.rfind("function boot()"):]
     assert "installGlobalSearch();" not in boot
     assert "document.querySelector('.v1818-search')?.remove();" in boot
 
