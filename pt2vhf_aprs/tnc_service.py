@@ -1370,6 +1370,36 @@ class TNCService:
             except Exception:
                 payload["dcd"] = None
         connected_since = str(payload.get("connected_since") or "")
+        # Reconcilia os contadores em memória com a evidência persistida da sessão.
+        # Isso evita a interface permanecer em zero quando um caminho de ingestão
+        # registrou frames corretamente, mas o acumulador transitório se perdeu.
+        if connected_since:
+            try:
+                with db.connection() as conn:
+                    if conn.execute(
+                        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='tnc_frames'"
+                    ).fetchone():
+                        row = conn.execute(
+                            """SELECT
+                                   SUM(CASE WHEN direction='RX' THEN 1 ELSE 0 END) AS rx,
+                                   SUM(CASE WHEN direction='TX' THEN 1 ELSE 0 END) AS tx,
+                                   MAX(CASE WHEN direction='RX' THEN timestamp END) AS last_rx,
+                                   MAX(CASE WHEN direction='TX' THEN timestamp END) AS last_tx
+                               FROM tnc_frames WHERE timestamp>=?""",
+                            (connected_since,),
+                        ).fetchone()
+                        persisted_rx = int(row["rx"] or 0)
+                        persisted_tx = int(row["tx"] or 0)
+                        payload["session_persisted_frames_rx"] = persisted_rx
+                        payload["session_persisted_frames_tx"] = persisted_tx
+                        payload["frames_rx"] = max(int(payload.get("frames_rx") or 0), persisted_rx)
+                        payload["frames_tx"] = max(int(payload.get("frames_tx") or 0), persisted_tx)
+                        if row["last_rx"] and not payload.get("last_rx_at"):
+                            payload["last_rx_at"] = str(row["last_rx"])
+                        if row["last_tx"] and not payload.get("last_tx_at"):
+                            payload["last_tx_at"] = str(row["last_tx"])
+            except Exception as exc:
+                diag.log_event("tnc_status_counter_reconcile_error", error=str(exc))
         last_valid_rx = str(payload.get("last_rx_at") or "")
         last_tx = str(payload.get("last_tx_at") or "")
         valid_rx_this_session = bool(last_valid_rx and (not connected_since or last_valid_rx >= connected_since))

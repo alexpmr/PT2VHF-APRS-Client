@@ -1,3 +1,26 @@
+## 1.11.0 - 2026-10-05
+
+- Corrigidos contadores RX/TX do TNC com reconciliação por frames persistidos da sessão.
+- Adicionado health check operacional do TNC com classificação automática do estágio de funcionamento.
+- Adicionado autoteste interno KISS/AX.25, incluindo RX, TX, ACK e validação do modelo de contadores.
+- Adicionada timeline de saúde do TNC.
+- Adicionado centro persistente de notificações.
+- Incorporadas as correções completas dos alertas configuráveis da v1.10.1.
+- Adicionado painel de saúde e retenção do SQLite, com limpeza por política e otimização manual.
+- Perfil da estação ampliado com indicadores operacionais, caminhos e “Ouvido por”.
+- Adicionados testes de regressão para contadores persistidos, notificações, retenção, perfil operacional e simulador.
+
+## 1.10.1 - 2026-10-05
+
+- Corrigido o sistema de alertas configuráveis para respeitar estritamente opções desmarcadas.
+- "Estação apareceu" passa a ser baseado em transição real de presença, não em qualquer atualização de last_heard.
+- "Estação desapareceu" passa a ser rearmável após a estação reaparecer.
+- "Nova mensagem" ganha deduplicação por ID.
+- Quedas de TNC/APRS-IS não alertam em desconexão voluntária.
+- Alerta de integridade SQLite passa a ser único por episódio.
+- Preferências de alertas são persistidas automaticamente ao alterar os controles.
+- Adicionados testes de regressão específicos para toda a cadeia de alarmes.
+
 ## 1.10.0 - 2026-10-04
 
 - Perfil externo de estação via QRZ.com XML API, opt-in, com credenciais, cache e foto quando fornecida oficialmente.

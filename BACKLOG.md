@@ -1,5 +1,17 @@
 # Backlog
 
+## Concluído na v1.11.0
+
+- **Alertas configuráveis:** corrigidos para respeitar preferências, usar transições reais e evitar duplicação.
+- **TNC — contadores RX/TX:** reconciliados com evidência persistida da sessão.
+- **TNC — health check:** classificação operacional automática e diagnóstico copiável.
+- **TNC — simulador/autoteste:** KISS/AX.25 RX/TX/ACK sem hardware físico.
+- **TNC — timeline:** histórico de mudanças de saúde/conectividade.
+- **Centro de notificações:** histórico persistente com contador de não lidas.
+- **SQLite:** saúde, retenção por categoria, limpeza manual e otimização.
+- **Perfil operacional da estação:** pacotes, meios, mensagens, paths e “Ouvido por”.
+- **Regressão:** testes dedicados aos recursos acima.
+
 ## Concluído na v1.9.0
 
 - **Painéis destacáveis:** Mensagens e Estações podem ficar sobre o mapa, com arraste, redimensionamento, minimização, encaixe e persistência de tamanho/posição.
@@ -214,6 +226,7 @@
 - **Idiomas:** auditoria contínua, paridade de dicionários e scanner de strings visíveis integrados à CI.
 
 ## Pendências para próximas versões
+
 
 - **Kenwood TM-D700 — teste físico externo**
   - O software de diagnóstico está concluído.

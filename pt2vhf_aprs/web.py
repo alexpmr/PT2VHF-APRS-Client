@@ -34,6 +34,7 @@ from .version_notes import notes_for
 from .advanced_features import register_advanced_routes
 from .v190_features import register_v190_routes
 from .v110_features import register_v110_routes
+from .v111_features import register_v111_routes
 
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
@@ -282,6 +283,7 @@ def create_app() -> Flask:
     register_advanced_routes(app)
     register_v190_routes(app)
     register_v110_routes(app)
+    register_v111_routes(app)
     diag.configure(db.DB_PATH.parent)
     scheduled_message_service.start()
     diag.log_event("flask_app_created", version=__version__)
