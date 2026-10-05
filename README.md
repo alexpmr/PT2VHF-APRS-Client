@@ -1,36 +1,49 @@
-# PT2VHF APRS Client - v1.10.1
+# PT2VHF APRS Client - v1.11.0
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.10.1** corrige e endurece o sistema de alertas configuráveis, garantindo que cada opção salva seja respeitada e que os alarmes sejam disparados somente em transições reais de estado.
+A **v1.11.0** reforça confiabilidade operacional: contadores TNC reconciliados, health check automático, autoteste KISS/AX.25, timeline do TNC, centro de notificações, saúde/retenção SQLite e perfil operacional da estação com “Ouvido por”.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.10.1**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.11.0**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Setup_x64_v1.10.1.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Portable_x64_v1.10.1.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Setup_ARM64_v1.10.1.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Portable_ARM64_v1.10.1.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_Setup_x64_v1.11.0.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_Portable_x64_v1.11.0.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_Setup_ARM64_v1.11.0.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_Portable_ARM64_v1.11.0.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_x86_64_v1.10.1.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/pt2vhf-aprs-client_1.10.1_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Linux_x86_64_v1.10.1.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_arm64_v1.10.1.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/pt2vhf-aprs-client_1.10.1_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Linux_arm64_v1.10.1.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_x86_64_v1.11.0.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/pt2vhf-aprs-client_1.11.0_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_Linux_x86_64_v1.11.0.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_arm64_v1.11.0.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/pt2vhf-aprs-client_1.11.0_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_Linux_arm64_v1.11.0.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_macOS_arm64_v1.10.1.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_macOS_x86_64_v1.10.1.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_macOS_arm64_v1.11.0.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_macOS_x86_64_v1.11.0.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Manual_v1.10.1.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.0/PT2VHF_APRS_Client_Manual_v1.11.0.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.11.0
+
+- **Contadores TNC corrigidos:** RX/TX da sessão são reconciliados com os frames realmente persistidos, eliminando o cenário em que o TNC funciona mas os indicadores ficam em zero.
+- **Health check automático:** diferencia transporte desconectado, porta aberta sem dados, bytes sem KISS, KISS com AX.25 inválido, KISS ativo, RX AX.25 operacional e RX/TX operacional.
+- **Autoteste TNC:** simulador interno determinístico valida KISS RX, AX.25, parser, modelo de contadores, TX e ACK sem rádio físico.
+- **Timeline do TNC:** registra mudanças reais de saúde/conectividade com horário e estado.
+- **Centro de notificações:** sino no cabeçalho com histórico persistente de alertas e marcação de leitura.
+- **Alertas configuráveis:** incorpora as correções da v1.10.1 para preferências, transições, deduplicação e quedas inesperadas.
+- **SQLite:** painel de saúde com integridade, tamanho, WAL, fragmentação, política de retenção por tipo de dado e otimização manual segura.
+- **Perfil operacional:** exibe pacotes, RF/APRS-IS, mensagens, caminhos observados e seção **Ouvido por** baseada em evidência de topologia.
+- **Diagnóstico:** botão para copiar o diagnóstico completo do TNC em formato pronto para suporte.
+- Release completa multiplataforma com regressões e Manual PDF.
 
 ## Novidades da v1.10.1
 
