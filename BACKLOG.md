@@ -234,6 +234,35 @@
 
 ## Pendências para próximas versões
 
+- **Painéis destacáveis — Estações e Mensagens não restauram/redimensionam após minimizar**
+  - Ao minimizar os painéis destacáveis de **Estações** e **Mensagens**, o usuário pode ficar sem conseguir:
+    - maximizar/restaurar novamente;
+    - redimensionar largura e altura;
+    - recuperar o painel para um tamanho utilizável.
+  - Revisar a máquina de estados dos painéis:
+    - normal;
+    - minimizado;
+    - maximizado;
+    - restaurado.
+  - Garantir botão/ação visível de **Restaurar/Maximizar** mesmo no estado minimizado.
+  - Preservar a geometria anterior ao minimizar e restaurá-la corretamente ao reabrir.
+  - Manter os handles de redimensionamento funcionais sempre que o painel estiver em estado normal/restaurado.
+  - Impedir que altura/largura sejam salvas com valores inválidos ou próximos de zero.
+  - Definir limites mínimos e máximos de tamanho e respeitar o viewport atual.
+  - Ao redimensionar a janela do aplicativo, manter o painel dentro da área visível.
+  - Se a geometria persistida estiver fora da tela ou inválida, aplicar fallback seguro para tamanho/posição padrão.
+  - Revisar persistência da posição, tamanho e estado entre abas e reinicialização do aplicativo.
+  - Adicionar ação **Restaurar tamanho/posição padrão** para cada painel.
+  - Testar separadamente:
+    - minimizar → restaurar;
+    - maximizar → restaurar;
+    - redimensionar pelas bordas/cantos;
+    - fechar/reabrir;
+    - reiniciar o aplicativo com painel minimizado;
+    - mudança de resolução/escala do Windows;
+    - dois painéis abertos simultaneamente sobre o mapa.
+  - Adicionar testes de regressão para garantir que Estações e Mensagens compartilhem a mesma lógica de janela e não tenham comportamentos divergentes.
+
 
 - **Kenwood TM-D700 — teste físico externo**
   - O software de diagnóstico está concluído.
