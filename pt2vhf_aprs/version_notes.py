@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.10.1": {
+        "title": "Correções completas dos alertas configuráveis",
+        "items": [
+            "Estação apareceu e Estação desapareceu passam a usar transições reais de presença, evitando alertas repetidos por simples atualização de last_heard.",
+            "Favorito apareceu respeita sua preferência independente e a mesma lógica de reentrada real.",
+            "Nova mensagem ganha deduplicação por ID.",
+            "TNC e APRS-IS só alertam quando a conexão cai inesperadamente, não em desconexão voluntária.",
+            "Problema no banco gera um aviso por episódio e rearma após normalização.",
+            "Alterações nos checkboxes de alerta são aplicadas e persistidas imediatamente.",
+            "Adiciona regressões para preferências desmarcadas, presença, deduplicação e transições de conectividade.",
+        ],
+    },
     "1.10.0": {
         "title": "QRZ, AIS, métricas RF e qualidade contínua",
         "items": [
