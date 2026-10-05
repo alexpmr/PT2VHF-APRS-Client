@@ -1,3 +1,14 @@
+## 1.10.1 - 2026-10-05
+
+- Corrigido o sistema de alertas configuráveis para respeitar estritamente opções desmarcadas.
+- "Estação apareceu" passa a ser baseado em transição real de presença, não em qualquer atualização de last_heard.
+- "Estação desapareceu" passa a ser rearmável após a estação reaparecer.
+- "Nova mensagem" ganha deduplicação por ID.
+- Quedas de TNC/APRS-IS não alertam em desconexão voluntária.
+- Alerta de integridade SQLite passa a ser único por episódio.
+- Preferências de alertas são persistidas automaticamente ao alterar os controles.
+- Adicionados testes de regressão específicos para toda a cadeia de alarmes.
+
 ## 1.10.0 - 2026-10-04
 
 - Perfil externo de estação via QRZ.com XML API, opt-in, com credenciais, cache e foto quando fornecida oficialmente.
