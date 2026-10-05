@@ -234,6 +234,61 @@
 
 ## Pendências para próximas versões
 
+- **Aba Satélites / ISS — mapa dedicado orbital**
+  - A aba **Satélites / ISS** deve possuir um **mapa próprio e dedicado**, independente do mapa APRS principal.
+  - Esse mapa deve ser o centro da experiência da aba e mostrar, conforme seleção/filtros:
+    - posição atual dos satélites;
+    - posição atual da ISS;
+    - trajetória orbital prevista;
+    - trajetória recente/passada;
+    - footprint/cobertura instantânea;
+    - subponto do satélite;
+    - direção do deslocamento;
+    - altitude;
+    - velocidade orbital;
+    - labels/identificação;
+    - passagem local destacada.
+  - Permitir selecionar um ou vários satélites simultaneamente.
+  - Exibir visualmente:
+    - órbita futura;
+    - órbita passada;
+    - área de cobertura;
+    - estação local configurada no APRS Client;
+    - entrada e saída prevista da cobertura;
+    - AOS/TCA/LOS quando a passagem for relevante.
+  - Integrar o mapa dedicado com a agenda de passagens:
+    - ao selecionar uma passagem na agenda, centralizar o satélite correspondente;
+    - destacar o trecho orbital daquela passagem;
+    - mostrar o footprint correspondente ao horário selecionado.
+  - Integrar o mapa dedicado com o painel de detalhes do satélite:
+    - frequências;
+    - modo APRS/packet;
+    - Doppler;
+    - altitude;
+    - azimute;
+    - elevação;
+    - tempo até AOS/TCA/LOS;
+    - idade/época do TLE.
+  - Incluir controles próprios da aba:
+    - mostrar/esconder footprint;
+    - mostrar/esconder trajetória futura;
+    - mostrar/esconder trajetória passada;
+    - mostrar/esconder labels;
+    - mostrar/esconder satélites não favoritos;
+    - centralizar no satélite;
+    - seguir satélite;
+    - escolher período da trajetória prevista.
+  - Esse mapa dedicado não deve depender do estado de visibilidade de **Mapa → Ver → Satélites**.
+    - **Mapa principal:** camada opcional e resumida de satélites.
+    - **Aba Satélites / ISS:** mapa orbital completo e sempre disponível para operação espacial.
+  - Persistir preferências visuais próprias da aba Satélites / ISS separadamente das preferências do mapa APRS principal.
+  - Adicionar testes de regressão garantindo independência entre:
+    - mapa APRS principal;
+    - mapa orbital dedicado;
+    - filtros/seleção de satélites;
+    - agenda de passagens;
+    - modo seguir satélite.
+
 - **Mapa → Ver — mostrar/esconder satélites**
   - Na aba **Mapa**, dentro do menu **Ver**, adicionar controle específico para **Satélites**.
   - Permitir mostrar/esconder todos os satélites exibidos no mapa principal sem afetar a aba dedicada **Satélites / ISS**.
