@@ -1,3 +1,21 @@
+## 1.12.0 - 2026-10-05
+
+- Nova aba **Satélites / ISS** com mapa orbital dedicado para APRS/packet espacial.
+- Sincronização de catálogo com SatNOGS e elementos TLE com CelesTrak, usando cache local e informação de época/fonte.
+- Propagação SGP4 para posição orbital, altitude, velocidade, footprint, azimute, elevação, alcance e estimativa de Doppler.
+- Agenda de passagens com AOS/TCA/LOS, elevação máxima, azimutes e duração em janelas de 24 h, 48 h ou 7 dias.
+- Alertas configuráveis de passagem integrados ao Centro de notificações.
+- **Mapa → Ver** ganha Satélites / ISS como camada opcional e independente do mapa orbital dedicado.
+- Corrigida definitivamente a classificação RF × APRS-IS: o meio real de recepção é propagado do pipeline de pacotes para a topologia.
+- Removida a migração legada da v1.7.7 que reconvertia enlaces RF com metadado de iGate para Internet a cada inicialização.
+- Migração v1.12 reconstrói evidência RF histórica a partir de pacotes persistidos com `medium='RF'`.
+- Popup/hover de topologia passa a informar a origem da classificação.
+- Mensagens, Estações e Logs passam a usar controles de janela no padrão Windows: minimizar, maximizar/restaurar e fechar/encaixar.
+- Corrigida a restauração/redimensionamento após minimizar e adicionada recuperação segura de geometria fora do viewport.
+- Aba Logs torna-se destacável.
+- Removido o campo de busca da extremidade esquerda da barra contextual do mapa.
+- Adicionadas regressões para SGP4, passagens, topologia RF, janelas destacáveis e integração de Satélites.
+
 ## 1.11.1 - 2026-10-05
 
 - Corrigida a topologia RF → iGate: evidência RF tem precedência visual sobre evidência APRS-IS para o mesmo par origem/destino.

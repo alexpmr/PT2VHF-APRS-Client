@@ -21,6 +21,7 @@
     rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
     igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
+    satellitesEnabled: localStorage.getItem('pt2vhf_map_item_satellites') !== '0',
     mapViewFilters: (() => {
       try {
         const parsed = JSON.parse(localStorage.getItem('pt2vhf_map_view_filters_v2') || '{}');
@@ -1348,6 +1349,9 @@
       wheelPxPerZoomLevel: zoomOptions.wheelPxPerZoomLevel,
       wheelDebounceTime: zoomOptions.wheelDebounceTime
     }).setView([saved.latitude, saved.longitude], Number(saved.zoom));
+    window.map = state.map;
+    window.pt2vhfMainMap = state.map;
+    window.dispatchEvent(new CustomEvent('pt2vhf:main-map-ready', {detail:{map:state.map}}));
 
     const elevationPane = state.map.createPane('pt2vhfElevationPane');
     elevationPane.classList.add('pt2vhf-elevation-pane');
@@ -1806,6 +1810,7 @@
     rfLinksEnabled: 'pt2vhf_map_item_rf',
     igateLinksEnabled: 'pt2vhf_map_item_igate',
     packetsEnabled: 'pt2vhf_map_item_packets',
+    satellitesEnabled: 'pt2vhf_map_item_satellites',
   };
 
   const MAP_DEVICE_CLASS_LABELS = {
@@ -1850,6 +1855,9 @@
     if (!(key in MAP_VIEW_STATE_STORAGE)) return;
     state[key] = !!enabled;
     localStorage.setItem(MAP_VIEW_STATE_STORAGE[key], state[key] ? '1' : '0');
+    if (key === 'satellitesEnabled') {
+      window.dispatchEvent(new CustomEvent('pt2vhf:satellite-visibility', {detail:{enabled:state[key]}}));
+    }
   }
 
   function repairMapVisibilityStateV186() {
@@ -2050,6 +2058,7 @@
       { id: 'root:rf', label: ui('Enlaces RF', 'RF links'), stateKey: 'rfLinksEnabled' },
       { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
       { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
+      { id: 'root:satellites', label: ui('Satélites / ISS', 'Satellites / ISS'), stateKey: 'satellitesEnabled' },
     ];
 
     tree.innerHTML = nodes.map(node => mapViewNodeHtml(node, 0)).join('');
@@ -2729,6 +2738,7 @@
       [ui('Última observação', 'Last observed'), fmtDate(edge.last_seen)],
       [ui('Última observação há', 'Last observed ago'), mapHoverAge(edge.last_seen)],
       ['iGate', edge.igate || ''],
+      [ui('Origem da classificação', 'Classification source'), edge.classification_source || ''],
     );
     showMapHoverInfo(
       ui('Enlace observado', 'Observed link'),
@@ -2800,6 +2810,7 @@
               ? `<div>Também observado via APRS-IS: ${Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')}</div>`
               : ''}
             <div>Pacotes observados: ${Number(edge.packet_count || 0).toLocaleString('pt-BR')}</div>
+            <div>Classificação: ${escapeHtml(edge.classification_source || (edge.kind === 'igate' ? 'APRS-IS confirmado' : 'RF inferido do path'))}</div>
             <div>Primeiro: ${escapeHtml(fmtDate(edge.first_seen))}</div>
             <div>Último: ${escapeHtml(fmtDate(edge.last_seen))}</div>
           </div>`);

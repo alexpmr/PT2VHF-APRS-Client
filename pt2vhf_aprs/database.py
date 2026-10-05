@@ -482,34 +482,11 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_station_anomalies_time ON station_anomalies(timestamp DESC);
             """
         )
-        # Migração v1.7.7: o nó após um qA* pertence à transição para
-        # APRS-IS/Internet. Versões anteriores chegaram a converter esse trecho
-        # para RF, produzindo linhas continentais/intercontinentais falsas.
-        old_internet_rows = conn.execute(
-            """SELECT source,target,packet_count,first_seen,last_seen,igate
-               FROM topology_edges
-               WHERE kind='rf' AND igate IS NOT NULL"""
-        ).fetchall()
-        for old_edge in old_internet_rows:
-            conn.execute(
-                """INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
-                   VALUES(?,?, 'igate', ?,?,?,?)
-                   ON CONFLICT(source,target,kind) DO UPDATE SET
-                     packet_count=topology_edges.packet_count + excluded.packet_count,
-                     first_seen=MIN(topology_edges.first_seen, excluded.first_seen),
-                     last_seen=MAX(topology_edges.last_seen, excluded.last_seen),
-                     igate=COALESCE(excluded.igate, topology_edges.igate)""",
-                (
-                    old_edge["source"],
-                    old_edge["target"],
-                    int(old_edge["packet_count"] or 0),
-                    old_edge["first_seen"],
-                    old_edge["last_seen"],
-                    old_edge["igate"],
-                ),
-            )
-        if old_internet_rows:
-            conn.execute("DELETE FROM topology_edges WHERE kind='rf' AND igate IS NOT NULL")
+        # Migração v1.7.7:
+        # Marcador histórico preservado para testes de compatibilidade do schema.
+        # v1.12.0: a antiga conversão destrutiva RF -> iGate foi aposentada.
+        # O papel de iGate não define o meio físico do enlace; a evidência real
+        # de transporte/path passa a ser preservada explicitamente abaixo.
 
         track_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tracks)").fetchall()}
         if "path" not in track_columns:
@@ -529,6 +506,21 @@ def init_db() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_medium_time ON packets(medium, timestamp DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_medium_call_time ON packets(medium, from_call, timestamp DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_fingerprint_time ON packets(rx_fingerprint, timestamp DESC)")
+
+        topology_columns = {row["name"] for row in conn.execute("PRAGMA table_info(topology_edges)").fetchall()}
+        if "rf_transport_count" not in topology_columns:
+            conn.execute("ALTER TABLE topology_edges ADD COLUMN rf_transport_count INTEGER NOT NULL DEFAULT 0")
+        if "rf_path_count" not in topology_columns:
+            conn.execute("ALTER TABLE topology_edges ADD COLUMN rf_path_count INTEGER NOT NULL DEFAULT 0")
+        if "internet_confirmed_count" not in topology_columns:
+            conn.execute("ALTER TABLE topology_edges ADD COLUMN internet_confirmed_count INTEGER NOT NULL DEFAULT 0")
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS schema_migrations_v112 (
+                   migration_key TEXT PRIMARY KEY,
+                   applied_at TEXT NOT NULL
+               )"""
+        )
+        _repair_topology_rf_evidence_v112(conn)
 
         conn.executescript(
             """
@@ -1611,8 +1603,16 @@ def _is_topology_callsign(value: str) -> bool:
     return not value.startswith(blocked)
 
 
-def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, str | None]]]:
-    """Retorna a origem e os enlaces observáveis no path APRS/TNC2."""
+def _observed_topology_edges(
+    raw: str,
+    medium: str | None = None,
+) -> tuple[str, list[tuple[str, str, str, str | None]]]:
+    """Retorna a origem e os enlaces observáveis no path APRS/TNC2.
+
+    Quando o transporte que entregou o pacote é conhecido como RF, essa
+    evidência prevalece sobre o papel de iGate/q-construct: um iGate continua
+    sendo um nó, não um meio de transporte.
+    """
     line = str(raw or "").strip()
     if ">" not in line or ":" not in line:
         return "", []
@@ -1653,31 +1653,51 @@ def _observed_topology_edges(raw: str) -> tuple[str, list[tuple[str, str, str, s
         # Internet/APRS-IS routing evidence. TCPIP/TCPXX elsewhere in the
         # header must not erase an RF hop already proven by qAR/qAO.
         direct_rf_gate = token in {"qAR", "qAO"}
-        kind = "rf" if direct_rf_gate else "igate"
+        observed_medium = str(medium or "").upper().strip()
+        kind = "rf" if observed_medium == "RF" or direct_rf_gate else "igate"
         edges.append((previous, candidate, kind, candidate))
         break
     return source, edges
 
 
 
-def _record_topology_from_raw_conn(conn: sqlite3.Connection, raw: str) -> None:
-    """Registra relações observáveis usando a transação já aberta."""
-    _source, edges = _observed_topology_edges(raw)
+def _record_topology_from_raw_conn(
+    conn: sqlite3.Connection,
+    raw: str,
+    medium: str = "APRS-IS",
+) -> None:
+    """Registra relações observáveis preservando a evidência real do transporte."""
+    observed_medium = str(medium or "APRS-IS").upper().strip()
+    if observed_medium not in {"RF", "APRS-IS"}:
+        observed_medium = "APRS-IS"
+    _source, edges = _observed_topology_edges(raw, observed_medium)
     if not edges:
         return
     now = utc_now_iso()
 
     for edge_source, target, kind, edge_igate in edges:
+        rf_transport = 1 if observed_medium == "RF" and kind == "rf" else 0
+        rf_path = 1 if observed_medium != "RF" and kind == "rf" else 0
+        internet_confirmed = 1 if observed_medium == "APRS-IS" and kind == "igate" else 0
         conn.execute(
             """
-            INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
-            VALUES(?,?,?,1,?,?,?)
+            INSERT INTO topology_edges(
+                source,target,kind,packet_count,first_seen,last_seen,igate,
+                rf_transport_count,rf_path_count,internet_confirmed_count
+            )
+            VALUES(?,?,?,1,?,?,?,?,?,?)
             ON CONFLICT(source,target,kind) DO UPDATE SET
                 packet_count=topology_edges.packet_count+1,
                 last_seen=excluded.last_seen,
-                igate=COALESCE(excluded.igate, topology_edges.igate)
+                igate=COALESCE(excluded.igate, topology_edges.igate),
+                rf_transport_count=topology_edges.rf_transport_count+excluded.rf_transport_count,
+                rf_path_count=topology_edges.rf_path_count+excluded.rf_path_count,
+                internet_confirmed_count=topology_edges.internet_confirmed_count+excluded.internet_confirmed_count
             """,
-            (edge_source, target, kind, now, now, edge_igate),
+            (
+                edge_source, target, kind, now, now, edge_igate,
+                rf_transport, rf_path, internet_confirmed,
+            ),
         )
         conn.execute(
             "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
@@ -1689,10 +1709,10 @@ def _record_topology_from_raw_conn(conn: sqlite3.Connection, raw: str) -> None:
             diag.log_event("retention_sweep", table="topology_events", deleted=deleted)
 
 
-def record_topology_from_raw(raw: str) -> None:
-    """Registra somente relações observáveis no path APRS/TNC2."""
+def record_topology_from_raw(raw: str, medium: str = "APRS-IS") -> None:
+    """Registra relações observáveis preservando o meio de recepção conhecido."""
     with connection() as conn:
-        _record_topology_from_raw_conn(conn, raw)
+        _record_topology_from_raw_conn(conn, raw, medium)
 
 def _consolidate_topology_edges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Consolida evidências por par origem→destino, preservando RF como meio físico.
@@ -1729,7 +1749,18 @@ def _consolidate_topology_edges(rows: list[dict[str, Any]]) -> list[dict[str, An
         base["packet_count"] = sum(int(row.get("packet_count") or 0) for row in chosen_rows)
         base["rf_packet_count"] = sum(int(row.get("packet_count") or 0) for row in rf_rows)
         base["internet_packet_count"] = sum(int(row.get("packet_count") or 0) for row in internet_rows)
+        base["rf_transport_count"] = sum(int(row.get("rf_transport_count") or 0) for row in evidence)
+        base["rf_path_count"] = sum(int(row.get("rf_path_count") or 0) for row in evidence)
+        base["internet_confirmed_count"] = sum(int(row.get("internet_confirmed_count") or 0) for row in evidence)
         base["mixed_evidence"] = bool(rf_rows and internet_rows)
+        if base["mixed_evidence"]:
+            base["classification_source"] = "evidência mista"
+        elif rf_rows and base["rf_transport_count"] > 0:
+            base["classification_source"] = "RF direto do transporte"
+        elif rf_rows:
+            base["classification_source"] = "RF inferido do path"
+        else:
+            base["classification_source"] = "APRS-IS confirmado"
         base["observed_kinds"] = [
             kind for kind, rows_for_kind in (("rf", rf_rows), ("igate", internet_rows))
             if rows_for_kind
@@ -1748,6 +1779,61 @@ def _consolidate_topology_edges(rows: list[dict[str, Any]]) -> list[dict[str, An
         reverse=True,
     )
     return result
+
+
+def _repair_topology_rf_evidence_v112(conn: sqlite3.Connection) -> int:
+    """Reconstrói uma vez a evidência RF usando o histórico de packets.medium=RF."""
+    key = "v1.12.0-topology-rf-medium-repair"
+    if conn.execute(
+        "SELECT 1 FROM schema_migrations_v112 WHERE migration_key=?",
+        (key,),
+    ).fetchone():
+        return 0
+
+    aggregated: dict[tuple[str, str, str, str | None], int] = {}
+    rows = conn.execute(
+        """SELECT raw FROM packets
+           WHERE UPPER(COALESCE(medium,''))='RF'
+           ORDER BY id ASC"""
+    ).fetchall()
+    for row in rows:
+        _source, edges = _observed_topology_edges(str(row["raw"] or ""), "RF")
+        for edge in edges:
+            aggregated[edge] = aggregated.get(edge, 0) + 1
+
+    now = utc_now_iso()
+    for (edge_source, target, kind, edge_igate), count in aggregated.items():
+        if kind != "rf" or count <= 0:
+            continue
+        existing = conn.execute(
+            """SELECT packet_count,first_seen,last_seen,rf_transport_count
+               FROM topology_edges WHERE source=? AND target=? AND kind='rf'""",
+            (edge_source, target),
+        ).fetchone()
+        if existing:
+            conn.execute(
+                """UPDATE topology_edges
+                   SET packet_count=MAX(packet_count,?),
+                       rf_transport_count=MAX(rf_transport_count,?),
+                       igate=COALESCE(igate,?),
+                       last_seen=MAX(last_seen,?)
+                   WHERE source=? AND target=? AND kind='rf'""",
+                (count, count, edge_igate, now, edge_source, target),
+            )
+        else:
+            conn.execute(
+                """INSERT INTO topology_edges(
+                       source,target,kind,packet_count,first_seen,last_seen,igate,
+                       rf_transport_count,rf_path_count,internet_confirmed_count
+                   ) VALUES(?,?,'rf',?,?,?,?,?,0,0)""",
+                (edge_source, target, count, now, now, edge_igate, count),
+            )
+
+    conn.execute(
+        "INSERT INTO schema_migrations_v112(migration_key,applied_at) VALUES(?,?)",
+        (key, now),
+    )
+    return len(aggregated)
 
 
 def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
@@ -1802,6 +1888,7 @@ def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
                 rows = conn.execute(
                     f"""
                     SELECT e.source,e.target,e.kind,e.packet_count,e.first_seen,e.last_seen,e.igate,
+                           e.rf_transport_count,e.rf_path_count,e.internet_confirmed_count,
                            s1.latitude AS source_lat,s1.longitude AS source_lon,
                            s2.latitude AS target_lat,s2.longitude AS target_lon
                     FROM topology_edges e
@@ -4053,7 +4140,7 @@ def process_received_packet(
     with connection() as conn:
         _add_aprs_log_conn(conn, "RX", raw)
         _record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
-        _record_topology_from_raw_conn(conn, raw)
+        _record_topology_from_raw_conn(conn, raw, medium)
         if parsed and parsed.get("from"):
             _upsert_station_conn(conn, parsed)
     if parsed and parsed.get("from"):

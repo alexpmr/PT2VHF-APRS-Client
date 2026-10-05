@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v190.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v110.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v111.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/v112.css') }}">
 </head>
 <body>
 <header class="app-header">
@@ -84,6 +85,7 @@
 
 <nav class="tabs" aria-label="Navegação principal">
   <button class="tab active" data-tab="map">MAPA</button>
+  <button class="tab" data-tab="satellites">Satélites / ISS</button>
   <button class="tab" data-tab="messages">Mensagens <span id="messageBadge" class="badge hidden">0</span></button>
   <button class="tab" data-tab="stations">Estações</button>
   <button class="tab" data-tab="log">Log</button>
@@ -231,6 +233,86 @@
           <span>Horário: <strong id="trafficCurrentTime">—</strong></span>
           <span>Velocidade: <strong id="trafficCurrentSpeed">1×</strong></span>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-satellites" class="tab-panel">
+    <div class="panel-header satellite-panel-header">
+      <div>
+        <h2>Satélites / ISS</h2>
+        <p>APRS/packet espacial: posição orbital, cobertura, trajetórias, passagens e alertas.</p>
+      </div>
+      <div class="satellite-header-actions">
+        <span id="satelliteDataStatus" class="satellite-data-status">Dados orbitais ainda não carregados</span>
+        <button id="satelliteRefreshButton" type="button" class="btn secondary">Atualizar TLE / catálogo</button>
+      </div>
+    </div>
+
+    <div class="satellite-workspace">
+      <div class="satellite-map-column">
+        <div class="satellite-map-toolbar">
+          <label class="check-field compact"><input id="satelliteShowFootprint" type="checkbox" checked><span>Cobertura</span></label>
+          <label class="check-field compact"><input id="satelliteShowFuture" type="checkbox" checked><span>Trajetória futura</span></label>
+          <label class="check-field compact"><input id="satelliteShowPast" type="checkbox" checked><span>Trajetória passada</span></label>
+          <label class="check-field compact"><input id="satelliteShowLabels" type="checkbox" checked><span>Labels</span></label>
+          <label class="check-field compact"><input id="satelliteFollowSelected" type="checkbox"><span>Seguir selecionado</span></label>
+          <label class="field compact">
+            <span>Previsão orbital</span>
+            <select id="satelliteTrackHorizon">
+              <option value="60">+60 min</option>
+              <option value="90" selected>+90 min</option>
+              <option value="180">+180 min</option>
+              <option value="360">+360 min</option>
+            </select>
+          </label>
+        </div>
+        <div id="satelliteMap" class="satellite-map" aria-label="Mapa orbital de satélites e ISS"></div>
+        <div id="satelliteLiveStrip" class="satellite-live-strip">
+          <span>Selecione um satélite para acompanhar a passagem.</span>
+        </div>
+      </div>
+
+      <aside class="satellite-sidebar">
+        <div class="satellite-card">
+          <div class="satellite-card-title">
+            <div><h3>Satélites APRS / packet</h3><small>Catálogo sincronizado e favoritos locais</small></div>
+            <label class="check-field compact"><input id="satelliteFavoritesOnly" type="checkbox"><span>Só favoritos</span></label>
+          </div>
+          <div id="satelliteCatalogList" class="satellite-catalog-list"><span class="hint">Carregando catálogo…</span></div>
+        </div>
+
+        <div id="satelliteDetail" class="satellite-card satellite-detail">
+          <h3>Detalhes do satélite</h3>
+          <div class="hint">Clique em um satélite no mapa ou na lista.</div>
+        </div>
+
+        <div class="satellite-card">
+          <h3>Alertas de passagem</h3>
+          <div class="satellite-alert-grid">
+            <label class="check-field"><input id="satelliteAlertsEnabled" type="checkbox" checked><span>Ativar alertas</span></label>
+            <label class="field compact"><span>Antecedência</span><select id="satelliteAlertLead"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
+            <label class="field compact"><span>Elevação mínima</span><input id="satelliteAlertMinElevation" type="number" min="0" max="90" step="5" value="10"></label>
+          </div>
+          <small>Os alertas entram também no Centro de notificações.</small>
+        </div>
+      </aside>
+    </div>
+
+    <div class="satellite-agenda-card">
+      <div class="satellite-agenda-heading">
+        <div><h3>Agenda de passagens</h3><small>AOS = início, TCA = ponto de máxima elevação, LOS = fim.</small></div>
+        <div class="satellite-agenda-filters">
+          <label class="field compact"><span>Período</span><select id="satellitePassHours"><option value="24" selected>24 h</option><option value="48">48 h</option><option value="168">7 dias</option></select></label>
+          <label class="field compact"><span>Elevação mínima</span><input id="satellitePassMinElevation" type="number" min="0" max="90" step="5" value="0"></label>
+          <button id="satellitePassRefresh" type="button" class="btn secondary">Atualizar agenda</button>
+        </div>
+      </div>
+      <div class="table-wrap satellite-pass-table-wrap">
+        <table id="satellitePassTable" class="data-table">
+          <thead><tr><th>Satélite</th><th>AOS</th><th>TCA</th><th>LOS</th><th>Elevação máx.</th><th>Az. AOS/TCA/LOS</th><th>Duração</th><th>Frequência / modo</th></tr></thead>
+          <tbody><tr><td colspan="8" class="hint">Atualize os dados orbitais para calcular as passagens.</td></tr></tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -1686,5 +1768,6 @@
 <script src="{{ url_for('static', filename='js/v190.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v110.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v111.js') }}"></script>
+<script src="{{ url_for('static', filename='js/v112.js') }}"></script>
 </body>
 </html>

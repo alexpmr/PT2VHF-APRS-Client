@@ -25,70 +25,207 @@
     panel.dataset.v190FloatReady = '1';
     const header = $('.panel-header', panel) || panel.firstElementChild;
     if (!header) return;
-    const actions = document.createElement('div');
-    actions.className = 'v190-float-actions';
-    actions.innerHTML = '<button type="button" class="btn secondary v190-detach">↗ '+tr('Destacar','Detach','Desacoplar','Détacher')+'</button>';
-    header.appendChild(actions);
 
+    const tabName = panelId.replace(/^tab-/, '');
+    const key = 'pt2vhf_v190_float_' + panelId;
+    const MIN_W = 360, MIN_H = 180, HEADER_H = 48;
     let placeholder = null;
     let dragging = false, dx = 0, dy = 0;
-    const key = 'pt2vhf_v190_float_'+panelId;
-    const state = () => { try { return JSON.parse(localStorage.getItem(key)||'{}'); } catch(_) { return {}; } };
+    let restoreRect = null;
+    let zCounter = Number(window.__pt2vhfFloatZ || 7200);
+
+    const actions = document.createElement('div');
+    actions.className = 'v190-float-actions';
+    header.appendChild(actions);
+
+    const savedState = () => {
+      try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (_) { return {}; }
+    };
+    const viewportRect = rect => {
+      const maxW = Math.max(MIN_W, window.innerWidth - 12);
+      const maxH = Math.max(MIN_H, window.innerHeight - 12);
+      const width = Math.max(MIN_W, Math.min(maxW, Number(rect?.width) || Math.min(760, maxW)));
+      const height = Math.max(MIN_H, Math.min(maxH, Number(rect?.height) || Math.min(620, maxH)));
+      const left = Math.max(0, Math.min(window.innerWidth - width, Number(rect?.left) || 20));
+      const top = Math.max(0, Math.min(window.innerHeight - HEADER_H, Number(rect?.top) || 100));
+      return { left, top, width, height };
+    };
+    const currentNormalRect = () => {
+      if (panel.classList.contains('v190-minimized') || panel.classList.contains('v190-maximized')) {
+        return restoreRect || viewportRect(savedState().restoreRect || savedState());
+      }
+      const r = panel.getBoundingClientRect();
+      return viewportRect({left:r.left, top:r.top, width:r.width, height:r.height});
+    };
     const save = () => {
       if (!panel.classList.contains('v190-floating')) return;
-      const r=panel.getBoundingClientRect();
-      localStorage.setItem(key, JSON.stringify({left:r.left,top:r.top,width:r.width,height:r.height,minimized:panel.classList.contains('v190-minimized')}));
+      const stored = savedState();
+      const normal = currentNormalRect();
+      const payload = {
+        left: normal.left, top: normal.top, width: normal.width, height: normal.height,
+        restoreRect: restoreRect || normal,
+        minimized: panel.classList.contains('v190-minimized'),
+        maximized: panel.classList.contains('v190-maximized'),
+      };
+      localStorage.setItem(key, JSON.stringify({...stored, ...payload}));
+    };
+    const bringToFront = () => {
+      zCounter = Math.max(zCounter + 1, Number(window.__pt2vhfFloatZ || 7200) + 1);
+      window.__pt2vhfFloatZ = zCounter;
+      panel.style.zIndex = String(zCounter);
+    };
+    const applyRect = rect => {
+      const r = viewportRect(rect);
+      panel.style.left = r.left + 'px';
+      panel.style.top = r.top + 'px';
+      panel.style.width = r.width + 'px';
+      panel.style.height = r.height + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+      return r;
+    };
+    const renderControls = () => {
+      if (!panel.classList.contains('v190-floating')) {
+        actions.innerHTML = '<button type="button" class="btn secondary v190-detach" title="'+tr('Destacar janela','Detach window','Desacoplar ventana','Détacher la fenêtre')+'" aria-label="'+tr('Destacar janela','Detach window','Desacoplar ventana','Détacher la fenêtre')+'">↗ '+tr('Destacar','Detach','Desacoplar','Détacher')+'</button>';
+      } else {
+        const maximized = panel.classList.contains('v190-maximized');
+        const minimized = panel.classList.contains('v190-minimized');
+        actions.innerHTML =
+          '<button type="button" class="v190-window-button v190-minimize" title="'+tr(minimized?'Restaurar':'Minimizar',minimized?'Restore':'Minimize',minimized?'Restaurar':'Minimizar',minimized?'Restaurer':'Réduire')+'" aria-label="'+tr(minimized?'Restaurar':'Minimizar',minimized?'Restore':'Minimize',minimized?'Restaurar':'Minimizar',minimized?'Restaurer':'Réduire')+'">'+(minimized?'▴':'—')+'</button>'+
+          '<button type="button" class="v190-window-button v190-maximize" title="'+tr(maximized?'Restaurar':'Maximizar',maximized?'Restore':'Maximize',maximized?'Restaurar':'Maximizar',maximized?'Restaurer':'Agrandir')+'" aria-label="'+tr(maximized?'Restaurar':'Maximizar',maximized?'Restore':'Maximize',maximized?'Restaurar':'Maximizar',maximized?'Restaurer':'Agrandir')+'">'+(maximized?'❐':'□')+'</button>'+
+          '<button type="button" class="v190-window-button v190-close" title="'+tr('Fechar e encaixar','Close and dock','Cerrar y acoplar','Fermer et ancrer')+'" aria-label="'+tr('Fechar e encaixar','Close and dock','Cerrar y acoplar','Fermer et ancrer')+'">×</button>';
+      }
+      bindButtons();
     };
     const detach = () => {
       if (panel.classList.contains('v190-floating')) return;
       placeholder = document.createComment('v190-'+panelId);
       panel.parentNode.insertBefore(placeholder, panel);
-      panel.classList.remove('tab-panel','active');
+      panel.classList.remove('tab-panel','active','v190-minimized','v190-maximized');
       panel.classList.add('v190-floating');
       document.body.appendChild(panel);
-      const s=state();
-      panel.style.left=(s.left ?? Math.max(20,window.innerWidth*0.18))+'px';
-      panel.style.top=(s.top ?? 120)+'px';
-      panel.style.width=(s.width ?? Math.min(720,window.innerWidth*0.65))+'px';
-      panel.style.height=(s.height ?? Math.min(620,window.innerHeight*0.7))+'px';
-      if (s.minimized) panel.classList.add('v190-minimized');
-      actions.innerHTML='<button type="button" class="btn secondary v190-minimize">—</button><button type="button" class="btn secondary v190-dock">↙ '+tr('Encaixar','Dock','Acoplar','Ancrer')+'</button>';
+      const saved = savedState();
+      restoreRect = viewportRect(saved.restoreRect || saved);
+      applyRect(restoreRect);
+      if (saved.maximized) {
+        panel.classList.add('v190-maximized');
+      } else if (saved.minimized) {
+        panel.classList.add('v190-minimized');
+      }
+      renderControls();
+      bringToFront();
       document.querySelector('[data-tab="map"]')?.click();
-      bindButtons();
       save();
     };
     const dock = () => {
-      panel.classList.remove('v190-floating','v190-minimized');
+      panel.classList.remove('v190-floating','v190-minimized','v190-maximized');
       panel.removeAttribute('style');
       panel.classList.add('tab-panel');
       if (placeholder?.parentNode) placeholder.parentNode.replaceChild(panel, placeholder);
       placeholder = null;
-      actions.innerHTML='<button type="button" class="btn secondary v190-detach">↗ '+tr('Destacar','Detach','Desacoplar','Détacher')+'</button>';
-      bindButtons();
-      document.querySelector('[data-tab="'+(panelId==='tab-messages'?'messages':'stations')+'"]')?.click();
+      restoreRect = null;
+      renderControls();
+      document.querySelector('[data-tab="'+tabName+'"]')?.click();
     };
-    const minimize = () => { panel.classList.toggle('v190-minimized'); save(); };
+    const minimize = () => {
+      if (!panel.classList.contains('v190-floating')) return;
+      if (panel.classList.contains('v190-minimized')) {
+        panel.classList.remove('v190-minimized');
+        if (!panel.classList.contains('v190-maximized')) applyRect(restoreRect || savedState().restoreRect || savedState());
+      } else {
+        if (!panel.classList.contains('v190-maximized')) restoreRect = currentNormalRect();
+        panel.classList.remove('v190-maximized');
+        panel.classList.add('v190-minimized');
+      }
+      renderControls();
+      bringToFront();
+      save();
+    };
+    const maximize = () => {
+      if (!panel.classList.contains('v190-floating')) return;
+      if (panel.classList.contains('v190-minimized')) {
+        panel.classList.remove('v190-minimized');
+      }
+      if (panel.classList.contains('v190-maximized')) {
+        panel.classList.remove('v190-maximized');
+        applyRect(restoreRect || savedState().restoreRect || savedState());
+      } else {
+        restoreRect = currentNormalRect();
+        panel.classList.add('v190-maximized');
+      }
+      renderControls();
+      bringToFront();
+      save();
+    };
+    const resetGeometry = () => {
+      restoreRect = viewportRect({
+        left: Math.max(20, window.innerWidth * 0.14),
+        top: 100,
+        width: Math.min(760, window.innerWidth * 0.72),
+        height: Math.min(620, window.innerHeight * 0.72),
+      });
+      panel.classList.remove('v190-minimized','v190-maximized');
+      if (panel.classList.contains('v190-floating')) applyRect(restoreRect);
+      localStorage.removeItem(key);
+      renderControls();
+      save();
+    };
+    panel._pt2vhfResetFloatGeometry = resetGeometry;
+
     const bindButtons = () => {
       $('.v190-detach',actions)?.addEventListener('click',detach);
-      $('.v190-dock',actions)?.addEventListener('click',dock);
+      $('.v190-close',actions)?.addEventListener('click',dock);
       $('.v190-minimize',actions)?.addEventListener('click',minimize);
+      $('.v190-maximize',actions)?.addEventListener('click',maximize);
     };
-    bindButtons();
+    renderControls();
+
     header.classList.add('v190-drag-handle');
     header.addEventListener('pointerdown', ev => {
-      if (!panel.classList.contains('v190-floating') || ev.target.closest('button,input,select,textarea,a,label')) return;
-      dragging=true; const r=panel.getBoundingClientRect(); dx=ev.clientX-r.left; dy=ev.clientY-r.top;
+      if (!panel.classList.contains('v190-floating') || panel.classList.contains('v190-minimized') || panel.classList.contains('v190-maximized') || ev.target.closest('button,input,select,textarea,a,label')) return;
+      dragging = true;
+      bringToFront();
+      const r = panel.getBoundingClientRect();
+      dx = ev.clientX - r.left;
+      dy = ev.clientY - r.top;
       header.setPointerCapture?.(ev.pointerId);
     });
     header.addEventListener('pointermove', ev => {
       if (!dragging) return;
-      const w=panel.offsetWidth,h=panel.offsetHeight;
-      panel.style.left=Math.max(0,Math.min(window.innerWidth-w,ev.clientX-dx))+'px';
-      panel.style.top=Math.max(0,Math.min(window.innerHeight-48,ev.clientY-dy))+'px';
+      const w = panel.offsetWidth, h = panel.offsetHeight;
+      panel.style.left = Math.max(0, Math.min(window.innerWidth-w, ev.clientX-dx))+'px';
+      panel.style.top = Math.max(0, Math.min(window.innerHeight-HEADER_H, ev.clientY-dy))+'px';
     });
-    header.addEventListener('pointerup',()=>{dragging=false;save();});
-    panel.addEventListener('mouseup',save);
-    new ResizeObserver(save).observe(panel);
+    header.addEventListener('pointerup', () => { dragging = false; restoreRect = currentNormalRect(); save(); });
+    panel.addEventListener('pointerdown', bringToFront);
+    panel.addEventListener('mouseup', () => {
+      if (!panel.classList.contains('v190-minimized') && !panel.classList.contains('v190-maximized')) {
+        restoreRect = currentNormalRect();
+      }
+      save();
+    });
+    new ResizeObserver(() => {
+      if (!panel.classList.contains('v190-floating') || panel.classList.contains('v190-minimized') || panel.classList.contains('v190-maximized')) return;
+      restoreRect = currentNormalRect();
+      save();
+    }).observe(panel);
+
+    window.addEventListener('resize', () => {
+      if (!panel.classList.contains('v190-floating')) return;
+      if (panel.classList.contains('v190-maximized')) {
+        renderControls();
+        return;
+      }
+      if (!panel.classList.contains('v190-minimized')) {
+        restoreRect = applyRect(restoreRect || currentNormalRect());
+      } else {
+        const r = viewportRect(restoreRect || savedState().restoreRect || savedState());
+        panel.style.left = r.left+'px';
+        panel.style.top = Math.max(0, Math.min(window.innerHeight-HEADER_H, Number(panel.style.top.replace('px','')) || r.top))+'px';
+        panel.style.width = r.width+'px';
+      }
+      save();
+    });
   }
 
   function installGlobalSearch() {
@@ -316,7 +453,10 @@
   function boot(){
     floatPanel('tab-messages','Mensagens');
     floatPanel('tab-stations','Estações');
-    installGlobalSearch();
+    floatPanel('tab-log','Logs');
+    // v1.12.0: remove o campo de busca da extremidade esquerda da barra superior.
+    document.querySelector('.v1818-search')?.remove();
+    document.querySelector('.v190-search')?.remove();
     installGroupsBackupAlerts();
     installTimelineAndTncTest();
     installHelpDiagnostics();
