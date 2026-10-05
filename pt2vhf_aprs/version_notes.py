@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.11.0": {
+        "title": "Confiabilidade operacional, TNC e observabilidade",
+        "items": [
+            "Contadores RX/TX do TNC são reconciliados com os frames persistidos da sessão, evitando indicadores presos em zero.",
+            "Novo health check classifica automaticamente transporte, KISS, AX.25, RX e RX/TX.",
+            "Autoteste interno KISS/AX.25 valida RX, TX, ACK e parser sem rádio físico.",
+            "Timeline de saúde do TNC e botão Copiar diagnóstico facilitam suporte.",
+            "Centro de notificações mantém histórico persistente dos alertas.",
+            "Saúde/retenção SQLite mostra integridade, tamanho, WAL, fragmentação e permite política por tipo de dado.",
+            "Perfil operacional da estação mostra tráfego, mensagens, paths e Ouvido por.",
+            "Inclui as correções completas de alertas da v1.10.1.",
+            "Release completa multiplataforma com Manual PDF.",
+        ],
+    },
     "1.10.1": {
         "title": "Correções completas dos alertas configuráveis",
         "items": [
