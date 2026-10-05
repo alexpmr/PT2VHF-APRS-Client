@@ -48,7 +48,7 @@ def test_v1818_version_and_arm64_updater_metadata(monkeypatch):
     monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-tar")
     assert updater.desired_asset_name("1.11.0") == "PT2VHF_APRS_Client_Linux_arm64_v1.11.0.tar.gz"
     monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-deb")
-    assert updater.desired_asset_name("1.11.0") == "pt2vhf-aprs-client_1.10.0_arm64.deb"
+    assert updater.desired_asset_name("1.11.0") == "pt2vhf-aprs-client_1.11.0_arm64.deb"
     monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-appimage")
     assert updater.desired_asset_name("1.11.0") == "PT2VHF_APRS_Client_arm64_v1.11.0.AppImage"
 
