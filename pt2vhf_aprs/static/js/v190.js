@@ -162,13 +162,29 @@
       const r=await fetch('/api/v190/backup/restore',{method:'POST',body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error||r.statusText);notify(tr('Backup restaurado. Reinicie o aplicativo.','Backup restored. Restart the application.','Backup restaurado. Reinicie la aplicación.','Sauvegarde restaurée. Redémarrez l’application.'));
     };
     const defs=[['station_appeared',tr('Estação apareceu','Station appeared','Estación apareció','Station apparue')],['station_disappeared',tr('Estação desapareceu','Station disappeared','Estación desapareció','Station disparue')],['favorite_appeared',tr('Favorito apareceu','Favorite appeared','Favorito apareció','Favori apparu')],['new_message',tr('Nova mensagem','New message','Nuevo mensaje','Nouveau message')],['tnc_down',tr('TNC caiu','TNC disconnected','TNC desconectado','TNC déconnecté')],['aprsis_down',tr('APRS-IS caiu','APRS-IS disconnected','APRS-IS desconectado','APRS-IS déconnecté')],['database_problem',tr('Problema no banco','Database problem','Problema de base','Problème de base')]];
-    json('/api/v190/alerts/settings').then(settings=>{
-      $('#v190Alerts',card).innerHTML=defs.map(([k,l])=>'<label class="check-field"><input type="checkbox" data-v190-alert="'+k+'" '+(settings[k]?'checked':'')+'><span>'+esc(l)+'</span></label>').join('')+'<label class="field"><span>'+tr('Considerar desaparecida após','Consider disappeared after','Considerar desaparecida después de','Considérer disparue après')+'</span><input id="v190DisappearMinutes" type="number" min="5" max="1440" value="'+esc(settings.disappear_minutes||60)+'"></label>';
-    });
-    $('#v190AlertsSave',card).onclick=async()=>{
-      const payload={}; $$('[data-v190-alert]',card).forEach(i=>payload[i.dataset.v190Alert]=i.checked);payload.disappear_minutes=Number($('#v190DisappearMinutes',card).value||60);
-      await json('/api/v190/alerts/settings',{method:'POST',body:JSON.stringify(payload)});notify(tr('Alertas salvos.','Alerts saved.','Alertas guardadas.','Alertes enregistrées.'));
+    const saveAlertSettings=async(showNotice=false)=>{
+      const payload={};
+      $('[data-v190-alert]',card).forEach(i=>payload[i.dataset.v190Alert]=i.checked);
+      payload.disappear_minutes=Number($('#v190DisappearMinutes',card)?.value||60);
+      await json('/api/v190/alerts/settings',{method:'POST',body:JSON.stringify(payload)});
+      window.__pt2vhfV190AlertSettings={...payload};
+      if(showNotice) notify(tr('Alertas salvos.','Alerts saved.','Alertas guardadas.','Alertes enregistrées.'));
     };
+    let alertSaveTimer=null;
+    json('/api/v190/alerts/settings').then(settings=>{
+      window.__pt2vhfV190AlertSettings={...settings};
+      $('#v190Alerts',card).innerHTML=defs.map(([k,l])=>'<label class="check-field"><input type="checkbox" data-v190-alert="'+k+'" '+(settings[k]?'checked':'')+'><span>'+esc(l)+'</span></label>').join('')+'<label class="field"><span>'+tr('Considerar desaparecida após','Consider disappeared after','Considerar desaparecida después de','Considérer disparue après')+'</span><input id="v190DisappearMinutes" type="number" min="5" max="1440" value="'+esc(settings.disappear_minutes||60)+'"></label>';
+      const autoSave=()=>{
+        clearTimeout(alertSaveTimer);
+        alertSaveTimer=setTimeout(()=>saveAlertSettings(false).catch(()=>{}),250);
+      };
+      $('[data-v190-alert]',card).forEach(i=>i.addEventListener('change',()=>{
+        window.__pt2vhfV190AlertSettings={...(window.__pt2vhfV190AlertSettings||{}),[i.dataset.v190Alert]:i.checked};
+        autoSave();
+      }));
+      $('#v190DisappearMinutes',card)?.addEventListener('change',autoSave);
+    });
+    $('#v190AlertsSave',card).onclick=()=>saveAlertSettings(true).catch(e=>notify(e.message));
   }
 
   function installHelpDiagnostics() {
@@ -230,35 +246,68 @@
   async function alertPoll() {
     let last=localStorage.getItem('pt2vhf_v190_alert_since')||new Date().toISOString();
     let previous=null;
+    let previousActive=null;
+    let databaseProblemLatched=false;
+    const seenMessageIds=new Set(JSON.parse(localStorage.getItem('pt2vhf_v190_seen_message_ids')||'[]').map(String));
     const tick=async()=>{
       try{
-        const [settings,state]=await Promise.all([json('/api/v190/alerts/settings'),json('/api/v190/alerts/state?since='+encodeURIComponent(last))]);
-        for(const st of state.stations_since||[]){
-          if(st.favorite&&settings.favorite_appeared) notify(tr('Favorito apareceu: ','Favorite appeared: ','Favorito apareció: ','Favori apparu : ')+st.callsign);
-          else if(settings.station_appeared) notify(tr('Estação apareceu: ','Station appeared: ','Estación apareció: ','Station apparue : ')+st.callsign);
-        }
-        const disappearedSeen=new Set(JSON.parse(localStorage.getItem('pt2vhf_v190_disappeared_seen')||'[]'));
-        if(settings.station_disappeared){
-          for(const st of state.disappeared||[]){
-            if(disappearedSeen.has(st.callsign)) continue;
-            disappearedSeen.add(st.callsign);
-            notify(tr('Estação desaparecida há mais de ','Station absent for more than ','Estación ausente por más de ','Station absente depuis plus de ')+(state.disappear_minutes||60)+' min: '+st.callsign);
+        const [serverSettings,state]=await Promise.all([
+          json('/api/v190/alerts/settings'),
+          json('/api/v190/alerts/state?since='+encodeURIComponent(last))
+        ]);
+        const settings={...serverSettings,...(window.__pt2vhfV190AlertSettings||{})};
+        const activeRows=Array.isArray(state.active_stations)?state.active_stations:[];
+        const activeMap=new Map(activeRows.map(st=>[String(st.callsign||'').toUpperCase(),st]).filter(([call])=>call));
+
+        if(previousActive!==null){
+          for(const [call,st] of activeMap){
+            if(previousActive.has(call)) continue;
+            if(st.favorite&&settings.favorite_appeared){
+              notify(tr('Favorito apareceu: ','Favorite appeared: ','Favorito apareció: ','Favori apparu : ')+call);
+            }else if(settings.station_appeared){
+              notify(tr('Estação apareceu: ','Station appeared: ','Estación apareció: ','Station apparue : ')+call);
+            }
           }
-          localStorage.setItem('pt2vhf_v190_disappeared_seen',JSON.stringify(Array.from(disappearedSeen).slice(-500)));
+          if(settings.station_disappeared){
+            for(const call of previousActive){
+              if(activeMap.has(call)) continue;
+              notify(tr('Estação desaparecida há mais de ','Station absent for more than ','Estación ausente por más de ','Station absente depuis plus de ')+(state.disappear_minutes||60)+' min: '+call);
+            }
+          }
         }
-        if(settings.new_message){
-          for(const m of state.messages_since||[]) notify(tr('Nova mensagem de ','New message from ','Nuevo mensaje de ','Nouveau message de ')+m.from_call+': '+m.message);
+        previousActive=new Set(activeMap.keys());
+
+        for(const m of state.messages_since||[]){
+          const id=String(m.id??'');
+          if(!id||seenMessageIds.has(id)) continue;
+          seenMessageIds.add(id);
+          if(settings.new_message) notify(tr('Nova mensagem de ','New message from ','Nuevo mensaje de ','Nouveau message de ')+m.from_call+': '+m.message);
         }
+        while(seenMessageIds.size>500) seenMessageIds.delete(seenMessageIds.values().next().value);
+        localStorage.setItem('pt2vhf_v190_seen_message_ids',JSON.stringify(Array.from(seenMessageIds)));
+
         if(previous){
           const tncWas=!!previous.tnc?.connected, tncNow=!!state.tnc?.connected;
           const aprsWas=!!previous.aprs_is?.connected, aprsNow=!!state.aprs_is?.connected;
-          if(tncWas&&!tncNow&&settings.tnc_down) notify(tr('TNC desconectado.','TNC disconnected.','TNC desconectado.','TNC déconnecté.'));
-          if(aprsWas&&!aprsNow&&settings.aprsis_down) notify(tr('APRS-IS desconectado.','APRS-IS disconnected.','APRS-IS desconectado.','APRS-IS déconnecté.'));
+          const tncWanted=state.tnc?.wanted!==false;
+          const aprsWanted=state.aprs_is?.wanted!==false;
+          if(tncWas&&!tncNow&&tncWanted&&settings.tnc_down) notify(tr('TNC desconectado.','TNC disconnected.','TNC desconectado.','TNC déconnecté.'));
+          if(aprsWas&&!aprsNow&&aprsWanted&&settings.aprsis_down) notify(tr('APRS-IS desconectado.','APRS-IS disconnected.','APRS-IS desconectado.','APRS-IS déconnecté.'));
         }
-        if(settings.database_problem&&String(state.database_integrity||'').toLowerCase()!=='ok') notify(tr('Problema detectado no banco SQLite.','SQLite database problem detected.','Problema detectado en SQLite.','Problème détecté dans SQLite.'));
-        previous=state;last=state.now;localStorage.setItem('pt2vhf_v190_alert_since',last);
+
+        const dbBad=String(state.database_integrity||'').toLowerCase()!=='ok';
+        if(dbBad&&!databaseProblemLatched&&settings.database_problem){
+          notify(tr('Problema detectado no banco SQLite.','SQLite database problem detected.','Problema detectado en SQLite.','Problème détecté dans SQLite.'));
+        }
+        databaseProblemLatched=dbBad;
+
+        previous=state;
+        last=state.now;
+        localStorage.setItem('pt2vhf_v190_alert_since',last);
       }catch(_){}
-    }; await tick(); setInterval(tick,15000);
+    };
+    await tick();
+    setInterval(tick,15000);
   }
 
   function boot(){
