@@ -98,6 +98,7 @@ def _setting(key: str, default: dict[str, Any]) -> dict[str, Any]:
 
 
 def _save_setting(key: str, payload: dict[str, Any], default: dict[str, Any]) -> dict[str, Any]:
+    _ensure_schema()
     clean = {**default, **dict(payload or {})}
     with db.connection() as conn:
         conn.execute(
@@ -429,14 +430,22 @@ def station_operational_profile(callsign: str, hours: int = 24) -> dict[str, Any
                 (call,),
             ).fetchone()
             result["summary"].update(dict(row))
+        if _table_exists(conn, "tnc_frames"):
             path_rows = conn.execute(
-                """SELECT path,medium,COUNT(*) AS packets,MAX(timestamp) AS last_seen
-                   FROM packets
-                   WHERE UPPER(from_call)=? AND timestamp>=? AND COALESCE(path,'')<>''
-                   GROUP BY path,medium ORDER BY packets DESC,last_seen DESC LIMIT 50""",
+                """SELECT path,'RF' AS medium,COUNT(*) AS packets,MAX(timestamp) AS last_seen
+                   FROM tnc_frames
+                   WHERE UPPER(source)=? AND timestamp>=? AND COALESCE(path,'') NOT IN ('','[]')
+                   GROUP BY path ORDER BY packets DESC,last_seen DESC LIMIT 50""",
                 (call, cutoff),
             ).fetchall()
             result["paths"] = [dict(row) for row in path_rows]
+        if not result["paths"] and result.get("station", {}).get("path"):
+            result["paths"] = [{
+                "path": result["station"]["path"],
+                "medium": "",
+                "packets": 1,
+                "last_seen": result["station"].get("last_heard") or "",
+            }]
         if _table_exists(conn, "messages"):
             result["messages"] = int(conn.execute(
                 """SELECT COUNT(*) FROM messages
