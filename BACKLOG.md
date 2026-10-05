@@ -234,6 +234,26 @@
 
 ## Pendências para próximas versões
 
+- **Mapa → Ver — mostrar/esconder satélites**
+  - Na aba **Mapa**, dentro do menu **Ver**, adicionar controle específico para **Satélites**.
+  - Permitir mostrar/esconder todos os satélites exibidos no mapa principal sem afetar a aba dedicada **Satélites / ISS**.
+  - Integrar o controle à mesma árvore de visibilidade já usada por estações, digipeaters, iGates, objetos APRS, tracklogs, enlaces e animações.
+  - Quando **Satélites** estiver desmarcado:
+    - ocultar ícones/markers dos satélites;
+    - ocultar labels;
+    - ocultar footprint/cobertura;
+    - ocultar trajetória orbital exibida no mapa principal.
+  - Quando marcado novamente, restaurar as camadas conforme o estado/filtros da aba Satélites / ISS.
+  - Prever subitens futuros sob **Satélites**, por exemplo:
+    - ISS;
+    - Favoritos;
+    - Demais satélites APRS/packet;
+    - Footprint;
+    - Trajetória.
+  - Persistir a preferência entre reinicializações.
+  - Manter sincronização entre a visibilidade do mapa principal e os controles de camada correspondentes.
+  - Adicionar testes de regressão para mostrar/esconder satélites sem alterar as demais camadas do mapa.
+
 - **Satélites / ISS — mapa orbital avançado inspirado no ISS Detector**
   - Na aba **Satélites / ISS**, incluir um mapa orbital dedicado mostrando em tempo real:
     - posição atual de cada satélite selecionado;
