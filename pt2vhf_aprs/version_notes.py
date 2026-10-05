@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.11.1": {
+        "title": "Topologia RF até iGate corrigida",
+        "items": [
+            "Enlaces que possuem evidência RF permanecem RF mesmo quando o destino é um iGate.",
+            "Linha tracejada fica reservada a enlaces 100% Internet/APRS-IS.",
+            "Quando o mesmo par foi observado por RF e Internet, o mapa mostra RF e preserva as contagens separadas dos dois meios.",
+            "Popup e hover exibem o meio efetivamente observado sem inferir Internet apenas pelo papel de iGate.",
+            "Adiciona regressões para qAR/qAO, evidência mista e Internet-only.",
+        ],
+    },
     "1.11.0": {
         "title": "Confiabilidade operacional, TNC e observabilidade",
         "items": [
