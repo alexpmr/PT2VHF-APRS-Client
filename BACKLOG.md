@@ -234,6 +234,44 @@
 
 ## Pendências para próximas versões
 
+- **Painéis destacáveis — controles no padrão Windows e aba Logs destacável**
+  - Padronizar os painéis destacáveis para comportamento semelhante a janelas do Windows.
+  - Exibir os controles de janela no canto superior direito de cada painel:
+    - **Minimizar**;
+    - **Maximizar/Restaurar**;
+    - **Fechar/encaixar novamente**.
+  - Usar ícones e ordem visual familiares ao Windows, mantendo acessibilidade por tooltip/aria-label.
+  - O botão **Minimizar** deve reduzir o painel sem perder o estado interno.
+  - O botão **Maximizar** deve expandir o painel dentro da área útil do aplicativo, sem cobrir controles essenciais permanentemente.
+  - Quando maximizado, o mesmo botão deve virar **Restaurar**, retornando exatamente à geometria anterior.
+  - O botão **Fechar** deve remover o painel flutuante e devolver a aba ao layout normal/encaixado, sem perder dados ou filtros.
+  - Os controles devem permanecer sempre visíveis no cabeçalho, inclusive em painel minimizado.
+  - Preservar posição, tamanho, estado minimizado/maximizado e geometria anterior à maximização.
+  - Garantir redimensionamento por bordas/cantos quando o painel estiver em estado normal/restaurado.
+  - Aplicar a mesma infraestrutura de janela às abas:
+    - **Mensagens**;
+    - **Estações**;
+    - **Logs**.
+  - Tornar a aba **Logs** destacável com as mesmas capacidades:
+    - arrastar;
+    - redimensionar;
+    - minimizar;
+    - maximizar/restaurar;
+    - fechar/encaixar;
+    - persistir posição e tamanho.
+  - Em Logs, preservar filtros, nível/categoria selecionados, posição de rolagem e atualização em tempo real ao destacar/encaixar.
+  - Permitir múltiplos painéis destacados simultaneamente sem sobreposição forçada ou perda de foco.
+  - Corrigir z-index/foco para que clicar em um painel traga a janela para frente.
+  - Em telas pequenas ou após mudança de resolução, recalcular geometria para manter todos os controles acessíveis.
+  - Adicionar ação **Restaurar layout padrão** para recuperar todas as janelas destacáveis de uma vez.
+  - Adicionar testes de regressão para:
+    - minimizar/maximizar/restaurar;
+    - fechar/encaixar;
+    - redimensionar;
+    - foco/z-order entre múltiplos painéis;
+    - persistência após reiniciar o aplicativo;
+    - Mensagens, Estações e Logs usando o mesmo componente-base.
+
 - **Painéis destacáveis — Estações e Mensagens não restauram/redimensionam após minimizar**
   - Ao minimizar os painéis destacáveis de **Estações** e **Mensagens**, o usuário pode ficar sem conseguir:
     - maximizar/restaurar novamente;
