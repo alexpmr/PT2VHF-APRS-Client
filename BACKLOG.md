@@ -234,6 +234,84 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — mapa orbital avançado inspirado no ISS Detector**
+  - Na aba **Satélites / ISS**, incluir um mapa orbital dedicado mostrando em tempo real:
+    - posição atual de cada satélite selecionado;
+    - posição da ISS;
+    - trajetória prevista/orbit track à frente;
+    - trajetória recente/orbit track atrás, quando útil;
+    - footprint/cobertura instantânea sobre a superfície;
+    - subponto do satélite;
+    - direção do movimento;
+    - altitude orbital;
+    - velocidade orbital;
+    - próxima passagem sobre a localização configurada.
+  - Inspirar a experiência de uso em aplicativos como **ISS Detector**, sem copiar identidade visual ou elementos proprietários.
+  - Exibir no mapa a faixa de cobertura estimada/footprint com transparência ajustável.
+  - Permitir selecionar um ou vários satélites simultaneamente.
+  - Diferenciar visualmente:
+    - ISS;
+    - satélites APRS favoritos;
+    - demais satélites APRS/packet;
+    - satélites fora de serviço/desativados.
+  - Ao clicar em um satélite, abrir painel com:
+    - nome;
+    - NORAD ID;
+    - indicativo/designação;
+    - altitude;
+    - velocidade;
+    - latitude/longitude do subponto;
+    - próxima passagem;
+    - AOS/TCA/LOS;
+    - elevação máxima;
+    - frequências;
+    - modo;
+    - Doppler estimado;
+    - idade/época do TLE.
+  - Adicionar timeline/controle temporal para visualizar:
+    - posição agora;
+    - posição prevista em +5, +10, +30 e +60 min;
+    - replay da passagem anterior, quando houver dados calculados.
+  - Mostrar a rota orbital prevista com marcações de tempo ao longo da trajetória.
+  - Permitir centralizar automaticamente o mapa no satélite selecionado.
+  - Permitir modo **seguir satélite**, mantendo-o centralizado durante o deslocamento.
+  - Adicionar opção **mostrar somente passagem local**, destacando apenas o trecho da órbita relevante para a estação do usuário.
+  - Sobrepor a localização da estação APRS configurada e indicar:
+    - distância até o subponto;
+    - azimute;
+    - elevação;
+    - se está dentro ou fora do footprint.
+  - Destacar visualmente quando a estação entrar na área de cobertura.
+  - Durante uma passagem ativa, mostrar painel compacto com:
+    - tempo até TCA;
+    - elevação atual;
+    - elevação máxima prevista;
+    - azimute;
+    - uplink/downlink;
+    - Doppler estimado;
+    - tempo restante até LOS.
+  - Permitir habilitar/desabilitar no mapa:
+    - footprint;
+    - trajetória futura;
+    - trajetória passada;
+    - labels;
+    - satélites não favoritos;
+    - grade/terminador dia-noite, se implementado.
+  - Considerar camada opcional de **terminador dia/noite** para ajudar na visualização orbital.
+  - Considerar indicação de iluminação do satélite/sol quando isso fizer sentido para o operador, sem misturar essa informação com disponibilidade APRS.
+  - Manter cálculos inteiramente baseados em TLE/SGP4 ou biblioteca orbital confiável, sem depender de posição “pré-calculada” de terceiros.
+  - Cachear efemérides calculadas para reduzir custo de atualização da interface.
+  - Atualizar a posição no mapa em intervalo curto o suficiente para parecer contínua, sem sobrecarregar CPU/WebView.
+  - Adicionar testes para:
+    - cálculo e desenho de footprint;
+    - orbit track futuro/passado;
+    - passagem sobre a estação;
+    - entrada/saída da área de cobertura;
+    - seleção múltipla de satélites;
+    - modo seguir;
+    - atualização de TLE alterando a trajetória prevista.
+  - Integrar essa visualização aos alarmes de passagem e ao Centro de notificações.
+
 - **Satélites / ISS com APRS — rastreio orbital, agenda de passagens e alertas**
   - Criar uma aba dedicada **Satélites / ISS** para facilitar a operação APRS via satélite.
   - Manter catálogo de satélites com suporte relevante a APRS/packet, incluindo a **ISS** e outros satélites ativos compatíveis.
