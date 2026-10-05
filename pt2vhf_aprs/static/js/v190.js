@@ -11,9 +11,12 @@
     if (!r.ok) throw new Error(d?.error || r.statusText);
     return d;
   };
-  const notify = msg => {
+  const notify = (msg, category='alert', severity='info', entity='') => {
     const toast = $('#toast');
     if (toast) { toast.textContent = msg; toast.classList.remove('hidden'); setTimeout(()=>toast.classList.add('hidden'), 5000); }
+    if (typeof window.pt2vhfNotificationCenterPush === 'function') {
+      void window.pt2vhfNotificationCenterPush(category, String(msg||''), '', severity, entity);
+    }
   };
 
   function floatPanel(panelId, label) {
