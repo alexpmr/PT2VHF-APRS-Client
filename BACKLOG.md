@@ -234,6 +234,19 @@
 
 ## Pendências para próximas versões
 
+- **Menu superior — remover campo à esquerda da barra**
+  - Remover o campo de texto exibido no canto esquerdo logo abaixo/ao lado do menu superior, atualmente visível antes dos demais controles.
+  - Manter apenas os controles realmente necessários nessa faixa.
+  - Ajustar o espaçamento/alinhamento após a remoção para não deixar área vazia ou desalinhada.
+  - Garantir que a alteração não afete:
+    - busca global;
+    - filtros;
+    - histórico;
+    - atalhos;
+    - comportamento responsivo em resoluções menores.
+  - Revisar PT-BR/EN/ES/FR caso o campo esteja ligado a rótulos ou placeholders traduzidos.
+  - Adicionar regressão visual/DOM para garantir que o campo não reapareça em releases futuras.
+
 - **Mapa / topologia — ainda há enlaces 100% RF classificados como Internet/APRS-IS**
   - Relato confirmado após a v1.11.1: ainda existem pares exibidos como **Internet/APRS-IS** apesar de o tráfego observado ser 100% RF.
   - Causa técnica identificada no fluxo atual:
