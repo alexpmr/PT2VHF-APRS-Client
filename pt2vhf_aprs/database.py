@@ -1694,6 +1694,62 @@ def record_topology_from_raw(raw: str) -> None:
     with connection() as conn:
         _record_topology_from_raw_conn(conn, raw)
 
+def _consolidate_topology_edges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Consolida evidências por par origem→destino, preservando RF como meio físico.
+
+    Regra visual/operacional:
+    - se existir qualquer evidência RF para o par, o enlace é RF;
+    - só fica `igate`/Internet quando não existe evidência RF para o mesmo par;
+    - quando ambos foram observados em momentos distintos, os dois contadores
+      permanecem disponíveis em metadados, sem transformar RF em Internet.
+    """
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for raw in rows:
+        item = dict(raw)
+        key = (
+            str(item.get("source") or "").upper().strip(),
+            str(item.get("target") or "").upper().strip(),
+        )
+        if not all(key):
+            continue
+        grouped.setdefault(key, []).append(item)
+
+    result: list[dict[str, Any]] = []
+    for (_source, _target), evidence in grouped.items():
+        rf_rows = [row for row in evidence if str(row.get("kind") or "").lower() == "rf"]
+        internet_rows = [row for row in evidence if str(row.get("kind") or "").lower() == "igate"]
+        chosen_rows = rf_rows if rf_rows else internet_rows
+        if not chosen_rows:
+            chosen_rows = evidence
+
+        # topology_edges tem uma linha por source/target/kind; ainda assim,
+        # agregamos defensivamente para suportar bancos/migrações antigos.
+        base = dict(max(chosen_rows, key=lambda row: str(row.get("last_seen") or "")))
+        base["kind"] = "rf" if rf_rows else "igate"
+        base["packet_count"] = sum(int(row.get("packet_count") or 0) for row in chosen_rows)
+        base["rf_packet_count"] = sum(int(row.get("packet_count") or 0) for row in rf_rows)
+        base["internet_packet_count"] = sum(int(row.get("packet_count") or 0) for row in internet_rows)
+        base["mixed_evidence"] = bool(rf_rows and internet_rows)
+        base["observed_kinds"] = [
+            kind for kind, rows_for_kind in (("rf", rf_rows), ("igate", internet_rows))
+            if rows_for_kind
+        ]
+        if chosen_rows:
+            first_values = [str(row.get("first_seen") or "") for row in chosen_rows if row.get("first_seen")]
+            last_values = [str(row.get("last_seen") or "") for row in chosen_rows if row.get("last_seen")]
+            if first_values:
+                base["first_seen"] = min(first_values)
+            if last_values:
+                base["last_seen"] = max(last_values)
+        result.append(base)
+
+    result.sort(
+        key=lambda item: (int(item.get("packet_count") or 0), str(item.get("last_seen") or "")),
+        reverse=True,
+    )
+    return result
+
+
 def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
     """Retorna enlaces observados sem permitir que uma consulta monopolize workers HTTP."""
     hours = int(hours or 0)
@@ -1776,7 +1832,7 @@ def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
         if interrupted:
             return stale
 
-        result = []
+        valid_rows = []
         for row in rows:
             item = dict(row)
             source = str(item.get("source") or "").upper().strip()
@@ -1787,7 +1843,12 @@ def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
                 continue
             if not _valid_geo_position(item.get("target_lat"), item.get("target_lon")):
                 continue
-            result.append(item)
+            valid_rows.append(item)
+
+        # Um mesmo par pode existir historicamente como RF e como iGate/APRS-IS.
+        # Para o mapa, RF tem precedência: tracejado só é correto quando o enlace
+        # não possui nenhuma evidência RF no período consultado.
+        result = _consolidate_topology_edges(valid_rows)
         with _topology_cache_lock:
             _topology_cache[hours] = (time.monotonic(), result)
 
