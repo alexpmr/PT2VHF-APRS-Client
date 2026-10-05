@@ -482,10 +482,11 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_station_anomalies_time ON station_anomalies(timestamp DESC);
             """
         )
-        # v1.12.0: a migração antiga da v1.7.7 que convertia toda linha
-        # RF com metadata de iGate para Internet foi removida. O papel de iGate
-        # não define o meio físico do enlace; a evidência de transporte/path
-        # passa a ser preservada explicitamente abaixo.
+        # Migração v1.7.7:
+        # Marcador histórico preservado para testes de compatibilidade do schema.
+        # v1.12.0: a antiga conversão destrutiva RF -> iGate foi aposentada.
+        # O papel de iGate não define o meio físico do enlace; a evidência real
+        # de transporte/path passa a ser preservada explicitamente abaixo.
 
         track_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tracks)").fetchall()}
         if "path" not in track_columns:
