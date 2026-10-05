@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.12.0": {
+        "title": "Satélites / ISS, topologia RF e janelas destacáveis",
+        "items": [
+            "Nova aba Satélites / ISS com mapa orbital dedicado, posição, rotas e footprint.",
+            "Agenda SGP4 de passagens com AOS, TCA, LOS, elevação máxima e azimutes.",
+            "Catálogo packet/APRS via SatNOGS e TLE via CelesTrak, com cache, fonte e época.",
+            "Alertas configuráveis de passagem com frequências, modo e integração ao Centro de notificações.",
+            "Mapa principal ganha opção Ver → Satélites / ISS.",
+            "Topologia preserva o meio real RF recebido pelo TNC e remove a antiga reconversão automática para Internet.",
+            "Mensagens, Estações e Logs usam controles minimizar, maximizar/restaurar e fechar/encaixar no padrão Windows.",
+            "Aba Logs passa a ser destacável e a geometria das janelas pode ser restaurada.",
+            "Campo de busca da extremidade esquerda da barra do mapa foi removido.",
+        ],
+    },
     "1.11.1": {
         "title": "Topologia RF até iGate corrigida",
         "items": [
