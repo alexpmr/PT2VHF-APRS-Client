@@ -234,6 +234,36 @@
 
 ## Pendências para próximas versões
 
+- **Mapa / topologia — ainda há enlaces 100% RF classificados como Internet/APRS-IS**
+  - Relato confirmado após a v1.11.1: ainda existem pares exibidos como **Internet/APRS-IS** apesar de o tráfego observado ser 100% RF.
+  - Causa técnica identificada no fluxo atual:
+    - `process_received_packet(..., medium=...)` conhece o meio real do pacote;
+    - porém `_record_topology_from_raw_conn(conn, raw)` recebe apenas o TNC2 bruto e ignora o parâmetro `medium`;
+    - assim, a classificação da topologia fica dependente somente do path/q-construct, mesmo quando o próprio receptor já sabe que o pacote entrou por RF.
+  - Alterar a cadeia de gravação para propagar explicitamente o meio observado:
+    - `process_received_packet(..., medium)` → `_record_topology_from_raw_conn(..., medium)`;
+    - `record_topology_from_raw(..., medium)` para chamadas diretas/testes.
+  - Regra de precedência:
+    - se `medium == RF`, nenhum segmento fisicamente observado desse pacote deve ser convertido para Internet apenas por conter iGate/q-construct;
+    - se `medium == APRS-IS`, usar o path/q-construct para inferir quais hops anteriores ao gate são RF e quais trechos são realmente Internet;
+    - Internet/APRS-IS só deve ser usado quando houver evidência positiva de transporte pela Internet.
+  - Não usar o papel do nó (ser iGate) como evidência suficiente do meio.
+  - Revisar também registros antigos em `topology_edges` já classificados incorretamente:
+    - permitir correção/consolidação quando novas evidências RF forem observadas;
+    - evitar que contagens históricas erradas mantenham o enlace tracejado.
+  - Adicionar diagnóstico no popup/hover informando **origem da classificação**:
+    - `RF direto do transporte`;
+    - `RF inferido do path`;
+    - `APRS-IS confirmado`;
+    - `evidência mista`.
+  - Adicionar regressões para:
+    - pacote recebido por TNC/RF cujo path termina em iGate;
+    - pacote RF com qAR/qAO;
+    - pacote APRS-IS com qAr/TCPIP;
+    - mesmo par observado primeiro como Internet e depois como RF;
+    - mesmo par observado primeiro como RF e depois como Internet.
+  - Critério: linha tracejada somente quando não existir evidência RF nem `medium=RF` para o enlace no período analisado.
+
 - **Painéis destacáveis — controles no padrão Windows e aba Logs destacável**
   - Padronizar os painéis destacáveis para comportamento semelhante a janelas do Windows.
   - Exibir os controles de janela no canto superior direito de cada painel:
