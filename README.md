@@ -1,36 +1,54 @@
-# PT2VHF APRS Client - v1.11.1
+# PT2VHF APRS Client - v1.12.0
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.11.1** corrige a representação da topologia RF × APRS-IS: qualquer evidência RF mantém o enlace como RF/linha contínua; tracejado fica restrito a enlaces 100% Internet.
+A **v1.12.0** adiciona operação espacial APRS/packet com Satélites/ISS, corrige definitivamente RF × APRS-IS e moderniza as janelas destacáveis.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.11.1**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.12.0**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_Setup_x64_v1.11.1.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_Portable_x64_v1.11.1.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_Setup_ARM64_v1.11.1.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_Portable_ARM64_v1.11.1.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_Setup_x64_v1.12.0.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_Portable_x64_v1.12.0.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_Setup_ARM64_v1.12.0.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_Portable_ARM64_v1.12.0.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_x86_64_v1.11.1.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/pt2vhf-aprs-client_1.11.1_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_Linux_x86_64_v1.11.1.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_arm64_v1.11.1.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/pt2vhf-aprs-client_1.11.1_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_Linux_arm64_v1.11.1.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_x86_64_v1.12.0.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/pt2vhf-aprs-client_1.12.0_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_Linux_x86_64_v1.12.0.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_arm64_v1.12.0.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/pt2vhf-aprs-client_1.12.0_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_Linux_arm64_v1.12.0.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_macOS_arm64_v1.11.1.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_macOS_x86_64_v1.11.1.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_macOS_arm64_v1.12.0.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_macOS_x86_64_v1.12.0.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.11.1/PT2VHF_APRS_Client_Manual_v1.11.1.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.12.0/PT2VHF_APRS_Client_Manual_v1.12.0.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.12.0
+
+- **Satélites / ISS:** nova aba dedicada para operação APRS/packet espacial.
+- **Mapa orbital próprio:** posição atual, trajetória futura/passada, footprint/cobertura, estação local, múltiplos satélites e modo seguir.
+- **Agenda de passagens:** cálculo SGP4 de AOS/TCA/LOS, elevação máxima, azimutes e duração para 24 h, 48 h ou 7 dias.
+- **Dados orbitais:** sincronização de catálogo packet/APRS via SatNOGS e TLE via CelesTrak, com cache e época do TLE.
+- **Frequências e Doppler:** painel mostra uplink/downlink, modo e estimativa de Doppler quando houver dados.
+- **Alertas de passagem:** antecedência e elevação mínima configuráveis, popup e integração com o Centro de notificações.
+- **Mapa → Ver → Satélites / ISS:** camada resumida opcional no mapa APRS principal, independente do mapa orbital dedicado.
+- **Topologia RF × APRS-IS:** o meio real de recepção passa a ser propagado até a topologia. Pacote recebido pelo TNC como RF não vira Internet apenas por terminar em iGate.
+- **Migração legada corrigida:** removida a rotina antiga que, a cada inicialização, convertia enlaces RF com metadado de iGate para Internet. O histórico RF é reparado a partir de `packets.medium='RF'`.
+- **Diagnóstico da topologia:** popup/hover informa se a classificação veio de RF direto do transporte, RF inferido do path, APRS-IS confirmado ou evidência mista.
+- **Janelas destacáveis:** Mensagens, Estações e Logs usam controles no padrão Windows — minimizar, maximizar/restaurar e fechar/encaixar — com geometria segura e persistente.
+- **Logs destacável:** passa a usar a mesma infraestrutura de janela das demais abas.
+- **Layout:** ação para restaurar a geometria padrão das janelas.
+- **Menu superior:** removido o campo de busca da extremidade esquerda da barra contextual do mapa.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.11.1
 
