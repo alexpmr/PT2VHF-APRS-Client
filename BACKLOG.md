@@ -248,6 +248,70 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — contador regressivo para próxima passagem APRS e despertador de aproximação**
+  - Na aba **Satélites / ISS**, ao lado do título/nome da aba, exibir um contador regressivo para a **próxima passagem de satélite que opere APRS**.
+  - Formato obrigatório: **HH:MM:SS**.
+  - Exibir o contador em **amarelo**, com **fonte grande e de alta legibilidade**.
+  - O contador deve considerar apenas satélites classificados como APRS/packet compatível com APRS, não qualquer satélite packet genérico.
+  - Critério da próxima passagem:
+    - usar a localização configurada da estação;
+    - considerar o próximo AOS futuro;
+    - respeitar, se houver, filtro mínimo de elevação configurado para alertas;
+    - ignorar satélites inativos/desativados.
+  - Quando uma passagem estiver em andamento, trocar o contador de “tempo até AOS” para uma indicação de passagem ativa, mostrando opcionalmente:
+    - tempo restante até LOS;
+    - satélite atual;
+    - elevação atual.
+  - Ao lado do contador, exibir de forma compacta o nome/indicativo do satélite da próxima passagem.
+  - Atualizar o contador pelo menos uma vez por segundo sem recalcular toda a agenda orbital a cada tick.
+  - Recalcular a próxima passagem quando:
+    - chegar ao AOS;
+    - terminar a passagem/LOS;
+    - TLE forem atualizados;
+    - localização da estação mudar;
+    - filtros de satélite/elevação mudarem.
+  - Criar um **despertador de aproximação da cobertura**:
+    - ativação/desativação independente;
+    - antecedência configurável em minutos;
+    - som distinto dos demais alertas do aplicativo;
+    - popup visual;
+    - integração com o Centro de notificações;
+    - opção de silenciar somente aquela passagem.
+  - O despertador deve disparar quando o satélite estiver se aproximando do AOS/cobertura configurada.
+  - Prever estágios visuais de aproximação, por exemplo:
+    - normal;
+    - aproximação;
+    - iminente;
+    - passagem ativa.
+  - Evitar alertas duplicados para a mesma passagem.
+  - Se várias passagens estiverem próximas, priorizar no contador a que ocorrer primeiro e manter as demais na agenda.
+  - No popup do despertador, mostrar:
+    - satélite;
+    - indicativo/designação;
+    - tempo restante;
+    - AOS;
+    - elevação máxima prevista;
+    - duração;
+    - uplink;
+    - downlink;
+    - modo APRS;
+    - Doppler estimado, se disponível.
+  - Adicionar ação rápida no popup:
+    - abrir aba Satélites / ISS;
+    - centralizar/seguir o satélite;
+    - silenciar esta passagem;
+    - marcar como favorito.
+  - Persistir preferências do despertador e antecedência entre reinicializações.
+  - Adicionar testes para:
+    - contagem regressiva HH:MM:SS;
+    - troca AOS → passagem ativa → LOS;
+    - múltiplas passagens próximas;
+    - filtro somente APRS;
+    - prevenção de alerta duplicado;
+    - mudança de TLE;
+    - mudança da localização da estação;
+    - persistência das preferências.
+
 - **Kenwood TM-D700 — teste físico externo**
   - O software de diagnóstico está concluído.
   - Encerrar a validação física somente quando houver um TM-D700 real, cabo/interface adequado e uma segunda estação/monitor RF para confirmar RX e TX no ar.
