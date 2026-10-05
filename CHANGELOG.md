@@ -1,3 +1,12 @@
+## 1.11.1 - 2026-10-05
+
+- Corrigida a topologia RF → iGate: evidência RF tem precedência visual sobre evidência APRS-IS para o mesmo par origem/destino.
+- Linha tracejada passa a ser usada somente quando o enlace é exclusivamente Internet/APRS-IS.
+- Enlaces com evidência mista permanecem contínuos/RF e expõem contagens separadas de RF e Internet nos metadados.
+- Popup e hover deixam de rotular como “Entrada no iGate” um trecho que possui evidência RF.
+- Mantida a semântica de qAR/qAO como entrada RF e qAr como Internet/APRS-IS.
+- Adicionados testes de regressão para RF → iGate, evidência mista e Internet-only.
+
 ## 1.11.0 - 2026-10-05
 
 - Corrigidos contadores RX/TX do TNC com reconciliação por frames persistidos da sessão.

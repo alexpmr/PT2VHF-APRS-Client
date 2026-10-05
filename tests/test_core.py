@@ -42,7 +42,7 @@ def test_aprs_query_helpers():
     assert build_query_payload("APRST") == "?APRST"
     assert build_query_payload("PING") == "?PING?"
     assert build_query_payload("APRSH", "PY2ABC-9").startswith("?APRSH PY2ABC-9")
-    assert parse_trace_nodes("PT2VHF>APRS,PT2DIGI*,WIDE2-1:") == ["PT2VHF", "PT2DIGI", "WIDE2-1"]
+    assert parse_trace_nodes("PT2VHF>APRS,PT2DGI*,WIDE2-1:") == ["PT2VHF", "PT2DGI", "WIDE2-1"]
 
 
 def test_aprs_query_database_lifecycle():
@@ -60,14 +60,14 @@ def test_aprs_query_database_lifecycle():
             assert db.get_aprs_query(qid)["status"] == "Aguardando resposta"
             resolved = db.resolve_aprs_query_response(
                 "PY2ABC-9", ["APRST"],
-                "PT2VHF>APRS,PT2DIGI*:",
-                "PY2ABC-9>APRS::PT2VHF  :PT2VHF>APRS,PT2DIGI*:",
-                trace_path=["PT2VHF", "PT2DIGI"],
+                "PT2VHF>APRS,PT2DGI*:",
+                "PY2ABC-9>APRS::PT2VHF  :PT2VHF>APRS,PT2DGI*:",
+                trace_path=["PT2VHF", "PT2DGI"],
             )
             assert resolved and resolved["status"] == "Respondida"
             assert resolved["rtt_ms"] is not None
             detail = db.aprs_query_detail(qid)
-            assert detail["trace_path_list"] == ["PT2VHF", "PT2DIGI"]
+            assert detail["trace_path_list"] == ["PT2VHF", "PT2DGI"]
     finally:
         db.DB_PATH = original
 
@@ -2171,3 +2171,68 @@ def test_v1721_track_hover_metadata_and_update_cleanup(monkeypatch, tmp_path):
     assert stale_temp.name in removed
     assert not old_setup.exists()
     assert not stale_temp.exists()
+
+
+def test_v1111_topology_rf_precedence_when_same_pair_has_internet_evidence():
+    rows = [
+        {
+            "source": "PU2AKM-7", "target": "PT2PAG-15", "kind": "igate",
+            "packet_count": 11, "first_seen": "2026-10-03T00:01:50+00:00",
+            "last_seen": "2026-10-03T09:30:33+00:00", "igate": "PT2PAG-15",
+            "source_lat": -15.8, "source_lon": -47.9, "target_lat": -15.7, "target_lon": -47.8,
+        },
+        {
+            "source": "PU2AKM-7", "target": "PT2PAG-15", "kind": "rf",
+            "packet_count": 7, "first_seen": "2026-10-03T08:00:00+00:00",
+            "last_seen": "2026-10-03T09:40:00+00:00", "igate": "PT2PAG-15",
+            "source_lat": -15.8, "source_lon": -47.9, "target_lat": -15.7, "target_lon": -47.8,
+        },
+    ]
+    consolidated = db._consolidate_topology_edges(rows)
+    assert len(consolidated) == 1
+    edge = consolidated[0]
+    assert edge["source"] == "PU2AKM-7"
+    assert edge["target"] == "PT2PAG-15"
+    assert edge["kind"] == "rf"
+    assert edge["packet_count"] == 7
+    assert edge["rf_packet_count"] == 7
+    assert edge["internet_packet_count"] == 11
+    assert edge["mixed_evidence"] is True
+    assert edge["observed_kinds"] == ["rf", "igate"]
+
+
+def test_v1111_topology_is_dashed_only_when_100_percent_internet():
+    only_internet = db._consolidate_topology_edges([
+        {
+            "source": "PY2NET", "target": "PT2IGT", "kind": "igate",
+            "packet_count": 5, "first_seen": "2026-10-03T08:00:00+00:00",
+            "last_seen": "2026-10-03T09:00:00+00:00", "igate": "PT2IGT",
+        },
+    ])
+    assert len(only_internet) == 1
+    assert only_internet[0]["kind"] == "igate"
+    assert only_internet[0]["mixed_evidence"] is False
+    assert only_internet[0]["rf_packet_count"] == 0
+    assert only_internet[0]["internet_packet_count"] == 5
+
+    source, edges = db._observed_topology_edges(
+        "PU2AKM-7>APRS,PT2DGI*,WIDE2-1,qAR,PT2PAG-15:>rf ingress"
+    )
+    assert source == "PU2AKM-7"
+    assert ("PU2AKM-7", "PT2DGI", "rf", None) in edges
+    assert ("PT2DGI", "PT2PAG-15", "rf", "PT2PAG-15") in edges
+
+    source, edges = db._observed_topology_edges(
+        "PY2NET>APRS,TCPIP*,qAr,PT2PAG-15:>internet only"
+    )
+    assert source == "PY2NET"
+    assert ("PY2NET", "PT2PAG-15", "igate", "PT2PAG-15") in edges
+
+
+def test_v1111_frontend_uses_continuous_rf_for_mixed_topology():
+    root = Path(__file__).resolve().parent.parent
+    js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
+    assert "const mixedEvidence = Boolean(edge.mixed_evidence)" in js
+    assert "edge.kind === 'igate' ? '7 5' : null" in js
+    assert "Também observado via APRS-IS" in js
+    assert "edge.kind === 'igate' ? 'Internet/APRS-IS' : 'Enlace RF observado'" in js

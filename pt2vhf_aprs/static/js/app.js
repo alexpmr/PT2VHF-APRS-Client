@@ -2710,20 +2710,30 @@
   function showTopologyHover(edge) {
     if (!edge) return;
     const isInternet = edge.kind === 'igate';
+    const mixedEvidence = Boolean(edge.mixed_evidence);
+    const rows = [
+      [ui('Tipo', 'Type'), isInternet ? 'Internet/APRS-IS' : 'RF'],
+      [ui('Origem', 'Source'), edge.source || '—'],
+      [ui('Destino', 'Destination'), edge.target || '—'],
+      [ui('Sentido', 'Direction'), `${edge.source || '—'} → ${edge.target || '—'}`],
+      [ui('Pacotes observados', 'Observed packets'), Number(edge.packet_count || 0).toLocaleString('pt-BR')],
+    ];
+    if (mixedEvidence && !isInternet) {
+      rows.push(
+        [ui('Evidência RF', 'RF evidence'), Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')],
+        [ui('Também via APRS-IS', 'Also via APRS-IS'), Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')],
+      );
+    }
+    rows.push(
+      [ui('Primeira observação', 'First observed'), fmtDate(edge.first_seen)],
+      [ui('Última observação', 'Last observed'), fmtDate(edge.last_seen)],
+      [ui('Última observação há', 'Last observed ago'), mapHoverAge(edge.last_seen)],
+      ['iGate', edge.igate || ''],
+    );
     showMapHoverInfo(
       ui('Enlace observado', 'Observed link'),
       `${edge.source || '—'} → ${edge.target || '—'}`,
-      [
-        [ui('Tipo', 'Type'), isInternet ? 'Internet/APRS-IS' : 'RF'],
-        [ui('Origem', 'Source'), edge.source || '—'],
-        [ui('Destino', 'Destination'), edge.target || '—'],
-        [ui('Sentido', 'Direction'), `${edge.source || '—'} → ${edge.target || '—'}`],
-        [ui('Pacotes observados', 'Observed packets'), Number(edge.packet_count || 0).toLocaleString('pt-BR')],
-        [ui('Primeira observação', 'First observed'), fmtDate(edge.first_seen)],
-        [ui('Última observação', 'Last observed'), fmtDate(edge.last_seen)],
-        [ui('Última observação há', 'Last observed ago'), mapHoverAge(edge.last_seen)],
-        ['iGate', edge.igate || ''],
-      ],
+      rows,
     );
   }
 
@@ -2785,7 +2795,10 @@
           <div class="topology-popup">
             <h3>Topologia observada</h3>
             <div><strong>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</strong></div>
-            <div>Tipo: ${edge.kind === 'igate' ? 'Entrada no IGate' : 'Enlace RF observado'}</div>
+            <div>Tipo: ${edge.kind === 'igate' ? 'Internet/APRS-IS' : 'Enlace RF observado'}</div>
+            ${edge.mixed_evidence && edge.kind !== 'igate'
+              ? `<div>Também observado via APRS-IS: ${Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')}</div>`
+              : ''}
             <div>Pacotes observados: ${Number(edge.packet_count || 0).toLocaleString('pt-BR')}</div>
             <div>Primeiro: ${escapeHtml(fmtDate(edge.first_seen))}</div>
             <div>Último: ${escapeHtml(fmtDate(edge.last_seen))}</div>
