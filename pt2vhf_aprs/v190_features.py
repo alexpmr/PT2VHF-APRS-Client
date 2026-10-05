@@ -411,14 +411,14 @@ def _alert_state(since: str = "", disappear_minutes: int = 60) -> dict[str, Any]
     cutoff = datetime.now(timezone.utc).timestamp() - disappear_minutes * 60
     cutoff_iso = datetime.fromtimestamp(cutoff, timezone.utc).replace(microsecond=0).isoformat()
     with db.connection() as conn:
+        active_stations = [dict(row) for row in conn.execute(
+            """SELECT s.callsign,s.last_heard,
+                      CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
+               FROM stations s LEFT JOIN favorites f ON f.callsign=s.callsign
+               WHERE s.last_heard>=? ORDER BY s.last_heard DESC LIMIT 5000""",
+            (cutoff_iso,),
+        ).fetchall()]
         if since:
-            stations = [dict(row) for row in conn.execute(
-                """SELECT s.callsign,s.last_heard,
-                          CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
-                   FROM stations s LEFT JOIN favorites f ON f.callsign=s.callsign
-                   WHERE s.last_heard>? ORDER BY s.last_heard DESC LIMIT 100""",
-                (since,),
-            ).fetchall()]
             messages = [dict(row) for row in conn.execute(
                 """SELECT id,timestamp,from_call,to_call,message
                    FROM messages
@@ -427,19 +427,18 @@ def _alert_state(since: str = "", disappear_minutes: int = 60) -> dict[str, Any]
                 (since,),
             ).fetchall()]
         else:
-            stations = []
             messages = []
         disappeared = [dict(row) for row in conn.execute(
             """SELECT s.callsign,s.last_heard,
                       CASE WHEN f.callsign IS NULL THEN 0 ELSE 1 END AS favorite
                FROM stations s LEFT JOIN favorites f ON f.callsign=s.callsign
-               WHERE s.last_heard<? ORDER BY s.last_heard DESC LIMIT 100""",
+               WHERE s.last_heard<? ORDER BY s.last_heard DESC LIMIT 5000""",
             (cutoff_iso,),
         ).fetchall()]
     integrity = _cached_integrity()
     return {
         "now": _utc(),
-        "stations_since": stations,
+        "active_stations": active_stations,
         "messages_since": messages,
         "disappeared": disappeared,
         "disappear_minutes": disappear_minutes,
