@@ -73,6 +73,7 @@ def test_v111_station_operational_profile_heard_by_and_paths():
             db.DB_PATH = Path(td) / "profile.db"
             db.init_db()
             now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+            tnc_service._ensure_schema()
             with db.connection() as conn:
                 conn.execute(
                     """INSERT INTO stations(callsign,name,last_heard,message_capable)
@@ -84,7 +85,6 @@ def test_v111_station_operational_profile_heard_by_and_paths():
                        VALUES(?,?,?,?)""",
                     (now, "PY2ABC>APRS,WIDE1-1:>test", "PY2ABC", "RF"),
                 )
-                tnc_service._ensure_schema()
                 conn.execute(
                     """INSERT INTO tnc_frames(timestamp,direction,medium,source,destination,path,packet_type,raw_tnc2,reason)
                        VALUES(?,?,?,?,?,?,?,?,?)""",
