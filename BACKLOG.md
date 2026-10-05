@@ -1,5 +1,17 @@
 # Backlog
 
+## Concluído na v1.11.0
+
+- **Alertas configuráveis:** corrigidos para respeitar preferências, usar transições reais e evitar duplicação.
+- **TNC — contadores RX/TX:** reconciliados com evidência persistida da sessão.
+- **TNC — health check:** classificação operacional automática e diagnóstico copiável.
+- **TNC — simulador/autoteste:** KISS/AX.25 RX/TX/ACK sem hardware físico.
+- **TNC — timeline:** histórico de mudanças de saúde/conectividade.
+- **Centro de notificações:** histórico persistente com contador de não lidas.
+- **SQLite:** saúde, retenção por categoria, limpeza manual e otimização.
+- **Perfil operacional da estação:** pacotes, meios, mensagens, paths e “Ouvido por”.
+- **Regressão:** testes dedicados aos recursos acima.
+
 ## Concluído na v1.9.0
 
 - **Painéis destacáveis:** Mensagens e Estações podem ficar sobre o mapa, com arraste, redimensionamento, minimização, encaixe e persistência de tamanho/posição.
@@ -215,36 +227,6 @@
 
 ## Pendências para próximas versões
 
-- **TNC / RF — contadores RX/TX permanecem em zero mesmo com tráfego real**
-  - Relato de múltiplos usuários: o TNC está funcional e há recepção/transmissão, porém os indicadores **RX KISS/AX.25** e/ou **TX entregue ao TNC** continuam em `0`.
-  - Revisar toda a cadeia de contabilização:
-    - bytes recebidos pelo transporte;
-    - frames KISS decodificados;
-    - frames AX.25 válidos;
-    - frames AX.25 inválidos;
-    - pacotes APRS efetivamente entregues ao parser;
-    - frames enviados ao transporte;
-    - bytes enviados ao transporte;
-    - pacotes realmente enfileirados para TX.
-  - Garantir que os contadores sejam incrementados no ponto correto do fluxo e não dependam apenas do refresh visual da aba.
-  - Verificar todos os transportes separadamente:
-    - KISS Serial;
-    - KISS TCP;
-    - AGWPE.
-  - Confirmar se o backend já contabiliza corretamente e o defeito está apenas na API/UI, ou se a própria sessão TNC não atualiza os acumuladores.
-  - Fazer os contadores refletirem a sessão atual e zerarem somente em novo ciclo de conexão/reinício conforme comportamento definido.
-  - Adicionar diagnóstico exibindo, lado a lado:
-    - bytes RX;
-    - frames KISS RX;
-    - AX.25 válidos;
-    - AX.25 inválidos;
-    - frames TX;
-    - bytes TX;
-    - último frame RX;
-    - último frame TX.
-  - Adicionar teste de regressão com tráfego KISS simulado confirmando incremento de RX e TX sem depender de hardware real.
-  - Incluir cenário AGWPE equivalente na suíte.
-  - Não considerar o TNC como totalmente operacional apenas porque a porta/transporte está aberto; os contadores devem acompanhar tráfego real observado.
 
 - **Kenwood TM-D700 — teste físico externo**
   - O software de diagnóstico está concluído.
