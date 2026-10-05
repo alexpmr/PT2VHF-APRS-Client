@@ -1,3 +1,15 @@
+## 1.11.0 - 2026-10-05
+
+- Corrigidos contadores RX/TX do TNC com reconciliação por frames persistidos da sessão.
+- Adicionado health check operacional do TNC com classificação automática do estágio de funcionamento.
+- Adicionado autoteste interno KISS/AX.25, incluindo RX, TX, ACK e validação do modelo de contadores.
+- Adicionada timeline de saúde do TNC.
+- Adicionado centro persistente de notificações.
+- Incorporadas as correções completas dos alertas configuráveis da v1.10.1.
+- Adicionado painel de saúde e retenção do SQLite, com limpeza por política e otimização manual.
+- Perfil da estação ampliado com indicadores operacionais, caminhos e “Ouvido por”.
+- Adicionados testes de regressão para contadores persistidos, notificações, retenção, perfil operacional e simulador.
+
 ## 1.10.1 - 2026-10-05
 
 - Corrigido o sistema de alertas configuráveis para respeitar estritamente opções desmarcadas.
