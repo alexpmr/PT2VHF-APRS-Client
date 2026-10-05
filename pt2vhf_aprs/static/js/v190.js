@@ -454,7 +454,9 @@
     floatPanel('tab-messages','Mensagens');
     floatPanel('tab-stations','Estações');
     floatPanel('tab-log','Logs');
-    // v1.12.0: o campo de busca global deixou de ocupar a extremidade esquerda da barra superior.
+    // v1.12.0: remove o campo de busca da extremidade esquerda da barra superior.
+    document.querySelector('.v1818-search')?.remove();
+    document.querySelector('.v190-search')?.remove();
     installGroupsBackupAlerts();
     installTimelineAndTncTest();
     installHelpDiagnostics();
