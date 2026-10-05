@@ -1,36 +1,47 @@
-# PT2VHF APRS Client - v1.10.0
+# PT2VHF APRS Client - v1.10.1
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.10.0** fecha o backlog de enriquecimento e qualidade: perfil de estação via API oficial do QRZ.com, foto AIS por provedor configurável/MMSI, metadados RF opcionais, diagnóstico específico do TM-D700, soak test prolongado, matriz de migração histórica e auditoria contínua de traduções.
+A **v1.10.1** corrige e endurece o sistema de alertas configuráveis, garantindo que cada opção salva seja respeitada e que os alarmes sejam disparados somente em transições reais de estado.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.10.0**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.10.1**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_Setup_x64_v1.10.0.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_Portable_x64_v1.10.0.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_Setup_ARM64_v1.10.0.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_Portable_ARM64_v1.10.0.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Setup_x64_v1.10.1.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Portable_x64_v1.10.1.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Setup_ARM64_v1.10.1.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Portable_ARM64_v1.10.1.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_x86_64_v1.10.0.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/pt2vhf-aprs-client_1.10.0_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_Linux_x86_64_v1.10.0.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_arm64_v1.10.0.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/pt2vhf-aprs-client_1.10.0_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_Linux_arm64_v1.10.0.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_x86_64_v1.10.1.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/pt2vhf-aprs-client_1.10.1_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Linux_x86_64_v1.10.1.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_arm64_v1.10.1.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/pt2vhf-aprs-client_1.10.1_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Linux_arm64_v1.10.1.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_macOS_arm64_v1.10.0.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_macOS_x86_64_v1.10.0.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_macOS_arm64_v1.10.1.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_macOS_x86_64_v1.10.1.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.0/PT2VHF_APRS_Client_Manual_v1.10.0.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.10.1/PT2VHF_APRS_Client_Manual_v1.10.1.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.10.1
+
+- **Estação apareceu:** passa a significar entrada/reentrada real na janela ativa, e não qualquer atualização de `last_heard`.
+- **Estação desapareceu:** é disparado apenas quando a estação efetivamente sai da janela ativa configurada; ao reaparecer, um novo desaparecimento futuro pode alertar novamente.
+- **Favorito apareceu:** segue a mesma transição real e respeita seu checkbox independentemente do alerta genérico de estação.
+- **Nova mensagem:** deduplicação por ID evita avisos repetidos do mesmo registro.
+- **TNC caiu / APRS-IS caiu:** alerta apenas em queda inesperada; desconexão voluntária não gera alarme.
+- **Problema no banco:** um único aviso por episódio; após normalização, uma nova falha pode gerar novo alerta.
+- **Configuração:** os checkboxes passam a ser aplicados/salvos imediatamente, mantendo também o botão **Salvar alertas**.
+- **Regressão:** novos testes cobrem preferências `false`, separação entre estações ativas/desaparecidas, deduplicação e lógica por transição.
 
 ## Novidades da v1.10.0
 
