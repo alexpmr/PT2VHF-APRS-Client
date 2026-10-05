@@ -234,6 +234,82 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS com APRS — rastreio orbital, agenda de passagens e alertas**
+  - Criar uma aba dedicada **Satélites / ISS** para facilitar a operação APRS via satélite.
+  - Manter catálogo de satélites com suporte relevante a APRS/packet, incluindo a **ISS** e outros satélites ativos compatíveis.
+  - Baixar e atualizar automaticamente dados keplerianos/TLE de fonte confiável.
+  - Exibir data/hora da última atualização dos elementos orbitais e avisar quando estiverem vencidos/desatualizados.
+  - Permitir atualização manual dos dados keplerianos.
+  - Calcular passagens para a localização da estação configurada no APRS Client.
+  - Mostrar agenda das próximas passagens com pelo menos:
+    - satélite;
+    - início da passagem/AOS;
+    - ponto máximo/TCA;
+    - fim da passagem/LOS;
+    - elevação máxima;
+    - azimute de entrada;
+    - azimute de máxima elevação;
+    - azimute de saída;
+    - duração;
+    - frequência(s) usada(s);
+    - modo APRS/packet;
+    - observações operacionais.
+  - Destacar passagens favoráveis por elevação máxima configurável.
+  - Permitir filtros:
+    - somente ISS;
+    - somente satélites com APRS;
+    - favoritos;
+    - elevação mínima;
+    - próximas 24 h / 48 h / 7 dias.
+  - Exibir status orbital em tempo real quando a aba estiver aberta:
+    - posição atual;
+    - footprint aproximado;
+    - próxima passagem;
+    - tempo até AOS;
+    - fase da passagem atual, quando aplicável.
+  - Integrar os satélites ao **Mapa** como camada opcional, com posição atual e footprint quando tecnicamente viável.
+  - Criar alarmes configuráveis para passagens:
+    - antecedência em minutos;
+    - elevação mínima;
+    - satélites específicos/favoritos;
+    - ativar/desativar individualmente.
+  - O popup de alerta deve mostrar de forma clara:
+    - nome do satélite;
+    - indicativo/designação;
+    - horário de AOS;
+    - elevação máxima prevista;
+    - duração;
+    - frequência de uplink;
+    - frequência de downlink;
+    - modo APRS/packet;
+    - observações importantes.
+  - Integrar os alarmes ao **Centro de notificações** já existente.
+  - Permitir ação rápida no alerta:
+    - abrir aba Satélites;
+    - abrir no mapa;
+    - silenciar aquela passagem;
+    - marcar satélite como favorito.
+  - Prever correção Doppler:
+    - exibir Doppler estimado por frequência;
+    - inicialmente apenas como informação;
+    - deixar arquitetura preparada para futura integração CAT com rádio, sem ajuste automático por padrão.
+  - Armazenar histórico básico das passagens previstas/ocorridas e eventos de alerta.
+  - Mostrar claramente a fonte dos TLE e a data de época dos elementos orbitais.
+  - Tratar satélites desativados/deorbitados sem quebrar o catálogo.
+  - Não assumir que todo satélite packet opera APRS convencional; manter metadados de modo/protocolo por satélite.
+  - Adicionar testes para:
+    - parsing/atualização de TLE;
+    - cálculo AOS/TCA/LOS;
+    - elevação máxima;
+    - agenda;
+    - filtros;
+    - alarmes;
+    - mudança de localização da estação;
+    - TLE vencido;
+    - satélite sem frequência válida;
+    - ISS e ao menos um segundo satélite de teste.
+  - Documentar que frequências e modos podem mudar e devem ser atualizados por fonte confiável antes da operação.
+
 - **Menu superior — remover campo à esquerda da barra**
   - Remover o campo de texto exibido no canto esquerdo logo abaixo/ao lado do menu superior, atualmente visível antes dos demais controles.
   - Manter apenas os controles realmente necessários nessa faixa.
