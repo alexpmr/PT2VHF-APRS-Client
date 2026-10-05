@@ -1,5 +1,12 @@
 # Backlog
 
+## Concluído na v1.11.1
+
+- **Mapa / topologia — RF até iGate:** qualquer evidência RF mantém o enlace como RF/linha contínua; tracejado somente para Internet/APRS-IS puro.
+- **Evidência mista:** RF tem precedência visual, sem perder os contadores de observações via Internet.
+- **Popup/hover:** mostra o meio real e informa evidência adicional APRS-IS quando existente.
+- **Regressão:** testes específicos para RF → iGate, qAR/qAO e Internet-only.
+
 ## Concluído na v1.11.0
 
 - **Alertas configuráveis:** corrigidos para respeitar preferências, usar transições reais e evitar duplicação.
@@ -226,22 +233,6 @@
 - **Idiomas:** auditoria contínua, paridade de dicionários e scanner de strings visíveis integrados à CI.
 
 ## Pendências para próximas versões
-
-- **Mapa / topologia — classificar corretamente enlace RF que termina em iGate**
-  - Enlace observado **por RF até um iGate** deve continuar sendo representado como **RF**, inclusive o último trecho estação → iGate.
-  - Não classificar automaticamente como `igate`/Internet apenas porque o nó de destino é um iGate.
-  - O tipo visual do enlace deve representar **o meio efetivamente observado naquele trecho**, e não o papel do nó de destino.
-  - Usar linha contínua/visual de RF quando houver evidência de recepção por RF.
-  - Usar linha tracejada de Internet/APRS-IS **somente quando o trecho for 100% Internet**, sem evidência RF para aquele enlace.
-  - Em caminhos mistos, representar cada segmento individualmente:
-    - estação → digipeater: RF;
-    - digipeater → iGate: RF;
-    - iGate → APRS-IS/destino via Internet: Internet/APRS-IS.
-  - Revisar a lógica de persistência/classificação de `topology_edges` e `topology_events`, especialmente transições envolvendo qA*/iGate.
-  - O popup/hover deve informar o meio real do trecho: **RF**, **Internet/APRS-IS** ou, quando houver evidência dos dois meios em momentos distintos, indicar isso sem converter o RF em Internet.
-  - Adicionar teste de regressão com cenário realista: pacote sai de uma estação, percorre RF e entra em um iGate; todos os segmentos anteriores à entrada no APRS-IS devem permanecer RF.
-  - Adicionar teste separado para tráfego exclusivamente APRS-IS, que deve permanecer tracejado.
-  - Não inferir Internet apenas pela presença de um iGate no path.
 
 
 - **Kenwood TM-D700 — teste físico externo**
