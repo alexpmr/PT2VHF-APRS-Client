@@ -42,7 +42,7 @@ def test_aprs_query_helpers():
     assert build_query_payload("APRST") == "?APRST"
     assert build_query_payload("PING") == "?PING?"
     assert build_query_payload("APRSH", "PY2ABC-9").startswith("?APRSH PY2ABC-9")
-    assert parse_trace_nodes("PT2VHF>APRS,PT2DIGI*,WIDE2-1:") == ["PT2VHF", "PT2DIGI", "WIDE2-1"]
+    assert parse_trace_nodes("PT2VHF>APRS,PT2DGI*,WIDE2-1:") == ["PT2VHF", "PT2DGI", "WIDE2-1"]
 
 
 def test_aprs_query_database_lifecycle():
@@ -60,14 +60,14 @@ def test_aprs_query_database_lifecycle():
             assert db.get_aprs_query(qid)["status"] == "Aguardando resposta"
             resolved = db.resolve_aprs_query_response(
                 "PY2ABC-9", ["APRST"],
-                "PT2VHF>APRS,PT2DIGI*:",
-                "PY2ABC-9>APRS::PT2VHF  :PT2VHF>APRS,PT2DIGI*:",
-                trace_path=["PT2VHF", "PT2DIGI"],
+                "PT2VHF>APRS,PT2DGI*:",
+                "PY2ABC-9>APRS::PT2VHF  :PT2VHF>APRS,PT2DGI*:",
+                trace_path=["PT2VHF", "PT2DGI"],
             )
             assert resolved and resolved["status"] == "Respondida"
             assert resolved["rtt_ms"] is not None
             detail = db.aprs_query_detail(qid)
-            assert detail["trace_path_list"] == ["PT2VHF", "PT2DIGI"]
+            assert detail["trace_path_list"] == ["PT2VHF", "PT2DGI"]
     finally:
         db.DB_PATH = original
 
@@ -2216,11 +2216,11 @@ def test_v1111_topology_is_dashed_only_when_100_percent_internet():
     assert only_internet[0]["internet_packet_count"] == 5
 
     source, edges = db._observed_topology_edges(
-        "PU2AKM-7>APRS,PT2DIGI*,WIDE2-1,qAR,PT2PAG-15:>rf ingress"
+        "PU2AKM-7>APRS,PT2DGI*,WIDE2-1,qAR,PT2PAG-15:>rf ingress"
     )
     assert source == "PU2AKM-7"
-    assert ("PU2AKM-7", "PT2DIGI", "rf", None) in edges
-    assert ("PT2DIGI", "PT2PAG-15", "rf", "PT2PAG-15") in edges
+    assert ("PU2AKM-7", "PT2DGI", "rf", None) in edges
+    assert ("PT2DGI", "PT2PAG-15", "rf", "PT2PAG-15") in edges
 
     source, edges = db._observed_topology_edges(
         "PY2NET>APRS,TCPIP*,qAr,PT2PAG-15:>internet only"
