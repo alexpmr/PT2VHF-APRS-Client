@@ -80,9 +80,15 @@ def test_v111_station_operational_profile_heard_by_and_paths():
                     ("PY2ABC", "Teste", now, 1),
                 )
                 conn.execute(
-                    """INSERT INTO packets(timestamp,raw,from_call,path,medium)
-                       VALUES(?,?,?,?,?)""",
-                    (now, "PY2ABC>APRS,WIDE1-1:>test", "PY2ABC", "WIDE1-1", "RF"),
+                    """INSERT INTO packets(timestamp,raw,from_call,medium)
+                       VALUES(?,?,?,?)""",
+                    (now, "PY2ABC>APRS,WIDE1-1:>test", "PY2ABC", "RF"),
+                )
+                tnc_service._ensure_schema()
+                conn.execute(
+                    """INSERT INTO tnc_frames(timestamp,direction,medium,source,destination,path,packet_type,raw_tnc2,reason)
+                       VALUES(?,?,?,?,?,?,?,?,?)""",
+                    (now, "RX", "RF", "PY2ABC", "APRS", '["WIDE1-1"]', "status", "PY2ABC>APRS,WIDE1-1:>test", ""),
                 )
                 conn.execute(
                     """INSERT INTO topology_events(timestamp,source,target,kind)
@@ -92,7 +98,7 @@ def test_v111_station_operational_profile_heard_by_and_paths():
             profile = station_operational_profile("PY2ABC", 24)
             assert profile["summary"]["packets"] == 1
             assert profile["summary"]["rf_packets"] == 1
-            assert profile["paths"][0]["path"] == "WIDE1-1"
+            assert "WIDE1-1" in profile["paths"][0]["path"]
             assert profile["heard_by"][0]["observer"] == "PT2IGT"
     finally:
         db.DB_PATH = old
