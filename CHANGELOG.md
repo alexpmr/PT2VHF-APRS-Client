@@ -1,3 +1,18 @@
+## 1.14.1 - 2026-10-06
+
+- **SAT — correção crítica do mapa orbital:** satélites selecionados são desenhados imediatamente, sem esperar o polling periódico de status.
+- **ISS:** NORAD 25544 é o único satélite selecionado por padrão em instalações novas; seleção vazia explícita continua vazia após reinício.
+- **Renderização progressiva:** posição atual tem prioridade sobre footprint e trajetórias; fila de tracks limitada evita rajadas de requisições em “Marcar tudo”.
+- **Desseleção segura:** requisições atrasadas não recriam marcadores de satélites já desmarcados.
+- **Feedback orbital:** estados de carregamento, TLE indisponível e erro de cálculo deixam de produzir mapa silenciosamente vazio.
+- **Layout SAT:** mapa, estações recebidas e mensagens passam a ocupar o espaço principal; detalhes, alertas, TLE, filtros, beacon e agenda ficam recolhidos por padrão.
+- **Próxima passagem:** contador alinhado à esquerda, com satélite/indicativo identificado; durante passagem ativa mostra “EM PASSAGEM” e contagem até LOS.
+- **Menu superior:** “Satélites / ISS” foi abreviado para **SAT**; o título interno continua completo.
+- **Notificações:** removido o sino da barra superior; o Centro de notificações permanece acessível em Configuração.
+- **Alertas de nova estação:** preferência desmarcada passa a ser aplicada imediatamente e persistida como fonte efetiva para o polling de alertas.
+- **CI/publicação:** o workflow completo deixa de competir com o workflow de produção na publicação da mesma Release.
+- Adicionados testes de regressão para seleção padrão, renderização imediata, layout recolhível, contador, sino e preferências de alertas.
+
 ## 1.14.0 - 2026-10-06
 
 - **Satélites / ISS — operação completa:** a aba passa a concentrar mapa, próxima passagem, estações recebidas, mensagens APRS, beacon satelital e agenda.
