@@ -279,6 +279,41 @@
 
 ## Pendências para próximas versões
 
+- **Alertas — notificação de nova estação continua disparando mesmo desmarcada**
+  - Corrigir a opção de configuração responsável por alertar quando uma **nova estação aparece/transmite**.
+  - Problema atual: mesmo com essa opção **desmarcada** em Configuração, a notificação continua sendo gerada.
+  - Tratar como regressão da lógica de alertas/persistência.
+  - Revisar o fluxo completo:
+    - carregamento das preferências ao iniciar o aplicativo;
+    - persistência no banco/localStorage;
+    - sincronização entre backend e frontend;
+    - atualização imediata ao marcar/desmarcar a opção;
+    - geração de popup;
+    - Centro de notificações;
+    - alerta sonoro;
+    - destaque de aba;
+    - deduplicação.
+  - A flag configurada deve ser a **fonte única de verdade** para esse tipo de alerta.
+  - Quando desmarcada:
+    - não gerar popup;
+    - não tocar som;
+    - não criar entrada no Centro de notificações;
+    - não destacar aba por esse evento;
+    - não voltar a ativar após reiniciar o aplicativo.
+  - Quando marcada novamente:
+    - o alerta deve voltar a funcionar apenas para **novos eventos posteriores à reativação**;
+    - não disparar retroativamente para estações já conhecidas/ativas.
+  - Garantir que a detecção de “nova estação” use transição de estado real e não apenas qualquer atualização de `last_heard`.
+  - Preservar a lógica de janela de desaparecimento/retorno já existente para evitar falsos positivos.
+  - Adicionar testes de regressão para:
+    - opção desmarcada → zero notificações;
+    - opção marcada → alerta apenas em nova aparição válida;
+    - desmarcar durante execução → efeito imediato;
+    - reiniciar aplicativo com opção desmarcada → continua desativada;
+    - reativar opção → não notificar retroativamente;
+    - estação já ativa recebendo novos pacotes → não gerar novo alerta;
+    - Centro de notificações não receber evento quando a opção estiver desativada.
+
 - **Menu superior — renomear “Satélites / ISS” para “SAT”**
   - No menu superior principal, substituir o texto da aba **Satélites / ISS** por **SAT**.
   - A alteração deve afetar apenas o rótulo da aba no menu superior.
