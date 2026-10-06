@@ -35,6 +35,9 @@ TNC_DEFAULTS: dict[str, Any] = {
     "transport": "tcp",
     "serial_port": "",
     "serial_baud": 9600,
+    "device_profile": "generic_kiss",
+    "serial_protocol": "kiss",
+    "packet_rf_baud": 1200,
     "tcp_host": "127.0.0.1",
     "tcp_port": 8001,
     "agwpe_host": "127.0.0.1",
@@ -457,6 +460,20 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
     if merged["serial_baud"] not in {1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400}:
         raise ValueError("Baud rate serial inválido.")
 
+    merged["device_profile"] = str(merged.get("device_profile") or "generic_kiss").lower().strip()
+    if merged["device_profile"] not in {"generic_kiss", "kenwood_tm_d700", "kenwood_tm_d710", "kantronics", "agwpe", "generic"}:
+        raise ValueError("Perfil de equipamento TNC inválido.")
+    merged["serial_protocol"] = str(merged.get("serial_protocol") or "kiss").lower().strip()
+    if merged["serial_protocol"] not in {"kiss", "terminal", "agwpe", "auto"}:
+        raise ValueError("Protocolo esperado inválido.")
+    merged["packet_rf_baud"] = int(merged.get("packet_rf_baud") or 1200)
+    if merged["packet_rf_baud"] not in {1200, 9600}:
+        raise ValueError("Velocidade packet RF deve ser 1200 ou 9600 baud.")
+    if merged["transport"] == "agwpe":
+        merged["serial_protocol"] = "agwpe"
+    if merged["device_profile"] in {"kenwood_tm_d700", "kenwood_tm_d710", "kantronics"} and merged["serial_protocol"] == "auto":
+        merged["serial_protocol"] = "terminal"
+
     merged["tcp_host"] = str(merged.get("tcp_host") or "127.0.0.1").strip()
     merged["tcp_port"] = int(merged.get("tcp_port") or 8001)
     if not (1 <= merged["tcp_port"] <= 65535):
@@ -534,6 +551,12 @@ def probe_transport(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         "elapsed_ms": None,
         "bytes_received": 0,
         "protocol": "unknown",
+        "expected_protocol": str(cfg.get("serial_protocol") or ("agwpe" if transport == "agwpe" else "kiss")),
+        "device_profile": str(cfg.get("device_profile") or "generic_kiss"),
+        "serial_baud": int(cfg.get("serial_baud") or 9600),
+        "packet_rf_baud": int(cfg.get("packet_rf_baud") or 1200),
+        "sample_hex": "",
+        "sample_ascii": "",
         "summary": "",
     }
     current_service = globals().get("service")
@@ -547,7 +570,9 @@ def probe_transport(payload: dict[str, Any] | None = None) -> dict[str, Any]:
                 "ok": True,
                 "endpoint": str(live.get("endpoint") or ""),
                 "bytes_received": int(live.get("transport_bytes_rx") or 0),
-                "protocol": "agwpe" if transport == "agwpe" else ("kiss" if int(live.get("kiss_frames_rx") or 0) > 0 else "transport-open"),
+                "protocol": "agwpe" if transport == "agwpe" else ("kiss" if int(live.get("kiss_frames_rx") or 0) > 0 else ("terminal-bytes" if str(cfg.get("serial_protocol") or "") == "terminal" and int(live.get("transport_bytes_rx") or 0) > 0 else "transport-open")),
+                "sample_hex": str(live.get("last_transport_sample_hex") or ""),
+                "sample_ascii": str(live.get("last_transport_sample_ascii") or ""),
                 "summary": "TNC já está conectado; teste usa o estado da sessão atual para não disputar a porta/transporte.",
                 "live_status": live,
                 "elapsed_ms": 0.0,
@@ -571,9 +596,17 @@ def probe_transport(payload: dict[str, Any] | None = None) -> dict[str, Any]:
             sample = handle.read(min(max(waiting, 1), 4096)) if waiting else b""
             result["bytes_received"] = len(sample)
             if sample:
+                safe = bytes(sample[:128])
+                result["sample_hex"] = safe.hex(" ")
+                result["sample_ascii"] = "".join(chr(b) if 32 <= b <= 126 else "." for b in safe)
                 decoder = KissStreamDecoder()
                 frames = decoder.feed(sample)
-                result["protocol"] = "kiss" if frames else "bytes-unrecognized"
+                if frames:
+                    result["protocol"] = "kiss"
+                elif str(cfg.get("serial_protocol") or "") == "terminal":
+                    result["protocol"] = "terminal-bytes"
+                else:
+                    result["protocol"] = "bytes-unrecognized"
             else:
                 result["protocol"] = "serial-open"
             result["ok"] = True
@@ -1322,6 +1355,8 @@ class TNCStatus:
     transport_bytes_tx: int = 0
     kiss_frames_rx: int = 0
     invalid_frames_rx: int = 0
+    last_transport_sample_hex: str = ""
+    last_transport_sample_ascii: str = ""
     last_rx_error: str = ""
     duplicates_suppressed: int = 0
     tx_paused: bool = False
@@ -1358,6 +1393,10 @@ class TNCService:
         payload["igate_rx_enabled"] = bool(cfg["igate_rx_enabled"])
         payload["igate_tx_enabled"] = bool(cfg["igate_tx_enabled"])
         payload["optimizer_mode"] = cfg["optimizer_mode"]
+        payload["device_profile"] = cfg.get("device_profile", "generic_kiss")
+        payload["expected_protocol"] = cfg.get("serial_protocol", "kiss")
+        payload["serial_baud"] = cfg.get("serial_baud", 9600)
+        payload["packet_rf_baud"] = cfg.get("packet_rf_baud", 1200)
         payload["dcd"] = None
         payload["rf_metric_source"] = ""
         if payload.get("connected") and str(cfg.get("transport") or "") == "serial":
@@ -1413,7 +1452,7 @@ class TNCService:
             elif int(payload.get("kiss_frames_rx") or 0) > 0 or int(payload.get("invalid_frames_rx") or 0) > 0:
                 payload["rx_state"] = "invalid"
             elif int(payload.get("transport_bytes_rx") or 0) > 0:
-                payload["rx_state"] = "bytes_without_kiss"
+                payload["rx_state"] = "terminal_bytes_active" if str(cfg.get("serial_protocol") or "") == "terminal" else "bytes_without_kiss"
             else:
                 payload["rx_state"] = "waiting"
             payload["tx_state"] = "delivered" if tx_this_session else "waiting"
@@ -1652,6 +1691,8 @@ class TNCService:
                     transport_bytes_tx=0,
                     kiss_frames_rx=0,
                     invalid_frames_rx=0,
+                    last_transport_sample_hex="",
+                    last_transport_sample_ascii="",
                     last_rx_error="",
                 )
                 retry = 2
@@ -1663,7 +1704,12 @@ class TNCService:
                         raise ConnectionError(("AGWPE" if cfg["transport"] == "agwpe" else "KISS TCP") + " encerrou a conexão.")
                     if not chunk:
                         continue
-                    self._set_status(last_transport_rx_at=utc_now_iso())
+                    safe_sample = bytes(chunk[:128])
+                    self._set_status(
+                        last_transport_rx_at=utc_now_iso(),
+                        last_transport_sample_hex=safe_sample.hex(" "),
+                        last_transport_sample_ascii="".join(chr(b) if 32 <= b <= 126 else "." for b in safe_sample),
+                    )
                     self._increment_status("transport_bytes_rx", len(chunk))
                     if cfg["transport"] == "agwpe":
                         for agw_frame in agw_decoder.feed(chunk):
