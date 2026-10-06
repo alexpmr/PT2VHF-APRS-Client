@@ -2978,16 +2978,26 @@
       };
     }
 
+    // v1.14.3: não use o frame bruto/path para decidir o papel da estação.
+    // WIDE1-1/WIDE2-1 descrevem o caminho solicitado pela origem e não provam
+    // que a própria estação seja um digipeater.
     const descriptor = [
       s?.name,
       s?.callsign,
       s?.info,
-      s?.raw
+      s?.device_class,
+      s?.map_role
     ].map(value => String(value || '').toUpperCase()).join(' ');
 
     const digiSymbol = String(s?.symbol || '') === '#';
-    const infrastructurePattern = /\bDIGI(?:PEATER)?\b|\bWIDE[1-7](?:-[1-7])?\b|\bRELAY\b|\bI-?GATE\b|\bIGATE\b|\bHOTSPOT\b|\bGATEWAY\b|\bREPEATER\b|\bREPETIDOR\b|\bD-?STAR\b|\bDMR\b|\bC4FM\b|\bYSF\b|\bECHOLINK\b/i;
-    const infrastructure = digiSymbol || infrastructurePattern.test(descriptor);
+    const infrastructureEvidence = Number(s?.infrastructure_evidence || 0) === 1;
+    const metadataInfrastructure = ['digi', 'igate'].includes(String(s?.map_role || '').toLowerCase())
+      || ['digi', 'igate'].includes(String(s?.device_class || '').toLowerCase());
+    const infrastructurePattern = /\bDIGI(?:PEATER)?\b|\bRELAY\b|\bI-?GATE\b|\bIGATE\b|\bHOTSPOT\b|\bGATEWAY\b|\bREPEATER\b|\bREPETIDOR\b|\bD-?STAR\b|\bDMR\b|\bC4FM\b|\bYSF\b|\bECHOLINK\b/i;
+    const infrastructure = infrastructureEvidence
+      || metadataInfrastructure
+      || digiSymbol
+      || infrastructurePattern.test(descriptor);
 
     if (!infrastructure) {
       return { enabled: true, infrastructure: false, reason: '' };
@@ -2997,8 +3007,8 @@
       enabled: false,
       infrastructure: true,
       reason: ui(
-        'Esta estação aparenta ser infraestrutura/digipeater e ainda não demonstrou suporte a mensagens ou queries APRS.',
-        'This station appears to be infrastructure/a digipeater and has not demonstrated APRS message or query support.'
+        'Esta estação possui evidência de infraestrutura/digipeater e ainda não demonstrou suporte a mensagens ou queries APRS.',
+        'This station has infrastructure/digipeater evidence and has not demonstrated APRS message or query support.'
       )
     };
   }
@@ -6307,7 +6317,10 @@
     state.pendingTab = '';
   });
 
-  $('#sendBeaconButton')?.addEventListener('click', async () => {
+  async function sendManualBeacon() {
+    const buttons = [$('#sendBeaconButton'), $('#headerSendBeaconButton')].filter(Boolean);
+    if (buttons.some(button => button.disabled)) return;
+    buttons.forEach(button => { button.disabled = true; });
     const altitude = Number($('#altitudeInput')?.value);
     const source = String($('#altitudeSourceInput')?.value || '');
     if (altitude === 0 && source === 'fallback_zero') {
@@ -6319,8 +6332,15 @@
     try {
       await api('/api/beacon', { method:'POST' });
       toast(ui('Beacon enviado ao APRS-IS.', 'Beacon sent to APRS-IS.'), 'ok');
-    } catch (err) { toast(err.message, 'error'); }
-  });
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  $('#sendBeaconButton')?.addEventListener('click', () => { void sendManualBeacon(); });
+  $('#headerSendBeaconButton')?.addEventListener('click', () => { void sendManualBeacon(); });
 
   $('#configImportFile').addEventListener('change', async e => {
     const file = e.target.files[0];
@@ -6620,6 +6640,7 @@
     'Conectar':'Connect',
     'Desconectar':'Disconnect',
     'Desconectado':'Disconnected',
+    'Enviar Beacon':'Send Beacon',
     'Verificando versão…':'Checking version…',
     'Mensagens APRS':'APRS Messages',
     'Agendadas':'Scheduled',
