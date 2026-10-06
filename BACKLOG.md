@@ -248,6 +248,69 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — atualização automática de TLE, múltiplas fontes e controle operacional inspirado no fluxo do PU2MUS**
+  - Considerar o fluxo utilizado pelo **PU2MUS**, que atualiza diariamente os elementos orbitais e mantém manualmente quais satélites entram ou saem da operação conforme estejam transmitindo.
+  - Implementar atualização automática programada dos dados orbitais, com padrão sugerido de **1 vez por dia à meia-noite**, sem impedir atualização manual.
+  - Permitir configurar o horário e a periodicidade da atualização.
+  - Suportar múltiplas fontes confiáveis de TLE/Keplerianos, com prioridade/fallback, incluindo inicialmente:
+    - **CelesTrak — Amateur**;
+    - **CelesTrak — Stations**;
+    - **AMSAT — Keplerian Elements / nasabare.txt**, quando aplicável;
+    - outras fontes apenas quando confiáveis e documentadas.
+  - Não depender de uma única fonte para todos os satélites.
+  - Fazer merge por **NORAD ID** sempre que possível, evitando duplicação por diferença de nome.
+  - Exibir para cada satélite:
+    - fonte do TLE;
+    - data/hora da última atualização;
+    - época do TLE;
+    - idade do TLE;
+    - fonte primária escolhida;
+    - fallback utilizado, se houver.
+  - Criar uma área de **fontes de dados orbitais** em Configuração/Satélites, permitindo:
+    - ativar/desativar uma fonte;
+    - definir prioridade;
+    - atualizar agora;
+    - testar disponibilidade;
+    - visualizar último erro;
+    - visualizar quantidade de satélites carregados por fonte.
+  - Implementar controle operacional por satélite, equivalente ao comportamento de “comentar/descomentar” usado no script do PU2MUS:
+    - **Ativo / Monitorar**;
+    - **Ignorar temporariamente**;
+    - **Inativo / Fora de operação**;
+    - observação manual do usuário.
+  - Esse estado deve ser persistente e não ser perdido em uma atualização de TLE.
+  - Separar claramente:
+    - disponibilidade orbital/TLE;
+    - suporte APRS;
+    - transmissor conhecido;
+    - status operacional atual.
+  - Um satélite pode ter TLE válido e ainda assim estar **fora do ar**; nesse caso não deve gerar alarme de passagem operacional.
+  - Permitir ao usuário desativar temporariamente alertas/agenda de um satélite sem removê-lo do catálogo.
+  - Se houver fonte confiável para status operacional, utilizá-la como sugestão, mas permitir sobrescrita manual.
+  - Atualização automática não deve reativar automaticamente um satélite que o usuário marcou como ignorado/inativo.
+  - Para satélites com múltiplos modos/transmissores, permitir ativar/desativar serviços individualmente, por exemplo:
+    - APRS;
+    - SSTV;
+    - telemetria;
+    - voz/FM;
+    - packet/AX.25.
+  - Prever suporte futuro a **SSTV**, inspirado no fluxo informado pelo PU2MUS:
+    - associar uma passagem a um serviço SSTV ativo;
+    - exibir frequência/modo;
+    - preparar integração futura para recepção/armazenamento de imagens;
+    - não iniciar download/recepção automática sem configuração explícita.
+  - Não usar comandos de shell, `wget`, `grep` ou `at` no cliente; implementar tudo nativamente e de forma multiplataforma.
+  - Não apagar/agendar tarefas do sistema operacional do usuário. O agendamento deve ser interno ao próprio aplicativo.
+  - Adicionar testes para:
+    - atualização diária programada;
+    - múltiplas fontes;
+    - fallback de fonte;
+    - deduplicação por NORAD ID;
+    - persistência de satélite ignorado/inativo;
+    - TLE atualizado sem alterar preferência operacional do usuário;
+    - falha de uma fonte com sucesso da fonte secundária;
+    - satélite com APRS ativo versus APRS temporariamente desativado.
+
 - **Satélites / ISS — filtrar catálogo para exibir somente satélites realmente compatíveis com APRS**
   - Corrigir a lista atual da aba **Satélites / ISS**, que está incluindo satélites packet/AX.25 que **não operam APRS**.
   - Exemplo observado: **Colibri-S (NORAD 61746)** aparece na lista apesar de não possuir operação APRS.
