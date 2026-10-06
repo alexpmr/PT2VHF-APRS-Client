@@ -169,7 +169,8 @@
       '<strong>'+esc(tr('Estado operacional','Operational state','Estado operativo','État opérationnel'))+'</strong><span>'+esc(m.operational_state||'monitor')+'</span>'+
       '<strong>'+esc(tr('Modo','Mode','Modo','Mode'))+'</strong><span>'+esc(m.mode||m.protocol||'—')+'</span>'+
       '<strong>TLE</strong><span class="'+(age!==null&&age>7?'satellite-tle-stale':'')+'">'+esc(epoch?fmtDate(epoch)+' · '+age+' d':'—')+'</span>'+
-      '<strong>'+esc(tr('Fonte','Source','Fuente','Source'))+'</strong><span>'+esc(m.source||state.lastCatalogMeta?.tle_source||'—')+'</span>'+
+      '<strong>'+esc(tr('Fonte TLE','TLE source','Fuente TLE','Source TLE'))+'</strong><span>'+esc(m.tle_source||state.lastCatalogMeta?.tle_source||'—')+'</span>'+
+      '<strong>'+esc(tr('Fonte do catálogo','Catalog source','Fuente del catálogo','Source du catalogue'))+'</strong><span>'+esc(m.source||state.lastCatalogMeta?.catalog_source||'—')+'</span>'+
       '</div>'+
       '<div class="satellite-service-controls"><strong>'+esc(tr('Serviços monitorados','Monitored services','Servicios monitorizados','Services surveillés'))+'</strong>'+
       ['aprs','sstv','telemetry','voice','packet'].map(key=>'<label><input type="checkbox" data-satellite-service="'+key+'" '+((m.service_states?.[key]??true)?'checked':'')+'><span>'+esc({aprs:'APRS',sstv:'SSTV',telemetry:'Telemetria',voice:'Voz/FM',packet:'Packet/AX.25'}[key])+'</span></label>').join('')+
