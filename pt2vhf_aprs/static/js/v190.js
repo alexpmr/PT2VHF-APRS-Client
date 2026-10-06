@@ -306,23 +306,28 @@
       const payload={};
       $('[data-v190-alert]',card).forEach(i=>payload[i.dataset.v190Alert]=i.checked);
       payload.disappear_minutes=Number($('#v190DisappearMinutes',card)?.value||60);
-      await json('/api/v190/alerts/settings',{method:'POST',body:JSON.stringify(payload)});
       window.__pt2vhfV190AlertSettings={...payload};
-      if(showNotice) notify(tr('Alertas salvos.','Alerts saved.','Alertas guardadas.','Alertes enregistrées.'));
+      window.__pt2vhfV190AlertSettingsDirty=true;
+      try{
+        const saved=await json('/api/v190/alerts/settings',{method:'POST',body:JSON.stringify(payload)});
+        window.__pt2vhfV190AlertSettings={...(saved.settings||payload)};
+        window.__pt2vhfV190AlertSettingsDirty=false;
+        if(showNotice) notify(tr('Alertas salvos.','Alerts saved.','Alertas guardadas.','Alertes enregistrées.'));
+      }catch(e){
+        window.__pt2vhfV190AlertSettingsDirty=true;
+        throw e;
+      }
     };
-    let alertSaveTimer=null;
     json('/api/v190/alerts/settings').then(settings=>{
       window.__pt2vhfV190AlertSettings={...settings};
+      window.__pt2vhfV190AlertSettingsDirty=false;
       $('#v190Alerts',card).innerHTML=defs.map(([k,l])=>'<label class="check-field"><input type="checkbox" data-v190-alert="'+k+'" '+(settings[k]?'checked':'')+'><span>'+esc(l)+'</span></label>').join('')+'<label class="field"><span>'+tr('Considerar desaparecida após','Consider disappeared after','Considerar desaparecida después de','Considérer disparue après')+'</span><input id="v190DisappearMinutes" type="number" min="5" max="1440" value="'+esc(settings.disappear_minutes||60)+'"></label>';
-      const autoSave=()=>{
-        clearTimeout(alertSaveTimer);
-        alertSaveTimer=setTimeout(()=>saveAlertSettings(false).catch(()=>{}),250);
-      };
       $('[data-v190-alert]',card).forEach(i=>i.addEventListener('change',()=>{
         window.__pt2vhfV190AlertSettings={...(window.__pt2vhfV190AlertSettings||{}),[i.dataset.v190Alert]:i.checked};
-        autoSave();
+        window.__pt2vhfV190AlertSettingsDirty=true;
+        void saveAlertSettings(false).catch(()=>{});
       }));
-      $('#v190DisappearMinutes',card)?.addEventListener('change',autoSave);
+      $('#v190DisappearMinutes',card)?.addEventListener('change',()=>{window.__pt2vhfV190AlertSettingsDirty=true;void saveAlertSettings(false).catch(()=>{});});
     });
     $('#v190AlertsSave',card).onclick=()=>saveAlertSettings(true).catch(e=>notify(e.message));
   }
@@ -395,7 +400,10 @@
           json('/api/v190/alerts/settings'),
           json('/api/v190/alerts/state?since='+encodeURIComponent(last))
         ]);
-        const settings={...serverSettings,...(window.__pt2vhfV190AlertSettings||{})};
+        const settings=window.__pt2vhfV190AlertSettingsDirty
+          ? {...serverSettings,...(window.__pt2vhfV190AlertSettings||{})}
+          : {...serverSettings};
+        if(!window.__pt2vhfV190AlertSettingsDirty)window.__pt2vhfV190AlertSettings={...serverSettings};
         const activeRows=Array.isArray(state.active_stations)?state.active_stations:[];
         const activeMap=new Map(activeRows.map(st=>[String(st.callsign||'').toUpperCase(),st]).filter(([call])=>call));
 
