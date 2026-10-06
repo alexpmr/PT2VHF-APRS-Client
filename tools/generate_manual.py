@@ -373,6 +373,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "A Configuração é organizada em cartões/seções para Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados, começando diretamente pela primeira seção.",
         "Antes de conectar ao APRS-IS, preencha Indicativo, Latitude, Longitude e Altitude. Caso tente conectar sem esses dados, o programa leva o usuário à Configuração e destaca os campos pendentes.",
         "Conectar ao iniciar vem habilitado por padrão em novas instalações e fica na seção APRS-IS.",
+        "O botão Enviar Beacon na barra principal superior dispara manualmente o mesmo beacon disponível em Configuração, sem exigir troca de aba.",
         "Latitude, Longitude e Altitude são apresentadas em linhas independentes para manter a leitura e a edição dentro do cartão mesmo em DMS, janelas menores ou fontes ampliadas.",
         "Se algum campo for alterado e você tentar mudar de aba antes de salvar, o cliente oferece Salvar e sair, Descartar alterações ou Cancelar."
     ])
@@ -458,6 +459,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     section(story, st, "12. Estações e Log", [
         "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa. No popup da estação, Mostrar log abre a aba Log com o indicativo/SSID aplicado ao filtro.",
         "Estações favoritas usam estrela amarela, ficam fixadas no topo da lista de Estações e são priorizadas nas conversas e sugestões do campo Destino. A marcação persiste após reiniciar ou atualizar.",
+        "Uma estação comum que usa WIDE1-1/WIDE2-1 como path continua sendo tratada como estação, não como digipeater. O bloqueio de Mensagem/queries exige evidência real de infraestrutura ou identificação explícita.",
         "O Log APRS-IS mostra tráfego TNC2 RX/TX e é a principal ferramenta para diagnosticar conexão, autenticação e filtro. Na conexão inicial, a v1.4 encerra as tentativas após três ciclos sem sucesso e mostra o erro final ao usuário."
     ], [
         "verified no logresp confirma autenticação APRS-IS.",
