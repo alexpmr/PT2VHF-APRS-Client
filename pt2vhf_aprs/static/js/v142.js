@@ -192,6 +192,16 @@ function installCoverage() {
   $('#mapPeriodHours')?.addEventListener('change', () => {
     if (coverageState.enabled) void refreshCoverage(true);
   });
+  $('#mapViewSelectAllButton')?.addEventListener('click', () => {
+    coverageState.enabled = true;
+    localStorage.setItem('pt2vhf_rf_coverage_enabled', '1');
+    setTimeout(() => void refreshCoverage(true), 0);
+  });
+  $('#mapViewClearAllButton')?.addEventListener('click', () => {
+    coverageState.enabled = false;
+    localStorage.setItem('pt2vhf_rf_coverage_enabled', '0');
+    setTimeout(() => void refreshCoverage(true), 0);
+  });
   window.addEventListener('pt2vhf:main-map-ready', () => {
     attachCoverageLayer();
     if (coverageState.enabled) void refreshCoverage(true);
