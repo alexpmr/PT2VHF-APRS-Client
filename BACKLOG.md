@@ -279,6 +279,72 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — reorganizar a aba para priorizar operação e manter configurações minimizadas**
+  - Reorganizar a aba **Satélites / ISS** para que as informações operacionais principais ocupem a maior parte da tela.
+  - Prioridade visual da aba:
+    1. **Mapa orbital**;
+    2. **Estações recebidas pelos satélites / APRS**;
+    3. **Área de envio de mensagem APRS**;
+    4. informações compactas da passagem atual/próxima.
+  - Os demais blocos devem ficar **minimizados/recolhidos por padrão** dentro da própria aba, para não consumir espaço operacional.
+  - Deixar recolhidos por padrão:
+    - seleção/configuração de satélites;
+    - agenda de passagens;
+    - configuração de TLE/fontes;
+    - alertas/despertador;
+    - Beacon Satélite / curto;
+    - filtros avançados;
+    - demais blocos de configuração não essenciais durante a operação.
+  - Usar padrão de **accordion/details** ou cartões recolhíveis, mantendo apenas o cabeçalho/resumo quando minimizados.
+  - Persistir o estado expandido/recolhido por bloco, mas usar **recolhido como padrão inicial** para novos usuários.
+  - Permitir ação **Expandir tudo / Recolher tudo** opcionalmente, sem ocupar destaque permanente.
+  - Garantir que recolher um bloco não interrompa:
+    - atualização de dados;
+    - scheduler;
+    - alertas;
+    - mensagens;
+    - atualização de TLE;
+    - beacon automático já autorizado;
+    - contadores.
+  - **Próxima passagem:** reposicionar a indicação para o lado **esquerdo**, na mesma linha operacional de **Satélites / ISS**.
+  - A linha deve ficar visualmente semelhante a:
+    - **Satélites / ISS — ISS/RS0ISS — próxima passagem: 08:46:32**
+  - O contador deve continuar:
+    - grande;
+    - amarelo;
+    - formato **HH:MM:SS**;
+    - alinhado à esquerda;
+    - com nome/indicativo do satélite claramente identificado.
+  - Quando a passagem estiver ativa, mostrar algo como:
+    - **ISS/RS0ISS — EM PASSAGEM — LOS em 00:07:24**
+  - Se houver várias passagens elegíveis, mostrar o satélite correspondente ao próximo AOS.
+  - Se nenhum satélite elegível estiver disponível, mostrar estado neutro:
+    - **Nenhuma passagem APRS prevista**;
+    - contador **--:--:--**.
+  - O mapa deve ganhar o maior espaço possível:
+    - reduzir margens/paddings desnecessários;
+    - evitar cards altos acima do mapa;
+    - manter controles de cobertura/trajetória de forma compacta;
+    - preservar responsividade.
+  - **Estações recebidas** e **Mensagem APRS** devem ficar sempre visíveis, sem necessidade de expandir cartões de configuração.
+  - Em desktop, preferir layout operacional:
+    - mapa ocupando a maior área;
+    - estações/mensagens em coluna lateral ou abaixo, conforme largura disponível.
+  - Em telas menores:
+    - manter mapa em primeiro lugar;
+    - estações recebidas logo depois;
+    - mensagens em seguida;
+    - configurações recolhidas ao final.
+  - Adicionar testes de regressão para:
+    - blocos de configuração recolhidos por padrão;
+    - mapa/estações/mensagens visíveis ao abrir a aba;
+    - contador alinhado à esquerda;
+    - nome/indicativo do satélite junto ao contador;
+    - passagem ativa mostrando LOS;
+    - expandir/recolher sem perder estado funcional;
+    - persistência do estado dos blocos;
+    - layout responsivo sem rolagem horizontal indevida.
+
 - **Satélites / ISS — satélite selecionado não aparece no mapa orbital (regressão v1.14.0)**
   - Na v1.14.0, mesmo com a **ISS selecionada/marcada** na lista de satélites, o mapa orbital permanece vazio e não desenha o satélite.
   - Tratar como **regressão funcional crítica da aba Satélites / ISS**.
