@@ -265,6 +265,94 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — operação APRS completa na própria aba e seleção de satélites compacta**
+  - Transformar a aba **Satélites / ISS** em uma área operacional completa, para que o usuário consiga trabalhar APRS via satélite sem precisar alternar para as abas **Estações** ou **Mensagens**.
+  - Adicionar uma seção **Estações recebidas via APRS** dentro da própria aba Satélites / ISS.
+  - A lista deve priorizar estações observadas no contexto de operação por satélite/APRS espacial, usando quando disponível:
+    - satélite associado;
+    - path APRS observado;
+    - horário da última recepção;
+    - origem RF/TNC ou APRS-IS;
+    - frequência/modo do satélite;
+    - quantidade de pacotes;
+    - última posição;
+    - última mensagem;
+    - distância;
+    - status de recepção recente.
+  - Sempre que tecnicamente identificável, distinguir:
+    - estação ouvida **diretamente via RF** pelo TNC;
+    - estação observada via **digipeater satelital**;
+    - estação vista apenas via **APRS-IS**.
+  - Permitir filtrar a lista por:
+    - satélite selecionado;
+    - satélite favorito;
+    - passagem atual;
+    - últimas 1 h / 6 h / 24 h;
+    - somente RF;
+    - somente estações com mensagens.
+  - Cada estação da lista deve ser clicável e abrir um painel compacto de detalhes na própria aba Satélites / ISS, sem navegar para a aba Estações.
+  - O painel de detalhes deve reutilizar, quando possível, os mesmos dados/componentes já existentes no perfil da estação, evitando duplicação de lógica.
+  - Adicionar um **campo de mensagem APRS** diretamente na aba Satélites / ISS:
+    - destinatário preenchido ao selecionar uma estação;
+    - campo de texto;
+    - botão **Enviar**;
+    - **Enter** envia;
+    - **Shift+Enter** insere quebra de linha, se o campo for multilinha;
+    - exibir estado da mensagem: pendente, enviada, ACK, REJ, timeout/sem confirmação;
+    - exibir histórico recente da conversa com a estação selecionada.
+  - O envio deve reutilizar exatamente o mesmo pipeline/validações da aba **Mensagens**, inclusive:
+    - message ID;
+    - ACK/REJ;
+    - retries;
+    - seleção de caminho/meio permitida;
+    - logs;
+    - regras de segurança do TNC/RF;
+    - persistência no banco.
+  - Não criar um segundo mecanismo de mensagens exclusivo para satélites; a aba Satélites deve ser apenas uma nova interface para o mesmo motor de mensagens.
+  - Quando o satélite/passagem estiver conhecido, exibir contexto operacional junto ao campo de mensagem:
+    - satélite;
+    - AOS/TCA/LOS;
+    - elevação atual;
+    - frequência;
+    - Doppler estimado;
+    - tempo restante da passagem.
+  - Opcionalmente, permitir filtrar o histórico de mensagens para mostrar apenas mensagens relacionadas ao satélite/passagem atual quando houver correlação confiável.
+  - Atualizar a lista de estações e mensagens em tempo real durante a passagem, sem polling excessivo.
+  - Exibir indicador discreto quando novas estações forem recebidas durante a passagem.
+
+  - **Refazer o bloco de seleção de satélites**, pois a seleção é uma configuração de baixa frequência e atualmente ocupa espaço demais.
+  - Tornar a seleção **compacta e recolhível** por padrão.
+  - Sugestão de UX:
+    - cabeçalho compacto **Satélites selecionados**;
+    - resumo, por exemplo: **3 selecionados · 2 favoritos**;
+    - botão/chevron **Expandir**;
+    - ao expandir, mostrar a lista completa, filtros, favoritos, estado operacional e **Marcar tudo / Desmarcar tudo**;
+    - ao recolher, ocupar apenas uma linha/pequeno cartão.
+  - Persistir o estado expandido/recolhido, mas usar **recolhido como padrão inicial** para novos usuários.
+  - No modo recolhido, mostrar somente informação operacionalmente útil:
+    - quantidade selecionada;
+    - quantidade de favoritos;
+    - próximo satélite/passagem elegível;
+    - ação **Editar seleção**.
+  - Reorganizar a aba para dar prioridade visual a:
+    1. contador/próxima passagem;
+    2. mapa orbital;
+    3. passagem ativa e dados operacionais;
+    4. estações recebidas;
+    5. mensagens;
+    6. agenda;
+    7. seleção/configuração de satélites.
+  - Garantir bom comportamento em telas menores, sem criar rolagem horizontal desnecessária.
+  - Adicionar testes de regressão para:
+    - seleção recolhida/expandida e persistência;
+    - estações recebidas aparecendo na aba Satélites;
+    - seleção de estação preenchendo o destinatário;
+    - envio via campo da aba Satélites usando o mesmo pipeline da aba Mensagens;
+    - ACK/REJ refletidos nas duas interfaces;
+    - histórico sincronizado entre Satélites e Mensagens;
+    - filtro por passagem/satélite/RF;
+    - atualização durante passagem ativa sem duplicação de estações/mensagens.
+
 - **Satélites / ISS — reposicionar contador regressivo e limitar às seleções/favoritos**
   - Mover o contador regressivo da posição atual para o **menu/barra inferior da área de Satélites / ISS**, no mesmo nível visual do controle/título **Satélites / ISS**.
   - O contador não deve mais ficar acoplado ao botão da aba superior.
