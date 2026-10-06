@@ -470,6 +470,13 @@ def register_v114_routes(app) -> None:
     def api_v114_get_beacon(norad_id: int):
         return jsonify(beacon_preview(norad_id))
 
+    @app.post("/api/v114/satellites/<int:norad_id>/beacon/preview")
+    def api_v114_preview_beacon(norad_id: int):
+        try:
+            return jsonify(beacon_preview(norad_id, request.get_json(silent=True) or {}))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
     @app.post("/api/v114/satellites/<int:norad_id>/beacon")
     def api_v114_save_beacon(norad_id: int):
         try:
