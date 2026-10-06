@@ -141,7 +141,7 @@ def test_v111_frontend_contains_operational_features():
     js = (root / "pt2vhf_aprs" / "static" / "js" / "v111.js").read_text(encoding="utf-8")
     css = (root / "pt2vhf_aprs" / "static" / "css" / "v111.css").read_text(encoding="utf-8")
     for needle in (
-        "v111Bell", "v111TncSelfTest", "v111DbHealth",
+        "v111NotifyOpen", "v111TncSelfTest", "v111DbHealth",
         "/api/v111/station/", "Ouvido por", "Copiar diagnóstico",
     ):
         assert needle in js
