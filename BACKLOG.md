@@ -248,6 +248,43 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — filtrar catálogo para exibir somente satélites realmente compatíveis com APRS**
+  - Corrigir a lista atual da aba **Satélites / ISS**, que está incluindo satélites packet/AX.25 que **não operam APRS**.
+  - Exemplo observado: **Colibri-S (NORAD 61746)** aparece na lista apesar de não possuir operação APRS.
+  - A lista padrão deve exibir **somente satélites com suporte APRS confirmado**, incluindo a ISS quando o sistema APRS/packet correspondente estiver operacional/conhecido.
+  - Não considerar como APRS apenas porque o transmissor possui:
+    - AX.25;
+    - packet genérico;
+    - GFSK;
+    - telemetria packet;
+    - beacon digital;
+    - digipeater não APRS.
+  - Separar claramente os conceitos:
+    - **APRS confirmado**;
+    - **packet/AX.25 não APRS**;
+    - **desconhecido / não confirmado**.
+  - Por padrão, a aba deve carregar apenas **APRS confirmado**.
+  - Adicionar opção/filtro avançado para o usuário poder mostrar, se desejar:
+    - satélites packet/AX.25 não APRS;
+    - todos os satélites digitais compatíveis com o catálogo.
+  - A classificação deve usar metadados confiáveis por satélite/transmissor e não apenas busca textual genérica por “AX.25”, “packet” ou “GFSK”.
+  - Sempre que possível, manter uma whitelist/metadata explícita dos satélites APRS conhecidos e validar essa lista contra fontes confiáveis.
+  - Exibir no painel de detalhes um campo **Tipo de operação**, por exemplo:
+    - APRS;
+    - Packet/AX.25;
+    - Telemetria;
+    - Outro digital.
+  - Satélites sem APRS confirmado não devem:
+    - entrar no contador da próxima passagem APRS;
+    - disparar o despertador de aproximação APRS;
+    - aparecer como APRS na agenda;
+    - ser selecionados automaticamente pelos filtros APRS.
+  - Adicionar testes de regressão garantindo que:
+    - Colibri-S não seja classificado como APRS;
+    - ISS apareça como APRS quando cadastrada com suporte correspondente;
+    - satélite AX.25 genérico não seja promovido automaticamente para APRS;
+    - filtro “somente APRS” funcione corretamente.
+
 - **Satélites / ISS — seleção rápida de satélites**
   - Na área de seleção/lista de satélites da aba **Satélites / ISS**, adicionar ações rápidas:
     - **Marcar tudo**;
