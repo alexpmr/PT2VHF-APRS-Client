@@ -1797,6 +1797,44 @@ class TNCService:
         self._tx_queue.put((int(priority), self._tx_seq, bytes(frame), reason, raw_tnc2))
         return True
 
+    def queue_satellite_beacon(self, info: str, path: str = "", satellite: str = "") -> dict[str, Any]:
+        """Enfileira beacon APRS curto para RF usando o mesmo pipeline/guardas do TNC."""
+        status = self.status()
+        cfg = get_tnc_config()
+        if not status.get("connected"):
+            raise ConnectionError("TNC/RF desconectado.")
+        if self._tx_paused or status.get("tx_paused"):
+            raise PermissionError("TX RF está pausado.")
+        if not cfg.get("auto_tx_enabled") or not cfg.get("tx_confirmed"):
+            raise PermissionError("TX RF não está habilitado e confirmado em TNC / RF.")
+        if str(cfg.get("serial_protocol") or "kiss") == "terminal":
+            raise PermissionError("Beacon RF automático não é suportado em protocolo serial terminal/PKT.")
+
+        source = self._own_call()
+        if not source:
+            raise ValueError("Configure o indicativo/SSID local antes de transmitir.")
+        path_items = normalize_message_rf_path(path)
+        clean_info = str(info or "").replace("\r", "").replace("\n", "").strip()
+        if not clean_info:
+            raise ValueError("Payload do beacon satélite vazio.")
+        frame = encode_ax25(source, APP_TOCALL, clean_info, path_items)
+        header = f"{source}>{APP_TOCALL}" + (("," + ",".join(path_items)) if path_items else "")
+        raw_tnc2 = f"{header}:{clean_info}"
+        reason = f"Beacon satélite {str(satellite or '').strip()}".strip()
+        if not self._enqueue(frame, reason, raw_tnc2=raw_tnc2, priority=5):
+            raise PermissionError("Beacon satélite bloqueado pelas regras de transmissão do TNC.")
+        record_decision(
+            "satellite_beacon", "queued",
+            f"{reason}; path {','.join(path_items) if path_items else 'direto'}.",
+            source=source, destination=APP_TOCALL, raw_tnc2=raw_tnc2,
+        )
+        return {
+            "queued": True,
+            "source": source,
+            "path": ",".join(path_items),
+            "raw": raw_tnc2,
+        }
+
     def queue_local_message(self, destination: str, text: str, msg_id: str, path: str = "") -> dict[str, Any]:
         """Enfileira uma mensagem APRS originada localmente para transmissão RF."""
         status = self.status()

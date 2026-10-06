@@ -113,10 +113,30 @@
     const up=fmtFreq(meta.uplink_hz),down=fmtFreq(meta.downlink_hz);
     return up===down?down:(tr('↑','↑','↑','↑')+up+' / '+tr('↓','↓','↓','↓')+down);
   }
+  function visibleCatalogRows(){
+    const p=layerPrefs();
+    const query=String($('#satelliteQuickSearch')?.value||'').trim().toUpperCase().replace(/\s+/g,' ');
+    return state.catalog.filter(meta=>{
+      const id=Number(meta.norad_id);
+      if(p.favoritesOnly&&!state.favorites.has(id))return false;
+      if(!query)return true;
+      const hay=[meta.name,meta.callsign,meta.designation,meta.norad_id].map(v=>String(v??'').toUpperCase().replace(/\s+/g,' ')).join(' ');
+      return hay.includes(query);
+    });
+  }
+
+  function updateSelectionSummary(){
+    const host=$('#satelliteSelectionSummaryText');if(!host)return;
+    const selected=state.selected.size;
+    const favorites=state.favorites.size;
+    const visible=visibleCatalogRows().length;
+    host.textContent=selected+' selecionados · '+favorites+' favoritos · '+visible+' visíveis';
+  }
+
   function renderCatalog(){
     const host=$('#satelliteCatalogList');if(!host)return;
     const p=layerPrefs();
-    const rows=state.catalog.filter(x=>!p.favoritesOnly||state.favorites.has(Number(x.norad_id)));
+    const rows=visibleCatalogRows();
     host.innerHTML=rows.length?rows.map(meta=>{
       const id=Number(meta.norad_id),active=state.selected.has(id),fav=state.favorites.has(id);
       const operational=String(meta.operational_state||'monitor');
@@ -131,19 +151,20 @@
       const id=Number(row.dataset.norad);
       $('.satellite-select',row)?.addEventListener('change',ev=>{
         ev.target.checked?state.selected.add(id):state.selected.delete(id);saveSelected(state.selected);
-        renderCatalog();void refreshOrbitalMaps();
+        renderCatalog();updateSelectionSummary();void refreshOrbitalMaps();
+        window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
       });
-      $('.satellite-open',row)?.addEventListener('click',()=>{state.activeNorad=id;state.selected.add(id);saveSelected(state.selected);renderCatalog();renderDetail(id);void drawSatelliteTrack(id,true);});
+      $('.satellite-open',row)?.addEventListener('click',()=>{state.activeNorad=id;state.selected.add(id);saveSelected(state.selected);renderCatalog();updateSelectionSummary();renderDetail(id);void drawSatelliteTrack(id,true);window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));});
       $('.satellite-operational',row)?.addEventListener('change',async ev=>{
         ev.stopPropagation();
         try{
           const saved=await req('/api/v113/satellites/'+encodeURIComponent(id)+'/operation',{method:'POST',body:JSON.stringify({state:ev.target.value})});
           const meta=satelliteMeta(id);meta.operational_state=saved.state;meta.operational=saved.state==='monitor';
-          await loadPasses();renderDetail(id);
+          await loadPasses();renderDetail(id);window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
         }catch(e){console.warn(e);}
       });
       $('.satellite-favorite',row)?.addEventListener('click',()=>{
-        state.favorites.has(id)?state.favorites.delete(id):state.favorites.add(id);saveFavorites(state.favorites);renderCatalog();renderPasses();
+        state.favorites.has(id)?state.favorites.delete(id):state.favorites.add(id);saveFavorites(state.favorites);renderCatalog();updateSelectionSummary();renderPasses();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-favorites-changed'));
       });
     });
   }
@@ -177,7 +198,7 @@
       '</div>';
     $('[data-satellite-service]',host).forEach(input=>input.addEventListener('change',async()=>{
       const services={...(m.service_states||{})};services[input.dataset.satelliteService]=input.checked;
-      try{const saved=await req('/api/v113/satellites/'+encodeURIComponent(norad)+'/operation',{method:'POST',body:JSON.stringify({state:m.operational_state||'monitor',services})});m.service_states=saved.services;await loadPasses();}catch(e){console.warn(e);}
+      try{const saved=await req('/api/v113/satellites/'+encodeURIComponent(norad)+'/operation',{method:'POST',body:JSON.stringify({state:m.operational_state||'monitor',services})});m.service_states=saved.services;await loadPasses();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));}catch(e){console.warn(e);}
     }));
   }
 
@@ -307,7 +328,7 @@
       state.catalog=data.catalog||[];state.lastCatalogMeta=data;
       if(!state.catalog.some(x=>Number(x.norad_id)===state.activeNorad))state.activeNorad=Number(state.catalog[0]?.norad_id||25544);
       if(host){host.textContent=catalogStatusText(data);host.classList.toggle('error',!!(data.errors||[]).length);}
-      renderCatalog();await loadStatus();await loadPasses();
+      renderCatalog();updateSelectionSummary();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-catalog-loaded',{detail:{catalog:state.catalog}}));await loadStatus();await loadPasses();
     }catch(e){if(host){host.textContent=e.message;host.classList.add('error');}}
   }
 
@@ -382,19 +403,15 @@
     $('#satellitePassRefresh')?.addEventListener('click',loadPasses);
     $('#satelliteRefreshButton')?.addEventListener('click',manualUpdate);
     $('#satelliteSelectAll')?.addEventListener('click',()=>{
-      const p=layerPrefs();
-      for(const meta of state.catalog){
-        if(!p.favoritesOnly||state.favorites.has(Number(meta.norad_id)))state.selected.add(Number(meta.norad_id));
-      }
-      saveSelected(state.selected);renderCatalog();void refreshOrbitalMaps();
+      for(const meta of visibleCatalogRows())state.selected.add(Number(meta.norad_id));
+      saveSelected(state.selected);renderCatalog();updateSelectionSummary();void refreshOrbitalMaps();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
     });
     $('#satelliteClearAll')?.addEventListener('click',()=>{
-      const p=layerPrefs();
-      for(const meta of state.catalog){
-        if(!p.favoritesOnly||state.favorites.has(Number(meta.norad_id)))state.selected.delete(Number(meta.norad_id));
-      }
-      saveSelected(state.selected);renderCatalog();void refreshOrbitalMaps();
+      for(const meta of visibleCatalogRows())state.selected.delete(Number(meta.norad_id));
+      saveSelected(state.selected);renderCatalog();updateSelectionSummary();void refreshOrbitalMaps();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
     });
+    $('#satelliteQuickSearch')?.addEventListener('input',()=>{renderCatalog();updateSelectionSummary();});
+    $('#satelliteQuickSearchClear')?.addEventListener('click',()=>{const q=$('#satelliteQuickSearch');if(q){q.value='';q.focus();}renderCatalog();updateSelectionSummary();});
   }
 
   function installLayoutReset(){

@@ -49,8 +49,9 @@
     const tab=$('#tab-tnc'); if(!tab||$('#v111TncOps'))return;
     const host=document.createElement('section');host.id='v111TncOps';host.className='tnc-card v111-tnc-ops';
     host.innerHTML='<div class="v111-section-head"><div><h3>'+tr('Saúde operacional do TNC','TNC operational health','Salud operativa del TNC','Santé opérationnelle du TNC')+'</h3><p id="v111TncHealthSummary">—</p></div><div><button id="v111TncCopy" class="btn secondary">'+tr('Copiar diagnóstico','Copy diagnostic','Copiar diagnóstico','Copier diagnostic')+'</button> <button id="v111TncSelfTest" class="btn primary">'+tr('Executar teste completo','Run full test','Ejecutar prueba completa','Exécuter test complet')+'</button></div></div><div id="v111TncCounters" class="v111-counter-grid"></div><details><summary>'+tr('Timeline de saúde','Health timeline','Timeline de salud','Chronologie de santé')+'</summary><div id="v111TncTimeline" class="v111-timeline"></div></details><pre id="v111TncSelfTestResult" class="hidden"></pre>';
-    const first=tab.querySelector('.tnc-status-grid')?.parentElement||tab.firstElementChild;
-    (first?.parentNode||tab).insertBefore(host,first?.nextSibling||null);
+    const reference=tab.querySelector(':scope > .tnc-card, :scope > .tnc-status-grid')||tab.firstElementChild;
+    tab.insertBefore(host,reference?.nextSibling||null);
+    if(host.parentElement!==tab)tab.appendChild(host);
     let lastHealth=null;
     const refresh=async()=>{
       try{

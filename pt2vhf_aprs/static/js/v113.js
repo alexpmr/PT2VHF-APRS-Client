@@ -48,12 +48,20 @@
     if(name)name.textContent=sat;
     checkCoverageAlarm(remaining,active);
   }
+  function countdownEligibleNorads(){
+    const ids=new Set();
+    try{for(const x of JSON.parse(localStorage.getItem('pt2vhf_v112_satellite_selected')||'[]'))ids.add(Number(x));}catch(_){}
+    try{for(const x of JSON.parse(localStorage.getItem('pt2vhf_v112_satellite_favorites')||'[]'))ids.add(Number(x));}catch(_){}
+    return [...ids].filter(Number.isFinite);
+  }
   async function refreshNextPass(force=false){
     if(!force&&Date.now()-lastFetch<120000)return;
     lastFetch=Date.now();
     try{
       const p=alarmPrefs();
-      const data=await req('/api/v113/satellites/next-pass?min_elevation='+encodeURIComponent(p.minElevation||0));
+      const norads=countdownEligibleNorads();
+      if(!norads.length){nextPass=null;renderCountdown();return;}
+      const data=await req('/api/v114/satellites/next-pass?min_elevation='+encodeURIComponent(p.minElevation||0)+'&norads='+encodeURIComponent(norads.join(',')));
       nextPass=data.pass||null;renderCountdown();
     }catch(_){nextPass=null;renderCountdown();}
   }
@@ -154,6 +162,9 @@
     countdownTimer=setInterval(renderCountdown,1000);
     refreshTimer=setInterval(()=>void refreshNextPass(true),120000);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshNextPass(true);});
+    window.addEventListener('pt2vhf:satellite-selection-changed',()=>void refreshNextPass(true));
+    window.addEventListener('pt2vhf:satellite-favorites-changed',()=>void refreshNextPass(true));
+    window.addEventListener('pt2vhf:satellite-catalog-loaded',()=>void refreshNextPass(true));
     document.addEventListener('click',e=>{if(e.target.closest?.('[data-tab="satellites"]')){void refreshNextPass(true);void loadSources();}});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();

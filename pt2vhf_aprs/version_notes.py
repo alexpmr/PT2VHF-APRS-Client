@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.0": {
+        "title": "Operação APRS por satélite em uma única aba",
+        "items": [
+            "A aba Satélites / ISS ganha estações recebidas, detalhes e envio de mensagens APRS sem sair da tela.",
+            "Mensagens reutilizam o mesmo motor da aba Mensagens, com histórico, ACK/REJ, rota e path.",
+            "Seleção de satélites fica compacta/recolhível e ganha pesquisa rápida por nome, indicativo ou NORAD.",
+            "Contador HH:MM:SS é movido para a barra operacional, fica maior e considera apenas selecionados ou favoritos.",
+            "Novo perfil Beacon Satélite / curto com path próprio, comentário enxuto, intervalo, elevação mínima, cobertura e parada no LOS.",
+            "Beacon satelital exige consentimento explícito e reutiliza todas as proteções do TNC/RF.",
+            "Saúde operacional do TNC fica restrita à aba TNC / RF.",
+        ],
+    },
     "1.13.0": {
         "title": "Satélites APRS refinados e diagnóstico TNC por protocolo",
         "items": [
