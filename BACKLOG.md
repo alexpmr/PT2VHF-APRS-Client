@@ -265,6 +265,80 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — perfil de beacon APRS curto e otimizado para operação via satélite**
+  - Adicionar um **perfil de beacon específico para satélite**, voltado para janelas curtas de passagem e canais compartilhados.
+  - O objetivo é reduzir airtime e aumentar a eficiência da operação APRS espacial, usando:
+    - payload mais curto;
+    - comentário enxuto;
+    - path adequado ao satélite;
+    - intervalo coerente com a duração da passagem;
+    - conteúdo operacionalmente útil e sem campos desnecessários.
+  - Criar opção explícita, por exemplo:
+    - **Beacon normal**;
+    - **Beacon Satélite / curto**.
+  - O perfil satélite deve ser configurável independentemente do beacon terrestre.
+  - Permitir definir um **path específico por satélite/serviço**, sem reutilizar automaticamente paths terrestres como `WIDE1-1,WIDE2-1`.
+  - Nunca assumir que todos os satélites usam o mesmo path.
+  - Suportar presets por satélite quando houver convenção operacional conhecida e confiável.
+  - Exibir claramente o path que será transmitido antes de habilitar TX.
+  - Prever campos específicos:
+    - **Path satélite**;
+    - **Comentário curto**;
+    - **Intervalo durante passagem**;
+    - **Transmitir somente durante cobertura/passagem ativa**;
+    - **Parar automaticamente no LOS**.
+  - O conteúdo do beacon deve priorizar somente o necessário, por exemplo:
+    - indicativo/posição APRS;
+    - identificação curta da operação;
+    - comentário opcional curto;
+    - sem textos longos ou telemetria não essencial.
+  - Permitir modelos curtos de comentário, por exemplo:
+    - `SAT`;
+    - `ISS`;
+    - `SAT APRS`;
+    - texto personalizado dentro de limite configurado.
+  - Mostrar estimativa do **tamanho do frame/payload** antes do envio.
+  - Alertar quando o comentário/path tornar o pacote excessivamente longo para uma operação satelital eficiente.
+  - Integrar o perfil com a aba **Satélites / ISS**:
+    - ao selecionar um satélite/passagem, carregar o preset correspondente;
+    - mostrar frequência/modo/path;
+    - permitir ativar/desativar o beacon satélite;
+    - mostrar tempo até a próxima transmissão;
+    - mostrar quantidade de beacons enviados durante a passagem.
+  - Quando **Transmitir somente durante cobertura** estiver habilitado:
+    - iniciar somente após AOS/critério de elevação configurado;
+    - interromper no LOS;
+    - não continuar transmitindo após a passagem.
+  - Permitir configurar uma **elevação mínima para beacon**, evitando transmitir logo no horizonte se o usuário preferir.
+  - Prever um **cooldown/limite de frequência de beacon** para evitar excesso de tráfego.
+  - Não habilitar TX satélite automaticamente apenas por entrar em cobertura; exigir configuração/consentimento explícito do usuário para transmissão automática.
+  - Reutilizar o mesmo pipeline TNC/RF e as mesmas regras de segurança do cliente:
+    - bloqueio de TX quando protocolo/transporte não suportar;
+    - confirmação de TX automático;
+    - logs;
+    - contadores;
+    - diagnóstico;
+    - parada de emergência.
+  - Registrar no histórico cada beacon satélite com:
+    - satélite;
+    - passagem;
+    - horário;
+    - frequência;
+    - path;
+    - payload;
+    - tamanho;
+    - resultado de TX.
+  - Adicionar testes para:
+    - perfil curto versus perfil terrestre;
+    - path satélite independente;
+    - início no AOS;
+    - parada no LOS;
+    - elevação mínima;
+    - limite/cooldown de beacon;
+    - frame excessivamente longo;
+    - bloqueio de TX sem consentimento;
+    - persistência dos presets por satélite.
+
 - **Satélites / ISS — operação APRS completa na própria aba e seleção de satélites compacta**
   - Transformar a aba **Satélites / ISS** em uma área operacional completa, para que o usuário consiga trabalhar APRS via satélite sem precisar alternar para as abas **Estações** ou **Mensagens**.
   - Adicionar uma seção **Estações recebidas via APRS** dentro da própria aba Satélites / ISS.
