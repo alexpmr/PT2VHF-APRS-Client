@@ -28,3 +28,8 @@
 .tnc-diagnostic-sample>div{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;margin-top:6px}
 .tnc-diagnostic-sample code{overflow-wrap:anywhere;white-space:pre-wrap}
 @media(max-width:800px){.satellite-source-row{grid-template-columns:auto 1fr}.satellite-source-row>*:nth-child(3),.satellite-source-row>*:nth-child(4){grid-column:auto}.satellite-tab-countdown{font-size:15px}.satellite-catalog-row{grid-template-columns:auto minmax(0,1fr) auto!important}.satellite-operational{grid-column:2/4;max-width:none}}
+
+.satellite-service-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px}
+.satellite-service-controls>strong{flex-basis:100%}
+.satellite-service-controls label{display:inline-flex;gap:5px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
+.satellite-tab-next-name{font-size:10px;font-weight:700;max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.82}
