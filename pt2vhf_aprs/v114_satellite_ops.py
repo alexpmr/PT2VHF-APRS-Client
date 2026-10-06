@@ -307,6 +307,7 @@ def satellite_stations(
     hours: int = 6,
     rf_only: bool = False,
     messages_only: bool = False,
+    context_only: bool = False,
     limit: int = 200,
 ) -> list[dict[str, Any]]:
     hours = max(1, min(int(hours), 24 * 30))
@@ -385,6 +386,8 @@ def satellite_stations(
     meta = {int(x.get("norad_id") or 0): x for x in sat113.enriched_catalog("all")}
     result = []
     for call, entry in aggregated.items():
+        if context_only and norads and not entry["context_match"]:
+            continue
         if rf_only and not entry["rf_packet_count"]:
             continue
         if messages_only and not msg_count.get(call):
@@ -462,6 +465,7 @@ def register_v114_routes(app) -> None:
                     hours=int(request.args.get("hours", 6)),
                     rf_only=str(request.args.get("rf_only", "")).lower() in {"1", "true", "yes"},
                     messages_only=str(request.args.get("messages_only", "")).lower() in {"1", "true", "yes"},
+                    context_only=str(request.args.get("context_only", "")).lower() in {"1", "true", "yes"},
                     limit=int(request.args.get("limit", 200)),
                 )
             })
