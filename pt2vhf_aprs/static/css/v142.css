@@ -1,0 +1,71 @@
+/* v1.14.2 — Cobertura RF em heatmap + AIS amigável */
+.v142-rf-heatmap-canvas{
+  position:absolute;
+  left:0;
+  top:0;
+  pointer-events:none!important;
+  mix-blend-mode:screen;
+  opacity:.92;
+}
+.v142-rf-coverage-node .map-view-label{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+.v142-rf-coverage-node .map-view-label small{
+  color:var(--muted);
+  font-size:9px;
+  font-weight:400;
+}
+.v142-ais-enrichment{
+  margin-top:9px;
+  padding-top:8px;
+  border-top:1px solid var(--line);
+}
+.v142-ais-grid{
+  display:grid;
+  grid-template-columns:minmax(105px,auto) minmax(120px,1fr);
+  gap:5px 10px;
+  align-items:start;
+  font-size:11px;
+}
+.v142-ais-grid strong{
+  color:var(--muted);
+  font-weight:700;
+}
+.v142-ais-grid span{
+  color:var(--text);
+  word-break:break-word;
+}
+.v142-ais-source{
+  display:block;
+  margin-top:6px;
+  color:var(--muted);
+  font-size:9px;
+}
+.v142-ais-illustration{
+  margin-top:8px;
+  padding:7px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:rgba(127,127,127,.06);
+  text-align:center;
+}
+.v142-ais-illustration svg{
+  display:block;
+  width:100%;
+  max-width:220px;
+  height:90px;
+  margin:0 auto 4px;
+  fill:rgba(59,166,255,.24);
+  stroke:var(--accent);
+  stroke-width:2;
+}
+.v142-ais-illustration small{
+  color:var(--muted);
+  font-size:9px;
+}
+html[data-theme="light"] .v142-rf-heatmap-canvas{
+  mix-blend-mode:multiply;
+  opacity:.78;
+}
