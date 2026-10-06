@@ -203,9 +203,10 @@ def send_satellite_beacon(norad_id: int, *, manual: bool = False) -> dict[str, A
 
     status = _current_satellite_status(norad_id)
     elevation = float((status or {}).get("elevation_deg") or -90.0)
-    if profile["coverage_only"] and elevation < float(profile["min_elevation_deg"]):
+    threshold = float(profile["min_elevation_deg"]) if profile["coverage_only"] else (0.0 if profile["stop_at_los"] else -90.0)
+    if elevation < threshold:
         raise PermissionError(
-            f"Satélite fora do critério de cobertura: elevação {elevation:.1f}°, mínimo {profile['min_elevation_deg']:.1f}°."
+            f"Satélite fora do critério de transmissão: elevação {elevation:.1f}°, mínimo {threshold:.1f}°."
         )
     preview = beacon_preview(norad_id)
     try:
@@ -420,7 +421,8 @@ def _scheduler_loop() -> None:
                         continue
                     status = _current_satellite_status(nid)
                     elevation = float((status or {}).get("elevation_deg") or -90)
-                    if profile["coverage_only"] and elevation < profile["min_elevation_deg"]:
+                    threshold = profile["min_elevation_deg"] if profile["coverage_only"] else (0.0 if profile["stop_at_los"] else -90.0)
+                    if elevation < threshold:
                         continue
                     send_satellite_beacon(nid, manual=False)
                 except Exception:
