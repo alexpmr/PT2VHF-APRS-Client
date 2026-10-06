@@ -170,7 +170,14 @@
       '<strong>'+esc(tr('Modo','Mode','Modo','Mode'))+'</strong><span>'+esc(m.mode||m.protocol||'—')+'</span>'+
       '<strong>TLE</strong><span class="'+(age!==null&&age>7?'satellite-tle-stale':'')+'">'+esc(epoch?fmtDate(epoch)+' · '+age+' d':'—')+'</span>'+
       '<strong>'+esc(tr('Fonte','Source','Fuente','Source'))+'</strong><span>'+esc(m.source||state.lastCatalogMeta?.tle_source||'—')+'</span>'+
+      '</div>'+
+      '<div class="satellite-service-controls"><strong>'+esc(tr('Serviços monitorados','Monitored services','Servicios monitorizados','Services surveillés'))+'</strong>'+
+      ['aprs','sstv','telemetry','voice','packet'].map(key=>'<label><input type="checkbox" data-satellite-service="'+key+'" '+((m.service_states?.[key]??true)?'checked':'')+'><span>'+esc({aprs:'APRS',sstv:'SSTV',telemetry:'Telemetria',voice:'Voz/FM',packet:'Packet/AX.25'}[key])+'</span></label>').join('')+
       '</div>';
+    $('[data-satellite-service]',host).forEach(input=>input.addEventListener('change',async()=>{
+      const services={...(m.service_states||{})};services[input.dataset.satelliteService]=input.checked;
+      try{const saved=await req('/api/v113/satellites/'+encodeURIComponent(norad)+'/operation',{method:'POST',body:JSON.stringify({state:m.operational_state||'monitor',services})});m.service_states=saved.services;await loadPasses();}catch(e){console.warn(e);}
+    }));
   }
 
   function renderLiveStrip(norad){
