@@ -248,6 +248,21 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — seleção rápida de satélites**
+  - Na área de seleção/lista de satélites da aba **Satélites / ISS**, adicionar ações rápidas:
+    - **Marcar tudo**;
+    - **Desmarcar tudo**.
+  - As ações devem afetar apenas a seleção de satélites exibidos/monitorados, sem alterar favoritos.
+  - Respeitar o filtro atualmente aplicado:
+    - com filtro ativo, **Marcar tudo** marca apenas os satélites visíveis no filtro;
+    - **Desmarcar tudo** desmarca apenas os satélites visíveis no filtro, preservando seleções fora dele.
+  - Atualizar imediatamente:
+    - mapa orbital dedicado;
+    - camada de satélites no mapa principal, quando habilitada;
+    - contador/agenda dependentes da seleção, quando aplicável.
+  - Manter persistência da seleção entre reinicializações.
+  - Adicionar testes de regressão para seleção total, limpeza total e comportamento com filtros ativos.
+
 - **Satélites / ISS — contador regressivo para próxima passagem APRS e despertador de aproximação**
   - Na aba **Satélites / ISS**, ao lado do título/nome da aba, exibir um contador regressivo para a **próxima passagem de satélite que opere APRS**.
   - Formato obrigatório: **HH:MM:SS**.
