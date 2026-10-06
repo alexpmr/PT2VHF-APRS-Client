@@ -37,6 +37,7 @@ from .v110_features import register_v110_routes
 from .v111_features import register_v111_routes
 from .v112_satellites import register_v112_satellite_routes
 from .v113_satellites import register_v113_satellite_routes
+from .v114_satellite_ops import register_v114_routes
 
 
 GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
@@ -288,6 +289,7 @@ def create_app() -> Flask:
     register_v111_routes(app)
     register_v112_satellite_routes(app)
     register_v113_satellite_routes(app)
+    register_v114_routes(app)
     diag.configure(db.DB_PATH.parent)
     scheduled_message_service.start()
     diag.log_event("flask_app_created", version=__version__)
