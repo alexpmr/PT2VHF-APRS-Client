@@ -1454,7 +1454,10 @@ class TNCService:
             elif int(payload.get("kiss_frames_rx") or 0) > 0 or int(payload.get("invalid_frames_rx") or 0) > 0:
                 payload["rx_state"] = "invalid"
             elif int(payload.get("transport_bytes_rx") or 0) > 0:
-                payload["rx_state"] = "terminal_bytes_active" if str(cfg.get("serial_protocol") or "") == "terminal" else "bytes_without_kiss"
+                if str(cfg.get("serial_protocol") or "") == "terminal":
+                    payload["rx_state"] = "terminal_bytes_active"
+                else:
+                    payload["rx_state"] = "bytes_without_kiss"
             else:
                 payload["rx_state"] = "waiting"
             payload["tx_state"] = "delivered" if tx_this_session else "waiting"
