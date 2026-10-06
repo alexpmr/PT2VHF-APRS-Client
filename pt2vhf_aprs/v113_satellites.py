@@ -254,13 +254,22 @@ def _download_source(source: dict[str, Any]) -> tuple[dict[int, dict[str, Any]],
 
 def refresh_multisource(*, force: bool = True, reason: str = "manual") -> dict[str, Any]:
     with _refresh_lock:
-        # Preserve SatNOGS catalog discovery from v1.12, but replace/augment TLE
-        # with ordered source fallback below.
-        base = orbital.refresh_satellite_data(force=force)
+        # Discover the catalog independently from orbital-element sources so
+        # disabled TLE sources are never contacted implicitly.
+        current = orbital._load_cache()
+        try:
+            catalog = orbital._discover_satnogs_catalog()
+            catalog_error = ""
+        except Exception as exc:
+            catalog = current.get("catalog") if isinstance(current.get("catalog"), list) else list(orbital.FALLBACK_CATALOG)
+            catalog_error = f"SatNOGS: {exc}"
+        base = dict(current) if isinstance(current, dict) else {}
+        base["catalog"] = catalog
+        base["catalog_source"] = "SatNOGS DB + fallback ISS metadata"
         settings = get_satellite_settings()
         runtime = _source_runtime()
         merged: dict[int, dict[str, Any]] = {}
-        errors: list[str] = []
+        errors: list[str] = [catalog_error] if catalog_error else []
         for source in settings["sources"]:
             sid = str(source.get("id") or "")
             if not bool(source.get("enabled", True)):
@@ -281,7 +290,7 @@ def refresh_multisource(*, force: bool = True, reason: str = "manual") -> dict[s
                 errors.append(f"{source.get('label')}: {exc}")
 
         if not merged:
-            for key, value in (base.get("tles") or {}).items():
+            for key, value in (current.get("tles") or {}).items():
                 try:
                     merged[int(key)] = dict(value)
                 except Exception:
