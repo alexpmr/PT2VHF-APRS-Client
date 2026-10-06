@@ -279,6 +279,22 @@
 
 ## Pendências para próximas versões
 
+- **Barra superior — remover sino de notificações do lado direito**
+  - Remover o ícone/botão de **sino de notificações** exibido na barra superior, no lado direito.
+  - A remoção deve afetar apenas o atalho visual da barra superior.
+  - Manter o **Centro de notificações**, histórico e geração de notificações funcionando normalmente por seus demais acessos internos.
+  - Remover também:
+    - badge/contador de não lidas associado ao sino;
+    - tooltip/aria-label exclusivos do sino;
+    - espaço reservado/placeholder que possa deixar desalinhamento na barra.
+  - Reajustar o espaçamento dos elementos restantes da barra superior para não ficar um vazio no lado direito.
+  - Garantir que alertas importantes continuem aparecendo pelos mecanismos já existentes:
+    - popup;
+    - destaque de aba;
+    - Centro de notificações quando acessado pela interface correspondente;
+    - alertas sonoros quando configurados.
+  - Adicionar teste de regressão garantindo que o sino não seja renderizado na barra superior e que a infraestrutura de notificações continue ativa.
+
 - **Satélites / ISS — reorganizar a aba para priorizar operação e manter configurações minimizadas**
   - Reorganizar a aba **Satélites / ISS** para que as informações operacionais principais ocupem a maior parte da tela.
   - Prioridade visual da aba:
