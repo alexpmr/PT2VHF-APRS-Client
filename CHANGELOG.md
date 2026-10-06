@@ -1,3 +1,20 @@
+## 1.14.2 - 2026-10-06
+
+- **Cobertura RF:** nova camada de mapa em formato heatmap Canvas, sem dependência externa e sem gerar tráfego adicional.
+- A camada usa somente evidência RF persistida; pontos com RSSI/SNR recebem ponderação de qualidade e os demais usam densidade de recepções como fallback.
+- **Zoom adaptativo:** o raio de influência varia com o nível de zoom, mesclando mais pontos em visão ampla e revelando detalhes ao aproximar.
+- **Período:** o heatmap acompanha o período selecionado na barra do Mapa.
+- **Mapa → Ver:** Cobertura RF é adicionada como item independente e acompanha Selecionar tudo / Remover tudo.
+- **AIS:** popup de embarcação ampliado com nome, MMSI, IMO, indicativo, tipo, status de navegação, SOG, COG, proa, destino, ETA, calado, dimensões e fonte quando disponíveis.
+- **Códigos AIS:** tipos/status numéricos comuns são convertidos para descrições legíveis.
+- **Foto AIS:** preservado o provedor externo configurável por MMSI/IMO e o cache local; quando houver associação confiável, a foto real é apresentada.
+- **Fallback AIS:** sem foto real, o Client pode mostrar uma representação vetorial claramente marcada como imagem ilustrativa do tipo.
+- O enriquecimento AIS é assíncrono e falhas do provedor não impedem a abertura do popup textual.
+- O backlog antigo de zoom intermediário é encerrado, pois o step configurável já existe desde a v1.8.17.
+- A validação física externa do Kenwood TM-D700 permanece pendente por exigir rádio real e monitor RF.
+- Adicionada suíte de regressão v1.14.2 e validador de produção.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.1 - 2026-10-06
 
 - **SAT — correção crítica do mapa orbital:** satélites selecionados são desenhados imediatamente, sem esperar o polling periódico de status.
