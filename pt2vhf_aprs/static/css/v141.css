@@ -1,0 +1,40 @@
+/* v1.14.1 — SAT: operação primeiro, configuração recolhida */
+#tab-satellites{overflow-x:hidden}
+#tab-satellites>.satellite-panel-header{padding-bottom:4px}
+.satellite-operation-bar{justify-content:flex-start!important;gap:10px!important;flex-wrap:wrap;margin-top:4px!important;margin-bottom:8px!important;padding:8px 10px!important}
+.satellite-operation-module{font-size:17px;white-space:nowrap}
+.satellite-operation-bar .satellite-tab-next-name{font-size:14px!important;max-width:none!important;font-weight:700}
+.satellite-operation-bar #satelliteCountdownLabel{opacity:.72;white-space:nowrap}
+.satellite-operation-bar .satellite-tab-countdown-large{font-size:30px!important}
+.satellite-workspace{grid-template-columns:minmax(0,3fr) minmax(260px,.72fr)!important;gap:10px!important;margin-top:6px!important}
+.satellite-map{min-height:520px}
+.satellite-sidebar{gap:8px}
+.satellite-secondary-panel{padding:0!important;overflow:visible}
+.satellite-secondary-panel>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;padding:9px 11px}
+.satellite-secondary-panel>summary::-webkit-details-marker{display:none}
+.satellite-secondary-panel>summary:after{content:'▸';opacity:.72;font-size:14px}
+.satellite-secondary-panel[open]>summary:after{content:'▾'}
+.satellite-secondary-panel>summary small{opacity:.68;text-align:right;font-weight:400}
+.satellite-collapsible-body{padding:0 11px 11px;border-top:1px solid var(--line)}
+#satelliteDetailPanel #satelliteDetail{padding:0 11px 11px;border-top:1px solid var(--line)}
+.satellite-inline-filters{margin:8px 0!important;border:1px solid var(--line);border-radius:8px}
+.satellite-inline-filters .satellite-station-filters{padding:0 9px 9px;margin:0}
+.satellite-communications-grid{margin-top:10px!important}
+.satellite-stations-card,.satellite-message-card{min-height:360px}
+.satellite-beacon-card,.satellite-agenda-card{grid-column:1/-1}
+.satellite-render-warning,.satellite-render-error{color:#ffb347!important}
+.v111-notify-config{display:block!important;margin-top:10px}
+.v111-notify-config .v111-notify-panel{left:0;right:auto}
+@media(max-width:1100px){
+  .satellite-workspace{grid-template-columns:1fr!important}
+  .satellite-map{min-height:470px}
+  .satellite-sidebar{display:grid!important;grid-template-columns:1fr!important}
+}
+@media(max-width:720px){
+  .satellite-operation-bar{align-items:flex-start!important;flex-direction:row!important}
+  .satellite-operation-module,.satellite-operation-bar .satellite-tab-next-name,#satelliteCountdownLabel,#satelliteTabCountdown{width:auto}
+  .satellite-operation-bar .satellite-tab-next-name{flex:1 1 100%}
+  .satellite-map{min-height:390px}
+  .satellite-secondary-panel>summary{align-items:flex-start}
+  .satellite-secondary-panel>summary small{text-align:left}
+}
