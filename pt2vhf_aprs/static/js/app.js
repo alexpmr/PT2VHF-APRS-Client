@@ -3139,6 +3139,56 @@
     return names[Math.round(degrees / 45) % 8];
   }
 
+  function aisShipTypeLabel(value) {
+    const text = String(value ?? '').trim();
+    if (!/^\d+$/.test(text)) return text;
+    const code = Number(text);
+    const exact = {
+      20: ui('Embarcação WIG', 'WIG vessel'),
+      30: ui('Pesqueiro', 'Fishing vessel'),
+      31: ui('Reboque', 'Towing'),
+      32: ui('Reboque de grande porte', 'Large towing'),
+      33: ui('Dragagem / operação submarina', 'Dredging / underwater ops'),
+      34: ui('Operações de mergulho', 'Diving operations'),
+      35: ui('Operação militar', 'Military operations'),
+      36: ui('Veleiro', 'Sailing vessel'),
+      37: ui('Embarcação de recreio', 'Pleasure craft'),
+      50: ui('Prático', 'Pilot vessel'),
+      51: ui('Busca e salvamento', 'Search and rescue'),
+      52: ui('Rebocador', 'Tug'),
+      53: ui('Apoio portuário', 'Port tender'),
+      54: ui('Antipoluição', 'Anti-pollution'),
+      55: ui('Autoridade / fiscalização', 'Law enforcement'),
+      58: ui('Transporte médico', 'Medical transport'),
+      59: ui('Navio não combatente', 'Noncombatant ship'),
+    };
+    if (exact[code]) return exact[code];
+    if (code >= 40 && code <= 49) return ui('Embarcação de alta velocidade', 'High-speed craft');
+    if (code >= 60 && code <= 69) return ui('Navio de passageiros', 'Passenger ship');
+    if (code >= 70 && code <= 79) return ui('Navio de carga', 'Cargo ship');
+    if (code >= 80 && code <= 89) return ui('Navio-tanque', 'Tanker');
+    if (code >= 90 && code <= 99) return ui('Outro tipo de embarcação', 'Other vessel type');
+    return text;
+  }
+
+  function aisNavigationStatusLabel(value) {
+    const text = String(value ?? '').trim();
+    if (!/^\d+$/.test(text)) return text;
+    const labels = {
+      0: ui('Em movimento a motor', 'Under way using engine'),
+      1: ui('Fundeado', 'At anchor'),
+      2: ui('Sem governo', 'Not under command'),
+      3: ui('Manobrabilidade restrita', 'Restricted manoeuvrability'),
+      4: ui('Restrito pelo calado', 'Constrained by draught'),
+      5: ui('Atracado', 'Moored'),
+      6: ui('Encalhado', 'Aground'),
+      7: ui('Em pesca', 'Engaged in fishing'),
+      8: ui('Em movimento a vela', 'Under way sailing'),
+      14: 'AIS-SART',
+    };
+    return labels[Number(text)] || text;
+  }
+
   function friendlyObjectPopupHtml(object, objectSymbol) {
     const details = object?.friendly_details || {};
     const rows = [];
@@ -3217,8 +3267,8 @@
       add('MMSI', details.mmsi || '');
       add('IMO', details.imo || '');
       add(ui('Indicativo', 'Callsign'), details.vessel_callsign || '');
-      add(ui('Tipo de embarcação', 'Vessel type'), details.vessel_type || '');
-      add(ui('Status de navegação', 'Navigation status'), details.nav_status || '');
+      add(ui('Tipo de embarcação', 'Vessel type'), aisShipTypeLabel(details.vessel_type || ''));
+      add(ui('Status de navegação', 'Navigation status'), aisNavigationStatusLabel(details.nav_status || ''));
       const speedKnots = number(details.speed_knots);
       if (speedKnots !== null) {
         add(ui('Velocidade sobre o fundo', 'Speed over ground'), `${fmtNum(speedKnots, 1)} kn · ${fmtNum(speedKnots * 1.852, 1)} km/h`, true);
