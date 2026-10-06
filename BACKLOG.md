@@ -265,6 +265,40 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — reposicionar contador regressivo e limitar às seleções/favoritos**
+  - Mover o contador regressivo da posição atual para o **menu/barra inferior da área de Satélites / ISS**, no mesmo nível visual do controle/título **Satélites / ISS**.
+  - O contador não deve mais ficar acoplado ao botão da aba superior.
+  - Aumentar de forma perceptível o tamanho da fonte do contador, mantendo:
+    - cor **amarela**;
+    - alta legibilidade;
+    - formato **HH:MM:SS**;
+    - números tabulares/monoespaçados quando possível para evitar deslocamento visual.
+  - A próxima passagem exibida deve considerar **somente satélites que estejam**:
+    - **selecionados** pelo usuário; **ou**
+    - marcados como **favoritos**.
+  - Satélites que não estejam selecionados nem favoritados não devem participar do cálculo do contador, mesmo que tenham APRS confirmado.
+  - Continuar considerando apenas satélites com:
+    - APRS confirmado;
+    - estado operacional **Monitorar**;
+    - serviço APRS habilitado.
+  - Se houver vários satélites elegíveis, mostrar o que tiver o próximo AOS.
+  - Durante uma passagem ativa, manter a mudança automática para contagem regressiva até LOS.
+  - Ao alterar seleção, favorito, estado operacional, serviço APRS, TLE ou localização da estação, recalcular imediatamente qual passagem deve alimentar o contador.
+  - Se nenhum satélite elegível tiver passagem futura calculada, mostrar estado neutro, por exemplo **--:--:--**.
+  - Manter junto ao contador, em texto menor, o nome/indicativo do satélite associado à contagem.
+  - O despertador de aproximação deve seguir o mesmo universo do contador:
+    - somente satélites selecionados ou favoritados;
+    - APRS confirmado;
+    - operação ativa/monitorada.
+  - Adicionar testes de regressão para:
+    - contador fora da aba superior;
+    - fonte maior;
+    - satélite selecionado entrando no cálculo;
+    - satélite favorito entrando no cálculo mesmo sem estar selecionado;
+    - satélite não selecionado/não favorito sendo ignorado;
+    - alteração de seleção/favorito recalculando imediatamente a próxima passagem;
+    - passagem ativa alternando AOS → LOS.
+
 - **Saúde operacional do TNC — remover de Configuração e Sobre**
   - O painel **Saúde operacional do TNC** deve existir somente na aba **TNC / RF**.
   - Remover qualquer renderização/injeção desse painel nas abas **Configuração** e **Sobre**.
