@@ -151,7 +151,7 @@ def test_v114_satellite_beacon_ui_and_tnc_pipeline():
 def test_v114_tnc_health_component_is_owned_by_tnc_tab_only():
     js = read("pt2vhf_aprs/static/js/v111.js")
     start = js.index("function installTncOperations")
-    end = js.index("function installNotifications", start)
+    end = js.index("function installDatabaseHealth", start)
     block = js[start:end]
     assert "const tab=$('#tab-tnc')" in block
     assert "tab.insertBefore(host" in block
