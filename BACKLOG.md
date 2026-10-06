@@ -279,6 +279,25 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — seleção padrão somente da ISS**
+  - Em instalações novas, o único satélite que deve vir **selecionado por padrão** é a **ISS / NORAD 25544**.
+  - Nenhum outro satélite deve ser marcado automaticamente na primeira execução.
+  - A seleção padrão deve ser aplicada somente quando ainda não existir preferência persistida do usuário.
+  - Se o usuário já tiver uma seleção salva em `pt2vhf_v112_satellite_selected`, preservar integralmente essa escolha após atualização.
+  - Não sobrescrever seleções existentes durante migração de versão.
+  - Favoritos continuam independentes da seleção padrão.
+  - A ISS deve permanecer selecionável/desmarcável normalmente pelo usuário; não deve ficar forçada permanentemente.
+  - Ao usar **Restaurar padrões** da seleção de satélites, o estado esperado deve voltar para:
+    - ISS selecionada;
+    - demais satélites desmarcados.
+  - Garantir que a ISS selecionada por padrão seja renderizada imediatamente no mapa orbital assim que houver TLE/status válido, sem depender de polling periódico.
+  - Adicionar testes de regressão para:
+    - instalação nova → somente NORAD 25544 selecionado;
+    - instalação nova → nenhum outro NORAD selecionado;
+    - usuário com seleção persistida → preferência preservada;
+    - usuário desmarca ISS → escolha permanece após reinício;
+    - restauração de padrões → somente ISS volta a ficar selecionada.
+
 - **Satélites / ISS — seleção não atualiza o mapa imediatamente e “Marcar tudo” tem atraso excessivo**
   - Corrigir a regressão da aba **SAT / Satélites / ISS** em que:
     - ao selecionar a **ISS**, o satélite continua sem aparecer imediatamente no mapa orbital;
