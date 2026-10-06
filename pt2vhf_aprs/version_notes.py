@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.3": {
+        "title": "Beacon manual no cabeçalho e classificação de digipeater corrigida",
+        "items": [
+            "A barra principal ganha botão Enviar Beacon para disparo manual rápido usando o mesmo pipeline já existente.",
+            "Os botões de beacon do cabeçalho e da Configuração são bloqueados durante o envio para evitar duplicidade por clique repetido.",
+            "O classificador de interação deixa de usar o frame bruto/path como prova de infraestrutura.",
+            "WIDE1-1/WIDE2-1 no path de uma estação comum não a transforma em digipeater.",
+            "O backend expõe evidência de infraestrutura baseada em hop intermediário realmente observado ou iGate de q-construct.",
+            "Objetos/itens e infraestrutura comprovada sem evidência bidirecional continuam protegidos.",
+            "A validação física do TM-D700 continua pendente de hardware real.",
+        ],
+    },
     "1.14.2": {
         "title": "Cobertura RF em heatmap e AIS ampliado",
         "items": [
