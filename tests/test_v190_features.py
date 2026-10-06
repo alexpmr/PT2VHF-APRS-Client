@@ -112,4 +112,5 @@ def test_v190_frontend_alerts_are_edge_triggered_and_deduplicated():
     assert "tncWanted=state.tnc?.wanted!==false" in js
     assert "aprsWanted=state.aprs_is?.wanted!==false" in js
     assert "window.__pt2vhfV190AlertSettings" in js
-    assert "setTimeout(()=>saveAlertSettings(false)" in js
+    assert "window.__pt2vhfV190AlertSettingsDirty=true" in js
+    assert "void saveAlertSettings(false)" in js
