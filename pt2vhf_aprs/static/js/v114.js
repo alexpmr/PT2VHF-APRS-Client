@@ -14,11 +14,21 @@ function initSelectionPanel(){
 }
 function fmtAgo(v){if(!v)return '—';const t=Date.parse(v);if(!Number.isFinite(t))return v;const s=Math.max(0,Math.floor((Date.now()-t)/1000));if(s<60)return s+' s';if(s<3600)return Math.floor(s/60)+' min';return Math.floor(s/3600)+' h';}
 function satNames(row){return (row.satellites||[]).map(x=>x.callsign||x.name).filter(Boolean).join(', ')||'—';}
+async function stationContextNorads(){
+ const mode=$('#satelliteStationsContext')?.value||'eligible';
+ if(mode==='selected')return [...idsFrom('pt2vhf_v112_satellite_selected')];
+ if(mode==='favorites')return [...idsFrom('pt2vhf_v112_satellite_favorites')];
+ if(mode==='active'){
+  const eligible=eligibleNorads();if(!eligible.length)return [];
+  try{const d=await req('/api/v114/satellites/next-pass?norads='+encodeURIComponent(eligible.join(',')));return d.pass?.phase==='active'?[Number(d.pass.norad_id)]:[];}catch(_){return [];}
+ }
+ return eligibleNorads();
+}
 async function loadStations(){
- const ids=eligibleNorads(),hours=$('#satelliteStationsHours')?.value||'6',rf=$('#satelliteStationsRfOnly')?.checked?'1':'0',msg=$('#satelliteStationsMessagesOnly')?.checked?'1':'0';
+ const ids=await stationContextNorads(),hours=$('#satelliteStationsHours')?.value||'6',rf=$('#satelliteStationsRfOnly')?.checked?'1':'0',msg=$('#satelliteStationsMessagesOnly')?.checked?'1':'0',ctx=$('#satelliteStationsContextOnly')?.checked?'1':'0';
  const host=$('#satelliteStationsList');if(!host)return;
  try{
-  const data=await req('/api/v114/satellites/stations?norads='+encodeURIComponent(ids.join(','))+'&hours='+hours+'&rf_only='+rf+'&messages_only='+msg);
+  const data=await req('/api/v114/satellites/stations?norads='+encodeURIComponent(ids.join(','))+'&hours='+hours+'&rf_only='+rf+'&messages_only='+msg+'&context_only='+ctx);
   const rows=data.items||[];
   const nowCalls=new Set(rows.map(x=>String(x.callsign||'')));
   let fresh=0;for(const c of nowCalls)if(lastStationCalls.size&&!lastStationCalls.has(c))fresh++;
@@ -70,7 +80,7 @@ async function updateBeaconCount(){try{const rows=await req('/api/v114/satellite
 function bind(){
  initSelectionPanel();
  $('#satelliteStationsRefresh')?.addEventListener('click',loadStations);
- ['satelliteStationsHours','satelliteStationsRfOnly','satelliteStationsMessagesOnly'].forEach(id=>$('#'+id)?.addEventListener('change',loadStations));
+ ['satelliteStationsContext','satelliteStationsHours','satelliteStationsContextOnly','satelliteStationsRfOnly','satelliteStationsMessagesOnly'].forEach(id=>$('#'+id)?.addEventListener('change',loadStations));
  $('#satelliteMessageSend')?.addEventListener('click',sendMessage);
  $('#satelliteMessageTo')?.addEventListener('change',loadConversation);
  $('#satelliteMessageText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void sendMessage();}});
