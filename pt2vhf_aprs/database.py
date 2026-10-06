@@ -1544,6 +1544,35 @@ def _interaction_calls_conn(conn: sqlite3.Connection) -> set[str]:
     }
 
 
+def _infrastructure_calls_conn(conn: sqlite3.Connection) -> set[str]:
+    """Retorna somente indicativos observados exercendo papel de digi/iGate.
+
+    O path solicitado pela estação de origem (ex.: WIDE1-1,WIDE2-1) não entra
+    nesta evidência. Um indicativo só aparece aqui quando foi observado como
+    hop intermediário efetivamente usado ou como iGate de um q-construct.
+    """
+    rows = conn.execute(
+        """
+        SELECT DISTINCT callsign
+          FROM (
+                SELECT UPPER(TRIM(target)) AS callsign
+                  FROM topology_edges
+                 WHERE kind='rf' AND target IS NOT NULL AND TRIM(target) <> ''
+                UNION
+                SELECT UPPER(TRIM(igate)) AS callsign
+                  FROM topology_edges
+                 WHERE igate IS NOT NULL AND TRIM(igate) <> ''
+               )
+         WHERE callsign IS NOT NULL AND callsign <> ''
+        """
+    ).fetchall()
+    return {
+        str(row["callsign"] or "").upper().strip()
+        for row in rows
+        if str(row["callsign"] or "").strip()
+    }
+
+
 def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     cfg = get_config()
     own_lat = cfg.get("latitude")
@@ -1551,6 +1580,7 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
     q = "%" + filter_text.upper().strip() + "%"
     with connection() as conn:
         interaction_calls = _interaction_calls_conn(conn)
+        infrastructure_calls = _infrastructure_calls_conn(conn)
         rows = conn.execute(
             """
             SELECT s.*,
@@ -1574,6 +1604,7 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
         item["interaction_evidence"] = 1 if (
             bool(item.get("message_capable")) or call in interaction_calls
         ) else 0
+        item["infrastructure_evidence"] = 1 if call in infrastructure_calls else 0
         issue = issues.get(call)
         valid = _valid_geo_position(item.get("latitude"), item.get("longitude")) and issue is None
         item["position_valid"] = bool(valid)
@@ -3559,6 +3590,7 @@ def _build_map_data_uncached() -> dict[str, Any]:
         # query ran three correlated EXISTS subqueries for every station, which
         # becomes very expensive as messages/aprs_queries grow.
         interaction_calls = _interaction_calls_conn(conn)
+        infrastructure_calls = _infrastructure_calls_conn(conn)
 
         station_rows = conn.execute(
             """
@@ -3582,6 +3614,7 @@ def _build_map_data_uncached() -> dict[str, Any]:
             item["interaction_evidence"] = 1 if (
                 bool(item.get("message_capable")) or call in interaction_calls
             ) else 0
+            item["infrastructure_evidence"] = 1 if call in infrastructure_calls else 0
             item["position_valid"] = True
             item["position_issue"] = ""
             item.update(aprs_map_device_metadata(
