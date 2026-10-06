@@ -1,3 +1,21 @@
+## 1.14.0 - 2026-10-06
+
+- **Satélites / ISS — operação completa:** a aba passa a concentrar mapa, próxima passagem, estações recebidas, mensagens APRS, beacon satelital e agenda.
+- **Estações APRS na aba Satélites:** lista recente com RF/APRS-IS, quantidade de pacotes, contexto satelital, última recepção, distância e mensagens.
+- **Filtros operacionais:** selecionados + favoritos, apenas selecionados, apenas favoritos ou passagem ativa; período, somente RF e somente estações com mensagens.
+- **Mensagens integradas:** destinatário preenchido ao clicar na estação, histórico local, ACK/REJ/status, Enter para enviar e Shift+Enter para quebra de linha.
+- **Motor único:** o envio na aba Satélites reutiliza `/api/messages/send`, o mesmo pipeline da aba Mensagens, incluindo rota, path, retries, ACK/REJ e persistência.
+- **Seleção compacta:** painel de satélites recolhível por padrão, resumo de selecionados/favoritos e ação Editar seleção.
+- **Pesquisa rápida:** busca por nome, indicativo/designação ou NORAD, integrada aos filtros; Marcar tudo/Desmarcar tudo respeitam a busca visível.
+- **Contador reposicionado:** sai da aba superior e vai para a barra operacional da aba Satélites, com fonte maior e formato HH:MM:SS.
+- **Contador e despertador:** consideram somente satélites selecionados ou favoritos, com APRS confirmado, estado Monitorar e serviço APRS ativo.
+- **Beacon Satélite / curto:** perfil RF independente do beacon terrestre, com path próprio, comentário curto, intervalo, elevação mínima, cobertura/LOS e consentimento explícito.
+- **Beacon seguro:** usa o mesmo pipeline TNC/RF, respeita TX confirmado/pausado e bloqueia protocolo serial terminal/PKT.
+- **Preview de beacon:** mostra o frame e tamanho estimado antes do envio e alerta para frame excessivamente longo.
+- **Histórico de beacon:** registra satélite, frequência, path, payload, tamanho e resultado.
+- **Saúde operacional do TNC:** componente passa a ser inserido estritamente dentro de TNC / RF e não pode aparecer em Configuração ou Sobre.
+- Adicionados testes de regressão para todos os itens acima.
+
 ## 1.13.0 - 2026-10-06
 
 - **Satélites APRS:** catálogo padrão passa a exibir somente satélites com APRS confirmado; AX.25, packet, GFSK ou telemetria genérica não são promovidos automaticamente para APRS.
