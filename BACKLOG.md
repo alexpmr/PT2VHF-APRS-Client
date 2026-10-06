@@ -279,6 +279,50 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — satélite selecionado não aparece no mapa orbital (regressão v1.14.0)**
+  - Na v1.14.0, mesmo com a **ISS selecionada/marcada** na lista de satélites, o mapa orbital permanece vazio e não desenha o satélite.
+  - Tratar como **regressão funcional crítica da aba Satélites / ISS**.
+  - Garantir que todo satélite elegível e marcado em **Satélites selecionados** seja efetivamente incluído no conjunto usado para renderização do mapa orbital.
+  - Revisar a sincronização entre:
+    - estado persistido de seleção em `pt2vhf_v112_satellite_selected`;
+    - lista retornada pelo catálogo;
+    - `state.selected`;
+    - `state.status`;
+    - atualização de TLE/status orbital;
+    - função que cria/atualiza os marcadores no mapa.
+  - Verificar especialmente se a nova refatoração da v1.14.0 introduziu condição em que:
+    - a seleção visual fica marcada, mas o NORAD não entra no conjunto de renderização;
+    - o mapa é atualizado antes de `state.status` ser carregado;
+    - o refresh da seleção não dispara `refreshOrbitalMaps()`;
+    - o filtro APRS/selecionados/favoritos remove indevidamente o satélite da camada;
+    - o marcador existe mas não é adicionado ao mapa;
+    - coordenadas orbitais válidas são descartadas por valor `0`, latitude/longitude, TLE ou estado operacional.
+  - A **ISS (NORAD 25544)** deve ser usada como caso mínimo obrigatório de regressão.
+  - Ao marcar a ISS:
+    - o marcador deve aparecer imediatamente no mapa;
+    - a posição deve refletir o último cálculo orbital disponível;
+    - cobertura/footprint deve aparecer quando habilitada;
+    - trajetória futura/passada deve aparecer conforme os respectivos controles;
+    - o painel de detalhes deve continuar sincronizado.
+  - Ao desmarcar a ISS:
+    - remover marcador;
+    - remover footprint;
+    - remover trajetórias associadas;
+    - não manter artefatos órfãos no mapa.
+  - Se o TLE estiver ausente, inválido ou vencido:
+    - não deixar o mapa silenciosamente vazio;
+    - mostrar aviso claro no próprio item/painel explicando por que o satélite não foi desenhado.
+  - Se o satélite estiver selecionado e houver TLE válido, **não exigir que ele seja favorito** para aparecer no mapa.
+  - Não vincular a renderização do mapa orbital ao universo restrito do contador/despertador; o mapa deve respeitar a **seleção visual do usuário**.
+  - Adicionar testes de regressão para:
+    - ISS selecionada → marcador visível;
+    - ISS selecionada sem ser favorita → marcador visível;
+    - seleção após carregamento inicial → marcador aparece sem recarregar a página;
+    - desmarcar → marcador/footprint/trilhas removidos;
+    - múltiplos satélites selecionados → todos aparecem;
+    - TLE ausente → aviso explícito;
+    - refresh de TLE → satélite selecionado reaparece automaticamente.
+
 - **Kenwood TM-D700 — teste físico externo**
   - O software de diagnóstico está concluído.
   - Encerrar a validação física somente quando houver um TM-D700 real, cabo/interface adequado e uma segunda estação/monitor RF para confirmar RX e TX no ar.
