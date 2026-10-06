@@ -570,7 +570,9 @@
     const equipment=String(item?.equipment||''),chipset=String(item?.chipset||'');
     if (/RADTEL.*950|RT-950|RT950/i.test(equipment)) {
       hint.textContent=tr('Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.');
-      hint.classList.remove('hidden');if(field('tncSerialBaud'))field('tncSerialBaud').value='115200';return;
+      hint.classList.remove('hidden');
+      if (field('tncSerialBaud')) field('tncSerialBaud').value = '115200';
+      return;
     }
     if (chipset==='CH9102') {
       hint.textContent=tr('Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.');
