@@ -314,9 +314,19 @@ def run_tnc_self_test() -> dict[str, Any]:
         "ax25_tx": bool(tx_decoded and tx_decoded[0]["source"] == "PT2TST"),
         "ack_frame": any("ack01" in item.get("info_text", "") for item in decoded),
     }
+    layers = {
+        "transport": bool(checks["transport_internal"]),
+        "framing_protocol": bool(checks["kiss_rx"]),
+        "ax25": bool(checks["ax25_rx"] and checks["ax25_tx"]),
+        "rx": bool(checks["ax25_rx"]),
+        "tx_model": bool(checks["kiss_tx"] and checks["ax25_tx"]),
+        "physical_rf_tx": False,
+    }
     return {
         "ok": all(checks.values()),
         "checks": checks,
+        "layers": layers,
+        "physical_validation_note": "Autoteste interno não confirma emissão RF física; valide RX/TX no ar com rádio real.",
         "bytes_rx": bytes_rx,
         "kiss_frames_rx": kiss_frames,
         "ax25_valid_rx": len(decoded),
