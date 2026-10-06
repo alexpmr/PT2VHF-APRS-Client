@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.13.0": {
+        "title": "Satélites APRS refinados e diagnóstico TNC por protocolo",
+        "items": [
+            "Catálogo de Satélites / ISS mostra APRS confirmado por padrão e separa Packet/AX.25 genérico.",
+            "Contador HH:MM:SS da próxima passagem APRS e despertador configurável de aproximação da cobertura.",
+            "TLE multifonte com CelesTrak Amateur/Stations, AMSAT, prioridades, testes, fallback e atualização diária.",
+            "Satélites podem ser monitorados, ignorados ou marcados fora do ar, com serviços APRS/SSTV/telemetria/voz/packet independentes.",
+            "Seleção de satélites ganha Marcar tudo e Desmarcar tudo.",
+            "TM-D700/TM-D710 ganham perfil próprio, separando serial 9600 de packet RF 1200/9600 e distinguindo terminal de KISS.",
+            "Diagnóstico serial mostra amostra limitada ASCII/HEX e evita sugerir menu KISS inexistente para TM-D700 em PKT.",
+            "Autoteste TNC passa a declarar quais camadas foram testadas e mantém TX físico RF como não validado.",
+        ],
+    },
     "1.12.0": {
         "title": "Satélites / ISS, topologia RF e janelas destacáveis",
         "items": [

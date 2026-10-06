@@ -14,6 +14,7 @@ from .tnc_service import (
     KissStreamDecoder,
     decode_ax25,
     encode_ax25,
+    get_tnc_config,
     kiss_encode,
     service as tnc_service,
 )
@@ -181,6 +182,9 @@ def tnc_health_snapshot(*, record_transition: bool = True) -> dict[str, Any]:
     bytes_tx = int(status.get("transport_bytes_tx") or 0)
     kiss_rx = int(status.get("kiss_frames_rx") or 0)
     invalid = int(status.get("invalid_frames_rx") or 0)
+    cfg = get_tnc_config()
+    expected_protocol = str(cfg.get("serial_protocol") or ("agwpe" if str(cfg.get("transport") or "") == "agwpe" else "kiss"))
+    device_profile = str(cfg.get("device_profile") or "generic_kiss")
 
     if not status.get("connected"):
         state = "disconnected"
@@ -197,6 +201,14 @@ def tnc_health_snapshot(*, record_transition: bool = True) -> dict[str, Any]:
     elif kiss_rx > 0:
         state = "kiss_active"
         summary = "KISS detectado; aguardando AX.25 válido."
+    elif bytes_rx > 0 and expected_protocol == "terminal":
+        sample = str(status.get("last_transport_sample_ascii") or "")
+        prompt_like = any(token in sample.upper() for token in ("CMD:", "COMMAND", "TNC>", "CMD>"))
+        state = "terminal_prompt_detected" if prompt_like else "terminal_bytes_active"
+        if device_profile in {"kenwood_tm_d700", "kenwood_tm_d710"}:
+            summary = "Serial ativa em modo terminal/PKT; bytes recebidos. KISS não é exigido por este perfil."
+        else:
+            summary = "Bytes recebidos pelo TNC em protocolo terminal; KISS não é o protocolo esperado."
     elif bytes_rx > 0:
         state = "bytes_without_kiss"
         summary = "Bytes recebidos, mas nenhum frame KISS reconhecido."
@@ -218,6 +230,12 @@ def tnc_health_snapshot(*, record_transition: bool = True) -> dict[str, Any]:
         "transport_bytes_tx": bytes_tx,
         "kiss_frames_rx": kiss_rx,
         "invalid_frames_rx": invalid,
+        "expected_protocol": expected_protocol,
+        "device_profile": device_profile,
+        "serial_baud": cfg.get("serial_baud"),
+        "packet_rf_baud": cfg.get("packet_rf_baud"),
+        "diagnostic_sample_hex": str(status.get("last_transport_sample_hex") or ""),
+        "diagnostic_sample_ascii": str(status.get("last_transport_sample_ascii") or ""),
     }
 
     if record_transition:
@@ -296,9 +314,19 @@ def run_tnc_self_test() -> dict[str, Any]:
         "ax25_tx": bool(tx_decoded and tx_decoded[0]["source"] == "PT2TST"),
         "ack_frame": any("ack01" in item.get("info_text", "") for item in decoded),
     }
+    layers = {
+        "transport": bool(checks["transport_internal"]),
+        "framing_protocol": bool(checks["kiss_rx"]),
+        "ax25": bool(checks["ax25_rx"] and checks["ax25_tx"]),
+        "rx": bool(checks["ax25_rx"]),
+        "tx_model": bool(checks["kiss_tx"] and checks["ax25_tx"]),
+        "physical_rf_tx": False,
+    }
     return {
         "ok": all(checks.values()),
         "checks": checks,
+        "layers": layers,
+        "physical_validation_note": "Autoteste interno não confirma emissão RF física; valide RX/TX no ar com rádio real.",
         "bytes_rx": bytes_rx,
         "kiss_frames_rx": kiss_frames,
         "ax25_valid_rx": len(decoded),

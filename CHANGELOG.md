@@ -1,3 +1,25 @@
+## 1.13.0 - 2026-10-06
+
+- **Satélites APRS:** catálogo padrão passa a exibir somente satélites com APRS confirmado; AX.25, packet, GFSK ou telemetria genérica não são promovidos automaticamente para APRS.
+- **Colibri-S:** adicionada regressão garantindo que o NORAD 61746 não seja classificado como APRS apenas por operar packet/AX.25.
+- **Filtros de catálogo:** opções Somente APRS, APRS + Packet/AX.25 e todos os digitais.
+- **Seleção rápida:** novos botões Marcar tudo e Desmarcar tudo, respeitando o filtro visível e sem alterar favoritos.
+- **Contador da próxima passagem:** indicador grande amarelo em HH:MM:SS ao lado de Satélites / ISS, atualizado a cada segundo sem recalcular toda a agenda.
+- **Passagem ativa:** contador troca automaticamente de tempo até AOS para tempo restante até LOS.
+- **Despertador de aproximação:** antecedência configurável, som próprio, popup, deduplicação, silenciar passagem, favoritar e abrir/seguir satélite.
+- **TLE multifonte:** CelesTrak Amateur, CelesTrak Stations e AMSAT nasabare.txt com ativação, prioridade, teste individual, fallback e deduplicação por NORAD ID.
+- **Atualização automática:** scheduler interno diário, padrão 00:00 local, sem wget/grep/at ou tarefas do sistema operacional.
+- **Estado operacional:** cada satélite pode ser Monitorado, Ignorado ou marcado Fora do ar sem perder a preferência na próxima atualização de TLE.
+- **Serviços por satélite:** APRS, SSTV, Telemetria, Voz/FM e Packet/AX.25 podem ser habilitados/desabilitados individualmente.
+- **Fontes orbitais:** painel mostra estado das fontes e o detalhe do satélite separa fonte do catálogo e fonte TLE.
+- **TM-D700/TM-D710:** diagnóstico passa a distinguir KISS de terminal/command mode e separa baud rate serial de packet RF 1200/9600.
+- **Perfis TNC:** Genérico KISS, Kenwood TM-D700, Kenwood TM-D710, Kantronics/TNC terminal e genérico.
+- **Diagnóstico serial:** amostra limitada ASCII/HEX, estados terminal-aware e orientação que não sugere menu KISS inexistente no TM-D700.
+- **Segurança:** TX automático é bloqueado em perfil serial terminal/PKT; uso de TX permanece restrito a transportes/protocolos compatíveis.
+- **Autoteste TNC:** passa a informar separadamente transporte, framing/protocolo, AX.25, RX, modelo de TX e deixa explícito que TX físico RF não foi validado.
+- **AGWPE:** preservado como caminho operacional para RX AX.25, incluindo o cenário real reportado pelo PU2MUS; TX físico continua dependente de validação no ar.
+- Adicionados testes de regressão para classificação APRS, fontes/fallback, scheduler, persistência operacional, alarmes/controles e diagnóstico TM-D700.
+
 ## 1.12.0 - 2026-10-05
 
 - Nova aba **Satélites / ISS** com mapa orbital dedicado para APRS/packet espacial.

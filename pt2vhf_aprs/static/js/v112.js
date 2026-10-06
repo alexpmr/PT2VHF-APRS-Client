@@ -44,6 +44,7 @@
     return {
       footprint:p.footprint!==false,future:p.future!==false,past:p.past!==false,
       labels:p.labels!==false,follow:!!p.follow,favoritesOnly:!!p.favoritesOnly,
+      catalogScope:['aprs','packet','all'].includes(String(p.catalogScope||''))?String(p.catalogScope):'aprs',
       horizon:Number(p.horizon||90),alerts:p.alerts!==false,alertLead:Number(p.alertLead||10),
       alertMin:Number(p.alertMin??10),passHours:Number(p.passHours||24),passMin:Number(p.passMin||0),
     };
@@ -56,6 +57,7 @@
       '#satelliteAlertsEnabled':p.alerts,
     };
     for(const [sel,val] of Object.entries(map)){const el=$(sel);if(el)el.checked=!!val;}
+    if($('#satelliteCatalogScope'))$('#satelliteCatalogScope').value=String(p.catalogScope);
     if($('#satelliteTrackHorizon'))$('#satelliteTrackHorizon').value=String(p.horizon);
     if($('#satelliteAlertLead'))$('#satelliteAlertLead').value=String(p.alertLead);
     if($('#satelliteAlertMinElevation'))$('#satelliteAlertMinElevation').value=String(p.alertMin);
@@ -117,9 +119,11 @@
     const rows=state.catalog.filter(x=>!p.favoritesOnly||state.favorites.has(Number(x.norad_id)));
     host.innerHTML=rows.length?rows.map(meta=>{
       const id=Number(meta.norad_id),active=state.selected.has(id),fav=state.favorites.has(id);
+      const operational=String(meta.operational_state||'monitor');
       return '<div class="satellite-catalog-row '+(active?'active':'')+'" data-norad="'+id+'">'+
         '<input class="satellite-select" type="checkbox" '+(active?'checked':'')+' aria-label="'+esc(tr('Mostrar satélite','Show satellite','Mostrar satélite','Afficher satellite'))+'">'+
-        '<button type="button" class="satellite-open"><span class="satellite-name">'+esc(meta.name||('NORAD '+id))+'</span><small>NORAD '+id+' · '+esc(meta.protocol||meta.mode||'packet')+' · '+esc(freqSummary(meta))+'</small></button>'+
+        '<button type="button" class="satellite-open"><span class="satellite-name">'+esc(meta.name||('NORAD '+id))+'</span><small>NORAD '+id+' · '+esc(meta.operation_type||meta.protocol||meta.mode||'digital')+' · '+esc(freqSummary(meta))+'</small></button>'+
+        '<select class="satellite-operational" title="'+esc(tr('Estado operacional','Operational state','Estado operativo','État opérationnel'))+'"><option value="monitor" '+(operational==='monitor'?'selected':'')+'>'+esc(tr('Monitorar','Monitor','Monitorear','Surveiller'))+'</option><option value="ignore" '+(operational==='ignore'?'selected':'')+'>'+esc(tr('Ignorar','Ignore','Ignorar','Ignorer'))+'</option><option value="inactive" '+(operational==='inactive'?'selected':'')+'>'+esc(tr('Fora do ar','Inactive','Fuera de servicio','Hors service'))+'</option></select>'+
         '<button type="button" class="satellite-favorite" title="'+esc(tr('Favorito','Favorite','Favorito','Favori'))+'">'+(fav?'★':'☆')+'</button></div>';
     }).join(''):'<span class="hint">'+esc(tr('Nenhum satélite para o filtro atual.','No satellites for the current filter.','No hay satélites para el filtro actual.','Aucun satellite pour ce filtre.'))+'</span>';
 
@@ -130,6 +134,14 @@
         renderCatalog();void refreshOrbitalMaps();
       });
       $('.satellite-open',row)?.addEventListener('click',()=>{state.activeNorad=id;state.selected.add(id);saveSelected(state.selected);renderCatalog();renderDetail(id);void drawSatelliteTrack(id,true);});
+      $('.satellite-operational',row)?.addEventListener('change',async ev=>{
+        ev.stopPropagation();
+        try{
+          const saved=await req('/api/v113/satellites/'+encodeURIComponent(id)+'/operation',{method:'POST',body:JSON.stringify({state:ev.target.value})});
+          const meta=satelliteMeta(id);meta.operational_state=saved.state;meta.operational=saved.state==='monitor';
+          await loadPasses();renderDetail(id);
+        }catch(e){console.warn(e);}
+      });
       $('.satellite-favorite',row)?.addEventListener('click',()=>{
         state.favorites.has(id)?state.favorites.delete(id):state.favorites.add(id);saveFavorites(state.favorites);renderCatalog();renderPasses();
       });
@@ -153,10 +165,20 @@
       '<strong>Footprint</strong><span>'+(p.footprint_radius_km??'—')+' km</span>'+
       '<strong>'+esc(tr('Uplink','Uplink','Uplink','Uplink'))+'</strong><span>'+esc(fmtFreq(m.uplink_hz))+(Number.isFinite(dopUp)?' · Doppler '+(dopUp>=0?'+':'')+dopUp+' Hz':'')+'</span>'+
       '<strong>'+esc(tr('Downlink','Downlink','Downlink','Downlink'))+'</strong><span>'+esc(fmtFreq(m.downlink_hz))+(Number.isFinite(dopDown)?' · Doppler '+(dopDown>=0?'+':'')+dopDown+' Hz':'')+'</span>'+
+      '<strong>'+esc(tr('Tipo de operação','Operation type','Tipo de operación','Type d’opération'))+'</strong><span>'+esc(m.operation_type||'—')+(m.aprs_confirmed?' · APRS confirmado':'')+'</span>'+
+      '<strong>'+esc(tr('Estado operacional','Operational state','Estado operativo','État opérationnel'))+'</strong><span>'+esc(m.operational_state||'monitor')+'</span>'+
       '<strong>'+esc(tr('Modo','Mode','Modo','Mode'))+'</strong><span>'+esc(m.mode||m.protocol||'—')+'</span>'+
       '<strong>TLE</strong><span class="'+(age!==null&&age>7?'satellite-tle-stale':'')+'">'+esc(epoch?fmtDate(epoch)+' · '+age+' d':'—')+'</span>'+
-      '<strong>'+esc(tr('Fonte','Source','Fuente','Source'))+'</strong><span>'+esc(m.source||state.lastCatalogMeta?.tle_source||'—')+'</span>'+
+      '<strong>'+esc(tr('Fonte TLE','TLE source','Fuente TLE','Source TLE'))+'</strong><span>'+esc(m.tle_source||state.lastCatalogMeta?.tle_source||'—')+'</span>'+
+      '<strong>'+esc(tr('Fonte do catálogo','Catalog source','Fuente del catálogo','Source du catalogue'))+'</strong><span>'+esc(m.source||state.lastCatalogMeta?.catalog_source||'—')+'</span>'+
+      '</div>'+
+      '<div class="satellite-service-controls"><strong>'+esc(tr('Serviços monitorados','Monitored services','Servicios monitorizados','Services surveillés'))+'</strong>'+
+      ['aprs','sstv','telemetry','voice','packet'].map(key=>'<label><input type="checkbox" data-satellite-service="'+key+'" '+((m.service_states?.[key]??true)?'checked':'')+'><span>'+esc({aprs:'APRS',sstv:'SSTV',telemetry:'Telemetria',voice:'Voz/FM',packet:'Packet/AX.25'}[key])+'</span></label>').join('')+
       '</div>';
+    $('[data-satellite-service]',host).forEach(input=>input.addEventListener('change',async()=>{
+      const services={...(m.service_states||{})};services[input.dataset.satelliteService]=input.checked;
+      try{const saved=await req('/api/v113/satellites/'+encodeURIComponent(norad)+'/operation',{method:'POST',body:JSON.stringify({state:m.operational_state||'monitor',services})});m.service_states=saved.services;await loadPasses();}catch(e){console.warn(e);}
+    }));
   }
 
   function renderLiveStrip(norad){
@@ -254,14 +276,14 @@
   async function loadPasses(){
     const p=layerPrefs();
     try{
-      const data=await req('/api/v112/satellites/passes?hours='+encodeURIComponent(p.passHours)+'&min_elevation='+encodeURIComponent(p.passMin));
+      const data=await req('/api/v112/satellites/passes?hours='+encodeURIComponent(p.passHours)+'&min_elevation='+encodeURIComponent(p.passMin)+'&scope='+encodeURIComponent(p.catalogScope));
       state.passes=data.items||[];state.observer=data.observer||state.observer;setObserverMarker();renderPasses();checkPassAlerts();
     }catch(e){const body=$('#satellitePassTable tbody');if(body)body.innerHTML='<tr><td colspan="8" class="hint">'+esc(e.message)+'</td></tr>';}
   }
 
   async function loadStatus(){
     try{
-      const data=await req('/api/v112/satellites/status');
+      const data=await req('/api/v112/satellites/status?scope='+encodeURIComponent(layerPrefs().catalogScope));
       state.status=data.items||[];state.observer=data.observer||state.observer;setObserverMarker();
       if(state.activeNorad)renderDetail(state.activeNorad);
       await refreshOrbitalMaps();
@@ -276,11 +298,11 @@
   async function loadCatalog(autoUpdate=true){
     const host=$('#satelliteDataStatus');
     try{
-      let data=await req('/api/v112/satellites/catalog');
+      let data=await req('/api/v112/satellites/catalog?scope='+encodeURIComponent(layerPrefs().catalogScope));
       if(autoUpdate&&(!data.updated_at||!(data.catalog||[]).some(x=>x.tle_available))){
         if(host)host.textContent=tr('Baixando TLE e catálogo…','Downloading TLE and catalog…','Descargando TLE y catálogo…','Téléchargement TLE et catalogue…');
-        await req('/api/v112/satellites/update',{method:'POST',body:'{}'});
-        data=await req('/api/v112/satellites/catalog');
+        await req('/api/v112/satellites/update?scope='+encodeURIComponent(layerPrefs().catalogScope),{method:'POST',body:'{}'});
+        data=await req('/api/v112/satellites/catalog?scope='+encodeURIComponent(layerPrefs().catalogScope));
       }
       state.catalog=data.catalog||[];state.lastCatalogMeta=data;
       if(!state.catalog.some(x=>Number(x.norad_id)===state.activeNorad))state.activeNorad=Number(state.catalog[0]?.norad_id||25544);
@@ -343,7 +365,7 @@
     const bindings=[
       ['#satelliteShowFootprint','footprint','checked'],['#satelliteShowFuture','future','checked'],['#satelliteShowPast','past','checked'],
       ['#satelliteShowLabels','labels','checked'],['#satelliteFollowSelected','follow','checked'],['#satelliteFavoritesOnly','favoritesOnly','checked'],
-      ['#satelliteAlertsEnabled','alerts','checked'],['#satelliteTrackHorizon','horizon','value'],['#satelliteAlertLead','alertLead','value'],
+      ['#satelliteAlertsEnabled','alerts','checked'],['#satelliteCatalogScope','catalogScope','value'],['#satelliteTrackHorizon','horizon','value'],['#satelliteAlertLead','alertLead','value'],
       ['#satelliteAlertMinElevation','alertMin','value'],['#satellitePassHours','passHours','value'],['#satellitePassMinElevation','passMin','value'],
     ];
     for(const [sel,key,prop] of bindings){
@@ -352,12 +374,27 @@
         const raw=el[prop];const value=prop==='checked'?!!raw:(['horizon','alertLead','alertMin','passHours','passMin'].includes(key)?Number(raw):raw);
         savePrefs({[key]:value});
         if(key==='favoritesOnly')renderCatalog();
+        if(key==='catalogScope')void loadCatalog(false);
         if(['passHours','passMin'].includes(key))void loadPasses();
         if(['footprint','future','past','labels','horizon'].includes(key))void refreshOrbitalMaps();
       });
     }
     $('#satellitePassRefresh')?.addEventListener('click',loadPasses);
     $('#satelliteRefreshButton')?.addEventListener('click',manualUpdate);
+    $('#satelliteSelectAll')?.addEventListener('click',()=>{
+      const p=layerPrefs();
+      for(const meta of state.catalog){
+        if(!p.favoritesOnly||state.favorites.has(Number(meta.norad_id)))state.selected.add(Number(meta.norad_id));
+      }
+      saveSelected(state.selected);renderCatalog();void refreshOrbitalMaps();
+    });
+    $('#satelliteClearAll')?.addEventListener('click',()=>{
+      const p=layerPrefs();
+      for(const meta of state.catalog){
+        if(!p.favoritesOnly||state.favorites.has(Number(meta.norad_id)))state.selected.delete(Number(meta.norad_id));
+      }
+      saveSelected(state.selected);renderCatalog();void refreshOrbitalMaps();
+    });
   }
 
   function installLayoutReset(){

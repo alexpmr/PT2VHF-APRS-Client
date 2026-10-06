@@ -431,6 +431,8 @@ def satellite_catalog() -> list[dict[str, Any]]:
         tle = tles.get(str(item.get("norad_id"))) if isinstance(tles, dict) else None
         item["tle_available"] = bool(tle)
         item["tle_epoch"] = _tle_epoch(tle) if tle else None
+        item["tle_source"] = str((tle or {}).get("source") or data.get("tle_source") or "")
+        item["tle_source_id"] = str((tle or {}).get("source_id") or "")
         out.append(item)
     return out
 
@@ -590,12 +592,16 @@ def _observer_from_request() -> tuple[float, float, float]:
 def register_v112_satellite_routes(app) -> None:
     @app.get("/api/v112/satellites/catalog")
     def api_v112_satellite_catalog():
+        from . import v113_satellites as v113
         data = get_satellite_data(auto_refresh=False)
+        scope = str(request.args.get("scope") or v113.get_satellite_settings().get("default_scope") or "aprs")
         return jsonify({
-            "catalog": satellite_catalog(),
+            "catalog": v113.enriched_catalog(scope),
+            "scope": scope,
             "updated_at": data.get("updated_at"),
             "catalog_source": data.get("catalog_source"),
             "tle_source": data.get("tle_source"),
+            "source_runtime": data.get("source_runtime") or {},
             "errors": data.get("errors") or [],
             "sgp4_available": Satrec is not None,
         })
@@ -603,11 +609,13 @@ def register_v112_satellite_routes(app) -> None:
     @app.post("/api/v112/satellites/update")
     def api_v112_satellite_update():
         try:
-            data = refresh_satellite_data(force=True)
+            from . import v113_satellites as v113
+            data = v113.refresh_multisource(force=True, reason="manual")
+            scope = str(request.args.get("scope") or v113.get_satellite_settings().get("default_scope") or "aprs")
             return jsonify({
                 "ok": True,
                 "updated_at": data.get("updated_at"),
-                "catalog": satellite_catalog(),
+                "catalog": v113.enriched_catalog(scope),
                 "errors": data.get("errors") or [],
             })
         except Exception as exc:
@@ -616,18 +624,25 @@ def register_v112_satellite_routes(app) -> None:
     @app.get("/api/v112/satellites/status")
     def api_v112_satellite_status():
         try:
+            from . import v113_satellites as v113
             lat, lon, alt = _observer_from_request()
-            return jsonify({"items": satellite_status(lat, lon, alt), "observer": {"latitude": lat, "longitude": lon, "altitude_m": alt}})
+            scope = str(request.args.get("scope") or v113.get_satellite_settings().get("default_scope") or "aprs")
+            items = v113.filter_status(satellite_status(lat, lon, alt), scope)
+            return jsonify({"items": items, "scope": scope, "observer": {"latitude": lat, "longitude": lon, "altitude_m": alt}})
         except Exception as exc:
             return jsonify({"items": [], "error": str(exc)}), 400
 
     @app.get("/api/v112/satellites/passes")
     def api_v112_satellite_passes():
         try:
+            from . import v113_satellites as v113
             lat, lon, alt = _observer_from_request()
             hours = int(request.args.get("hours", 24))
             min_elevation = float(request.args.get("min_elevation", 0))
-            return jsonify({"items": satellite_passes(lat, lon, alt, hours, min_elevation), "observer": {"latitude": lat, "longitude": lon, "altitude_m": alt}})
+            scope = str(request.args.get("scope") or v113.get_satellite_settings().get("default_scope") or "aprs")
+            raw = satellite_passes(lat, lon, alt, hours, min_elevation)
+            items = v113.filter_passes(raw, scope, operational_only=(scope == "aprs"))
+            return jsonify({"items": items, "scope": scope, "observer": {"latitude": lat, "longitude": lon, "altitude_m": alt}})
         except Exception as exc:
             return jsonify({"items": [], "error": str(exc)}), 400
 

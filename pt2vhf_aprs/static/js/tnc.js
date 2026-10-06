@@ -312,6 +312,8 @@
       : serial
         ? (rxState === 'active'
           ? tr('Serial operacional — RX KISS ativo')
+          : rxState === 'terminal_bytes_active'
+            ? 'Serial terminal ativa'
           : rxState === 'bytes_without_kiss'
             ? tr('Serial conectada — sem KISS')
             : rxState === 'invalid'
@@ -330,6 +332,9 @@
       diagnosticState = 'idle';
     } else if (rxState === 'active') {
       rxDetail = `${tr('RX ativo')} · ${status.last_rx_at ? `${tr('Última')}: ${humanTime(status.last_rx_at)}` : ''}`;
+      diagnosticState = 'good';
+    } else if (rxState === 'terminal_bytes_active') {
+      rxDetail = `${bytesRx.toLocaleString()} bytes recebidos em protocolo terminal/PKT`;
       diagnosticState = 'good';
     } else if (rxState === 'bytes_without_kiss') {
       rxDetail = `${bytesRx.toLocaleString()} ${tr('bytes recebidos pela serial, mas nenhum frame KISS válido foi reconhecido.')}`;
@@ -355,6 +360,8 @@
           ? 'TNC offline'
           : rxState === 'active'
             ? `TNC · ${tr('RX KISS ativo')}`
+            : serial && rxState === 'terminal_bytes_active'
+              ? 'TNC · Terminal ativo'
             : serial && rxState === 'bytes_without_kiss'
               ? `TNC · ${tr('Serial sem KISS')}`
               : serial && rxState === 'invalid'
@@ -392,8 +399,13 @@
         diagnosticText.textContent = tr('Desconectado.');
       } else if (rxState === 'active') {
         diagnosticText.textContent = tr('Transporte operacional: frames KISS/AX.25 válidos estão chegando ao Client.');
+      } else if (rxState === 'terminal_bytes_active') {
+        const profile=String(status.device_profile||lastConfig?.device_profile||'');
+        diagnosticText.textContent = profile==='kenwood_tm_d700'
+          ? 'Kenwood TM-D700 em modo terminal/PKT: porta aberta e bytes chegando. Isto é compatível com o perfil selecionado; não existe exigência de menu KISS neste modo. Serial e packet RF possuem velocidades independentes.'
+          : 'Porta serial ativa em protocolo terminal/TNC. Bytes estão chegando; KISS não é o protocolo esperado para este perfil.';
       } else if (rxState === 'bytes_without_kiss') {
-        diagnosticText.textContent = tr('A porta está aberta e há bytes chegando, mas não em KISS reconhecível. Verifique modo PKT/KISS, protocolo e baud rate; não mude o rádio para TNC interno apenas para fazer o indicador ficar ativo.');
+        diagnosticText.textContent = 'A porta está aberta e há bytes chegando, mas KISS é o protocolo esperado e nenhum frame KISS foi reconhecido. Verifique protocolo/configuração e baud rate da interface.';
       } else if (rxState === 'invalid') {
         diagnosticText.textContent = tr('Há frames KISS chegando, mas o conteúdo AX.25 não está sendo validado. Consulte o erro exibido e revise o modo/protocolo do equipamento.');
       } else {
@@ -404,6 +416,12 @@
             : tr('KISS TCP conectado; aguardando o primeiro frame válido.');
       }
     }
+
+    const sampleBox=$('#tncDiagnosticSample'),sampleAscii=$('#tncDiagnosticAscii'),sampleHex=$('#tncDiagnosticHex');
+    const sampleA=String(status.last_transport_sample_ascii||''),sampleH=String(status.last_transport_sample_hex||'');
+    if(sampleBox)sampleBox.classList.toggle('hidden',!connected||(!sampleA&&!sampleH));
+    if(sampleAscii)sampleAscii.textContent=sampleA||'—';
+    if(sampleHex)sampleHex.textContent=sampleH||'—';
 
     $('#tncConnect')?.toggleAttribute('disabled', connected);
     $('#tncDisconnect')?.toggleAttribute('disabled', !connected);
@@ -420,6 +438,9 @@
       transport: val('tncTransport', 'tcp'),
       serial_port: val('tncSerialPort'),
       serial_baud: Number(val('tncSerialBaud', 9600)),
+      device_profile: val('tncDeviceProfile', 'generic_kiss'),
+      serial_protocol: val('tncSerialProtocol', 'kiss'),
+      packet_rf_baud: Number(val('tncPacketRfBaud', 1200)),
       tcp_host: String(val('tncTcpHost', '127.0.0.1')).trim(),
       tcp_port: Number(val('tncTcpPort', 8001)),
       agwpe_host: String(val('tncAgwpeHost', '127.0.0.1')).trim(),
@@ -449,6 +470,9 @@
     const values = {
       tncTransport: cfg.transport || 'tcp',
       tncSerialBaud: cfg.serial_baud ?? 9600,
+      tncDeviceProfile: cfg.device_profile || 'generic_kiss',
+      tncSerialProtocol: cfg.serial_protocol || 'kiss',
+      tncPacketRfBaud: cfg.packet_rf_baud ?? 1200,
       tncTcpHost: cfg.tcp_host || '127.0.0.1',
       tncTcpPort: cfg.tcp_port ?? 8001,
       tncAgwpeHost: cfg.agwpe_host || '127.0.0.1',
@@ -531,28 +555,30 @@
   function updateSerialProfileHint(port = null) {
     const hint = $('#tncSerialProfileHint');
     if (!hint) return;
+    const profile=String(val('tncDeviceProfile','generic_kiss'));
+    if(profile==='kenwood_tm_d700'||profile==='kenwood_tm_d710'){
+      hint.textContent='Kenwood '+(profile==='kenwood_tm_d700'?'TM-D700':'TM-D710')+': o baud rate serial e o packet RF são parâmetros diferentes. Em modo terminal/PKT, KISS não é obrigatório.';
+      hint.classList.remove('hidden');return;
+    }
+    if(profile==='kantronics'){
+      hint.textContent='TNC terminal: bytes ASCII/comandos podem ser esperados. Use KISS apenas quando o equipamento estiver realmente configurado para KISS.';
+      hint.classList.remove('hidden');return;
+    }
     const device = String(val('tncSerialPort') || '').trim().toUpperCase();
     const item = port || lastSerialPorts.find(row => String(row.device || '').toUpperCase() === device);
-    if (!device) {
-      hint.textContent = '';
-      hint.classList.add('hidden');
-      return;
-    }
-    const equipment = String(item?.equipment || '');
-    const chipset = String(item?.chipset || '');
+    if (!device) { hint.textContent='';hint.classList.add('hidden');return; }
+    const equipment=String(item?.equipment||''),chipset=String(item?.chipset||'');
     if (/RADTEL.*950|RT-950|RT950/i.test(equipment)) {
-      hint.textContent = tr('Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.');
+      hint.textContent=tr('Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.');
       hint.classList.remove('hidden');
       if (field('tncSerialBaud')) field('tncSerialBaud').value = '115200';
       return;
     }
-    if (chipset === 'CH9102') {
-      hint.textContent = tr('Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.');
-      hint.classList.remove('hidden');
-      return;
+    if (chipset==='CH9102') {
+      hint.textContent=tr('Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.');
+      hint.classList.remove('hidden');return;
     }
-    hint.textContent = '';
-    hint.classList.add('hidden');
+    hint.textContent='';hint.classList.add('hidden');
   }
 
   function renderSerialDevices(ports = []) {
@@ -744,6 +770,13 @@
     field('tncTransport')?.addEventListener('change', syncTransportFields);
     field('tncRole')?.addEventListener('change', applyRolePreset);
     field('tncSerialPort')?.addEventListener('input', () => updateSerialProfileHint());
+    field('tncDeviceProfile')?.addEventListener('change',()=>{
+      const profile=val('tncDeviceProfile','generic_kiss');
+      if(['kenwood_tm_d700','kenwood_tm_d710','kantronics'].includes(profile)&&field('tncSerialProtocol'))field('tncSerialProtocol').value='terminal';
+      if(profile==='kenwood_tm_d700'&&field('tncPacketRfBaud'))field('tncPacketRfBaud').value='1200';
+      updateSerialProfileHint();
+    });
+    field('tncSerialProtocol')?.addEventListener('change',()=>updateSerialProfileHint());
     $('#tncRefreshPorts')?.addEventListener('click', () => loadPorts({force:true}));
     $('#tncRescanDevices')?.addEventListener('click', () => loadPorts({force:true}));
     $('#tncSerialDevicesBody')?.addEventListener('click', event => {

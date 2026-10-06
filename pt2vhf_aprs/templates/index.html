@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v110.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v111.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v112.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/v113.css') }}">
 </head>
 <body>
 <header class="app-header">
@@ -85,7 +86,7 @@
 
 <nav class="tabs" aria-label="Navegação principal">
   <button class="tab active" data-tab="map">MAPA</button>
-  <button class="tab" data-tab="satellites">Satélites / ISS</button>
+  <button class="tab satellite-tab-button" data-tab="satellites">Satélites / ISS <span id="satelliteTabCountdown" class="satellite-tab-countdown" title="Tempo para a próxima passagem APRS">--:--:--</span></button>
   <button class="tab" data-tab="messages">Mensagens <span id="messageBadge" class="badge hidden">0</span></button>
   <button class="tab" data-tab="stations">Estações</button>
   <button class="tab" data-tab="log">Log</button>
@@ -276,8 +277,19 @@
       <aside class="satellite-sidebar">
         <div class="satellite-card">
           <div class="satellite-card-title">
-            <div><h3>Satélites APRS / packet</h3><small>Catálogo sincronizado e favoritos locais</small></div>
+            <div><h3>Satélites APRS / packet</h3><small>Por padrão, somente APRS confirmado</small></div>
             <label class="check-field compact"><input id="satelliteFavoritesOnly" type="checkbox"><span>Só favoritos</span></label>
+          </div>
+          <div class="satellite-selection-toolbar">
+            <label class="field compact"><span>Mostrar</span>
+              <select id="satelliteCatalogScope">
+                <option value="aprs" selected>Somente APRS confirmado</option>
+                <option value="packet">APRS + Packet/AX.25</option>
+                <option value="all">Todos digitais do catálogo</option>
+              </select>
+            </label>
+            <button id="satelliteSelectAll" type="button" class="btn secondary">Marcar tudo</button>
+            <button id="satelliteClearAll" type="button" class="btn secondary">Desmarcar tudo</button>
           </div>
           <div id="satelliteCatalogList" class="satellite-catalog-list"><span class="hint">Carregando catálogo…</span></div>
         </div>
@@ -291,10 +303,26 @@
           <h3>Alertas de passagem</h3>
           <div class="satellite-alert-grid">
             <label class="check-field"><input id="satelliteAlertsEnabled" type="checkbox" checked><span>Ativar alertas</span></label>
+            <label class="check-field"><input id="satelliteCoverageAlarmEnabled" type="checkbox" checked><span>Despertador de aproximação</span></label>
+            <label class="field compact"><span>Despertador</span><select id="satelliteCoverageAlarmLead"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
             <label class="field compact"><span>Antecedência</span><select id="satelliteAlertLead"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
             <label class="field compact"><span>Elevação mínima</span><input id="satelliteAlertMinElevation" type="number" min="0" max="90" step="5" value="10"></label>
           </div>
           <small>Os alertas entram também no Centro de notificações.</small>
+        </div>
+
+        <div class="satellite-card satellite-sources-card">
+          <h3>Dados orbitais / TLE</h3>
+          <div class="satellite-source-settings">
+            <label class="check-field"><input id="satelliteAutoUpdateEnabled" type="checkbox" checked><span>Atualização automática</span></label>
+            <label class="field compact"><span>Horário diário</span><input id="satelliteUpdateTime" type="time" value="00:00"></label>
+          </div>
+          <div id="satelliteSourcesList" class="satellite-sources-list"><span class="hint">Carregando fontes…</span></div>
+          <div class="satellite-source-actions">
+            <button id="satelliteSaveSources" type="button" class="btn secondary">Salvar fontes</button>
+            <button id="satelliteUpdateAllSources" type="button" class="btn secondary">Atualizar agora</button>
+          </div>
+          <small>TLE válido não significa transmissor ativo. O estado operacional de cada satélite é independente.</small>
         </div>
       </aside>
     </div>
@@ -791,6 +819,11 @@
       <span id="tncTransportDiagnosticText">Desconectado.</span>
     </div>
 
+    <div id="tncDiagnosticSample" class="tnc-diagnostic-sample hidden">
+      <strong>Amostra serial de diagnóstico (limitada):</strong>
+      <div><span>ASCII</span><code id="tncDiagnosticAscii">—</code></div>
+      <div><span>HEX</span><code id="tncDiagnosticHex">—</code></div>
+    </div>
     <div id="tncError" class="tnc-error hidden" role="alert"></div>
 
     <form id="tncForm" class="tnc-config-grid">
@@ -820,6 +853,26 @@
               <option>1200</option><option>2400</option><option>4800</option><option selected>9600</option>
               <option>19200</option><option>38400</option><option>57600</option><option>115200</option><option>230400</option>
             </select>
+          </label>
+          <label class="field tnc-serial-field"><span>Perfil do equipamento</span>
+            <select id="tncDeviceProfile" name="device_profile">
+              <option value="generic_kiss">Genérico KISS</option>
+              <option value="kenwood_tm_d700">Kenwood TM-D700</option>
+              <option value="kenwood_tm_d710">Kenwood TM-D710</option>
+              <option value="kantronics">Kantronics / TNC terminal</option>
+              <option value="generic">Outro / genérico</option>
+            </select>
+          </label>
+          <label class="field tnc-serial-field"><span>Protocolo esperado</span>
+            <select id="tncSerialProtocol" name="serial_protocol">
+              <option value="kiss">KISS</option>
+              <option value="terminal">Terminal / command mode</option>
+              <option value="auto">Detectar / diagnóstico</option>
+            </select>
+          </label>
+          <label class="field tnc-serial-field"><span>Packet RF</span>
+            <select id="tncPacketRfBaud" name="packet_rf_baud"><option value="1200" selected>1200 baud</option><option value="9600">9600 baud</option></select>
+            <small>Velocidade no ar; não é o baud rate da porta serial.</small>
           </label>
         </div>
         <p class="hint">Compatível com TNC físico em KISS e softwares como Dire Wolf por KISS TCP. APRS-IS e RF podem operar de forma independente.</p>
@@ -1769,5 +1822,6 @@
 <script src="{{ url_for('static', filename='js/v110.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v111.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v112.js') }}"></script>
+<script src="{{ url_for('static', filename='js/v113.js') }}"></script>
 </body>
 </html>
