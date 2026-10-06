@@ -1,36 +1,48 @@
-# PT2VHF APRS Client - v1.14.2
+# PT2VHF APRS Client - v1.14.3
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.14.2** adiciona Cobertura RF em heatmap e amplia o popup AIS, preservando as melhorias de SAT, TNC/RF, mensagens e atualização automática das versões anteriores.
+A **v1.14.3** adiciona o botão **Enviar Beacon** na barra superior e corrige o falso positivo que podia classificar uma estação comum/HT usando WIDE como digipeater.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.14.2**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.14.3**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_Setup_x64_v1.14.2.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_Portable_x64_v1.14.2.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_Setup_ARM64_v1.14.2.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_Portable_ARM64_v1.14.2.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_Setup_x64_v1.14.3.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_Portable_x64_v1.14.3.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_Setup_ARM64_v1.14.3.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_Portable_ARM64_v1.14.3.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_x86_64_v1.14.2.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/pt2vhf-aprs-client_1.14.2_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_Linux_x86_64_v1.14.2.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_arm64_v1.14.2.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/pt2vhf-aprs-client_1.14.2_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_Linux_arm64_v1.14.2.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_x86_64_v1.14.3.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/pt2vhf-aprs-client_1.14.3_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_Linux_x86_64_v1.14.3.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_arm64_v1.14.3.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/pt2vhf-aprs-client_1.14.3_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_Linux_arm64_v1.14.3.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_macOS_arm64_v1.14.2.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_macOS_x86_64_v1.14.2.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_macOS_arm64_v1.14.3.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_macOS_x86_64_v1.14.3.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.2/PT2VHF_APRS_Client_Manual_v1.14.2.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.3/PT2VHF_APRS_Client_Manual_v1.14.3.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.14.3
+
+- **Enviar Beacon:** novo botão na barra principal superior para disparo manual rápido.
+- **Mesma lógica de TX:** cabeçalho e Configuração reutilizam o mesmo envio manual já existente; não há pipeline paralelo.
+- **Proteção contra duplicidade:** os controles ficam bloqueados durante o envio para evitar cliques repetidos.
+- **Estações comuns com WIDE:** `WIDE1-1,WIDE2-1` no path deixa de ser interpretado como prova de que a origem é um digipeater.
+- **Classificação mais confiável:** o frame bruto não é mais usado para bloquear interação; digis/iGates podem ser confirmados por evidência observada na topologia.
+- **Mensagens APRS:** uma estação comum/HT volta a permitir Mensagem e queries quando não há evidência real de infraestrutura.
+- **Segurança preservada:** objetos/itens e infraestrutura comprovada sem capacidade interativa continuam bloqueados.
+- **TM-D700:** validação física continua pendente de equipamento real e segunda estação/monitor RF.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.14.2
 
