@@ -42,7 +42,7 @@
     selected:selectedSet(),favorites:favoriteSet(),activeNorad:25544,
     layers:new Map(),mainLayers:new Map(),mainMap:null,refreshTimer:null,alertTimer:null,
     observer:null,trackBusy:new Set(),lastCatalogMeta:null,
-    trackQueue:[],trackQueued:new Set(),trackPromises:new Map(),trackActive:0,trackGeneration:new Map(),
+    trackQueue:[],trackQueued:new Set(),trackPromises:new Map(),trackRequestGen:new Map(),trackActive:0,trackGeneration:new Map(),
   };
 
   function layerPrefs(){
@@ -279,7 +279,12 @@
   async function fetchAndRenderTrack(norad,center=false,generation=null){
     const id=Number(norad),meta=satelliteMeta(id);if(!state.map||!meta.norad_id)return;
     const started=performance.now(),gen=generation??state.trackGeneration.get(id)??0;
-    if(state.trackPromises.has(id))return state.trackPromises.get(id);
+    if(state.trackPromises.has(id)){
+      const existing=state.trackPromises.get(id),existingGen=state.trackRequestGen.get(id);
+      if(existingGen===gen)return existing;
+      try{await existing;}catch(_){}
+      if(!state.selected.has(id)||gen!==(state.trackGeneration.get(id)??0))return;
+    }
     const task=(async()=>{
       try{
         const p=layerPrefs();
@@ -296,9 +301,12 @@
           const fallback=renderCachedPosition(id,center);
           if(!fallback)setSatelliteRenderStatus(id,(meta.tle_available===false?tr('TLE indisponível','TLE unavailable','TLE no disponible','TLE indisponible'):tr('Erro ao calcular órbita','Orbital calculation error','Error al calcular órbita','Erreur de calcul orbital'))+': '+e.message,true);
         }
-      }finally{state.trackPromises.delete(id);state.trackBusy.delete(id);}
+      }finally{
+        if(state.trackPromises.get(id)===task){state.trackPromises.delete(id);state.trackRequestGen.delete(id);}
+        state.trackBusy.delete(id);
+      }
     })();
-    state.trackPromises.set(id,task);state.trackBusy.add(id);return task;
+    state.trackPromises.set(id,task);state.trackRequestGen.set(id,gen);state.trackBusy.add(id);return task;
   }
   function pumpTrackQueue(){
     while(state.trackActive<4&&state.trackQueue.length){
@@ -309,8 +317,10 @@
     }
   }
   function enqueueTrack(norad,center=false){
-    const id=Number(norad);if(!state.selected.has(id)||state.trackQueued.has(id)||state.trackPromises.has(id))return;
-    state.trackQueued.add(id);state.trackQueue.push({id,center,generation:state.trackGeneration.get(id)??0});pumpTrackQueue();
+    const id=Number(norad),generation=state.trackGeneration.get(id)??0;
+    if(!state.selected.has(id)||state.trackQueued.has(id))return;
+    if(state.trackPromises.has(id)&&state.trackRequestGen.get(id)===generation)return;
+    state.trackQueued.add(id);state.trackQueue.push({id,center,generation});pumpTrackQueue();
   }
   function showSatelliteImmediately(norad,center=false){
     const id=Number(norad);if(!state.selected.has(id))return;
@@ -396,7 +406,7 @@
       state.catalog=data.catalog||[];state.lastCatalogMeta=data;
       if(!state.catalog.some(x=>Number(x.norad_id)===state.activeNorad))state.activeNorad=Number(state.catalog[0]?.norad_id||25544);
       if(host){host.textContent=catalogStatusText(data);host.classList.toggle('error',!!(data.errors||[]).length);}
-      renderCatalog();updateSelectionSummary();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-catalog-loaded',{detail:{catalog:state.catalog}}));await loadStatus();await loadPasses();
+      renderCatalog();updateSelectionSummary();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-catalog-loaded',{detail:{catalog:state.catalog}}));await refreshOrbitalMaps();await loadStatus();await loadPasses();
     }catch(e){if(host){host.textContent=e.message;host.classList.add('error');}}
   }
 
