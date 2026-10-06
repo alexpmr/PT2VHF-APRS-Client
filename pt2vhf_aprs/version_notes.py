@@ -3,6 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.2": {
+        "title": "Cobertura RF em heatmap e AIS ampliado",
+        "items": [
+            "Mapa ganha camada Cobertura RF em heatmap Canvas, ponderada por RSSI/SNR quando disponíveis e por densidade RF como fallback.",
+            "O heatmap respeita período e zoom e integra Selecionar tudo / Remover tudo do menu Ver.",
+            "Popup AIS passa a mostrar mais dados amigáveis: nome, MMSI, IMO, indicativo, tipo, navegação, SOG/COG, proa, destino, ETA, calado e dimensões.",
+            "Códigos AIS comuns são traduzidos para descrições legíveis.",
+            "Foto real continua dependente do provedor configurável por MMSI/IMO; sem foto, a representação é explicitamente marcada como ilustrativa.",
+            "Falhas do enriquecimento AIS não bloqueiam o popup.",
+            "O backlog antigo de zoom é encerrado porque o step já é configurável.",
+            "A validação física do TM-D700 continua pendente de hardware real.",
+        ],
+    },
     "1.14.1": {
         "title": "SAT mais rápido, compacto e operacional",
         "items": [
