@@ -523,6 +523,8 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
     merged["retention_days"] = max(1, min(90, int(merged.get("retention_days") or 14)))
 
     if strict and (merged["digi_enabled"] or merged["igate_tx_enabled"] or merged["auto_tx_enabled"]):
+        if merged["transport"] == "serial" and merged["serial_protocol"] == "terminal":
+            raise ValueError("TX automático não é suportado no perfil serial terminal/PKT; use KISS/AGWPE ou mantenha o perfil em monitor.")
         if not merged["tx_confirmed"]:
             raise ValueError("Confirme explicitamente a habilitação de transmissão automática em RF.")
         if not merged["auto_tx_enabled"] and (merged["digi_enabled"] or merged["igate_tx_enabled"]):
