@@ -34,18 +34,23 @@
     return 'normal';
   }
   function renderCountdown(){
-    const el=$('#satelliteTabCountdown'),name=ensureNameNode();if(!el)return;
+    const el=$('#satelliteTabCountdown'),name=ensureNameNode(),label=$('#satelliteCountdownLabel');if(!el)return;
     if(!nextPass){
-      el.textContent='--:--:--';el.dataset.phase='idle';el.title='Nenhuma passagem APRS calculada';if(name)name.textContent='';return;
+      el.textContent='--:--:--';el.dataset.phase='idle';el.title='Nenhuma passagem APRS prevista';
+      if(name)name.textContent='Nenhuma passagem APRS prevista';
+      if(label)label.textContent='Próxima passagem';
+      return;
     }
     const now=Date.now(),aos=Date.parse(nextPass.aos||''),los=Date.parse(nextPass.los||'');
     const active=Number.isFinite(aos)&&Number.isFinite(los)&&aos<=now&&now<=los;
     const remaining=active?los-now:aos-now;
     if(!Number.isFinite(remaining)||remaining<0){void refreshNextPass(true);return;}
     el.textContent=formatHms(remaining);el.dataset.phase=countdownPhase(remaining,active);
-    const sat=String(nextPass.name||nextPass.callsign||('NORAD '+nextPass.norad_id));
+    const callsign=String(nextPass.callsign||'').trim(),satName=String(nextPass.name||('NORAD '+nextPass.norad_id)).trim();
+    const sat=callsign&&callsign.toUpperCase()!==satName.toUpperCase()?satName+' / '+callsign:(callsign||satName);
     el.title=(active?'Passagem APRS ativa — tempo até LOS: ':'Próxima passagem APRS — tempo até AOS: ')+sat;
-    if(name)name.textContent=sat;
+    if(name)name.textContent=active?sat+' — EM PASSAGEM':sat;
+    if(label)label.textContent=active?'LOS em':'Próxima passagem em';
     checkCoverageAlarm(remaining,active);
   }
   function countdownEligibleNorads(){

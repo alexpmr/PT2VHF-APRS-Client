@@ -17,7 +17,7 @@ checks = {
         "/api/v111/station/", "station_operational_profile",
     ],
     "pt2vhf_aprs/static/js/v111.js": [
-        "v111Bell", "v111TncSelfTest", "v111DbHealth",
+        "v111NotifyOpen", "v111TncSelfTest", "v111DbHealth",
         "Ouvido por", "Copiar diagnóstico", "Executar teste completo",
     ],
     "pt2vhf_aprs/static/css/v111.css": [".v111-notify-panel", ".v111-counter-grid"],

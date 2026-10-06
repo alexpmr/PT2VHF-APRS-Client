@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.1": {
+        "title": "SAT mais rápido, compacto e operacional",
+        "items": [
+            "Corrigida a regressão em que a ISS selecionada podia não aparecer no mapa até o próximo polling.",
+            "A ISS/NORAD 25544 passa a ser o único satélite selecionado por padrão em instalações novas.",
+            "Mapa, estações recebidas e mensagens ganham prioridade visual; configurações secundárias ficam recolhidas.",
+            "O contador de passagem fica alinhado à esquerda e identifica claramente o satélite, AOS/LOS e passagem ativa.",
+            "O menu superior passa a mostrar SAT.",
+            "O sino de notificações é removido da barra superior; o Centro de notificações continua disponível em Configuração.",
+            "Corrigida a preferência de alerta de nova estação para respeitar imediatamente o estado desmarcado.",
+        ],
+    },
     "1.14.0": {
         "title": "Operação APRS por satélite em uma única aba",
         "items": [

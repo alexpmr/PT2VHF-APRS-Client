@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v112.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v113.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/v114.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/v141.css') }}">
 </head>
 <body>
 <header class="app-header">
@@ -87,7 +88,7 @@
 
 <nav class="tabs" aria-label="Navegação principal">
   <button class="tab active" data-tab="map">MAPA</button>
-  <button class="tab satellite-tab-button" data-tab="satellites">Satélites / ISS</button>
+  <button class="tab satellite-tab-button" data-tab="satellites">SAT</button>
   <button class="tab" data-tab="messages">Mensagens <span id="messageBadge" class="badge hidden">0</span></button>
   <button class="tab" data-tab="stations">Estações</button>
   <button class="tab" data-tab="log">Log</button>
@@ -243,23 +244,15 @@
     <div class="panel-header satellite-panel-header">
       <div>
         <h2>Satélites / ISS</h2>
-        <p>APRS/packet espacial: posição orbital, cobertura, trajetórias, passagens e alertas.</p>
-      </div>
-      <div class="satellite-header-actions">
-        <span id="satelliteDataStatus" class="satellite-data-status">Dados orbitais ainda não carregados</span>
-        <button id="satelliteRefreshButton" type="button" class="btn secondary">Atualizar TLE / catálogo</button>
+        <p>APRS/packet espacial: mapa, estações recebidas e mensagens em primeiro plano.</p>
       </div>
     </div>
 
     <div class="satellite-operation-bar">
-      <div class="satellite-operation-title">
-        <strong>Satélites / ISS</strong>
-        <span id="satelliteTabNextName" class="satellite-tab-next-name"></span>
-      </div>
-      <div class="satellite-countdown-wrap">
-        <small id="satelliteCountdownLabel">Próxima passagem APRS</small>
-        <span id="satelliteTabCountdown" class="satellite-tab-countdown satellite-tab-countdown-large" title="Tempo para a próxima passagem APRS">--:--:--</span>
-      </div>
+      <strong class="satellite-operation-module">Satélites / ISS</strong>
+      <span id="satelliteTabNextName" class="satellite-tab-next-name">Nenhuma passagem APRS prevista</span>
+      <small id="satelliteCountdownLabel">Próxima passagem</small>
+      <span id="satelliteTabCountdown" class="satellite-tab-countdown satellite-tab-countdown-large" title="Tempo para a próxima passagem APRS">--:--:--</span>
     </div>
 
     <div class="satellite-workspace">
@@ -317,41 +310,49 @@
               </label>
               <button id="satelliteSelectAll" type="button" class="btn secondary">Marcar tudo</button>
               <button id="satelliteClearAll" type="button" class="btn secondary">Desmarcar tudo</button>
+              <button id="satelliteResetDefaults" type="button" class="btn secondary">Restaurar padrão</button>
             </div>
             <div id="satelliteCatalogList" class="satellite-catalog-list"><span class="hint">Carregando catálogo…</span></div>
           </div>
         </details>
 
-        <div id="satelliteDetail" class="satellite-card satellite-detail">
-          <h3>Detalhes do satélite</h3>
-          <div class="hint">Clique em um satélite no mapa ou na lista.</div>
-        </div>
+        <details id="satelliteDetailPanel" class="satellite-card satellite-secondary-panel" data-sat-collapsible="detail">
+          <summary><strong>Detalhes do satélite</strong><small>Posição, frequências, Doppler e serviços</small></summary>
+          <div id="satelliteDetail" class="satellite-detail">
+            <div class="hint">Clique em um satélite no mapa ou na lista.</div>
+          </div>
+        </details>
 
-        <div class="satellite-card">
-          <h3>Alertas de passagem</h3>
-          <div class="satellite-alert-grid">
-            <label class="check-field"><input id="satelliteAlertsEnabled" type="checkbox" checked><span>Ativar alertas</span></label>
-            <label class="check-field"><input id="satelliteCoverageAlarmEnabled" type="checkbox" checked><span>Despertador de aproximação</span></label>
-            <label class="field compact"><span>Despertador</span><select id="satelliteCoverageAlarmLead"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
-            <label class="field compact"><span>Antecedência</span><select id="satelliteAlertLead"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
-            <label class="field compact"><span>Elevação mínima</span><input id="satelliteAlertMinElevation" type="number" min="0" max="90" step="5" value="10"></label>
+        <details class="satellite-card satellite-secondary-panel" data-sat-collapsible="alerts">
+          <summary><strong>Alertas de passagem</strong><small>Despertador, antecedência e elevação mínima</small></summary>
+          <div class="satellite-collapsible-body">
+            <div class="satellite-alert-grid">
+              <label class="check-field"><input id="satelliteAlertsEnabled" type="checkbox" checked><span>Ativar alertas</span></label>
+              <label class="check-field"><input id="satelliteCoverageAlarmEnabled" type="checkbox" checked><span>Despertador de aproximação</span></label>
+              <label class="field compact"><span>Despertador</span><select id="satelliteCoverageAlarmLead"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
+              <label class="field compact"><span>Antecedência</span><select id="satelliteAlertLead"><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
+              <label class="field compact"><span>Elevação mínima</span><input id="satelliteAlertMinElevation" type="number" min="0" max="90" step="5" value="10"></label>
+            </div>
+            <small>Os alertas entram também no Centro de notificações.</small>
           </div>
-          <small>Os alertas entram também no Centro de notificações.</small>
-        </div>
+        </details>
 
-        <div class="satellite-card satellite-sources-card">
-          <h3>Dados orbitais / TLE</h3>
-          <div class="satellite-source-settings">
-            <label class="check-field"><input id="satelliteAutoUpdateEnabled" type="checkbox" checked><span>Atualização automática</span></label>
-            <label class="field compact"><span>Horário diário</span><input id="satelliteUpdateTime" type="time" value="00:00"></label>
+        <details class="satellite-card satellite-sources-card satellite-secondary-panel" data-sat-collapsible="tle">
+          <summary><strong>Dados orbitais / TLE</strong><small id="satelliteDataStatus" class="satellite-data-status">Dados orbitais ainda não carregados</small></summary>
+          <div class="satellite-collapsible-body">
+            <div class="satellite-source-settings">
+              <label class="check-field"><input id="satelliteAutoUpdateEnabled" type="checkbox" checked><span>Atualização automática</span></label>
+              <label class="field compact"><span>Horário diário</span><input id="satelliteUpdateTime" type="time" value="00:00"></label>
+            </div>
+            <div id="satelliteSourcesList" class="satellite-sources-list"><span class="hint">Carregando fontes…</span></div>
+            <div class="satellite-source-actions">
+              <button id="satelliteSaveSources" type="button" class="btn secondary">Salvar fontes</button>
+              <button id="satelliteUpdateAllSources" type="button" class="btn secondary">Atualizar agora</button>
+              <button id="satelliteRefreshButton" type="button" class="btn secondary">Atualizar TLE / catálogo</button>
+            </div>
+            <small>TLE válido não significa transmissor ativo. O estado operacional de cada satélite é independente.</small>
           </div>
-          <div id="satelliteSourcesList" class="satellite-sources-list"><span class="hint">Carregando fontes…</span></div>
-          <div class="satellite-source-actions">
-            <button id="satelliteSaveSources" type="button" class="btn secondary">Salvar fontes</button>
-            <button id="satelliteUpdateAllSources" type="button" class="btn secondary">Atualizar agora</button>
-          </div>
-          <small>TLE válido não significa transmissor ativo. O estado operacional de cada satélite é independente.</small>
-        </div>
+        </details>
       </aside>
     </div>
 
@@ -364,23 +365,26 @@
           </div>
           <span id="satelliteNewStationsBadge" class="badge hidden">0 novas</span>
         </div>
-        <div class="satellite-station-filters">
-          <label class="field compact"><span>Contexto</span>
-            <select id="satelliteStationsContext">
-              <option value="eligible" selected>Selecionados + favoritos</option>
-              <option value="selected">Selecionados</option>
-              <option value="favorites">Favoritos</option>
-              <option value="active">Passagem atual</option>
-            </select>
-          </label>
-          <label class="field compact"><span>Período</span>
-            <select id="satelliteStationsHours"><option value="1">1 h</option><option value="6" selected>6 h</option><option value="24">24 h</option></select>
-          </label>
-          <label class="check-field compact"><input id="satelliteStationsContextOnly" type="checkbox"><span>Somente do contexto</span></label>
-          <label class="check-field compact"><input id="satelliteStationsRfOnly" type="checkbox"><span>Somente RF</span></label>
-          <label class="check-field compact"><input id="satelliteStationsMessagesOnly" type="checkbox"><span>Com mensagens</span></label>
-          <button id="satelliteStationsRefresh" type="button" class="btn secondary">Atualizar</button>
-        </div>
+        <details class="satellite-inline-filters satellite-secondary-panel" data-sat-collapsible="station-filters">
+          <summary><strong>Filtros</strong><small>Contexto, período, RF e mensagens</small></summary>
+          <div class="satellite-station-filters">
+            <label class="field compact"><span>Contexto</span>
+              <select id="satelliteStationsContext">
+                <option value="eligible" selected>Selecionados + favoritos</option>
+                <option value="selected">Selecionados</option>
+                <option value="favorites">Favoritos</option>
+                <option value="active">Passagem atual</option>
+              </select>
+            </label>
+            <label class="field compact"><span>Período</span>
+              <select id="satelliteStationsHours"><option value="1">1 h</option><option value="6" selected>6 h</option><option value="24">24 h</option></select>
+            </label>
+            <label class="check-field compact"><input id="satelliteStationsContextOnly" type="checkbox"><span>Somente do contexto</span></label>
+            <label class="check-field compact"><input id="satelliteStationsRfOnly" type="checkbox"><span>Somente RF</span></label>
+            <label class="check-field compact"><input id="satelliteStationsMessagesOnly" type="checkbox"><span>Com mensagens</span></label>
+            <button id="satelliteStationsRefresh" type="button" class="btn secondary">Atualizar</button>
+          </div>
+          </details>
         <div id="satelliteStationsList" class="satellite-stations-list"><span class="hint">Aguardando recepções APRS…</span></div>
         <div id="satelliteStationDetail" class="satellite-station-detail hidden"></div>
       </section>
@@ -413,7 +417,9 @@
         </div>
       </section>
 
-      <section class="satellite-card satellite-beacon-card">
+      <details class="satellite-card satellite-beacon-card satellite-secondary-panel" data-sat-collapsible="beacon">
+        <summary><strong>Beacon Satélite / curto</strong><small>Path, intervalo, cobertura e TX automático</small></summary>
+        <div class="satellite-collapsible-body">
         <div class="satellite-section-heading">
           <div>
             <h3>Beacon Satélite / curto</h3>
@@ -437,10 +443,13 @@
           <button id="satelliteBeaconSave" type="button" class="btn secondary">Salvar perfil</button>
           <button id="satelliteBeaconSendNow" type="button" class="btn primary">Enviar agora</button>
         </div>
-      </section>
+        </div>
+      </details>
     </div>
 
-    <div class="satellite-agenda-card">
+    <details class="satellite-agenda-card satellite-secondary-panel" data-sat-collapsible="agenda">
+      <summary><strong>Agenda de passagens</strong><small>AOS, TCA, LOS e elevação máxima</small></summary>
+      <div class="satellite-collapsible-body">
       <div class="satellite-agenda-heading">
         <div><h3>Agenda de passagens</h3><small>AOS = início, TCA = ponto de máxima elevação, LOS = fim.</small></div>
         <div class="satellite-agenda-filters">
@@ -455,7 +464,8 @@
           <tbody><tr><td colspan="8" class="hint">Atualize os dados orbitais para calcular as passagens.</td></tr></tbody>
         </table>
       </div>
-    </div>
+      </div>
+    </details>
   </section>
 
   <section id="tab-messages" class="tab-panel">
@@ -1937,5 +1947,6 @@
 <script src="{{ url_for('static', filename='js/v112.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v113.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v114.js') }}"></script>
+<script src="{{ url_for('static', filename='js/v141.js') }}"></script>
 </body>
 </html>
