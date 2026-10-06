@@ -321,15 +321,30 @@ def next_aprs_pass(lat: float, lon: float, alt: float, min_elevation: float = 0.
             active.append((los, item))
         elif aos > now:
             future.append((aos, item))
+    chosen = None
     if active:
-        item = dict(sorted(active, key=lambda x: x[0])[0][1])
-        item["phase"] = "active"
-        return item
-    if future:
-        item = dict(sorted(future, key=lambda x: x[0])[0][1])
-        item["phase"] = "upcoming"
-        return item
-    return None
+        chosen = dict(sorted(active, key=lambda x: x[0])[0][1])
+        chosen["phase"] = "active"
+    elif future:
+        chosen = dict(sorted(future, key=lambda x: x[0])[0][1])
+        chosen["phase"] = "upcoming"
+    if chosen is None:
+        return None
+
+    # Estimate Doppler at AOS when frequency/TLE data are available.
+    try:
+        cache = orbital.get_satellite_data(auto_refresh=False)
+        tle = (cache.get("tles") or {}).get(str(int(chosen.get("norad_id") or 0)))
+        aos_dt = datetime.fromisoformat(str(chosen.get("aos")))
+        if aos_dt.tzinfo is None:
+            aos_dt = aos_dt.replace(tzinfo=timezone.utc)
+        observer = (float(lat), float(lon), float(alt or 0))
+        if tle:
+            chosen["doppler_uplink_hz"] = orbital._doppler_hz(tle, aos_dt, observer, orbital._frequency_value(chosen.get("uplink_hz")))
+            chosen["doppler_downlink_hz"] = orbital._doppler_hz(tle, aos_dt, observer, orbital._frequency_value(chosen.get("downlink_hz")))
+    except Exception:
+        pass
+    return chosen
 
 
 def _scheduled_due(settings: dict[str, Any], runtime: dict[str, Any], now: datetime) -> bool:
@@ -358,7 +373,7 @@ def _scheduler_loop() -> None:
         try:
             settings = get_satellite_settings()
             runtime = _source_runtime()
-            now = datetime.now(timezone.utc)
+            now = datetime.now().astimezone()
             if _scheduled_due(settings, runtime, now):
                 refresh_multisource(force=True, reason="scheduled")
         except Exception:
