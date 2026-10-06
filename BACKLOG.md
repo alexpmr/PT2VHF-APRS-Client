@@ -265,6 +265,35 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — pesquisa rápida na seleção de satélites**
+  - No bloco de **seleção de satélites**, adicionar um campo de pesquisa rápida por nome.
+  - A busca deve filtrar a lista em tempo real conforme o usuário digita.
+  - Pesquisar também, quando disponível:
+    - nome do satélite;
+    - indicativo/designação;
+    - NORAD ID.
+  - A busca deve ser:
+    - case-insensitive;
+    - tolerante a espaços extras;
+    - aplicada apenas à visualização da lista, sem alterar a seleção/favoritos.
+  - Integrar com os filtros já existentes:
+    - Somente APRS;
+    - APRS + Packet/AX.25;
+    - Todos digitais;
+    - favoritos;
+    - estado operacional.
+  - **Marcar tudo / Desmarcar tudo** deve respeitar também o resultado da pesquisa atual, afetando apenas os satélites visíveis após o filtro.
+  - Ao limpar a pesquisa, restaurar imediatamente a lista completa dentro dos demais filtros ativos.
+  - Manter o campo dentro do painel expandido de **Satélites selecionados**, por ser uma ação de configuração e não de uso contínuo.
+  - Adicionar botão/ícone para limpar a busca rapidamente.
+  - Adicionar testes de regressão para:
+    - pesquisa por nome;
+    - pesquisa por indicativo;
+    - pesquisa por NORAD;
+    - combinação com filtro APRS;
+    - Marcar tudo / Desmarcar tudo com pesquisa ativa;
+    - limpar busca restaurando a lista.
+
 - **Satélites / ISS — perfil de beacon APRS curto e otimizado para operação via satélite**
   - Adicionar um **perfil de beacon específico para satélite**, voltado para janelas curtas de passagem e canais compartilhados.
   - O objetivo é reduzir airtime e aumentar a eficiência da operação APRS espacial, usando:
