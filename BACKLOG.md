@@ -1,5 +1,17 @@
 # Backlog
 
+## Concluído na v1.14.3
+
+- **Barra principal superior:** botão **Enviar Beacon** adicionado para disparo manual rápido.
+- **Reuso seguro:** o novo botão e o botão da Configuração usam a mesma rotina `/api/beacon`, sem criar uma segunda lógica de transmissão.
+- **Anti-duplo clique:** ambos os botões ficam temporariamente bloqueados enquanto o envio está em andamento.
+- **Classificação de estações:** o frame bruto/path deixa de participar da decisão que bloqueia Mensagem/queries.
+- **WIDE não é função:** usar `WIDE1-1`, `WIDE2-1` ou outro path de repetição não classifica a estação de origem como digipeater.
+- **Evidência real de infraestrutura:** digipeater/iGate passa a ser reforçado por observação como hop intermediário utilizado ou iGate de q-construct.
+- **Compatibilidade:** objetos/itens permanecem não interativos e infraestrutura comprovada continua protegida quando não há evidência de comunicação bidirecional.
+- **Regressão:** testes cobrem estação comum/HT com WIDE e digipeater efetivamente observado.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## Concluído na v1.14.2
 
 - **Cobertura RF — heatmap:** nova camada Canvas sem dependência externa, usando somente estações/pontos com evidência RF persistida.
