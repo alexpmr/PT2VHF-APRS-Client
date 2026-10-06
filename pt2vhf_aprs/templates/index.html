@@ -365,9 +365,18 @@
           <span id="satelliteNewStationsBadge" class="badge hidden">0 novas</span>
         </div>
         <div class="satellite-station-filters">
+          <label class="field compact"><span>Contexto</span>
+            <select id="satelliteStationsContext">
+              <option value="eligible" selected>Selecionados + favoritos</option>
+              <option value="selected">Selecionados</option>
+              <option value="favorites">Favoritos</option>
+              <option value="active">Passagem atual</option>
+            </select>
+          </label>
           <label class="field compact"><span>Período</span>
             <select id="satelliteStationsHours"><option value="1">1 h</option><option value="6" selected>6 h</option><option value="24">24 h</option></select>
           </label>
+          <label class="check-field compact"><input id="satelliteStationsContextOnly" type="checkbox"><span>Somente do contexto</span></label>
           <label class="check-field compact"><input id="satelliteStationsRfOnly" type="checkbox"><span>Somente RF</span></label>
           <label class="check-field compact"><input id="satelliteStationsMessagesOnly" type="checkbox"><span>Com mensagens</span></label>
           <button id="satelliteStationsRefresh" type="button" class="btn secondary">Atualizar</button>
