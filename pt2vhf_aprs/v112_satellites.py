@@ -431,6 +431,8 @@ def satellite_catalog() -> list[dict[str, Any]]:
         tle = tles.get(str(item.get("norad_id"))) if isinstance(tles, dict) else None
         item["tle_available"] = bool(tle)
         item["tle_epoch"] = _tle_epoch(tle) if tle else None
+        item["tle_source"] = str((tle or {}).get("source") or data.get("tle_source") or "")
+        item["tle_source_id"] = str((tle or {}).get("source_id") or "")
         out.append(item)
     return out
 
