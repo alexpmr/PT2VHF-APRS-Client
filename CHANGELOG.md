@@ -1,3 +1,16 @@
+## 1.14.3 - 2026-10-06
+
+- **Barra superior:** novo botão **Enviar Beacon** para disparo manual imediato sem navegar até Configuração.
+- O botão reutiliza exatamente o mesmo endpoint e a mesma configuração do beacon manual já existente, com bloqueio temporário dos dois botões durante o envio para impedir duplo clique/disparo duplicado.
+- **Estações — falso positivo de digipeater corrigido:** o classificador de interação deixa de usar o frame APRS bruto/path como prova de infraestrutura.
+- Paths como **WIDE1-1,WIDE2-1** deixam de transformar a estação de origem em digipeater; eles representam apenas o caminho solicitado para o pacote.
+- O backend passa a fornecer evidência explícita de infraestrutura quando um indicativo foi realmente observado como hop intermediário utilizado ou como iGate em q-construct.
+- Objetos/itens APRS continuam não interativos, e infraestrutura comprovada sem evidência de capacidade bidirecional continua protegida contra envio dirigido.
+- Adicionada regressão específica para HT/estação comum usando WIDE e para digipeater realmente observado no path.
+- Atualizados README, backlog, histórico interno e Manual PDF.
+- A validação física externa do Kenwood TM-D700 permanece pendente.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.2 - 2026-10-06
 
 - **Cobertura RF:** nova camada de mapa em formato heatmap Canvas, sem dependência externa e sem gerar tráfego adicional.
