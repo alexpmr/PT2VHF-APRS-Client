@@ -23,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.2 production release
+      - name: Validate v1.14.3 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_2.py
+        run: python tools\apply_release_1_14_3.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -110,9 +110,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.14.2 production release
+      - name: Validate v1.14.3 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_2.py
+        run: python tools\apply_release_1_14_3.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -194,9 +194,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.2 production release
+      - name: Validate v1.14.3 production release
         shell: bash
-        run: python tools/apply_release_1_14_2.py
+        run: python tools/apply_release_1_14_3.py
 
       - name: Build Linux packages
         shell: bash
@@ -229,9 +229,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.2 production release
+      - name: Validate v1.14.3 production release
         shell: bash
-        run: python tools/apply_release_1_14_2.py
+        run: python tools/apply_release_1_14_3.py
 
       - name: Build Linux ARM64 packages
         shell: bash
@@ -270,7 +270,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_14_2.py
+          python tools/apply_release_1_14_3.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -300,9 +300,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.2 production release
+      - name: Validate v1.14.3 production release
         shell: bash
-        run: python tools/apply_release_1_14_2.py
+        run: python tools/apply_release_1_14_3.py
 
       - name: Build macOS DMG
         shell: bash
@@ -338,9 +338,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.14.2 production release
+      - name: Validate v1.14.3 production release
         shell: bash
-        run: python tools/apply_release_1_14_2.py
+        run: python tools/apply_release_1_14_3.py
 
       - name: Generate versioned PDF manual
         shell: bash
