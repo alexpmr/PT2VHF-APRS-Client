@@ -36,6 +36,8 @@
       disconnected:tr('Desconectado','Disconnected','Desconectado','Déconnecté'),
       transport_open_waiting:tr('Porta aberta, sem dados','Transport open, no data','Puerto abierto, sin datos','Transport ouvert, sans données'),
       bytes_without_kiss:tr('Bytes chegando, sem KISS','Bytes arriving, no KISS','Bytes llegando, sin KISS','Octets reçus, sans KISS'),
+      terminal_bytes_active:tr('Terminal/PKT ativo','Terminal/PKT active','Terminal/PKT activo','Terminal/PKT actif'),
+      terminal_prompt_detected:tr('Prompt de TNC detectado','TNC prompt detected','Prompt TNC detectado','Invite TNC détectée'),
       kiss_invalid_ax25:tr('KISS ativo, AX.25 inválido','KISS active, invalid AX.25','KISS activo, AX.25 inválido','KISS actif, AX.25 invalide'),
       kiss_active:tr('KISS detectado','KISS detected','KISS detectado','KISS détecté'),
       rx_active:tr('RX AX.25 operacional','AX.25 RX operational','RX AX.25 operativo','RX AX.25 opérationnel'),
