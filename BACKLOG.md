@@ -279,6 +279,69 @@
 
 ## Pendências para próximas versões
 
+- **Satélites / ISS — seleção não atualiza o mapa imediatamente e “Marcar tudo” tem atraso excessivo**
+  - Corrigir a regressão da aba **SAT / Satélites / ISS** em que:
+    - ao selecionar a **ISS**, o satélite continua sem aparecer imediatamente no mapa orbital;
+    - ao clicar em **Marcar tudo**, os satélites acabam aparecendo, porém somente depois de um atraso significativo.
+  - Tratar como problema de **sincronização/ordem assíncrona** entre seleção, carregamento de status orbital/TLE e renderização do mapa.
+  - Ao marcar um satélite:
+    - adicionar imediatamente o NORAD ao conjunto selecionado;
+    - solicitar/usar o status orbital já disponível em cache;
+    - disparar imediatamente a renderização daquele satélite;
+    - não esperar o próximo polling periódico de 15/30/120 segundos.
+  - Se o status orbital ainda não estiver carregado:
+    - buscar apenas o(s) satélite(s) recém-selecionado(s), quando possível;
+    - ou disparar um refresh de status prioritário;
+    - assim que o status chegar, renderizar automaticamente sem exigir nova interação.
+  - **Marcar tudo** não deve disparar uma sequência lenta de requisições independentes, uma por satélite, quando houver alternativa de processamento em lote.
+  - Otimizar a renderização em lote:
+    - obter status orbital de todos os satélites selecionados em uma única chamada sempre que possível;
+    - reutilizar os dados já presentes em `state.status`;
+    - buscar tracks/footprints de forma paralela com limite de concorrência;
+    - evitar chamadas duplicadas para o mesmo NORAD;
+    - não bloquear a interface esperando todas as trajetórias para mostrar os primeiros marcadores.
+  - Separar a renderização em etapas:
+    1. **marcador da posição atual** — prioridade máxima;
+    2. **footprint/cobertura**;
+    3. **trajetória futura/passada**.
+  - O marcador deve aparecer assim que a posição atual estiver disponível, mesmo que as trajetórias ainda estejam sendo calculadas/carregadas.
+  - Mostrar estado de carregamento por satélite, por exemplo:
+    - **Carregando posição…**;
+    - **Carregando trajetória…**;
+    - **TLE indisponível**;
+    - **Erro ao calcular órbita**.
+  - Não deixar o mapa silenciosamente vazio durante o carregamento.
+  - Revisar possíveis condições de corrida entre:
+    - `renderCatalog()`;
+    - `state.selected`;
+    - `loadStatus()`;
+    - `refreshOrbitalMaps()`;
+    - `drawSatelliteTrack()`;
+    - eventos `pt2vhf:satellite-selection-changed`;
+    - timers de atualização periódica.
+  - Garantir que o evento de seleção não seja consumido antes de a camada/mapa estar inicializada.
+  - Se a aba SAT ainda estiver inicializando, enfileirar a seleção e desenhar assim que o mapa estiver pronto.
+  - **ISS / NORAD 25544** deve ser o caso obrigatório:
+    - marcar ISS → marcador aparece em poucos segundos, sem aguardar polling periódico;
+    - desmarcar ISS → marcador some imediatamente.
+  - Para **Marcar tudo**:
+    - primeiros marcadores devem aparecer progressivamente;
+    - a UI deve permanecer responsiva;
+    - trajetórias podem completar depois, sem atrasar a exibição das posições.
+  - Adicionar métricas/logs de diagnóstico para medir:
+    - tempo seleção → posição exibida;
+    - tempo seleção → trajetória exibida;
+    - quantidade de requests disparados;
+    - falhas por TLE/status/track.
+  - Adicionar testes de regressão para:
+    - ISS selecionada após carregamento da aba → aparece imediatamente;
+    - ISS selecionada antes do mapa terminar de inicializar → aparece assim que mapa estiver pronto;
+    - Marcar tudo → marcadores aparecem progressivamente sem esperar o lote inteiro;
+    - ausência de polling periódico para disparar a primeira renderização;
+    - nenhuma requisição duplicada por NORAD durante a mesma atualização;
+    - múltiplas seleções rápidas não geram estado inconsistente;
+    - desmarcar durante carregamento impede que o marcador reapareça ao final da requisição atrasada.
+
 - **Alertas — notificação de nova estação continua disparando mesmo desmarcada**
   - Corrigir a opção de configuração responsável por alertar quando uma **nova estação aparece/transmite**.
   - Problema atual: mesmo com essa opção **desmarcada** em Configuração, a notificação continua sendo gerada.
