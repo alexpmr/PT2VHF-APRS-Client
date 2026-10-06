@@ -1,5 +1,23 @@
 # Backlog
 
+## Concluído na v1.14.2
+
+- **Cobertura RF — heatmap:** nova camada Canvas sem dependência externa, usando somente estações/pontos com evidência RF persistida.
+- **Qualidade RF:** quando disponíveis, RSSI/SNR influenciam a intensidade; quando não há qualidade, a densidade de recepções RF é usada como fallback.
+- **Zoom adaptativo:** o raio visual do heatmap varia com o nível de zoom, mesclando mais em visão ampla e revelando maior detalhe ao aproximar.
+- **Período:** a camada respeita o período selecionado no Mapa e é recarregada ao alterar esse filtro.
+- **Mapa → Ver:** Cobertura RF passa a ser uma opção própria e acompanha **Selecionar tudo / Remover tudo**.
+- **Segurança:** a camada é exclusivamente analítica e não gera tráfego APRS/RF adicional.
+- **AIS — popup amigável:** ampliado com nome, MMSI, IMO, indicativo, tipo de embarcação, status de navegação, SOG, COG, proa, destino, ETA, calado, dimensões e fonte quando disponíveis.
+- **AIS — códigos legíveis:** códigos numéricos comuns de tipo de embarcação e status de navegação passam a ser convertidos para descrições amigáveis.
+- **AIS — imagem:** preservado o provedor externo configurável/cache por MMSI/IMO; quando houver correspondência confiável, a foto real é usada.
+- **AIS — fallback:** sem foto real, o popup pode mostrar uma representação vetorial explicitamente identificada como **imagem ilustrativa do tipo**, sem sugerir que seja a embarcação exata.
+- **AIS — robustez:** enriquecimento externo é assíncrono; falha ou ausência de imagem não bloqueia o popup textual.
+- **Zoom do mapa:** o backlog antigo de passos intermediários é encerrado como obsoleto, pois o step já é configurável desde a v1.8.17.
+- **Regressão:** suíte v1.14.2 cobre API de cobertura RF, qualidade/densidade, parser AIS, heatmap por zoom e fallback visual.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
+
 ## Concluído na v1.14.1
 
 - **Mapa SAT:** satélites selecionados, incluindo ISS/NORAD 25544, são desenhados imediatamente sem aguardar polling periódico.
@@ -611,89 +629,4 @@
 - **Sobre:** nova aba com Alex/PT2VHF, contatos, tiny.cc/aprs e envio manual de Announcement APRS BLNA.
 - **Idiomas:** cobertura PT/EN/ES/FR ampliada em áreas estáticas e dinâmicas, com atualização imediata na troca de idioma.
 
-
-## Backlog — AIS no mapa
-
-- **Popup amigável ao clicar em objeto AIS**
-  - Ao clicar em uma embarcação/objeto AIS no mapa, abrir um popup formatado e legível, em vez de exibir dados crus.
-  - Exibir apenas campos disponíveis; não mostrar linhas vazias, `null` ou placeholders desnecessários.
-  - Mostrar, quando disponíveis:
-    - nome da embarcação;
-    - MMSI;
-    - indicativo/callsign;
-    - tipo de embarcação em texto legível;
-    - status de navegação;
-    - latitude/longitude;
-    - velocidade sobre o fundo (SOG), em nós e opcionalmente km/h;
-    - rumo sobre o fundo (COG);
-    - proa/heading;
-    - destino informado;
-    - ETA;
-    - calado;
-    - dimensões da embarcação;
-    - tempo desde a última atualização;
-    - fonte dos dados.
-  - Converter códigos AIS numéricos para descrições amigáveis sempre que possível.
-  - Organizar as informações em seções compactas e consistentes com os demais popups do mapa.
-
-- **Imagem da embarcação**
-  - Tentar exibir uma **foto real da embarcação** quando houver fonte pública confiável na internet.
-  - Priorizar a identificação por:
-    1. MMSI;
-    2. nome da embarcação;
-    3. callsign;
-    4. modelo/classe/tipo.
-  - Carregar a imagem de forma assíncrona para que o popup textual abra imediatamente.
-  - Usar cache local/temporário para evitar consultas repetidas para a mesma embarcação.
-  - Identificar claramente a imagem como **Foto da embarcação** quando houver correspondência confiável.
-
-- **Fallback visual**
-  - Se não houver foto real disponível, tentar exibir uma **imagem/ilustração do mesmo modelo ou classe/tipo de embarcação**.
-  - Quando for apenas uma representação do modelo/tipo, identificar explicitamente como **Imagem ilustrativa do modelo/tipo**, sem sugerir que seja a embarcação exata.
-  - Se nenhuma imagem adequada estiver disponível, manter somente o popup textual, sem erro técnico intrusivo.
-
-- **Comportamento e robustez**
-  - A ausência ou falha da fonte de imagem não deve impedir a abertura do popup AIS.
-  - Não bloquear a interface enquanto a imagem é consultada.
-  - Preferir fontes públicas e estáveis, com identificação clara de origem quando apropriado.
-
-
-## Backlog — Cobertura RF em mapa de calor
-
-- Substituir os círculos individuais da camada de **Cobertura RF** por um **heatmap**.
-- Cada ponto de recepção RF deve contribuir para a intensidade visual da área.
-- Pontos próximos devem **se mesclar automaticamente**, formando manchas contínuas de cobertura.
-- O comportamento deve ser **dependente do zoom**:
-  - em zoom mais afastado, agrupar/mesclar mais os pontos, formando áreas amplas;
-  - em zoom mais próximo, reduzir o raio de influência para revelar detalhes locais;
-  - recalcular/redesenhar a camada quando o nível de zoom mudar.
-- A intensidade poderá considerar, quando disponível:
-  - quantidade de recepções;
-  - SNR;
-  - RSSI;
-  - período atualmente selecionado no mapa.
-- Áreas com maior densidade e/ou melhor qualidade RF devem aparecer mais intensas.
-- Evitar marcadores circulares individuais sobrepostos, reduzindo poluição visual.
-- Manter o filtro temporal e demais filtros já existentes da cobertura.
-- Não gerar qualquer tráfego adicional no APRS/rádio; usar exclusivamente os dados de recepção já registrados.
-- Preparar a arquitetura para permitir futuramente alternância entre:
-  - **Mapa de calor**
-  - **Pontos individuais**
-
-
-## Backlog — Zoom do mapa com passos intermediários
-
-- Reduzir o tamanho do **step de zoom** do mapa, permitindo níveis intermediários entre os níveis atuais.
-- Objetivo: tornar o zoom mais suave e permitir enquadramento mais preciso, especialmente para análise de cobertura RF, tracklogs, topologia e objetos AIS.
-- Preferir **zoom fracionário**, quando suportado pelo motor de mapa.
-- Valor inicial recomendado:
-  - `zoomDelta`: **0,25**;
-  - `zoomSnap`: **0,05** ou **0,10**.
-- Aplicar o mesmo comportamento a:
-  - botões `+` / `-`;
-  - roda do mouse;
-  - gestos de zoom, quando aplicável;
-  - controles programáticos que alterem o zoom.
-- Manter compatibilidade com todos os tipos de mapa-base e overlays.
-- Validar desempenho do heatmap de Cobertura RF com níveis fracionários de zoom.
 
