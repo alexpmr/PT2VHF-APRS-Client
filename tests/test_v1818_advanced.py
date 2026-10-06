@@ -39,18 +39,18 @@ def test_advanced_quality_and_comparison_on_empty_db():
 def test_v1818_version_and_arm64_updater_metadata(monkeypatch):
     from pt2vhf_aprs import updater
     root = Path(__file__).resolve().parents[1]
-    assert (root / "VERSION").read_text(encoding="utf-8").strip() == "1.14.0"
+    assert (root / "VERSION").read_text(encoding="utf-8").strip() == "1.14.1"
     win = (root / "windows" / "version_info.txt").read_text(encoding="utf-8")
     assert "filevers=(1, 14, 0, 0)" in win
     assert "prodvers=(1, 14, 0, 0)" in win
 
     monkeypatch.setattr(updater, "_machine", lambda: "arm64")
     monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-tar")
-    assert updater.desired_asset_name("1.14.0") == "PT2VHF_APRS_Client_Linux_arm64_v1.14.0.tar.gz"
+    assert updater.desired_asset_name("1.14.1") == "PT2VHF_APRS_Client_Linux_arm64_v1.14.1.tar.gz"
     monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-deb")
-    assert updater.desired_asset_name("1.14.0") == "pt2vhf-aprs-client_1.14.0_arm64.deb"
+    assert updater.desired_asset_name("1.14.1") == "pt2vhf-aprs-client_1.14.1_arm64.deb"
     monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-appimage")
-    assert updater.desired_asset_name("1.14.0") == "PT2VHF_APRS_Client_arm64_v1.14.0.AppImage"
+    assert updater.desired_asset_name("1.14.1") == "PT2VHF_APRS_Client_arm64_v1.14.1.AppImage"
 
 
 def test_v1818_release_docs_and_routes_are_present():
