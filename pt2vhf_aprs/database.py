@@ -2302,8 +2302,39 @@ def aprs_object_friendly_details(item: dict[str, Any]) -> dict[str, Any]:
         vertical_speed = -abs(descent)
 
     mmsi = _object_first_text(text, [r"\bMMSI\s*[:=#-]?\s*(\d{7,9})\b"])
+    imo = _object_first_text(text, [r"\bIMO\s*[:=#-]?\s*(\d{7})\b"])
+    vessel_name = _object_first_text(text, [
+        r"\b(?:VESSEL(?:\s+NAME)?|SHIP(?:\s+NAME)?|NAVIO|EMBARCA(?:CAO|ÇÃO)|NAME|NOME)\s*[:=]\s*([^|;,]+)"
+    ])
+    vessel_callsign = _object_first_text(text, [
+        r"\b(?:CALLSIGN|CALL\s*SIGN|INDICATIVO)\s*[:=]\s*([A-Z0-9-]{3,10})\b"
+    ])
+    vessel_type = _object_first_text(text, [
+        r"\b(?:SHIP\s*TYPE|VESSEL\s*TYPE|TYPE|TIPO)\s*[:=]\s*([^|;,]+)"
+    ])
+    nav_status = _object_first_text(text, [
+        r"\b(?:NAV(?:IGATION)?\s*STATUS|NAVSTAT|STATUS\s*NAV|ESTADO\s*NAV)\s*[:=]\s*([^|;,]+)"
+    ])
     destination = _object_first_text(text, [
         r"\b(?:DEST(?:INATION)?|DESTINO)\s*[:=]\s*([^|;,]+)"
+    ])
+    eta = _object_first_text(text, [
+        r"\bETA\s*[:=]\s*([^|;,]+)"
+    ])
+    draught = _object_first_number(text, [
+        r"\b(?:DRAUGHT|DRAFT|CALADO)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(?:M|METERS?|METROS?)?\b"
+    ])
+    heading = _object_first_number(text, [
+        r"\b(?:HEADING|HDG|PROA)\s*[:=]?\s*(\d{1,3}(?:[.,]\d+)?)\b"
+    ])
+    ship_length = _object_first_number(text, [
+        r"\b(?:LENGTH|LEN|COMPRIMENTO)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(?:M|METERS?|METROS?)?\b"
+    ])
+    ship_width = _object_first_number(text, [
+        r"\b(?:WIDTH|BEAM|LARGURA|BOCA)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(?:M|METERS?|METROS?)?\b"
+    ])
+    sog_knots = _object_first_number(text, [
+        r"\bSOG\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(?:KT|KTS|KNOTS?|NOS|NÓS)?\b"
     ])
     offset = _object_first_number(text, [
         r"\b(?:OFFSET|OFF)\s*[:=]?\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:KHZ)?\b"
@@ -2364,7 +2395,18 @@ def aprs_object_friendly_details(item: dict[str, Any]) -> dict[str, Any]:
         "speed_kmh": speed,
         "course_deg": course,
         "mmsi": mmsi,
+        "imo": imo,
+        "vessel_name": vessel_name,
+        "vessel_callsign": vessel_callsign,
+        "vessel_type": vessel_type,
+        "nav_status": nav_status,
         "destination": destination,
+        "eta": eta,
+        "draught_m": draught,
+        "heading_deg": heading,
+        "length_m": ship_length,
+        "width_m": ship_width,
+        "speed_knots": sog_knots,
         "offset_khz": offset,
         "tone_hz": tone,
         "temperature_c": temperature,
