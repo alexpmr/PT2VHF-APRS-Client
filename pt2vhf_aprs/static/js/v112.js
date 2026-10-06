@@ -481,6 +481,12 @@
       for(const meta of visibleCatalogRows()){const id=Number(meta.norad_id);state.selected.delete(id);markSelectionGeneration(id);removeSatelliteLayers(id);}
       saveSelected(state.selected);renderCatalog();updateSelectionSummary();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
     });
+    $('#satelliteResetDefaults')?.addEventListener('click',()=>{
+      for(const id of [...state.selected]){state.selected.delete(id);markSelectionGeneration(id);removeSatelliteLayers(id);}
+      state.selected.add(25544);markSelectionGeneration(25544);saveSelected(state.selected);
+      state.activeNorad=25544;renderCatalog();updateSelectionSummary();showSatelliteImmediately(25544,true);
+      window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
+    });
     $('#satelliteQuickSearch')?.addEventListener('input',()=>{renderCatalog();updateSelectionSummary();});
     $('#satelliteQuickSearchClear')?.addEventListener('click',()=>{const q=$('#satelliteQuickSearch');if(q){q.value='';q.focus();}renderCatalog();updateSelectionSummary();});
   }
