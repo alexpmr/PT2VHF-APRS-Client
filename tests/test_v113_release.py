@@ -77,9 +77,8 @@ def test_v113_source_fallback_and_dedup_by_norad(monkeypatch, tmp_path):
                 {"id": "amsat_nasabare", "enabled": True, "priority": 30},
             ]
         })
-        monkeypatch.setattr(sat.orbital, "refresh_satellite_data", lambda force=True: {
-            "catalog": [], "tles": {}, "errors": [], "updated_at": None
-        })
+        monkeypatch.setattr(sat.orbital, "_discover_satnogs_catalog", lambda: [])
+        monkeypatch.setattr(sat.orbital, "_load_cache", lambda: {"catalog": [], "tles": {}, "errors": [], "updated_at": None})
         captured = {}
         monkeypatch.setattr(sat.orbital, "_save_cache", lambda value: captured.update(value))
 
@@ -108,6 +107,20 @@ def test_v113_scheduler_due_respects_configured_daily_time():
     assert sat._scheduled_due(settings, {}, now) is True
     runtime = {"_last_update": {"at": "2026-10-06T00:01:00+00:00"}}
     assert sat._scheduled_due(settings, runtime, now) is False
+
+
+def test_v113_terminal_profile_blocks_automatic_tx():
+    with pytest.raises(ValueError, match="terminal/PKT"):
+        tnc_service.normalize_tnc_config({
+            "transport": "serial",
+            "serial_port": "COM2",
+            "serial_baud": 9600,
+            "device_profile": "kenwood_tm_d700",
+            "serial_protocol": "terminal",
+            "packet_rf_baud": 1200,
+            "auto_tx_enabled": 1,
+            "tx_confirmed": 1,
+        }, strict=True)
 
 
 def test_v113_tm_d700_serial_and_rf_bauds_are_independent():
