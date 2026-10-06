@@ -88,8 +88,8 @@ def test_v114_search_and_compact_selection_ui():
     assert "visibleCatalogRows" in js
     assert "meta.callsign" in js
     assert "meta.norad_id" in js
-    assert "visibleCatalogRows())state.selected.add" in js
-    assert "visibleCatalogRows())state.selected.delete" in js
+    assert "for(const meta of rows){const id=Number(meta.norad_id);state.selected.add(id)" in js
+    assert "for(const meta of visibleCatalogRows()){const id=Number(meta.norad_id);state.selected.delete(id)" in js
     assert ".satellite-selection-panel" in css
 
 
