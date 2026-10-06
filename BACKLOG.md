@@ -248,6 +248,86 @@
 
 ## Pendências para próximas versões
 
+- **TNC / RF — diagnóstico específico para Kenwood TM-D700 em PKT 1200 e distinção entre terminal/TNC e KISS**
+  - Relato real do **PU2MUS (Marco)** em teste com **Kenwood TM-D700**:
+    - rádio em **PKT 1200** na frequência **145.570 MHz** com tráfego;
+    - conexão serial em **COM2 @ 9600**;
+    - diagnóstico atual do cliente:
+      - transporte conectado;
+      - bytes chegando;
+      - `health_state = bytes_without_kiss`;
+      - nenhum frame KISS reconhecido;
+      - RX/TX AX.25 zerados;
+    - observação operacional do PU2MUS: no TM-D700, **PKT 1200 não expõe um menu KISS**; os **9600 bps são da interface serial/comando**, de forma semelhante ao uso de um TNC Kantronics.
+  - Corrigir o diagnóstico para **não assumir que todo TNC serial conectado diretamente ao rádio deve entregar KISS**.
+  - Criar distinção explícita entre tipos de transporte/protocolo:
+    - **KISS serial**;
+    - **TNC terminal/command mode**;
+    - **AGWPE**;
+    - **KISS TCP**;
+    - outros protocolos suportados futuramente.
+  - Para perfis conhecidos como **Kenwood TM-D700 / TM-D710 em modo PKT**, exibir diagnóstico contextual:
+    - porta serial aberta e bytes chegando;
+    - protocolo recebido não é KISS;
+    - isso pode ser esperado dependendo do modo do TNC/rádio;
+    - orientar configuração correta sem sugerir uma opção de menu KISS inexistente.
+  - Remover/ajustar a recomendação atual:
+    - “Verifique modo PKT/KISS” não deve aparecer genericamente para TM-D700 quando o rádio estiver em PKT 1200 e o transporte selecionado não for KISS.
+  - Incluir um **perfil de dispositivo/protocolo** configurável no TNC:
+    - Genérico KISS;
+    - Kenwood TM-D700;
+    - Kenwood TM-D710;
+    - Kantronics;
+    - AGWPE;
+    - outro/genérico.
+  - Para TM-D700, diferenciar:
+    - baud rate da **porta serial de controle/terminal**;
+    - velocidade de **packet over-the-air** (1200/9600 baud);
+    - não tratar esses valores como equivalentes.
+  - Exibir campos separados na interface quando aplicável:
+    - **Serial:** ex. COM2 @ 9600;
+    - **Packet RF:** ex. 1200 baud;
+    - **Protocolo esperado:** KISS / terminal / AGWPE / outro.
+  - Adicionar um modo de **captura diagnóstica de bytes serial**:
+    - mostrar amostra segura em ASCII/hex;
+    - identificar padrões de prompt/comando de TNC;
+    - sugerir provável modo terminal quando houver bytes válidos mas sem framing KISS;
+    - nunca despejar volume ilimitado de dados.
+  - Melhorar o estado de saúde:
+    - `bytes_without_kiss` deve ser usado somente quando **KISS for realmente o protocolo esperado**;
+    - para perfil terminal/TNC, usar estado próprio, por exemplo:
+      - `terminal_bytes_active`;
+      - `terminal_prompt_detected`;
+      - `terminal_ax25_unparsed`;
+      - `terminal_rx_active`, se houver parser compatível.
+  - O autoteste TNC deve informar claramente qual camada foi validada:
+    - transporte serial;
+    - framing/protocolo;
+    - AX.25;
+    - RX;
+    - TX.
+  - Não declarar compatibilidade física completa do TM-D700 até teste RX/TX real no ar ser concluído.
+  - Registrar também o resultado do **AGWPE** informado pelo PU2MUS:
+    - teste em **1200 baud**, PTT em **COM3**;
+    - endpoint **127.0.0.1:8001 / radio 0**;
+    - `health_state = rx_active`;
+    - `frames_rx = 1`;
+    - `kiss_frames_rx = 1`;
+    - RX AX.25 confirmado;
+    - nenhum TX confirmado na sessão.
+  - Usar esse caso AGWPE como referência positiva de diagnóstico:
+    - transporte operacional;
+    - framing reconhecido;
+    - AX.25 RX operacional;
+    - TX ainda não validado.
+  - Adicionar regressões para:
+    - TM-D700 serial com bytes não KISS;
+    - perfil KISS com bytes não KISS;
+    - distinção serial 9600 × packet RF 1200;
+    - AGWPE com RX ativo;
+    - diagnóstico que não sugere menu KISS inexistente para TM-D700;
+    - preservação do aviso de “TX ainda não confirmado” quando só houver RX.
+
 - **Satélites / ISS — atualização automática de TLE, múltiplas fontes e controle operacional inspirado no fluxo do PU2MUS**
   - Considerar o fluxo utilizado pelo **PU2MUS**, que atualiza diariamente os elementos orbitais e mantém manualmente quais satélites entram ou saem da operação conforme estejam transmitindo.
   - Implementar atualização automática programada dos dados orbitais, com padrão sugerido de **1 vez por dia à meia-noite**, sem impedir atualização manual.
