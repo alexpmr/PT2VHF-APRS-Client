@@ -279,6 +279,22 @@
 
 ## Pendências para próximas versões
 
+- **Menu superior — renomear “Satélites / ISS” para “SAT”**
+  - No menu superior principal, substituir o texto da aba **Satélites / ISS** por **SAT**.
+  - A alteração deve afetar apenas o rótulo da aba no menu superior.
+  - Manter o título interno da página/aba como **Satélites / ISS** para preservar clareza dentro do módulo.
+  - Manter inalterados:
+    - rotas/IDs internos;
+    - `data-tab="satellites"`;
+    - atalhos;
+    - lógica de navegação;
+    - traduções internas do conteúdo da aba.
+  - Atualizar traduções do rótulo do menu para usar **SAT** em todos os idiomas, salvo necessidade técnica específica.
+  - Adicionar teste de regressão garantindo:
+    - menu superior mostra **SAT**;
+    - conteúdo interno continua identificado como **Satélites / ISS**;
+    - navegação continua abrindo `#tab-satellites`.
+
 - **Barra superior — remover sino de notificações do lado direito**
   - Remover o ícone/botão de **sino de notificações** exibido na barra superior, no lado direito.
   - A remoção deve afetar apenas o atalho visual da barra superior.
