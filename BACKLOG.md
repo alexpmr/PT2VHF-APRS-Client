@@ -265,6 +265,13 @@
 
 ## Pendências para próximas versões
 
+- **Saúde operacional do TNC — remover de Configuração e Sobre**
+  - O painel **Saúde operacional do TNC** deve existir somente na aba **TNC / RF**.
+  - Remover qualquer renderização/injeção desse painel nas abas **Configuração** e **Sobre**.
+  - Garantir que **Copiar diagnóstico**, **Executar teste completo**, contadores, timeline e resultado do autoteste continuem funcionando normalmente na aba **TNC / RF**.
+  - Corrigir a lógica de inserção do componente para usar como referência exclusivamente o container da aba TNC, evitando que seletores genéricos ou movimentação de DOM façam o bloco aparecer em outras abas.
+  - Adicionar teste de regressão verificando que o elemento de saúde TNC tenha um único pai/instância e permaneça dentro de `#tab-tnc`.
+
 - **Kenwood TM-D700 — teste físico externo**
   - O software de diagnóstico está concluído.
   - Encerrar a validação física somente quando houver um TM-D700 real, cabo/interface adequado e uma segunda estação/monitor RF para confirmar RX e TX no ar.
