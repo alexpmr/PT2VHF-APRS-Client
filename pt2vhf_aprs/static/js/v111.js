@@ -17,18 +17,19 @@
   window.pt2vhfNotificationCenterPush=centerNotification;
 
   function installNotificationCenter(){
-    if($('#v111Bell'))return;
-    const header=document.querySelector('header .header-actions')||document.querySelector('header');
-    if(!header)return;
-    const wrap=document.createElement('div');wrap.className='v111-notify-wrap';
-    wrap.innerHTML='<button id="v111Bell" class="btn secondary" type="button" title="'+tr('Notificações','Notifications','Notificaciones','Notifications')+'">🔔 <span id="v111BellCount"></span></button><div id="v111NotifyPanel" class="v111-notify-panel hidden"><div class="v111-notify-head"><strong>'+tr('Notificações','Notifications','Notificaciones','Notifications')+'</strong><button id="v111MarkRead" class="btn secondary">'+tr('Marcar todas como lidas','Mark all read','Marcar todas leídas','Tout marquer lu')+'</button></div><div id="v111NotifyList"></div></div>';
-    header.appendChild(wrap);
-    $('#v111Bell').onclick=async()=>{$('#v111NotifyPanel').classList.toggle('hidden');await renderNotifications();};
+    if($('#v111NotifyOpen'))return;
+    const config=$('#tab-config');
+    if(!config)return;
+    const wrap=document.createElement('div');wrap.className='v111-notify-wrap v111-notify-config';
+    wrap.innerHTML='<button id="v111NotifyOpen" class="btn secondary" type="button">'+tr('Centro de notificações','Notification center','Centro de notificaciones','Centre de notifications')+' <span id="v111NotifyCount"></span></button><div id="v111NotifyPanel" class="v111-notify-panel hidden"><div class="v111-notify-head"><strong>'+tr('Notificações','Notifications','Notificaciones','Notifications')+'</strong><button id="v111MarkRead" class="btn secondary">'+tr('Marcar todas como lidas','Mark all read','Marcar todas leídas','Tout marquer lu')+'</button></div><div id="v111NotifyList"></div></div>';
+    const anchor=$('#v190ConfigCard')||config.querySelector('.config-card')||config;
+    anchor.appendChild(wrap);
+    $('#v111NotifyOpen').onclick=async()=>{$('#v111NotifyPanel').classList.toggle('hidden');await renderNotifications();};
     $('#v111MarkRead').onclick=async()=>{await req('/api/v111/notifications/read',{method:'POST',body:'{}'});await renderNotifications();updateBell();};
     document.addEventListener('click',e=>{if(!wrap.contains(e.target))$('#v111NotifyPanel').classList.add('hidden');});
     updateBell();setInterval(updateBell,15000);
   }
-  async function updateBell(){try{const rows=await req('/api/v111/notifications?unread=1&limit=200');const n=rows.length;const el=$('#v111BellCount');if(el)el.textContent=n?String(n):'';}catch(_){}}
+  async function updateBell(){try{const rows=await req('/api/v111/notifications?unread=1&limit=200');const n=rows.length;const el=$('#v111NotifyCount');if(el)el.textContent=n?'('+String(n)+')':'';}catch(_){}}
   async function renderNotifications(){const host=$('#v111NotifyList');if(!host)return;try{const rows=await req('/api/v111/notifications?limit=100');host.innerHTML=rows.length?rows.map(n=>'<article class="v111-note '+esc(n.severity)+(n.read_at?' read':'')+'"><time>'+esc(n.timestamp)+'</time><strong>'+esc(n.title)+'</strong><p>'+esc(n.detail||'')+'</p></article>').join(''):'<p>—</p>';}catch(e){host.textContent=e.message;}}
 
   function healthLabel(state){
