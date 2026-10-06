@@ -3213,10 +3213,32 @@
       if (rain24h !== null) add(ui('Chuva 24 h', 'Rain 24 h'), `${fmtNum(rain24h, 1)} mm`);
       if (altitude !== null) add(ui('Altitude', 'Altitude'), `${fmtNum(altitude, 1)} m`);
     } else if (subtype === 'ais') {
+      add(ui('Nome da embarcação', 'Vessel name'), details.vessel_name || object.name || '', true);
       add('MMSI', details.mmsi || '');
-      if (speed !== null) add(ui('Velocidade', 'Speed'), `${fmtNum(speed, 1)} km/h`, true);
-      if (course !== null) add(ui('Curso', 'Course'), `${fmtNum(course, 0)}°`);
+      add('IMO', details.imo || '');
+      add(ui('Indicativo', 'Callsign'), details.vessel_callsign || '');
+      add(ui('Tipo de embarcação', 'Vessel type'), details.vessel_type || '');
+      add(ui('Status de navegação', 'Navigation status'), details.nav_status || '');
+      const speedKnots = number(details.speed_knots);
+      if (speedKnots !== null) {
+        add(ui('Velocidade sobre o fundo', 'Speed over ground'), `${fmtNum(speedKnots, 1)} kn · ${fmtNum(speedKnots * 1.852, 1)} km/h`, true);
+      } else if (speed !== null) {
+        add(ui('Velocidade sobre o fundo', 'Speed over ground'), `${fmtNum(speed / 1.852, 1)} kn · ${fmtNum(speed, 1)} km/h`, true);
+      }
+      if (course !== null) add(ui('Rumo sobre o fundo', 'Course over ground'), `${fmtNum(course, 0)}°`);
+      const heading = number(details.heading_deg);
+      if (heading !== null) add(ui('Proa', 'Heading'), `${fmtNum(heading, 0)}°`);
       add(ui('Destino', 'Destination'), details.destination || '');
+      add('ETA', details.eta || '');
+      const draught = number(details.draught_m);
+      if (draught !== null) add(ui('Calado', 'Draught'), `${fmtNum(draught, 1)} m`);
+      const length = number(details.length_m);
+      const width = number(details.width_m);
+      if (length !== null || width !== null) {
+        const dims = [length !== null ? `${fmtNum(length, 1)} m` : '', width !== null ? `${fmtNum(width, 1)} m` : ''].filter(Boolean).join(' × ');
+        add(ui('Dimensões', 'Dimensions'), dims);
+      }
+      add(ui('Fonte dos dados', 'Data source'), object.source_callsign || '');
     } else {
       if (frequency !== null) add(ui('Frequência', 'Frequency'), `${fmtNum(frequency, 4)} MHz`, true);
       const offset = number(details.offset_khz);
