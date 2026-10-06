@@ -41,8 +41,8 @@ def test_v1818_version_and_arm64_updater_metadata(monkeypatch):
     root = Path(__file__).resolve().parents[1]
     assert (root / "VERSION").read_text(encoding="utf-8").strip() == "1.14.1"
     win = (root / "windows" / "version_info.txt").read_text(encoding="utf-8")
-    assert "filevers=(1, 14, 0, 0)" in win
-    assert "prodvers=(1, 14, 0, 0)" in win
+    assert "filevers=(1, 14, 1, 0)" in win
+    assert "prodvers=(1, 14, 1, 0)" in win
 
     monkeypatch.setattr(updater, "_machine", lambda: "arm64")
     monkeypatch.setattr(updater, "current_update_mode", lambda: "linux-tar")
