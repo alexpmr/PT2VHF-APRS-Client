@@ -30,6 +30,9 @@ def test_v145_config_dirty_state_is_recomputed_and_slow_load_preserves_edits():
     js = text("pt2vhf_aprs/static/js/app.js")
     assert "configEditGeneration: 0" in js
     assert "configTouchedFields: new Set()" in js
+    assert "configManagedFields: new Set()" in js
+    assert "state.configManagedFields.size && !state.configManagedFields.has(el.name)" in js
+    assert "state.configManagedFields.size && !state.configManagedFields.has(fieldName)" in js
     assert "const editedDuringLoad = state.configEditGeneration !== editGenerationAtStart" in js
     assert "applyConfigToForm(cfg, { preserveTouched: !force && editedDuringLoad })" in js
     assert "state.configDirty = configFormSnapshot() !== state.configBaseline" in js
@@ -107,3 +110,14 @@ def test_v145_satellite_service_controls_use_collection_and_do_not_masquerade_as
 def test_v145_import_and_reset_force_clean_reload():
     js = text("pt2vhf_aprs/static/js/app.js")
     assert js.count("loadConfig({ force:true })") >= 2
+
+
+def test_v145_core_config_excludes_tnc_rf_fields_with_independent_persistence():
+    html = text("pt2vhf_aprs/templates/index.html")
+    js = text("pt2vhf_aprs/static/js/app.js")
+    database = text("pt2vhf_aprs/database.py")
+    assert 'name="serial_port"' in html
+    assert 'name="transport"' in html
+    assert '"serial_port":' not in database.split("DEFAULT_CONFIG", 1)[1].split("}\n", 1)[0]
+    assert "configManagedFields" in js
+    assert "Object.keys(cfg || {}).filter(key => !!form?.elements?.namedItem(key))" in js
