@@ -697,9 +697,9 @@ def create_app() -> Flask:
                 return str(request.args.get(name, "1")).lower() not in {"0", "false", "no", "off"}
 
             try:
-                hours = int(request.args.get("hours", 0))
+                hours = float(request.args.get("hours", 0))
             except (TypeError, ValueError):
-                hours = 0
+                hours = 0.0
 
             options = {
                 "include_stations": enabled("stations"),
@@ -755,9 +755,9 @@ def create_app() -> Flask:
     @app.get("/api/topology")
     def api_topology():
         try:
-            hours = int(request.args.get("hours", 0))
+            hours = float(request.args.get("hours", 0))
         except (TypeError, ValueError):
-            hours = 0
+            hours = 0.0
         return jsonify(db.list_topology_edges(hours))
 
     @app.get("/api/topology/stats")
@@ -832,7 +832,7 @@ def create_app() -> Flask:
     @app.get("/api/stations/<callsign>/rf-heard")
     def api_station_rf_heard(callsign: str):
         try:
-            hours = int(request.args.get("hours", 0))
+            hours = float(request.args.get("hours", 0))
             limit = int(request.args.get("limit", 100))
             return jsonify(db.list_rf_received_by(callsign, hours=hours, limit=limit))
         except Exception as exc:
