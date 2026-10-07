@@ -98,6 +98,11 @@ def capture(output_dir: Path) -> None:
                 page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
                 page.goto(local_url, wait_until="networkidle")
                 page.wait_for_timeout(1800)
+                # Em release nova, o popup legítimo "Novidades" cobre as abas.
+                # Confirmá-lo antes dos testes reais de clique (em vez de usar
+                # clicks forçados que ignorariam a interação do usuário).
+                if page.locator("#whatsNewModal").is_visible():
+                    page.locator("#whatsNewClose").click()
                 page.screenshot(path=str(output_dir / "map.png"))
                 for tab, filename in [("messages","messages.png"),("stations","stations.png"),("log","log.png")]:
                     page.evaluate("""(name) => document.querySelector('.tab[data-tab="' + name + '"]').click()""", tab)
