@@ -1,14 +1,31 @@
 /* v1.14.1 — SAT: operação primeiro, configuração recolhida */
-#tab-satellites{overflow-x:hidden}
+#tab-satellites{overflow-x:hidden;max-width:100%;min-width:0;box-sizing:border-box}
+#tab-satellites *{box-sizing:border-box}
+#tab-satellites>.satellite-panel-header,
+#tab-satellites .satellite-operation-bar,
+#tab-satellites .satellite-workspace,
+#tab-satellites .satellite-communications-grid,
+#tab-satellites .satellite-agenda-card{min-width:0;max-width:100%}
+#tab-satellites>.satellite-panel-header{flex-wrap:wrap}
+#tab-satellites .satellite-card,
+#tab-satellites .satellite-collapsible-body{min-width:0;max-width:100%}
+#tab-satellites .table-wrap{max-width:100%;overflow-x:auto}
+#tab-satellites input,
+#tab-satellites select,
+#tab-satellites textarea{min-width:0;max-width:100%}
 #tab-satellites>.satellite-panel-header{padding-bottom:4px}
 .satellite-operation-bar{justify-content:flex-start!important;gap:10px!important;flex-wrap:wrap;margin-top:4px!important;margin-bottom:8px!important;padding:8px 10px!important}
 .satellite-operation-module{font-size:17px;white-space:nowrap}
 .satellite-operation-bar .satellite-tab-next-name{font-size:14px!important;max-width:none!important;font-weight:700}
 .satellite-operation-bar #satelliteCountdownLabel{opacity:.72;white-space:nowrap}
 .satellite-operation-bar .satellite-tab-countdown-large{font-size:30px!important}
-.satellite-workspace{grid-template-columns:minmax(0,3fr) minmax(260px,.72fr)!important;gap:10px!important;margin-top:6px!important}
-.satellite-map{min-height:520px}
-.satellite-sidebar{gap:8px}
+.satellite-workspace{grid-template-columns:minmax(0,2.35fr) minmax(340px,.85fr)!important;gap:10px!important;margin-top:6px!important;max-width:100%;min-width:0}
+.satellite-map-column,.satellite-map{min-width:0;max-width:100%}
+.satellite-map{min-height:520px;width:100%}
+.satellite-sidebar{gap:8px;min-width:0;max-width:100%;overflow:hidden}
+.satellite-sidebar>*{min-width:0;max-width:100%}
+.satellite-sidebar .satellite-name,.satellite-sidebar small,.satellite-secondary-panel>summary>*{overflow-wrap:anywhere;word-break:break-word}
+.satellite-sidebar .satellite-catalog-row .satellite-name{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.2}
 .satellite-secondary-panel{padding:0!important;overflow:visible}
 .satellite-secondary-panel>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;padding:9px 11px}
 .satellite-secondary-panel>summary::-webkit-details-marker{display:none}
@@ -25,7 +42,7 @@
 .satellite-render-warning,.satellite-render-error{color:#ffb347!important}
 .v111-notify-config{display:block!important;margin-top:10px}
 .v111-notify-config .v111-notify-panel{left:0;right:auto}
-@media(max-width:1100px){
+@media(max-width:1320px){
   .satellite-workspace{grid-template-columns:1fr!important}
   .satellite-map{min-height:470px}
   .satellite-sidebar{display:grid!important;grid-template-columns:1fr!important}

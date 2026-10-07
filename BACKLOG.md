@@ -1,5 +1,23 @@
 # Backlog
 
+## Pendência externa não bloqueante
+
+- **SignPath Foundation (#1):** concluir onboarding, autorização do GitHub App, configuração da policy e assinatura Authenticode. Depende de aprovação/autorização externas e não bloqueia releases sem assinatura oficial.
+- **Kenwood TM-D700:** validação física encerrada administrativamente em 07/10/2026. Não declarar RX/TX físico validado.
+
+## Concluído na v1.14.4
+
+- **PU2MUS #48 — Alertas:** corrigido o erro `$(...).forEach is not a function`; autosave e botão Salvar alertas usam coleção `$()`.
+- **PU2MUS #49 — Backend/banco:** abertura da Configuração deixa de executar verificação profunda e contagens integrais do SQLite; a saúde rápida evita scans desnecessários em bancos maiores. O padrão de retenção **não foi reduzido para 5 dias**.
+- **PU2MUS #50 — Mapa:** incluídos **15 min** e **30 min**, com suporte fracionário real no backend para topologia, RF ouvido, KML e Cobertura RF.
+- **PU2MUS #51 — SAT:** layout responsivo reforçado, nomes podem quebrar linha, sidebar não é comprimida a poucos caracteres e o mapa orbital recalcula o tamanho após mudança da grade.
+- **Configuração:** modal de saída com alterações pendentes corrigido, incluindo Salvar e sair, Descartar e sair, Cancelar, feedback e proteção contra duplo clique.
+- **Estações:** clique direito em linha abre o compositor de Mensagem rápida e preenche o indicativo sem mudar de aba.
+- **Mapa:** linhas Internet/APRS-IS observadas passam a respeitar apenas o toggle de Enlaces iGate/APRS-IS e não desaparecem pela ocultação independente de ícones/marcadores.
+- **Topologia:** caminhos RF reais não são convertidos em Internet; qAR e qAr e evidência mista permanecem diferenciados.
+- **Ícones do sistema:** desenho compacto com alto contraste aplicado aos builds Windows, Linux e macOS; logomarca oficial preservada na interface e no Manual PDF.
+- **Regressão:** pytest e automação Playwright para os três botões de saída, botão direito e enlace Internet.
+
 ## Concluído na v1.14.3
 
 - **Barra principal superior:** botão **Enviar Beacon** adicionado para disparo manual rápido.

@@ -280,7 +280,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "O PT2VHF APRS Client é um cliente APRS-IS com mapa, mensagens, estações, log, tracklogs, topologia observada e banco SQLite local.",
         "A interface foi projetada para uso direto por radioamadores, com distribuição pronta para Windows, Linux e macOS."
     ], [
-        "Mapa baseado em Leaflet com OpenStreetMap, OpenTopoMap e imagem de satélite.",
+        "Mapa baseado em Leaflet com OpenStreetMap, OpenTopoMap e imagem de satélite; o período inclui janelas curtas de 15 e 30 minutos.",
         "Mensagens APRS individuais com ACK/REJ, boletins e histórico local.",
         "Topologia observada a partir dos paths APRS recebidos.",
         "Configuração visual de mapa, tracklogs, topologia, tema, fontes e idioma.",
@@ -375,7 +375,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Conectar ao iniciar vem habilitado por padrão em novas instalações e fica na seção APRS-IS.",
         "O botão Enviar Beacon na barra principal superior dispara manualmente o mesmo beacon disponível em Configuração, sem exigir troca de aba.",
         "Latitude, Longitude e Altitude são apresentadas em linhas independentes para manter a leitura e a edição dentro do cartão mesmo em DMS, janelas menores ou fontes ampliadas.",
-        "Se algum campo for alterado e você tentar mudar de aba antes de salvar, o cliente oferece Salvar e sair, Descartar alterações ou Cancelar."
+        "Se algum campo for alterado e você tentar mudar de aba antes de salvar, o cliente oferece Salvar e sair, Descartar alterações ou Cancelar. A v1.14.4 confirma o resultado, mantém alterações quando há erro e navega para a aba solicitada somente depois da ação bem-sucedida."
     ])
     story.append(Paragraph("Campos principais", st["h2"]))
     story.append(bullet_list([
@@ -425,7 +425,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     ], [
         "Tipos de mapa: OpenStreetMap, OpenTopoMap e Satélite.",
         "Tracklogs: cor e espessura configuráveis.",
-        "Topologia observada: pode ser ligada/desligada e usa Completo como período padrão, além de 1 h, 6 h, 24 h e 7 dias.",
+        "Topologia observada: pode ser ligada/desligada e usa Completo como período padrão, além de 15 min, 30 min, 1 h, 6 h, 24 h e 7 dias.",
         "Enlaces RF e via IGate possuem cores independentes e espessura configurável.",
         "A estatísticas da rede fica na aba superior Estatísticas, separada das preferências visuais de Configuração.",
         "A aba Estatísticas oferece período, métricas agregadas, ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
@@ -433,7 +433,9 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "O Mapa possui legenda dinâmica para tracklog, enlaces RF, IGate/APRS-IS, replay temporal e pacotes em movimento.",
         "A aba Estatísticas inclui animação de tráfego APRS em modos Histórico e Ao vivo, com Play/Pausa, início, avanço/recuo, velocidades de 0,5x a 10x, timestamp e contadores. Em paths multi-hop, vários segmentos do mesmo pacote podem ser animados ao mesmo tempo.",
         "Quando habilitado em Configuração, cada pacote recebido pode gerar um sinal sonoro curto e um pulso vermelho temporário no marcador da estação transmissora.",
-        "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px."
+        "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px.",
+        "Os enlaces Internet/iGate confirmados são tracejados e controlados pela opção Enlaces iGate / APRS-IS, independente da exibição de marcadores de estações. Pares sem coordenadas válidas não são inventados nem desenhados.",
+        "As janelas de 15 e 30 minutos são aplicadas também à topologia e à Cobertura RF para uma visão operacional mais recente."
     ])
 
     add_screenshot(story, st, screenshots_dir, "analysis.png", "Aba Estatísticas com métricas da topologia observada e comparação histórica.")
@@ -457,7 +459,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
 
     add_screenshot(story, st, screenshots_dir, "messages.png", "Aba Mensagens em fluxo de chat.")
     section(story, st, "12. Estações e Log", [
-        "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa. No popup da estação, Mostrar log abre a aba Log com o indicativo/SSID aplicado ao filtro.",
+        "A aba Estações lista os últimos dados conhecidos e permite abrir a estação diretamente no mapa. Na v1.14.4 o clique direito numa linha abre Mensagem rápida para o indicativo da estação. No popup da estação, Mostrar log abre a aba Log com o indicativo/SSID aplicado ao filtro.",
         "Estações favoritas usam estrela amarela, ficam fixadas no topo da lista de Estações e são priorizadas nas conversas e sugestões do campo Destino. A marcação persiste após reiniciar ou atualizar.",
         "Uma estação comum que usa WIDE1-1/WIDE2-1 como path continua sendo tratada como estação, não como digipeater. O bloqueio de Mensagem/queries exige evidência real de infraestrutura ou identificação explícita.",
         "O Log APRS-IS mostra tráfego TNC2 RX/TX e é a principal ferramenta para diagnosticar conexão, autenticação e filtro. Na conexão inicial, a v1.4 encerra as tentativas após três ciclos sem sucesso e mostra o erro final ao usuário."

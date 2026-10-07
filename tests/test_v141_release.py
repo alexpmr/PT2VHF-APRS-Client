@@ -42,7 +42,8 @@ def test_v141_satellite_operational_layout_keeps_primary_content_visible():
     assert 'class="satellite-card satellite-message-card"' in html
     for key in ("detail", "alerts", "tle", "station-filters", "beacon", "agenda"):
         assert f'data-sat-collapsible="{key}"' in html
-    assert "grid-template-columns:minmax(0,3fr)" in css
+    assert "grid-template-columns:minmax(0," in css
+    assert "minmax(340px,.85fr)" in css
     assert ".satellite-secondary-panel>summary" in css
 
 

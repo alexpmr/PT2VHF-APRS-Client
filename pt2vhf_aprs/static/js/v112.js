@@ -510,7 +510,13 @@
 
   async function init(){
     if(state.initialized)return;state.initialized=true;applyPrefControls();bindPrefs();installLayoutReset();
-    await initDedicatedMap();for(const id of state.selected)showSatelliteImmediately(id,false);await loadCatalog(true);
+    await initDedicatedMap();
+    const workspace=document.querySelector('.satellite-workspace');
+    if(workspace && typeof ResizeObserver!=='undefined' && !window.__pt2vhfSatResizeObserver){
+      window.__pt2vhfSatResizeObserver=new ResizeObserver(()=>requestAnimationFrame(()=>state.map?.invalidateSize({animate:false})));
+      window.__pt2vhfSatResizeObserver.observe(workspace);
+    }
+    for(const id of state.selected)showSatelliteImmediately(id,false);await loadCatalog(true);
     state.refreshTimer=setInterval(()=>{if(document.querySelector('.tab.active[data-tab="satellites"]'))void loadStatus();else if(localStorage.getItem('pt2vhf_map_item_satellites')!=='0')void loadStatus();},30000);
     state.alertTimer=setInterval(()=>{if(state.passes.length)checkPassAlerts();else void loadPasses();},60000);
   }

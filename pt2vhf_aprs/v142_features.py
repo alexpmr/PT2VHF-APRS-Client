@@ -9,8 +9,12 @@ from flask import jsonify, request
 from . import database as db
 
 
-def _cutoff(hours: int) -> str | None:
-    value = max(0, min(int(hours or 0), 24 * 30))
+def _cutoff(hours: float) -> str | None:
+    try:
+        value = float(hours or 0)
+    except (TypeError, ValueError):
+        value = 0.0
+    value = max(0.0, min(value, 24 * 30))
     if value <= 0:
         return None
     return (datetime.now(timezone.utc) - timedelta(hours=value)).isoformat(timespec="seconds")
@@ -44,8 +48,12 @@ def _quality_weight(rssi: Any, snr: Any, receptions: int) -> float:
     return round(max(0.15, min(1.0, quality * 0.72 + density * 0.28)), 4)
 
 
-def rf_coverage_points(hours: int = 24, limit: int = 3500) -> dict[str, Any]:
-    hours = max(0, min(int(hours or 0), 24 * 30))
+def rf_coverage_points(hours: float = 24, limit: int = 3500) -> dict[str, Any]:
+    try:
+        hours = float(hours or 0)
+    except (TypeError, ValueError):
+        hours = 0.0
+    hours = max(0.0, min(hours, 24 * 30))
     limit = max(100, min(int(limit or 3500), 8000))
     cutoff = _cutoff(hours)
 
@@ -159,7 +167,7 @@ def register_v142_routes(app) -> None:
     @app.get("/api/v142/rf-coverage")
     def api_v142_rf_coverage():
         try:
-            hours = int(request.args.get("hours", 24))
+            hours = float(request.args.get("hours", 24))
             limit = int(request.args.get("limit", 3500))
             return jsonify(rf_coverage_points(hours=hours, limit=limit))
         except Exception as exc:

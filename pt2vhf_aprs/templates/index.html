@@ -108,6 +108,8 @@
       <span>Período</span>
       <select id="mapPeriodHours" title="Período único de todos os itens do mapa" aria-label="Período do mapa">
         <option value="0" selected>Completo</option>
+        <option value="0.25">15 min</option>
+        <option value="0.5">30 min</option>
         <option value="1">1 h</option>
         <option value="6">6 h</option>
         <option value="12">12 h</option>
@@ -1827,6 +1829,7 @@
       <div class="message-alert-eyebrow">Alterações não salvas</div>
       <h3 id="unsavedConfigTitle">Salvar alterações da Configuração?</h3>
       <p>Há alterações que ainda não foram salvas.</p>
+      <p id="unsavedConfigActionStatus" role="status" aria-live="polite" class="unsaved-config-action-status hidden"></p>
       <div class="message-alert-actions">
         <button id="unsavedSaveButton" type="button" class="btn primary">Salvar e sair</button>
         <button id="unsavedDiscardButton" type="button" class="btn secondary">Descartar alterações e sair</button>
@@ -1888,6 +1891,8 @@
           <span>Período</span>
           <select id="kmlExportPeriod">
             <option value="0">Completo</option>
+            <option value="0.25">15 minutos</option>
+            <option value="0.5">30 minutos</option>
             <option value="1">1 hora</option>
             <option value="6">6 horas</option>
             <option value="24">24 horas</option>

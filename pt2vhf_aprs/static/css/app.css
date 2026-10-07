@@ -4041,3 +4041,8 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
   .scheduled-targets-field,
   .scheduled-message-field { grid-column: auto; }
 }
+
+/* v1.14.4 — feedback acessível para transições de configuração. */
+.unsaved-config-action-status { margin: 6px 0 10px; font-size: 13px; color: var(--muted); }
+.unsaved-config-action-status.is-error { color: #f67f79; font-weight: 600; }
+#unsavedConfigModal .message-alert-actions button:disabled { opacity: .55; cursor: wait; }

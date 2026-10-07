@@ -3,6 +3,22 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.4": {
+        "title": "Configuração, enlaces Internet e envio rápido por clique direito",
+        "items": [
+            "Salvar e sair, Descartar e sair e Continuar na Configuração têm navegação consistente e feedback de erro.",
+            "Clique direito numa estação abre Mensagem rápida para o indicativo selecionado.",
+            "Enlaces iGate/Internet confirmados não somem por filtros independentes de marcadores no Mapa.",
+            "A classificação RF/Internet continua respeitando evidência real, incluindo qAR/qAO, qAr e pares mistos.",
+            "Ícones do sistema ganham versão simplificada de alto contraste; logo oficial permanece na interface e manual.",
+            "Corrigido o salvamento de alertas que falhava com $(...).forEach is not a function.",
+            "Mapa ganha janelas de 15 e 30 minutos com suporte fracionário real no backend.",
+            "Aba SAT evita compressão ilegível da barra lateral e recalcula o mapa após redimensionamento.",
+            "Saúde do SQLite na Configuração é leve e não executa scans profundos automaticamente em bancos grandes.",
+            "Adicionadas regressões pytest e testes de interface Chromium/Playwright.",
+            "TM-D700 removido administrativamente do backlog sem declarar validação física.",
+        ],
+    },
     "1.14.3": {
         "title": "Beacon manual no cabeçalho e classificação de digipeater corrigida",
         "items": [

@@ -150,6 +150,7 @@
     conversationSort: localStorage.getItem('pt2vhf_conversation_sort') === 'desc' ? 'desc' : 'asc',
     conversationSortKey: localStorage.getItem('pt2vhf_conversation_sort_key') === 'date' ? 'date' : 'sender',
     configDirty: false,
+    configTransitionBusy: false,
     configLoading: false,
     configBaseline: '',
     pendingTab: '',
@@ -1073,6 +1074,7 @@
       if (tab === state.activeTab) return;
       if (state.activeTab === 'config' && tab !== 'config' && state.configDirty) {
         state.pendingTab = tab;
+        pendingConfigFeedback();
         $('#unsavedConfigModal')?.classList.remove('hidden');
         return;
       }
@@ -1787,7 +1789,7 @@
 
   function topologyPeriodValue(value) {
     const parsed = Number(value);
-    return [0, 1, 6, 12, 24, 168].includes(parsed) ? parsed : 0;
+    return [0, 0.25, 0.5, 1, 6, 12, 24, 168].includes(parsed) ? parsed : 0;
   }
 
   function statisticsPeriodValue(value) {
@@ -1796,9 +1798,12 @@
   }
 
   function topologyPeriodLabel(hours = state.topologyHours) {
-    if (Number(hours) === 0) return ui('Completo', 'Complete');
-    if (Number(hours) === 168) return ui('7 dias', '7 days');
-    return `${Number(hours)} h`;
+    const value = Number(hours);
+    if (value === 0) return ui('Completo', 'Complete');
+    if (value === 0.25) return '15 min';
+    if (value === 0.5) return '30 min';
+    if (value === 168) return ui('7 dias', '7 days');
+    return `${value} h`;
   }
 
   const MAP_VIEW_STATE_STORAGE = {
@@ -2711,7 +2716,7 @@
         [ui('Caminhos APRS', 'APRS paths'), pathsText],
         ['RSSI', rssiValues.length ? `${Math.min(...rssiValues).toFixed(0)} a ${Math.max(...rssiValues).toFixed(0)} dBm` : ''],
         ['SNR', snrValues.length ? `${Math.min(...snrValues).toFixed(1)} a ${Math.max(...snrValues).toFixed(1)} dB` : ''],
-        [ui('Período do mapa', 'Map period'), state.mapPeriodHours === 0 ? ui('Completo', 'Complete') : `${state.mapPeriodHours} h`],
+        [ui('Período do mapa', 'Map period'), state.mapPeriodHours === 0 ? ui('Completo', 'Complete') : topologyPeriodLabel(state.mapPeriodHours)],
       ],
     };
   }
@@ -2766,8 +2771,13 @@
 
         const sourceCall = normalizedCall(edge.source);
         const targetCall = normalizedCall(edge.target);
-        if (sourceCall && state.mapKnownCallsigns.has(sourceCall) && !state.mapVisibleCallsigns.has(sourceCall)) continue;
-        if (targetCall && state.mapKnownCallsigns.has(targetCall) && !state.mapVisibleCallsigns.has(targetCall)) continue;
+        // A visibilidade da camada de enlaces Internet/iGate é independente da
+        // visibilidade dos marcadores e seus subtipos. Um filtro que oculta
+        // iGates não deve apagar enlaces APRS-IS que já foram comprovados.
+        if (edge.kind !== 'igate') {
+          if (sourceCall && state.mapKnownCallsigns.has(sourceCall) && !state.mapVisibleCallsigns.has(sourceCall)) continue;
+          if (targetCall && state.mapKnownCallsigns.has(targetCall) && !state.mapVisibleCallsigns.has(targetCall)) continue;
+        }
 
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
@@ -5944,6 +5954,16 @@
     }
   }
 
+  // Clique direito: pré-seleciona indicativo e abre o compositor da própria
+  // aba Estações, com as mesmas regras e guardas do botão Mensagem.
+  $('#stationsTable tbody')?.addEventListener('contextmenu', event => {
+    const row = event.target.closest('.station-row[data-callsign]');
+    if (!row) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openStationQuickMessage(row.dataset.callsign || '');
+  });
+
   document.addEventListener('click', event => {
     const button = event.target.closest('.station-list-message-button');
     if (!button) return;
@@ -6219,8 +6239,11 @@
       }
       updateUpdateSettingsUi();
       if (state.updateSchedulerReady) rescheduleUpdateChecks();
-    } catch (err) { toast(err.message, 'error'); }
-    finally { state.configLoading = false; }
+      return true;
+    } catch (err) {
+      toast(err.message, 'error');
+      return false;
+    } finally { state.configLoading = false; }
   }
 
   async function saveConfigForm() {
@@ -6273,8 +6296,9 @@
       );
       applyMapPreferences(result.config || data);
       applyAppearancePreferences(result.config || data);
-      await loadConfig();
-      await loadStations();
+      const refreshed = await loadConfig();
+      if (!refreshed) console.warn('Configuração persistida; recarga da interface indisponível.');
+      void loadStations();
       state.configDirty = false;
       const saveStatus = $('#configSaveStatus');
       if (saveStatus) {
@@ -6297,25 +6321,80 @@
   $('#configForm').addEventListener('input', markConfigDirty);
   $('#configForm').addEventListener('change', markConfigDirty);
 
-  $('#unsavedSaveButton')?.addEventListener('click', async () => {
+  function pendingConfigFeedback(message = '', error = false) {
+    const node = $('#unsavedConfigActionStatus');
+    if (!node) return;
+    node.textContent = message;
+    node.classList.toggle('hidden', !message);
+    node.classList.toggle('is-error', !!error);
+  }
+
+  async function resolveUnsavedConfig(mode) {
+    if (state.configTransitionBusy) return;
+    const overlay = $('#unsavedConfigModal');
     const target = state.pendingTab;
-    if (await saveConfigForm()) {
-      $('#unsavedConfigModal')?.classList.add('hidden');
-      state.pendingTab = '';
-      if (target) activateTab(target);
+    if (!target) {
+      overlay?.classList.add('hidden');
+      return;
     }
-  });
-  $('#unsavedDiscardButton')?.addEventListener('click', async () => {
-    const target = state.pendingTab;
-    await loadConfig();
-    $('#unsavedConfigModal')?.classList.add('hidden');
-    state.pendingTab = '';
-    if (target) activateTab(target);
-  });
-  $('#unsavedCancelButton')?.addEventListener('click', () => {
-    $('#unsavedConfigModal')?.classList.add('hidden');
-    state.pendingTab = '';
-  });
+    state.configTransitionBusy = true;
+    const buttons = [];
+    for (const selector of ['#unsavedSaveButton', '#unsavedDiscardButton', '#unsavedCancelButton']) {
+      const button = $(selector);
+      if (button) buttons.push(button);
+    }
+    buttons.forEach(button => { button.disabled = true; });
+    try {
+      if (mode === 'save') {
+        pendingConfigFeedback(ui('Salvando alterações…', 'Saving changes…'));
+        // Um diálogo nativo de confirmação (ex.: filtro APRS-IS vazio) não
+        // deve ficar atrás da sobreposição modal enquanto o save é executado.
+        overlay?.classList.add('hidden');
+        let saved = false;
+        try {
+          saved = await saveConfigForm();
+        } catch (err) {
+          console.error('Falha ao salvar ao sair da Configuração:', err);
+          pendingConfigFeedback(String(err?.message || err), true);
+        }
+        if (!saved) {
+          overlay?.classList.remove('hidden');
+          if (!$('#unsavedConfigActionStatus')?.classList.contains('is-error')) {
+            pendingConfigFeedback(ui('Não foi possível salvar. Revise os dados da Configuração e tente novamente.', 'Could not save. Review configuration and try again.'), true);
+          }
+          return;
+        }
+      } else if (mode === 'discard') {
+        pendingConfigFeedback(ui('Descartando alterações…', 'Discarding changes…'));
+        overlay?.classList.add('hidden');
+        if (!await loadConfig()) {
+          overlay?.classList.remove('hidden');
+          pendingConfigFeedback(ui('Não foi possível restaurar a configuração salva.', 'Could not restore saved configuration.'), true);
+          return;
+        }
+      } else {
+        overlay?.classList.add('hidden');
+        pendingConfigFeedback();
+        state.pendingTab = '';
+        return;
+      }
+      overlay?.classList.add('hidden');
+      pendingConfigFeedback();
+      state.pendingTab = '';
+      activateTab(target);
+    } catch (err) {
+      overlay?.classList.remove('hidden');
+      pendingConfigFeedback(String(err?.message || err), true);
+      toast(String(err?.message || err), 'error');
+    } finally {
+      state.configTransitionBusy = false;
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  $('#unsavedSaveButton')?.addEventListener('click', () => { void resolveUnsavedConfig('save'); });
+  $('#unsavedDiscardButton')?.addEventListener('click', () => { void resolveUnsavedConfig('discard'); });
+  $('#unsavedCancelButton')?.addEventListener('click', () => { void resolveUnsavedConfig('cancel'); });
 
   async function sendManualBeacon() {
     const buttons = [$('#sendBeaconButton'), $('#headerSendBeaconButton')].filter(Boolean);

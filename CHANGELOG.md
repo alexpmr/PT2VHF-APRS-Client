@@ -1,3 +1,20 @@
+## 1.14.4 - 2026-10-07
+
+- **Configuração:** corrigido o modal de alterações pendentes para concluir corretamente Salvar e sair, Descartar alterações e sair e Continuar na Configuração.
+- Fluxo de saída com controle de concorrência, indicação acessível de progresso/erro, modal temporariamente recolhido durante confirmações nativas e preservação das alterações se o salvamento falhar.
+- O botão normal Salvar configuração e a persistência SQLite continuam usando o mesmo backend.
+- **Estações:** botão direito na linha do indicativo abre Mensagem rápida com destinatário preenchido, reusando validações, fila, roteamento e ACK/REJ já existentes.
+- **Mapa:** enlaces exclusivamente Internet/APRS-IS deixam de ser ocultados quando filtros de visibilidade dos marcadores de estações/iGates estão desativados. A camada Enlaces iGate/APRS-IS permanece independente e respeita seu próprio liga/desliga.
+- **Classificação:** conexões qAr/APRS-IS confirmadas permanecem Internet tracejada; qAR/qAO RF e evidência mista seguem a política existente sem criar rotas fictícias.
+- **Ícones:** pictograma de antena de alto contraste específico para ícones do sistema (Windows/Linux/macOS), legível em 16/24 px; logomarca oficial preservada no cabeçalho e manual.
+- **Alertas:** corrigido `$(...).forEach is not a function` no módulo de alertas configuráveis; coleção passa a usar `$()` tanto no autosave quanto em Salvar alertas.
+- **Mapa — janela curta:** adicionados períodos de **15 min** e **30 min**. Topologia, RF ouvido, KML e cobertura RF aceitam frações de hora sem truncar para período completo.
+- **SAT responsivo:** a grade muda para uma coluna até 1320 px, preserva no mínimo ~340 px para a lateral quando em duas colunas, permite quebra de nomes e invalida o tamanho do Leaflet via ResizeObserver.
+- **Banco/backend:** a abertura de Configuração usa saúde SQLite leve, sem `PRAGMA quick_check` e `COUNT(*)` integrais nas tabelas grandes; checagem profunda permanece nas rotinas explícitas/testes.
+- **Validação:** testes automatizados de regressão mais testes reais em Chromium/Playwright durante a criação das telas do manual para salvar, descartar, cancelar, alertas, botão direito, enlace Internet e responsividade SAT.
+- TM-D700 permanece encerrado administrativamente: não há alegação de teste físico RF.
+- Release completa Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.3 - 2026-10-06
 
 - **Barra superior:** novo botão **Enviar Beacon** para disparo manual imediato sem navegar até Configuração.
