@@ -55,6 +55,7 @@ _retention_state = {
 _topology_query_lock = threading.Lock()
 _topology_cache_lock = threading.Lock()
 _topology_cache: dict[int, tuple[float, list[dict[str, Any]]]] = {}
+_topology_cache_db_path = ""
 TOPOLOGY_CACHE_SECONDS = 2.0
 TOPOLOGY_QUERY_MAX_SECONDS = 2.5
 
@@ -1869,6 +1870,7 @@ def _repair_topology_rf_evidence_v112(conn: sqlite3.Connection) -> int:
 
 def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
     """Retorna enlaces observados sem permitir que uma consulta monopolize workers HTTP."""
+    global _topology_cache_db_path
     hours = int(hours or 0)
     if hours > 0:
         hours = max(1, min(hours, 24 * 30))
@@ -1877,6 +1879,11 @@ def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
 
     now = time.monotonic()
     with _topology_cache_lock:
+        if _topology_cache_db_path != str(DB_PATH):
+            # Não reutilizar resultado de outro banco (testes, restauração,
+            # seleção de diretório de dados ou migração).
+            _topology_cache.clear()
+            _topology_cache_db_path = str(DB_PATH)
         cached = _topology_cache.get(hours)
         if cached and now - cached[0] <= TOPOLOGY_CACHE_SECONDS:
             return [dict(item) for item in cached[1]]
