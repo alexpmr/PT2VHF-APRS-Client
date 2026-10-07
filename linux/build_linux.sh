@@ -54,17 +54,13 @@ mkdir -p "$appdir/usr/bin" "$appdir/usr/share/applications" "$appdir/usr/share/i
 cp "$binary_src" "$appdir/usr/bin/pt2vhf-aprs-client"
 chmod 0755 "$appdir/usr/bin/pt2vhf-aprs-client"
 
-# Ícone Linux derivado da logo APRS oficial.
+# Ícone Linux simplificado; logomarca oficial preservada em
+# pt2vhf_aprs/static/img/app_logo.png para a interface e o manual.
 "$VENV/bin/python" - <<'PY'
 from pathlib import Path
-from PIL import Image, ImageOps
-src = Path("pt2vhf_aprs/static/img/app_logo.png")
+from tools.compact_icon import render_compact_icon
 dst = Path("dist-linux/pt2vhf-aprs-client.png")
-img = Image.open(src).convert("RGBA")
-canvas = Image.new("RGBA", (256, 256), "white")
-fit = ImageOps.contain(img, (248, 248), method=Image.Resampling.LANCZOS)
-canvas.alpha_composite(fit, ((256-fit.width)//2, (256-fit.height)//2))
-canvas.save(dst)
+render_compact_icon(256).save(dst)
 PY
 cp dist-linux/pt2vhf-aprs-client.png "$appdir/usr/share/icons/hicolor/256x256/apps/pt2vhf-aprs-client.png"
 cp dist-linux/pt2vhf-aprs-client.png "$appdir/pt2vhf-aprs-client.png"
