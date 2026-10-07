@@ -319,11 +319,9 @@
 - **Bancos antigos:** matriz automatizada de migração histórica integrada à CI.
 - **Idiomas:** auditoria contínua, paridade de dicionários e scanner de strings visíveis integrados à CI.
 
-## Pendências para próximas versões
+## Validações externas encerradas administrativamente
 
-- **Kenwood TM-D700 — teste físico externo**
-  - O software de diagnóstico está concluído.
-  - Encerrar a validação física somente quando houver um TM-D700 real, cabo/interface adequado e uma segunda estação/monitor RF para confirmar RX e TX no ar.
+- **Kenwood TM-D700 — teste físico externo:** retirado do backlog ativo em 07/10/2026, por decisão do mantenedor. Diagnóstico em software concluído. **RX/TX físico com rádio real não foi validado**; o encerramento é administrativo, não comprovação de funcionamento em RF.
 
 ## Concluído na v1.8.12
 
