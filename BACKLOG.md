@@ -1,5 +1,9 @@
 # Backlog
 
+## Pendências para próxima versão
+
+- **#52 — SAT / erro de renderização mascarado como cálculo orbital:** corrigir `$('[data-satellite-service]',host).forEach(...)` em `v112.js`, separar erro de cálculo orbital de erro de UI e adicionar regressão para detalhes/serviços monitorados dos satélites.
+
 ## Pendência externa não bloqueante
 
 - **SignPath Foundation (#1):** concluir onboarding, autorização do GitHub App, configuração da policy e assinatura Authenticode. Depende de aprovação/autorização externas e não bloqueia releases sem assinatura oficial.
@@ -7,7 +11,7 @@
 
 ## Concluído na v1.14.4
 
-- **PU2MUS #48 — Alertas:** corrigido o erro `$(...).forEach is not a function`; autosave e botão Salvar alertas usam coleção `$()`.
+- **PU2MUS #48 — Alertas:** corrigido o erro `$(...).forEach is not a function`; autosave e botão Salvar alertas usam `querySelectorAll()`.
 - **PU2MUS #49 — Backend/banco:** abertura da Configuração deixa de executar verificação profunda e contagens integrais do SQLite; a saúde rápida evita scans desnecessários em bancos maiores. O padrão de retenção **não foi reduzido para 5 dias**.
 - **PU2MUS #50 — Mapa:** incluídos **15 min** e **30 min**, com suporte fracionário real no backend para topologia, RF ouvido, KML e Cobertura RF.
 - **PU2MUS #51 — SAT:** layout responsivo reforçado, nomes podem quebrar linha, sidebar não é comprimida a poucos caracteres e o mapa orbital recalcula o tamanho após mudança da grade.
