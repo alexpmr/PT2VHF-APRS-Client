@@ -1,5 +1,15 @@
 # Backlog
 
+## Concluído na v1.14.4
+
+- **Configuração:** modal de saída com alterações pendentes corrigido, incluindo Salvar e sair, Descartar e sair, Cancelar, feedback e proteção contra duplo clique.
+- **Estações:** clique direito em linha abre o compositor de Mensagem rápida e preenche o indicativo sem mudar de aba.
+- **Mapa:** linhas Internet/APRS-IS observadas passam a respeitar apenas o toggle de Enlaces iGate/APRS-IS e não desaparecem pela ocultação independente de ícones/marcadores.
+- **Topologia:** caminhos RF reais não são convertidos em Internet; qAR e qAr e evidência mista permanecem diferenciados.
+- **Ícones do sistema:** desenho compacto com alto contraste aplicado aos builds Windows, Linux e macOS; logomarca oficial preservada na interface e no Manual PDF.
+- **Regressão:** pytest e automação Playwright para os três botões de saída, botão direito e enlace Internet.
+- **SignPath Foundation:** onboarding/autorização externa ainda pendente; não bloqueia a publicação sem assinatura oficial.
+
 ## Concluído na v1.14.3
 
 - **Barra principal superior:** botão **Enviar Beacon** adicionado para disparo manual rápido.
