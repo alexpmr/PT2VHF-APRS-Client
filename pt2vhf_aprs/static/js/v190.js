@@ -304,7 +304,7 @@
     const defs=[['station_appeared',tr('Estação apareceu','Station appeared','Estación apareció','Station apparue')],['station_disappeared',tr('Estação desapareceu','Station disappeared','Estación desapareció','Station disparue')],['favorite_appeared',tr('Favorito apareceu','Favorite appeared','Favorito apareció','Favori apparu')],['new_message',tr('Nova mensagem','New message','Nuevo mensaje','Nouveau message')],['tnc_down',tr('TNC caiu','TNC disconnected','TNC desconectado','TNC déconnecté')],['aprsis_down',tr('APRS-IS caiu','APRS-IS disconnected','APRS-IS desconectado','APRS-IS déconnecté')],['database_problem',tr('Problema no banco','Database problem','Problema de base','Problème de base')]];
     const saveAlertSettings=async(showNotice=false)=>{
       const payload={};
-      $('[data-v190-alert]',card).forEach(i=>payload[i.dataset.v190Alert]=i.checked);
+      card.querySelectorAll('[data-v190-alert]').forEach(i=>payload[i.dataset.v190Alert]=i.checked);
       payload.disappear_minutes=Number($('#v190DisappearMinutes',card)?.value||60);
       window.__pt2vhfV190AlertSettings={...payload};
       window.__pt2vhfV190AlertSettingsDirty=true;
@@ -322,7 +322,7 @@
       window.__pt2vhfV190AlertSettings={...settings};
       window.__pt2vhfV190AlertSettingsDirty=false;
       $('#v190Alerts',card).innerHTML=defs.map(([k,l])=>'<label class="check-field"><input type="checkbox" data-v190-alert="'+k+'" '+(settings[k]?'checked':'')+'><span>'+esc(l)+'</span></label>').join('')+'<label class="field"><span>'+tr('Considerar desaparecida após','Consider disappeared after','Considerar desaparecida después de','Considérer disparue après')+'</span><input id="v190DisappearMinutes" type="number" min="5" max="1440" value="'+esc(settings.disappear_minutes||60)+'"></label>';
-      $('[data-v190-alert]',card).forEach(i=>i.addEventListener('change',()=>{
+      card.querySelectorAll('[data-v190-alert]').forEach(i=>i.addEventListener('change',()=>{
         window.__pt2vhfV190AlertSettings={...(window.__pt2vhfV190AlertSettings||{}),[i.dataset.v190Alert]:i.checked};
         window.__pt2vhfV190AlertSettingsDirty=true;
         void saveAlertSettings(false).catch(()=>{});
