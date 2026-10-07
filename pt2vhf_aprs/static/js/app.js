@@ -1789,7 +1789,7 @@
 
   function topologyPeriodValue(value) {
     const parsed = Number(value);
-    return [0, 1, 6, 12, 24, 168].includes(parsed) ? parsed : 0;
+    return [0, 0.25, 0.5, 1, 6, 12, 24, 168].includes(parsed) ? parsed : 0;
   }
 
   function statisticsPeriodValue(value) {
@@ -1798,9 +1798,12 @@
   }
 
   function topologyPeriodLabel(hours = state.topologyHours) {
-    if (Number(hours) === 0) return ui('Completo', 'Complete');
-    if (Number(hours) === 168) return ui('7 dias', '7 days');
-    return `${Number(hours)} h`;
+    const value = Number(hours);
+    if (value === 0) return ui('Completo', 'Complete');
+    if (value === 0.25) return '15 min';
+    if (value === 0.5) return '30 min';
+    if (value === 168) return ui('7 dias', '7 days');
+    return `${value} h`;
   }
 
   const MAP_VIEW_STATE_STORAGE = {
@@ -2713,7 +2716,7 @@
         [ui('Caminhos APRS', 'APRS paths'), pathsText],
         ['RSSI', rssiValues.length ? `${Math.min(...rssiValues).toFixed(0)} a ${Math.max(...rssiValues).toFixed(0)} dBm` : ''],
         ['SNR', snrValues.length ? `${Math.min(...snrValues).toFixed(1)} a ${Math.max(...snrValues).toFixed(1)} dB` : ''],
-        [ui('Período do mapa', 'Map period'), state.mapPeriodHours === 0 ? ui('Completo', 'Complete') : `${state.mapPeriodHours} h`],
+        [ui('Período do mapa', 'Map period'), state.mapPeriodHours === 0 ? ui('Completo', 'Complete') : topologyPeriodLabel(state.mapPeriodHours)],
       ],
     };
   }
