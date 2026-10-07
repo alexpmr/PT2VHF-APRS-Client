@@ -6335,8 +6335,11 @@
       return;
     }
     state.configTransitionBusy = true;
-    const buttons = ['#unsavedSaveButton', '#unsavedDiscardButton', '#unsavedCancelButton']
-      .map(selector => $(selector)).filter(Boolean);
+    const buttons = [];
+    for (const selector of ['#unsavedSaveButton', '#unsavedDiscardButton', '#unsavedCancelButton']) {
+      const button = $(selector);
+      if (button) buttons.push(button);
+    }
     buttons.forEach(button => { button.disabled = true; });
     try {
       if (mode === 'save') {
