@@ -6204,6 +6204,14 @@
       if (!Object.prototype.hasOwnProperty.call(cfg, el.name)) continue;
       values[el.name] = el.type === 'checkbox' ? !!cfg[el.name] : String(cfg[el.name] ?? '');
     }
+    // Espelhar canonicalizações que a UI aplica sem evento de input/change.
+    // Sem isso, 0.1 vs 0.10 ou passcode calculado geram dirty-state fantasma.
+    if (Object.prototype.hasOwnProperty.call(values, 'map_zoom_step')) {
+      values.map_zoom_step = normalizeMapZoomStep(cfg.map_zoom_step ?? values.map_zoom_step ?? 0.10).toFixed(2);
+    }
+    if (Object.prototype.hasOwnProperty.call(values, 'passcode') && !String(cfg.passcode || '').trim()) {
+      values.passcode = calculateAprsPasscode(cfg.callsign || values.callsign || '');
+    }
     return stableConfigSnapshot(values);
   }
 
