@@ -156,6 +156,7 @@
     configEditGeneration: 0,
     configLoadGeneration: 0,
     configTouchedFields: new Set(),
+    configManagedFields: new Set(),
     pendingTab: '',
     updateInfo: null,
     updateDownloading: false,
@@ -6174,6 +6175,10 @@
     const data = {};
     for (const el of [...form.elements]) {
       if (!el.name || el.type === 'file' || el.type === 'submit' || el.type === 'button') continue;
+      // O mesmo <form> também contém controles TNC/RF com salvamento próprio.
+      // Depois que /api/config foi carregado, somente campos conhecidos por
+      // esse endpoint participam do dirty-state e do POST principal.
+      if (state.configManagedFields.size && !state.configManagedFields.has(el.name)) continue;
       data[el.name] = el.type === 'checkbox' ? !!el.checked : String(el.value ?? '');
     }
     return data;
@@ -6257,6 +6262,7 @@
 
   function markConfigDirty(event = null) {
     const fieldName = event?.target?.name;
+    if (fieldName && state.configManagedFields.size && !state.configManagedFields.has(fieldName)) return;
     if (fieldName) {
       state.configTouchedFields.add(fieldName);
       state.configEditGeneration += 1;
@@ -6296,6 +6302,10 @@
       if (loadGeneration !== state.configLoadGeneration) return false;
       const editedDuringLoad = state.configEditGeneration !== editGenerationAtStart;
       state.currentConfig = cfg;
+      const form = $('#configForm');
+      state.configManagedFields = new Set(
+        Object.keys(cfg || {}).filter(key => !!form?.elements?.namedItem(key))
+      );
 
       if (force) state.configTouchedFields.clear();
       applyConfigToForm(cfg, { preserveTouched: !force && editedDuringLoad });
