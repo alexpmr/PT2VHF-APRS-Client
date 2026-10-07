@@ -2,7 +2,7 @@
 
 ## Pendências para próxima versão
 
-- **#45 — Configuração / Salvar e sair ainda falha na v1.14.4:** reaberto após evidência em instalação real. O modal mostra apenas mensagem genérica; próxima correção deve preservar o erro real de `/api/config`, testar configuração migrada da v1.14.3 e normalizar valores legados que possam bloquear o save.
+- **#45 — Configuração / modal de alterações pendentes quebrado na v1.14.4:** **Salvar e sair**, botão inferior **Salvar configuração** e **Descartar alterações e sair** falham em instalação real. Corrigir detecção de dirty state, preservar erro real de `/api/config`, evitar corrida com `loadConfig()` e fazer **Descartar** restaurar o último baseline local sem depender do backend.
 - **#52 — SAT / erro de renderização mascarado como cálculo orbital:** corrigir `$('[data-satellite-service]',host).forEach(...)` em `v112.js`, separar erro de cálculo orbital de erro de UI e adicionar regressão para detalhes/serviços monitorados dos satélites.
 
 ## Pendência externa não bloqueante
