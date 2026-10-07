@@ -137,6 +137,10 @@ def capture(output_dir: Path) -> None:
                 assert cfg["comment"] == "Beacon 1.14.4 salvo no modal", "Modal Salvar e sair não persistiu"
 
                 page.locator('.tab[data-tab="config"]').click()
+                # A abertura da aba dispara GET /api/config assíncrono.
+                # Esperar a recarga antes de editar evita corrida do próprio
+                # cenário de teste com o preenchimento efetuado pela API.
+                page.wait_for_timeout(900)
                 page.locator('input[name="comment"]').fill("Alteração para cancelar")
                 page.locator('.tab[data-tab="stations"]').click()
                 page.locator("#unsavedConfigModal").wait_for(state="visible")
