@@ -1,5 +1,10 @@
 # Backlog
 
+## Pendência externa não bloqueante
+
+- **SignPath Foundation (#1):** concluir onboarding, autorização do GitHub App, configuração da policy e assinatura Authenticode. Depende de aprovação/autorização externas e não bloqueia releases sem assinatura oficial.
+- **Kenwood TM-D700:** validação física encerrada administrativamente em 07/10/2026. Não declarar RX/TX físico validado.
+
 ## Concluído na v1.14.4
 
 - **Configuração:** modal de saída com alterações pendentes corrigido, incluindo Salvar e sair, Descartar e sair, Cancelar, feedback e proteção contra duplo clique.
@@ -8,7 +13,6 @@
 - **Topologia:** caminhos RF reais não são convertidos em Internet; qAR e qAr e evidência mista permanecem diferenciados.
 - **Ícones do sistema:** desenho compacto com alto contraste aplicado aos builds Windows, Linux e macOS; logomarca oficial preservada na interface e no Manual PDF.
 - **Regressão:** pytest e automação Playwright para os três botões de saída, botão direito e enlace Internet.
-- **SignPath Foundation:** onboarding/autorização externa ainda pendente; não bloqueia a publicação sem assinatura oficial.
 
 ## Concluído na v1.14.3
 
