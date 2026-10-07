@@ -19,6 +19,7 @@ checks = {
     ],
     "pt2vhf_aprs/static/js/app.js": [
         "configTouchedFields: new Set()",
+        "configManagedFields: new Set()",
         "configEditGeneration: 0",
         "function restoreConfigBaselineLocally()",
         "function configChangedPayload()",
