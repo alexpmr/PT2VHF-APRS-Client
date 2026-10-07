@@ -49,6 +49,11 @@ def seed(data_dir: Path) -> None:
             "symbol_table": "/", "symbol": ">", "comment": info,
             "path": ["WIDE1-1", "WIDE2-1"], "raw": f"{call}>APRS,WIDE1-1,WIDE2-1:!demo",
         })
+    # Caminho Internet/APRS-IS confirmado, independente de evidência RF.
+    db.record_topology_from_raw(
+        "PY1TEST-10>APRS,TCPIP*,qAr,PT2XYZ-7:>enlace internet",
+        medium="APRS-IS",
+    )
     db.add_message("in", "PY2ABC-9", "PT2VHF-15", "Bom dia! Teste de mensagem APRS.", msg_id="101", status="Recebida")
     db.add_message("out", "PT2VHF-15", "PY2ABC-9", "Recebido. Aplicação funcionando.", msg_id="102", status="ACK")
     db.add_aprs_log("RX", "# aprsc 2.1.12-g123 24 Sep 2026 14:00:00 GMT")
@@ -112,6 +117,60 @@ def capture(output_dir: Path) -> None:
                 page.locator("#appTheme").scroll_into_view_if_needed()
                 page.wait_for_timeout(350)
                 page.screenshot(path=str(output_dir / "config-app.png"))
+
+                # Regressão funcional real: fechar modal com salvar/descartar/
+                # cancelar, sem depender só de testes que buscam strings no JS.
+                page.locator('input[name="comment"]').fill("Beacon 1.14.4 salvo no modal")
+                page.locator('.tab[data-tab="stations"]').click()
+                page.locator("#unsavedConfigModal").wait_for(state="visible")
+                page.locator("#unsavedSaveButton").click()
+                page.wait_for_function(
+                    "() => document.querySelector('.tab[data-tab=\\"stations\\"]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
+                    timeout=15000,
+                )
+                cfg = page.request.get(f"{local_url}/api/config").json()
+                assert cfg["comment"] == "Beacon 1.14.4 salvo no modal", "Modal Salvar e sair não persistiu"
+
+                page.locator('.tab[data-tab="config"]').click()
+                page.locator('input[name="comment"]').fill("Alteração para cancelar")
+                page.locator('.tab[data-tab="stations"]').click()
+                page.locator("#unsavedConfigModal").wait_for(state="visible")
+                page.locator("#unsavedCancelButton").click()
+                assert page.locator('.tab[data-tab="config"]').get_attribute("class").find("active") >= 0
+                assert page.locator('input[name="comment"]').input_value() == "Alteração para cancelar"
+
+                page.locator('.tab[data-tab="stations"]').click()
+                page.locator("#unsavedConfigModal").wait_for(state="visible")
+                page.locator("#unsavedDiscardButton").click()
+                page.wait_for_function(
+                    "() => document.querySelector('.tab[data-tab=\\"stations\\"]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
+                    timeout=15000,
+                )
+                cfg = page.request.get(f"{local_url}/api/config").json()
+                assert cfg["comment"] == "Beacon 1.14.4 salvo no modal", "Descartar alterou config persistida"
+
+                page.locator('#stationsTable tbody .station-row[data-callsign="PY2ABC-9"]').click(button="right")
+                page.locator("#stationQuickMessagePanel").wait_for(state="visible", timeout=10000)
+                assert page.locator("#stationQuickMessageCall").inner_text() == "PY2ABC-9"
+
+                # A evidência de Internet deve existir na API e na visualização,
+                # sem ficar bloqueada quando categorias de marcadores forem ocultadas.
+                assert any(
+                    e["kind"] == "igate"
+                    for e in page.request.get(f"{local_url}/api/topology?hours=0").json()
+                ), "API não forneceu enlace Internet do cenário de teste"
+                page.locator('.tab[data-tab="map"]').click()
+                page.wait_for_timeout(500)
+                page.evaluate("""() => {
+                    const toggle = document.querySelector('#mapViewTree input[data-map-state-key="stationsEnabled"]');
+                    if (!toggle) throw new Error('Filtro Estações ausente');
+                    toggle.checked = false;
+                    toggle.dispatchEvent(new Event('change', { bubbles: true }));
+                }""")
+                page.wait_for_function(
+                    "() => [...document.querySelectorAll('.leaflet-overlay-pane path')].some(p => (p.getAttribute('stroke-dasharray') || '').includes('7'))",
+                    timeout=12000,
+                )
                 browser.close()
         finally:
             proc.terminate()
