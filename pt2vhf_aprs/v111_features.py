@@ -336,7 +336,13 @@ def run_tnc_self_test() -> dict[str, Any]:
     }
 
 
-def db_health() -> dict[str, Any]:
+def db_health(*, deep: bool = True) -> dict[str, Any]:
+    """Saúde do SQLite.
+
+    deep=False evita PRAGMA quick_check e COUNT(*) integrais na abertura da
+    Configuração. Isso mantém o backend responsivo em bases grandes; a checagem
+    profunda continua disponível nas rotinas explícitas de manutenção/teste.
+    """
     path = Path(db.DB_PATH)
     result: dict[str, Any] = {
         "path": str(path),
@@ -352,25 +358,30 @@ def db_health() -> dict[str, Any]:
     if wal.exists():
         result["wal_bytes"] = wal.stat().st_size
     with db.connection() as conn:
-        try:
-            result["integrity"] = str(conn.execute("PRAGMA quick_check").fetchone()[0])
-        except Exception as exc:
-            result["integrity"] = f"error: {exc}"
+        if deep:
+            try:
+                result["integrity"] = str(conn.execute("PRAGMA quick_check").fetchone()[0])
+            except Exception as exc:
+                result["integrity"] = f"error: {exc}"
+        else:
+            conn.execute("SELECT 1").fetchone()
+            result["integrity"] = "operacional"
         result["page_count"] = int(conn.execute("PRAGMA page_count").fetchone()[0] or 0)
         result["freelist_count"] = int(conn.execute("PRAGMA freelist_count").fetchone()[0] or 0)
         if result["page_count"]:
             result["fragmentation_percent"] = round(
                 result["freelist_count"] * 100.0 / result["page_count"], 2
             )
-        for table in (
-            "packets", "tracks", "messages", "aprs_log", "topology_events",
-            "tnc_frames", "tnc_decisions", "notifications_v111",
-        ):
-            if _table_exists(conn, table):
-                try:
-                    result["tables"][table] = int(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
-                except Exception:
-                    result["tables"][table] = -1
+        if deep:
+            for table in (
+                "packets", "tracks", "messages", "aprs_log", "topology_events",
+                "tnc_frames", "tnc_decisions", "notifications_v111",
+            ):
+                if _table_exists(conn, table):
+                    try:
+                        result["tables"][table] = int(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+                    except Exception:
+                        result["tables"][table] = -1
     return result
 
 
@@ -410,7 +421,7 @@ def apply_retention(settings: dict[str, Any] | None = None) -> dict[str, Any]:
             except sqlite3.OperationalError:
                 deleted[table] = 0
     db.invalidate_map_data_cache(drop_payload=True)
-    return {"settings": values, "deleted": deleted, "health": db_health()}
+    return {"settings": values, "deleted": deleted, "health": db_health(deep=False)}
 
 
 def optimize_database() -> dict[str, Any]:
@@ -550,7 +561,8 @@ def register_v111_routes(app) -> None:
 
     @app.get("/api/v111/db/health")
     def api_v111_db_health():
-        return jsonify(db_health())
+        deep = str(request.args.get("deep", "")).lower() in {"1", "true", "yes"}
+        return jsonify(db_health(deep=deep))
 
     @app.get("/api/v111/db/retention")
     def api_v111_db_retention():
