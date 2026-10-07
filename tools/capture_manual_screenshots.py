@@ -178,8 +178,20 @@ def capture(output_dir: Path) -> None:
                     toggle.checked = false;
                     toggle.dispatchEvent(new Event('change', { bubbles: true }));
                 }""")
+                page.wait_for_timeout(1200)
+                print("V144_MAP_DEBUG:", page.evaluate("""() => ({
+                    leafletLoaded: !!window.L,
+                    mapPaths: [...document.querySelectorAll('.leaflet-overlay-pane path')].map(p => ({
+                        dash: p.getAttribute('stroke-dasharray'),
+                        style: p.getAttribute('style'),
+                        cls: p.getAttribute('class')
+                    })).slice(0, 12),
+                    linkState: [...document.querySelectorAll('#mapViewTree input[data-map-state-key]')]
+                        .map(i => ({name:i.dataset.mapStateKey, enabled:i.checked})),
+                    activeTab: document.querySelector('.tab.active')?.dataset.tab
+                })"""), flush=True)
                 page.wait_for_function(
-                    "() => [...document.querySelectorAll('.leaflet-overlay-pane path')].some(p => (p.getAttribute('stroke-dasharray') || '').includes('7'))",
+                    "() => [...document.querySelectorAll('.leaflet-overlay-pane path')].some(p => ((p.getAttribute('stroke-dasharray') || p.style.strokeDasharray || '')).includes('7'))",
                     timeout=12000,
                 )
                 browser.close()
