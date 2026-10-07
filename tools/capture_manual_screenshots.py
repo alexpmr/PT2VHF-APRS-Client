@@ -125,7 +125,7 @@ def capture(output_dir: Path) -> None:
                 page.locator("#unsavedConfigModal").wait_for(state="visible")
                 page.locator("#unsavedSaveButton").click()
                 page.wait_for_function(
-                    "() => document.querySelector('.tab[data-tab=\\"stations\\"]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
+                    "() => document.querySelector('.tab[data-tab=stations]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
                     timeout=15000,
                 )
                 cfg = page.request.get(f"{local_url}/api/config").json()
@@ -143,7 +143,7 @@ def capture(output_dir: Path) -> None:
                 page.locator("#unsavedConfigModal").wait_for(state="visible")
                 page.locator("#unsavedDiscardButton").click()
                 page.wait_for_function(
-                    "() => document.querySelector('.tab[data-tab=\\"stations\\"]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
+                    "() => document.querySelector('.tab[data-tab=stations]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
                     timeout=15000,
                 )
                 cfg = page.request.get(f"{local_url}/api/config").json()
