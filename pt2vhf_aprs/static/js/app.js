@@ -6307,7 +6307,8 @@
 
       if (firstConfigLoad) {
         state.trafficMode = 'live';
-        state.trafficPlaying = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
+        state.trafficAnimationEnabled = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
+        state.trafficPlaying = state.trafficAnimationEnabled;
         state.timelineReplayActive = false;
         if ($('#trafficMode')) $('#trafficMode').value = 'live';
       }
@@ -6519,7 +6520,7 @@
     try {
       await api('/api/config/import', { method: 'POST', body: fd });
       toast('Configuração recuperada do arquivo.', 'ok');
-      await loadConfig();
+      await loadConfig({ force:true });
     } catch (err) { toast(err.message, 'error'); }
     e.target.value = '';
   });
