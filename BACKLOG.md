@@ -1,5 +1,16 @@
 # Backlog
 
+## Concluído na v1.14.6
+
+- **SAT/ISS:** removido integralmente do PT2VHF APRS Client.
+- Removidos do build: backend orbital, rotas SAT, TLE/SGP4, cálculo de passagens, agenda, alarmes, mapa/footprint/trajetórias, seleção/favoritos, estações/mensagens SAT e beacon satelital.
+- Removidos também assets JS/CSS, dependência `sgp4`, hooks de visibilidade, menu/aba SAT e pipeline TNC exclusivo de beacon satelital.
+- **Direção arquitetural:** o cliente principal permanece focado em APRS terrestre; APRS via satélite fica reservado para uma futura aplicação dedicada.
+- **Enlaces iGate/Internet:** corrigida a regressão da v1.14.5 em que evidência APRS-IS podia desaparecer quando o mesmo par também possuía evidência RF histórica.
+- **Classificação:** RF e APRS-IS são preservados como observações independentes; RF real nunca é convertido em Internet apenas pelo papel de iGate.
+- **Renderização:** enlace APRS-IS confirmado permanece tracejado e visível, inclusive em pares com evidência mista.
+- **Testes/CI:** suites históricas deixaram de exigir o módulo SAT; adicionada regressão específica v1.14.6 e novo validador de produção.
+
 ## Monitoramento pós-release
 
 - **#49 — Backend/banco crescente:** manter aberto para observar perda de conexão/latência com bancos maiores após as otimizações recentes. Não alterar automaticamente a retenção padrão para 5 dias.
