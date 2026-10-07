@@ -50,8 +50,10 @@ def seed(data_dir: Path) -> None:
             "path": ["WIDE1-1", "WIDE2-1"], "raw": f"{call}>APRS,WIDE1-1,WIDE2-1:!demo",
         })
     # Caminho Internet/APRS-IS confirmado, independente de evidência RF.
+    # PY1TEST-10 tem indicativo-base de 7 caracteres e é rejeitado pelo parser.
+    # O teste usa PY2ABC-9 (válido) para verificar de fato o enlace qAr.
     db.record_topology_from_raw(
-        "PY1TEST-10>APRS,TCPIP*,qAr,PT2XYZ-7:>enlace internet",
+        "PY2ABC-9>APRS,TCPIP*,qAr,PT2XYZ-7:>enlace internet",
         medium="APRS-IS",
     )
     db.add_message("in", "PY2ABC-9", "PT2VHF-15", "Bom dia! Teste de mensagem APRS.", msg_id="101", status="Recebida")
