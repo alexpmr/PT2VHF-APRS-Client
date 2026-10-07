@@ -1,36 +1,50 @@
-# PT2VHF APRS Client - v1.14.4
+# PT2VHF APRS Client - v1.14.5
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.14.4** corrige a saída da Configuração, reabilita a exibição independente de enlaces Internet/iGate, permite mensagem por clique direito na aba Estações e simplifica os ícones do sistema.
+A **v1.14.5** corrige definitivamente o fluxo de alterações pendentes da Configuração em instalações reais e elimina o erro de interface SAT que aparecia como falha de cálculo orbital.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.14.4**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
+Os arquivos abaixo apontam diretamente para a **release v1.14.5**, evitando links `latest/download` com nomes de arquivo de versões anteriores.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_Setup_x64_v1.14.4.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_Portable_x64_v1.14.4.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_Setup_ARM64_v1.14.4.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_Portable_ARM64_v1.14.4.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_Setup_x64_v1.14.5.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_Portable_x64_v1.14.5.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_Setup_ARM64_v1.14.5.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_Portable_ARM64_v1.14.5.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_x86_64_v1.14.4.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/pt2vhf-aprs-client_1.14.4_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_Linux_x86_64_v1.14.4.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_arm64_v1.14.4.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/pt2vhf-aprs-client_1.14.4_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_Linux_arm64_v1.14.4.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_x86_64_v1.14.5.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/pt2vhf-aprs-client_1.14.5_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_Linux_x86_64_v1.14.5.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_arm64_v1.14.5.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/pt2vhf-aprs-client_1.14.5_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_Linux_arm64_v1.14.5.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_macOS_arm64_v1.14.4.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_macOS_x86_64_v1.14.4.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_macOS_arm64_v1.14.5.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_macOS_x86_64_v1.14.5.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.4/PT2VHF_APRS_Client_Manual_v1.14.4.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.5/PT2VHF_APRS_Client_Manual_v1.14.5.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
 
+
+## Novidades da v1.14.5
+
+- **Configuração — salvar de verdade:** o botão inferior recalcula o estado atual do formulário e envia apenas os campos efetivamente alterados; não depende de um `configDirty` possivelmente perdido.
+- **Salvar e sair:** mostra no próprio modal o erro real retornado por `/api/config`; em caso de sucesso, persiste e navega para a aba solicitada.
+- **Descartar alterações e sair:** passa a ser 100% local, restaurando o último baseline/configuração carregada com sucesso sem depender do backend.
+- **Continuar na Configuração:** fecha o modal e preserva exatamente as alterações locais.
+- **Backend lento:** respostas atrasadas de `GET /api/config` não podem mais apagar nem transformar uma edição do usuário em novo baseline.
+- **Instalações migradas:** salvamentos parciais não são bloqueados por um valor legado inválido em outro campo não alterado; ao editar o campo legado, a validação atual continua valendo.
+- **SAT:** corrigido `$('[data-satellite-service]',host).forEach is not a function`; os controles APRS/SSTV/Telemetria/Voz/Packet usam coleção real.
+- **SAT — mensagens de erro:** falha de renderização dos detalhes não é mais apresentada como “Erro ao calcular órbita”.
+- **Regressão real:** Chromium/Playwright cobre botão inferior, GET lento, erro real de backend, continuar, descarte com backend indisponível e restauração do valor persistido.
+- **Compatibilidade:** preservadas as correções da v1.14.4 para enlaces Internet/iGate, períodos de 15/30 min e layout SAT responsivo.
+- Pacotes completos Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.14.4
 
