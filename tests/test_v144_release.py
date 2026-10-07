@@ -4,7 +4,6 @@ from pathlib import Path
 import tempfile
 
 from pt2vhf_aprs import database as db
-from tools.compact_icon import render_compact_icon
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -52,6 +51,9 @@ def test_v144_right_click_reuses_message_safety_and_composer():
 
 
 def test_v144_icon_compact_and_brand_kept():
+    import pytest
+    pytest.importorskip("PIL")
+    from tools.compact_icon import render_compact_icon
     icon = render_compact_icon(256)
     assert icon.size == (256, 256)
     assert icon.getpixel((0, 0))[3] == 0
