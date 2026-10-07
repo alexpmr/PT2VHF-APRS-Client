@@ -280,7 +280,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "O PT2VHF APRS Client é um cliente APRS-IS com mapa, mensagens, estações, log, tracklogs, topologia observada e banco SQLite local.",
         "A interface foi projetada para uso direto por radioamadores, com distribuição pronta para Windows, Linux e macOS."
     ], [
-        "Mapa baseado em Leaflet com OpenStreetMap, OpenTopoMap e imagem de satélite.",
+        "Mapa baseado em Leaflet com OpenStreetMap, OpenTopoMap e imagem de satélite; o período inclui janelas curtas de 15 e 30 minutos.",
         "Mensagens APRS individuais com ACK/REJ, boletins e histórico local.",
         "Topologia observada a partir dos paths APRS recebidos.",
         "Configuração visual de mapa, tracklogs, topologia, tema, fontes e idioma.",
@@ -425,7 +425,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
     ], [
         "Tipos de mapa: OpenStreetMap, OpenTopoMap e Satélite.",
         "Tracklogs: cor e espessura configuráveis.",
-        "Topologia observada: pode ser ligada/desligada e usa Completo como período padrão, além de 1 h, 6 h, 24 h e 7 dias.",
+        "Topologia observada: pode ser ligada/desligada e usa Completo como período padrão, além de 15 min, 30 min, 1 h, 6 h, 24 h e 7 dias.",
         "Enlaces RF e via IGate possuem cores independentes e espessura configurável.",
         "A estatísticas da rede fica na aba superior Estatísticas, separada das preferências visuais de Configuração.",
         "A aba Estatísticas oferece período, métricas agregadas, ranking de digipeaters, ranking de IGates, enlaces que deixaram de aparecer e comparação com o período anterior.",
@@ -434,7 +434,8 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "A aba Estatísticas inclui animação de tráfego APRS em modos Histórico e Ao vivo, com Play/Pausa, início, avanço/recuo, velocidades de 0,5x a 10x, timestamp e contadores. Em paths multi-hop, vários segmentos do mesmo pacote podem ser animados ao mesmo tempo.",
         "Quando habilitado em Configuração, cada pacote recebido pode gerar um sinal sonoro curto e um pulso vermelho temporário no marcador da estação transmissora.",
         "Restaurar topologia padrão retorna RF #35a7ff, IGate #b06cff e 2 px.",
-        "Os enlaces Internet/iGate confirmados são tracejados e controlados pela opção Enlaces iGate / APRS-IS, independente da exibição de marcadores de estações. Pares sem coordenadas válidas não são inventados nem desenhados."
+        "Os enlaces Internet/iGate confirmados são tracejados e controlados pela opção Enlaces iGate / APRS-IS, independente da exibição de marcadores de estações. Pares sem coordenadas válidas não são inventados nem desenhados.",
+        "As janelas de 15 e 30 minutos são aplicadas também à topologia e à Cobertura RF para uma visão operacional mais recente."
     ])
 
     add_screenshot(story, st, screenshots_dir, "analysis.png", "Aba Estatísticas com métricas da topologia observada e comparação histórica.")
