@@ -39,6 +39,10 @@ Os arquivos abaixo apontam diretamente para a **release v1.14.4**, evitando link
 - **Mapa:** enlaces genuinamente Internet/iGate (por exemplo, qAr com posições válidas) são desenhados mesmo quando os ícones/markers dos envolvidos estão ocultos por categoria; opção Mapa → Ver → Enlaces iGate/APRS-IS permanece independente.
 - **RF genuíno preservado:** qAR/qAO recebidos por RF continuam sólidos; APRS-IS exclusivamente Internet fica tracejado. Evidência mista não fabrica trechos de RF ou Internet.
 - **Ícone do sistema:** pictograma compacto de antena para tamanhos pequenos no Windows, Linux e macOS. A logo oficial continua na interface e no manual.
+- **Alertas:** corrigido o erro `$(...).forEach is not a function`, tanto no autosave quanto no botão Salvar alertas.
+- **Mapa:** adicionados **15 min** e **30 min**, preservando filtros realmente fracionários também em topologia, cobertura RF e exportação.
+- **SAT:** layout mais responsivo em notebooks e escalas ampliadas do Windows; barra lateral não é mais esmagada pelo mapa.
+- **SQLite:** a tela de Configuração consulta saúde leve do banco, evitando `quick_check` e contagens completas em cada abertura.
 - **Testes:** regressão pytest e testes com interface real Chromium/Playwright na geração do manual com telas.
 - **TM-D700:** teste físico encerrado administrativamente e não validado em RF.
 - Pacotes completos Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
