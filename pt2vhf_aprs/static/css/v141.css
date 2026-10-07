@@ -1,5 +1,18 @@
 /* v1.14.1 — SAT: operação primeiro, configuração recolhida */
-#tab-satellites{overflow-x:hidden}
+#tab-satellites{overflow-x:hidden;max-width:100%;min-width:0;box-sizing:border-box}
+#tab-satellites *{box-sizing:border-box}
+#tab-satellites>.satellite-panel-header,
+#tab-satellites .satellite-operation-bar,
+#tab-satellites .satellite-workspace,
+#tab-satellites .satellite-communications-grid,
+#tab-satellites .satellite-agenda-card{min-width:0;max-width:100%}
+#tab-satellites>.satellite-panel-header{flex-wrap:wrap}
+#tab-satellites .satellite-card,
+#tab-satellites .satellite-collapsible-body{min-width:0;max-width:100%}
+#tab-satellites .table-wrap{max-width:100%;overflow-x:auto}
+#tab-satellites input,
+#tab-satellites select,
+#tab-satellites textarea{min-width:0;max-width:100%}
 #tab-satellites>.satellite-panel-header{padding-bottom:4px}
 .satellite-operation-bar{justify-content:flex-start!important;gap:10px!important;flex-wrap:wrap;margin-top:4px!important;margin-bottom:8px!important;padding:8px 10px!important}
 .satellite-operation-module{font-size:17px;white-space:nowrap}
