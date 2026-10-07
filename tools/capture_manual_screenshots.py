@@ -125,6 +125,15 @@ def capture(output_dir: Path) -> None:
                 page.wait_for_timeout(350)
                 page.screenshot(path=str(output_dir / "config-app.png"))
 
+                # Regressão do PU2MUS: salvar alertas deve funcionar sem
+                # querySelector(...).forEach em um único elemento.
+                page.locator("#v190AlertsSave").scroll_into_view_if_needed()
+                page.locator("#v190AlertsSave").click()
+                page.wait_for_function(
+                    "() => document.querySelector('#toast')?.textContent?.includes('Alertas salvos')",
+                    timeout=10000,
+                )
+
                 # Regressão funcional real: fechar modal com salvar/descartar/
                 # cancelar, sem depender só de testes que buscam strings no JS.
                 page.locator('input[name="comment"]').fill("Beacon 1.14.4 salvo no modal")
@@ -170,6 +179,7 @@ def capture(output_dir: Path) -> None:
                     e["kind"] == "igate"
                     for e in page.request.get(f"{local_url}/api/topology?hours=0").json()
                 ), "API não forneceu enlace Internet do cenário de teste"
+                assert page.request.get(f"{local_url}/api/topology?hours=0.25").ok
                 page.locator('.tab[data-tab="map"]').click()
                 page.wait_for_timeout(500)
                 page.evaluate("""() => {
@@ -197,6 +207,27 @@ def capture(output_dir: Path) -> None:
                     }""",
                     timeout=12000,
                 )
+                page.set_viewport_size({"width": 1280, "height": 720})
+                page.locator('.tab[data-tab="satellites"]').click()
+                page.wait_for_timeout(900)
+                sat_layout = page.evaluate("""() => {
+                    const tab=document.querySelector('#tab-satellites');
+                    const workspace=document.querySelector('.satellite-workspace');
+                    const sidebar=document.querySelector('.satellite-sidebar');
+                    const map=document.querySelector('#satelliteMap');
+                    const sb=sidebar?.getBoundingClientRect();
+                    const mp=map?.getBoundingClientRect();
+                    return {
+                        overflow: tab ? tab.scrollWidth > tab.clientWidth + 2 : true,
+                        sidebarWidth: sb?.width || 0,
+                        mapWidth: mp?.width || 0,
+                        columns: workspace ? getComputedStyle(workspace).gridTemplateColumns : ''
+                    };
+                }""")
+                assert not sat_layout["overflow"], f"SAT com overflow horizontal: {sat_layout}"
+                assert sat_layout["sidebarWidth"] >= 300, f"Sidebar SAT ilegível: {sat_layout}"
+                assert sat_layout["mapWidth"] >= 300, f"Mapa SAT colapsado: {sat_layout}"
+                page.set_viewport_size({"width": 1440, "height": 900})
                 browser.close()
         finally:
             proc.terminate()
