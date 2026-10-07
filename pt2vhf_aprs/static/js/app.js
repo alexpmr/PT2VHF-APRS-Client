@@ -21,7 +21,6 @@
     rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
     igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
-    satellitesEnabled: localStorage.getItem('pt2vhf_map_item_satellites') !== '0',
     mapViewFilters: (() => {
       try {
         const parsed = JSON.parse(localStorage.getItem('pt2vhf_map_view_filters_v2') || '{}');
@@ -1820,7 +1819,6 @@
     rfLinksEnabled: 'pt2vhf_map_item_rf',
     igateLinksEnabled: 'pt2vhf_map_item_igate',
     packetsEnabled: 'pt2vhf_map_item_packets',
-    satellitesEnabled: 'pt2vhf_map_item_satellites',
   };
 
   const MAP_DEVICE_CLASS_LABELS = {
@@ -1865,9 +1863,6 @@
     if (!(key in MAP_VIEW_STATE_STORAGE)) return;
     state[key] = !!enabled;
     localStorage.setItem(MAP_VIEW_STATE_STORAGE[key], state[key] ? '1' : '0');
-    if (key === 'satellitesEnabled') {
-      window.dispatchEvent(new CustomEvent('pt2vhf:satellite-visibility', {detail:{enabled:state[key]}}));
-    }
   }
 
   function repairMapVisibilityStateV186() {
@@ -2068,7 +2063,6 @@
       { id: 'root:rf', label: ui('Enlaces RF', 'RF links'), stateKey: 'rfLinksEnabled' },
       { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
       { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
-      { id: 'root:satellites', label: ui('Satélites / ISS', 'Satellites / ISS'), stateKey: 'satellitesEnabled' },
     ];
 
     tree.innerHTML = nodes.map(node => mapViewNodeHtml(node, 0)).join('');
@@ -2737,11 +2731,18 @@
       [ui('Sentido', 'Direction'), `${edge.source || '—'} → ${edge.target || '—'}`],
       [ui('Pacotes observados', 'Observed packets'), Number(edge.packet_count || 0).toLocaleString('pt-BR')],
     ];
-    if (mixedEvidence && !isInternet) {
-      rows.push(
-        [ui('Evidência RF', 'RF evidence'), Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')],
-        [ui('Também via APRS-IS', 'Also via APRS-IS'), Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')],
-      );
+    if (mixedEvidence) {
+      if (isInternet) {
+        rows.push(
+          [ui('Evidência APRS-IS', 'APRS-IS evidence'), Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')],
+          [ui('Também observado por RF', 'Also observed via RF'), Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')],
+        );
+      } else {
+        rows.push(
+          [ui('Evidência RF', 'RF evidence'), Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')],
+          [ui('Também via APRS-IS', 'Also via APRS-IS'), Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')],
+        );
+      }
     }
     rows.push(
       [ui('Primeira observação', 'First observed'), fmtDate(edge.first_seen)],
@@ -2770,7 +2771,12 @@
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
       const active = new Set();
 
-      for (const edge of edges) {
+      // Desenha RF primeiro e APRS-IS depois. Em pares com evidência mista,
+      // a linha Internet fica visível sobre a linha RF sem reclassificar o RF.
+      const orderedEdges = [...edges].sort(
+        (a, b) => Number(a.kind === 'igate') - Number(b.kind === 'igate')
+      );
+      for (const edge of orderedEdges) {
         if (edge.kind === 'igate' && !state.igateLinksEnabled) continue;
         if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue;
 
@@ -2795,7 +2801,9 @@
         let line = state.topologyLines.get(key);
         const style = {
           color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-          weight: state.mapConfig.topology_width,
+          weight: edge.kind === 'igate' && edge.mixed_evidence
+            ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
+            : state.mapConfig.topology_width,
           opacity: .72,
           dashArray: edge.kind === 'igate' ? '7 5' : null,
           interactive: true,
@@ -2809,6 +2817,7 @@
           line.setLatLngs(points).setStyle(style);
         }
 
+        if (edge.kind === 'igate') line.bringToFront();
         line._pt2vhfEdge = edge;
         if (!line._pt2vhfHoverBound) {
           line.on('mouseover', () => showTopologyHover(line._pt2vhfEdge));
@@ -2821,8 +2830,10 @@
             <h3>Topologia observada</h3>
             <div><strong>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</strong></div>
             <div>Tipo: ${edge.kind === 'igate' ? 'Internet/APRS-IS' : 'Enlace RF observado'}</div>
-            ${edge.mixed_evidence && edge.kind !== 'igate'
-              ? `<div>Também observado via APRS-IS: ${Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')}</div>`
+            ${edge.mixed_evidence
+              ? (edge.kind === 'igate'
+                ? `<div>Também observado por RF: ${Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')}</div>`
+                : `<div>Também observado via APRS-IS: ${Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')}</div>`)
               : ''}
             <div>Pacotes observados: ${Number(edge.packet_count || 0).toLocaleString('pt-BR')}</div>
             <div>Classificação: ${escapeHtml(edge.classification_source || (edge.kind === 'igate' ? 'APRS-IS confirmado' : 'RF inferido do path'))}</div>

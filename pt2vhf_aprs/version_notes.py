@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.6": {
+        "title": "Cliente terrestre mais leve e enlaces iGate restaurados",
+        "items": [
+            "O módulo SAT/ISS foi removido estruturalmente do aplicativo principal, incluindo backend, interface, assets e serviços exclusivos.",
+            "A dependência orbital SGP4 deixa de fazer parte do build e o cliente volta ao foco APRS terrestre.",
+            "Enlaces APRS-IS confirmados voltam a aparecer mesmo quando o mesmo par também foi observado por RF.",
+            "RF e Internet são mantidos como evidências independentes; um iGate não converte automaticamente um enlace RF em Internet.",
+            "Em evidência mista, RF permanece sólido e APRS-IS permanece tracejado com contadores próprios.",
+            "O CI e os testes foram limpos das dependências SAT e ganharam regressões específicas para a nova topologia.",
+            "APRS via satélite fica reservado para uma futura aplicação dedicada.",
+        ],
+    },
     "1.14.5": {
         "title": "Configuração robusta em instalação real e correção SAT",
         "items": [

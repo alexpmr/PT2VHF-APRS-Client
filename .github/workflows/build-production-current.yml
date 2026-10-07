@@ -23,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.5 production release
+      - name: Validate v1.14.6 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_5.py
+        run: python tools\apply_release_1_14_6.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -43,10 +43,6 @@ jobs:
           node --check pt2vhf_aprs\static\js\v190.js
           node --check pt2vhf_aprs\static\js\v110.js
           node --check pt2vhf_aprs\static\js\v111.js
-          node --check pt2vhf_aprs\static\js\v112.js
-          node --check pt2vhf_aprs\static\js\v113.js
-          node --check pt2vhf_aprs\static\js\v114.js
-          node --check pt2vhf_aprs\static\js\v141.js
           node --check pt2vhf_aprs\static\js\v142.js
 
       - name: Run tests
@@ -110,9 +106,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.14.5 production release
+      - name: Validate v1.14.6 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_5.py
+        run: python tools\apply_release_1_14_6.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -130,10 +126,6 @@ jobs:
           node --check pt2vhf_aprs\static\js\v190.js
           node --check pt2vhf_aprs\static\js\v110.js
           node --check pt2vhf_aprs\static\js\v111.js
-          node --check pt2vhf_aprs\static\js\v112.js
-          node --check pt2vhf_aprs\static\js\v113.js
-          node --check pt2vhf_aprs\static\js\v114.js
-          node --check pt2vhf_aprs\static\js\v141.js
           node --check pt2vhf_aprs\static\js\v142.js
 
       - name: Run tests
@@ -194,9 +186,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.5 production release
+      - name: Validate v1.14.6 production release
         shell: bash
-        run: python tools/apply_release_1_14_5.py
+        run: python tools/apply_release_1_14_6.py
 
       - name: Build Linux packages
         shell: bash
@@ -229,9 +221,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.5 production release
+      - name: Validate v1.14.6 production release
         shell: bash
-        run: python tools/apply_release_1_14_5.py
+        run: python tools/apply_release_1_14_6.py
 
       - name: Build Linux ARM64 packages
         shell: bash
@@ -270,7 +262,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_14_5.py
+          python tools/apply_release_1_14_6.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -300,9 +292,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.5 production release
+      - name: Validate v1.14.6 production release
         shell: bash
-        run: python tools/apply_release_1_14_5.py
+        run: python tools/apply_release_1_14_6.py
 
       - name: Build macOS DMG
         shell: bash
@@ -338,9 +330,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.14.5 production release
+      - name: Validate v1.14.6 production release
         shell: bash
-        run: python tools/apply_release_1_14_5.py
+        run: python tools/apply_release_1_14_6.py
 
       - name: Generate versioned PDF manual
         shell: bash

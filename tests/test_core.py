@@ -2173,33 +2173,43 @@ def test_v1721_track_hover_metadata_and_update_cleanup(monkeypatch, tmp_path):
     assert not stale_temp.exists()
 
 
-def test_v1111_topology_rf_precedence_when_same_pair_has_internet_evidence():
+def test_v1111_topology_preserves_both_media_when_same_pair_has_internet_evidence():
     rows = [
         {
             "source": "PU2AKM-7", "target": "PT2PAG-15", "kind": "igate",
             "packet_count": 11, "first_seen": "2026-10-03T00:01:50+00:00",
             "last_seen": "2026-10-03T09:30:33+00:00", "igate": "PT2PAG-15",
             "source_lat": -15.8, "source_lon": -47.9, "target_lat": -15.7, "target_lon": -47.8,
+            "internet_confirmed_count": 11,
         },
         {
             "source": "PU2AKM-7", "target": "PT2PAG-15", "kind": "rf",
             "packet_count": 7, "first_seen": "2026-10-03T08:00:00+00:00",
             "last_seen": "2026-10-03T09:40:00+00:00", "igate": "PT2PAG-15",
             "source_lat": -15.8, "source_lon": -47.9, "target_lat": -15.7, "target_lon": -47.8,
+            "rf_transport_count": 7,
         },
     ]
     consolidated = db._consolidate_topology_edges(rows)
-    assert len(consolidated) == 1
-    edge = consolidated[0]
-    assert edge["source"] == "PU2AKM-7"
-    assert edge["target"] == "PT2PAG-15"
-    assert edge["kind"] == "rf"
-    assert edge["packet_count"] == 7
-    assert edge["rf_packet_count"] == 7
-    assert edge["internet_packet_count"] == 11
-    assert edge["mixed_evidence"] is True
-    assert edge["observed_kinds"] == ["rf", "igate"]
+    assert len(consolidated) == 2
+    by_kind = {edge["kind"]: edge for edge in consolidated}
 
+    rf = by_kind["rf"]
+    assert rf["source"] == "PU2AKM-7"
+    assert rf["target"] == "PT2PAG-15"
+    assert rf["packet_count"] == 7
+    assert rf["rf_packet_count"] == 7
+    assert rf["internet_packet_count"] == 11
+    assert rf["mixed_evidence"] is True
+    assert rf["observed_kinds"] == ["rf", "igate"]
+
+    internet = by_kind["igate"]
+    assert internet["packet_count"] == 11
+    assert internet["rf_packet_count"] == 7
+    assert internet["internet_packet_count"] == 11
+    assert internet["internet_confirmed_count"] == 11
+    assert internet["mixed_evidence"] is True
+    assert internet["classification_source"] == "APRS-IS confirmado"
 
 def test_v1111_topology_is_dashed_only_when_100_percent_internet():
     only_internet = db._consolidate_topology_edges([
@@ -2229,10 +2239,13 @@ def test_v1111_topology_is_dashed_only_when_100_percent_internet():
     assert ("PY2NET", "PT2PAG-15", "igate", "PT2PAG-15") in edges
 
 
-def test_v1111_frontend_uses_continuous_rf_for_mixed_topology():
+def test_v1111_frontend_keeps_rf_and_internet_distinct_for_mixed_topology():
     root = Path(__file__).resolve().parent.parent
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
     assert "const mixedEvidence = Boolean(edge.mixed_evidence)" in js
     assert "edge.kind === 'igate' ? '7 5' : null" in js
+    assert "orderedEdges" in js
+    assert "line.bringToFront()" in js
     assert "Também observado via APRS-IS" in js
+    assert "Também observado por RF" in js
     assert "edge.kind === 'igate' ? 'Internet/APRS-IS' : 'Enlace RF observado'" in js

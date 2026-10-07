@@ -148,14 +148,3 @@ def test_v144_light_database_health_avoids_deep_scans_on_config_open():
     finally:
         db.DB_PATH = original
         db.invalidate_map_data_cache(drop_payload=True)
-
-
-def test_v144_satellite_layout_switches_before_sidebar_becomes_illegible():
-    css = text("pt2vhf_aprs/static/css/v141.css")
-    js = text("pt2vhf_aprs/static/js/v112.js")
-    assert "minmax(340px,.85fr)" in css
-    assert "@media(max-width:1320px)" in css
-    assert "overflow-wrap:anywhere" in css
-    assert "white-space:normal!important" in css
-    assert "ResizeObserver" in js
-    assert "state.map?.invalidateSize({animate:false})" in js

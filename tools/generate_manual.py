@@ -508,7 +508,6 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Conecta sem estações: confira o filtro e procure erros no Log.",
         "Mapa sem tiles: confira o acesso à Internet e o provedor de mapas.",
         "Localização atual não funciona: confira a permissão de localização do sistema/WebView/navegador.",
-        "SAT mostra erro de detalhes/serviços: a v1.14.5 separa falha de renderização da interface de erro orbital e corrige os controles APRS/SSTV/Telemetria/Voz/Packet.",
         "Topologia vazia: confirme que a opção está ativa e que existem paths observados entre nós com posições conhecidas.",
         "Sem som de mensagem: confira a opção em Aparência e o volume do sistema."
     ])
