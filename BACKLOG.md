@@ -1,12 +1,5 @@
 # Backlog
 
-## Relatos PU2MUS — 07/10/2026
-
-- **#48 — Alertas configuráveis:** erro `$(...).forEach is not a function` identificado em `v190.js`. Correção aplicada na candidata v1.14.4 trocando os seletores de coleção por `$()`; aguarda CI/reteste antes de encerrar a issue.
-- **#49 — Desempenho/backend com banco crescente:** investigar perda de conexão/travamentos percebidos com banco em torno de 66 MB e melhora observada após retenção de 5 dias. **Não alterar o padrão global de retenção para 5 dias sem decisão explícita do mantenedor.**
-- **#50 — Período do mapa:** adicionar opções de **15 min** e **30 min**, abrangendo estações, objetos, tracklogs, topologia e cobertura RF sem truncar frações de hora.
-- **#51 — SAT responsivo:** corrigir layout em que o mapa comprime a barra lateral e corta nomes; validar 1366×768, 1280×720, 1440×900 e escalas 100/125/150%.
-
 ## Pendência externa não bloqueante
 
 - **SignPath Foundation (#1):** concluir onboarding, autorização do GitHub App, configuração da policy e assinatura Authenticode. Depende de aprovação/autorização externas e não bloqueia releases sem assinatura oficial.
@@ -14,6 +7,10 @@
 
 ## Concluído na v1.14.4
 
+- **PU2MUS #48 — Alertas:** corrigido o erro `$(...).forEach is not a function`; autosave e botão Salvar alertas usam coleção `$()`.
+- **PU2MUS #49 — Backend/banco:** abertura da Configuração deixa de executar verificação profunda e contagens integrais do SQLite; a saúde rápida evita scans desnecessários em bancos maiores. O padrão de retenção **não foi reduzido para 5 dias**.
+- **PU2MUS #50 — Mapa:** incluídos **15 min** e **30 min**, com suporte fracionário real no backend para topologia, RF ouvido, KML e Cobertura RF.
+- **PU2MUS #51 — SAT:** layout responsivo reforçado, nomes podem quebrar linha, sidebar não é comprimida a poucos caracteres e o mapa orbital recalcula o tamanho após mudança da grade.
 - **Configuração:** modal de saída com alterações pendentes corrigido, incluindo Salvar e sair, Descartar e sair, Cancelar, feedback e proteção contra duplo clique.
 - **Estações:** clique direito em linha abre o compositor de Mensagem rápida e preenche o indicativo sem mudar de aba.
 - **Mapa:** linhas Internet/APRS-IS observadas passam a respeitar apenas o toggle de Enlaces iGate/APRS-IS e não desaparecem pela ocultação independente de ícones/marcadores.
