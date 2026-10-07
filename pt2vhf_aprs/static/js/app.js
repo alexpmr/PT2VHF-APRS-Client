@@ -6305,13 +6305,15 @@
       state.configLoaded = true;
       state.configDirty = configFormSnapshot() !== state.configBaseline;
 
-      if (!editedDuringLoad || force || firstConfigLoad) {
-        if (firstConfigLoad) {
-          state.trafficMode = 'live';
-          state.trafficPlaying = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
-          state.timelineReplayActive = false;
-          if ($('#trafficMode')) $('#trafficMode').value = 'live';
-        }
+      if (firstConfigLoad) {
+        state.trafficMode = 'live';
+        state.trafficPlaying = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
+        state.timelineReplayActive = false;
+        if ($('#trafficMode')) $('#trafficMode').value = 'live';
+      }
+      // Uma resposta atrasada pode atualizar o baseline persistido, mas não
+      // reaplica preferências visuais por cima de uma edição local em curso.
+      if (!editedDuringLoad || force) {
         syncConfigRuntime(cfg);
         updateTrafficAnimationUi();
       }
