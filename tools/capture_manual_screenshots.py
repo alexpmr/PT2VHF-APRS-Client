@@ -211,20 +211,22 @@ def capture(output_dir: Path) -> None:
                 page.locator('.tab[data-tab="satellites"]').click()
                 page.wait_for_timeout(900)
                 sat_layout = page.evaluate("""() => {
-                    const tab=document.querySelector('#tab-satellites');
                     const workspace=document.querySelector('.satellite-workspace');
                     const sidebar=document.querySelector('.satellite-sidebar');
                     const map=document.querySelector('#satelliteMap');
+                    const ws=workspace?.getBoundingClientRect();
                     const sb=sidebar?.getBoundingClientRect();
                     const mp=map?.getBoundingClientRect();
                     return {
-                        overflow: tab ? tab.scrollWidth > tab.clientWidth + 2 : true,
+                        workspaceOverflow: workspace ? workspace.scrollWidth > workspace.clientWidth + 2 : true,
                         sidebarWidth: sb?.width || 0,
                         mapWidth: mp?.width || 0,
+                        sidebarInsideWorkspace: !!(ws && sb && sb.left >= ws.left - 2 && sb.right <= ws.right + 2),
                         columns: workspace ? getComputedStyle(workspace).gridTemplateColumns : ''
                     };
                 }""")
-                assert not sat_layout["overflow"], f"SAT com overflow horizontal: {sat_layout}"
+                assert not sat_layout["workspaceOverflow"], f"Workspace SAT com overflow: {sat_layout}"
+                assert sat_layout["sidebarInsideWorkspace"], f"Sidebar SAT fora do workspace: {sat_layout}"
                 assert sat_layout["sidebarWidth"] >= 300, f"Sidebar SAT ilegível: {sat_layout}"
                 assert sat_layout["mapWidth"] >= 300, f"Mapa SAT colapsado: {sat_layout}"
                 page.set_viewport_size({"width": 1440, "height": 900})
