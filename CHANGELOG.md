@@ -1,3 +1,16 @@
+## 1.14.4 - 2026-10-07
+
+- **Configuração:** corrigido o modal de alterações pendentes para concluir corretamente Salvar e sair, Descartar alterações e sair e Continuar na Configuração.
+- Fluxo de saída com controle de concorrência, indicação acessível de progresso/erro, modal temporariamente recolhido durante confirmações nativas e preservação das alterações se o salvamento falhar.
+- O botão normal Salvar configuração e a persistência SQLite continuam usando o mesmo backend.
+- **Estações:** botão direito na linha do indicativo abre Mensagem rápida com destinatário preenchido, reusando validações, fila, roteamento e ACK/REJ já existentes.
+- **Mapa:** enlaces exclusivamente Internet/APRS-IS deixam de ser ocultados quando filtros de visibilidade dos marcadores de estações/iGates estão desativados. A camada Enlaces iGate/APRS-IS permanece independente e respeita seu próprio liga/desliga.
+- **Classificação:** conexões qAr/APRS-IS confirmadas permanecem Internet tracejada; qAR/qAO RF e evidência mista seguem a política existente sem criar rotas fictícias.
+- **Ícones:** pictograma de antena de alto contraste específico para ícones do sistema (Windows/Linux/macOS), legível em 16/24 px; logomarca oficial preservada no cabeçalho e manual.
+- **Validação:** testes automatizados de regressão mais testes reais em Chromium/Playwright durante a criação das telas do manual para salvar, descartar, cancelar, botão direito e presença da linha Internet.
+- TM-D700 permanece encerrado administrativamente: não há alegação de teste físico RF.
+- Release completa Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.3 - 2026-10-06
 
 - **Barra superior:** novo botão **Enviar Beacon** para disparo manual imediato sem navegar até Configuração.
