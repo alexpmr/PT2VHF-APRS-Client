@@ -46,6 +46,8 @@ def test_v146_satellite_runtime_is_removed():
     assert 'data-tab="satellites"' not in html
     assert 'id="tab-satellites"' not in html
     assert "satelliteMap" not in html
+    for asset in ("js/v112.js", "js/v113.js", "js/v114.js", "js/v141.js"):
+        assert asset not in html
     app = text("pt2vhf_aprs/static/js/app.js")
     assert "satellitesEnabled" not in app
     assert "pt2vhf:satellite-visibility" not in app
