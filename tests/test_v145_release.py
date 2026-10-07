@@ -121,3 +121,5 @@ def test_v145_core_config_excludes_tnc_rf_fields_with_independent_persistence():
     assert '"serial_port":' not in database.split("DEFAULT_CONFIG", 1)[1].split("}\n", 1)[0]
     assert "configManagedFields" in js
     assert "Object.keys(cfg || {}).filter(key => !!form?.elements?.namedItem(key))" in js
+    assert "values.map_zoom_step = normalizeMapZoomStep" in js
+    assert "values.passcode = calculateAprsPasscode" in js
