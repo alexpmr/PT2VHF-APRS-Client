@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.4": {
+        "title": "Configuração, enlaces Internet e envio rápido por clique direito",
+        "items": [
+            "Salvar e sair, Descartar e sair e Continuar na Configuração têm navegação consistente e feedback de erro.",
+            "Clique direito numa estação abre Mensagem rápida para o indicativo selecionado.",
+            "Enlaces iGate/Internet confirmados não somem por filtros independentes de marcadores no Mapa.",
+            "A classificação RF/Internet continua respeitando evidência real, incluindo qAR/qAO, qAr e pares mistos.",
+            "Ícones do sistema ganham versão simplificada de alto contraste; logo oficial permanece na interface e manual.",
+            "Adicionadas regressões pytest e testes de interface Chromium/Playwright.",
+            "TM-D700 removido administrativamente do backlog sem declarar validação física.",
+        ],
+    },
     "1.14.3": {
         "title": "Beacon manual no cabeçalho e classificação de digipeater corrigida",
         "items": [
