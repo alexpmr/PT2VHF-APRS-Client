@@ -1,14 +1,24 @@
 # Backlog
 
-## Pendências para próxima versão
+## Monitoramento pós-release
 
-- **#45 — Configuração / modal de alterações pendentes quebrado na v1.14.4:** **Salvar e sair**, botão inferior **Salvar configuração** e **Descartar alterações e sair** falham em instalação real. Corrigir detecção de dirty state, preservar erro real de `/api/config`, evitar corrida com `loadConfig()` e fazer **Descartar** restaurar o último baseline local sem depender do backend.
-- **#52 — SAT / erro de renderização mascarado como cálculo orbital:** corrigir `$('[data-satellite-service]',host).forEach(...)` em `v112.js`, separar erro de cálculo orbital de erro de UI e adicionar regressão para detalhes/serviços monitorados dos satélites.
+- **#49 — Backend/banco crescente:** manter aberto para observar perda de conexão/latência com bancos maiores após as otimizações recentes. Não alterar automaticamente a retenção padrão para 5 dias.
 
 ## Pendência externa não bloqueante
 
 - **SignPath Foundation (#1):** concluir onboarding, autorização do GitHub App, configuração da policy e assinatura Authenticode. Depende de aprovação/autorização externas e não bloqueia releases sem assinatura oficial.
 - **Kenwood TM-D700:** validação física encerrada administrativamente em 07/10/2026. Não declarar RX/TX físico validado.
+
+## Concluído na v1.14.5
+
+- **#45 — Configuração:** corrigidos botão inferior Salvar, Salvar e sair, Descartar alterações e sair e Continuar na Configuração.
+- O detector de alterações compara o formulário atual com um baseline persistido e não depende apenas de eventos anteriores.
+- Respostas lentas de `GET /api/config` preservam campos editados enquanto a leitura estava pendente.
+- **Descartar** é local e funciona sem backend; **Continuar** preserva a edição; **Salvar** exibe erro real quando o backend rejeita.
+- O POST de Configuração envia apenas campos alterados; valores legados em campos não tocados não bloqueiam uma alteração independente.
+- **#52 — SAT:** corrigido `$().forEach` nos serviços monitorados e isolada falha de renderização de detalhes da mensagem de erro orbital.
+- **Regressão:** pytest e Playwright cobrem banco migrado, GET lento, botão inferior, erro real, descarte offline e serviços SAT.
+- **Produção:** release completa Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Concluído na v1.14.4
 

@@ -1,3 +1,18 @@
+## 1.14.5 - 2026-10-07
+
+- **Configuração — detecção de alterações:** o estado dirty passa a ser recalculado pelo snapshot real do formulário; eventos ocorridos durante carregamento assíncrono deixam de ser ignorados.
+- **Configuração — resposta lenta:** `loadConfig()` rastreia geração de edição e campos tocados, preservando alterações locais quando um GET antigo termina depois da edição.
+- **Botão inferior Salvar configuração:** compara formulário com baseline persistido no momento do clique e envia apenas os campos alterados.
+- **Salvar e sair:** usa o mesmo patch do botão inferior e mantém no modal a mensagem real do backend quando houver rejeição.
+- **Descartar alterações e sair:** restaura o último estado carregado em memória e navega sem executar `GET /api/config`; funciona mesmo com backend temporariamente indisponível.
+- **Continuar na Configuração:** permanece uma operação local e não altera o formulário.
+- **Configuração migrada:** valores legados fora da faixa atual não impedem salvar outro campo não relacionado; a validação continua obrigatória quando o próprio campo é modificado.
+- **Pós-save:** removida a recarga GET obrigatória logo após POST; o retorno confirmado do backend passa a ser o novo baseline.
+- **SAT #52:** corrigido o uso de `$().forEach` nos serviços monitorados; agora usa `querySelectorAll()`.
+- **SAT — isolamento de erro:** falhas de renderização do painel de detalhes são tratadas por `safeRenderDetail()` e deixam de cair no tratamento de erro orbital.
+- **Testes:** novas regressões pytest e Playwright para instalação migrada, GET lento, botão inferior, erro real, descarte offline e serviços SAT.
+- Release completa Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.4 - 2026-10-07
 
 - **Configuração:** corrigido o modal de alterações pendentes para concluir corretamente Salvar e sair, Descartar alterações e sair e Continuar na Configuração.
@@ -7,7 +22,7 @@
 - **Mapa:** enlaces exclusivamente Internet/APRS-IS deixam de ser ocultados quando filtros de visibilidade dos marcadores de estações/iGates estão desativados. A camada Enlaces iGate/APRS-IS permanece independente e respeita seu próprio liga/desliga.
 - **Classificação:** conexões qAr/APRS-IS confirmadas permanecem Internet tracejada; qAR/qAO RF e evidência mista seguem a política existente sem criar rotas fictícias.
 - **Ícones:** pictograma de antena de alto contraste específico para ícones do sistema (Windows/Linux/macOS), legível em 16/24 px; logomarca oficial preservada no cabeçalho e manual.
-- **Alertas:** corrigido `$(...).forEach is not a function` no módulo de alertas configuráveis; coleção passa a usar `$()` tanto no autosave quanto em Salvar alertas.
+- **Alertas:** corrigido `$(...).forEach is not a function` no módulo de alertas configuráveis; coleção passa a usar `querySelectorAll()` tanto no autosave quanto em Salvar alertas.
 - **Mapa — janela curta:** adicionados períodos de **15 min** e **30 min**. Topologia, RF ouvido, KML e cobertura RF aceitam frações de hora sem truncar para período completo.
 - **SAT responsivo:** a grade muda para uma coluna até 1320 px, preserva no mínimo ~340 px para a lateral quando em duas colunas, permite quebra de nomes e invalida o tamanho do Leaflet via ResizeObserver.
 - **Banco/backend:** a abertura de Configuração usa saúde SQLite leve, sem `PRAGMA quick_check` e `COUNT(*)` integrais nas tabelas grandes; checagem profunda permanece nas rotinas explícitas/testes.

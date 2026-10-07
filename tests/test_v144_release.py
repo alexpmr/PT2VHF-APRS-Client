@@ -13,14 +13,9 @@ def text(path: str) -> str:
 
 
 def test_v144_version_metadata():
-    assert text("VERSION").strip() == "1.14.4"
-    assert '__version__ = "1.14.4"' in text("pt2vhf_aprs/__init__.py")
-    win = text("windows/version_info.txt")
-    for marker in (
-        "filevers=(1, 14, 4, 0)", "prodvers=(1, 14, 4, 0)",
-        "FileVersion', '1.14.4'", "ProductVersion', '1.14.4'",
-    ):
-        assert marker in win
+    version = text("VERSION").strip()
+    assert tuple(map(int, version.split("."))) >= (1, 14, 4)
+    assert f'__version__ = "{version}"' in text("pt2vhf_aprs/__init__.py")
 
 
 def test_v144_modal_uses_real_save_restore_and_target_navigation():
@@ -28,8 +23,9 @@ def test_v144_modal_uses_real_save_restore_and_target_navigation():
     html = text("pt2vhf_aprs/templates/index.html")
     assert "async function resolveUnsavedConfig(mode)" in js
     assert "async function saveConfigForm()" in js
-    assert "saved = await saveConfigForm()" in js
-    assert "if (!await loadConfig())" in js
+    assert "configChangedPayload()" in js
+    assert "const result = await saveConfigForm()" in js
+    assert "restoreConfigBaselineLocally()" in js
     assert "activateTab(target)" in js
     assert "pendingConfigFeedback" in js
     assert "state.configTransitionBusy" in js

@@ -375,7 +375,8 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Conectar ao iniciar vem habilitado por padrão em novas instalações e fica na seção APRS-IS.",
         "O botão Enviar Beacon na barra principal superior dispara manualmente o mesmo beacon disponível em Configuração, sem exigir troca de aba.",
         "Latitude, Longitude e Altitude são apresentadas em linhas independentes para manter a leitura e a edição dentro do cartão mesmo em DMS, janelas menores ou fontes ampliadas.",
-        "Se algum campo for alterado e você tentar mudar de aba antes de salvar, o cliente oferece Salvar e sair, Descartar alterações ou Cancelar. A v1.14.4 confirma o resultado, mantém alterações quando há erro e navega para a aba solicitada somente depois da ação bem-sucedida."
+        "Se algum campo for alterado e você tentar mudar de aba antes de salvar, o cliente oferece Salvar e sair, Descartar alterações ou Cancelar. Na v1.14.5, Salvar e sair mostra o erro real do backend quando houver falha, Descartar restaura o último estado salvo localmente sem depender do backend e Cancelar/Continuar preserva exatamente a edição em curso.",
+        "O botão inferior Salvar configuração compara o formulário atual com o último baseline persistido e envia somente os campos efetivamente alterados. Uma resposta lenta de leitura da Configuração não pode apagar uma edição feita enquanto a resposta estava pendente."
     ])
     story.append(Paragraph("Campos principais", st["h2"]))
     story.append(bullet_list([
@@ -507,6 +508,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Conecta sem estações: confira o filtro e procure erros no Log.",
         "Mapa sem tiles: confira o acesso à Internet e o provedor de mapas.",
         "Localização atual não funciona: confira a permissão de localização do sistema/WebView/navegador.",
+        "SAT mostra erro de detalhes/serviços: a v1.14.5 separa falha de renderização da interface de erro orbital e corrige os controles APRS/SSTV/Telemetria/Voz/Packet.",
         "Topologia vazia: confirme que a opção está ativa e que existem paths observados entre nós com posições conhecidas.",
         "Sem som de mensagem: confira a opção em Aparência e o volume do sistema."
     ])

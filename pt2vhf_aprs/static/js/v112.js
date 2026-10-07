@@ -166,13 +166,13 @@
         }
         window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
       });
-      $('.satellite-open',row)?.addEventListener('click',()=>{state.activeNorad=id;state.selected.add(id);saveSelected(state.selected);markSelectionGeneration(id);renderCatalog();updateSelectionSummary();renderDetail(id);showSatelliteImmediately(id,true);window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));});
+      $('.satellite-open',row)?.addEventListener('click',()=>{state.activeNorad=id;state.selected.add(id);saveSelected(state.selected);markSelectionGeneration(id);renderCatalog();updateSelectionSummary();safeRenderDetail(id);showSatelliteImmediately(id,true);window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));});
       $('.satellite-operational',row)?.addEventListener('change',async ev=>{
         ev.stopPropagation();
         try{
           const saved=await req('/api/v113/satellites/'+encodeURIComponent(id)+'/operation',{method:'POST',body:JSON.stringify({state:ev.target.value})});
           const meta=satelliteMeta(id);meta.operational_state=saved.state;meta.operational=saved.state==='monitor';
-          await loadPasses();renderDetail(id);window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
+          await loadPasses();safeRenderDetail(id);window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));
         }catch(e){console.warn(e);}
       });
       $('.satellite-favorite',row)?.addEventListener('click',()=>{
@@ -208,10 +208,20 @@
       '<div class="satellite-service-controls"><strong>'+esc(tr('Serviços monitorados','Monitored services','Servicios monitorizados','Services surveillés'))+'</strong>'+
       ['aprs','sstv','telemetry','voice','packet'].map(key=>'<label><input type="checkbox" data-satellite-service="'+key+'" '+((m.service_states?.[key]??true)?'checked':'')+'><span>'+esc({aprs:'APRS',sstv:'SSTV',telemetry:'Telemetria',voice:'Voz/FM',packet:'Packet/AX.25'}[key])+'</span></label>').join('')+
       '</div>';
-    $('[data-satellite-service]',host).forEach(input=>input.addEventListener('change',async()=>{
+    host.querySelectorAll('[data-satellite-service]').forEach(input=>input.addEventListener('change',async()=>{
       const services={...(m.service_states||{})};services[input.dataset.satelliteService]=input.checked;
       try{const saved=await req('/api/v113/satellites/'+encodeURIComponent(norad)+'/operation',{method:'POST',body:JSON.stringify({state:m.operational_state||'monitor',services})});m.service_states=saved.services;await loadPasses();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));}catch(e){console.warn(e);}
     }));
+  }
+
+  function safeRenderDetail(norad){
+    try{renderDetail(norad);return true;}
+    catch(e){
+      console.error('[SAT] detail render error',e);
+      const host=$('#satelliteDetail');
+      if(host)host.innerHTML='<div class="satellite-render-error">'+esc(tr('Erro ao renderizar detalhes do satélite','Satellite detail rendering error','Error al mostrar detalles del satélite','Erreur d’affichage des détails du satellite'))+': '+esc(e?.message||e)+'</div>';
+      return false;
+    }
   }
 
   function renderLiveStrip(norad){
@@ -233,7 +243,7 @@
     const p=layerPrefs(),latlng=[Number(pos.latitude),Number(pos.longitude)];
     const marker=L.marker(latlng,{icon:satelliteIcon(meta),title:meta.name||('NORAD '+id)}).addTo(map);
     if(p.labels)marker.bindTooltip(meta.name||('NORAD '+id),{permanent:false,direction:'top'});
-    marker.on('click',()=>{state.activeNorad=id;renderDetail(id);renderLiveStrip(id);if(!isMain)void drawSatelliteTrack(id,true);});
+    marker.on('click',()=>{state.activeNorad=id;safeRenderDetail(id);renderLiveStrip(id);if(!isMain)void drawSatelliteTrack(id,true);});
     layers.push(marker);
 
     if(p.footprint&&Number(pos.footprint_radius_km)>0){
@@ -273,7 +283,7 @@
     if(!state.map||!state.selected.has(id)||!meta.norad_id||!hasPosition(pos))return false;
     renderOneOnMap(state.map,state.layers,meta,pos,null,false);
     if(center)state.map.setView([Number(pos.latitude),Number(pos.longitude)],Math.max(state.map.getZoom(),4));
-    if(id===state.activeNorad){renderDetail(id);renderLiveStrip(id);}
+    if(id===state.activeNorad){safeRenderDetail(id);renderLiveStrip(id);}
     return true;
   }
   async function fetchAndRenderTrack(norad,center=false,generation=null){
@@ -294,7 +304,7 @@
         if(!hasPosition(current))throw new Error(tr('Posição orbital indisponível','Orbital position unavailable','Posición orbital no disponible','Position orbitale indisponible'));
         renderOneOnMap(state.map,state.layers,meta,current,data,false);
         if(center)state.map.setView([Number(current.latitude),Number(current.longitude)],Math.max(state.map.getZoom(),4));
-        if(id===state.activeNorad){renderDetail(id);renderLiveStrip(id);}
+        if(id===state.activeNorad){safeRenderDetail(id);renderLiveStrip(id);}
         console.debug('[SAT] selection→track',id,Math.round(performance.now()-started)+'ms');
       }catch(e){
         if(state.selected.has(id)&&gen===(state.trackGeneration.get(id)??0)){
@@ -368,7 +378,7 @@
       '<td>'+esc(fmtDuration(x.duration_seconds))+'</td><td>'+esc(freqSummary(x))+'<br><small>'+esc(x.mode||x.protocol||'')+'</small></td></tr>').join(''):
       '<tr><td colspan="8" class="hint">'+esc(tr('Nenhuma passagem no filtro atual.','No passes in the current filter.','No hay pases en el filtro actual.','Aucun passage avec ce filtre.'))+'</td></tr>';
     $$('tr[data-norad]',body).forEach(row=>row.addEventListener('click',()=>{
-      const id=Number(row.dataset.norad);state.activeNorad=id;state.selected.add(id);saveSelected(state.selected);markSelectionGeneration(id);renderCatalog();renderDetail(id);renderLiveStrip(id);showSatelliteImmediately(id,true);
+      const id=Number(row.dataset.norad);state.activeNorad=id;state.selected.add(id);saveSelected(state.selected);markSelectionGeneration(id);renderCatalog();safeRenderDetail(id);renderLiveStrip(id);showSatelliteImmediately(id,true);
     }));
   }
 
@@ -384,7 +394,7 @@
     try{
       const data=await req('/api/v112/satellites/status?scope='+encodeURIComponent(layerPrefs().catalogScope));
       state.status=data.items||[];state.observer=data.observer||state.observer;setObserverMarker();
-      if(state.activeNorad)renderDetail(state.activeNorad);
+      if(state.activeNorad)safeRenderDetail(state.activeNorad);
       await refreshOrbitalMaps();
     }catch(e){console.warn(e);}
   }

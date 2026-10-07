@@ -765,6 +765,7 @@ def get_config() -> dict[str, Any]:
 def save_config(data: dict[str, Any]) -> dict[str, Any]:
     current = get_config()
     allowed = set(DEFAULT_CONFIG)
+    provided = set(data) & allowed
     merged = {key: data.get(key, current.get(key, DEFAULT_CONFIG[key])) for key in allowed}
 
     merged["callsign"] = str(merged["callsign"] or "").upper().strip()
@@ -830,85 +831,85 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
 
     # Salvar preferências não exige uma estação completa. A validação dos
     # campos obrigatórios acontece no momento da conexão ao APRS-IS.
-    if not (0 <= merged["ssid"] <= 15):
+    if "ssid" in provided and not (0 <= merged["ssid"] <= 15):
         raise ValueError("SSID deve estar entre 0 e 15.")
-    if merged["latitude"] is not None and not (-90 <= merged["latitude"] <= 90):
+    if "latitude" in provided and merged["latitude"] is not None and not (-90 <= merged["latitude"] <= 90):
         raise ValueError("Latitude inválida.")
-    if merged["longitude"] is not None and not (-180 <= merged["longitude"] <= 180):
+    if "longitude" in provided and merged["longitude"] is not None and not (-180 <= merged["longitude"] <= 180):
         raise ValueError("Longitude inválida.")
-    if not merged["server"]:
+    if "server" in provided and not merged["server"]:
         raise ValueError("Servidor APRS-IS não pode ficar vazio.")
-    if not (1 <= merged["port"] <= 65535):
+    if "port" in provided and not (1 <= merged["port"] <= 65535):
         raise ValueError("Porta inválida.")
     if merged["altitude_source"] not in {"manual", "geolocation", "fallback_zero"}:
         merged["altitude_source"] = "manual"
-    if merged["map_type"] not in {"osm", "topo", "light", "dark", "cyclosm", "humanitarian", "osmde", "opnv", "satellite"}:
+    if "map_type" in provided and merged["map_type"] not in {"osm", "topo", "light", "dark", "cyclosm", "humanitarian", "osmde", "opnv", "satellite"}:
         raise ValueError("Tipo de mapa inválido.")
-    if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["track_color"]):
+    if "track_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["track_color"]):
         raise ValueError("Cor do tracklog inválida.")
-    if not (1 <= merged["track_width"] <= 10):
+    if "track_width" in provided and not (1 <= merged["track_width"] <= 10):
         raise ValueError("Espessura do tracklog deve estar entre 1 e 10.")
-    if merged["map_zoom_step"] not in {0.05, 0.10, 0.25, 0.50, 1.00}:
+    if "map_zoom_step" in provided and merged["map_zoom_step"] not in {0.05, 0.10, 0.25, 0.50, 1.00}:
         raise ValueError("Step do zoom deve ser 0,05, 0,10, 0,25, 0,50 ou 1,00.")
-    if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_color"]):
+    if "topology_rf_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_color"]):
         raise ValueError("Cor dos enlaces RF da topologia inválida.")
-    if not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_igate_color"]):
+    if "topology_igate_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_igate_color"]):
         raise ValueError("Cor dos enlaces IGate da topologia inválida.")
-    if not (1 <= merged["topology_width"] <= 10):
+    if "topology_width" in provided and not (1 <= merged["topology_width"] <= 10):
         raise ValueError("Espessura da topologia deve estar entre 1 e 10.")
-    if not (30 <= merged["map_brightness"] <= 150):
+    if "map_brightness" in provided and not (30 <= merged["map_brightness"] <= 150):
         raise ValueError("Brilho do mapa deve estar entre 30% e 150%.")
-    if not (10 <= merged["weather_radar_opacity"] <= 100):
+    if "weather_radar_opacity" in provided and not (10 <= merged["weather_radar_opacity"] <= 100):
         raise ValueError("Opacidade do radar deve estar entre 10% e 100%.")
-    if not (100 <= merged["elevation_slider_max"] <= 9000):
+    if "elevation_slider_max" in provided and not (100 <= merged["elevation_slider_max"] <= 9000):
         raise ValueError("Máximo do slider de relevo deve estar entre 100 m e 9.000 m.")
-    if not (0 <= merged["elevation_threshold"] <= merged["elevation_slider_max"]):
+    if ("elevation_threshold" in provided or "elevation_slider_max" in provided) and not (0 <= merged["elevation_threshold"] <= merged["elevation_slider_max"]):
         raise ValueError("Cota do relevo deve ficar entre 0 m e o máximo configurado.")
-    if not (10 <= merged["elevation_opacity"] <= 100):
+    if "elevation_opacity" in provided and not (10 <= merged["elevation_opacity"] <= 100):
         raise ValueError("Opacidade do relevo deve estar entre 10% e 100%.")
-    if not (1 <= merged["message_popup_seconds"] <= 60):
+    if "message_popup_seconds" in provided and not (1 <= merged["message_popup_seconds"] <= 60):
         raise ValueError("Duração do aviso de mensagem deve estar entre 1 e 60 segundos.")
-    if not (70 <= merged["resource_cpu_critical_percent"] <= 100):
+    if "resource_cpu_critical_percent" in provided and not (70 <= merged["resource_cpu_critical_percent"] <= 100):
         raise ValueError("Limite crítico de CPU deve estar entre 70% e 100%.")
-    if not (70 <= merged["resource_memory_critical_percent"] <= 100):
+    if "resource_memory_critical_percent" in provided and not (70 <= merged["resource_memory_critical_percent"] <= 100):
         raise ValueError("Limite crítico de memória deve estar entre 70% e 100%.")
-    if not (10 <= merged["resource_alert_sustain_seconds"] <= 300):
+    if "resource_alert_sustain_seconds" in provided and not (10 <= merged["resource_alert_sustain_seconds"] <= 300):
         raise ValueError("Persistência do alerta deve estar entre 10 e 300 segundos.")
-    if not (1 <= merged["resource_alert_cooldown_minutes"] <= 120):
+    if "resource_alert_cooldown_minutes" in provided and not (1 <= merged["resource_alert_cooldown_minutes"] <= 120):
         raise ValueError("Cooldown do alerta deve estar entre 1 e 120 minutos.")
 
-    if merged["app_theme"] not in {"dark", "light"}:
+    if "app_theme" in provided and merged["app_theme"] not in {"dark", "light"}:
         raise ValueError("Tema da aplicação inválido.")
-    if merged["language"] not in {"pt-BR", "en", "es", "fr"}:
+    if "language" in provided and merged["language"] not in {"pt-BR", "en", "es", "fr"}:
         raise ValueError("Idioma da aplicação inválido.")
 
     allowed_fonts = {"system", "segoe", "arial", "verdana", "tahoma", "consolas"}
-    if merged["messages_font_family"] not in allowed_fonts:
+    if "messages_font_family" in provided and merged["messages_font_family"] not in allowed_fonts:
         raise ValueError("Fonte da tela de mensagens inválida.")
-    if merged["stations_font_family"] not in allowed_fonts:
+    if "stations_font_family" in provided and merged["stations_font_family"] not in allowed_fonts:
         raise ValueError("Fonte da tela de estações inválida.")
-    if merged["logs_font_family"] not in allowed_fonts:
+    if "logs_font_family" in provided and merged["logs_font_family"] not in allowed_fonts:
         raise ValueError("Fonte da tela de logs inválida.")
-    if merged["messages_font_weight"] not in {"normal", "bold"}:
+    if "messages_font_weight" in provided and merged["messages_font_weight"] not in {"normal", "bold"}:
         raise ValueError("Peso da fonte de mensagens inválido.")
-    if merged["stations_font_weight"] not in {"normal", "bold"}:
+    if "stations_font_weight" in provided and merged["stations_font_weight"] not in {"normal", "bold"}:
         raise ValueError("Peso da fonte de estações inválido.")
-    if merged["logs_font_weight"] not in {"normal", "bold"}:
+    if "logs_font_weight" in provided and merged["logs_font_weight"] not in {"normal", "bold"}:
         raise ValueError("Peso da fonte de logs inválido.")
-    if not (10 <= merged["messages_font_size"] <= 20):
+    if "messages_font_size" in provided and not (10 <= merged["messages_font_size"] <= 20):
         raise ValueError("Tamanho da fonte de mensagens deve estar entre 10 e 20 px.")
-    if not (10 <= merged["stations_font_size"] <= 20):
+    if "stations_font_size" in provided and not (10 <= merged["stations_font_size"] <= 20):
         raise ValueError("Tamanho da fonte de estações deve estar entre 10 e 20 px.")
-    if not (10 <= merged["logs_font_size"] <= 20):
+    if "logs_font_size" in provided and not (10 <= merged["logs_font_size"] <= 20):
         raise ValueError("Tamanho da fonte de logs deve estar entre 10 e 20 px.")
-    if not (11 <= merged["statistics_font_size"] <= 20):
+    if "statistics_font_size" in provided and not (11 <= merged["statistics_font_size"] <= 20):
         raise ValueError("Tamanho da fonte de estatísticas deve estar entre 11 e 20 px.")
     for key, label in (
         ("messages_line_height", "mensagens"),
         ("stations_line_height", "estações"),
         ("logs_line_height", "logs"),
     ):
-        if not (1.0 <= float(merged[key]) <= 2.0):
+        if key in provided and not (1.0 <= float(merged[key]) <= 2.0):
             raise ValueError(f"Espaçamento de linha de {label} deve estar entre 1,0 e 2,0.")
 
     sets = ", ".join(f"{key}=?" for key in sorted(allowed))
