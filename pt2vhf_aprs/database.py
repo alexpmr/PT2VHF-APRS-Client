@@ -1868,14 +1868,17 @@ def _repair_topology_rf_evidence_v112(conn: sqlite3.Connection) -> int:
     return len(aggregated)
 
 
-def list_topology_edges(hours: int = 0) -> list[dict[str, Any]]:
+def list_topology_edges(hours: float = 0) -> list[dict[str, Any]]:
     """Retorna enlaces observados sem permitir que uma consulta monopolize workers HTTP."""
     global _topology_cache_db_path
-    hours = int(hours or 0)
+    try:
+        hours = float(hours or 0)
+    except (TypeError, ValueError):
+        hours = 0.0
     if hours > 0:
-        hours = max(1, min(hours, 24 * 30))
+        hours = max(0.25, min(hours, 24 * 30))
     else:
-        hours = 0
+        hours = 0.0
 
     now = time.monotonic()
     with _topology_cache_lock:
@@ -3740,10 +3743,13 @@ def map_data(*, force: bool = False) -> dict[str, Any]:
         _map_data_build_lock.release()
 
 
-def geographic_export_data(hours: int = 0) -> dict[str, Any]:
-    hours = int(hours or 0)
+def geographic_export_data(hours: float = 0) -> dict[str, Any]:
+    try:
+        hours = float(hours or 0)
+    except (TypeError, ValueError):
+        hours = 0.0
     if hours > 0:
-        hours = max(1, min(hours, 24 * 30))
+        hours = max(0.25, min(hours, 24 * 30))
         cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     else:
         cutoff = None
@@ -3766,7 +3772,7 @@ def geographic_export_data(hours: int = 0) -> dict[str, Any]:
 
 
 
-def list_rf_received_by(receiver: str, hours: int = 0, limit: int = 100) -> list[dict[str, Any]]:
+def list_rf_received_by(receiver: str, hours: float = 0, limit: int = 100) -> list[dict[str, Any]]:
     """Estações comprovadamente observadas chegando ao nó por enlace RF."""
     receiver = str(receiver or "").upper().strip()
     if not receiver:
@@ -3774,8 +3780,12 @@ def list_rf_received_by(receiver: str, hours: int = 0, limit: int = 100) -> list
     limit = max(1, min(int(limit or 100), 500))
     params: list[Any] = [receiver]
     where = ""
-    if int(hours or 0) > 0:
-        safe_hours = max(1, min(int(hours), 24 * 30))
+    try:
+        safe_hours = float(hours or 0)
+    except (TypeError, ValueError):
+        safe_hours = 0.0
+    if safe_hours > 0:
+        safe_hours = max(0.25, min(safe_hours, 24 * 30))
         cutoff = (datetime.now(timezone.utc) - timedelta(hours=safe_hours)).isoformat(timespec="seconds")
         where = "AND last_seen >= ?"
         params.append(cutoff)
