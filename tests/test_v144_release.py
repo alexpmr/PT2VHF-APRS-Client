@@ -118,7 +118,7 @@ def test_v144_igate_link_layer_is_independent_of_hidden_markers():
 def test_v144_alert_settings_use_collection_selector():
     import re
     js = text("pt2vhf_aprs/static/js/v190.js")
-    assert "$$('[data-v190-alert]',card).forEach" in js
+    assert "card.querySelectorAll('[data-v190-alert]').forEach" in js
     assert not re.search(r"(?<!\$)\$\([^\n;]+?\)\.(?:forEach|map|filter|find|some|every)\(", js)
 
 
