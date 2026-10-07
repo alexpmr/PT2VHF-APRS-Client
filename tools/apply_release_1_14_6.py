@@ -47,6 +47,10 @@ for marker in (
     'id="tab-satellites"',
     "satelliteTabCountdown",
     "satelliteMap",
+    "js/v112.js",
+    "js/v113.js",
+    "js/v114.js",
+    "js/v141.js",
 ):
     if marker in html:
         raise SystemExit(f"retired SAT UI still present: {marker}")
