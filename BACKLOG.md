@@ -1,5 +1,12 @@
 # Backlog
 
+## Relatos PU2MUS — 07/10/2026
+
+- **#48 — Alertas configuráveis:** erro `$(...).forEach is not a function` identificado em `v190.js`. Correção aplicada na candidata v1.14.4 trocando os seletores de coleção por `$()`; aguarda CI/reteste antes de encerrar a issue.
+- **#49 — Desempenho/backend com banco crescente:** investigar perda de conexão/travamentos percebidos com banco em torno de 66 MB e melhora observada após retenção de 5 dias. **Não alterar o padrão global de retenção para 5 dias sem decisão explícita do mantenedor.**
+- **#50 — Período do mapa:** adicionar opções de **15 min** e **30 min**, abrangendo estações, objetos, tracklogs, topologia e cobertura RF sem truncar frações de hora.
+- **#51 — SAT responsivo:** corrigir layout em que o mapa comprime a barra lateral e corta nomes; validar 1366×768, 1280×720, 1440×900 e escalas 100/125/150%.
+
 ## Pendência externa não bloqueante
 
 - **SignPath Foundation (#1):** concluir onboarding, autorização do GitHub App, configuração da policy e assinatura Authenticode. Depende de aprovação/autorização externas e não bloqueia releases sem assinatura oficial.
