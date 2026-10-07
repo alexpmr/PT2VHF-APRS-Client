@@ -37,7 +37,7 @@ checks = {
     "windows/make_icon.py": ["render_compact_icon", "app_logo.png"],
     "macos/make_icon.py": ["render_compact_icon", "app_logo.png"],
     "linux/build_linux.sh": ["render_compact_icon(256)", "app_logo.png"],
-    "pt2vhf_aprs/static/js/v190.js": ["$('[data-v190-alert]',card).forEach"],
+    "pt2vhf_aprs/static/js/v190.js": ["card.querySelectorAll('[data-v190-alert]').forEach"],
     "pt2vhf_aprs/static/css/v141.css": ["@media(max-width:1320px)", "minmax(340px,.85fr)", "overflow-wrap:anywhere"],
     "pt2vhf_aprs/static/js/v112.js": ["ResizeObserver", "invalidateSize({animate:false})"],
     "pt2vhf_aprs/v111_features.py": ["def db_health(*, deep: bool = True)", "db_health(deep=deep)", 'result["integrity"] = "operacional"'],
