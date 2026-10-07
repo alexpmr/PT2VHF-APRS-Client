@@ -153,6 +153,9 @@
     configTransitionBusy: false,
     configLoading: false,
     configBaseline: '',
+    configEditGeneration: 0,
+    configLoadGeneration: 0,
+    configTouchedFields: new Set(),
     pendingTab: '',
     updateInfo: null,
     updateDownloading: false,
@@ -1072,6 +1075,7 @@
     $$('.tab').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
       if (tab === state.activeTab) return;
+      if (state.activeTab === 'config' && tab !== 'config') markConfigDirty();
       if (state.activeTab === 'config' && tab !== 'config' && state.configDirty) {
         state.pendingTab = tab;
         pendingConfigFeedback();
@@ -6164,153 +6168,246 @@
     refreshRequiredFieldHighlights();
   });
 
-  function configFormSnapshot() {
+  function configFormValues() {
     const form = $('#configForm');
-    if (!form) return '';
+    if (!form) return {};
     const data = {};
     for (const el of [...form.elements]) {
       if (!el.name || el.type === 'file' || el.type === 'submit' || el.type === 'button') continue;
       data[el.name] = el.type === 'checkbox' ? !!el.checked : String(el.value ?? '');
     }
-    return JSON.stringify(Object.keys(data).sort().reduce((acc, key) => { acc[key] = data[key]; return acc; }, {}));
+    return data;
   }
 
-  function markConfigDirty() {
-    if (!state.configLoaded || state.configLoading) return;
-    state.configDirty = configFormSnapshot() !== state.configBaseline;
+  function stableConfigSnapshot(values = {}) {
+    return JSON.stringify(Object.keys(values).sort().reduce((acc, key) => {
+      acc[key] = values[key];
+      return acc;
+    }, {}));
+  }
+
+  function configFormSnapshot() {
+    return stableConfigSnapshot(configFormValues());
+  }
+
+  function configSnapshotFromConfig(cfg = {}) {
+    const form = $('#configForm');
+    const values = configFormValues();
+    if (!form) return stableConfigSnapshot(values);
+    for (const el of [...form.elements]) {
+      if (!el.name || el.type === 'file' || el.type === 'submit' || el.type === 'button') continue;
+      if (!Object.prototype.hasOwnProperty.call(cfg, el.name)) continue;
+      values[el.name] = el.type === 'checkbox' ? !!cfg[el.name] : String(cfg[el.name] ?? '');
+    }
+    return stableConfigSnapshot(values);
+  }
+
+  function setConfigDirtyStatus(message = '', error = false) {
     const status = $('#configSaveStatus');
-    if (status) {
-      status.textContent = state.configDirty
-        ? ui('Há alterações não salvas.', 'There are unsaved changes.')
-        : ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
-      status.classList.toggle('unsaved', state.configDirty);
+    if (!status) return;
+    if (message) {
+      status.textContent = message;
+      status.classList.add('unsaved');
+      status.classList.toggle('is-error', !!error);
+      return;
+    }
+    status.textContent = state.configDirty
+      ? ui('Há alterações não salvas.', 'There are unsaved changes.')
+      : ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
+    status.classList.toggle('unsaved', state.configDirty);
+    status.classList.remove('is-error');
+  }
+
+  function applyConfigToForm(cfg = {}, { preserveTouched = false } = {}) {
+    const form = $('#configForm');
+    if (!form) return;
+    for (const [key, value] of Object.entries(cfg)) {
+      if (preserveTouched && state.configTouchedFields.has(key)) continue;
+      const input = form.elements.namedItem(key);
+      if (!input) continue;
+      if (input.type === 'checkbox') input.checked = !!value;
+      else input.value = value ?? '';
     }
   }
 
-  async function loadConfig() {
+  function syncConfigRuntime(cfg = {}) {
+    updateSelectedSymbol();
+    const baseCall = String(cfg.callsign || '').toUpperCase().trim();
+    const ssid = Number(cfg.ssid || 0);
+    state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
+    state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
+    state.soundOnStationActivity = !!cfg.sound_on_station_activity;
+    state.highlightStationActivity = !!cfg.highlight_station_activity;
+    state.trafficAnimationEnabled = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
+    state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
+    state.language = normalizeLanguage(cfg.language);
+    if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
+    validateCallsignField();
+    updateAltitudeSourceStatus(cfg.altitude_source, cfg.altitude);
+    applyMapPreferences(cfg);
+    applyAppearancePreferences(cfg);
+    syncMapPreferenceControls();
+    syncAppearanceControls();
+    syncDmsFromDecimal();
+    applyCoordinateMode(localStorage.getItem('pt2vhf_coordinate_mode') || 'decimal');
+    applyLanguage(state.language);
+    updateUpdateSettingsUi();
+    if (state.updateSchedulerReady) rescheduleUpdateChecks();
+  }
+
+  function markConfigDirty(event = null) {
+    const fieldName = event?.target?.name;
+    if (fieldName) {
+      state.configTouchedFields.add(fieldName);
+      state.configEditGeneration += 1;
+    }
+    if (!state.configBaseline) {
+      state.configDirty = !!fieldName;
+    } else {
+      state.configDirty = configFormSnapshot() !== state.configBaseline;
+    }
+    setConfigDirtyStatus();
+  }
+
+  function restoreConfigBaselineLocally() {
+    if (state.currentConfig) {
+      applyConfigToForm(state.currentConfig);
+      syncConfigRuntime(state.currentConfig);
+      state.configBaseline = configSnapshotFromConfig(state.currentConfig);
+    } else if (state.configBaseline) {
+      try {
+        const values = JSON.parse(state.configBaseline);
+        applyConfigToForm(values);
+      } catch (_) {}
+    }
+    state.configTouchedFields.clear();
+    state.configEditGeneration += 1;
+    state.configDirty = false;
+    setConfigDirtyStatus();
+  }
+
+  async function loadConfig({ force = false } = {}) {
+    const loadGeneration = ++state.configLoadGeneration;
+    const editGenerationAtStart = state.configEditGeneration;
     state.configLoading = true;
     const firstConfigLoad = !state.configLoaded;
     try {
       const cfg = await api('/api/config');
+      if (loadGeneration !== state.configLoadGeneration) return false;
+      const editedDuringLoad = state.configEditGeneration !== editGenerationAtStart;
       state.currentConfig = cfg;
-      const form = $('#configForm');
-      for (const [key, value] of Object.entries(cfg)) {
-        const input = form.elements.namedItem(key);
-        if (!input) continue;
-        if (input.type === 'checkbox') input.checked = !!value;
-        else input.value = value ?? '';
-      }
-      updateSelectedSymbol();
-      const baseCall = String(cfg.callsign || '').toUpperCase().trim();
-      const ssid = Number(cfg.ssid || 0);
-      state.ownCallsign = baseCall ? (ssid ? `${baseCall}-${ssid}` : baseCall) : '';
-      state.soundOnPersonalMessage = !!cfg.sound_on_personal_message;
-      state.soundOnStationActivity = !!cfg.sound_on_station_activity;
-      state.highlightStationActivity = !!cfg.highlight_station_activity;
-      state.trafficAnimationEnabled = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
-      if (firstConfigLoad) {
-        state.trafficMode = 'live';
-        state.trafficPlaying = state.trafficAnimationEnabled;
-        state.timelineReplayActive = false;
-        if ($('#trafficMode')) $('#trafficMode').value = 'live';
-      } else if (!state.trafficAnimationEnabled && state.trafficMode === 'live') {
-        state.trafficPlaying = false;
-      }
-      updateTrafficAnimationUi();
-      state.messagePopupSeconds = Math.min(60, Math.max(1, Number(cfg.message_popup_seconds || 5)));
-      state.language = normalizeLanguage(cfg.language);
-      if (!String(cfg.passcode || '').trim()) updateCalculatedPasscode(true);
-      validateCallsignField();
-      updateAltitudeSourceStatus(cfg.altitude_source, cfg.altitude);
-      applyMapPreferences(cfg);
-      applyAppearancePreferences(cfg);
-      syncMapPreferenceControls();
-      syncAppearanceControls();
-      syncDmsFromDecimal();
-      applyCoordinateMode(localStorage.getItem('pt2vhf_coordinate_mode') || 'decimal');
-      applyLanguage(state.language);
+
+      if (force) state.configTouchedFields.clear();
+      applyConfigToForm(cfg, { preserveTouched: !force && editedDuringLoad });
+
+      // Uma resposta GET lenta nunca pode apagar/rebaselinar uma edição local.
+      state.configBaseline = configSnapshotFromConfig(cfg);
       state.configLoaded = true;
-      state.configBaseline = configFormSnapshot();
-      state.configDirty = false;
-      const configStatus = $('#configSaveStatus');
-      if (configStatus && !configStatus.classList.contains('saved')) {
-        configStatus.textContent = ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
-        configStatus.classList.remove('unsaved');
+      state.configDirty = configFormSnapshot() !== state.configBaseline;
+
+      if (!editedDuringLoad || force || firstConfigLoad) {
+        if (firstConfigLoad) {
+          state.trafficMode = 'live';
+          state.trafficPlaying = cfg.traffic_animation_enabled !== 0 && cfg.traffic_animation_enabled !== false;
+          state.timelineReplayActive = false;
+          if ($('#trafficMode')) $('#trafficMode').value = 'live';
+        }
+        syncConfigRuntime(cfg);
+        updateTrafficAnimationUi();
       }
-      updateUpdateSettingsUi();
-      if (state.updateSchedulerReady) rescheduleUpdateChecks();
+
+      if (!state.configDirty) state.configTouchedFields.clear();
+      setConfigDirtyStatus();
       return true;
     } catch (err) {
       toast(err.message, 'error');
       return false;
-    } finally { state.configLoading = false; }
+    } finally {
+      if (loadGeneration === state.configLoadGeneration) state.configLoading = false;
+    }
+  }
+
+  function configChangedPayload() {
+    const current = configFormValues();
+    let baseline = {};
+    try { baseline = state.configBaseline ? JSON.parse(state.configBaseline) : {}; } catch (_) {}
+    const changed = {};
+    for (const [key, value] of Object.entries(current)) {
+      if (JSON.stringify(value) !== JSON.stringify(baseline[key])) changed[key] = value;
+    }
+    return changed;
   }
 
   async function saveConfigForm() {
-    const form = $('#configForm');
     syncDecimalFromDmsIfNeeded();
-    const data = Object.fromEntries(new FormData(form).entries());
-    data.connect_on_start = !!form.elements.connect_on_start?.checked;
-    data.open_browser_on_start = !!form.elements.open_browser_on_start?.checked;
-    data.sound_on_personal_message = !!form.elements.sound_on_personal_message?.checked;
-    data.resource_alert_enabled = !!form.elements.resource_alert_enabled?.checked;
-    data.sound_on_station_activity = !!form.elements.sound_on_station_activity?.checked;
-    data.highlight_station_activity = !!form.elements.highlight_station_activity?.checked;
-    data.traffic_animation_enabled = !!form.elements.traffic_animation_enabled?.checked;
-    data.respond_to_queries = !!form.elements.respond_to_queries?.checked;
-    data.check_updates_on_start = !!form.elements.check_updates_on_start?.checked;
-    data.auto_download_updates = false;
-    data.install_updates_on_exit = false;
+    markConfigDirty();
+    const data = configFormValues();
+    const payload = configChangedPayload();
+
+    if (!Object.keys(payload).length) {
+      state.configDirty = false;
+      setConfigDirtyStatus();
+      return { ok: true, unchanged: true };
+    }
 
     const filterValidation = validateAprsFilterSyntax(data.aprs_filter || '');
     if (!filterValidation.valid) {
-      toast(ui(
+      const message = ui(
         `Filtro APRS-IS inválido: ${filterValidation.invalid.join(', ')}`,
         `Invalid APRS-IS filter: ${filterValidation.invalid.join(', ')}`
-      ), 'error');
+      );
+      toast(message, 'error');
+      setConfigDirtyStatus(message, true);
       $('#aprsFilterInput')?.focus();
-      return false;
+      return { ok: false, error: message };
     }
 
-    if (!String(data.aprs_filter || '').trim()) {
+    if (Object.prototype.hasOwnProperty.call(payload, 'aprs_filter') && !String(data.aprs_filter || '').trim()) {
       const proceed = window.confirm(ui(
         'O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?',
         'The APRS-IS filter is empty. Depending on the server and port in use, the client may receive a much larger traffic stream, including all traffic made available on that connection.\n\nDo you want to continue without a filter?'
       ));
       if (!proceed) {
+        const message = ui('Salvamento cancelado; as alterações foram mantidas.', 'Save cancelled; changes were kept.');
         showConfigSection('aprs');
         $('#aprsFilterInput')?.focus();
-        return false;
+        setConfigDirtyStatus(message, true);
+        return { ok: false, error: message };
       }
     }
 
     try {
       const result = await api('/api/config', {
-        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
       });
+      const savedConfig = result.config || { ...(state.currentConfig || {}), ...payload };
+      state.currentConfig = savedConfig;
+      applyConfigToForm(savedConfig);
+      syncConfigRuntime(savedConfig);
+      state.configBaseline = configSnapshotFromConfig(savedConfig);
+      state.configTouchedFields.clear();
+      state.configDirty = false;
+      state.configEditGeneration += 1;
       toast(
         result.reconnected
           ? ui('Configuração salva. APRS-IS reconectando com os novos parâmetros.', 'Configuration saved. APRS-IS is reconnecting with the new parameters.')
           : ui('Configuração salva.', 'Configuration saved.'),
         'ok'
       );
-      applyMapPreferences(result.config || data);
-      applyAppearancePreferences(result.config || data);
-      const refreshed = await loadConfig();
-      if (!refreshed) console.warn('Configuração persistida; recarga da interface indisponível.');
       void loadStations();
-      state.configDirty = false;
       const saveStatus = $('#configSaveStatus');
       if (saveStatus) {
         saveStatus.textContent = ui('Configuração salva com sucesso.', 'Configuration saved successfully.');
-        saveStatus.classList.remove('unsaved');
+        saveStatus.classList.remove('unsaved', 'is-error');
         saveStatus.classList.add('saved');
         setTimeout(() => saveStatus.classList.remove('saved'), 2600);
       }
-      return true;
+      return { ok: true, unchanged: false };
     } catch (err) {
-      toast(err.message, 'error');
-      return false;
+      const message = String(err?.message || err || ui('Erro desconhecido ao salvar.', 'Unknown save error.'));
+      toast(message, 'error');
+      setConfigDirtyStatus(message, true);
+      return { ok: false, error: message };
     }
   }
 
@@ -6350,28 +6447,19 @@
         // Um diálogo nativo de confirmação (ex.: filtro APRS-IS vazio) não
         // deve ficar atrás da sobreposição modal enquanto o save é executado.
         overlay?.classList.add('hidden');
-        let saved = false;
-        try {
-          saved = await saveConfigForm();
-        } catch (err) {
-          console.error('Falha ao salvar ao sair da Configuração:', err);
-          pendingConfigFeedback(String(err?.message || err), true);
-        }
-        if (!saved) {
+        const result = await saveConfigForm();
+        if (!result?.ok) {
           overlay?.classList.remove('hidden');
-          if (!$('#unsavedConfigActionStatus')?.classList.contains('is-error')) {
-            pendingConfigFeedback(ui('Não foi possível salvar. Revise os dados da Configuração e tente novamente.', 'Could not save. Review configuration and try again.'), true);
-          }
+          pendingConfigFeedback(
+            result?.error || ui('Não foi possível salvar.', 'Could not save.'),
+            true
+          );
           return;
         }
       } else if (mode === 'discard') {
-        pendingConfigFeedback(ui('Descartando alterações…', 'Discarding changes…'));
+        // Descartar é uma operação local. Nunca depender do backend para sair.
+        restoreConfigBaselineLocally();
         overlay?.classList.add('hidden');
-        if (!await loadConfig()) {
-          overlay?.classList.remove('hidden');
-          pendingConfigFeedback(ui('Não foi possível restaurar a configuração salva.', 'Could not restore saved configuration.'), true);
-          return;
-        }
       } else {
         overlay?.classList.add('hidden');
         pendingConfigFeedback();
@@ -7442,13 +7530,10 @@
       const input = $('#configForm')?.elements.namedItem('language');
       if (input) input.value = next;
       if (state.configLoaded) {
-        state.configBaseline = configFormSnapshot();
-        state.configDirty = false;
-        const status = $('#configSaveStatus');
-        if (status) {
-          status.textContent = ui('Configuração sem alterações pendentes.', 'No pending configuration changes.');
-          status.classList.remove('unsaved');
-        }
+        state.configBaseline = configSnapshotFromConfig(state.currentConfig || {});
+        state.configDirty = configFormSnapshot() !== state.configBaseline;
+        state.configTouchedFields.delete('language');
+        setConfigDirtyStatus();
       }
     } catch (err) {
       toast(err.message, 'error');
@@ -8902,7 +8987,7 @@
     try {
       await api('/api/config/reset', { method:'POST' });
       localStorage.removeItem('pt2vhf_coordinate_mode');
-      await loadConfig();
+      await loadConfig({ force:true });
       toast(ui('Configuração padrão restaurada.', 'Default configuration restored.'), 'ok');
     } catch (err) { toast(err.message, 'error'); }
   });
