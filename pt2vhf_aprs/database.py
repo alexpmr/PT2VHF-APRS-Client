@@ -1748,71 +1748,90 @@ def record_topology_from_raw(raw: str, medium: str = "APRS-IS") -> None:
         _record_topology_from_raw_conn(conn, raw, medium)
 
 def _consolidate_topology_edges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Consolida evidências por par origem→destino, preservando RF como meio físico.
+    """Consolida duplicatas sem apagar evidência APRS-IS confirmada.
 
-    Regra visual/operacional:
-    - se existir qualquer evidência RF para o par, o enlace é RF;
-    - só fica `igate`/Internet quando não existe evidência RF para o mesmo par;
-    - quando ambos foram observados em momentos distintos, os dois contadores
-      permanecem disponíveis em metadados, sem transformar RF em Internet.
+    Um mesmo par origem→destino pode ter sido observado fisicamente por RF e,
+    em outro momento, ter chegado por APRS-IS. Esses fatos não são mutuamente
+    exclusivos. A consolidação mantém uma linha por meio observado:
+
+    - rf continua sendo enlace físico e nunca vira Internet por o destino
+      exercer papel de iGate;
+    - igate existe somente quando houve evidência positiva APRS-IS;
+    - pares mistos preservam ambos os enlaces e seus contadores, permitindo à
+      interface desenhar RF sólido e Internet tracejado sem esconder nenhum.
     """
-    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    by_pair: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    by_kind: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+
     for raw in rows:
         item = dict(raw)
-        key = (
-            str(item.get("source") or "").upper().strip(),
-            str(item.get("target") or "").upper().strip(),
-        )
-        if not all(key):
+        source = str(item.get("source") or "").upper().strip()
+        target = str(item.get("target") or "").upper().strip()
+        if not source or not target:
             continue
-        grouped.setdefault(key, []).append(item)
+        kind = "igate" if str(item.get("kind") or "").lower() == "igate" else "rf"
+        item["source"] = source
+        item["target"] = target
+        item["kind"] = kind
+        by_pair.setdefault((source, target), []).append(item)
+        by_kind.setdefault((source, target, kind), []).append(item)
 
     result: list[dict[str, Any]] = []
-    for (_source, _target), evidence in grouped.items():
-        rf_rows = [row for row in evidence if str(row.get("kind") or "").lower() == "rf"]
-        internet_rows = [row for row in evidence if str(row.get("kind") or "").lower() == "igate"]
-        chosen_rows = rf_rows if rf_rows else internet_rows
-        if not chosen_rows:
-            chosen_rows = evidence
+    for (source, target, kind), same_kind_rows in by_kind.items():
+        pair_rows = by_pair[(source, target)]
+        rf_rows = [row for row in pair_rows if row["kind"] == "rf"]
+        internet_rows = [row for row in pair_rows if row["kind"] == "igate"]
 
-        # topology_edges tem uma linha por source/target/kind; ainda assim,
-        # agregamos defensivamente para suportar bancos/migrações antigos.
-        base = dict(max(chosen_rows, key=lambda row: str(row.get("last_seen") or "")))
-        base["kind"] = "rf" if rf_rows else "igate"
-        base["packet_count"] = sum(int(row.get("packet_count") or 0) for row in chosen_rows)
+        base = dict(max(same_kind_rows, key=lambda row: str(row.get("last_seen") or "")))
+        base["source"] = source
+        base["target"] = target
+        base["kind"] = kind
+        base["packet_count"] = sum(int(row.get("packet_count") or 0) for row in same_kind_rows)
         base["rf_packet_count"] = sum(int(row.get("packet_count") or 0) for row in rf_rows)
         base["internet_packet_count"] = sum(int(row.get("packet_count") or 0) for row in internet_rows)
-        base["rf_transport_count"] = sum(int(row.get("rf_transport_count") or 0) for row in evidence)
-        base["rf_path_count"] = sum(int(row.get("rf_path_count") or 0) for row in evidence)
-        base["internet_confirmed_count"] = sum(int(row.get("internet_confirmed_count") or 0) for row in evidence)
+        base["rf_transport_count"] = sum(int(row.get("rf_transport_count") or 0) for row in pair_rows)
+        base["rf_path_count"] = sum(int(row.get("rf_path_count") or 0) for row in pair_rows)
+        base["internet_confirmed_count"] = sum(int(row.get("internet_confirmed_count") or 0) for row in pair_rows)
         base["mixed_evidence"] = bool(rf_rows and internet_rows)
-        if base["mixed_evidence"]:
-            base["classification_source"] = "evidência mista"
-        elif rf_rows and base["rf_transport_count"] > 0:
-            base["classification_source"] = "RF direto do transporte"
-        elif rf_rows:
-            base["classification_source"] = "RF inferido do path"
-        else:
-            base["classification_source"] = "APRS-IS confirmado"
         base["observed_kinds"] = [
-            kind for kind, rows_for_kind in (("rf", rf_rows), ("igate", internet_rows))
-            if rows_for_kind
+            observed_kind
+            for observed_kind, kind_rows in (("rf", rf_rows), ("igate", internet_rows))
+            if kind_rows
         ]
-        if chosen_rows:
-            first_values = [str(row.get("first_seen") or "") for row in chosen_rows if row.get("first_seen")]
-            last_values = [str(row.get("last_seen") or "") for row in chosen_rows if row.get("last_seen")]
-            if first_values:
-                base["first_seen"] = min(first_values)
-            if last_values:
-                base["last_seen"] = max(last_values)
+
+        if kind == "igate":
+            base["classification_source"] = "APRS-IS confirmado"
+        elif base["rf_transport_count"] > 0:
+            base["classification_source"] = "RF direto do transporte"
+        else:
+            base["classification_source"] = "RF inferido do path"
+
+        first_values = [
+            str(row.get("first_seen") or "")
+            for row in same_kind_rows
+            if row.get("first_seen")
+        ]
+        last_values = [
+            str(row.get("last_seen") or "")
+            for row in same_kind_rows
+            if row.get("last_seen")
+        ]
+        if first_values:
+            base["first_seen"] = min(first_values)
+        if last_values:
+            base["last_seen"] = max(last_values)
         result.append(base)
 
+    # RF primeiro, APRS-IS depois para que o tracejado permaneça visível em
+    # pares mistos. O frontend reforça a mesma ordem ao renderizar.
     result.sort(
-        key=lambda item: (int(item.get("packet_count") or 0), str(item.get("last_seen") or "")),
-        reverse=True,
+        key=lambda item: (
+            str(item.get("source") or ""),
+            str(item.get("target") or ""),
+            1 if str(item.get("kind") or "") == "igate" else 0,
+        )
     )
     return result
-
 
 def _repair_topology_rf_evidence_v112(conn: sqlite3.Connection) -> int:
     """Reconstrói uma vez a evidência RF usando o histórico de packets.medium=RF."""
@@ -1974,9 +1993,8 @@ def list_topology_edges(hours: float = 0) -> list[dict[str, Any]]:
                 continue
             valid_rows.append(item)
 
-        # Um mesmo par pode existir historicamente como RF e como iGate/APRS-IS.
-        # Para o mapa, RF tem precedência: tracejado só é correto quando o enlace
-        # não possui nenhuma evidência RF no período consultado.
+        # RF e APRS-IS são evidências independentes. Um par observado pelos
+        # dois meios deve retornar as duas linhas; nenhum meio apaga o outro.
         result = _consolidate_topology_edges(valid_rows)
         with _topology_cache_lock:
             _topology_cache[hours] = (time.monotonic(), result)
