@@ -1,3 +1,16 @@
+## 1.14.6 - 2026-10-07
+
+- **SAT/ISS removido do cliente principal:** retirados aba SAT, mapas/órbitas, catálogo/TLE, passagens, alertas, estações/mensagens satelitais, beacon satelital e rotas dedicadas.
+- **Build mais leve:** removida a dependência `sgp4`, os assets JS/CSS e os serviços de backend exclusivos do módulo orbital.
+- **Escopo:** o PT2VHF APRS Client volta a concentrar-se no APRS terrestre; uma solução dedicada a APRS via satélite poderá ser tratada separadamente.
+- **Topologia iGate/Internet:** evidência APRS-IS confirmada deixa de ser descartada quando o mesmo par de estações também possui evidência RF.
+- **RF preservado:** pacotes recebidos efetivamente por TNC/RF e caminhos qAR/qAO continuam classificados como RF; ser iGate não transforma um enlace RF em Internet.
+- **Evidência mista:** RF e APRS-IS passam a ser mantidos como enlaces independentes, com contadores próprios e indicação de evidência mista.
+- **Mapa:** RF é desenhado primeiro; enlace Internet confirmado fica tracejado e em primeiro plano, preservando a leitura quando as geometrias coincidem.
+- **Migração:** preferências/cache SAT de versões anteriores deixam de ser carregados ou executados; os dados do usuário não são apagados de forma destrutiva.
+- **Regressão:** testes garantem remoção estrutural do SAT e retorno/renderização de enlaces iGate/APRS-IS, inclusive quando existe RF para o mesmo par.
+- Release completa prevista para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.5 - 2026-10-07
 
 - **Configuração — detecção de alterações:** o estado dirty passa a ser recalculado pelo snapshot real do formulário; eventos ocorridos durante carregamento assíncrono deixam de ser ignorados.
