@@ -134,41 +134,128 @@ def capture(output_dir: Path) -> None:
                     timeout=10000,
                 )
 
-                # Regressão funcional real: fechar modal com salvar/descartar/
-                # cancelar, sem depender só de testes que buscam strings no JS.
-                page.locator('input[name="comment"]').fill("Beacon 1.14.4 salvo no modal")
+                # v1.14.5 — regressão real do fluxo da Configuração.
+                # 1) O botão inferior precisa detectar e persistir alteração real.
+                page.locator('input[name="comment"]').fill("V145_FOOTER_SAVE")
+                page.locator("#saveConfigFooterButton").click()
+                page.wait_for_function(
+                    "() => document.querySelector('#configSaveStatus')?.textContent?.includes('sucesso')",
+                    timeout=12000,
+                )
+                cfg = page.request.get(f"{local_url}/api/config").json()
+                assert cfg["comment"] == "V145_FOOTER_SAVE", "Botão inferior não persistiu a alteração"
+
+                # 2) GET /api/config lento não pode engolir/rebaselinar edição feita
+                # enquanto a resposta ainda está pendente.
+                page.locator('.tab[data-tab="stations"]').click()
+                page.evaluate("""() => {
+                    window.__v145PrevFetch = window.fetch;
+                    window.__v145DelayNextConfigGet = true;
+                    const previous = window.__v145PrevFetch.bind(window);
+                    window.fetch = (input, init = {}) => {
+                        const url = typeof input === 'string' ? input : String(input?.url || '');
+                        const method = String(init?.method || input?.method || 'GET').toUpperCase();
+                        if (window.__v145DelayNextConfigGet && url.includes('/api/config') && method === 'GET') {
+                            window.__v145DelayNextConfigGet = false;
+                            return new Promise((resolve, reject) => {
+                                setTimeout(() => previous(input, init).then(resolve, reject), 1200);
+                            });
+                        }
+                        return previous(input, init);
+                    };
+                }""")
+                page.locator('.tab[data-tab="config"]').click()
+                page.locator('input[name="comment"]').fill("V145_SLOW_CONFIG_TEST")
+                page.wait_for_timeout(1550)
+                assert page.locator('input[name="comment"]').input_value() == "V145_SLOW_CONFIG_TEST"
+                assert "não salvas" in page.locator("#configSaveStatus").inner_text().lower()
+                page.locator("#saveConfigFooterButton").click()
+                page.wait_for_function(
+                    "() => document.querySelector('#configSaveStatus')?.textContent?.includes('sucesso')",
+                    timeout=12000,
+                )
+                cfg = page.request.get(f"{local_url}/api/config").json()
+                assert cfg["comment"] == "V145_SLOW_CONFIG_TEST", "Edição durante GET lento foi perdida"
+                page.evaluate("""() => {
+                    window.fetch = window.__v145PrevFetch;
+                    delete window.__v145PrevFetch;
+                    delete window.__v145DelayNextConfigGet;
+                }""")
+
+                # 3) O modal deve mostrar o erro verdadeiro retornado pelo backend,
+                # em vez da mensagem genérica da v1.14.4.
+                page.locator('input[name="comment"]').fill("V145_REAL_ERROR_TEST")
+                page.evaluate("""() => {
+                    window.__v145PrevFetch = window.fetch;
+                    window.__v145FailNextConfigPost = true;
+                    const previous = window.__v145PrevFetch.bind(window);
+                    window.fetch = (input, init = {}) => {
+                        const url = typeof input === 'string' ? input : String(input?.url || '');
+                        const method = String(init?.method || input?.method || 'GET').toUpperCase();
+                        if (window.__v145FailNextConfigPost && url.includes('/api/config') && method === 'POST') {
+                            window.__v145FailNextConfigPost = false;
+                            return Promise.resolve(new Response(
+                                JSON.stringify({error:'ERRO REAL TESTE V145'}),
+                                {status:400, headers:{'Content-Type':'application/json'}}
+                            ));
+                        }
+                        return previous(input, init);
+                    };
+                }""")
                 page.locator('.tab[data-tab="stations"]').click()
                 page.locator("#unsavedConfigModal").wait_for(state="visible")
                 page.locator("#unsavedSaveButton").click()
-                page.wait_for_function(
-                    "() => document.querySelector('.tab[data-tab=stations]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
-                    timeout=15000,
-                )
-                cfg = page.request.get(f"{local_url}/api/config").json()
-                assert cfg["comment"] == "Beacon 1.14.4 salvo no modal", "Modal Salvar e sair não persistiu"
-
-                page.locator('.tab[data-tab="config"]').click()
-                # A abertura da aba dispara GET /api/config assíncrono.
-                # Esperar a recarga antes de editar evita corrida do próprio
-                # cenário de teste com o preenchimento efetuado pela API.
-                page.wait_for_timeout(900)
-                page.locator('input[name="comment"]').fill("Alteração para cancelar")
-                page.locator('.tab[data-tab="stations"]').click()
                 page.locator("#unsavedConfigModal").wait_for(state="visible")
+                page.wait_for_function(
+                    "() => document.querySelector('#unsavedConfigActionStatus')?.textContent?.includes('ERRO REAL TESTE V145')",
+                    timeout=10000,
+                )
+                page.evaluate("""() => {
+                    window.fetch = window.__v145PrevFetch;
+                    delete window.__v145PrevFetch;
+                    delete window.__v145FailNextConfigPost;
+                }""")
+
+                # Continuar na Configuração é local e preserva a edição.
                 page.locator("#unsavedCancelButton").click()
                 assert page.locator('.tab[data-tab="config"]').get_attribute("class").find("active") >= 0
-                assert page.locator('input[name="comment"]').input_value() == "Alteração para cancelar"
+                assert page.locator('input[name="comment"]').input_value() == "V145_REAL_ERROR_TEST"
 
+                # 4) Descartar deve funcionar mesmo se GET /api/config estiver
+                # indisponível; nenhum GET deve ser necessário para abandonar edições.
                 page.locator('.tab[data-tab="stations"]').click()
                 page.locator("#unsavedConfigModal").wait_for(state="visible")
+                page.evaluate("""() => {
+                    window.__v145PrevFetch = window.fetch;
+                    window.__v145DiscardConfigGets = 0;
+                    const previous = window.__v145PrevFetch.bind(window);
+                    window.fetch = (input, init = {}) => {
+                        const url = typeof input === 'string' ? input : String(input?.url || '');
+                        const method = String(init?.method || input?.method || 'GET').toUpperCase();
+                        if (url.includes('/api/config') && method === 'GET') {
+                            window.__v145DiscardConfigGets += 1;
+                            return Promise.reject(new Error('V145_DISCARD_OFFLINE_TEST'));
+                        }
+                        return previous(input, init);
+                    };
+                }""")
                 page.locator("#unsavedDiscardButton").click()
                 page.wait_for_function(
                     "() => document.querySelector('.tab[data-tab=stations]')?.classList.contains('active') && document.querySelector('#unsavedConfigModal')?.classList.contains('hidden')",
-                    timeout=15000,
+                    timeout=10000,
                 )
-                cfg = page.request.get(f"{local_url}/api/config").json()
-                assert cfg["comment"] == "Beacon 1.14.4 salvo no modal", "Descartar alterou config persistida"
+                assert page.evaluate("() => window.__v145DiscardConfigGets") == 0
+                page.evaluate("""() => {
+                    window.fetch = window.__v145PrevFetch;
+                    delete window.__v145PrevFetch;
+                    delete window.__v145DiscardConfigGets;
+                }""")
 
+                # Ao voltar, o valor persistido antes do erro deve reaparecer.
+                page.locator('.tab[data-tab="config"]').click()
+                page.wait_for_timeout(800)
+                assert page.locator('input[name="comment"]').input_value() == "V145_SLOW_CONFIG_TEST"
+                page.locator('.tab[data-tab="stations"]').click()
                 page.locator('#stationsTable tbody .station-row[data-callsign="PY2ABC-9"]').click(button="right")
                 page.locator("#stationQuickMessagePanel").wait_for(state="visible", timeout=10000)
                 assert page.locator("#stationQuickMessageCall").inner_text() == "PY2ABC-9"
