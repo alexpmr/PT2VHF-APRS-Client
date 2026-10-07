@@ -208,7 +208,7 @@
       '<div class="satellite-service-controls"><strong>'+esc(tr('Serviços monitorados','Monitored services','Servicios monitorizados','Services surveillés'))+'</strong>'+
       ['aprs','sstv','telemetry','voice','packet'].map(key=>'<label><input type="checkbox" data-satellite-service="'+key+'" '+((m.service_states?.[key]??true)?'checked':'')+'><span>'+esc({aprs:'APRS',sstv:'SSTV',telemetry:'Telemetria',voice:'Voz/FM',packet:'Packet/AX.25'}[key])+'</span></label>').join('')+
       '</div>';
-    $('[data-satellite-service]',host).forEach(input=>input.addEventListener('change',async()=>{
+    host.querySelectorAll('[data-satellite-service]').forEach(input=>input.addEventListener('change',async()=>{
       const services={...(m.service_states||{})};services[input.dataset.satelliteService]=input.checked;
       try{const saved=await req('/api/v113/satellites/'+encodeURIComponent(norad)+'/operation',{method:'POST',body:JSON.stringify({state:m.operational_state||'monitor',services})});m.service_states=saved.services;await loadPasses();window.dispatchEvent(new CustomEvent('pt2vhf:satellite-selection-changed'));}catch(e){console.warn(e);}
     }));
