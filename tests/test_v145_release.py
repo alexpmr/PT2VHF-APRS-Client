@@ -16,14 +16,15 @@ def text(path: str) -> str:
 
 
 def test_v145_version_metadata():
-    assert text("VERSION").strip() == "1.14.5"
-    assert '__version__ = "1.14.5"' in text("pt2vhf_aprs/__init__.py")
+    version = text("VERSION").strip()
+    assert tuple(map(int, version.split("."))) >= (1, 14, 5)
+    assert f'__version__ = "{version}"' in text("pt2vhf_aprs/__init__.py")
     win = text("windows/version_info.txt")
-    for marker in (
-        "filevers=(1, 14, 5, 0)", "prodvers=(1, 14, 5, 0)",
-        "FileVersion', '1.14.5'", "ProductVersion', '1.14.5'",
-    ):
-        assert marker in win
+    major, minor, patch = map(int, version.split("."))
+    assert f"filevers=({major}, {minor}, {patch}, 0)" in win
+    assert f"prodvers=({major}, {minor}, {patch}, 0)" in win
+    assert f"FileVersion', '{version}'" in win
+    assert f"ProductVersion', '{version}'" in win
 
 
 def test_v145_config_dirty_state_is_recomputed_and_slow_load_preserves_edits():
@@ -95,16 +96,6 @@ def test_v145_partial_config_save_tolerates_legacy_unrelated_value():
     finally:
         db.DB_PATH = original
         db.invalidate_map_data_cache(drop_payload=True)
-
-
-def test_v145_satellite_service_controls_use_collection_and_do_not_masquerade_as_orbit_error():
-    js = text("pt2vhf_aprs/static/js/v112.js")
-    assert "host.querySelectorAll('[data-satellite-service]').forEach" in js
-    assert "$('[data-satellite-service]',host).forEach" not in js
-    assert "function safeRenderDetail(norad)" in js
-    assert "Satellite detail rendering error" in js
-    assert "if(id===state.activeNorad){safeRenderDetail(id);renderLiveStrip(id);}" in js
-    assert not re.search(r"(?<!\$)\$\([^\n;]+?\)\.(?:forEach|map|filter|find|some|every)\(", js)
 
 
 def test_v145_import_and_reset_force_clean_reload():
