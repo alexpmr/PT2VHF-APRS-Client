@@ -3,6 +3,20 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.5": {
+        "title": "Configuração robusta em instalação real e correção SAT",
+        "items": [
+            "Salvar configuração recalcula as diferenças reais e envia somente os campos alterados.",
+            "Salvar e sair exibe o erro verdadeiro do backend e só navega depois de persistir.",
+            "Descartar alterações restaura o baseline local sem depender de rede/backend.",
+            "Continuar na Configuração preserva os valores editados sem chamadas externas.",
+            "GET de configuração atrasado não apaga nem rebaselina uma edição feita pelo usuário.",
+            "Configurações migradas podem salvar um campo independente mesmo que outro valor legado esteja fora da faixa atual.",
+            "Serviços monitorados do SAT deixam de usar $().forEach e passam a querySelectorAll().",
+            "Falhas de renderização SAT deixam de ser rotuladas como erro de cálculo orbital.",
+            "Novos testes de interface reproduzem botão inferior, backend lento, erro real e descarte offline.",
+        ],
+    },
     "1.14.4": {
         "title": "Configuração, enlaces Internet e envio rápido por clique direito",
         "items": [
