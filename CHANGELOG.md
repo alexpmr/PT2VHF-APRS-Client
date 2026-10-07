@@ -7,7 +7,11 @@
 - **Mapa:** enlaces exclusivamente Internet/APRS-IS deixam de ser ocultados quando filtros de visibilidade dos marcadores de estações/iGates estão desativados. A camada Enlaces iGate/APRS-IS permanece independente e respeita seu próprio liga/desliga.
 - **Classificação:** conexões qAr/APRS-IS confirmadas permanecem Internet tracejada; qAR/qAO RF e evidência mista seguem a política existente sem criar rotas fictícias.
 - **Ícones:** pictograma de antena de alto contraste específico para ícones do sistema (Windows/Linux/macOS), legível em 16/24 px; logomarca oficial preservada no cabeçalho e manual.
-- **Validação:** testes automatizados de regressão mais testes reais em Chromium/Playwright durante a criação das telas do manual para salvar, descartar, cancelar, botão direito e presença da linha Internet.
+- **Alertas:** corrigido `$(...).forEach is not a function` no módulo de alertas configuráveis; coleção passa a usar `$()` tanto no autosave quanto em Salvar alertas.
+- **Mapa — janela curta:** adicionados períodos de **15 min** e **30 min**. Topologia, RF ouvido, KML e cobertura RF aceitam frações de hora sem truncar para período completo.
+- **SAT responsivo:** a grade muda para uma coluna até 1320 px, preserva no mínimo ~340 px para a lateral quando em duas colunas, permite quebra de nomes e invalida o tamanho do Leaflet via ResizeObserver.
+- **Banco/backend:** a abertura de Configuração usa saúde SQLite leve, sem `PRAGMA quick_check` e `COUNT(*)` integrais nas tabelas grandes; checagem profunda permanece nas rotinas explícitas/testes.
+- **Validação:** testes automatizados de regressão mais testes reais em Chromium/Playwright durante a criação das telas do manual para salvar, descartar, cancelar, alertas, botão direito, enlace Internet e responsividade SAT.
 - TM-D700 permanece encerrado administrativamente: não há alegação de teste físico RF.
 - Release completa Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
