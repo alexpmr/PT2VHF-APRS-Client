@@ -1,3 +1,28 @@
+## Novo — Estatísticas: recordes dos enlaces/rotas RF mais longos
+
+- Adicionar na aba **Estatísticas** um bloco de **Recordes RF** com ranking das rotas/enlaces completos entre estações com maior distância total observada.
+- Exibir em formato de ranking, por exemplo:
+  - `1 — PT2VHF → PP2AX → PY2ASD — 182 km`
+  - `2 — ...`
+- Considerar somente caminhos compostos por **enlaces RF reais observados**, sem usar APRS-IS/Internet para completar a rota.
+- Para cada recorde, mostrar pelo menos:
+  - posição no ranking;
+  - estação de origem;
+  - estação de destino;
+  - sequência completa dos hops/intermediários;
+  - quantidade de hops;
+  - distância de cada trecho;
+  - **distância total da rota RF**;
+  - data/hora da evidência mais recente da rota;
+  - quantidade de observações/evidências disponíveis, quando houver.
+- Ordenar por **maior distância total RF**.
+- Respeitar o período selecionado na aba Estatísticas; quando o período for alterado, recalcular o ranking.
+- Evitar duplicidade da mesma rota em sentido inverso quando representar o mesmo caminho observado; tratar `A → B → C` e `C → B → A` como o mesmo recorde, salvo quando houver evidência direcional relevante que justifique separação.
+- Quando houver múltiplas rotas entre o mesmo par de estações, considerar separadamente as rotas com sequência de hops distinta.
+- Permitir clicar em um recorde para abrir/localizar a rota correspondente no mapa, reutilizando o modo de análise de rotas RF já existente.
+- Reutilizar o mesmo grafo/topologia RF do recurso de pesquisa de rotas para manter coerência de classificação e cálculo de distância.
+- Criar testes para ranking, cálculo de distância total, múltiplos hops, deduplicação de sentido inverso, exclusão de Internet/APRS-IS e filtro por período.
+
 ## Novo — Estatísticas: exibir blocos completos sem rolagem interna
 
 - Remover, sempre que possível, as **barras de rolagem internas** dos blocos/cards da aba **Estatísticas**.
