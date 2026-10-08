@@ -2057,6 +2057,221 @@ def list_topology_edges(hours: float = 0) -> list[dict[str, Any]]:
         _topology_query_lock.release()
 
 
+
+def _rf_route_callsign(value: Any) -> str:
+    """Normaliza indicativos usados pela análise de rotas RF."""
+    call = str(value or "").upper().strip()
+    if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", call):
+        return ""
+    return call
+
+
+def _rf_route_graph(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]:
+    """Monta grafo não-direcional apenas com enlaces que possuem evidência RF real."""
+    graph: dict[str, dict[str, dict[str, Any]]] = {}
+    positions: dict[str, tuple[float, float]] = {}
+    merged: dict[tuple[str, str], dict[str, Any]] = {}
+
+    for raw in list_topology_edges(hours):
+        if str(raw.get("kind") or "").lower() == "igate":
+            continue
+        source = _rf_route_callsign(raw.get("source"))
+        target = _rf_route_callsign(raw.get("target"))
+        if not source or not target or source == target:
+            continue
+        if int(raw.get("rf_transport_count") or 0) <= 0 and int(raw.get("rf_path_count") or 0) <= 0:
+            # Linhas RF antigas podem não ter os novos contadores; nesse caso a
+            # própria classificação kind='rf' continua sendo a evidência legada.
+            if str(raw.get("kind") or "").lower() != "rf":
+                continue
+
+        slat = raw.get("source_lat")
+        slon = raw.get("source_lon")
+        tlat = raw.get("target_lat")
+        tlon = raw.get("target_lon")
+        if not (_valid_geo_position(slat, slon) and _valid_geo_position(tlat, tlon)):
+            continue
+        positions[source] = (float(slat), float(slon))
+        positions[target] = (float(tlat), float(tlon))
+
+        a, b = sorted((source, target))
+        item = merged.get((a, b))
+        distance = round(haversine_km(*positions[source], *positions[target]), 3)
+        candidate = {
+            "a": a,
+            "b": b,
+            "packet_count": int(raw.get("packet_count") or 0),
+            "first_seen": str(raw.get("first_seen") or ""),
+            "last_seen": str(raw.get("last_seen") or ""),
+            "distance_km": distance,
+            "classification_source": str(raw.get("classification_source") or "RF observado"),
+            "rf_transport_count": int(raw.get("rf_transport_count") or 0),
+            "rf_path_count": int(raw.get("rf_path_count") or 0),
+        }
+        if item is None:
+            merged[(a, b)] = candidate
+        else:
+            item["packet_count"] = int(item.get("packet_count") or 0) + candidate["packet_count"]
+            item["rf_transport_count"] = int(item.get("rf_transport_count") or 0) + candidate["rf_transport_count"]
+            item["rf_path_count"] = int(item.get("rf_path_count") or 0) + candidate["rf_path_count"]
+            first_values = [x for x in (item.get("first_seen"), candidate["first_seen"]) if x]
+            last_values = [x for x in (item.get("last_seen"), candidate["last_seen"]) if x]
+            item["first_seen"] = min(first_values) if first_values else ""
+            item["last_seen"] = max(last_values) if last_values else ""
+
+    for (a, b), edge in merged.items():
+        graph.setdefault(a, {})[b] = edge
+        graph.setdefault(b, {})[a] = edge
+    return graph, positions
+
+
+def list_rf_route_candidates(source: str, hours: float = 0, query: str = "", limit: int = 80) -> list[dict[str, Any]]:
+    """Estações alcançáveis por um caminho composto exclusivamente por enlaces RF observados."""
+    source_call = _rf_route_callsign(source)
+    if not source_call:
+        return []
+    query_norm = str(query or "").upper().strip()
+    graph, _positions = _rf_route_graph(hours)
+    if source_call not in graph:
+        return []
+
+    queue: list[tuple[str, int]] = [(source_call, 0)]
+    visited = {source_call}
+    candidates: list[dict[str, Any]] = []
+    while queue:
+        node, hops = queue.pop(0)
+        neighbors = sorted(
+            graph.get(node, {}).items(),
+            key=lambda pair: (str(pair[1].get("last_seen") or ""), int(pair[1].get("packet_count") or 0)),
+            reverse=True,
+        )
+        for nxt, edge in neighbors:
+            if nxt in visited:
+                continue
+            visited.add(nxt)
+            next_hops = hops + 1
+            queue.append((nxt, next_hops))
+            if query_norm and query_norm not in nxt:
+                continue
+            candidates.append({
+                "callsign": nxt,
+                "hops": next_hops,
+                "last_seen": str(edge.get("last_seen") or ""),
+                "packet_count": int(edge.get("packet_count") or 0),
+            })
+
+    candidates.sort(key=lambda item: (
+        0 if query_norm and str(item["callsign"]).startswith(query_norm) else 1,
+        -int(item.get("packet_count") or 0),
+        int(item.get("hops") or 0),
+        str(item.get("callsign") or ""),
+    ))
+    return candidates[: max(1, min(int(limit or 80), 200))]
+
+
+def list_rf_routes(
+    source: str,
+    target: str,
+    hours: float = 0,
+    max_routes: int = 12,
+    max_hops: int = 8,
+) -> dict[str, Any]:
+    """Lista caminhos simples entre dois indicativos usando somente enlaces RF observados."""
+    source_call = _rf_route_callsign(source)
+    target_call = _rf_route_callsign(target)
+    if not source_call or not target_call or source_call == target_call:
+        return {"source": source_call, "target": target_call, "direct_distance_km": None, "routes": []}
+
+    graph, positions = _rf_route_graph(hours)
+    if source_call not in graph or target_call not in graph:
+        direct = None
+        if source_call in positions and target_call in positions:
+            direct = round(haversine_km(*positions[source_call], *positions[target_call]), 3)
+        return {"source": source_call, "target": target_call, "direct_distance_km": direct, "routes": []}
+
+    route_limit = max(1, min(int(max_routes or 12), 25))
+    hop_limit = max(1, min(int(max_hops or 8), 12))
+    found: list[list[str]] = []
+
+    def walk(node: str, path: list[str]) -> None:
+        if len(found) >= route_limit * 4:
+            return
+        hops = len(path) - 1
+        if hops >= hop_limit:
+            return
+        neighbors = sorted(
+            graph.get(node, {}).items(),
+            key=lambda pair: (str(pair[1].get("last_seen") or ""), int(pair[1].get("packet_count") or 0)),
+            reverse=True,
+        )
+        for nxt, _edge in neighbors:
+            if nxt in path:
+                continue
+            next_path = path + [nxt]
+            if nxt == target_call:
+                found.append(next_path)
+                continue
+            walk(nxt, next_path)
+
+    walk(source_call, [source_call])
+
+    routes: list[dict[str, Any]] = []
+    for nodes in found:
+        route_edges: list[dict[str, Any]] = []
+        total = 0.0
+        latest_values: list[str] = []
+        observations = 0
+        for index in range(len(nodes) - 1):
+            a, b = nodes[index], nodes[index + 1]
+            edge = dict(graph[a][b])
+            distance = float(edge.get("distance_km") or 0.0)
+            total += distance
+            observations += int(edge.get("packet_count") or 0)
+            if edge.get("last_seen"):
+                latest_values.append(str(edge["last_seen"]))
+            route_edges.append({
+                "source": a,
+                "target": b,
+                "source_lat": positions[a][0],
+                "source_lon": positions[a][1],
+                "target_lat": positions[b][0],
+                "target_lon": positions[b][1],
+                "distance_km": round(distance, 3),
+                "packet_count": int(edge.get("packet_count") or 0),
+                "first_seen": edge.get("first_seen") or "",
+                "last_seen": edge.get("last_seen") or "",
+                "classification_source": edge.get("classification_source") or "RF observado",
+            })
+        routes.append({
+            "nodes": nodes,
+            "hops": len(nodes) - 1,
+            "distance_km": round(total, 3),
+            # Para uma rota completa, a evidência limitante é o trecho menos recente.
+            "route_evidence_at": min(latest_values) if latest_values else "",
+            "observations": observations,
+            "edges": route_edges,
+        })
+
+    # Rotas mais recentes/consistentes primeiro; em empate, menos hops e menor distância.
+    routes.sort(key=lambda item: (
+        str(item.get("route_evidence_at") or ""),
+        -int(item.get("observations") or 0),
+        -int(item.get("hops") or 0),
+        -float(item.get("distance_km") or 0.0),
+    ), reverse=True)
+
+    direct_distance = None
+    if source_call in positions and target_call in positions:
+        direct_distance = round(haversine_km(*positions[source_call], *positions[target_call]), 3)
+
+    return {
+        "source": source_call,
+        "target": target_call,
+        "direct_distance_km": direct_distance,
+        "routes": routes[:route_limit],
+    }
+
+
 def _aprs_tocall_from_raw(raw: str) -> str:
     """Extrai o destination/TOCALL do cabeçalho TNC2."""
     match = re.match(r"^[^>\r\n]+>([^,:>\r\n]+)", str(raw or "").strip())

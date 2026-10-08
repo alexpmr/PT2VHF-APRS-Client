@@ -207,6 +207,66 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   color: var(--text);
   background: var(--panel-2);
 }
+.rf-route-search {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(92px, 118px) 18px minmax(140px, 190px) auto auto;
+  grid-template-rows: auto auto;
+  align-items: end;
+  gap: 3px 5px;
+  min-height: 34px;
+  padding: 3px 6px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 7px;
+  background: var(--panel-2);
+}
+.rf-route-search label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.rf-route-search label > span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+.rf-route-search input {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.rf-route-search .btn {
+  min-height: 26px;
+  padding: 3px 8px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.rf-route-arrow {
+  align-self: center;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-weight: 900;
+}
+.rf-route-candidate-status {
+  grid-column: 1 / -1;
+  min-width: 0;
+  max-width: 390px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .map-items-control {
   position: relative;
   flex: 0 0 auto;
@@ -3091,6 +3151,124 @@ html[data-theme="light"] .traffic-animation-panel {
   pointer-events: none;
 }
 .map-hover-info-panel.hidden { display: none; }
+.rf-route-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 910;
+  width: min(430px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(120,160,190,.65);
+  border-radius: 10px;
+  background: rgba(14,20,26,.96);
+  color: var(--text);
+  box-shadow: 0 10px 32px rgba(0,0,0,.42);
+  backdrop-filter: blur(6px);
+}
+.rf-route-panel.hidden { display: none; }
+.rf-route-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 11px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.rf-route-panel-header > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rf-route-panel-header span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.rf-route-panel-header strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.rf-route-panel-header .btn {
+  min-width: 30px;
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: 18px;
+}
+.rf-route-panel-body {
+  overflow: auto;
+  padding: 8px;
+}
+.rf-route-summary,
+.rf-route-empty {
+  margin-bottom: 7px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  background: rgba(59,166,255,.08);
+  color: var(--muted);
+  font-size: 11px;
+}
+.rf-route-summary strong { color: var(--text); }
+.rf-route-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 0 7px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.rf-route-card:hover,
+.rf-route-card.selected {
+  border-color: var(--accent);
+  background: rgba(59,166,255,.11);
+}
+.rf-route-card-title {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.rf-route-card > strong {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.rf-route-card > span,
+.rf-route-card > small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.rf-route-edge-list {
+  display: grid;
+  gap: 3px;
+  margin-top: 4px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.rf-route-edge-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  align-items: center;
+  font-size: 10px;
+}
+.rf-route-edge-row span { overflow-wrap: anywhere; }
+.rf-route-edge-row strong { font-size: 10px; }
+.rf-route-edge-row small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 9px;
+}
+
 .map-hover-info-header {
   display: flex;
   flex-direction: column;

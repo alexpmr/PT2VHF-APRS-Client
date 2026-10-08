@@ -114,6 +114,22 @@
       </select>
     </label>
 
+    <div class="rf-route-search" aria-label="Pesquisa e rota RF">
+      <label>
+        <span>Indicativo</span>
+        <input id="rfRouteSource" type="text" maxlength="9" autocomplete="off" placeholder="PT2VHF" aria-label="Primeiro indicativo">
+      </label>
+      <span class="rf-route-arrow" aria-hidden="true">↔</span>
+      <label>
+        <span>Destino RF</span>
+        <input id="rfRouteTarget" type="text" maxlength="9" autocomplete="off" list="rfRouteTargetList" placeholder="Somente rotas completas" aria-label="Segundo indicativo">
+        <datalist id="rfRouteTargetList"></datalist>
+      </label>
+      <button id="rfRouteApply" type="button" class="btn secondary">Rotas RF</button>
+      <button id="rfRouteClear" type="button" class="btn secondary" title="Limpar análise de rota">Limpar</button>
+      <small id="rfRouteCandidateStatus" class="rf-route-candidate-status"></small>
+    </div>
+
     <div class="map-items-control">
       <button id="mapItemsButton" type="button" class="btn secondary" aria-haspopup="true" aria-expanded="false">Ver ▾</button>
       <div id="mapItemsMenu" class="map-items-menu map-view-tree-menu hidden" role="menu">
@@ -188,6 +204,16 @@
             <strong id="mapHoverInfoTitle">—</strong>
           </div>
           <div id="mapHoverInfoBody" class="map-hover-info-body"></div>
+        </aside>
+        <aside id="rfRoutePanel" class="rf-route-panel hidden" aria-live="polite">
+          <div class="rf-route-panel-header">
+            <div>
+              <span>Análise de rota RF</span>
+              <strong id="rfRoutePanelTitle">—</strong>
+            </div>
+            <button id="rfRoutePanelClose" type="button" class="btn secondary" title="Fechar e restaurar todos os enlaces">×</button>
+          </div>
+          <div id="rfRoutePanelBody" class="rf-route-panel-body"></div>
         </aside>
       </div>
       <div class="traffic-animation-panel map-traffic-panel hidden">
