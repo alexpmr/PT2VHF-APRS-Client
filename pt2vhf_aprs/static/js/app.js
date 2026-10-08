@@ -75,6 +75,9 @@
     rfRouteSelectedIndex: -1,
     rfRouteNodeMarkers: new Map(),
     rfRouteCandidateTimer: null,
+    rfRouteOriginTimer: null,
+    rfRouteExclusiveNodes: null,
+    rfRouteRecords: [],
     mapLegendElement: null,
     mapLegendCollapsed: localStorage.getItem('pt2vhf_map_legend_collapsed') === '1',
     trafficReplayLayers: new Set(),
@@ -2060,11 +2063,21 @@
 
     if (rfSource && rfSource.dataset.bound !== '1') {
       rfSource.dataset.bound = '1';
+      rfSource.addEventListener('focus', () => { void refreshRfRouteOrigins(rfSource.value); });
+      rfSource.addEventListener('input', () => {
+        rfSource.value = rfSource.value.toUpperCase();
+        if (rfTarget) rfTarget.value = '';
+        if (state.rfRouteOriginTimer) clearTimeout(state.rfRouteOriginTimer);
+        state.rfRouteOriginTimer = setTimeout(() => {
+          void refreshRfRouteOrigins(rfSource.value);
+        }, 140);
+      });
       rfSource.addEventListener('change', async () => {
         rfSource.value = normalizedCall(rfSource.value);
         if (rfTarget) rfTarget.value = '';
         locateRfCallsign(rfSource.value);
         await clearRfRouteAnalysis();
+        await refreshRfRouteOrigins(rfSource.value);
         await refreshRfRouteCandidates('');
       });
       rfSource.addEventListener('keydown', event => {
@@ -2105,6 +2118,8 @@
       rfClear.addEventListener('click', async () => {
         if (rfSource) rfSource.value = '';
         if (rfTarget) rfTarget.value = '';
+        const sourceList = $('#rfRouteSourceList');
+        if (sourceList) sourceList.innerHTML = '';
         const list = $('#rfRouteTargetList');
         if (list) list.innerHTML = '';
         const status = $('#rfRouteCandidateStatus');
@@ -2357,6 +2372,23 @@
   }
 
   function addMapControls() {
+    const contextBar = $('#mapContextBar');
+    if (contextBar && contextBar.dataset.resizeBound !== '1') {
+      contextBar.dataset.resizeBound = '1';
+      const syncContextHeight = () => {
+        const height = Math.max(0, Math.ceil(contextBar.getBoundingClientRect().height || 0));
+        document.documentElement.style.setProperty('--map-context-height', height + 'px');
+        if (state.map) setTimeout(() => state.map.invalidateSize(), 0);
+      };
+      syncContextHeight();
+      if (window.ResizeObserver) {
+        const observer = new ResizeObserver(syncContextHeight);
+        observer.observe(contextBar);
+        contextBar._pt2vhfResizeObserver = observer;
+      } else {
+        window.addEventListener('resize', syncContextHeight);
+      }
+    }
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
     state.topologyHours = statisticsPeriodValue(state.topologyHours);
     const repairedVisibility = repairMapVisibilityStateV186();
@@ -2378,6 +2410,7 @@
         localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
         await loadMapData();
         if ($('#rfRouteSource')?.value.trim()) {
+          await refreshRfRouteOrigins($('#rfRouteSource').value);
           await refreshRfRouteCandidates('', { preserveTarget: true });
           if (state.rfRouteAnalysis && $('#rfRouteTarget')?.value.trim()) await applyRfRouteAnalysis();
         }
@@ -2924,12 +2957,97 @@
     });
   }
 
+  function setTransientRouteFocusVisibility(visible) {
+    const method = visible ? 'addLayer' : 'removeLayer';
+    for (const layer of state.trafficReplayLayers) {
+      try { state.map?.[method]?.(layer); } catch (_) {}
+    }
+    for (const layer of state.queryTraceLayers) {
+      try { state.map?.[method]?.(layer); } catch (_) {}
+    }
+  }
+
+  function fitRfRouteBounds(routes) {
+    if (!state.map) return;
+    const points = [];
+    for (const route of routes || []) {
+      for (const edge of route.edges || []) {
+        points.push([Number(edge.source_lat), Number(edge.source_lon)]);
+        points.push([Number(edge.target_lat), Number(edge.target_lon)]);
+      }
+    }
+    const valid = points.filter(point => point.every(Number.isFinite));
+    if (valid.length) state.map.fitBounds(valid, { padding: [42, 42], maxZoom: 13 });
+  }
+
+  async function focusRfRecordRoute(route) {
+    if (!route || !Array.isArray(route.nodes) || route.nodes.length < 2) return;
+    const source = normalizedCall(route.source || route.nodes[0]);
+    const target = normalizedCall(route.target || route.nodes[route.nodes.length - 1]);
+    state.mapPeriodHours = topologyPeriodValue(state.topologyHours);
+    const mapPeriod = $('#mapPeriodHours');
+    if (mapPeriod) mapPeriod.value = String(state.mapPeriodHours);
+    localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
+    state.rfRouteExclusiveNodes = new Set(route.nodes.map(normalizedCall).filter(Boolean));
+    state.rfRouteAnalysis = {
+      source,
+      target,
+      direct_distance_km: Number(route.direct_distance_km),
+      routes: [route],
+      record_focus: true,
+    };
+    state.rfRouteSelectedIndex = 0;
+    const sourceInput = $('#rfRouteSource');
+    const targetInput = $('#rfRouteTarget');
+    if (sourceInput) sourceInput.value = source;
+    if (targetInput) targetInput.value = target;
+    setTransientRouteFocusVisibility(false);
+    activateTab('map');
+    await loadMapData();
+    await loadTopology();
+    renderRfRouteNodeMarkers();
+    renderRfRoutePanel();
+    focusRfRoute(0);
+    fitRfRouteBounds([route]);
+  }
+
+  async function refreshRfRouteOrigins(query = '') {
+    const input = $('#rfRouteSource');
+    const list = $('#rfRouteSourceList');
+    if (!input || !list) return [];
+    try {
+      const url = '/api/topology/rf-origins?hours=' + encodeURIComponent(state.mapPeriodHours) +
+        '&q=' + encodeURIComponent(query || '') + '&limit=100';
+      const rows = await api(url);
+      list.innerHTML = rows.map(item =>
+        '<option value="' + escapeHtml(item.callsign) + '">' +
+        Number(item.links || 0) + ' enlaces · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
+      ).join('');
+      return rows;
+    } catch (_) {
+      list.innerHTML = '';
+      return [];
+    }
+  }
+
   async function clearRfRouteAnalysis(options = {}) {
+    const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
     state.rfRouteAnalysis = null;
     state.rfRouteSelectedIndex = -1;
+    state.rfRouteExclusiveNodes = null;
     clearRfRouteNodeMarkers();
     renderRfRoutePanel();
-    if (options.reload !== false) await loadTopology();
+    if (hadExclusiveFocus) setTransientRouteFocusVisibility(true);
+    if (options.reload !== false) {
+      if (hadExclusiveFocus) {
+        await loadMapData();
+        if (!state.topologyEnabled) clearTopologyLines();
+      } else if (state.topologyEnabled) {
+        await loadTopology();
+      } else {
+        clearTopologyLines();
+      }
+    }
   }
 
   async function refreshRfRouteCandidates(query = '', options = {}) {
@@ -2996,20 +3114,19 @@
         '&hours=' + encodeURIComponent(state.mapPeriodHours) +
         '&max_routes=12&max_hops=8';
       const payload = await api(url);
+      const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
+      state.rfRouteExclusiveNodes = null;
+      if (hadExclusiveFocus) {
+        setTransientRouteFocusVisibility(true);
+        await loadMapData();
+      }
       state.rfRouteAnalysis = payload;
       state.rfRouteSelectedIndex = -1;
       await loadTopology();
       renderRfRouteNodeMarkers();
       renderRfRoutePanel();
-      const points = [];
-      for (const route of payload.routes || []) {
-        for (const edge of route.edges || []) {
-          points.push([Number(edge.source_lat), Number(edge.source_lon)]);
-          points.push([Number(edge.target_lat), Number(edge.target_lon)]);
-        }
-      }
-      const valid = points.filter(point => point.every(Number.isFinite));
-      if (valid.length) state.map.fitBounds(valid, { padding: [35, 35], maxZoom: 13 });
+      state.rfRouteExclusiveNodes = null;
+      fitRfRouteBounds(payload.routes || []);
       if (!payload.routes || !payload.routes.length) {
         toast(ui('Não existe rota RF completa observada entre esses indicativos neste período.', 'No complete RF route was observed between these callsigns in this period.'), 'error');
       }
@@ -3065,7 +3182,7 @@
   }
 
   async function loadTopology() {
-    if (!state.map || !state.topologyEnabled || state.activeTab !== 'map') return;
+    if (!state.map || (!state.topologyEnabled && !state.rfRouteAnalysis) || state.activeTab !== 'map') return;
     if (state.topologyLoadBusy) return;
     state.topologyLoadBusy = true;
     try {
@@ -3728,7 +3845,10 @@
       const periodObjects = allObjects.filter(objectMatchesMapPeriod);
       renderMapViewTree(periodStations, periodObjects);
 
-      const visibleStations = periodStations.filter(stationMatchesViewFilter);
+      const routeFocusNodes = state.rfRouteExclusiveNodes;
+      const visibleStations = periodStations
+        .filter(stationMatchesViewFilter)
+        .filter(station => !routeFocusNodes || routeFocusNodes.has(normalizedCall(station.callsign)));
       state.mapKnownCallsigns = new Set(allStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
       state.mapVisibleCallsigns = new Set(visibleStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
 
@@ -3774,7 +3894,7 @@
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
-      const visibleObjects = periodObjects.filter(objectMatchesViewFilter);
+      const visibleObjects = routeFocusNodes ? [] : periodObjects.filter(objectMatchesViewFilter);
       const activeObjects = new Set(visibleObjects.map(object => String(object.name || '')));
       for (const [name, marker] of state.objectMarkers) {
         if (!activeObjects.has(name)) {
@@ -3820,7 +3940,7 @@
       }
 
       const grouped = new Map();
-      if (state.tracklogEnabled) {
+      if (state.tracklogEnabled && !routeFocusNodes) {
         for (const track of (Array.isArray(data.tracks) ? data.tracks : [])) {
           if (!trackMatchesMapPeriod(track)) continue;
           const call = normalizedCall(track.callsign);
@@ -8691,6 +8811,33 @@
     </div>`;
   }
 
+  function renderRfRouteRecords(records) {
+    state.rfRouteRecords = Array.isArray(records) ? records.slice() : [];
+    if (!state.rfRouteRecords.length) {
+      return '<div class="topology-stat-group rf-route-records-group"><h4>' +
+        escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+        '</h4><span class="hint">' +
+        escapeHtml(ui('Nenhuma rota RF completa com posição conhecida neste período.', 'No complete RF route with known positions in this period.')) +
+        '</span></div>';
+    }
+    const rows = state.rfRouteRecords.map((route, index) => {
+      const path = (route.nodes || []).join(' → ');
+      const meta = Number(route.hops || 0) + ' hops · ' +
+        Number(route.observations || 0).toLocaleString(currentLocale()) + ' obs. · ' +
+        ui('evidência', 'evidence') + ': ' + fmtDate(route.route_evidence_at);
+      return '<button type="button" class="rf-route-record" data-rf-route-record-index="' + index + '">' +
+        '<span class="rf-route-record-rank">' + (index + 1) + 'º</span>' +
+        '<span class="rf-route-record-path">' + escapeHtml(path) + '</span>' +
+        '<span class="rf-route-record-distance">' + escapeHtml(formatRfDistanceKm(route.distance_km)) + '</span>' +
+        '<span class="rf-route-record-meta">' + escapeHtml(meta) + '</span></button>';
+    }).join('');
+    return '<div class="topology-stat-group rf-route-records-group"><h4>' +
+      escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+      '</h4><div class="hint">' +
+      escapeHtml(ui('Somente enlaces RF observados. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Observed RF links only. Click a route to show it by itself on the map.')) +
+      '</div><div class="rf-route-record-list">' + rows + '</div></div>';
+  }
+
   async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
     if (!box) return;
@@ -8726,6 +8873,7 @@
 
       box.innerHTML =
         receptionSummary +
+        renderRfRouteRecords(data.rf_route_records || []) +
         renderStationStatsTable(data.station_rankings || []) +
 
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
@@ -8785,6 +8933,16 @@
     event.preventDefault();
     event.stopPropagation();
     void focusStationOnMap(link.dataset.mapCallsign || '');
+  });
+
+  document.addEventListener('click', event => {
+    const record = event.target.closest('[data-rf-route-record-index]');
+    if (!record) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const index = Number(record.dataset.rfRouteRecordIndex);
+    const route = state.rfRouteRecords[index];
+    if (route) void focusRfRecordRoute(route);
   });
 
   document.addEventListener('click', event => {

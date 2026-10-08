@@ -1,4 +1,4 @@
-## Novo — Estatísticas: recordes dos enlaces/rotas RF mais longos
+## Implementado na v1.14.10 — Estatísticas: recordes dos enlaces/rotas RF mais longos
 
 - Ao selecionar/clicar em um item do ranking de **Recordes RF**, abrir imediatamente a rota correspondente no mapa em **modo de foco exclusivo**.
 - Nesse modo, exibir somente:
@@ -48,7 +48,7 @@
 - Reutilizar o mesmo grafo/topologia RF do recurso de pesquisa de rotas para manter coerência de classificação e cálculo de distância.
 - Criar testes para ranking, cálculo de distância total, múltiplos hops, deduplicação de sentido inverso, exclusão de Internet/APRS-IS e filtro por período.
 
-## Novo — Estatísticas: exibir blocos completos sem rolagem interna
+## Implementado na v1.14.10 — Estatísticas: exibir blocos completos sem rolagem interna
 
 - Remover, sempre que possível, as **barras de rolagem internas** dos blocos/cards da aba **Estatísticas**.
 - Os painéis devem crescer verticalmente conforme a quantidade de conteúdo, exibindo tabelas, rankings e demais informações **por inteiro**.
@@ -61,7 +61,7 @@
 - Validar em notebook, tela Full HD, escala ampliada do Windows e janela não maximizada.
 - Criar regressão visual/layout para impedir o retorno de alturas internas fixas desnecessárias.
 
-## Novo — Mapa: barra superior espremida / responsividade dos controles
+## Implementado na v1.14.10 — Mapa: barra superior responsiva e compacta
 
 - Reduzir a largura dos campos de **indicativo de origem e destino**, deixando-os apenas com o espaço necessário para um indicativo APRS válido e pequena folga visual.
 - Tornar também os demais campos, selects e botões da barra **mais justos/compactos**, evitando larguras mínimas excessivas.
@@ -83,7 +83,7 @@
 - Validar nos principais breakpoints e com zoom/escala de interface maiores.
 - Criar teste visual/regressão de layout para impedir que novos controles voltem a ultrapassar a largura disponível.
 
-## Implementado na v1.14.9 — Mapa: pesquisa por indicativo e rota RF entre duas estações
+## Implementado até a v1.14.10 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
 - Tornar os campos de **indicativo inicial** e **indicativo final** autocompletáveis desde os primeiros caracteres digitados.
 - No campo de **origem/início**, sugerir indicativos já conhecidos pelo cliente no período/base atual, priorizando estações com posição válida e participação em enlaces RF observados.

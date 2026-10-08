@@ -143,19 +143,18 @@ h1 { margin: 0; font-size: 20px; }
 .hidden { display: none !important; }
 main { height: calc(100vh - 143px); }
 .map-context-bar {
-  height: 41px;
+  min-height: 41px;
+  height: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 18px;
+  gap: 5px;
+  padding: 4px 10px;
   border-bottom: 1px solid var(--line);
   background: #10171d;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
+  overflow: visible;
 }
 .map-context-bar.hidden { display: none !important; }
-body.map-context-visible main { height: calc(100vh - 184px); }
+body.map-context-visible main { height: calc(100vh - 143px - var(--map-context-height, 41px)); }
 .map-history-toggle {
   flex: 0 0 auto;
   min-height: 29px;
@@ -176,9 +175,11 @@ body.map-context-visible main { height: calc(100vh - 184px); }
 }
 .map-context-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  min-width: max-content;
+  gap: 5px;
+  min-width: 0;
+  width: 100%;
   margin-left: 0;
   margin-right: auto;
 }
@@ -187,9 +188,9 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-height: 29px;
-  padding: 1px 7px;
+  gap: 4px;
+  min-height: 27px;
+  padding: 1px 5px;
   border: 1px solid rgba(255,255,255,.14);
   border-radius: 7px;
   background: var(--panel-2);
@@ -199,9 +200,11 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   white-space: nowrap;
 }
 .map-context-field select {
-  min-width: 82px;
-  height: 27px;
-  padding: 2px 6px;
+  min-width: 66px;
+  width: fit-content;
+  max-width: 152px;
+  height: 25px;
+  padding: 2px 5px;
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--text);
@@ -210,12 +213,12 @@ body.map-context-visible main { height: calc(100vh - 184px); }
 .rf-route-search {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: minmax(92px, 118px) 18px minmax(140px, 190px) auto auto;
+  grid-template-columns: 92px 14px 104px auto auto;
   grid-template-rows: auto auto;
   align-items: end;
-  gap: 3px 5px;
-  min-height: 34px;
-  padding: 3px 6px;
+  gap: 2px 4px;
+  min-height: 32px;
+  padding: 2px 5px;
   border: 1px solid rgba(255,255,255,.14);
   border-radius: 7px;
   background: var(--panel-2);
@@ -234,8 +237,8 @@ body.map-context-visible main { height: calc(100vh - 184px); }
 .rf-route-search input {
   width: 100%;
   min-width: 0;
-  height: 26px;
-  padding: 2px 6px;
+  height: 24px;
+  padding: 2px 5px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--panel);
@@ -244,8 +247,8 @@ body.map-context-visible main { height: calc(100vh - 184px); }
   text-transform: uppercase;
 }
 .rf-route-search .btn {
-  min-height: 26px;
-  padding: 3px 8px;
+  min-height: 24px;
+  padding: 2px 6px;
   font-size: 10px;
   white-space: nowrap;
 }
@@ -258,7 +261,7 @@ body.map-context-visible main { height: calc(100vh - 184px); }
 .rf-route-candidate-status {
   grid-column: 1 / -1;
   min-width: 0;
-  max-width: 390px;
+  max-width: 300px;
   overflow: hidden;
   color: var(--muted);
   font-size: 9px;
@@ -3945,8 +3948,9 @@ html[data-theme="light"] .map-view-tree-header {
 }
 .station-ranking-table-wrap {
   margin-top: 9px;
-  overflow: auto;
-  max-height: 430px;
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
   border: 1px solid var(--line);
   border-radius: 7px;
 }
@@ -4224,3 +4228,88 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
 .unsaved-config-action-status { margin: 6px 0 10px; font-size: 13px; color: var(--muted); }
 .unsaved-config-action-status.is-error { color: #f67f79; font-weight: 600; }
 #unsavedConfigModal .message-alert-actions button:disabled { opacity: .55; cursor: wait; }
+
+
+/* v1.14.10 - mapa compacto/responsivo e Estatísticas sem scroll interno */
+.map-history-toggle,
+.map-kml-export,
+.map-layers-button,
+#mapItemsButton {
+  min-height: 27px;
+  padding: 3px 7px;
+  font-size: 10px;
+}
+@media (max-width: 1180px) {
+  .map-context-controls { align-items: flex-end; }
+  .rf-route-search { order: 2; }
+  .map-items-control,
+  .map-context-field,
+  .map-layers-control,
+  .map-history-toggle,
+  .map-kml-export { order: 1; }
+}
+@media (max-width: 760px) {
+  .rf-route-search {
+    grid-template-columns: 86px 12px 98px auto auto;
+    max-width: 100%;
+  }
+  .rf-route-candidate-status { display: none; }
+}
+
+#tab-analysis .topology-stat-group,
+#tab-analysis .analysis-client-version-panel {
+  max-height: none;
+  overflow: visible;
+}
+#tab-analysis .station-ranking-table-wrap {
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.rf-route-records-group {
+  grid-column: 1 / -1;
+}
+.rf-route-record-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+}
+.rf-route-record {
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) auto;
+  gap: 7px 10px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(59,166,255,.04);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.rf-route-record:hover,
+.rf-route-record:focus-visible {
+  border-color: var(--accent);
+  background: rgba(59,166,255,.11);
+  outline: none;
+}
+.rf-route-record-rank {
+  color: var(--accent);
+  font-weight: 900;
+  text-align: center;
+}
+.rf-route-record-path {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 800;
+}
+.rf-route-record-distance {
+  white-space: nowrap;
+  font-weight: 900;
+}
+.rf-route-record-meta {
+  grid-column: 2 / -1;
+  color: var(--muted);
+  font-size: 10px;
+}
