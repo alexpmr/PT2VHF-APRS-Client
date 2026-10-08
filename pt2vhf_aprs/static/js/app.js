@@ -2372,6 +2372,23 @@
   }
 
   function addMapControls() {
+    const contextBar = $('#mapContextBar');
+    if (contextBar && contextBar.dataset.resizeBound !== '1') {
+      contextBar.dataset.resizeBound = '1';
+      const syncContextHeight = () => {
+        const height = Math.max(0, Math.ceil(contextBar.getBoundingClientRect().height || 0));
+        document.documentElement.style.setProperty('--map-context-height', height + 'px');
+        if (state.map) setTimeout(() => state.map.invalidateSize(), 0);
+      };
+      syncContextHeight();
+      if (window.ResizeObserver) {
+        const observer = new ResizeObserver(syncContextHeight);
+        observer.observe(contextBar);
+        contextBar._pt2vhfResizeObserver = observer;
+      } else {
+        window.addEventListener('resize', syncContextHeight);
+      }
+    }
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
     state.topologyHours = statisticsPeriodValue(state.topologyHours);
     const repairedVisibility = repairMapVisibilityStateV186();
@@ -3022,8 +3039,14 @@
     renderRfRoutePanel();
     if (hadExclusiveFocus) setTransientRouteFocusVisibility(true);
     if (options.reload !== false) {
-      if (hadExclusiveFocus) await loadMapData();
-      else await loadTopology();
+      if (hadExclusiveFocus) {
+        await loadMapData();
+        if (!state.topologyEnabled) clearTopologyLines();
+      } else if (state.topologyEnabled) {
+        await loadTopology();
+      } else {
+        clearTopologyLines();
+      }
     }
   }
 
@@ -3153,7 +3176,7 @@
   }
 
   async function loadTopology() {
-    if (!state.map || !state.topologyEnabled || state.activeTab !== 'map') return;
+    if (!state.map || (!state.topologyEnabled && !state.rfRouteAnalysis) || state.activeTab !== 'map') return;
     if (state.topologyLoadBusy) return;
     state.topologyLoadBusy = true;
     try {
