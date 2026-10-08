@@ -78,26 +78,72 @@
   function installDatabaseHealth(){
     const config=$('#tab-config');if(!config||$('#v111DbHealth'))return;
     const card=document.createElement('div');card.id='v111DbHealth';card.className='config-card full-card config-section';
-    card.innerHTML='<h3>'+tr('Saúde e retenção do banco','Database health and retention','Salud y retención de la base','Santé et rétention de la base')+'</h3><div id="v111DbMetrics" class="v111-counter-grid"></div><div class="v111-retention-grid"></div><div class="v111-actions"><button id="v111RetentionSave" class="btn secondary">'+tr('Salvar política','Save policy','Guardar política','Enregistrer politique')+'</button><button id="v111RetentionApply" class="btn secondary">'+tr('Aplicar limpeza agora','Apply cleanup now','Aplicar limpieza ahora','Appliquer nettoyage')+'</button><button id="v111DbOptimize" class="btn secondary">'+tr('Otimizar banco','Optimize database','Optimizar base','Optimiser base')+'</button></div>';
+    card.innerHTML='<h3>'+tr('Saúde e retenção do banco','Database health and retention','Salud y retención de la base','Santé et rétention de la base')+'</h3>'+
+      '<p>'+tr('Retenções menores mantêm o banco mais leve; períodos maiores preservam mais histórico. Cada categoria é independente.','Shorter retention keeps the database lighter; longer periods preserve more history. Each category is independent.','Retenciones menores mantienen la base más liviana; períodos mayores conservan más historial. Cada categoría es independiente.','Une rétention plus courte allège la base; une durée plus longue conserve davantage d’historique. Chaque catégorie est indépendante.')+'</p>'+
+      '<div id="v111DbMetrics" class="v111-counter-grid"></div><div class="v111-retention-grid"></div><div class="v111-actions"><button id="v111RetentionSave" class="btn secondary">'+tr('Salvar política','Save policy','Guardar política','Enregistrer politique')+'</button><button id="v111RetentionApply" class="btn secondary">'+tr('Aplicar limpeza agora','Apply cleanup now','Aplicar limpieza ahora','Appliquer nettoyage')+'</button><button id="v111DbOptimize" class="btn secondary">'+tr('Otimizar banco','Optimize database','Optimizar base','Optimiser base')+'</button></div>';
     config.appendChild(card);
     const defs=[
       ['packets_days',tr('Pacotes brutos','Raw packets','Paquetes brutos','Paquets bruts')],
-      ['tracks_days','Tracklogs'],['aprs_log_days','APRS log'],['topology_events_days',tr('Topologia','Topology','Topología','Topologie')],
-      ['tnc_frames_days','TNC frames'],['tnc_decisions_days','TNC decisions'],['notifications_days',tr('Notificações','Notifications','Notificaciones','Notifications')],['messages_days',tr('Mensagens','Messages','Mensajes','Messages')]
+      ['tracks_days','Tracklogs'],
+      ['aprs_log_days','APRS log'],
+      ['topology_events_days',tr('Enlaces / Topologia','Links / Topology','Enlaces / Topología','Liens / Topologie')],
+      ['tnc_frames_days','TNC frames'],
+      ['tnc_decisions_days','TNC decisions'],
+      ['notifications_days',tr('Notificações','Notifications','Notificaciones','Notifications')],
+      ['messages_days',tr('Mensagens','Messages','Mensajes','Messages')]
     ];
+    const presetOptions=(value)=>{
+      const v=Number(value||0);
+      const presets=[
+        [0,tr('Não apagar','Do not delete','No borrar','Ne pas supprimer')],
+        [1,tr('1 dia','1 day','1 día','1 jour')],
+        [7,tr('1 semana','1 week','1 semana','1 semaine')],
+        [30,tr('1 mês','1 month','1 mes','1 mois')]
+      ];
+      if(!presets.some(([n])=>n===v))presets.push([v,tr('Atual: ','Current: ','Actual: ','Actuel : ')+v+' '+tr('dias','days','días','jours')]);
+      return presets.map(([n,label])=>'<option value="'+n+'"'+(n===v?' selected':'')+'>'+esc(label)+'</option>').join('');
+    };
     const load=async()=>{
-      const [h,s]=await Promise.all([req('/api/v111/db/health'),req('/api/v111/db/retention')]);
+      const [h,saved]=await Promise.all([req('/api/v111/db/health'),req('/api/v111/db/retention')]);
       $('#v111DbMetrics').innerHTML=[
         [tr('Tamanho','Size','Tamaño','Taille'),Math.round(h.size_bytes/1024/1024*10)/10+' MB'],
         ['SQLite',h.integrity],[tr('Fragmentação','Fragmentation','Fragmentación','Fragmentation'),h.fragmentation_percent+'%'],
         ['WAL',Math.round(h.wal_bytes/1024/1024*10)/10+' MB']
       ].map(([k,v])=>'<div><span>'+esc(k)+'</span><strong>'+esc(v)+'</strong></div>').join('');
-      $('.v111-retention-grid',card).innerHTML=defs.map(([k,l])=>'<label class="field"><span>'+esc(l)+' — '+tr('dias (0 = manter)','days (0 = keep)','días (0 = mantener)','jours (0 = garder)')+'</span><input type="number" min="0" max="3650" data-ret="'+k+'" value="'+esc(s[k]??0)+'"></label>').join('');
+      $('.v111-retention-grid',card).innerHTML=defs.map(([k,l])=>'<label class="field"><span>'+esc(l)+'</span><select data-ret="'+k+'">'+presetOptions(saved[k])+'</select></label>').join('');
     };
     const payload=()=>{const p={};$$('[data-ret]',card).forEach(i=>p[i.dataset.ret]=Number(i.value||0));return p;};
-    $('#v111RetentionSave').onclick=async()=>{await req('/api/v111/db/retention',{method:'POST',body:JSON.stringify(payload())});toast(tr('Política salva.','Policy saved.','Política guardada.','Politique enregistrée.'));};
-    $('#v111RetentionApply').onclick=async()=>{if(!confirm(tr('Aplicar agora a política de retenção?','Apply retention policy now?','¿Aplicar política ahora?','Appliquer la politique maintenant ?')))return;await req('/api/v111/db/retention',{method:'POST',body:JSON.stringify(payload())});const r=await req('/api/v111/db/retention/apply',{method:'POST',body:'{}'});toast(tr('Limpeza concluída.','Cleanup completed.','Limpieza concluida.','Nettoyage terminé.'));load();};
+    $('#v111RetentionSave').onclick=async()=>{await req('/api/v111/db/retention',{method:'POST',body:JSON.stringify(payload())});toast(tr('Política de retenção salva.','Retention policy saved.','Política de retención guardada.','Politique de rétention enregistrée.'));};
+    $('#v111RetentionApply').onclick=async()=>{
+      if(!confirm(tr('Aplicar agora a política de retenção?','Apply retention policy now?','¿Aplicar política ahora?','Appliquer la politique maintenant ?')))return;
+      await req('/api/v111/db/retention',{method:'POST',body:JSON.stringify(payload())});
+      const r=await req('/api/v111/db/retention/apply',{method:'POST',body:'{}'});
+      const reclaimed=Math.max(0,Number(r.reclaimable_bytes||0))/1024/1024;
+      toast(tr('Limpeza concluída: ','Cleanup completed: ','Limpieza concluida: ','Nettoyage terminé : ')+Number(r.deleted_total||0)+' '+tr('registros removidos; ','records removed; ','registros eliminados; ','enregistrements supprimés ; ')+reclaimed.toFixed(1)+' MB '+tr('recuperáveis ao otimizar.','reclaimable after optimization.','recuperables al optimizar.','récupérables après optimisation.'));
+      load();
+    };
     $('#v111DbOptimize').onclick=async()=>{if(!confirm(tr('Otimizar o SQLite agora?','Optimize SQLite now?','¿Optimizar SQLite ahora?','Optimiser SQLite maintenant ?')))return;await req('/api/v111/db/optimize',{method:'POST',body:'{}'});toast(tr('Banco otimizado.','Database optimized.','Base optimizada.','Base optimisée.'));load();};
+    load();
+  }
+
+  function installAutoReply(){
+    const config=$('#tab-config');if(!config||$('#v148AutoReply'))return;
+    const card=document.createElement('div');card.id='v148AutoReply';card.className='config-card full-card config-section';
+    card.innerHTML='<h3>'+tr('Resposta automática','Automatic reply','Respuesta automática','Réponse automatique')+'</h3>'+
+      '<p>'+tr('Responde apenas a mensagens APRS diretas destinadas à sua estação. ACK/REJ, queries, boletins e grupos não disparam esta função.','Replies only to direct APRS messages addressed to your station. ACK/REJ, queries, bulletins and groups do not trigger it.','Responde solo a mensajes APRS directos destinados a su estación. ACK/REJ, consultas, boletines y grupos no activan esta función.','Répond uniquement aux messages APRS directs adressés à votre station. ACK/REJ, requêtes, bulletins et groupes ne la déclenchent pas.')+'</p>'+
+      '<label class="check-field"><input id="v148AutoReplyEnabled" type="checkbox"><span>'+tr('Ativar resposta automática','Enable automatic reply','Activar respuesta automática','Activer la réponse automatique')+'</span></label>'+
+      '<label class="field"><span>'+tr('Texto da resposta','Reply text','Texto de respuesta','Texte de réponse')+'</span><textarea id="v148AutoReplyText" rows="3" maxlength="240"></textarea></label>'+
+      '<label class="field"><span>'+tr('Intervalo mínimo para o mesmo remetente','Minimum interval for the same sender','Intervalo mínimo para el mismo remitente','Intervalle minimum pour le même expéditeur')+'</span><select id="v148AutoReplyCooldown"><option value="30">30 s</option><option value="60">1 min</option><option value="300">5 min</option><option value="900">15 min</option><option value="3600">1 h</option></select></label>'+
+      '<div class="v111-actions"><button id="v148AutoReplySave" class="btn secondary">'+tr('Salvar resposta automática','Save automatic reply','Guardar respuesta automática','Enregistrer la réponse automatique')+'</button></div>';
+    config.appendChild(card);
+    const load=async()=>{try{const cfg=await req('/api/config');$('#v148AutoReplyEnabled').checked=!!cfg.auto_reply_enabled;$('#v148AutoReplyText').value=cfg.auto_reply_text||'';const sel=$('#v148AutoReplyCooldown');const value=String(cfg.auto_reply_cooldown_seconds||300);if(!Array.from(sel.options).some(o=>o.value===value)){const o=document.createElement('option');o.value=value;o.textContent=value+' s';sel.appendChild(o);}sel.value=value;}catch(e){toast(e.message);}};
+    $('#v148AutoReplySave').onclick=async()=>{
+      const payload={auto_reply_enabled:$('#v148AutoReplyEnabled').checked,auto_reply_text:$('#v148AutoReplyText').value,auto_reply_cooldown_seconds:Number($('#v148AutoReplyCooldown').value||300)};
+      const saved=await req('/api/config',{method:'POST',body:JSON.stringify(payload)});
+      if(saved && saved.ok===false)throw new Error(saved.error||'Erro');
+      toast(tr('Resposta automática salva.','Automatic reply saved.','Respuesta automática guardada.','Réponse automatique enregistrée.'));
+      load();
+    };
     load();
   }
 
@@ -118,6 +164,6 @@
   }
   function watchStation(){const o=new MutationObserver(()=>enrichStationOperational());o.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});}
 
-  function boot(){installNotificationCenter();installTncOperations();installDatabaseHealth();watchStation();}
+  function boot(){installNotificationCenter();installTncOperations();installDatabaseHealth();installAutoReply();watchStation();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
