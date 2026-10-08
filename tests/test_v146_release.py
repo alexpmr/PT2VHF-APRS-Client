@@ -19,7 +19,7 @@ def test_v146_version_metadata():
     assert f'__version__ = "{version}"' in text("pt2vhf_aprs/__init__.py")
     win = text("windows/version_info.txt")
     assert f"filevers=({major}, {minor}, {patch}, 0)" in win
-    assert "prodvers=(1, 14, 6, 0)" in win
+    assert f"prodvers=({major}, {minor}, {patch}, 0)" in win
     assert "FileVersion', '1.14.6'" in win
     assert "ProductVersion', '1.14.6'" in win
 
