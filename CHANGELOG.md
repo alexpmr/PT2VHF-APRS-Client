@@ -1,3 +1,17 @@
+## 1.14.5 - 2026-10-08
+
+- **Configuração — dirty state:** comparação passa a usar snapshot estável do formulário e baseline derivado da configuração persistida.
+- **Configuração — corrida assíncrona:** edição realizada enquanto `GET /api/config` está pendente é preservada e não é rebaselinizada como se já estivesse salva.
+- **Configuração — Salvar configuração:** o POST envia somente campos efetivamente modificados e atualiza baseline/local state diretamente após sucesso, sem um GET de recarga concorrente.
+- **Configuração — Salvar e sair:** modal usa o resultado estruturado do salvamento e mostra o erro real devolvido por `/api/config`.
+- **Configuração — Descartar e sair:** restauração passa a ser local, usando o último snapshot/configuração válida em memória; funciona mesmo com backend temporariamente indisponível.
+- **Configuração — Continuar:** não realiza chamadas de rede e mantém a edição local.
+- **Configuração migrada:** validação backend considera apenas os campos enviados no patch, evitando que um valor legado não relacionado bloqueie todo o salvamento.
+- **SAT:** corrigido `$('[data-satellite-service]',host).forEach` para coleção segura via `querySelectorAll`.
+- **SAT:** renderização de detalhes ganhou isolamento próprio; uma falha de UI não é mais rotulada automaticamente como falha de cálculo orbital.
+- **Testes:** cobertura pytest + Playwright real para salvar no rodapé, backend lento, erro real do backend, descarte offline e painel SAT.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.5 - 2026-10-07
 
 - **Configuração — detecção de alterações:** o estado dirty passa a ser recalculado pelo snapshot real do formulário; eventos ocorridos durante carregamento assíncrono deixam de ser ignorados.
