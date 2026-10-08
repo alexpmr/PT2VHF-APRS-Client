@@ -385,44 +385,88 @@ def db_health(*, deep: bool = True) -> dict[str, Any]:
     return result
 
 
-def retention_settings() -> dict[str, Any]:
-    values = _setting("retention", RETENTION_DEFAULTS)
-    for key in RETENTION_DEFAULTS:
+def _normalize_retention(payload: dict[str, Any] | None) -> dict[str, int]:
+    source = dict(payload or {})
+    clean: dict[str, int] = {}
+    for key, default in RETENTION_DEFAULTS.items():
         try:
-            values[key] = max(0, min(int(values.get(key, RETENTION_DEFAULTS[key])), 3650))
+            clean[key] = max(0, min(int(source.get(key, default)), 3650))
         except Exception:
-            values[key] = RETENTION_DEFAULTS[key]
-    return values
+            clean[key] = int(default)
+    return clean
+
+
+def retention_settings() -> dict[str, Any]:
+    return _normalize_retention(_setting("retention", RETENTION_DEFAULTS))
+
+
+def save_retention_settings(payload: dict[str, Any] | None) -> dict[str, Any]:
+    current = retention_settings()
+    merged = {**current, **dict(payload or {})}
+    clean = _normalize_retention(merged)
+    return _save_setting("retention", clean, RETENTION_DEFAULTS)
 
 
 def apply_retention(settings: dict[str, Any] | None = None) -> dict[str, Any]:
-    values = retention_settings() if settings is None else _save_setting("retention", settings, RETENTION_DEFAULTS)
+    values = retention_settings() if settings is None else save_retention_settings(settings)
     table_keys = {
-        "packets": "packets_days",
-        "tracks": "tracks_days",
-        "messages": "messages_days",
-        "aprs_log": "aprs_log_days",
-        "topology_events": "topology_events_days",
-        "tnc_frames": "tnc_frames_days",
-        "tnc_decisions": "tnc_decisions_days",
-        "notifications_v111": "notifications_days",
+        "packets": ("packets_days", "timestamp"),
+        "tracks": ("tracks_days", "timestamp"),
+        "messages": ("messages_days", "timestamp"),
+        "aprs_log": ("aprs_log_days", "timestamp"),
+        "topology_events": ("topology_events_days", "timestamp"),
+        "tnc_frames": ("tnc_frames_days", "timestamp"),
+        "tnc_decisions": ("tnc_decisions_days", "timestamp"),
+        "notifications_v111": ("notifications_days", "timestamp"),
     }
+    before = db_health(deep=False)
     deleted: dict[str, int] = {}
+    page_size = 0
+    freelist_after = 0
+
     with db.connection() as conn:
-        for table, key in table_keys.items():
+        page_size = int(conn.execute("PRAGMA page_size").fetchone()[0] or 0)
+        for table, (key, time_column) in table_keys.items():
             days = int(values.get(key) or 0)
             if days <= 0 or not _table_exists(conn, table):
                 deleted[table] = 0
                 continue
             cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).replace(microsecond=0).isoformat()
             try:
-                cur = conn.execute(f"DELETE FROM {table} WHERE timestamp<?", (cutoff,))
+                cur = conn.execute(f"DELETE FROM {table} WHERE {time_column}<?", (cutoff,))
                 deleted[table] = max(0, int(cur.rowcount or 0))
             except sqlite3.OperationalError:
                 deleted[table] = 0
-    db.invalidate_map_data_cache(drop_payload=True)
-    return {"settings": values, "deleted": deleted, "health": db_health(deep=False)}
 
+        # Enlaces persistidos são o agregado da topologia e precisam seguir a
+        # mesma retenção dos eventos. Assim o histórico visual realmente fica
+        # leve sem manter arestas antigas sem evidência recente.
+        topology_days = int(values.get("topology_events_days") or 0)
+        if topology_days > 0 and _table_exists(conn, "topology_edges"):
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=topology_days)).replace(microsecond=0).isoformat()
+            try:
+                cur = conn.execute("DELETE FROM topology_edges WHERE last_seen<?", (cutoff,))
+                deleted["topology_edges"] = max(0, int(cur.rowcount or 0))
+            except sqlite3.OperationalError:
+                deleted["topology_edges"] = 0
+        else:
+            deleted["topology_edges"] = 0
+
+        freelist_after = int(conn.execute("PRAGMA freelist_count").fetchone()[0] or 0)
+
+    db.invalidate_map_data_cache(drop_payload=True)
+    after = db_health(deep=False)
+    deleted_total = sum(int(v or 0) for v in deleted.values())
+    reclaimable_bytes = max(0, page_size * freelist_after)
+    return {
+        "settings": values,
+        "deleted": deleted,
+        "deleted_total": deleted_total,
+        "before_size_bytes": int(before.get("size_bytes") or 0),
+        "after_size_bytes": int(after.get("size_bytes") or 0),
+        "reclaimable_bytes": reclaimable_bytes,
+        "health": after,
+    }
 
 def optimize_database() -> dict[str, Any]:
     before = db_health()
@@ -571,7 +615,7 @@ def register_v111_routes(app) -> None:
     @app.post("/api/v111/db/retention")
     def api_v111_save_retention():
         data = request.get_json(force=True) or {}
-        return jsonify({"ok": True, "settings": _save_setting("retention", data, RETENTION_DEFAULTS)})
+        return jsonify({"ok": True, "settings": save_retention_settings(data)})
 
     @app.post("/api/v111/db/retention/apply")
     def api_v111_apply_retention():

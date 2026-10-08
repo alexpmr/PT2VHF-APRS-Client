@@ -1,6 +1,6 @@
 # Backlog
 
-## Novo — Mensagens: resposta automática customizável
+## Implementado na v1.14.8 — Mensagens: resposta automática customizável
 
 - Adicionar opção de **Resposta automática** para mensagens APRS recebidas.
 - Permitir habilitar/desabilitar o recurso globalmente.
@@ -17,7 +17,7 @@
 - Incluir testes de regressão para mensagem direta, mensagens duplicadas, ACK/REJ, cooldown, loop entre autorespostas e recurso desabilitado.
 
 
-## Novo — Configuração: retenção granular do banco
+## Implementado na v1.14.8 — Configuração: retenção granular do banco
 
 - Revisar o bloco **Saúde e retenção do banco** da aba **Configuração** para facilitar o controle do tamanho do SQLite.
 - Permitir configurar separadamente a retenção de:
@@ -64,10 +64,6 @@
 - **Classificação:** RF e APRS-IS são preservados como observações independentes; RF real nunca é convertido em Internet apenas pelo papel de iGate.
 - **Renderização:** enlace APRS-IS confirmado permanece tracejado e visível, inclusive em pares com evidência mista.
 - **Testes/CI:** suites históricas deixaram de exigir o módulo SAT; adicionada regressão específica v1.14.6 e novo validador de produção.
-
-## Monitoramento pós-release
-
-- **#49 — Backend/banco crescente:** manter aberto para observar perda de conexão/latência com bancos maiores após as otimizações recentes. Não alterar automaticamente a retenção padrão para 5 dias.
 
 ## Pendência externa não bloqueante
 

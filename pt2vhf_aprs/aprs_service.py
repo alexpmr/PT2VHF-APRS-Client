@@ -128,6 +128,7 @@ class APRSService:
         self._msg_counter = int(time.time()) % 1000
         self._last_beacon = 0.0
         self._query_response_last: dict[tuple[str, str], float] = {}
+        self._auto_reply_last: dict[str, float] = {}
 
     def status(self) -> dict[str, Any]:
         with self._status_lock:
@@ -605,6 +606,46 @@ class APRSService:
             except Exception:
                 pass
 
+        if is_personal_message:
+            self._maybe_auto_reply(from_call, message_text, via_rf=via_rf)
+
+    def _maybe_auto_reply(self, from_call: str, incoming_text: str, *, via_rf: bool = False) -> None:
+        """Envia uma resposta automática configurável com proteção contra loops."""
+        cfg = db.get_config()
+        if not bool(cfg.get("auto_reply_enabled", 0)):
+            return
+        destination = str(from_call or "").upper().strip()
+        own_call = full_callsign(cfg).upper()
+        if not destination or destination == own_call:
+            return
+
+        reply_text = " ".join(
+            str(cfg.get("auto_reply_text") or "").replace("\r", " ").replace("\n", " ").split()
+        )
+        if not reply_text:
+            return
+
+        # Queries, ACK/REJ e boletins já são filtrados antes deste ponto.
+        # O cooldown por remetente é a barreira anti-loop: se duas estações
+        # estiverem com autoresposta ligada, a resposta recebida não dispara
+        # uma nova sequência até o intervalo expirar.
+        cooldown = max(30, min(86400, int(cfg.get("auto_reply_cooldown_seconds") or 300)))
+        now = time.monotonic()
+        self._auto_reply_last = {
+            call: at for call, at in self._auto_reply_last.items()
+            if now - float(at) < cooldown
+        }
+        last = float(self._auto_reply_last.get(destination) or 0.0)
+        if last and now - last < cooldown:
+            return
+
+        route = "rf_direct" if via_rf else "aprs_is"
+        try:
+            self.queue_message_parts(destination, reply_text, route=route, automated=True)
+            self._auto_reply_last[destination] = now
+        except Exception as exc:
+            self._set_status(last_error=f"Resposta automática para {destination}: {exc}")
+
     def _send_raw(self, line: str) -> None:
         data = (line.rstrip("\r\n") + "\r\n").encode("latin-1", errors="replace")
         if len(data) > 512:
@@ -626,7 +667,7 @@ class APRSService:
                 self._status.last_tx_at = db.utc_now_iso()
         db.add_aprs_log("TX", mask_sensitive_log_line(line))
 
-    def queue_message_parts(self, destination: str, text: str, route: str = "auto", path: str = "") -> dict[str, Any]:
+    def queue_message_parts(self, destination: str, text: str, route: str = "auto", path: str = "", automated: bool = False) -> dict[str, Any]:
         cfg = db.get_config()
         source = full_callsign(cfg)
         destination = str(destination or "").upper().strip()
@@ -719,6 +760,7 @@ class APRSService:
                     "retry_count": 0,
                     "tx_medium": medium,
                     "tx_path": effective_path,
+                    "automated": bool(automated),
                 })
 
             row_ids = db.add_outgoing_message_parts(pending_rows)

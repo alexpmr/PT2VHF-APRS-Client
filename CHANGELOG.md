@@ -1,3 +1,17 @@
+## 1.14.8 - 2026-10-08
+
+- **Configuração — retenção granular:** Saúde e retenção do banco passa a oferecer presets por categoria: Não apagar, 1 dia, 1 semana e 1 mês.
+- **SQLite leve:** Mensagens, Tracklogs, Log APRS, Enlaces/Topologia, frames/decisões TNC, notificações e pacotes podem ter políticas independentes.
+- **Compatibilidade:** valores de retenção já existentes são preservados; instalações antigas não têm sua política sobrescrita na atualização.
+- **Enlaces/Topologia:** arestas agregadas antigas passam a seguir a mesma janela dos eventos de topologia, mantendo mapa e banco coerentes.
+- **Limpeza manual:** Aplicar limpeza agora informa registros removidos e espaço estimado recuperável; Otimizar banco continua disponível para efetivar VACUUM.
+- **Mensagens — resposta automática:** novo recurso opcional com texto customizável e cooldown por remetente.
+- **Anti-loop:** autoresposta só atua em mensagem direta para a própria estação; ACK/REJ, queries e boletins não disparam resposta, e o cooldown impede ciclos entre duas estações automáticas.
+- **Roteamento seguro:** resposta recebida via APRS-IS responde por APRS-IS; mensagem RF responde por RF direto, respeitando os mesmos bloqueios e confirmações de TX.
+- **Histórico:** mensagens disparadas automaticamente ficam marcadas no banco com metadado `automated`.
+- **Regressão:** novos testes cobrem migração/configuração, cooldown, filtros de autoresposta, histórico automático e retenção de topologia.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.7 - 2026-10-08
 
 - **Backend/SQLite (#49):** reduzida a contenção observada na v1.14.6, sem alterar a retenção padrão para 5 dias.
