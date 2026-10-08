@@ -2960,6 +2960,7 @@
       [ui('Origem', 'Source'), edge.source || '—'],
       [ui('Destino', 'Destination'), edge.target || '—'],
       [ui('Sentido', 'Direction'), `${edge.source || '—'} → ${edge.target || '—'}`],
+      [ui('Comprimento', 'Length'), formatRfDistanceKm(topologyEdgeDistanceKm(edge))],
       [ui('Pacotes observados', 'Observed packets'), Number(edge.packet_count || 0).toLocaleString('pt-BR')],
     ];
     if (mixedEvidence) {
@@ -3000,6 +3001,8 @@
     state.topologyLoadBusy = true;
     try {
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
+      state.topologyEdges = Array.isArray(edges) ? edges : [];
+      const routeAllowedPairs = state.rfRouteAnalysis ? rfRouteAllowedPairs() : null;
       const active = new Set();
 
       // Desenha RF primeiro e APRS-IS depois. Em pares com evidência mista,
@@ -3008,15 +3011,20 @@
         (a, b) => Number(a.kind === 'igate') - Number(b.kind === 'igate')
       );
       for (const edge of orderedEdges) {
-        if (edge.kind === 'igate' && !state.igateLinksEnabled) continue;
-        if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue;
+        if (routeAllowedPairs) {
+          if (edge.kind === 'igate') continue;
+          if (!routeAllowedPairs.has(rfRoutePairKey(edge.source, edge.target))) continue;
+        } else {
+          if (edge.kind === 'igate' && !state.igateLinksEnabled) continue;
+          if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue;
+        }
 
         const sourceCall = normalizedCall(edge.source);
         const targetCall = normalizedCall(edge.target);
         // A visibilidade da camada de enlaces Internet/iGate é independente da
         // visibilidade dos marcadores e seus subtipos. Um filtro que oculta
         // iGates não deve apagar enlaces APRS-IS que já foram comprovados.
-        if (edge.kind !== 'igate') {
+        if (!routeAllowedPairs && edge.kind !== 'igate') {
           if (sourceCall && state.mapKnownCallsigns.has(sourceCall) && !state.mapVisibleCallsigns.has(sourceCall)) continue;
           if (targetCall && state.mapKnownCallsigns.has(targetCall) && !state.mapVisibleCallsigns.has(targetCall)) continue;
         }
@@ -3066,6 +3074,7 @@
                 ? `<div>Também observado por RF: ${Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')}</div>`
                 : `<div>Também observado via APRS-IS: ${Number(edge.internet_packet_count || 0).toLocaleString('pt-BR')}</div>`)
               : ''}
+            <div>Comprimento: ${escapeHtml(formatRfDistanceKm(topologyEdgeDistanceKm(edge)))}</div>
             <div>Pacotes observados: ${Number(edge.packet_count || 0).toLocaleString('pt-BR')}</div>
             <div>Classificação: ${escapeHtml(edge.classification_source || (edge.kind === 'igate' ? 'APRS-IS confirmado' : 'RF inferido do path'))}</div>
             <div>Primeiro: ${escapeHtml(fmtDate(edge.first_seen))}</div>
@@ -3078,6 +3087,9 @@
           state.map.removeLayer(line);
           state.topologyLines.delete(key);
         }
+      }
+      if (routeAllowedPairs && state.rfRouteAnalysis?.routes?.length) {
+        focusRfRoute(state.rfRouteSelectedIndex);
       }
     } catch (err) {
       console.warn(err);
