@@ -140,8 +140,8 @@ def test_v148_retention_presets_are_independent_and_prune_topology_edges():
                     ("PY2NEW", "PT2NEW", "rf", 1, now, now, None),
                 )
                 conn.execute(
-                    "INSERT INTO topology_events(timestamp,source,target,kind,igate,raw,medium) VALUES(?,?,?,?,?,?,?)",
-                    (old, "PY2OLD", "PT2OLD", "rf", None, "old", "RF"),
+                    "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
+                    (old, "PY2OLD", "PT2OLD", "rf"),
                 )
 
             result = apply_retention()
