@@ -354,8 +354,25 @@ def _serial_connection_error(port: str, exc: Exception) -> Exception:
     return ConnectionError(f"Falha ao abrir a porta serial {port}: {text or exc.__class__.__name__}.")
 
 
+_schema_lock = threading.Lock()
+_schema_ready_db_path = ""
+
+
 def _ensure_schema() -> None:
-    with db.connection() as conn:
+    """Create/migrate TNC tables once per active database path.
+
+    This used to execute CREATE TABLE/INDEX and PRAGMA table_info on every
+    status/config request. Under APRS traffic that created avoidable SQLite
+    schema contention with map, replay and RX transactions.
+    """
+    global _schema_ready_db_path
+    db_key = str(db.DB_PATH)
+    if _schema_ready_db_path == db_key:
+        return
+    with _schema_lock:
+        if _schema_ready_db_path == db_key:
+            return
+        with db.connection() as conn:
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS tnc_config(
@@ -430,6 +447,7 @@ def _ensure_schema() -> None:
         heard_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_heard)").fetchall()}
         if "last_direct_heard" not in heard_columns:
             conn.execute("ALTER TABLE tnc_heard ADD COLUMN last_direct_heard TEXT")
+        _schema_ready_db_path = db_key
 
 
 def get_tnc_config() -> dict[str, Any]:
