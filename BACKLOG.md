@@ -1,4 +1,4 @@
-## Novo — Menu superior: simplificar textos de status
+## Implementado na v1.14.11 — Menu superior: simplificar textos de status
 
 - No indicador de versão do menu superior, trocar o texto **“Versão atualizada”** por apenas **“Atualizada”**.
 - No status do TNC:
@@ -15,7 +15,7 @@
 - Preservar tooltip/title com detalhes adicionais do estado, quando útil, sem poluir visualmente a barra superior.
 - Manter consistência visual entre os indicadores **TNC** e **APRS-IS**, incluindo tamanho do LED, espaçamento, tipografia e comportamento de cores.
 
-## Implementado na v1.14.10 — Estatísticas: recordes dos enlaces/rotas RF mais longos
+## Ajustado na v1.14.11 — Estatísticas: recordes RF por distância entre estações
 
 - Ao selecionar/clicar em um item do ranking de **Recordes RF**, abrir imediatamente a rota correspondente no mapa em **modo de foco exclusivo**.
 - Nesse modo, exibir somente:
@@ -101,7 +101,7 @@
 - Validar nos principais breakpoints e com zoom/escala de interface maiores.
 - Criar teste visual/regressão de layout para impedir que novos controles voltem a ultrapassar a largura disponível.
 
-## Implementado até a v1.14.10 — Mapa: pesquisa por indicativo e rota RF entre duas estações
+## Implementado até a v1.14.11 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
 - Na barra do mapa, renomear o botão **“Rotas RF”** para **“Pesquisar”**, mantendo a mesma ação de consultar/analisar as rotas RF entre os indicativos informados.
 
