@@ -285,6 +285,7 @@ def build_manual(output: Path, screenshots_dir: Path | None = None, logo_path: P
         "Topologia observada a partir dos paths APRS recebidos.",
         "Configuração visual de mapa, tracklogs, topologia, tema, fontes e idioma.",
         "Backup e restauração da configuração em JSON.",
+        "A aba SAT isola erros de renderização dos controles de serviços para não confundi-los com falhas de cálculo orbital.",
         "Verificação de versão e acesso às Releases oficiais."
     ])
 
