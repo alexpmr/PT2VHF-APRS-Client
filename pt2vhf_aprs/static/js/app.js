@@ -2393,6 +2393,7 @@
         localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
         await loadMapData();
         if ($('#rfRouteSource')?.value.trim()) {
+          await refreshRfRouteOrigins($('#rfRouteSource').value);
           await refreshRfRouteCandidates('', { preserveTarget: true });
           if (state.rfRouteAnalysis && $('#rfRouteTarget')?.value.trim()) await applyRfRouteAnalysis();
         }
@@ -2966,6 +2967,10 @@
     if (!route || !Array.isArray(route.nodes) || route.nodes.length < 2) return;
     const source = normalizedCall(route.source || route.nodes[0]);
     const target = normalizedCall(route.target || route.nodes[route.nodes.length - 1]);
+    state.mapPeriodHours = topologyPeriodValue(state.topologyHours);
+    const mapPeriod = $('#mapPeriodHours');
+    if (mapPeriod) mapPeriod.value = String(state.mapPeriodHours);
+    localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
     state.rfRouteExclusiveNodes = new Set(route.nodes.map(normalizedCall).filter(Boolean));
     state.rfRouteAnalysis = {
       source,
@@ -8777,6 +8782,33 @@
     </div>`;
   }
 
+  function renderRfRouteRecords(records) {
+    state.rfRouteRecords = Array.isArray(records) ? records.slice() : [];
+    if (!state.rfRouteRecords.length) {
+      return '<div class="topology-stat-group rf-route-records-group"><h4>' +
+        escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+        '</h4><span class="hint">' +
+        escapeHtml(ui('Nenhuma rota RF completa com posição conhecida neste período.', 'No complete RF route with known positions in this period.')) +
+        '</span></div>';
+    }
+    const rows = state.rfRouteRecords.map((route, index) => {
+      const path = (route.nodes || []).join(' → ');
+      const meta = Number(route.hops || 0) + ' hops · ' +
+        Number(route.observations || 0).toLocaleString(currentLocale()) + ' obs. · ' +
+        ui('evidência', 'evidence') + ': ' + fmtDate(route.route_evidence_at);
+      return '<button type="button" class="rf-route-record" data-rf-route-record-index="' + index + '">' +
+        '<span class="rf-route-record-rank">' + (index + 1) + 'º</span>' +
+        '<span class="rf-route-record-path">' + escapeHtml(path) + '</span>' +
+        '<span class="rf-route-record-distance">' + escapeHtml(formatRfDistanceKm(route.distance_km)) + '</span>' +
+        '<span class="rf-route-record-meta">' + escapeHtml(meta) + '</span></button>';
+    }).join('');
+    return '<div class="topology-stat-group rf-route-records-group"><h4>' +
+      escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+      '</h4><div class="hint">' +
+      escapeHtml(ui('Somente enlaces RF observados. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Observed RF links only. Click a route to show it by itself on the map.')) +
+      '</div><div class="rf-route-record-list">' + rows + '</div></div>';
+  }
+
   async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
     if (!box) return;
@@ -8812,6 +8844,7 @@
 
       box.innerHTML =
         receptionSummary +
+        renderRfRouteRecords(data.rf_route_records || []) +
         renderStationStatsTable(data.station_rankings || []) +
 
         '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
@@ -8871,6 +8904,16 @@
     event.preventDefault();
     event.stopPropagation();
     void focusStationOnMap(link.dataset.mapCallsign || '');
+  });
+
+  document.addEventListener('click', event => {
+    const record = event.target.closest('[data-rf-route-record-index]');
+    if (!record) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const index = Number(record.dataset.rfRouteRecordIndex);
+    const route = state.rfRouteRecords[index];
+    if (route) void focusRfRecordRoute(route);
   });
 
   document.addEventListener('click', event => {
