@@ -754,6 +754,16 @@ def create_app() -> Flask:
             hours = 0.0
         return jsonify(db.list_topology_edges(hours))
 
+    @app.get("/api/topology/rf-origins")
+    def api_topology_rf_origins():
+        query = str(request.args.get("q") or "").upper().strip()
+        try:
+            hours = float(request.args.get("hours", 0))
+            limit = int(request.args.get("limit", 80))
+        except (TypeError, ValueError):
+            hours, limit = 0.0, 80
+        return jsonify(db.list_rf_route_origins(hours=hours, query=query, limit=limit))
+
     @app.get("/api/topology/rf-candidates")
     def api_topology_rf_candidates():
         source = str(request.args.get("source") or "").upper().strip()
