@@ -13,6 +13,26 @@
   - menor quantidade de hops;
   - correspondência textual com o que estiver sendo digitado.
 - O filtro do segundo campo deve reutilizar o mesmo grafo/evidência usado para calcular e desenhar a rota, evitando divergência entre autocomplete e resultado final.
+- Quando o usuário selecionar os dois indicativos e aplicar a análise de rota, o mapa deve entrar em um **modo de foco de rotas**:
+  - esconder temporariamente todos os demais enlaces/rotas que não façam parte de algum caminho RF válido entre os dois indicativos selecionados;
+  - manter visíveis apenas as rotas RF encontradas para aquele par;
+  - preservar as estações/nós intermediários necessários para compreender cada caminho.
+- Se houver **mais de uma rota RF possível**, exibir todas as alternativas válidas no mapa, mas ocultando qualquer enlace alheio ao filtro para evitar poluição visual.
+- Abrir um **painel/popup lateral** dedicado à análise, listando separadamente cada rota possível com base exclusivamente nos enlaces registrados.
+- Para cada rota alternativa, mostrar pelo menos:
+  - identificação da rota (ex.: Rota 1, Rota 2, Rota 3);
+  - sequência completa de indicativos/hops;
+  - quantidade de hops;
+  - distância de cada trecho;
+  - distância total da rota;
+  - distância direta entre origem e destino;
+  - data/hora da evidência mais recente da rota;
+  - quantidade de observações/evidências disponíveis por trecho, quando houver.
+- Permitir clicar em uma rota no painel lateral para **destacá-la** no mapa e reduzir visualmente a ênfase das demais alternativas.
+- Quando houver apenas uma rota válida, mostrar somente ela no mapa e o painel lateral deve indicar claramente que existe **1 rota RF completa observada**.
+- Incluir uma ação de **limpar/fechar análise de rota**, restaurando imediatamente os enlaces e camadas que estavam visíveis antes da aplicação do filtro.
+- O painel lateral e o mapa devem sempre usar o mesmo conjunto de enlaces filtrados pelo período atual; não listar uma rota no painel se algum trecho dela não estiver efetivamente disponível no grafo RF daquele período.
+- Não misturar rotas parciais com rotas completas: caminhos incompletos podem ser informados separadamente como diagnóstico, mas nunca devem aparecer entre as rotas RF completas disponíveis.
 
 - Adicionar no mapa um campo de **pesquisa por indicativo** para localizar rapidamente uma estação e centralizar/realçar sua posição.
 - Permitir informar um **segundo indicativo** em campo separado para analisar a conectividade RF entre as duas estações.
