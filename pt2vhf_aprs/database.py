@@ -146,6 +146,9 @@ DEFAULT_CONFIG = {
     "message_retry_seconds": 60,
     "message_retry_attempts": 2,
     "respond_to_queries": 1,
+    "auto_reply_enabled": 0,
+    "auto_reply_text": "Mensagem recebida. Retornarei assim que possível.",
+    "auto_reply_cooldown_seconds": 300,
     "language": "pt-BR",
     "map_type": "osm",
     "track_color": "#3ba6ff",
@@ -280,6 +283,9 @@ def init_db() -> None:
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
                 message_retry_attempts INTEGER NOT NULL DEFAULT 2,
                 respond_to_queries INTEGER NOT NULL DEFAULT 1,
+                auto_reply_enabled INTEGER NOT NULL DEFAULT 0,
+                auto_reply_text TEXT NOT NULL DEFAULT 'Mensagem recebida. Retornarei assim que possível.',
+                auto_reply_cooldown_seconds INTEGER NOT NULL DEFAULT 300,
                 language TEXT NOT NULL DEFAULT 'pt-BR',
                 map_type TEXT NOT NULL DEFAULT 'osm',
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
@@ -411,6 +417,7 @@ def init_db() -> None:
                 read_at TEXT,
                 tx_medium TEXT,
                 tx_path TEXT,
+                automated INTEGER NOT NULL DEFAULT 0,
                 timestamp TEXT NOT NULL,
                 raw TEXT
             );
@@ -691,6 +698,12 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN message_retry_attempts INTEGER NOT NULL DEFAULT 2")
         if "respond_to_queries" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN respond_to_queries INTEGER NOT NULL DEFAULT 1")
+        if "auto_reply_enabled" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN auto_reply_enabled INTEGER NOT NULL DEFAULT 0")
+        if "auto_reply_text" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN auto_reply_text TEXT NOT NULL DEFAULT 'Mensagem recebida. Retornarei assim que possível.'")
+        if "auto_reply_cooldown_seconds" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN auto_reply_cooldown_seconds INTEGER NOT NULL DEFAULT 300")
 
         # Corrige o antigo padrão v1.2, que combinava brazil.aprs2.net com 14580.
         # Mantém configurações personalizadas intactas.
@@ -719,6 +732,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE messages ADD COLUMN tx_medium TEXT")
         if "tx_path" not in message_columns:
             conn.execute("ALTER TABLE messages ADD COLUMN tx_path TEXT")
+        if "automated" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN automated INTEGER NOT NULL DEFAULT 0")
 
         object_columns = {row["name"] for row in conn.execute("PRAGMA table_info(aprs_objects)").fetchall()}
         object_migrations = {
@@ -810,6 +825,9 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["message_retry_seconds"] = max(15, min(3600, int(merged["message_retry_seconds"] or 60)))
     merged["message_retry_attempts"] = max(0, min(10, int(merged["message_retry_attempts"] or 0)))
     merged["respond_to_queries"] = 1 if bool(merged["respond_to_queries"]) else 0
+    merged["auto_reply_enabled"] = 1 if bool(merged["auto_reply_enabled"]) else 0
+    merged["auto_reply_text"] = " ".join(str(merged["auto_reply_text"] or "").replace("\r", " ").replace("\n", " ").split())[:240]
+    merged["auto_reply_cooldown_seconds"] = max(30, min(86400, int(merged["auto_reply_cooldown_seconds"] or 300)))
     merged["language"] = str(merged["language"] or "pt-BR").strip()
     merged["aprs_filter"] = str(merged["aprs_filter"] or "").strip()
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
@@ -4071,20 +4089,21 @@ def add_message(direction: str, from_call: str, to_call: str, message: str, msg_
                 status: str = "", raw: str | None = None, message_type: str = "message",
                 message_group_id: str | None = None, part_index: int | None = None,
                 part_count: int | None = None, retry_count: int = 0,
-                tx_medium: str | None = None, tx_path: str | None = None) -> int:
+                tx_medium: str | None = None, tx_path: str | None = None,
+                automated: bool = False) -> int:
     message_type = str(message_type or "message").strip().lower()
     if message_type not in {"message", "bulletin", "group_bulletin"}:
         message_type = "message"
     with connection() as conn:
         cur = conn.execute(
             """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,
-                                    message_group_id,part_index,part_count,retry_count,tx_medium,tx_path,timestamp,raw)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                                    message_group_id,part_index,part_count,retry_count,tx_medium,tx_path,automated,timestamp,raw)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 direction, from_call.upper(), to_call.upper(), message, message_type, msg_id, status,
                 message_group_id, part_index, part_count, max(0, int(retry_count or 0)),
                 str(tx_medium or "").upper() or None, str(tx_path or "").upper() or None,
-                utc_now_iso(), raw,
+                1 if automated else 0, utc_now_iso(), raw,
             ),
         )
         return int(cur.lastrowid)
@@ -4099,8 +4118,8 @@ def add_outgoing_message_parts(rows: list[dict[str, Any]]) -> list[int]:
         for row in rows:
             cur = conn.execute(
                 """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,
-                                        message_group_id,part_index,part_count,retry_count,tx_medium,tx_path,timestamp,raw)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                                        message_group_id,part_index,part_count,retry_count,tx_medium,tx_path,automated,timestamp,raw)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     "out",
                     str(row.get("from_call") or "").upper(),
@@ -4115,6 +4134,7 @@ def add_outgoing_message_parts(rows: list[dict[str, Any]]) -> list[int]:
                     max(0, int(row.get("retry_count") or 0)),
                     str(row.get("tx_medium") or "").upper() or None,
                     str(row.get("tx_path") or "").upper() or None,
+                    1 if bool(row.get("automated")) else 0,
                     utc_now_iso(),
                     row.get("raw"),
                 ),
