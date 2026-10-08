@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.10": {
+        "title": "Recordes RF e mapa mais responsivo",
+        "items": [
+            "A barra de controles do mapa passa a quebrar de forma responsiva e recalcula a altura útil do mapa.",
+            "Campos de origem/destino e demais controles ficam mais compactos para aproveitar melhor a largura disponível.",
+            "Os dois campos de indicativo ganham sugestões progressivas baseadas no grafo RF disponível.",
+            "A aba Estatísticas deixa de usar rolagem vertical interna nos principais rankings.",
+            "Novo bloco Recordes RF lista as rotas completas mais longas por distância total.",
+            "Ao clicar em um recorde, somente aquela rota e as estações envolvidas permanecem visíveis no mapa até limpar o foco.",
+        ],
+    },
     "1.14.9": {
         "title": "Pesquisa e análise de rotas RF no mapa",
         "items": [
