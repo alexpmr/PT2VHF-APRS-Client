@@ -1,5 +1,13 @@
 ## Novo — Mapa: barra superior espremida / responsividade dos controles
 
+- Reduzir a largura dos campos de **indicativo de origem e destino**, deixando-os apenas com o espaço necessário para um indicativo APRS válido e pequena folga visual.
+- Tornar também os demais campos, selects e botões da barra **mais justos/compactos**, evitando larguras mínimas excessivas.
+- Priorizar dimensionamento por conteúdo (`fit-content`/largura intrínseca quando aplicável), mantendo somente o espaço necessário para texto, ícone e área confortável de clique.
+- Evitar campos vazios largos quando o conteúdo máximo previsível é curto.
+- Preservar legibilidade, acessibilidade e área mínima de interação, sem deixar os controles visualmente apertados demais.
+- Em telas largas, não expandir os controles desnecessariamente; usar o espaço extra principalmente para o mapa.
+- Em telas menores, combinar essa compactação com a quebra responsiva em linhas prevista nesta mesma correção.
+
 - Corrigir a faixa de controles imediatamente acima do mapa, que ficou **espremida e recortada** após a inclusão da pesquisa de indicativos/Rotas RF.
 - Na largura mostrada na interface, alguns controles deixam de ficar totalmente visíveis e a barra passa a exigir espaço horizontal maior do que o disponível.
 - Evitar comprimir excessivamente campos, selects e botões a ponto de prejudicar leitura ou operação.
