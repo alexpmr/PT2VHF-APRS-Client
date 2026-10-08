@@ -86,6 +86,8 @@
 
 ## Implementado até a v1.14.10 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
+- Na barra do mapa, renomear o botão **“Rotas RF”** para **“Pesquisar”**, mantendo a mesma ação de consultar/analisar as rotas RF entre os indicativos informados.
+
 - Tornar os campos de **indicativo inicial** e **indicativo final** autocompletáveis desde os primeiros caracteres digitados.
 - No campo de **origem/início**, sugerir indicativos já conhecidos pelo cliente no período/base atual, priorizando estações com posição válida e participação em enlaces RF observados.
 - À medida que o usuário digitar, reduzir dinamicamente a lista de sugestões por correspondência de prefixo/trecho do indicativo.
