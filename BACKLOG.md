@@ -1,5 +1,19 @@
 ## Novo — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
+- Após selecionar/preencher o **primeiro indicativo**, o campo do **segundo indicativo** deve ser filtrado dinamicamente.
+- Ao começar a digitar o segundo indicativo, exibir como sugestões apenas estações para as quais exista **rota RF completa observada** a partir do primeiro indicativo, dentro do período atualmente selecionado no mapa.
+- Não listar como candidato do segundo campo uma estação cujo caminho dependa de trecho APRS-IS/Internet, de salto ausente ou de evidência RF incompleta.
+- A lista deve funcionar como busca/autocomplete, reduzindo as opções conforme o usuário digita.
+- Se não existir nenhuma estação com rota RF completa a partir do primeiro indicativo, informar isso no próprio campo/resultado, sem sugerir estações inválidas.
+- Ao trocar o primeiro indicativo ou o período do mapa, recalcular imediatamente a lista de candidatos válidos para o segundo campo.
+- Se o segundo indicativo já selecionado deixar de possuir rota RF completa após mudança de período/filtros, invalidar a seleção e informar o motivo.
+- Priorizar na ordenação dos candidatos, quando possível:
+  - rota RF mais recente;
+  - maior quantidade de evidências/observações;
+  - menor quantidade de hops;
+  - correspondência textual com o que estiver sendo digitado.
+- O filtro do segundo campo deve reutilizar o mesmo grafo/evidência usado para calcular e desenhar a rota, evitando divergência entre autocomplete e resultado final.
+
 - Adicionar no mapa um campo de **pesquisa por indicativo** para localizar rapidamente uma estação e centralizar/realçar sua posição.
 - Permitir informar um **segundo indicativo** em campo separado para analisar a conectividade RF entre as duas estações.
 - Quando houver evidência de um caminho RF completo entre origem e destino, listar e desenhar no mapa **toda a rota RF observada**, incluindo todos os nós/hops intermediários.
