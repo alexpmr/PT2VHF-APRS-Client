@@ -46,6 +46,20 @@ Os arquivos abaixo apontam diretamente para a **release v1.14.5**, evitando link
 - **Compatibilidade:** preservadas as correções da v1.14.4 para enlaces Internet/iGate, períodos de 15/30 min e layout SAT responsivo.
 - Pacotes completos Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
+## Novidades da v1.14.5
+
+- **Configuração — Salvar e sair:** o estado alterado é recalculado pelo conteúdo real do formulário, reduzindo falsos “não há o que salvar”.
+- **Configuração — backend lento:** respostas atrasadas de `GET /api/config` não apagam nem transformam uma edição feita pelo usuário em novo baseline.
+- **Configuração — botão inferior:** envia somente os campos efetivamente modificados e não faz recarga assíncrona imediatamente após o POST, removendo a corrida que podia perder o estado salvo.
+- **Configuração — erro real:** o modal passa a mostrar a mensagem verdadeira devolvida pelo backend em vez de substituir tudo por “Revise os dados”.
+- **Configuração — Descartar:** restaura o último estado válido já carregado em memória e sai da aba sem depender de nova chamada ao backend.
+- **Configuração — Continuar:** apenas fecha o modal e preserva exatamente os valores editados.
+- **Configurações antigas:** um valor legado não relacionado não bloqueia mais o salvamento de outro campo; somente campos enviados no patch são validados.
+- **SAT:** corrigido o `$().forEach is not a function` nos serviços monitorados do satélite.
+- **SAT:** falhas na renderização do painel de detalhes são tratadas separadamente e não aparecem indevidamente como “Erro ao calcular órbita”.
+- **Regressão:** novos testes pytest e Chromium/Playwright reproduzem backend lento, erro real de POST, descarte sem backend e controles SAT.
+- **Compatibilidade:** preservadas as correções da v1.14.4, inclusive enlaces Internet/iGate tracejados e RF genuíno sólido.
+
 ## Novidades da v1.14.4
 
 - **Configuração:** Salvar e sair, Descartar e sair e Continuar na Configuração corrigidos. Alterações persistidas no SQLite, confirmação de sucesso, feedback de erro sem perda dos valores e bloqueio de cliques duplicados.
