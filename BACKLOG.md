@@ -14,6 +14,21 @@
 
 ## Implementado na v1.14.9 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
+- Tornar os campos de **indicativo inicial** e **indicativo final** autocompletáveis desde os primeiros caracteres digitados.
+- No campo de **origem/início**, sugerir indicativos já conhecidos pelo cliente no período/base atual, priorizando estações com posição válida e participação em enlaces RF observados.
+- À medida que o usuário digitar, reduzir dinamicamente a lista de sugestões por correspondência de prefixo/trecho do indicativo.
+- Após selecionar ou preencher o primeiro indicativo, o campo de **destino/fim** deve passar a sugerir somente indicativos para os quais exista **rota RF completa observada/possível no grafo atual**, respeitando o período selecionado.
+- Não sugerir no segundo campo estações cujo caminho dependa de APRS-IS/Internet, trecho ausente ou rota RF incompleta.
+- Pré-preencher/sugerir os indicativos conhecidos de forma progressiva, sem exigir que o usuário memorize ou digite o indicativo completo.
+- Se houver apenas uma correspondência válida para o texto digitado, permitir completar automaticamente o indicativo quando isso não gerar ambiguidade.
+- Ordenar as sugestões considerando, quando disponível:
+  - melhor correspondência textual;
+  - rota RF completa mais recente;
+  - maior quantidade de observações/evidências;
+  - menor quantidade de hops.
+- Atualizar imediatamente as sugestões caso o usuário altere o período do mapa, a origem ou os filtros que mudem o grafo RF disponível.
+- Reutilizar a mesma base de indicativos/topologia usada pela análise de rotas para evitar sugestões que depois não possam ser efetivamente calculadas.
+
 - Após selecionar/preencher o **primeiro indicativo**, o campo do **segundo indicativo** deve ser filtrado dinamicamente.
 - Ao começar a digitar o segundo indicativo, exibir como sugestões apenas estações para as quais exista **rota RF completa observada** a partir do primeiro indicativo, dentro do período atualmente selecionado no mapa.
 - Não listar como candidato do segundo campo uma estação cujo caminho dependa de trecho APRS-IS/Internet, de salto ausente ou de evidência RF incompleta.
