@@ -180,7 +180,8 @@ body.map-context-visible main { height: calc(100vh - 143px - var(--map-context-h
   gap: 5px;
   min-width: 0;
   width: 100%;
-  margin: 0;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .map-context-field {
