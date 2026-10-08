@@ -48,10 +48,10 @@ h1 { margin: 0; font-size: 20px; }
 .connection-control {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-width: 168px;
-  min-height: 42px;
-  padding: 6px 10px;
+  gap: 7px;
+  min-width: auto;
+  min-height: 30px;
+  padding: 4px 9px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--panel-2);
@@ -4312,4 +4312,23 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
   grid-column: 2 / -1;
   color: var(--muted);
   font-size: 10px;
+}
+
+/* v1.14.11 - indicadores compactos do cabeçalho */
+.connection-control-copy small { display: none; }
+.connection-control-copy strong { font-size: 11px; line-height: 1; }
+.tnc-header-status {
+  min-width: auto !important;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  white-space: nowrap;
+}
+.tnc-header-status .dot,
+.connection-control .dot {
+  width: 9px;
+  height: 9px;
 }
