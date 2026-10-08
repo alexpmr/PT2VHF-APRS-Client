@@ -1734,7 +1734,7 @@ def test_v1713_object_symbols_activity_and_version_status():
     assert "L.tooltip({ permanent: false, direction: 'top', opacity: .9 })" not in js
     assert "options.duration || 1000" in js
 
-    assert "Versão atualizada" in js
+    assert "Atualizada" in js
     assert "Versão ${data.latest_version} disponível" in js
     assert "function rescheduleUpdateChecks()" in js
 
