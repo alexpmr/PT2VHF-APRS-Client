@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.9": {
+        "title": "Pesquisa e análise de rotas RF no mapa",
+        "items": [
+            "O Mapa ganha pesquisa por indicativo e localização rápida da estação.",
+            "Após escolher a origem, o segundo indicativo mostra somente destinos com rota RF completa observada no período atual.",
+            "A análise enumera múltiplas rotas RF completas, ocultando temporariamente enlaces alheios ao filtro.",
+            "O painel lateral detalha hops, distâncias por trecho e total, distância direta, evidência temporal e observações.",
+            "APRS-IS/Internet é excluído do grafo usado para completar rotas RF.",
+            "O hover e o popup dos enlaces passam a informar também o comprimento em metros ou quilômetros.",
+        ],
+    },
     "1.14.8": {
         "title": "Retenção granular e resposta automática",
         "items": [
