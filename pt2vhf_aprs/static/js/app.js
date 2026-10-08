@@ -75,6 +75,9 @@
     rfRouteSelectedIndex: -1,
     rfRouteNodeMarkers: new Map(),
     rfRouteCandidateTimer: null,
+    rfRouteOriginTimer: null,
+    rfRouteExclusiveNodes: null,
+    rfRouteRecords: [],
     mapLegendElement: null,
     mapLegendCollapsed: localStorage.getItem('pt2vhf_map_legend_collapsed') === '1',
     trafficReplayLayers: new Set(),
@@ -3728,7 +3731,10 @@
       const periodObjects = allObjects.filter(objectMatchesMapPeriod);
       renderMapViewTree(periodStations, periodObjects);
 
-      const visibleStations = periodStations.filter(stationMatchesViewFilter);
+      const routeFocusNodes = state.rfRouteExclusiveNodes;
+      const visibleStations = periodStations
+        .filter(stationMatchesViewFilter)
+        .filter(station => !routeFocusNodes || routeFocusNodes.has(normalizedCall(station.callsign)));
       state.mapKnownCallsigns = new Set(allStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
       state.mapVisibleCallsigns = new Set(visibleStations.map(station => normalizedCall(station.callsign)).filter(Boolean));
 
@@ -3774,7 +3780,7 @@
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
       }
 
-      const visibleObjects = periodObjects.filter(objectMatchesViewFilter);
+      const visibleObjects = routeFocusNodes ? [] : periodObjects.filter(objectMatchesViewFilter);
       const activeObjects = new Set(visibleObjects.map(object => String(object.name || '')));
       for (const [name, marker] of state.objectMarkers) {
         if (!activeObjects.has(name)) {
@@ -3820,7 +3826,7 @@
       }
 
       const grouped = new Map();
-      if (state.tracklogEnabled) {
+      if (state.tracklogEnabled && !routeFocusNodes) {
         for (const track of (Array.isArray(data.tracks) ? data.tracks : [])) {
           if (!trackMatchesMapPeriod(track)) continue;
           const call = normalizedCall(track.callsign);
