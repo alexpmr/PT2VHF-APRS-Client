@@ -1,5 +1,22 @@
 # Backlog
 
+## Novo — Mensagens: resposta automática customizável
+
+- Adicionar opção de **Resposta automática** para mensagens APRS recebidas.
+- Permitir habilitar/desabilitar o recurso globalmente.
+- Permitir configurar livremente o **texto da resposta automática**.
+- Reutilizar o mesmo pipeline da aba **Mensagens**, incluindo validação de destino, fila de envio, roteamento, ACK/REJ, retries, persistência e logs.
+- Responder somente a mensagens direcionadas à própria estação/SSID configurado, evitando responder a boletins, grupos, objetos, telemetria ou tráfego que não seja uma mensagem direta válida.
+- Implementar proteção contra **loop de autoresposta**, impedindo duas estações com resposta automática de ficarem respondendo indefinidamente entre si.
+- Aplicar cooldown por remetente e deduplicação por mensagem recebida.
+- Permitir configurar um intervalo mínimo entre respostas automáticas ao mesmo remetente.
+- Registrar no histórico/log que a mensagem foi enviada automaticamente.
+- Exibir no histórico o texto original recebido e a resposta automática disparada.
+- Respeitar o estado da conexão APRS-IS/TNC e as mesmas regras de segurança já existentes para TX.
+- Persistir a configuração após reinício.
+- Incluir testes de regressão para mensagem direta, mensagens duplicadas, ACK/REJ, cooldown, loop entre autorespostas e recurso desabilitado.
+
+
 ## Novo — Configuração: retenção granular do banco
 
 - Revisar o bloco **Saúde e retenção do banco** da aba **Configuração** para facilitar o controle do tamanho do SQLite.
