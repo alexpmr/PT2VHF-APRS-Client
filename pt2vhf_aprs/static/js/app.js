@@ -2063,11 +2063,21 @@
 
     if (rfSource && rfSource.dataset.bound !== '1') {
       rfSource.dataset.bound = '1';
+      rfSource.addEventListener('focus', () => { void refreshRfRouteOrigins(rfSource.value); });
+      rfSource.addEventListener('input', () => {
+        rfSource.value = rfSource.value.toUpperCase();
+        if (rfTarget) rfTarget.value = '';
+        if (state.rfRouteOriginTimer) clearTimeout(state.rfRouteOriginTimer);
+        state.rfRouteOriginTimer = setTimeout(() => {
+          void refreshRfRouteOrigins(rfSource.value);
+        }, 140);
+      });
       rfSource.addEventListener('change', async () => {
         rfSource.value = normalizedCall(rfSource.value);
         if (rfTarget) rfTarget.value = '';
         locateRfCallsign(rfSource.value);
         await clearRfRouteAnalysis();
+        await refreshRfRouteOrigins(rfSource.value);
         await refreshRfRouteCandidates('');
       });
       rfSource.addEventListener('keydown', event => {
@@ -2108,6 +2118,8 @@
       rfClear.addEventListener('click', async () => {
         if (rfSource) rfSource.value = '';
         if (rfTarget) rfTarget.value = '';
+        const sourceList = $('#rfRouteSourceList');
+        if (sourceList) sourceList.innerHTML = '';
         const list = $('#rfRouteTargetList');
         if (list) list.innerHTML = '';
         const status = $('#rfRouteCandidateStatus');
