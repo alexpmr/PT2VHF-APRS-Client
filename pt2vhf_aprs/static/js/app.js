@@ -3114,6 +3114,12 @@
         '&hours=' + encodeURIComponent(state.mapPeriodHours) +
         '&max_routes=12&max_hops=8';
       const payload = await api(url);
+      const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
+      state.rfRouteExclusiveNodes = null;
+      if (hadExclusiveFocus) {
+        setTransientRouteFocusVisibility(true);
+        await loadMapData();
+      }
       state.rfRouteAnalysis = payload;
       state.rfRouteSelectedIndex = -1;
       await loadTopology();
