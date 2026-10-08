@@ -3635,13 +3635,14 @@ def _map_data_result(payload: dict[str, Any], *, source: str, age_ms: float = 0.
     return result
 
 
-def invalidate_map_data_cache(*, drop_payload: bool = False) -> None:
-    """Invalidate destructive changes immediately; coalesce normal RX updates.
+def invalidate_map_data_cache(*, drop_payload: bool = False, coalesce: bool = False) -> None:
+    """Invalidate explicit changes immediately; coalesce only continuous RX.
 
-    Position/track changes arrive continuously. Resetting the cache age for
-    every APRS packet forced a full map rebuild on virtually every frontend
-    poll. Normal RX now keeps the latest snapshot until the short cache TTL;
-    destructive operations still drop it immediately.
+    Position/track changes from APRS RX arrive continuously. Resetting the
+    cache age for every received packet forced a full map rebuild on virtually
+    every frontend poll. The RX pipeline may request coalescing until the short
+    cache TTL, while explicit station edits and destructive operations remain
+    immediately visible.
     """
     global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms, _map_data_cache_db_path
     with _map_data_cache_lock:
@@ -3655,6 +3656,8 @@ def invalidate_map_data_cache(*, drop_payload: bool = False) -> None:
             _map_data_cache_payload = None
             _map_data_cache_at = 0.0
             _map_data_cache_build_ms = 0.0
+        elif not coalesce:
+            _map_data_cache_at = 0.0
 
 
 def _build_map_data_uncached() -> dict[str, Any]:
@@ -4299,7 +4302,7 @@ def process_received_packet(
         if parsed and parsed.get("from"):
             _upsert_station_conn(conn, parsed)
     if parsed and parsed.get("from"):
-        invalidate_map_data_cache(drop_payload=False)
+        invalidate_map_data_cache(drop_payload=False, coalesce=True)
     elapsed_ms = (time.monotonic() - started) * 1000
     if elapsed_ms >= 250:
         diag.log_event(
