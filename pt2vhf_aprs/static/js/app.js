@@ -2052,6 +2052,71 @@
   }
 
   function renderMapViewTree(stations = [], objects = []) {
+    const rfSource = $('#rfRouteSource');
+    const rfTarget = $('#rfRouteTarget');
+    const rfApply = $('#rfRouteApply');
+    const rfClear = $('#rfRouteClear');
+    const rfClose = $('#rfRoutePanelClose');
+
+    if (rfSource && rfSource.dataset.bound !== '1') {
+      rfSource.dataset.bound = '1';
+      rfSource.addEventListener('change', async () => {
+        rfSource.value = normalizedCall(rfSource.value);
+        if (rfTarget) rfTarget.value = '';
+        locateRfCallsign(rfSource.value);
+        await clearRfRouteAnalysis();
+        await refreshRfRouteCandidates('');
+      });
+      rfSource.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        rfSource.value = normalizedCall(rfSource.value);
+        locateRfCallsign(rfSource.value);
+        void refreshRfRouteCandidates('');
+      });
+    }
+
+    if (rfTarget && rfTarget.dataset.bound !== '1') {
+      rfTarget.dataset.bound = '1';
+      rfTarget.addEventListener('input', () => {
+        rfTarget.value = rfTarget.value.toUpperCase();
+        if (state.rfRouteCandidateTimer) clearTimeout(state.rfRouteCandidateTimer);
+        state.rfRouteCandidateTimer = setTimeout(() => {
+          void refreshRfRouteCandidates(rfTarget.value);
+        }, 180);
+      });
+      rfTarget.addEventListener('change', () => {
+        rfTarget.value = normalizedCall(rfTarget.value);
+        locateRfCallsign(rfTarget.value);
+      });
+      rfTarget.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        void applyRfRouteAnalysis();
+      });
+    }
+
+    if (rfApply && rfApply.dataset.bound !== '1') {
+      rfApply.dataset.bound = '1';
+      rfApply.addEventListener('click', () => void applyRfRouteAnalysis());
+    }
+    if (rfClear && rfClear.dataset.bound !== '1') {
+      rfClear.dataset.bound = '1';
+      rfClear.addEventListener('click', async () => {
+        if (rfSource) rfSource.value = '';
+        if (rfTarget) rfTarget.value = '';
+        const list = $('#rfRouteTargetList');
+        if (list) list.innerHTML = '';
+        const status = $('#rfRouteCandidateStatus');
+        if (status) status.textContent = '';
+        await clearRfRouteAnalysis();
+      });
+    }
+    if (rfClose && rfClose.dataset.bound !== '1') {
+      rfClose.dataset.bound = '1';
+      rfClose.addEventListener('click', () => void clearRfRouteAnalysis());
+    }
+
     const tree = $('#mapViewTree');
     if (!tree) return;
 
@@ -2312,6 +2377,10 @@
         state.replayWindowEnd = null;
         localStorage.setItem('pt2vhf_map_period_hours', String(state.mapPeriodHours));
         await loadMapData();
+        if ($('#rfRouteSource')?.value.trim()) {
+          await refreshRfRouteCandidates('', { preserveTarget: true });
+          if (state.rfRouteAnalysis && $('#rfRouteTarget')?.value.trim()) await applyRfRouteAnalysis();
+        }
         stopTrafficTimer();
         state.trafficPlaying = false;
         state.trafficOverview = null;
