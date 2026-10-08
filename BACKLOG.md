@@ -1,4 +1,4 @@
-## Novo — Mapa: pesquisa por indicativo e rota RF entre duas estações
+## Implementado na v1.14.9 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
 - Após selecionar/preencher o **primeiro indicativo**, o campo do **segundo indicativo** deve ser filtrado dinamicamente.
 - Ao começar a digitar o segundo indicativo, exibir como sugestões apenas estações para as quais exista **rota RF completa observada** a partir do primeiro indicativo, dentro do período atualmente selecionado no mapa.
@@ -56,7 +56,7 @@
 - Reutilizar, sempre que possível, os dados e a lógica de **Topologia/Enlaces** já existentes para manter a classificação RF/APRS-IS coerente em toda a aplicação.
 - Criar testes para localização por indicativo, rota RF simples, rota multi-hop, múltiplas rotas, ausência de caminho completo, mistura RF/APRS-IS e cálculo das distâncias.
 
-## Novo — Mapa: comprimento do enlace no hover
+## Implementado na v1.14.9 — Mapa: comprimento do enlace no hover
 
 - Ao posicionar o mouse sobre um **enlace** no mapa, exibir também o **comprimento/distância total do enlace**.
 - Calcular a distância entre os dois pontos/extremidades do enlace usando as coordenadas já disponíveis.
