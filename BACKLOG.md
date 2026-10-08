@@ -1,5 +1,30 @@
 ## Novo — Estatísticas: recordes dos enlaces/rotas RF mais longos
 
+- Ao selecionar/clicar em um item do ranking de **Recordes RF**, abrir imediatamente a rota correspondente no mapa em **modo de foco exclusivo**.
+- Nesse modo, exibir somente:
+  - a rota RF selecionada;
+  - as estações de origem e destino;
+  - todos os digipeaters/estações intermediárias envolvidos;
+  - os enlaces/trechos que compõem aquele caminho.
+- Ocultar temporariamente do mapa:
+  - demais estações;
+  - demais enlaces RF;
+  - enlaces APRS-IS/Internet;
+  - objetos/camadas que possam poluir visualmente a leitura da rota, quando não forem necessários para o contexto.
+- Ajustar automaticamente o zoom/enquadramento para mostrar o trajeto completo com boa margem visual.
+- Destacar a sequência da rota de forma clara, preservando a ordem dos hops.
+- Mostrar no mapa/painel de apoio:
+  - sequência completa dos indicativos;
+  - distância de cada trecho;
+  - distância total da rota;
+  - quantidade de hops;
+  - evidência/horário da rota.
+- Reutilizar o mesmo **modo de foco de rotas RF** já existente na pesquisa por dois indicativos, evitando uma implementação paralela.
+- Incluir ação clara de **Voltar/Limpar foco**, restaurando exatamente a visualização anterior do mapa.
+- Ao selecionar outro item do ranking, substituir o foco atual pela nova rota, sem exigir limpeza manual prévia.
+- Garantir que o mapa não mostre simultaneamente toda a topologia geral enquanto um recorde estiver selecionado, para que o trajeto fique **claro e nítido**.
+- Criar teste/regressão para seleção no ranking, foco exclusivo, enquadramento, troca de recorde e restauração do estado anterior do mapa.
+
 - Adicionar na aba **Estatísticas** um bloco de **Recordes RF** com ranking das rotas/enlaces completos entre estações com maior distância total observada.
 - Exibir em formato de ranking, por exemplo:
   - `1 — PT2VHF → PP2AX → PY2ASD — 182 km`
