@@ -1,5 +1,33 @@
 # Backlog
 
+## Novo — Configuração: retenção granular do banco
+
+- Revisar o bloco **Saúde e retenção do banco** da aba **Configuração** para facilitar o controle do tamanho do SQLite.
+- Permitir configurar separadamente a retenção de:
+  - **Mensagens**;
+  - **Tracklogs/posições**;
+  - **Enlaces/Topologia**;
+  - **Log APRS**;
+  - **Frames TNC**;
+  - **Decisões TNC**;
+  - **Notificações**;
+  - demais históricos persistentes relevantes que contribuam para o crescimento do banco.
+- Para cada categoria, oferecer presets simples:
+  - **Não apagar**;
+  - **1 dia**;
+  - **1 semana**;
+  - **1 mês**.
+- Preservar a possibilidade de políticas diferentes por categoria; não aplicar uma retenção global obrigatória.
+- **Não alterar automaticamente** os valores existentes do usuário ao atualizar de versão.
+- Executar a limpeza de forma incremental/segura, sem bloquear recepção APRS, TNC, mapa ou salvamento da Configuração.
+- Manter a ação **Aplicar limpeza agora**, exibindo antes/depois a quantidade de registros removidos e, quando possível, o espaço recuperável/recuperado.
+- A opção **Não apagar** deve desativar expurgo automático apenas daquela categoria.
+- A retenção de **Enlaces/Topologia** deve preservar a coerência entre arestas, eventos e evidências RF/APRS-IS, sem deixar referências órfãs ou alterar a classificação dos enlaces atuais.
+- Exibir uma explicação curta no bloco: retenções menores mantêm o banco mais leve; retenções longas preservam mais histórico.
+- A política deve ser persistida no SQLite/configuração e reaplicada após reinício.
+- Criar testes de regressão para cada preset e para migração de instalações que já possuam valores de retenção configurados.
+
+
 ## Implementado na v1.14.7
 
 - Hardening do backend SQLite para bancos crescentes.
