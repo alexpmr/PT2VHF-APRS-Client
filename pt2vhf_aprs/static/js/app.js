@@ -286,7 +286,7 @@
         el.title = ui(`Instalada ${current}. Clique para baixar e instalar ${latest}.`, `Installed ${current}. Click to download and install ${latest}.`);
       } else if (data.status === 'latest') {
         el.classList.add('latest');
-        textEl.textContent = ui('Versão atualizada', 'Version up to date');
+        textEl.textContent = ui('Atualizada', 'Up to date');
         el.title = ui(`${current} é a versão mais recente publicada.`, `${current} is the latest published version.`);
       } else if (data.status === 'ahead') {
         el.classList.add('ahead');
@@ -4659,11 +4659,16 @@
     button.setAttribute('aria-label', view.label + '. ' + view.hint);
     const statusText = $('#connectionControlStatus');
     const actionText = $('#connectionControlAction');
-    if (statusText) statusText.textContent = view.label;
-    if (actionText) actionText.textContent = state.connectionActionBusy ? ui('Aguarde…', 'Please wait…') : view.hint;
+    if (statusText) statusText.textContent = 'APRS-IS';
+    if (actionText) actionText.textContent = '';
+    button.classList.toggle('connected', !!status.connected);
+    if (!status.connected) {
+      button.classList.remove('unverified', 'connecting', 'lost');
+      button.classList.add('disconnected');
+    }
     button.disabled = !!state.connectionActionBusy;
     const detail = String(status.last_error || status.server_message || status.state || '').trim();
-    button.title = detail ? (view.label + ' — ' + detail) : (view.label + ' — ' + view.hint);
+    button.title = detail ? ('APRS-IS — ' + view.label + ' — ' + detail) : ('APRS-IS — ' + view.label + ' — ' + view.hint);
   }
 
   async function refreshStatus() {
@@ -8823,12 +8828,14 @@
     const rows = state.rfRouteRecords.map((route, index) => {
       const path = (route.nodes || []).join(' → ');
       const meta = Number(route.hops || 0) + ' hops · ' +
+        ui('rota', 'route') + ': ' + formatRfDistanceKm(route.distance_km) + ' · ' +
         Number(route.observations || 0).toLocaleString(currentLocale()) + ' obs. · ' +
         ui('evidência', 'evidence') + ': ' + fmtDate(route.route_evidence_at);
       return '<button type="button" class="rf-route-record" data-rf-route-record-index="' + index + '">' +
         '<span class="rf-route-record-rank">' + (index + 1) + 'º</span>' +
         '<span class="rf-route-record-path">' + escapeHtml(path) + '</span>' +
-        '<span class="rf-route-record-distance">' + escapeHtml(formatRfDistanceKm(route.distance_km)) + '</span>' +
+        '<span class="rf-route-record-distance" title="' + escapeHtml(ui('Distância direta entre as estações extremas', 'Direct distance between endpoint stations')) + '">' +
+        escapeHtml(formatRfDistanceKm(route.direct_distance_km)) + '</span>' +
         '<span class="rf-route-record-meta">' + escapeHtml(meta) + '</span></button>';
     }).join('');
     return '<div class="topology-stat-group rf-route-records-group"><h4>' +
