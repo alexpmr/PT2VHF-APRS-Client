@@ -20,8 +20,8 @@ def test_v146_version_metadata():
     win = text("windows/version_info.txt")
     assert f"filevers=({major}, {minor}, {patch}, 0)" in win
     assert f"prodvers=({major}, {minor}, {patch}, 0)" in win
-    assert "FileVersion', '1.14.6'" in win
-    assert "ProductVersion', '1.14.6'" in win
+    assert f"FileVersion', '{version}'" in win
+    assert f"ProductVersion', '{version}'" in win
 
 
 def test_v146_satellite_runtime_is_removed():
