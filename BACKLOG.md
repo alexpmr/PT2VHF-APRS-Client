@@ -1,3 +1,11 @@
+## Novo — Mapa: comprimento do enlace no hover
+
+- Ao posicionar o mouse sobre um **enlace** no mapa, exibir também o **comprimento/distância total do enlace**.
+- Calcular a distância entre os dois pontos/extremidades do enlace usando as coordenadas já disponíveis.
+- Mostrar a distância em formato amigável, preferencialmente em **km** e, para enlaces muito curtos, em **m**.
+- Reutilizar o mesmo painel/tooltip de hover já existente para informações do enlace, sem exigir clique.
+- Manter o valor coerente independentemente do tipo de enlace (**RF** ou **Internet/APRS-IS**) e dos filtros/zoom do mapa.
+
 # Backlog
 
 ## Implementado na v1.14.8 — Mensagens: resposta automática customizável
