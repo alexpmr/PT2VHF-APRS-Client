@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.11": {
+        "title": "Recordes RF refinados e cabeçalho compacto",
+        "items": [
+            "Os Recordes RF passam a ser ordenados pela distância direta entre as estações extremas.",
+            "A distância total da rota pelos hops permanece disponível apenas como informação complementar.",
+            "Cada par de estações aparece uma única vez no ranking, mesmo quando existem caminhos alternativos.",
+            "O botão Rotas RF do mapa passa a se chamar Pesquisar.",
+            "O cabeçalho usa os rótulos curtos Atualizada, TNC e APRS-IS, com LEDs vermelho/verde para os estados de conexão.",
+        ],
+    },
     "1.14.10": {
         "title": "Recordes RF e mapa mais responsivo",
         "items": [

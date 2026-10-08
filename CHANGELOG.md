@@ -1,3 +1,16 @@
+## 1.14.11 - 2026-10-08
+
+- **Recordes RF:** o ranking passa a usar como critério principal a distância geográfica direta entre as duas estações extremas, da maior para a menor, desde que exista rota RF completa entre elas.
+- **Distância da rota:** a soma dos hops continua exibida como informação complementar, sem influenciar a posição no ranking.
+- **Deduplicação por par:** cada par origem/destino aparece uma única vez no ranking, mesmo quando há caminhos RF alternativos.
+- **Mapa:** o botão “Rotas RF” passa a se chamar **“Pesquisar”**.
+- **Cabeçalho:** “Versão atualizada” passa a **“Atualizada”**.
+- **TNC:** indicador superior simplificado para LED vermelho/verde + texto **TNC**; detalhes permanecem no tooltip.
+- **APRS-IS:** indicador superior simplificado para LED vermelho/verde + texto **APRS-IS**; detalhes permanecem no tooltip.
+- **Layout:** indicadores TNC/APRS-IS ficaram mais compactos para liberar espaço no cabeçalho.
+- **Regressão:** testes cobrem ordenação por distância direta, deduplicação de pares e os novos rótulos/status do cabeçalho.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.10 - 2026-10-08
 
 - **Mapa — barra responsiva:** controles acima do mapa deixam de ficar recortados; a barra quebra de linha quando necessário e o mapa recalcula automaticamente a altura disponível.

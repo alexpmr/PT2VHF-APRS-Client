@@ -197,7 +197,8 @@ def test_tnc_connected_without_valid_kiss_is_warning_not_success():
     assert "Serial conectada — sem KISS" in js
     assert "Serial conectada — aguardando dados" in js
     assert "Serial operacional — RX KISS ativo" in js
-    assert "tr('Serial sem KISS')" in js
+    assert "text.textContent = 'TNC'" in js
+    assert "connected ? 'connected' : 'disconnected'" in js
     assert ".status.warning" in css
 
 

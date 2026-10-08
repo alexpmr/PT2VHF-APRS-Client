@@ -353,24 +353,10 @@
 
     const header = $('#tncHeaderStatus');
     if (header) {
-      header.className = `${statusClass(connected, !!status.tx_paused, rxState)} tnc-header-status`;
+      header.className = `status ${connected ? 'connected' : 'disconnected'} tnc-header-status`;
       const text = header.querySelector('span:last-child');
-      if (text) {
-        text.textContent = !connected
-          ? 'TNC offline'
-          : rxState === 'active'
-            ? `TNC · ${tr('RX KISS ativo')}`
-            : serial && rxState === 'terminal_bytes_active'
-              ? 'TNC · Terminal ativo'
-            : serial && rxState === 'bytes_without_kiss'
-              ? `TNC · ${tr('Serial sem KISS')}`
-              : serial && rxState === 'invalid'
-                ? `TNC · ${tr('AX.25 inválido')}`
-                : serial
-                  ? `TNC · ${tr('Serial aguardando')}`
-                  : agwpe ? 'TNC · AGWPE' : `TNC · ${tr('KISS aguardando')}`;
-      }
-      header.title = [status.state, status.endpoint, rxDetail, status.last_error].filter(Boolean).join(' · ');
+      if (text) text.textContent = 'TNC';
+      header.title = [connected ? 'TNC conectado' : 'TNC desconectado', status.state, status.endpoint, rxDetail, status.last_error].filter(Boolean).join(' · ');
     }
 
     const pairs = [
@@ -730,7 +716,7 @@
       if (header) {
         header.className = 'status disconnected tnc-header-status';
         const text = header.querySelector('span:last-child');
-        if (text) text.textContent = 'TNC erro';
+        if (text) text.textContent = 'TNC';
         header.title = error.message;
       }
     }

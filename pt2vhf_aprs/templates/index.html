@@ -74,12 +74,12 @@
       <span class="version-status-dot"></span>
       <span id="versionStatusText">Verificando versão…</span>
     </a>
-    <div id="tncHeaderStatus" class="status disconnected tnc-header-status" title="Estado TNC / RF"><span class="dot"></span><span>TNC offline</span></div>
+    <div id="tncHeaderStatus" class="status disconnected tnc-header-status" title="Estado TNC / RF"><span class="dot"></span><span>TNC</span></div>
     <button id="connectButton" type="button" class="connection-control disconnected" data-action="connect" title="Clique para conectar ao APRS-IS">
       <span class="dot" aria-hidden="true"></span>
       <span class="connection-control-copy">
-        <strong id="connectionControlStatus">Desconectado</strong>
-        <small id="connectionControlAction">Clique para conectar</small>
+        <strong id="connectionControlStatus">APRS-IS</strong>
+        <small id="connectionControlAction"></small>
       </span>
     </button>
   </div>
@@ -126,7 +126,7 @@
         <input id="rfRouteTarget" type="text" maxlength="9" autocomplete="off" list="rfRouteTargetList" placeholder="Somente rotas completas" aria-label="Segundo indicativo">
         <datalist id="rfRouteTargetList"></datalist>
       </label>
-      <button id="rfRouteApply" type="button" class="btn secondary">Rotas RF</button>
+      <button id="rfRouteApply" type="button" class="btn secondary">Pesquisar</button>
       <button id="rfRouteClear" type="button" class="btn secondary" title="Limpar análise de rota">Limpar</button>
       <small id="rfRouteCandidateStatus" class="rf-route-candidate-status"></small>
     </div>
