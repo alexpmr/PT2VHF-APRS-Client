@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.8": {
+        "title": "Retenção granular e resposta automática",
+        "items": [
+            "Configuração ganha presets independentes de retenção: Não apagar, 1 dia, 1 semana e 1 mês.",
+            "Mensagens, tracklogs, enlaces/topologia, logs APRS, TNC e notificações podem ter janelas distintas sem reduzir automaticamente valores existentes.",
+            "Limpeza de topologia remove também enlaces agregados sem evidência recente e informa registros removidos e espaço recuperável.",
+            "Mensagens diretas podem receber resposta automática com texto customizável e cooldown por remetente.",
+            "ACK/REJ, queries, boletins e grupos não acionam autoresposta; proteção por cooldown evita loops entre estações automáticas.",
+            "Autoresposta respeita o meio recebido e as mesmas guardas de segurança de TX APRS-IS/RF.",
+            "Mensagens automáticas ficam identificadas no histórico persistido.",
+        ],
+    },
     "1.14.7": {
         "title": "Backend mais responsivo com banco crescente",
         "items": [
