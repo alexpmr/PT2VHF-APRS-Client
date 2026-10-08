@@ -24,8 +24,9 @@ for marker in (
     "idx_topology_kind_target_seen",
     "idx_topology_igate_seen",
     "MAP_DATA_CACHE_SECONDS = 30.0",
+    "coalesce=True",
     "_station_position_issues_conn(conn, station_rows)",
-    "Normal RX now keeps the latest snapshot until the short cache TTL",
+    "cache age for every received packet forced a full map rebuild",
 ):
     if marker not in database:
         raise SystemExit(f"v1.14.7 database marker missing: {marker}")
