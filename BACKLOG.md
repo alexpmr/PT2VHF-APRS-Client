@@ -1,3 +1,17 @@
+## Novo — Mapa: barra superior espremida / responsividade dos controles
+
+- Corrigir a faixa de controles imediatamente acima do mapa, que ficou **espremida e recortada** após a inclusão da pesquisa de indicativos/Rotas RF.
+- Na largura mostrada na interface, alguns controles deixam de ficar totalmente visíveis e a barra passa a exigir espaço horizontal maior do que o disponível.
+- Evitar comprimir excessivamente campos, selects e botões a ponto de prejudicar leitura ou operação.
+- Reorganizar a barra de forma **responsiva**, preservando todos os comandos atuais, incluindo Histórico, Período, pesquisa de indicativos, Rotas RF, Limpar, Ver, Velocidade, Tipo de mapa e demais controles existentes.
+- Em larguras menores, permitir quebra organizada em **duas linhas** ou outra disposição adaptativa, em vez de simplesmente ocultar/recortar controles.
+- Manter alinhamento visual e espaçamento consistente entre grupos de controles.
+- Não reduzir o mapa desnecessariamente; a barra deve ocupar apenas a altura necessária.
+- Evitar rolagem horizontal como comportamento principal; se for usada como fallback extremo, não deve esconder controles essenciais.
+- Garantir funcionamento em notebooks, telas com escala do Windows ampliada e janelas não maximizadas.
+- Validar nos principais breakpoints e com zoom/escala de interface maiores.
+- Criar teste visual/regressão de layout para impedir que novos controles voltem a ultrapassar a largura disponível.
+
 ## Implementado na v1.14.9 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
 - Após selecionar/preencher o **primeiro indicativo**, o campo do **segundo indicativo** deve ser filtrado dinamicamente.
