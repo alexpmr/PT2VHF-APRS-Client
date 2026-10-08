@@ -4654,18 +4654,13 @@
     if (!button) return;
     const view = connectionControlView(status);
     button.classList.remove('connected', 'unverified', 'disconnected', 'connecting', 'lost');
-    button.classList.add(view.kind);
+    button.classList.add(status.connected ? 'connected' : 'disconnected');
     button.dataset.action = view.action;
     button.setAttribute('aria-label', view.label + '. ' + view.hint);
     const statusText = $('#connectionControlStatus');
     const actionText = $('#connectionControlAction');
     if (statusText) statusText.textContent = 'APRS-IS';
     if (actionText) actionText.textContent = '';
-    button.classList.toggle('connected', !!status.connected);
-    if (!status.connected) {
-      button.classList.remove('unverified', 'connecting', 'lost');
-      button.classList.add('disconnected');
-    }
     button.disabled = !!state.connectionActionBusy;
     const detail = String(status.last_error || status.server_message || status.state || '').trim();
     button.title = detail ? ('APRS-IS — ' + view.label + ' — ' + detail) : ('APRS-IS — ' + view.label + ' — ' + view.hint);
