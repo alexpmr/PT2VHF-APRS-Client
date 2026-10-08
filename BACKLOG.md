@@ -1,3 +1,16 @@
+## Novo — Estatísticas: exibir blocos completos sem rolagem interna
+
+- Remover, sempre que possível, as **barras de rolagem internas** dos blocos/cards da aba **Estatísticas**.
+- Os painéis devem crescer verticalmente conforme a quantidade de conteúdo, exibindo tabelas, rankings e demais informações **por inteiro**.
+- Priorizar uma única rolagem vertical da página/aba de Estatísticas, evitando a experiência de “rolagem dentro da rolagem”.
+- Remover alturas fixas, `max-height` ou `overflow-y: auto/scroll` que estejam limitando artificialmente cards como **Estações — atividade e interações** e outros blocos semelhantes.
+- Aplicar o mesmo princípio a **todos os blocos da aba Estatísticas**, mantendo cada seção inteira sempre que tecnicamente viável.
+- Preservar cabeçalhos, colunas e alinhamento das tabelas.
+- Para tabelas muito largas, manter comportamento horizontal responsivo sem cortar informações; a solicitação de remover rolagem refere-se principalmente à **rolagem vertical interna**.
+- Garantir que o aumento da altura dos cards não cause sobreposição entre blocos nem quebra do layout em resoluções menores.
+- Validar em notebook, tela Full HD, escala ampliada do Windows e janela não maximizada.
+- Criar regressão visual/layout para impedir o retorno de alturas internas fixas desnecessárias.
+
 ## Novo — Mapa: barra superior espremida / responsividade dos controles
 
 - Reduzir a largura dos campos de **indicativo de origem e destino**, deixando-os apenas com o espaço necessário para um indicativo APRS válido e pequena folga visual.
