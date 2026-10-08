@@ -2927,12 +2927,87 @@
     });
   }
 
+  function setTransientRouteFocusVisibility(visible) {
+    const method = visible ? 'addLayer' : 'removeLayer';
+    for (const layer of state.trafficReplayLayers) {
+      try { state.map?.[method]?.(layer); } catch (_) {}
+    }
+    for (const layer of state.queryTraceLayers) {
+      try { state.map?.[method]?.(layer); } catch (_) {}
+    }
+  }
+
+  function fitRfRouteBounds(routes) {
+    if (!state.map) return;
+    const points = [];
+    for (const route of routes || []) {
+      for (const edge of route.edges || []) {
+        points.push([Number(edge.source_lat), Number(edge.source_lon)]);
+        points.push([Number(edge.target_lat), Number(edge.target_lon)]);
+      }
+    }
+    const valid = points.filter(point => point.every(Number.isFinite));
+    if (valid.length) state.map.fitBounds(valid, { padding: [42, 42], maxZoom: 13 });
+  }
+
+  async function focusRfRecordRoute(route) {
+    if (!route || !Array.isArray(route.nodes) || route.nodes.length < 2) return;
+    const source = normalizedCall(route.source || route.nodes[0]);
+    const target = normalizedCall(route.target || route.nodes[route.nodes.length - 1]);
+    state.rfRouteExclusiveNodes = new Set(route.nodes.map(normalizedCall).filter(Boolean));
+    state.rfRouteAnalysis = {
+      source,
+      target,
+      direct_distance_km: Number(route.direct_distance_km),
+      routes: [route],
+      record_focus: true,
+    };
+    state.rfRouteSelectedIndex = 0;
+    const sourceInput = $('#rfRouteSource');
+    const targetInput = $('#rfRouteTarget');
+    if (sourceInput) sourceInput.value = source;
+    if (targetInput) targetInput.value = target;
+    setTransientRouteFocusVisibility(false);
+    activateTab('map');
+    await loadMapData();
+    await loadTopology();
+    renderRfRouteNodeMarkers();
+    renderRfRoutePanel();
+    focusRfRoute(0);
+    fitRfRouteBounds([route]);
+  }
+
+  async function refreshRfRouteOrigins(query = '') {
+    const input = $('#rfRouteSource');
+    const list = $('#rfRouteSourceList');
+    if (!input || !list) return [];
+    try {
+      const url = '/api/topology/rf-origins?hours=' + encodeURIComponent(state.mapPeriodHours) +
+        '&q=' + encodeURIComponent(query || '') + '&limit=100';
+      const rows = await api(url);
+      list.innerHTML = rows.map(item =>
+        '<option value="' + escapeHtml(item.callsign) + '">' +
+        Number(item.links || 0) + ' enlaces · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
+      ).join('');
+      return rows;
+    } catch (_) {
+      list.innerHTML = '';
+      return [];
+    }
+  }
+
   async function clearRfRouteAnalysis(options = {}) {
+    const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
     state.rfRouteAnalysis = null;
     state.rfRouteSelectedIndex = -1;
+    state.rfRouteExclusiveNodes = null;
     clearRfRouteNodeMarkers();
     renderRfRoutePanel();
-    if (options.reload !== false) await loadTopology();
+    if (hadExclusiveFocus) setTransientRouteFocusVisibility(true);
+    if (options.reload !== false) {
+      if (hadExclusiveFocus) await loadMapData();
+      else await loadTopology();
+    }
   }
 
   async function refreshRfRouteCandidates(query = '', options = {}) {
@@ -3004,15 +3079,8 @@
       await loadTopology();
       renderRfRouteNodeMarkers();
       renderRfRoutePanel();
-      const points = [];
-      for (const route of payload.routes || []) {
-        for (const edge of route.edges || []) {
-          points.push([Number(edge.source_lat), Number(edge.source_lon)]);
-          points.push([Number(edge.target_lat), Number(edge.target_lon)]);
-        }
-      }
-      const valid = points.filter(point => point.every(Number.isFinite));
-      if (valid.length) state.map.fitBounds(valid, { padding: [35, 35], maxZoom: 13 });
+      state.rfRouteExclusiveNodes = null;
+      fitRfRouteBounds(payload.routes || []);
       if (!payload.routes || !payload.routes.length) {
         toast(ui('Não existe rota RF completa observada entre esses indicativos neste período.', 'No complete RF route was observed between these callsigns in this period.'), 'error');
       }
