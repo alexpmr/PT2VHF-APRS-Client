@@ -103,21 +103,21 @@ def test_v1410_rf_records_respect_statistics_period():
             old = (datetime.now(timezone.utc) - timedelta(days=3)).replace(microsecond=0).isoformat()
             recent = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0).isoformat()
             with db.connection() as conn:
-                _station(conn, "PT2OLD1", -15.8, -47.9)
-                _station(conn, "PT2OLD2", -14.8, -46.9)
-                _station(conn, "PT2NEW1", -15.7, -47.8)
-                _station(conn, "PT2NEW2", -15.6, -47.7)
-                _edge(conn, "PT2OLD1", "PT2OLD2", "rf", 50, old)
-                _edge(conn, "PT2NEW1", "PT2NEW2", "rf", 5, recent)
+                _station(conn, "PT2O1", -15.8, -47.9)
+                _station(conn, "PT2O2", -14.8, -46.9)
+                _station(conn, "PT2N1", -15.7, -47.8)
+                _station(conn, "PT2N2", -15.6, -47.7)
+                _edge(conn, "PT2O1", "PT2O2", "rf", 50, old)
+                _edge(conn, "PT2N1", "PT2N2", "rf", 5, recent)
 
             records = db.list_rf_route_records(hours=24, limit=10)
             assert records
-            assert all("PT2OLD1" not in route["nodes"] for route in records)
-            assert any(set(route["nodes"]) == {"PT2NEW1", "PT2NEW2"} for route in records)
+            assert all("PT2O1" not in route["nodes"] for route in records)
+            assert any(set(route["nodes"]) == {"PT2N1", "PT2N2"} for route in records)
 
             stats = db.topology_stats(24)
             assert "rf_route_records" in stats
-            assert all("PT2OLD1" not in route["nodes"] for route in stats["rf_route_records"])
+            assert all("PT2O1" not in route["nodes"] for route in stats["rf_route_records"])
     finally:
         db.DB_PATH = original
 
