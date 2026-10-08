@@ -2169,6 +2169,178 @@ def list_rf_route_candidates(source: str, hours: float = 0, query: str = "", lim
     return candidates[: max(1, min(int(limit or 80), 200))]
 
 
+
+def list_rf_route_origins(hours: float = 0, query: str = "", limit: int = 80) -> list[dict[str, Any]]:
+    """Indicativos conhecidos que participam do grafo RF observável no período."""
+    graph, _positions = _rf_route_graph(hours)
+    query_norm = str(query or "").upper().strip()
+    rows: list[dict[str, Any]] = []
+    for callsign, neighbors in graph.items():
+        if query_norm and query_norm not in callsign:
+            continue
+        packet_count = sum(int(edge.get("packet_count") or 0) for edge in neighbors.values())
+        latest = max((str(edge.get("last_seen") or "") for edge in neighbors.values()), default="")
+        rows.append({
+            "callsign": callsign,
+            "links": len(neighbors),
+            "packet_count": packet_count,
+            "last_seen": latest,
+        })
+    rows.sort(key=lambda item: (
+        0 if query_norm and str(item["callsign"]).startswith(query_norm) else 1,
+        -int(item.get("packet_count") or 0),
+        -int(item.get("links") or 0),
+        str(item.get("callsign") or ""),
+    ))
+    return rows[: max(1, min(int(limit or 80), 200))]
+
+
+def _rf_route_payload(
+    nodes: list[str],
+    graph: dict[str, dict[str, dict[str, Any]]],
+    positions: dict[str, tuple[float, float]],
+) -> dict[str, Any] | None:
+    if len(nodes) < 2:
+        return None
+    route_edges: list[dict[str, Any]] = []
+    total = 0.0
+    latest_values: list[str] = []
+    observations = 0
+    for index in range(len(nodes) - 1):
+        a, b = nodes[index], nodes[index + 1]
+        edge = graph.get(a, {}).get(b)
+        if not edge or a not in positions or b not in positions:
+            return None
+        distance = float(edge.get("distance_km") or 0.0)
+        total += distance
+        observations += int(edge.get("packet_count") or 0)
+        if edge.get("last_seen"):
+            latest_values.append(str(edge["last_seen"]))
+        route_edges.append({
+            "source": a,
+            "target": b,
+            "source_lat": positions[a][0],
+            "source_lon": positions[a][1],
+            "target_lat": positions[b][0],
+            "target_lon": positions[b][1],
+            "distance_km": round(distance, 3),
+            "packet_count": int(edge.get("packet_count") or 0),
+            "first_seen": edge.get("first_seen") or "",
+            "last_seen": edge.get("last_seen") or "",
+            "classification_source": edge.get("classification_source") or "RF observado",
+        })
+    direct = round(haversine_km(*positions[nodes[0]], *positions[nodes[-1]]), 3)
+    return {
+        "source": nodes[0],
+        "target": nodes[-1],
+        "nodes": nodes,
+        "hops": len(nodes) - 1,
+        "distance_km": round(total, 3),
+        "direct_distance_km": direct,
+        "route_evidence_at": min(latest_values) if latest_values else "",
+        "observations": observations,
+        "edges": route_edges,
+    }
+
+
+def list_rf_route_records(
+    hours: float = 0,
+    limit: int = 10,
+    max_hops: int = 6,
+    beam_width: int = 500,
+) -> list[dict[str, Any]]:
+    """Ranking limitado dos caminhos RF simples mais longos observados.
+
+    O problema de caminho simples mais longo é combinatório; esta implementação usa
+    busca em feixe determinística sobre o mesmo grafo RF da análise interativa.
+    """
+    graph, positions = _rf_route_graph(hours)
+    route_limit = max(1, min(int(limit or 10), 50))
+    hop_limit = max(1, min(int(max_hops or 6), 10))
+    beam_limit = max(50, min(int(beam_width or 500), 2000))
+
+    def canonical(path: list[str]) -> tuple[str, ...]:
+        direct = tuple(path)
+        reverse = tuple(reversed(path))
+        return min(direct, reverse)
+
+    scored: dict[tuple[str, ...], tuple[float, int, str, list[str]]] = {}
+    frontier: list[tuple[float, int, str, list[str]]] = []
+    seen_edges: set[tuple[str, str]] = set()
+    for a, neighbors in graph.items():
+        for b, edge in neighbors.items():
+            pair = tuple(sorted((a, b)))
+            if pair in seen_edges:
+                continue
+            seen_edges.add(pair)
+            path = [a, b]
+            score = (
+                float(edge.get("distance_km") or 0.0),
+                int(edge.get("packet_count") or 0),
+                str(edge.get("last_seen") or ""),
+                path,
+            )
+            key = canonical(path)
+            scored[key] = score
+            frontier.append(score)
+
+    frontier.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+    frontier = frontier[:beam_limit]
+
+    # Cada rodada adiciona um hop a uma das extremidades, mantendo caminhos simples.
+    for _depth in range(1, hop_limit):
+        expanded: dict[tuple[str, ...], tuple[float, int, str, list[str]]] = {}
+        for total, observations, evidence, path in frontier:
+            for side in ("left", "right"):
+                endpoint = path[0] if side == "left" else path[-1]
+                for nxt, edge in graph.get(endpoint, {}).items():
+                    if nxt in path:
+                        continue
+                    next_path = ([nxt] + path) if side == "left" else (path + [nxt])
+                    if len(next_path) - 1 > hop_limit:
+                        continue
+                    next_total = total + float(edge.get("distance_km") or 0.0)
+                    next_obs = observations + int(edge.get("packet_count") or 0)
+                    edge_seen = str(edge.get("last_seen") or "")
+                    next_evidence = min([value for value in (evidence, edge_seen) if value], default="")
+                    key = canonical(next_path)
+                    candidate = (next_total, next_obs, next_evidence, next_path)
+                    current = expanded.get(key)
+                    if current is None or candidate[:3] > current[:3]:
+                        expanded[key] = candidate
+                    previous = scored.get(key)
+                    if previous is None or candidate[:3] > previous[:3]:
+                        scored[key] = candidate
+        if not expanded:
+            break
+        frontier = sorted(
+            expanded.values(),
+            key=lambda item: (item[0], item[1], item[2]),
+            reverse=True,
+        )[:beam_limit]
+
+    ranked = sorted(
+        scored.values(),
+        key=lambda item: (item[0], item[1], item[2], len(item[3])),
+        reverse=True,
+    )
+    result: list[dict[str, Any]] = []
+    emitted: set[tuple[str, ...]] = set()
+    for _total, _obs, _evidence, path in ranked:
+        key = canonical(path)
+        if key in emitted:
+            continue
+        payload = _rf_route_payload(path, graph, positions)
+        if not payload:
+            continue
+        emitted.add(key)
+        payload["rank"] = len(result) + 1
+        result.append(payload)
+        if len(result) >= route_limit:
+            break
+    return result
+
+
 def list_rf_routes(
     source: str,
     target: str,
@@ -2217,40 +2389,9 @@ def list_rf_routes(
 
     routes: list[dict[str, Any]] = []
     for nodes in found:
-        route_edges: list[dict[str, Any]] = []
-        total = 0.0
-        latest_values: list[str] = []
-        observations = 0
-        for index in range(len(nodes) - 1):
-            a, b = nodes[index], nodes[index + 1]
-            edge = dict(graph[a][b])
-            distance = float(edge.get("distance_km") or 0.0)
-            total += distance
-            observations += int(edge.get("packet_count") or 0)
-            if edge.get("last_seen"):
-                latest_values.append(str(edge["last_seen"]))
-            route_edges.append({
-                "source": a,
-                "target": b,
-                "source_lat": positions[a][0],
-                "source_lon": positions[a][1],
-                "target_lat": positions[b][0],
-                "target_lon": positions[b][1],
-                "distance_km": round(distance, 3),
-                "packet_count": int(edge.get("packet_count") or 0),
-                "first_seen": edge.get("first_seen") or "",
-                "last_seen": edge.get("last_seen") or "",
-                "classification_source": edge.get("classification_source") or "RF observado",
-            })
-        routes.append({
-            "nodes": nodes,
-            "hops": len(nodes) - 1,
-            "distance_km": round(total, 3),
-            # Para uma rota completa, a evidência limitante é o trecho menos recente.
-            "route_evidence_at": min(latest_values) if latest_values else "",
-            "observations": observations,
-            "edges": route_edges,
-        })
+        payload = _rf_route_payload(nodes, graph, positions)
+        if payload:
+            routes.append(payload)
 
     # Rotas mais recentes/consistentes primeiro; em empate, menos hops e menor distância.
     routes.sort(key=lambda item: (
