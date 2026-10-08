@@ -1,5 +1,14 @@
 # Backlog
 
+## Implementado na v1.14.7
+
+- Hardening do backend SQLite para bancos crescentes.
+- Schema TNC inicializado uma vez por banco, em vez de repetido nos pollings.
+- Snapshot pesado do mapa coalescido por 30 segundos sob RX APRS contínuo.
+- Índices adicionais para packets e topologia; ajustes conservadores de cache e WAL.
+- Política de retenção preservada sem redução automática para 5 dias.
+
+
 ## Concluído na v1.14.6
 
 - **SAT/ISS:** removido integralmente do PT2VHF APRS Client.
