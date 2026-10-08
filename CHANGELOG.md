@@ -1,3 +1,14 @@
+## 1.14.7 - 2026-10-08
+
+- **Backend/SQLite (#49):** reduzida a contenção observada na v1.14.6, sem alterar a retenção padrão para 5 dias.
+- **TNC/RF:** criação e migração do schema deixam de rodar em cada polling de status/saúde; passam a ocorrer uma vez por caminho de banco.
+- **Mapa:** RX APRS contínuo deixa de invalidar imediatamente o snapshot completo; rebuilds são coalescidos por 30 s.
+- **Mapa — leitura:** validação de posições reutiliza as estações já carregadas no mesmo build.
+- **SQLite:** adicionados cache conservador, temp_store em memória, wal_autocheckpoint explícito e índices para consultas quentes de packets/topologia.
+- **Compatibilidade:** preservados WAL, busy timeout, classificação RF/APRS-IS, dados existentes e política de retenção do usuário.
+- **Regressão:** novos testes cobrem schema TNC one-shot, coalescimento do mapa e os novos índices/pragmas.
+- Release completa prevista para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.6 - 2026-10-07
 
 - **SAT/ISS removido do cliente principal:** retirados aba SAT, mapas/órbitas, catálogo/TLE, passagens, alertas, estações/mensagens satelitais, beacon satelital e rotas dedicadas.
