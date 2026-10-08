@@ -3659,6 +3659,7 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "recently_disappeared": stale,
         "problem_stations": station_problem_stats(0 if complete else hours),
         "improvement_suggestions": network_improvement_suggestions(0 if complete else hours),
+        "rf_route_records": list_rf_route_records(0 if complete else hours, limit=10, max_hops=6),
         "client_versions": client_version_stats(0 if complete else hours),
     }
 
