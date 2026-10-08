@@ -1,3 +1,20 @@
+## Novo — Menu superior: simplificar textos de status
+
+- No indicador de versão do menu superior, trocar o texto **“Versão atualizada”** por apenas **“Atualizada”**.
+- No status do TNC:
+  - remover os textos **“TNC offline”**, **“TNC online”** ou equivalentes;
+  - exibir apenas **“TNC”**;
+  - manter o LED como indicador visual do estado;
+  - LED **verde** quando o TNC estiver conectado/operacional;
+  - LED **vermelho** quando estiver desconectado/offline.
+- Aplicar o mesmo padrão ao status do **APRS-IS**:
+  - exibir apenas **“APRS-IS”**;
+  - LED **verde** quando conectado;
+  - LED **vermelho** quando desconectado;
+  - remover textos longos como “Conectado”, “Desconectado” ou equivalentes ao lado do nome.
+- Preservar tooltip/title com detalhes adicionais do estado, quando útil, sem poluir visualmente a barra superior.
+- Manter consistência visual entre os indicadores **TNC** e **APRS-IS**, incluindo tamanho do LED, espaçamento, tipografia e comportamento de cores.
+
 ## Implementado na v1.14.10 — Estatísticas: recordes dos enlaces/rotas RF mais longos
 
 - Ao selecionar/clicar em um item do ranking de **Recordes RF**, abrir imediatamente a rota correspondente no mapa em **modo de foco exclusivo**.
