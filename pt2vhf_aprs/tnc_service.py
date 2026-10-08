@@ -373,82 +373,81 @@ def _ensure_schema() -> None:
         if _schema_ready_db_path == db_key:
             return
         with db.connection() as conn:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS tnc_config(
-                id INTEGER PRIMARY KEY CHECK(id=1),
-                payload TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
+            conn.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS tnc_config(
+                    id INTEGER PRIMARY KEY CHECK(id=1),
+                    payload TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
 
-            CREATE TABLE IF NOT EXISTS tnc_frames(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                direction TEXT NOT NULL,
-                medium TEXT NOT NULL DEFAULT 'RF',
-                source TEXT,
-                destination TEXT,
-                path TEXT,
-                packet_type TEXT,
-                raw_tnc2 TEXT,
-                reason TEXT
-            );
-            CREATE INDEX IF NOT EXISTS idx_tnc_frames_time ON tnc_frames(timestamp DESC);
-            CREATE INDEX IF NOT EXISTS idx_tnc_frames_src ON tnc_frames(source, timestamp DESC);
+                CREATE TABLE IF NOT EXISTS tnc_frames(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    direction TEXT NOT NULL,
+                    medium TEXT NOT NULL DEFAULT 'RF',
+                    source TEXT,
+                    destination TEXT,
+                    path TEXT,
+                    packet_type TEXT,
+                    raw_tnc2 TEXT,
+                    reason TEXT
+                );
+                CREATE INDEX IF NOT EXISTS idx_tnc_frames_time ON tnc_frames(timestamp DESC);
+                CREATE INDEX IF NOT EXISTS idx_tnc_frames_src ON tnc_frames(source, timestamp DESC);
 
-            CREATE TABLE IF NOT EXISTS tnc_heard(
-                callsign TEXT PRIMARY KEY,
-                last_heard TEXT NOT NULL,
-                last_direct_heard TEXT,
-                direct INTEGER NOT NULL DEFAULT 0,
-                path TEXT,
-                heard_count INTEGER NOT NULL DEFAULT 0,
-                last_packet_type TEXT,
-                last_raw TEXT
-            );
+                CREATE TABLE IF NOT EXISTS tnc_heard(
+                    callsign TEXT PRIMARY KEY,
+                    last_heard TEXT NOT NULL,
+                    last_direct_heard TEXT,
+                    direct INTEGER NOT NULL DEFAULT 0,
+                    path TEXT,
+                    heard_count INTEGER NOT NULL DEFAULT 0,
+                    last_packet_type TEXT,
+                    last_raw TEXT
+                );
 
-            CREATE TABLE IF NOT EXISTS tnc_decisions(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                action TEXT NOT NULL,
-                decision TEXT NOT NULL,
-                source TEXT,
-                destination TEXT,
-                reason TEXT,
-                raw_tnc2 TEXT
-            );
-            CREATE INDEX IF NOT EXISTS idx_tnc_decisions_time ON tnc_decisions(timestamp DESC);
+                CREATE TABLE IF NOT EXISTS tnc_decisions(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    decision TEXT NOT NULL,
+                    source TEXT,
+                    destination TEXT,
+                    reason TEXT,
+                    raw_tnc2 TEXT
+                );
+                CREATE INDEX IF NOT EXISTS idx_tnc_decisions_time ON tnc_decisions(timestamp DESC);
 
-            CREATE TABLE IF NOT EXISTS tnc_edges(
-                source TEXT NOT NULL,
-                destination TEXT NOT NULL,
-                medium TEXT NOT NULL,
-                first_seen TEXT NOT NULL,
-                last_seen TEXT NOT NULL,
-                interactions INTEGER NOT NULL DEFAULT 0,
-                ack_count INTEGER NOT NULL DEFAULT 0,
-                PRIMARY KEY(source,destination,medium)
-            );
-            CREATE INDEX IF NOT EXISTS idx_tnc_edges_activity ON tnc_edges(interactions DESC,last_seen DESC);
-            """
-        )
-        frame_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_frames)").fetchall()}
-        for name, ddl in (
-            ("rssi", "REAL"),
-            ("snr", "REAL"),
-            ("dcd", "INTEGER"),
-            ("frequency_hz", "REAL"),
-            ("channel", "TEXT"),
-            ("metric_source", "TEXT"),
-        ):
-            if name not in frame_columns:
-                conn.execute(f"ALTER TABLE tnc_frames ADD COLUMN {name} {ddl}")
+                CREATE TABLE IF NOT EXISTS tnc_edges(
+                    source TEXT NOT NULL,
+                    destination TEXT NOT NULL,
+                    medium TEXT NOT NULL,
+                    first_seen TEXT NOT NULL,
+                    last_seen TEXT NOT NULL,
+                    interactions INTEGER NOT NULL DEFAULT 0,
+                    ack_count INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY(source,destination,medium)
+                );
+                CREATE INDEX IF NOT EXISTS idx_tnc_edges_activity ON tnc_edges(interactions DESC,last_seen DESC);
+                """
+            )
+            frame_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_frames)").fetchall()}
+            for name, ddl in (
+                ("rssi", "REAL"),
+                ("snr", "REAL"),
+                ("dcd", "INTEGER"),
+                ("frequency_hz", "REAL"),
+                ("channel", "TEXT"),
+                ("metric_source", "TEXT"),
+            ):
+                if name not in frame_columns:
+                    conn.execute(f"ALTER TABLE tnc_frames ADD COLUMN {name} {ddl}")
 
-        heard_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_heard)").fetchall()}
-        if "last_direct_heard" not in heard_columns:
-            conn.execute("ALTER TABLE tnc_heard ADD COLUMN last_direct_heard TEXT")
+            heard_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_heard)").fetchall()}
+            if "last_direct_heard" not in heard_columns:
+                conn.execute("ALTER TABLE tnc_heard ADD COLUMN last_direct_heard TEXT")
         _schema_ready_db_path = db_key
-
 
 def get_tnc_config() -> dict[str, Any]:
     _ensure_schema()
