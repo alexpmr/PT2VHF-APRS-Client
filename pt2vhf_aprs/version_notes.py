@@ -4,6 +4,19 @@ from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
     "1.14.5": {
+        "title": "Configuração robusta e correção SAT",
+        "items": [
+            "Salvar e sair e o botão inferior passam a detectar diferenças reais do formulário e salvar somente os campos alterados.",
+            "GET lento da configuração não apaga nem rebaseliniza edições feitas durante a resposta.",
+            "Descartar alterações restaura o último estado válido localmente e funciona mesmo sem backend.",
+            "Erros de salvamento mostram a causa real devolvida pelo backend.",
+            "Configurações antigas não bloqueiam um patch válido por causa de um valor legado não relacionado.",
+            "Corrigido o erro $().forEach nos controles de serviços da aba SAT.",
+            "Erro de renderização SAT passa a ser separado de erro de cálculo orbital.",
+            "Preservada a correção de enlaces Internet/iGate da v1.14.4.",
+        ],
+    },
+    "1.14.5": {
         "title": "Configuração robusta em instalação real e correção SAT",
         "items": [
             "Salvar configuração recalcula as diferenças reais e envia somente os campos alterados.",
