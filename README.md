@@ -1,34 +1,43 @@
-# PT2VHF APRS Client - v1.14.10
+# PT2VHF APRS Client - v1.14.11
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.14.10** melhora a responsividade do mapa, amplia o autocomplete de indicativos e adiciona Recordes RF clicáveis nas Estatísticas.
+A **v1.14.11** refina os Recordes RF e simplifica os indicadores de status do cabeçalho.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.14.10**.
+Os arquivos abaixo apontam diretamente para a **release v1.14.11**.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_Setup_x64_v1.14.10.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_Portable_x64_v1.14.10.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_Setup_ARM64_v1.14.10.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_Portable_ARM64_v1.14.10.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_Setup_x64_v1.14.11.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_Portable_x64_v1.14.11.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_Setup_ARM64_v1.14.11.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_Portable_ARM64_v1.14.11.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_x86_64_v1.14.10.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/pt2vhf-aprs-client_1.14.10_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_Linux_x86_64_v1.14.10.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_arm64_v1.14.10.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/pt2vhf-aprs-client_1.14.10_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_Linux_arm64_v1.14.10.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_x86_64_v1.14.11.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/pt2vhf-aprs-client_1.14.11_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_Linux_x86_64_v1.14.11.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_arm64_v1.14.11.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/pt2vhf-aprs-client_1.14.11_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_Linux_arm64_v1.14.11.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_macOS_arm64_v1.14.10.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_macOS_x86_64_v1.14.10.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_macOS_arm64_v1.14.11.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_macOS_x86_64_v1.14.11.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.10/PT2VHF_APRS_Client_Manual_v1.14.10.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.11/PT2VHF_APRS_Client_Manual_v1.14.11.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
+
+## Novidades da v1.14.11
+
+- **Recordes RF por distância direta:** o ranking considera a distância entre as estações extremas, e não a soma dos hops.
+- **Rota como complemento:** a distância total percorrida continua disponível para análise.
+- **Um registro por par:** rotas alternativas não duplicam o mesmo par de estações no ranking.
+- **Pesquisar:** o botão de análise RF no mapa ganha um nome mais direto.
+- **Cabeçalho compacto:** “Atualizada”, TNC e APRS-IS usam textos curtos e LEDs vermelho/verde.
+- Pacotes completos para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.14.10
 
