@@ -17,11 +17,18 @@ def read(rel: str) -> str:
 
 
 def test_v147_version_metadata():
-    assert read("VERSION").strip() == "1.14.7"
-    assert '__version__ = "1.14.7"' in read("pt2vhf_aprs/__init__.py")
+    # v1.14.7 remains the minimum version that must contain these regressions;
+    # future releases must keep metadata internally consistent.
+    version = read("VERSION").strip()
+    parts = tuple(int(item) for item in version.split("."))
+    assert parts >= (1, 14, 7)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
     win = read("windows/version_info.txt")
-    assert "filevers=(1, 14, 7, 0)" in win
-    assert "prodvers=(1, 14, 7, 0)" in win
+    numeric = ", ".join(version.split("."))
+    assert f"filevers=({numeric}, 0)" in win
+    assert f"prodvers=({numeric}, 0)" in win
+    assert f"FileVersion', '{version}'" in win
+    assert f"ProductVersion', '{version}'" in win
 
 
 def test_v147_tnc_schema_is_ensured_once_per_database_path(monkeypatch):
