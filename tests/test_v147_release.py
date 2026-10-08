@@ -68,7 +68,7 @@ def test_v147_continuous_rx_does_not_force_immediate_map_rebuild(monkeypatch):
         return {"stations": [], "objects": [], "tracks": []}
 
     monkeypatch.setattr(db, "_build_map_data_uncached", fail_build)
-    db.invalidate_map_data_cache(drop_payload=False)
+    db.invalidate_map_data_cache(drop_payload=False, coalesce=True)
     result = db.map_data()
     assert result["_meta"]["source"] == "cache"
     assert result["stations"][0]["callsign"] == "PT2VHF"
