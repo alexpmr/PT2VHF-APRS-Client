@@ -1,5 +1,13 @@
 # Backlog
 
+## Concluído na v1.14.5
+
+- **#45 — Configuração:** corrigidos Salvar e sair, botão inferior, detecção de alterações, backend lento, erro real, Descartar local e Continuar sem rede.
+- **#45 — instalações migradas:** saves parciais validam somente os campos enviados; valores legados não relacionados deixam de bloquear alterações válidas.
+- **#52 — SAT:** corrigido o `forEach` em seletor unitário dos serviços monitorados e separado erro de renderização de erro orbital.
+- **Regressão:** testes automatizados e Chromium/Playwright cobrem os cenários reais reportados na v1.14.4.
+- **Enlaces Internet/iGate:** preservada a correção da v1.14.4; APRS-IS exclusivo permanece tracejado e RF genuíno permanece sólido.
+
 ## Monitoramento pós-release
 
 - **#49 — Backend/banco crescente:** manter aberto para observar perda de conexão/latência com bancos maiores após as otimizações recentes. Não alterar automaticamente a retenção padrão para 5 dias.
