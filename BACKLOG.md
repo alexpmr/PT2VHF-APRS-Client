@@ -1,3 +1,27 @@
+## Novo — Mapa: pesquisa por indicativo e rota RF entre duas estações
+
+- Adicionar no mapa um campo de **pesquisa por indicativo** para localizar rapidamente uma estação e centralizar/realçar sua posição.
+- Permitir informar um **segundo indicativo** em campo separado para analisar a conectividade RF entre as duas estações.
+- Quando houver evidência de um caminho RF completo entre origem e destino, listar e desenhar no mapa **toda a rota RF observada**, incluindo todos os nós/hops intermediários.
+- Exibir, para cada trecho da rota:
+  - estação/nó de origem e destino;
+  - tipo do trecho, obrigatoriamente baseado em **evidência RF real**;
+  - distância do trecho;
+  - horário/última evidência observada, quando disponível;
+  - quantidade de observações/pacotes, quando disponível.
+- Exibir também:
+  - distância geográfica direta entre os dois indicativos;
+  - **distância total percorrida pela rota RF** (soma dos trechos);
+  - quantidade total de hops;
+  - sequência completa da rota em ordem, por exemplo: `PT2AAA → DIGI1 → DIGI2 → PT2BBB`.
+- Destacar visualmente no mapa a rota completa entre os dois indicativos, sem ocultar os demais elementos do mapa.
+- Se houver mais de uma rota RF possível, priorizar a rota mais recente/consistente e permitir visualizar alternativas quando tecnicamente viável.
+- **Não considerar APRS-IS/Internet como trecho RF.** Um caminho só deve ser declarado como rota RF completa quando todos os saltos necessários possuírem evidência RF observada.
+- Se não houver caminho RF completo de ponta a ponta, informar claramente que **não existe rota RF completa observada** entre as duas estações no período selecionado.
+- A análise deve respeitar o **período/filtro atual do mapa**, evitando usar enlaces históricos fora da janela selecionada sem indicação explícita.
+- Reutilizar, sempre que possível, os dados e a lógica de **Topologia/Enlaces** já existentes para manter a classificação RF/APRS-IS coerente em toda a aplicação.
+- Criar testes para localização por indicativo, rota RF simples, rota multi-hop, múltiplas rotas, ausência de caminho completo, mistura RF/APRS-IS e cálculo das distâncias.
+
 ## Novo — Mapa: comprimento do enlace no hover
 
 - Ao posicionar o mouse sobre um **enlace** no mapa, exibir também o **comprimento/distância total do enlace**.
