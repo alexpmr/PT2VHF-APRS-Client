@@ -75,7 +75,7 @@ _map_data_cache_payload: dict[str, Any] | None = None
 _map_data_cache_at = 0.0
 _map_data_cache_build_ms = 0.0
 _map_data_cache_db_path = ""
-MAP_DATA_CACHE_SECONDS = 15.0
+MAP_DATA_CACHE_SECONDS = 30.0
 MAP_DATA_INITIAL_WAIT_SECONDS = 0.75
 
 APRS_DEVICE_ID_PATH = Path(__file__).resolve().parent / "data" / "aprs_device_ids.json"
@@ -3635,12 +3635,24 @@ def _map_data_result(payload: dict[str, Any], *, source: str, age_ms: float = 0.
 
 
 def invalidate_map_data_cache(*, drop_payload: bool = False) -> None:
+    """Invalidate destructive changes immediately; coalesce normal RX updates.
+
+    Position/track changes arrive continuously. Resetting the cache age for
+    every APRS packet forced a full map rebuild on virtually every frontend
+    poll. Normal RX now keeps the latest snapshot until the short cache TTL;
+    destructive operations still drop it immediately.
+    """
     global _map_data_cache_payload, _map_data_cache_at, _map_data_cache_build_ms, _map_data_cache_db_path
     with _map_data_cache_lock:
-        _map_data_cache_at = 0.0
-        _map_data_cache_db_path = str(DB_PATH)
+        db_key = str(DB_PATH)
+        if _map_data_cache_db_path != db_key:
+            _map_data_cache_payload = None
+            _map_data_cache_at = 0.0
+            _map_data_cache_build_ms = 0.0
+        _map_data_cache_db_path = db_key
         if drop_payload:
             _map_data_cache_payload = None
+            _map_data_cache_at = 0.0
             _map_data_cache_build_ms = 0.0
 
 
