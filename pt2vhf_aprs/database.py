@@ -451,7 +451,6 @@ def init_db() -> None:
             );
             CREATE INDEX IF NOT EXISTS idx_packets_time ON packets(timestamp DESC);
             CREATE INDEX IF NOT EXISTS idx_packets_time_from_call ON packets(timestamp DESC, from_call);
-            CREATE INDEX IF NOT EXISTS idx_packets_medium_time ON packets(medium, timestamp DESC);
             CREATE INDEX IF NOT EXISTS idx_packets_from_call_norm_time
                 ON packets(UPPER(TRIM(from_call)), timestamp DESC);
 
@@ -526,6 +525,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE packets ADD COLUMN medium TEXT NOT NULL DEFAULT 'APRS-IS'")
         if "rx_fingerprint" not in packet_columns:
             conn.execute("ALTER TABLE packets ADD COLUMN rx_fingerprint TEXT")
+        # Indexes that depend on migrated columns must remain after ALTER TABLE
+        # so databases created before medium/rx_fingerprint continue to upgrade.
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_medium_time ON packets(medium, timestamp DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_medium_call_time ON packets(medium, from_call, timestamp DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_packets_fingerprint_time ON packets(rx_fingerprint, timestamp DESC)")
