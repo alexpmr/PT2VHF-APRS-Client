@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.7": {
+        "title": "Backend mais responsivo com banco crescente",
+        "items": [
+            "O schema TNC passa a ser criado/migrado uma vez por banco, evitando DDL repetitivo nos pollings.",
+            "Atualizações APRS contínuas deixam de invalidar imediatamente o snapshot completo do mapa.",
+            "Rebuilds pesados do mapa são coalescidos em uma janela curta de 30 segundos.",
+            "SQLite ganha índices adicionais para packets/topologia e ajustes conservadores de cache, temp_store e WAL.",
+            "A validação de posições reutiliza as estações já carregadas no build do mapa.",
+            "A retenção padrão não foi reduzida para 5 dias; as preferências do usuário permanecem preservadas.",
+        ],
+    },
     "1.14.6": {
         "title": "Cliente terrestre mais leve e enlaces iGate restaurados",
         "items": [
