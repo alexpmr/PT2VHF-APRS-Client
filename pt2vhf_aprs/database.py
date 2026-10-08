@@ -59,6 +59,13 @@ _topology_cache_db_path = ""
 TOPOLOGY_CACHE_SECONDS = 2.0
 TOPOLOGY_QUERY_MAX_SECONDS = 2.5
 
+# SQLite operational tuning for growing local databases. These values are
+# intentionally conservative: WAL still provides concurrency, while temporary
+# grouping/sort work stays off disk without reserving a large cache per worker.
+SQLITE_BUSY_TIMEOUT_MS = 5000
+SQLITE_CACHE_KIB = 8192
+SQLITE_WAL_AUTOCHECKPOINT_PAGES = 1000
+
 # /api/map-data is one of the most requested and expensive read paths.
 # Keep one builder at a time for the whole process; concurrent callers receive
 # the latest valid snapshot instead of starting identical SQLite work.
@@ -190,7 +197,10 @@ def _configure_database_runtime() -> None:
     try:
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA busy_timeout=5000")
+        conn.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")
+        conn.execute(f"PRAGMA wal_autocheckpoint={SQLITE_WAL_AUTOCHECKPOINT_PAGES}")
+        conn.execute("PRAGMA temp_store=MEMORY")
+        conn.execute(f"PRAGMA cache_size=-{SQLITE_CACHE_KIB}")
         conn.commit()
     finally:
         conn.close()
@@ -206,7 +216,9 @@ def connection():
         conn = sqlite3.connect(DB_PATH, timeout=5, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys=ON")
-        conn.execute("PRAGMA busy_timeout=5000")
+        conn.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")
+        conn.execute("PRAGMA temp_store=MEMORY")
+        conn.execute(f"PRAGMA cache_size=-{SQLITE_CACHE_KIB}")
         yield conn
         conn.commit()
     except Exception as exc:
@@ -334,6 +346,8 @@ def init_db() -> None:
                 raw TEXT
             );
 
+            CREATE INDEX IF NOT EXISTS idx_stations_last_heard ON stations(last_heard DESC);
+
             CREATE TABLE IF NOT EXISTS aprs_objects (
                 name TEXT PRIMARY KEY,
                 source_callsign TEXT,
@@ -436,6 +450,10 @@ def init_db() -> None:
                 rx_fingerprint TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_packets_time ON packets(timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_packets_time_from_call ON packets(timestamp DESC, from_call);
+            CREATE INDEX IF NOT EXISTS idx_packets_medium_time ON packets(medium, timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_packets_from_call_norm_time
+                ON packets(UPPER(TRIM(from_call)), timestamp DESC);
 
             CREATE TABLE IF NOT EXISTS aprs_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -459,6 +477,10 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_topology_last_seen ON topology_edges(last_seen DESC);
             CREATE INDEX IF NOT EXISTS idx_topology_source_target ON topology_edges(source, target);
             CREATE INDEX IF NOT EXISTS idx_topology_target ON topology_edges(target);
+            CREATE INDEX IF NOT EXISTS idx_topology_kind_target_seen
+                ON topology_edges(kind, target, last_seen DESC);
+            CREATE INDEX IF NOT EXISTS idx_topology_igate_seen
+                ON topology_edges(igate, last_seen DESC);
 
             CREATE TABLE IF NOT EXISTS topology_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -734,6 +756,10 @@ def init_db() -> None:
                 "INSERT INTO map_state (id, latitude, longitude, zoom, updated_at) VALUES (1, -14.2350, -51.9253, 4, ?)",
                 (utc_now_iso(),),
             )
+
+        # Refresh planner statistics after schema/index migrations. PRAGMA
+        # optimize is incremental and avoids the blocking full VACUUM path.
+        conn.execute("PRAGMA optimize")
 
 
 def validate_required_station_config(config: dict[str, Any]) -> None:
@@ -1050,8 +1076,13 @@ def _rf_relay_position_issue_conn(
     }
 
 
-def _station_position_issues_conn(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
-    rows = conn.execute(
+def _station_position_issues_conn(
+    conn: sqlite3.Connection,
+    station_rows: Iterable[sqlite3.Row] | None = None,
+) -> dict[str, dict[str, Any]]:
+    # Callers that already loaded the complete station set can reuse it and
+    # avoid a second full stations scan in the same HTTP request.
+    rows = list(station_rows) if station_rows is not None else conn.execute(
         "SELECT callsign,latitude,longitude,path,last_heard FROM stations"
     ).fetchall()
     valid_coords: dict[str, tuple[float, float]] = {}
@@ -3632,7 +3663,7 @@ def _build_map_data_uncached() -> dict[str, Any]:
             """
         ).fetchall()
 
-        issues = _station_position_issues_conn(conn)
+        issues = _station_position_issues_conn(conn, station_rows)
         stations: list[dict[str, Any]] = []
         valid_calls: set[str] = set()
         for row in station_rows:
