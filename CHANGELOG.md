@@ -1,3 +1,15 @@
+## 1.14.9 - 2026-10-08
+
+- **Mapa — pesquisa por indicativo:** novo campo localiza rapidamente uma estação no mapa.
+- **Rotas RF completas:** após informar a origem, o segundo indicativo oferece somente destinos alcançáveis por uma cadeia completa de enlaces RF observados no período selecionado.
+- **Múltiplas rotas:** o mapa entra em modo de foco e oculta enlaces alheios ao par pesquisado; um painel lateral lista todas as alternativas RF completas encontradas.
+- **Detalhamento de rota:** cada alternativa mostra sequência de hops, distância por trecho, distância total, distância direta, evidência temporal e quantidade de observações.
+- **Seleção visual:** clicar em uma rota destaca seus enlaces e reduz a ênfase das demais; fechar a análise restaura a topologia normal.
+- **RF estrito:** APRS-IS/Internet nunca é usado para completar artificialmente uma rota RF.
+- **Enlaces — hover:** o painel de detalhes passa a mostrar o comprimento do enlace em metros ou quilômetros e o popup do enlace exibe o mesmo valor.
+- **Regressão:** novos testes cobrem candidatos RF, múltiplos caminhos, exclusão de Internet, direção de consulta e marcadores da interface.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.8 - 2026-10-08
 
 - **Configuração — retenção granular:** Saúde e retenção do banco passa a oferecer presets por categoria: Não apagar, 1 dia, 1 semana e 1 mês.
