@@ -24,8 +24,9 @@ def _seed_edge(conn, source: str, target: str, kind: str = "rf", packets: int = 
 
 def test_v149_version_and_ui_markers():
     root = Path(__file__).resolve().parent.parent
-    assert (root / "VERSION").read_text(encoding="utf-8").strip() == "1.14.9"
-    assert '__version__ = "1.14.9"' in (root / "pt2vhf_aprs" / "__init__.py").read_text(encoding="utf-8")
+    version = (root / "VERSION").read_text(encoding="utf-8").strip()
+    assert tuple(int(part) for part in version.split(".")) >= (1, 14, 9)
+    assert f'__version__ = "{version}"' in (root / "pt2vhf_aprs" / "__init__.py").read_text(encoding="utf-8")
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
     assert 'id="rfRouteSource"' in html
