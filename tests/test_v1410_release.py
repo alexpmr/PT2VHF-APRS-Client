@@ -24,8 +24,9 @@ def _edge(conn, source: str, target: str, kind: str = "rf", packets: int = 5, wh
 
 def test_v1410_version_ui_and_layout_markers():
     root = Path(__file__).resolve().parent.parent
-    assert (root / "VERSION").read_text(encoding="utf-8").strip() == "1.14.10"
-    assert '__version__ = "1.14.10"' in (root / "pt2vhf_aprs" / "__init__.py").read_text(encoding="utf-8")
+    version = (root / "VERSION").read_text(encoding="utf-8").strip()
+    assert tuple(int(part) for part in version.split(".")) >= (1, 14, 10)
+    assert f'__version__ = "{version}"' in (root / "pt2vhf_aprs" / "__init__.py").read_text(encoding="utf-8")
 
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
     css = (root / "pt2vhf_aprs" / "static" / "css" / "app.css").read_text(encoding="utf-8")
