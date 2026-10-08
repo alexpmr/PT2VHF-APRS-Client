@@ -3093,9 +3093,11 @@
         // A visibilidade da camada de enlaces Internet/iGate é independente da
         // visibilidade dos marcadores e seus subtipos. Um filtro que oculta
         // iGates não deve apagar enlaces APRS-IS que já foram comprovados.
-        if (!routeAllowedPairs && edge.kind !== 'igate') {
-          if (sourceCall && state.mapKnownCallsigns.has(sourceCall) && !state.mapVisibleCallsigns.has(sourceCall)) continue;
-          if (targetCall && state.mapKnownCallsigns.has(targetCall) && !state.mapVisibleCallsigns.has(targetCall)) continue;
+        if (edge.kind !== 'igate') {
+          if (!routeAllowedPairs) {
+            if (sourceCall && state.mapKnownCallsigns.has(sourceCall) && !state.mapVisibleCallsigns.has(sourceCall)) continue;
+            if (targetCall && state.mapKnownCallsigns.has(targetCall) && !state.mapVisibleCallsigns.has(targetCall)) continue;
+          }
         }
 
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
