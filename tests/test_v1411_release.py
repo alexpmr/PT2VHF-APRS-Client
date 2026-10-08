@@ -49,17 +49,17 @@ def test_v1411_rf_records_rank_endpoint_distance_not_route_length():
             db.init_db()
             with db.connection() as conn:
                 # Curved multi-hop route: long traveled path, but endpoints are close.
-                _station(conn, "PT2A", 0.0, 0.0)
-                _station(conn, "PT2M1", 0.4, 0.0)
-                _station(conn, "PT2M2", 0.4, 0.4)
-                _station(conn, "PT2B", 0.0, 0.1)
+                _station(conn, "PT2A", 10.0, 10.0)
+                _station(conn, "PT2M1", 10.4, 10.0)
+                _station(conn, "PT2M2", 10.4, 10.4)
+                _station(conn, "PT2B", 10.0, 10.1)
                 _edge(conn, "PT2A", "PT2M1", 10)
                 _edge(conn, "PT2M1", "PT2M2", 10)
                 _edge(conn, "PT2M2", "PT2B", 10)
 
                 # Separate pair with a larger endpoint distance than any hop above.
-                _station(conn, "PT2C", 2.0, 0.0)
-                _station(conn, "PT2D", 2.0, 0.8)
+                _station(conn, "PT2C", 12.0, 10.0)
+                _station(conn, "PT2D", 12.0, 10.8)
                 _edge(conn, "PT2C", "PT2D", 5)
 
             records = db.list_rf_route_records(hours=24, limit=20, max_hops=6)
