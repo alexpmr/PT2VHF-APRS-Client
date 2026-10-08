@@ -1,3 +1,15 @@
+## 1.14.10 - 2026-10-08
+
+- **Mapa — barra responsiva:** controles acima do mapa deixam de ficar recortados; a barra quebra de linha quando necessário e o mapa recalcula automaticamente a altura disponível.
+- **Controles compactos:** campos de origem/destino, selects e botões usam larguras menores e mais próximas do conteúdo.
+- **Autocomplete RF:** origem e destino passam a sugerir indicativos progressivamente; a origem usa estações conhecidas no grafo RF e o destino continua restrito a rotas RF completas.
+- **Estatísticas sem rolagem interna:** rankings e tabelas deixam de usar altura vertical fixa; a rolagem principal fica na página da aba.
+- **Recordes RF:** novo ranking das rotas RF completas mais longas, com hops, distância total, evidência e observações.
+- **Foco exclusivo de recorde:** clicar num recorde abre somente aquela rota e suas estações no mapa, ocultando topologia, objetos e tracklogs alheios ao trajeto até o foco ser limpo.
+- **RF estrito:** recordes e autocomplete usam o mesmo grafo RF da análise de rotas; APRS-IS/Internet não completa caminhos.
+- **Regressão:** novos testes cobrem autocomplete, períodos, deduplicação de sentido inverso, recordes multi-hop, layout responsivo e foco exclusivo.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.9 - 2026-10-08
 
 - **Mapa — pesquisa por indicativo:** novo campo localiza rapidamente uma estação no mapa.
