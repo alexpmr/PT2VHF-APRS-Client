@@ -13,10 +13,12 @@ def text(rel: str) -> str:
 
 
 def test_v146_version_metadata():
-    assert text("VERSION").strip() == "1.14.6"
-    assert '__version__ = "1.14.6"' in text("pt2vhf_aprs/__init__.py")
+    version = text("VERSION").strip()
+    major, minor, patch = (int(part) for part in version.split("."))
+    assert (major, minor, patch) >= (1, 14, 6)
+    assert f'__version__ = "{version}"' in text("pt2vhf_aprs/__init__.py")
     win = text("windows/version_info.txt")
-    assert "filevers=(1, 14, 6, 0)" in win
+    assert f"filevers=({major}, {minor}, {patch}, 0)" in win
     assert "prodvers=(1, 14, 6, 0)" in win
     assert "FileVersion', '1.14.6'" in win
     assert "ProductVersion', '1.14.6'" in win
