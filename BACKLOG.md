@@ -25,7 +25,7 @@
 - Garantir que o mapa não mostre simultaneamente toda a topologia geral enquanto um recorde estiver selecionado, para que o trajeto fique **claro e nítido**.
 - Criar teste/regressão para seleção no ranking, foco exclusivo, enquadramento, troca de recorde e restauração do estado anterior do mapa.
 
-- Adicionar na aba **Estatísticas** um bloco de **Recordes RF** com ranking das rotas/enlaces completos entre estações com maior distância total observada.
+- Adicionar na aba **Estatísticas** um bloco de **Recordes RF** com ranking dos pares de estações interligados por uma rota RF completa, usando como referência principal a **distância geográfica direta entre as duas estações extremas**.
 - Exibir em formato de ranking, por exemplo:
   - `1 — PT2VHF → PP2AX → PY2ASD — 182 km`
   - `2 — ...`
@@ -34,19 +34,20 @@
   - posição no ranking;
   - estação de origem;
   - estação de destino;
+  - **distância direta entre origem e destino**, que define a posição no ranking;
   - sequência completa dos hops/intermediários;
   - quantidade de hops;
   - distância de cada trecho;
   - **distância total da rota RF**;
   - data/hora da evidência mais recente da rota;
   - quantidade de observações/evidências disponíveis, quando houver.
-- Ordenar por **maior distância total RF**.
+- Ordenar da **maior para a menor distância direta entre a estação de origem e a estação de destino**, desde que exista rota RF completa entre elas. A distância total percorrida pelos hops deve permanecer visível apenas como informação complementar e não como critério principal do ranking.
 - Respeitar o período selecionado na aba Estatísticas; quando o período for alterado, recalcular o ranking.
 - Evitar duplicidade da mesma rota em sentido inverso quando representar o mesmo caminho observado; tratar `A → B → C` e `C → B → A` como o mesmo recorde, salvo quando houver evidência direcional relevante que justifique separação.
-- Quando houver múltiplas rotas entre o mesmo par de estações, considerar separadamente as rotas com sequência de hops distinta.
+- Quando houver múltiplas rotas entre o mesmo par de estações, o **par origem/destino deve ocupar uma única posição no ranking pela distância direta entre as extremidades**. As diferentes sequências de hops podem ser mostradas como alternativas/detalhes desse mesmo recorde.
 - Permitir clicar em um recorde para abrir/localizar a rota correspondente no mapa, reutilizando o modo de análise de rotas RF já existente.
 - Reutilizar o mesmo grafo/topologia RF do recurso de pesquisa de rotas para manter coerência de classificação e cálculo de distância.
-- Criar testes para ranking, cálculo de distância total, múltiplos hops, deduplicação de sentido inverso, exclusão de Internet/APRS-IS e filtro por período.
+- Criar testes para ranking por distância direta entre as estações extremas, cálculo da distância total da rota como dado complementar, múltiplos hops, múltiplas rotas do mesmo par, deduplicação de sentido inverso, exclusão de Internet/APRS-IS e filtro por período.
 
 ## Implementado na v1.14.10 — Estatísticas: exibir blocos completos sem rolagem interna
 
