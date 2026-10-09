@@ -1,4 +1,4 @@
-## Novo — Mapa: acompanhar estação em tempo real pelo popup
+## Implementado na v1.14.18 — Mapa: acompanhar estação em tempo real pelo popup
 
 - No **popup/balão da estação** aberto ao clicar sobre o marcador no mapa, adicionar uma ação explícita chamada **Acompanhar Estação** junto das demais opções existentes.
 - Ao clicar em **Acompanhar Estação**:
@@ -29,35 +29,20 @@
 - Reutilizar/refatorar o mecanismo de **seguir tracklog** já implementado na v1.14.16, evitando dois estados concorrentes de acompanhamento.
 - Critério de aceite: ao clicar em **Acompanhar Estação**, o popup fecha, a estação fica centralizada e o painel flutuante mostra velocidade, curso e idade do último pacote; a cada nova posição recebida, o marcador continua no centro do mapa e os dados do painel são atualizados.
 
-## Novo — Mensagens APRS: evitar duplicação por retry após ACK
+## Implementado na v1.14.18 — Mensagens APRS: evitar duplicação por retry/ACK
 
-- Relato do **PP5AU**: algumas mensagens estão chegando **duplicadas**, em certos casos 2 ou 3 vezes, sugerindo que a retransmissão continua mesmo após o ACK correspondente.
-- Investigar o ciclo completo **TX → message ID → espera de ACK/REJ → cancelamento da fila de retry**.
-- Garantir que um ACK válido para a mensagem:
-  - marque imediatamente a mensagem como confirmada;
-  - remova/cancele retries ainda pendentes;
-  - impeça novos envios automáticos da mesma mensagem/ID;
-  - atualize o histórico sem criar uma segunda mensagem lógica.
-- Correlacionar ACK pelo **destinatário + message ID** correto, respeitando normalização de indicativo/SSID.
-- Tratar corretamente ACK recebido por meio diferente do envio original, quando permitido pelo modelo atual (por exemplo, envio RF e ACK recebido via APRS-IS, ou vice-versa), sem perder a correlação.
-- Evitar corrida entre chegada do ACK e timer de retransmissão: se o ACK entrar no mesmo intervalo em que um retry está para disparar, o ACK deve prevalecer e cancelar o reenvio.
-- Verificar se reconexão, reinício da interface, atraso de banco, reprocessamento de evento ou restauração de estado estão recriando retries já confirmados.
-- Registrar no diagnóstico, para cada mensagem:
-  - message ID;
-  - tentativa atual;
-  - horário de cada TX;
-  - horário/canal do ACK;
-  - motivo de cada retry;
-  - momento em que a fila foi cancelada.
-- Adicionar regressões para:
-  - ACK antes do primeiro retry;
-  - ACK no limite exato do timer;
-  - ACK após um retry;
-  - ACK duplicado;
-  - REJ;
-  - ACK por RF/APRS-IS;
-  - reinício/reconexão sem ressuscitar retries já confirmados.
-- Critério de aceite: após ACK válido, **nenhuma nova retransmissão automática da mesma mensagem deve ocorrer**.
+- Corrigida a causa estrutural dos retries: uma retransmissão passa a usar **o mesmo message ID APRS** e atualizar a mesma mensagem lógica no banco.
+- Removida a criação de uma nova linha/novo ID a cada retry automático.
+- **ACK e REJ são terminais**: estados de TX ou retry que terminem depois não podem voltar a mensagem para Enviada/Reenviada.
+- A correlação continua por **destinatário + message ID**, com normalização de indicativo/SSID.
+- Mensagens recebidas repetidamente com o mesmo remetente, destino, ID e texto são deduplicadas no histórico dentro da janela operacional de retry.
+- A deduplicação não impede ACK: cada repetição aplicável pode provocar nova confirmação.
+- Mensagens pessoais recebidas via **TNC/RF** passam a gerar **ACK por RF** quando o TX automático estiver habilitado e confirmado.
+- Se um frame RF idêntico for recebido novamente e for suprimido pela janela anti-duplicação do TNC, o cliente ainda tenta reenviar o ACK, cobrindo perda do ACK anterior no ar.
+- ACK recebido durante um retry prevalece; a atualização posterior do retry não ressuscita a mensagem.
+- Diagnóstico registra ACK/REJ recebidos, retries, duplicatas suprimidas e falhas de ACK RF.
+- Regressões cobrem terminalidade de ACK, retry com ID estável, uma única mensagem lógica no banco, deduplicação de RX e ACK RF.
+- Critério de aceite: após ACK válido, **nenhuma nova retransmissão automática da mesma mensagem ocorre**, e repetições RF por ACK perdido não criam mensagens duplicadas no histórico.
 
 ## Encerrado como sintoma de dados legados — PP5AU-7 não aparecia no mapa
 
