@@ -3011,12 +3011,12 @@
     requestAnimationFrame(() => applyRfRoutePanelPosition());
     title.textContent = (analysis.source || '—') + ' ↔ ' + (analysis.target || '—');
     if (!routes.length) {
-      body.innerHTML = '<div class="rf-route-empty">' + ui('Não existe rota RF completa observada neste período.', 'No complete RF route was observed in this period.') + '</div>';
+      body.innerHTML = '<div class="rf-route-empty">' + ui('Não existe rota RF confirmada neste período.', 'No confirmed RF route was found in this period.') + '</div>';
       return;
     }
     body.innerHTML =
       '<div class="rf-route-summary"><strong>' + routes.length + '</strong> ' +
-      (routes.length === 1 ? ui('rota RF completa observada', 'complete RF route observed') : ui('rotas RF completas observadas', 'complete RF routes observed')) +
+      (routes.length === 1 ? ui('rota RF confirmada', 'confirmed RF route') : ui('rotas RF confirmadas', 'confirmed RF routes')) +
       '</div>' + routes.map((route, index) => routePanelHtml(route, index, analysis.direct_distance_km)).join('');
     body.querySelectorAll('[data-rf-route-index]').forEach(button => {
       button.addEventListener('click', () => focusRfRoute(Number(button.dataset.rfRouteIndex)));
@@ -3163,8 +3163,8 @@
         Number(item.hops || 0) + ' hops · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
       ).join('');
       if (status) status.textContent = candidates.length
-        ? candidates.length + ' ' + ui('destinos com rota RF completa', 'destinations with a complete RF route')
-        : ui('Nenhum destino com rota RF completa neste período.', 'No destination has a complete RF route in this period.');
+        ? candidates.length + ' ' + ui('destinos com rota RF confirmada', 'destinations with a confirmed RF route')
+        : ui('Nenhum destino com rota RF confirmada neste período.', 'No destination has a confirmed RF route in this period.');
       if (options.preserveTarget && targetInput.value.trim()) {
         const current = normalizedCall(targetInput.value);
         if (!candidates.some(item => normalizedCall(item.callsign) === current)) {
@@ -3220,7 +3220,7 @@
       state.rfRouteExclusiveNodes = null;
       fitRfRouteBounds(payload.routes || []);
       if (!payload.routes || !payload.routes.length) {
-        toast(ui('Não existe rota RF completa observada entre esses indicativos neste período.', 'No complete RF route was observed between these callsigns in this period.'), 'error');
+        toast(ui('Não existe rota RF confirmada entre esses indicativos neste período.', 'No confirmed RF route was found between these callsigns in this period.'), 'error');
       }
     } catch (err) {
       toast(String((err && err.message) || err), 'error');
@@ -8907,7 +8907,7 @@
     state.rfRouteRecords = Array.isArray(records) ? records.slice() : [];
     if (!state.rfRouteRecords.length) {
       return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-        escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+        escapeHtml(ui('Recordes RF confirmados — maiores distâncias', 'Confirmed RF records — longest distances')) +
         '</h4><span class="hint">' +
         escapeHtml(ui('Nenhuma rota RF completa com posição conhecida neste período.', 'No complete RF route with known positions in this period.')) +
         '</span></div>';
@@ -8926,7 +8926,7 @@
         '<span class="rf-route-record-meta">' + escapeHtml(meta) + '</span></button>';
     }).join('');
     return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-      escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+      escapeHtml(ui('Recordes RF confirmados — maiores distâncias', 'Confirmed RF records — longest distances')) +
       '</h4><div class="hint">' +
       escapeHtml(ui('Somente enlaces RF confirmados pela heurística de evidência/plausibilidade. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Only RF links confirmed by the evidence/plausibility heuristic. Click a route to show it by itself on the map.')) +
       '</div><div class="rf-route-record-list">' + rows + '</div></div>';
