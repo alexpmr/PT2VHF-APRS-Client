@@ -4444,3 +4444,109 @@ html[data-theme="light"] .rf-route-node-temp {
   color: #5f4b00;
   border-color: #b99500;
 }
+
+
+/* v1.14.17 - feedback global para operações demoradas */
+.global-processing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 22000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 11, 16, .42);
+  backdrop-filter: blur(2px);
+}
+.global-processing-overlay.hidden {
+  display: none !important;
+}
+.global-processing-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: min(360px, calc(100vw - 36px));
+  max-width: min(520px, calc(100vw - 36px));
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 25, 34, .97);
+  color: var(--text);
+  box-shadow: 0 18px 55px rgba(0,0,0,.55);
+}
+.processing-clock {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(59,166,255,.12);
+}
+.processing-clock::before,
+.processing-clock::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: rgba(255,255,255,.18);
+  transform: translateX(-50%);
+}
+.processing-clock::after {
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  bottom: auto;
+  width: auto;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.processing-clock-hand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 15px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform-origin: 50% 100%;
+  animation: pt2vhf-processing-clock 1s linear infinite;
+}
+.processing-clock-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+}
+.global-processing-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.global-processing-copy strong {
+  font-size: 15px;
+  font-weight: 850;
+}
+.global-processing-copy span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+html[data-theme="light"] .global-processing-card {
+  background: rgba(255,255,255,.98);
+}
+html.is-processing {
+  cursor: progress;
+}
+@keyframes pt2vhf-processing-clock {
+  from { transform: translate(-50%, -100%) rotate(0deg); }
+  to { transform: translate(-50%, -100%) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .processing-clock-hand { animation-duration: 2.5s; }
+}
