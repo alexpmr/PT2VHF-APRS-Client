@@ -782,9 +782,9 @@ def create_app() -> Flask:
         try:
             hours = float(request.args.get("hours", 0))
             max_routes = int(request.args.get("max_routes", 12))
-            max_hops = int(request.args.get("max_hops", 8))
+            max_hops = int(request.args.get("max_hops", 12))
         except (TypeError, ValueError):
-            hours, max_routes, max_hops = 0.0, 12, 8
+            hours, max_routes, max_hops = 0.0, 12, 12
         return jsonify(db.list_rf_routes(
             source,
             target,
