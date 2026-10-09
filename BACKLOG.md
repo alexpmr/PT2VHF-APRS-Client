@@ -106,6 +106,18 @@
 
 ## Implementado até a v1.14.12 — Estatísticas: exibir blocos completos sem rolagem interna
 
+- Corrigir especificamente o bloco de **ranking de software/aplicações**, que ainda aparece como uma área separada com barra de rolagem vertical própria.
+- O ranking de software deve ficar **contínuo com os demais blocos abaixo**, fazendo parte do mesmo fluxo vertical da aba Estatísticas.
+- Remover qualquer `height`, `max-height`, `overflow-y: auto`, `overflow-y: scroll` ou combinação de flex/layout que crie uma viewport vertical independente nesse bloco.
+- O conteúdo do ranking deve crescer naturalmente conforme o número de linhas exibidas.
+- A seção seguinte, como **Saúde e comparação da rede**, deve aparecer imediatamente após o término real do ranking, sem uma “janela rolável” intermediária.
+- A única barra de rolagem vertical deve ser a da **aba/página de Estatísticas como um todo**.
+- Manter apenas rolagem horizontal se a tabela ficar larga demais.
+- Garantir que o container pai da aba não esteja impondo altura fixa que force o ranking a rolar internamente.
+- Revisar também `.analysis-content`, `.analysis-client-version-panel`, `.client-version-stats-content` e wrappers da tabela para garantir fluxo contínuo.
+- Validar visualmente com ranking de 20 ou mais softwares, confirmando que todas as linhas ficam expostas na página e que os blocos seguintes permanecem logo abaixo.
+
+
 - Reforçar a regra para que **todos os blocos/cards da aba Estatísticas fiquem integralmente na página**, sem barra de rolagem vertical própria.
 - Aplicar explicitamente essa regra ao bloco de **ranking de uso de software/aplicações**, que ainda pode apresentar rolagem vertical interna.
 - Remover `max-height`, alturas fixas e `overflow-y: auto/scroll` de qualquer bloco da aba Estatísticas que ainda limite verticalmente o conteúdo.
