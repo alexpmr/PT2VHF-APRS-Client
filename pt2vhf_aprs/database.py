@@ -2236,13 +2236,253 @@ def _rf_route_edge_payload(
     }
 
 
+
+RF_INFERRED_REFINEMENT_MIN_KM = 250.0
+RF_INFERRED_REFINEMENT_WINDOW_HOURS = 36.0
+RF_INFERRED_REFINEMENT_MAX_HOPS = 5
+RF_INFERRED_REFINEMENT_MAX_EXPANSIONS = 4000
+RF_INFERRED_REFINEMENT_MIN_INFERRED_OBS = 2
+
+
+def _rf_route_timestamp(value: Any) -> datetime | None:
+    try:
+        return _parse_timestamp(value)
+    except Exception:
+        return None
+
+
+def _rf_refinement_edge_allowed(reference_edge: dict[str, Any], edge: dict[str, Any]) -> bool:
+    """Filtra evidências fracas/temporalmente distantes para reconstrução de um hop inferido."""
+    level, _label = _rf_route_evidence(edge)
+    observations = max(0, int(edge.get("packet_count") or 0))
+    if level == "inferred" and observations < RF_INFERRED_REFINEMENT_MIN_INFERRED_OBS:
+        return False
+    if level == "legacy" and observations < RF_INFERRED_REFINEMENT_MIN_INFERRED_OBS + 1:
+        return False
+
+    reference_time = _rf_route_timestamp(reference_edge.get("last_seen"))
+    candidate_time = _rf_route_timestamp(edge.get("last_seen"))
+    if reference_time is not None and candidate_time is not None:
+        delta_hours = abs((candidate_time - reference_time).total_seconds()) / 3600.0
+        if delta_hours > RF_INFERRED_REFINEMENT_WINDOW_HOURS:
+            return False
+    return True
+
+
+def _rf_refinement_edge_cost(reference_edge: dict[str, Any], edge: dict[str, Any]) -> float:
+    """Custo conservador: RF direto domina; inferido exige recorrência e proximidade temporal."""
+    level, _label = _rf_route_evidence(edge)
+    base = {"direct": 0.80, "inferred": 2.15, "legacy": 2.85}.get(level, 2.85)
+    observations = max(0, int(edge.get("packet_count") or 0))
+    score = base - min(0.45, math.log1p(observations) * 0.08)
+
+    reference_time = _rf_route_timestamp(reference_edge.get("last_seen"))
+    candidate_time = _rf_route_timestamp(edge.get("last_seen"))
+    if reference_time is not None and candidate_time is not None:
+        delta_hours = abs((candidate_time - reference_time).total_seconds()) / 3600.0
+        score += min(0.9, delta_hours / max(1.0, RF_INFERRED_REFINEMENT_WINDOW_HOURS) * 0.9)
+
+    # Distância é apenas um desempate suave. Nunca veta RF direto observado.
+    score += min(0.35, max(0.0, float(edge.get("distance_km") or 0.0)) / 3000.0)
+    return max(0.25, score)
+
+
+def _rf_refine_inferred_edge(
+    source: str,
+    target: str,
+    graph: dict[str, dict[str, dict[str, Any]]],
+    positions: dict[str, tuple[float, float]],
+    forbidden_nodes: set[str] | None = None,
+) -> dict[str, Any] | None:
+    """Tenta substituir um hop RF apenas inferido por uma cadeia melhor sustentada.
+
+    A aresta original é excluída da busca. O resultado é aceito somente quando
+    há uma cadeia plausível dentro da janela temporal e do limite topológico.
+    """
+    reference = graph.get(source, {}).get(target)
+    if not reference:
+        return None
+    level, _label = _rf_route_evidence(reference)
+    reference_distance = max(0.0, float(reference.get("distance_km") or 0.0))
+    if level != "inferred" or reference_distance < RF_INFERRED_REFINEMENT_MIN_KM:
+        return None
+
+    blocked = set(forbidden_nodes or set())
+    blocked.discard(source)
+    blocked.discard(target)
+    excluded_pair = tuple(sorted((source, target)))
+
+    queue: list[tuple[float, int, tuple[str, ...]]] = [(0.0, 0, (source,))]
+    expansions = 0
+
+    while queue and expansions < RF_INFERRED_REFINEMENT_MAX_EXPANSIONS:
+        cost, hops, path = heapq.heappop(queue)
+        node = path[-1]
+        if node == target:
+            if len(path) < 3:
+                continue
+            route_edges: list[dict[str, Any]] = []
+            direct_count = 0
+            inferred_count = 0
+            total_distance = 0.0
+            all_inferred_strong = True
+            for index in range(len(path) - 1):
+                edge = graph.get(path[index], {}).get(path[index + 1])
+                if not edge:
+                    route_edges = []
+                    break
+                edge_level, _ = _rf_route_evidence(edge)
+                observations = max(0, int(edge.get("packet_count") or 0))
+                if edge_level == "direct":
+                    direct_count += 1
+                elif edge_level == "inferred":
+                    inferred_count += 1
+                    if observations < RF_INFERRED_REFINEMENT_MIN_INFERRED_OBS + 1:
+                        all_inferred_strong = False
+                else:
+                    all_inferred_strong = False
+                total_distance += max(0.0, float(edge.get("distance_km") or 0.0))
+                route_edges.append(edge)
+
+            if not route_edges:
+                continue
+            # Sem nenhum RF direto, só aceitamos uma cadeia inferida recorrente em todos os trechos.
+            if direct_count <= 0 and not all_inferred_strong:
+                continue
+
+            # Evita reconstruções com grandes desvios geográficos artificiais.
+            detour_limit = max(reference_distance * 1.80, reference_distance + 250.0)
+            if total_distance > detour_limit:
+                continue
+
+            return {
+                "nodes": list(path),
+                "intermediate_nodes": list(path[1:-1]),
+                "direct_edges": direct_count,
+                "inferred_edges": inferred_count,
+                "distance_km": round(total_distance, 3),
+                "reference_distance_km": round(reference_distance, 3),
+                "search_cost": round(cost, 4),
+                "search_expansions": expansions,
+            }
+
+        if hops >= RF_INFERRED_REFINEMENT_MAX_HOPS:
+            continue
+
+        expansions += 1
+        neighbors = []
+        for nxt, edge in graph.get(node, {}).items():
+            pair = tuple(sorted((node, nxt)))
+            if pair == excluded_pair:
+                continue
+            if nxt in path or nxt in blocked:
+                continue
+            if not _rf_refinement_edge_allowed(reference, edge):
+                continue
+            neighbors.append((nxt, edge))
+        neighbors.sort(key=lambda item: (
+            _rf_refinement_edge_cost(reference, item[1]),
+            -int(item[1].get("packet_count") or 0),
+            item[0],
+        ))
+        for nxt, edge in neighbors:
+            heapq.heappush(
+                queue,
+                (
+                    cost + _rf_refinement_edge_cost(reference, edge),
+                    hops + 1,
+                    path + (nxt,),
+                ),
+            )
+    return None
+
+
+def _rf_refine_route_nodes(
+    nodes: list[str],
+    graph: dict[str, dict[str, dict[str, Any]]],
+    positions: dict[str, tuple[float, float]],
+) -> tuple[list[str], list[dict[str, Any]], list[dict[str, Any]], dict[tuple[str, str], str]]:
+    """Expande somente hops longos inferidos quando existe cadeia intermediária sustentada."""
+    if len(nodes) < 2:
+        return list(nodes), [], [], {}
+
+    refined = [nodes[0]]
+    reconstructed: list[dict[str, Any]] = []
+    unresolved: list[dict[str, Any]] = []
+    reconstructed_pairs: dict[tuple[str, str], str] = {}
+
+    for index in range(len(nodes) - 1):
+        source, target = nodes[index], nodes[index + 1]
+        edge = graph.get(source, {}).get(target)
+        if not edge:
+            if refined[-1] != target:
+                refined.append(target)
+            continue
+
+        level, _label = _rf_route_evidence(edge)
+        distance = max(0.0, float(edge.get("distance_km") or 0.0))
+        candidate = None
+        if level == "inferred" and distance >= RF_INFERRED_REFINEMENT_MIN_KM:
+            forbidden = set(nodes) | set(refined)
+            forbidden.discard(source)
+            forbidden.discard(target)
+            candidate = _rf_refine_inferred_edge(
+                source,
+                target,
+                graph,
+                positions,
+                forbidden_nodes=forbidden,
+            )
+
+        if candidate:
+            original_label = f"{source} → {target}"
+            chain = [str(value) for value in candidate.get("nodes") or []]
+            for a, b in zip(chain, chain[1:]):
+                reconstructed_pairs[tuple(sorted((a, b)))] = original_label
+            reconstructed.append({
+                "source": source,
+                "target": target,
+                "distance_km": round(distance, 3),
+                **candidate,
+            })
+            for node in chain[1:]:
+                if refined[-1] != node:
+                    refined.append(node)
+            continue
+
+        if level == "inferred" and distance >= RF_INFERRED_REFINEMENT_MIN_KM:
+            unresolved.append({
+                "source": source,
+                "target": target,
+                "distance_km": round(distance, 3),
+                "reason": "intermediários não identificados",
+            })
+
+        if refined[-1] != target:
+            refined.append(target)
+
+    return refined, reconstructed, unresolved, reconstructed_pairs
+
+
 def _rf_route_payload(
     nodes: list[str],
     graph: dict[str, dict[str, dict[str, Any]]],
     positions: dict[str, tuple[float, float]],
+    *,
+    refine_inferred: bool = True,
 ) -> dict[str, Any] | None:
     if len(nodes) < 2:
         return None
+
+    original_nodes = list(nodes)
+    reconstructed: list[dict[str, Any]] = []
+    unresolved: list[dict[str, Any]] = []
+    reconstructed_pairs: dict[tuple[str, str], str] = {}
+    if refine_inferred:
+        nodes, reconstructed, unresolved, reconstructed_pairs = _rf_refine_route_nodes(
+            list(nodes), graph, positions
+        )
+
     route_edges: list[dict[str, Any]] = []
     total = 0.0
     latest_values: list[str] = []
@@ -2256,6 +2496,12 @@ def _rf_route_payload(
         payload = _rf_route_edge_payload(a, b, edge, positions)
         if not payload:
             return None
+        pair = tuple(sorted((a, b)))
+        if pair in reconstructed_pairs:
+            payload["reconstructed"] = True
+            payload["reconstructed_from"] = reconstructed_pairs[pair]
+        else:
+            payload["reconstructed"] = False
         distance = float(payload.get("distance_km") or 0.0)
         total += distance
         observations += int(payload.get("packet_count") or 0)
@@ -2270,10 +2516,19 @@ def _rf_route_payload(
         route_evidence_class = "mixed" if evidence_counts["direct"] else "inferred"
     else:
         route_evidence_class = "direct"
+
+    reconstructed_nodes: list[str] = []
+    for item in reconstructed:
+        for call in item.get("intermediate_nodes") or []:
+            call = str(call or "")
+            if call and call not in reconstructed_nodes:
+                reconstructed_nodes.append(call)
+
     return {
         "source": nodes[0],
         "target": nodes[-1],
         "nodes": nodes,
+        "original_nodes": original_nodes,
         "hops": len(nodes) - 1,
         "distance_km": round(total, 3),
         "direct_distance_km": direct,
@@ -2283,6 +2538,10 @@ def _rf_route_payload(
         "inferred_edges": evidence_counts["inferred"],
         "legacy_edges": evidence_counts["legacy"],
         "route_evidence_class": route_evidence_class,
+        "refinement_applied": bool(reconstructed),
+        "reconstructed_intermediate_nodes": reconstructed_nodes,
+        "reconstructed_segments": reconstructed,
+        "unresolved_inferred_edges": unresolved,
         "edges": route_edges,
     }
 
@@ -2476,7 +2735,7 @@ def list_rf_route_records(
                 if nxt not in positions or source >= nxt:
                     continue
 
-                payload = _rf_route_payload(next_path, graph, positions)
+                payload = _rf_route_payload(next_path, graph, positions, refine_inferred=False)
                 if not payload:
                     continue
                 candidates.append((
@@ -2566,12 +2825,17 @@ def list_rf_routes(
     if source_call in positions and target_call in positions:
         direct_distance = round(haversine_km(*positions[source_call], *positions[target_call]), 3)
 
-    eligible_nodes = sorted({
+    eligible_nodes = {
         call
         for edge in eligible_edges
         for call in (str(edge.get("source") or ""), str(edge.get("target") or ""))
         if call
-    })
+    }
+    for route in routes:
+        for call in route.get("nodes") or []:
+            if call:
+                eligible_nodes.add(str(call))
+    eligible_nodes = sorted(eligible_nodes)
     return {
         "source": source_call,
         "target": target_call,
