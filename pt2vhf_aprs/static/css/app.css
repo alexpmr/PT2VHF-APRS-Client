@@ -4392,3 +4392,55 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
 #tab-analysis .rf-route-record-list {
   overflow-x: auto;
 }
+
+
+/* v1.14.16 - nós temporários de rota sempre visíveis */
+.rf-route-node-temp-wrap {
+  background: transparent !important;
+  border: 0 !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+.rf-route-node-temp {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: max-content;
+  height: 26px;
+  padding: 2px 7px 2px 3px;
+  border: 1px solid rgba(255, 213, 0, .92);
+  border-radius: 999px;
+  background: rgba(12, 18, 23, .94);
+  color: #fff7ba;
+  box-shadow: 0 2px 8px rgba(0,0,0,.5);
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.rf-route-node-dot {
+  display: block;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border: 2px solid #12181d;
+  border-radius: 50%;
+  background: #ffd500;
+  box-shadow: 0 0 0 1px #ffd500;
+}
+.rf-route-node-temp strong {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .015em;
+}
+.rf-route-node-temp.has-normal {
+  padding-left: 7px;
+  background: rgba(12,18,23,.88);
+}
+.rf-route-node-temp.has-normal .rf-route-node-dot {
+  display: none;
+}
+html[data-theme="light"] .rf-route-node-temp {
+  background: rgba(255,255,255,.97);
+  color: #5f4b00;
+  border-color: #b99500;
+}

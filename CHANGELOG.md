@@ -1,3 +1,16 @@
+## 1.14.16 - 2026-10-09
+
+- **Tracklog com acompanhamento:** clicar em um tracklog ativa o modo de seguimento; novas posições mantêm a estação centralizada sem alterar o zoom escolhido.
+- **Controle manual preservado:** arrastar o mapa encerra o acompanhamento; alterar o zoom mantém o modo ativo e recentraliza o tracklog no novo nível.
+- **Troca de seleção:** clicar em outro tracklog transfere o acompanhamento; selecionar outra estação encerra o seguimento do tracklog anterior.
+- **Ranking com enquadramento máximo:** ao abrir uma rota do Ranking, o mapa usa o maior zoom possível que ainda comporta todo o trajeto e todos os nós.
+- **Painel considerado no enquadramento:** o cálculo reserva a área ocupada pelo painel de análise para evitar esconder a rota atrás do popup lateral.
+- **Todos os nós da rota visíveis:** cada indicativo listado no painel recebe uma identificação visual no mapa, inclusive quando o marcador normal está filtrado, ausente ou sobreposto.
+- **Marcadores temporários de rota:** nós sem marcador normal recebem marcador temporário próprio; nós que já possuem símbolo normal recebem apenas um rótulo de rota, evitando duplicar o símbolo APRS.
+- **Limpeza consistente:** os marcadores temporários são removidos ao encerrar ou trocar a análise de rota.
+- **Regressões:** novos testes cobrem acompanhamento de tracklog, zoom preservado, enquadramento sem `maxZoom` artificial e visibilidade integral dos nós.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.15 - 2026-10-09
 
 - **Rotas RF em malhas densas:** removido o corte prematuro da antiga DFS (`route_limit * 4`), que podia ignorar enlaces RF válidos depois dos primeiros caminhos encontrados.

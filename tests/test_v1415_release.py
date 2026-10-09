@@ -27,9 +27,11 @@ def connect(graph, a: str, b: str, payload):
 
 
 def test_v1415_version_metadata():
-    assert read("VERSION").strip() == "1.14.15"
-    assert '__version__ = "1.14.15"' in read("pt2vhf_aprs/__init__.py")
-    assert "(1, 14, 15, 0)" in read("windows/version_info.txt")
+    version = read("VERSION").strip()
+    assert tuple(int(part) for part in version.split(".")) >= (1, 14, 15)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
+    parts = tuple(int(part) for part in version.split("."))
+    assert str(parts + (0,)) in read("windows/version_info.txt")
 
 
 def test_v1415_eligible_corridor_keeps_all_rf_links_that_can_join_route():

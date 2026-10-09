@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.16": {
+        "title": "Tracklog acompanhado e rotas totalmente visíveis",
+        "items": [
+            "Clique em um tracklog para mantê-lo centralizado conforme novas posições chegam, preservando o zoom atual.",
+            "Arrastar o mapa encerra o acompanhamento; mudar apenas o zoom mantém o seguimento ativo.",
+            "Rotas abertas pelo Ranking passam a usar o maior zoom possível que ainda mostra todo o trajeto e todas as estações envolvidas.",
+            "O enquadramento considera a área ocupada pelo painel de rota para não esconder trechos atrás do popup.",
+            "Todos os nós listados na rota recebem identificação visual no mapa, mesmo quando o marcador APRS normal não está disponível.",
+        ],
+    },
     "1.14.15": {
         "title": "Rotas RF completas em malhas densas",
         "items": [
