@@ -126,6 +126,8 @@ def test_v1415_frontend_uses_eligible_edges_and_twelve_hop_horizon():
     assert "payload.eligible_nodes || []" in js
     assert "fitRfRouteBounds(routes, payload.eligible_edges || [])" in js
     assert "&max_routes=12&max_hops=12" in js
+    assert "routeEvidence?.evidence_level === 'inferred'" in js
+    assert "inferredRouteEdge ? '5 5'" in js
     assert 'request.args.get("max_hops", 12)' in web
 
 
