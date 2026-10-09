@@ -1,3 +1,21 @@
+## Novo — Mapa: exibir todos os nós envolvidos na rota analisada
+
+- Ao abrir no mapa uma rota a partir de **Estatísticas > Ranking** ou da análise manual entre duas estações, garantir que **todos os nós listados no popup/painel da rota também apareçam visualmente no mapa**.
+- A representação do mapa deve ser coerente com a sequência exibida no painel: se a rota mostra `A → B → C → D`, os quatro nós precisam estar visíveis no mapa.
+- Não depender exclusivamente dos marcadores normais de estação para representar os nós da rota.
+- Se um nó da rota estiver:
+  - oculto por filtros;
+  - fora do conjunto normal de marcadores carregados;
+  - sem marcador persistente naquele momento;
+  - ou não puder ser exibido pelo mecanismo padrão;
+  criar um **marcador temporário de rota** para garantir sua visualização.
+- Origem, destino e nós intermediários devem ser representados de forma consistente e permanecer visíveis enquanto a análise da rota estiver ativa.
+- Os marcadores temporários da rota devem usar as coordenadas presentes nos dados da própria rota/enlace.
+- Evitar duplicidade visual: se o marcador normal da estação já estiver visível, não criar outro por cima.
+- Ao trocar de rota, atualizar o conjunto de marcadores temporários para refletir apenas os nós da nova rota/corredor analisado.
+- Ao fechar a análise de rota, remover os marcadores temporários sem afetar os marcadores normais do mapa.
+- O `fitBounds` da rota deve considerar também esses nós temporários, garantindo que todos permaneçam dentro da área visível.
+
 ## Novo — Estatísticas > Ranking: enquadramento automático do trajeto no mapa
 
 - Ao abrir no mapa uma rota/trajeto a partir de **Estatísticas > Ranking**, ajustar automaticamente o enquadramento para o **zoom mais próximo possível** que ainda mantenha **todo o trajeto e todas as estações envolvidas visíveis**.
