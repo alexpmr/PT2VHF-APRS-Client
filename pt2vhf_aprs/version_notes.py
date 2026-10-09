@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.14": {
+        "title": "Consolidação do modelo RF observado",
+        "items": [
+            "A interface passa a usar consistentemente o termo RF observado após a restauração do algoritmo permissivo.",
+            "O painel de rotas deixa de exibir confiança/heurística obsoleta e mostra a origem real da classificação do enlace.",
+            "Autocomplete e mensagens de rota passam a falar em rotas RF observadas, alinhados ao backend.",
+            "A pesquisa de duas estações mantém o mesmo foco exclusivo dos Recordes RF, com rotas alternativas e restauração da visualização.",
+            "Mantidas as correções de Estatísticas sem rolagem vertical interna e a separação objetiva entre RF e APRS-IS/Internet.",
+        ],
+    },
     "1.14.13": {
         "title": "Rotas RF observadas e foco unificado no mapa",
         "items": [
