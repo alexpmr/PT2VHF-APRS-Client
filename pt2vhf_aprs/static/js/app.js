@@ -3007,13 +3007,18 @@
   }
 
   function routePanelHtml(route, index, directDistanceKm) {
-    const edgeRows = (route.edges || []).map(edge =>
-      '<div class="rf-route-edge-row"><span>' + escapeHtml(edge.source) + ' → ' + escapeHtml(edge.target) + '</span>' +
-      '<strong>' + escapeHtml(formatRfDistanceKm(edge.distance_km)) + '</strong>' +
-      '<small>' + Number(edge.packet_count || 0).toLocaleString(currentLocale()) + ' obs. · ' +
-      escapeHtml(edge.evidence_label || edge.classification_source || ui('RF observado', 'Observed RF')) + ' · ' +
-      escapeHtml(fmtDate(edge.last_seen)) + '</small></div>'
-    ).join('');
+    const edgeRows = (route.edges || []).map(edge => {
+      const reconstruction = edge.reconstructed
+        ? ' · ' + ui('reconstruído de', 'reconstructed from') + ' ' + escapeHtml(edge.reconstructed_from || '')
+        : '';
+      return '<div class="rf-route-edge-row' + (edge.reconstructed ? ' reconstructed' : '') + '"><span>' +
+        escapeHtml(edge.source) + ' → ' + escapeHtml(edge.target) + '</span>' +
+        '<strong>' + escapeHtml(formatRfDistanceKm(edge.distance_km)) + '</strong>' +
+        '<small>' + Number(edge.packet_count || 0).toLocaleString(currentLocale()) + ' obs. · ' +
+        escapeHtml(edge.evidence_label || edge.classification_source || ui('RF observado', 'Observed RF')) +
+        reconstruction + ' · ' + escapeHtml(fmtDate(edge.last_seen)) + '</small></div>';
+    }).join('');
+
     const evidenceParts = [];
     if (Number(route.direct_edges || 0)) {
       evidenceParts.push(Number(route.direct_edges || 0) + ' ' + ui('diretos', 'direct'));
@@ -3024,6 +3029,35 @@
     if (Number(route.legacy_edges || 0)) {
       evidenceParts.push(Number(route.legacy_edges || 0) + ' ' + ui('legados', 'legacy'));
     }
+
+    const reconstructedNodes = Array.isArray(route.reconstructed_intermediate_nodes)
+      ? route.reconstructed_intermediate_nodes.filter(Boolean)
+      : [];
+    const reconstructedNotice = reconstructedNodes.length
+      ? '<div class="rf-route-refinement ok"><strong>' +
+        escapeHtml(ui('Intermediários reconstruídos/prováveis', 'Reconstructed/probable intermediate nodes')) +
+        ':</strong> ' + escapeHtml(reconstructedNodes.join(', ')) +
+        '<small>' + escapeHtml(ui(
+          'A cadeia foi reconstruída a partir de evidências RF conhecidas próximas no tempo; esses nós não foram necessariamente explicitados no mesmo pacote.',
+          'The chain was reconstructed from known RF evidence close in time; these nodes were not necessarily explicit in the same packet.'
+        )) + '</small></div>'
+      : '';
+
+    const unresolvedEdges = Array.isArray(route.unresolved_inferred_edges)
+      ? route.unresolved_inferred_edges
+      : [];
+    const unresolvedNotice = unresolvedEdges.length
+      ? '<div class="rf-route-refinement warning"><strong>' +
+        escapeHtml(ui('Intermediários não identificados', 'Intermediate nodes not identified')) +
+        ':</strong> ' + unresolvedEdges.map(edge =>
+          escapeHtml(String(edge.source || '') + ' → ' + String(edge.target || '') + ' (' + formatRfDistanceKm(edge.distance_km) + ')')
+        ).join(' · ') +
+        '<small>' + escapeHtml(ui(
+          'O trecho permanece inferido; o software não inventa estações para preencher a rota.',
+          'The segment remains inferred; the software does not invent stations to fill the route.'
+        )) + '</small></div>'
+      : '';
+
     return '<button type="button" class="rf-route-card" data-rf-route-index="' + index + '">' +
       '<span class="rf-route-card-title">' + ui('Rota', 'Route') + ' ' + (index + 1) + '</span>' +
       '<strong>' + escapeHtml((route.nodes || []).join(' → ')) + '</strong>' +
@@ -3031,6 +3065,7 @@
       '<small>' + ui('Distância direta', 'Direct distance') + ': ' + escapeHtml(formatRfDistanceKm(directDistanceKm)) + '</small>' +
       '<small>' + ui('Evidência', 'Evidence') + ': ' + escapeHtml(evidenceParts.join(' · ') || ui('RF observado', 'Observed RF')) + '</small>' +
       '<small>' + ui('Evidência completa', 'Complete evidence') + ': ' + escapeHtml(fmtDate(route.route_evidence_at)) + '</small>' +
+      reconstructedNotice + unresolvedNotice +
       '<div class="rf-route-edge-list">' + edgeRows + '</div></button>';
   }
 
@@ -9217,10 +9252,18 @@
       if (Number(route.direct_edges || 0)) evidenceParts.push(Number(route.direct_edges || 0) + ' ' + ui('diretos', 'direct'));
       if (Number(route.inferred_edges || 0)) evidenceParts.push(Number(route.inferred_edges || 0) + ' ' + ui('inferidos', 'inferred'));
       if (Number(route.legacy_edges || 0)) evidenceParts.push(Number(route.legacy_edges || 0) + ' ' + ui('legados', 'legacy'));
+      const refinementParts = [];
+      const reconstructedCount = Array.isArray(route.reconstructed_intermediate_nodes)
+        ? route.reconstructed_intermediate_nodes.length : 0;
+      const unresolvedCount = Array.isArray(route.unresolved_inferred_edges)
+        ? route.unresolved_inferred_edges.length : 0;
+      if (reconstructedCount) refinementParts.push(reconstructedCount + ' ' + ui('interm. reconstruídos', 'reconstructed interm.'));
+      if (unresolvedCount) refinementParts.push(unresolvedCount + ' ' + ui('trechos inferidos sem interm.', 'inferred segments without interm.'));
       const meta = Number(route.hops || 0) + ' hops · ' +
         ui('rota', 'route') + ': ' + formatRfDistanceKm(route.distance_km) + ' · ' +
         Number(route.observations || 0).toLocaleString(currentLocale()) + ' obs. · ' +
         (evidenceParts.length ? evidenceParts.join(' · ') + ' · ' : '') +
+        (refinementParts.length ? refinementParts.join(' · ') + ' · ' : '') +
         ui('evidência', 'evidence') + ': ' + fmtDate(route.route_evidence_at);
       return '<button type="button" class="rf-route-record" data-rf-route-record-index="' + index + '">' +
         '<span class="rf-route-record-rank">' + (index + 1) + 'º</span>' +
