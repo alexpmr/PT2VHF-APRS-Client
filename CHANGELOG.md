@@ -1,3 +1,19 @@
+## 1.14.17 - 2026-10-09
+
+- **Backup completo corrigido:** o botão deixa de ser um link simples e passa a executar uma operação explícita, com erro/sucesso visível.
+- **Salvamento nativo no desktop:** Windows, Linux e macOS usam diálogo nativo para escolher onde salvar o ZIP; o modo navegador mantém fallback por Blob/download.
+- **Backend de backup robusto:** falhas retornam erro JSON explícito, ZIP vazio é rejeitado e a resposta recebe headers `no-store`.
+- **Indicador global de processamento:** novo overlay central com relógio animado e mensagem contextual para operações demoradas.
+- **API reutilizável:** `showProcessing`, `updateProcessing`, `hideProcessing` e `withProcessing` ficam disponíveis para fluxos assíncronos longos.
+- **Aplicado em operações críticas:** backup completo, restauração e exportação KML passam a mostrar processamento em andamento.
+- **Refinamento RF inferido:** hops longos apenas inferidos pelo path são investigados contra o grafo RF conhecido, excluindo a própria aresta original.
+- **Intermediários reconstruídos:** quando existe cadeia melhor sustentada e temporalmente próxima, o painel/mapa expandem o trecho e identificam os nós como reconstruídos/prováveis.
+- **Sem fabricação de rota:** quando não há evidência suficiente, o trecho permanece inferido e o painel mostra “Intermediários não identificados”.
+- **RF direto preservado:** enlaces RF diretamente observados nunca são quebrados apenas pela distância.
+- **Critério conservador:** reconstrução prioriza RF direto, exige recorrência para caminhos apenas inferidos, restringe janela temporal e evita grandes desvios artificiais.
+- **Regressões:** testes cobrem reconstrução, ausência de cadeia, RF direto longo, preferência por evidência direta, proximidade temporal, backup e overlay.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.16 - 2026-10-09
 
 - **Tracklog com acompanhamento:** clicar em um tracklog ativa o modo de seguimento; novas posições mantêm a estação centralizada sem alterar o zoom escolhido.
