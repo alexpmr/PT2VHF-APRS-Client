@@ -51,6 +51,9 @@
   async function createFullBackup() {
     const button = $('#v190BackupFull');
     if (button) button.disabled = true;
+    const version = String($('.app-version')?.textContent || '').trim().replace(/^v/i,'') || 'backup';
+    const stamp = new Date().toISOString().replace(/[-:T]/g,'').slice(0,15);
+    const suggested = 'PT2VHF_APRS_Client_Backup_v' + version + '_' + stamp + '.zip';
     try {
       await withProcessing(
         tr('Gerando backup completo...', 'Creating full backup...', 'Generando backup completo...', 'Création de la sauvegarde complète...'),
@@ -61,6 +64,26 @@
           'Copie de la base et préparation du fichier ZIP. Veuillez patienter.'
         ),
         async token => {
+          const nativeApi = window.pywebview?.api;
+          if (nativeApi?.save_local_download) {
+            if (token && typeof window.pt2vhfUpdateProcessing === 'function') {
+              window.pt2vhfUpdateProcessing(token,
+                tr('Gerando backup completo...', 'Creating full backup...', 'Generando backup completo...', 'Création de la sauvegarde complète...'),
+                tr('Escolha onde salvar; em seguida o snapshot será criado e gravado.', 'Choose where to save; the snapshot will then be created and written.', 'Elija dónde guardar; después se creará y grabará la instantánea.', 'Choisissez où enregistrer ; l’instantané sera ensuite créé et écrit.')
+              );
+            }
+            const result = await nativeApi.save_local_download('/api/v190/backup/full', suggested);
+            if (result?.cancelled) return { cancelled: true };
+            if (!result?.saved) throw new Error(result?.error || tr('Não foi possível salvar o backup.','Could not save the backup.','No se pudo guardar el backup.','Impossible d’enregistrer la sauvegarde.'));
+            notify(
+              tr('Backup completo salvo em: ', 'Full backup saved to: ', 'Backup completo guardado en: ', 'Sauvegarde complète enregistrée dans : ') +
+              String(result.path || suggested),
+              'backup',
+              'success'
+            );
+            return result;
+          }
+
           if (token && typeof window.pt2vhfUpdateProcessing === 'function') {
             window.pt2vhfUpdateProcessing(token,
               tr('Gerando backup completo...', 'Creating full backup...', 'Generando backup completo...', 'Création de la sauvegarde complète...'),
@@ -82,8 +105,7 @@
           }
           const blob = await response.blob();
           if (!blob.size) throw new Error(tr('O servidor retornou um backup vazio.', 'The server returned an empty backup.', 'El servidor devolvió un backup vacío.', 'Le serveur a renvoyé une sauvegarde vide.'));
-          const fallback = 'PT2VHF_APRS_Client_Backup_' + new Date().toISOString().replace(/[-:T]/g,'').slice(0,15) + '.zip';
-          const filename = responseFilename(response, fallback);
+          const filename = responseFilename(response, suggested);
           if (token && typeof window.pt2vhfUpdateProcessing === 'function') {
             window.pt2vhfUpdateProcessing(token,
               tr('Backup pronto', 'Backup ready', 'Backup listo', 'Sauvegarde prête'),
@@ -92,6 +114,7 @@
           }
           triggerBlobDownload(blob, filename);
           notify(tr('Backup completo gerado: ', 'Full backup created: ', 'Backup completo generado: ', 'Sauvegarde complète créée : ') + filename, 'backup', 'success');
+          return { saved: true, path: filename };
         }
       );
     } catch (e) {
