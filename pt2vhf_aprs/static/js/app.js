@@ -1404,6 +1404,14 @@
     state.map.on('dragstart', () => {
       if (state.trackFollowCallsign) clearTrackFollow();
     });
+    state.map.on('zoomend', () => {
+      if (!state.trackFollowCallsign) return;
+      for (const [call, line] of state.trackLines) {
+        if (normalizedCall(call) !== state.trackFollowCallsign) continue;
+        centerFollowedTrack(call, line._pt2vhfTrackRows || [], { force: true, animate: false });
+        break;
+      }
+    });
 
     if (!window._pt2vhfMapViewportSyncBound) {
       window._pt2vhfMapViewportSyncBound = true;
@@ -2912,15 +2920,15 @@
     for (const [call, point] of nodes) {
       if (!call || !point.every(Number.isFinite)) continue;
       const normal = state.markers.get(call);
-      if (normal && state.map.hasLayer(normal)) continue;
+      const hasNormalMarker = !!(normal && state.map.hasLayer(normal));
 
       const marker = L.marker(point, {
         icon: L.divIcon({
           className: 'rf-route-node-temp-wrap',
-          html: '<div class="rf-route-node-temp"><span class="rf-route-node-dot"></span><strong>' +
-            escapeHtml(call) + '</strong></div>',
+          html: '<div class="rf-route-node-temp' + (hasNormalMarker ? ' has-normal' : '') + '">' +
+            '<span class="rf-route-node-dot"></span><strong>' + escapeHtml(call) + '</strong></div>',
           iconSize: [118, 30],
-          iconAnchor: [10, 15],
+          iconAnchor: hasNormalMarker ? [-12, 15] : [10, 15],
         }),
         title: call,
         pane: 'pt2vhfMarkerPane',
