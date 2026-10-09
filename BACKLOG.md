@@ -1,4 +1,4 @@
-## Novo — Topologia/Recordes RF: revisar rigorosamente o que é realmente 100% RF
+## Implementado na v1.14.12 — Topologia/Recordes RF: validar rigorosamente o que é realmente 100% RF
 
 - Revisar a lógica que atualmente classifica enlaces e rotas como **100% RF**, principalmente nos rankings de **Recordes RF** e na análise de rotas entre estações.
 - Não considerar uma rota como RF completa apenas porque existe uma sequência de arestas classificadas como `rf` no grafo.
@@ -58,7 +58,7 @@
 - Preservar tooltip/title com detalhes adicionais do estado, quando útil, sem poluir visualmente a barra superior.
 - Manter consistência visual entre os indicadores **TNC** e **APRS-IS**, incluindo tamanho do LED, espaçamento, tipografia e comportamento de cores.
 
-## Ajustado na v1.14.11 — Estatísticas: recordes RF por distância entre estações
+## Ajustado até a v1.14.12 — Estatísticas: recordes RF por distância entre estações
 
 - Ao abrir no mapa uma rota/recorde RF selecionado, tornar o **popup/painel lateral de análise de rota arrastável**.
 - Permitir mover o painel livremente dentro da área do mapa por **drag-and-drop**, preferencialmente arrastando pelo cabeçalho **“ANÁLISE DE ROTA RF”**.
@@ -121,7 +121,7 @@
 - Reutilizar o mesmo grafo/topologia RF do recurso de pesquisa de rotas para manter coerência de classificação e cálculo de distância.
 - Criar testes para ranking por distância direta entre as estações extremas, cálculo da distância total da rota como dado complementar, múltiplos hops, múltiplas rotas do mesmo par, deduplicação de sentido inverso, exclusão de Internet/APRS-IS e filtro por período.
 
-## Implementado na v1.14.10 — Estatísticas: exibir blocos completos sem rolagem interna
+## Implementado até a v1.14.12 — Estatísticas: exibir blocos completos sem rolagem interna
 
 - Reforçar a regra para que **todos os blocos/cards da aba Estatísticas fiquem integralmente na página**, sem barra de rolagem vertical própria.
 - Aplicar explicitamente essa regra ao bloco de **ranking de uso de software/aplicações**, que ainda pode apresentar rolagem vertical interna.

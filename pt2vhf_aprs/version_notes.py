@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.12": {
+        "title": "RF confirmado e Estatísticas sem scroll interno",
+        "items": [
+            "Rotas e Recordes RF passam a exigir trechos RF confirmados por uma heurística de evidência e plausibilidade.",
+            "Trechos muito longos com pouca evidência são rebaixados, enquanto propagação excepcional com evidência direta forte continua válida.",
+            "O painel de Análise de rota RF passa a ser arrastável dentro do mapa.",
+            "O painel exibe confiança e justificativa resumida da classificação RF.",
+            "A aba Estatísticas deixa de usar rolagem vertical interna nos cards, inclusive no ranking de software/aplicações.",
+        ],
+    },
     "1.14.11": {
         "title": "Recordes RF refinados e cabeçalho compacto",
         "items": [

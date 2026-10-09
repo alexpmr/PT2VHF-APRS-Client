@@ -78,6 +78,8 @@
     rfRouteOriginTimer: null,
     rfRouteExclusiveNodes: null,
     rfRouteRecords: [],
+    rfRoutePanelPosition: null,
+    rfRoutePanelDragBound: false,
     mapLegendElement: null,
     mapLegendCollapsed: localStorage.getItem('pt2vhf_map_legend_collapsed') === '1',
     trafficReplayLayers: new Set(),
@@ -2896,15 +2898,100 @@
     const edgeRows = (route.edges || []).map(edge =>
       '<div class="rf-route-edge-row"><span>' + escapeHtml(edge.source) + ' → ' + escapeHtml(edge.target) + '</span>' +
       '<strong>' + escapeHtml(formatRfDistanceKm(edge.distance_km)) + '</strong>' +
-      '<small>' + Number(edge.packet_count || 0).toLocaleString('pt-BR') + ' obs. · ' + escapeHtml(fmtDate(edge.last_seen)) + '</small></div>'
+      '<small>' + Number(edge.packet_count || 0).toLocaleString('pt-BR') + ' obs. · ' +
+      escapeHtml(edge.rf_confidence_label || ui('RF confirmado', 'RF confirmed')) + ' · ' +
+      escapeHtml(edge.rf_confidence_reason || '') + ' · ' + escapeHtml(fmtDate(edge.last_seen)) + '</small></div>'
     ).join('');
     return '<button type="button" class="rf-route-card" data-rf-route-index="' + index + '">' +
       '<span class="rf-route-card-title">' + ui('Rota', 'Route') + ' ' + (index + 1) + '</span>' +
       '<strong>' + escapeHtml((route.nodes || []).join(' → ')) + '</strong>' +
       '<span>' + Number(route.hops || 0) + ' hops · ' + escapeHtml(formatRfDistanceKm(route.distance_km)) + '</span>' +
       '<small>' + ui('Distância direta', 'Direct distance') + ': ' + escapeHtml(formatRfDistanceKm(directDistanceKm)) + '</small>' +
+      '<small>' + ui('Confiança', 'Confidence') + ': ' + escapeHtml(route.rf_confidence_label || ui('RF confirmado', 'RF confirmed')) + '</small>' +
+      '<small>' + escapeHtml(route.rf_confidence_reason || '') + '</small>' +
       '<small>' + ui('Evidência completa', 'Complete evidence') + ': ' + escapeHtml(fmtDate(route.route_evidence_at)) + '</small>' +
       '<div class="rf-route-edge-list">' + edgeRows + '</div></button>';
+  }
+
+  function clampRfRoutePanelPosition(panel, left, top) {
+    const stage = panel?.closest('.map-stage');
+    if (!panel || !stage) return { left: 0, top: 0 };
+    const stageRect = stage.getBoundingClientRect();
+    const width = panel.offsetWidth || 0;
+    const height = panel.offsetHeight || 0;
+    const maxLeft = Math.max(0, stageRect.width - Math.min(width, stageRect.width));
+    const maxTop = Math.max(0, stageRect.height - Math.min(height, stageRect.height));
+    return {
+      left: Math.max(0, Math.min(Number(left) || 0, maxLeft)),
+      top: Math.max(0, Math.min(Number(top) || 0, maxTop)),
+    };
+  }
+
+  function applyRfRoutePanelPosition() {
+    const panel = $('#rfRoutePanel');
+    if (!panel || !state.rfRoutePanelPosition) return;
+    const pos = clampRfRoutePanelPosition(panel, state.rfRoutePanelPosition.left, state.rfRoutePanelPosition.top);
+    state.rfRoutePanelPosition = pos;
+    panel.style.left = pos.left + 'px';
+    panel.style.top = pos.top + 'px';
+    panel.style.right = 'auto';
+  }
+
+  function resetRfRoutePanelPosition() {
+    const panel = $('#rfRoutePanel');
+    state.rfRoutePanelPosition = null;
+    if (!panel) return;
+    panel.style.left = '';
+    panel.style.top = '';
+    panel.style.right = '';
+  }
+
+  function bindRfRoutePanelDrag() {
+    if (state.rfRoutePanelDragBound) return;
+    const panel = $('#rfRoutePanel');
+    const header = panel?.querySelector('.rf-route-panel-header');
+    if (!panel || !header) return;
+    state.rfRoutePanelDragBound = true;
+
+    header.addEventListener('pointerdown', event => {
+      if (event.button !== undefined && event.button !== 0) return;
+      if (event.target.closest('button')) return;
+      const stage = panel.closest('.map-stage');
+      if (!stage) return;
+      const stageRect = stage.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const startLeft = panelRect.left - stageRect.left;
+      const startTop = panelRect.top - stageRect.top;
+      const originX = event.clientX;
+      const originY = event.clientY;
+      panel.classList.add('dragging');
+      try { header.setPointerCapture(event.pointerId); } catch (_) {}
+
+      const move = moveEvent => {
+        const pos = clampRfRoutePanelPosition(
+          panel,
+          startLeft + (moveEvent.clientX - originX),
+          startTop + (moveEvent.clientY - originY)
+        );
+        state.rfRoutePanelPosition = pos;
+        panel.style.left = pos.left + 'px';
+        panel.style.top = pos.top + 'px';
+        panel.style.right = 'auto';
+      };
+      const stop = stopEvent => {
+        panel.classList.remove('dragging');
+        header.removeEventListener('pointermove', move);
+        header.removeEventListener('pointerup', stop);
+        header.removeEventListener('pointercancel', stop);
+        try { header.releasePointerCapture(stopEvent.pointerId); } catch (_) {}
+      };
+      header.addEventListener('pointermove', move);
+      header.addEventListener('pointerup', stop);
+      header.addEventListener('pointercancel', stop);
+      event.preventDefault();
+    });
+
+    window.addEventListener('resize', () => applyRfRoutePanelPosition());
   }
 
   function renderRfRoutePanel() {
@@ -2920,14 +3007,16 @@
       return;
     }
     panel.classList.remove('hidden');
+    bindRfRoutePanelDrag();
+    requestAnimationFrame(() => applyRfRoutePanelPosition());
     title.textContent = (analysis.source || '—') + ' ↔ ' + (analysis.target || '—');
     if (!routes.length) {
-      body.innerHTML = '<div class="rf-route-empty">' + ui('Não existe rota RF completa observada neste período.', 'No complete RF route was observed in this period.') + '</div>';
+      body.innerHTML = '<div class="rf-route-empty">' + ui('Não existe rota RF confirmada neste período.', 'No confirmed RF route was found in this period.') + '</div>';
       return;
     }
     body.innerHTML =
       '<div class="rf-route-summary"><strong>' + routes.length + '</strong> ' +
-      (routes.length === 1 ? ui('rota RF completa observada', 'complete RF route observed') : ui('rotas RF completas observadas', 'complete RF routes observed')) +
+      (routes.length === 1 ? ui('rota RF confirmada', 'confirmed RF route') : ui('rotas RF confirmadas', 'confirmed RF routes')) +
       '</div>' + routes.map((route, index) => routePanelHtml(route, index, analysis.direct_distance_km)).join('');
     body.querySelectorAll('[data-rf-route-index]').forEach(button => {
       button.addEventListener('click', () => focusRfRoute(Number(button.dataset.rfRouteIndex)));
@@ -2982,6 +3071,7 @@
 
   async function focusRfRecordRoute(route) {
     if (!route || !Array.isArray(route.nodes) || route.nodes.length < 2) return;
+    resetRfRoutePanelPosition();
     const source = normalizedCall(route.source || route.nodes[0]);
     const target = normalizedCall(route.target || route.nodes[route.nodes.length - 1]);
     state.mapPeriodHours = topologyPeriodValue(state.topologyHours);
@@ -3032,6 +3122,7 @@
 
   async function clearRfRouteAnalysis(options = {}) {
     const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
+    resetRfRoutePanelPosition();
     state.rfRouteAnalysis = null;
     state.rfRouteSelectedIndex = -1;
     state.rfRouteExclusiveNodes = null;
@@ -3072,8 +3163,8 @@
         Number(item.hops || 0) + ' hops · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
       ).join('');
       if (status) status.textContent = candidates.length
-        ? candidates.length + ' ' + ui('destinos com rota RF completa', 'destinations with a complete RF route')
-        : ui('Nenhum destino com rota RF completa neste período.', 'No destination has a complete RF route in this period.');
+        ? candidates.length + ' ' + ui('destinos com rota RF confirmada', 'destinations with a confirmed RF route')
+        : ui('Nenhum destino com rota RF confirmada neste período.', 'No destination has a confirmed RF route in this period.');
       if (options.preserveTarget && targetInput.value.trim()) {
         const current = normalizedCall(targetInput.value);
         if (!candidates.some(item => normalizedCall(item.callsign) === current)) {
@@ -3101,6 +3192,7 @@
 
   async function applyRfRouteAnalysis() {
     const source = normalizedCall($('#rfRouteSource') && $('#rfRouteSource').value);
+    resetRfRoutePanelPosition();
     const target = normalizedCall($('#rfRouteTarget') && $('#rfRouteTarget').value);
     if (!source || !target) {
       toast(ui('Informe os dois indicativos.', 'Enter both callsigns.'), 'error');
@@ -3128,7 +3220,7 @@
       state.rfRouteExclusiveNodes = null;
       fitRfRouteBounds(payload.routes || []);
       if (!payload.routes || !payload.routes.length) {
-        toast(ui('Não existe rota RF completa observada entre esses indicativos neste período.', 'No complete RF route was observed between these callsigns in this period.'), 'error');
+        toast(ui('Não existe rota RF confirmada entre esses indicativos neste período.', 'No confirmed RF route was found between these callsigns in this period.'), 'error');
       }
     } catch (err) {
       toast(String((err && err.message) || err), 'error');
@@ -8815,7 +8907,7 @@
     state.rfRouteRecords = Array.isArray(records) ? records.slice() : [];
     if (!state.rfRouteRecords.length) {
       return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-        escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+        escapeHtml(ui('Recordes RF confirmados — maiores distâncias', 'Confirmed RF records — longest distances')) +
         '</h4><span class="hint">' +
         escapeHtml(ui('Nenhuma rota RF completa com posição conhecida neste período.', 'No complete RF route with known positions in this period.')) +
         '</span></div>';
@@ -8834,9 +8926,9 @@
         '<span class="rf-route-record-meta">' + escapeHtml(meta) + '</span></button>';
     }).join('');
     return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-      escapeHtml(ui('Recordes RF — rotas mais longas', 'RF records — longest routes')) +
+      escapeHtml(ui('Recordes RF confirmados — maiores distâncias', 'Confirmed RF records — longest distances')) +
       '</h4><div class="hint">' +
-      escapeHtml(ui('Somente enlaces RF observados. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Observed RF links only. Click a route to show it by itself on the map.')) +
+      escapeHtml(ui('Somente enlaces RF confirmados pela heurística de evidência/plausibilidade. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Only RF links confirmed by the evidence/plausibility heuristic. Click a route to show it by itself on the map.')) +
       '</div><div class="rf-route-record-list">' + rows + '</div></div>';
   }
 

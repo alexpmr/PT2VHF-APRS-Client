@@ -1,3 +1,16 @@
+## 1.14.12 - 2026-10-09
+
+- **RF confirmado:** Pesquisa RF e Recordes RF deixam de aceitar automaticamente qualquer aresta marcada como `rf`; cada trecho passa por uma heurística de evidência e plausibilidade.
+- **Níveis de confiança:** trechos podem ser classificados como RF confirmado, RF provável, RF inconsistente ou Internet/APRS-IS.
+- **Plausibilidade física:** distâncias maiores exigem evidência direta/repetida mais forte; um trecho excepcionalmente longo com poucas observações deixa de compor uma rota 100% RF.
+- **Propagação excepcional preservada:** enlaces muito longos continuam possíveis quando houver quantidade forte de evidência direta suficiente.
+- **Histórico reavaliado dinamicamente:** rotas e Recordes RF são recalculados com a nova heurística sem apagar os dados brutos armazenados.
+- **Painel de análise RF arrastável:** o painel lateral pode ser movido pelo cabeçalho dentro da área do mapa, com limites para não sair da tela.
+- **Estatísticas sem scroll interno:** cards, ranking de software/aplicações, estações e Recordes RF usam apenas a rolagem vertical principal da aba.
+- **UI:** resultados de rota passam a usar explicitamente o rótulo RF confirmado e exibem a justificativa/confiança dos trechos.
+- **Regressão:** novos testes cobrem trechos curtos confirmados, longos inconsistentes, propagação excepcional com evidência forte, filtro do grafo, painel arrastável e ausência de scroll vertical interno.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.11 - 2026-10-08
 
 - **Recordes RF:** o ranking passa a usar como critério principal a distância geográfica direta entre as duas estações extremas, da maior para a menor, desde que exista rota RF completa entre elas.

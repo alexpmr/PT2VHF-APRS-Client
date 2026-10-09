@@ -4332,3 +4332,41 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
   width: 9px;
   height: 9px;
 }
+
+
+/* v1.14.12 - rota RF arrastável, confiança RF e Estatísticas sem scroll vertical interno */
+.rf-route-panel-header {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.rf-route-panel.dragging .rf-route-panel-header {
+  cursor: grabbing;
+}
+.rf-route-panel {
+  max-height: calc(100% - 24px);
+}
+.rf-route-edge-row small {
+  overflow-wrap: anywhere;
+}
+
+/* A aba Estatísticas usa somente o scroll vertical principal de .analysis-content. */
+#tab-analysis .topology-stats-box,
+#tab-analysis .topology-stats-content,
+#tab-analysis .topology-stat-group,
+#tab-analysis .analysis-client-version-panel,
+#tab-analysis .client-version-stats-content,
+#tab-analysis .station-ranking-table-wrap,
+#tab-analysis .rf-route-record-list {
+  max-height: none !important;
+  height: auto;
+  overflow-y: visible !important;
+}
+#tab-analysis .client-version-stats-content,
+#tab-analysis .station-ranking-table-wrap {
+  overflow-x: auto;
+}
+#tab-analysis .client-version-table,
+#tab-analysis .station-ranking-table {
+  height: auto;
+}
