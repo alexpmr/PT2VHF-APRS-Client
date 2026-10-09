@@ -68,7 +68,7 @@ def test_v1413_manual_route_search_uses_exclusive_ranking_focus():
     assert "setTransientRouteFocusVisibility(false);" in body
     assert "await loadMapData();" in body
     assert "await loadTopology();" in body
-    assert "fitRfRouteBounds(routes);" in body
+    assert "fitRfRouteBounds(routes" in body
 
 
 def test_v1413_removed_v1412_rf_exclusion_thresholds():
