@@ -1,56 +1,41 @@
-## Novo — Correção crítica TNC/RF: bytes recebidos pela serial não chegam ao mapa
+## Novo — Mensagens APRS: evitar duplicação por retry após ACK
 
-- **Escopo exato do relato do PP5AU:** “A minha estação RF via TNC **PP5AU-7** não está plotando no mapa.”
-- Portanto, validar especificamente o caso em que **a própria estação/local station**, recebida pelo TNC/RF, precisa ser persistida e exibida no mapa.
-- Não assumir que o defeito afeta necessariamente todas as estações RF remotas; criar teste dedicado para a estação local `PP5AU-7`.
-- Verificar se existe alguma supressão por **próprio indicativo / own callsign / estação local** entre `ingest_rf_packet()`, persistência em `stations/tracks`, filtros do mapa e renderização de marcadores.
-- Critério de aceite: ao receber via TNC um pacote de posição válido originado por `PP5AU-7`, o cliente deve registrar o pacote como **RF**, atualizar posição/tracklog e mostrar **PP5AU-7 no mapa**, mesmo que o indicativo configurado no cliente também seja PP5AU-7.
-
-
-- Cenário real reportado pelo **PP5AU**: a porta serial está conectada e recebe bytes, porém os contadores permanecem em **KISS RX = 0 / AX.25 RX = 0** e nenhuma estação recebida por RF chega ao mapa.
-- A captura mostra **COM10 @ 9600**, bytes chegando pela serial e estado **“Bytes chegando, sem KISS”**.
-- Tratar como problema do pipeline **Serial → framing/protocolo → AX.25 → APRS → mapa**, e não como falha de renderização do mapa.
-- Revisar regressão introduzida/acentuada após a inclusão de `device_profile` e `serial_protocol` na série 1.13:
-  - o cliente passou a distinguir conceitualmente `kiss` e `terminal`;
-  - porém o loop de recepção serial continua encaminhando todo transporte serial não-AGWPE ao `KissStreamDecoder`.
-- Implementar recepção coerente com o protocolo configurado:
-  - `serial_protocol=kiss`: usar exclusivamente framing KISS;
-  - `serial_protocol=terminal`: usar decoder de linhas/monitor TNC2/PKT quando o equipamento fornecer saída textual APRS;
-  - `transport=agwpe`: manter decoder AGWPE atual.
-- Adicionar opção **Auto detectar protocolo serial**:
-  - detectar KISS pela presença/framing `FEND (0xC0)`;
-  - detectar saída terminal/TNC2 por linhas APRS válidas do tipo `CALL>DST,PATH:payload`;
-  - nunca interpretar bytes binários aleatórios como AX.25 sem framing confiável.
-- Se bytes forem recebidos por alguns segundos/quantidade mínima e nenhum KISS válido aparecer:
-  - mostrar diagnóstico claro;
-  - informar protocolo atualmente esperado;
-  - sugerir troca para Terminal/PKT quando houver padrão textual reconhecível;
-  - sugerir baud rate/modo incorreto quando os bytes forem binários sem framing reconhecível.
-- Não alterar automaticamente configuração persistida sem evidência suficiente; oferecer ação explícita **“Usar protocolo detectado”**.
-- Para perfil Kenwood TM-D700/TM-D710 em modo terminal/PKT:
-  - aceitar monitor RX textual quando disponível;
-  - manter TX automático bloqueado nesse modo até validação física específica.
-- Garantir que todo pacote APRS válido recebido em Terminal/PKT siga o mesmo pipeline dos frames KISS:
-  - registrar em TNC/RF;
-  - marcar origem como RF;
-  - atualizar estação/posição;
-  - alimentar mensagens;
-  - atualizar topologia;
-  - aparecer imediatamente no mapa.
-- Verificar migração de configuração entre versões para impedir que um perfil serial anteriormente funcional seja convertido silenciosamente para `generic_kiss / kiss`.
-- Adicionar diagnóstico de framing com contadores separados:
-  - bytes serial;
-  - delimitadores KISS detectados;
-  - linhas terminal/TNC2 detectadas;
-  - frames AX.25 válidos;
-  - pacotes APRS entregues ao serviço principal.
+- Relato do **PP5AU**: algumas mensagens estão chegando **duplicadas**, em certos casos 2 ou 3 vezes, sugerindo que a retransmissão continua mesmo após o ACK correspondente.
+- Investigar o ciclo completo **TX → message ID → espera de ACK/REJ → cancelamento da fila de retry**.
+- Garantir que um ACK válido para a mensagem:
+  - marque imediatamente a mensagem como confirmada;
+  - remova/cancele retries ainda pendentes;
+  - impeça novos envios automáticos da mesma mensagem/ID;
+  - atualize o histórico sem criar uma segunda mensagem lógica.
+- Correlacionar ACK pelo **destinatário + message ID** correto, respeitando normalização de indicativo/SSID.
+- Tratar corretamente ACK recebido por meio diferente do envio original, quando permitido pelo modelo atual (por exemplo, envio RF e ACK recebido via APRS-IS, ou vice-versa), sem perder a correlação.
+- Evitar corrida entre chegada do ACK e timer de retransmissão: se o ACK entrar no mesmo intervalo em que um retry está para disparar, o ACK deve prevalecer e cancelar o reenvio.
+- Verificar se reconexão, reinício da interface, atraso de banco, reprocessamento de evento ou restauração de estado estão recriando retries já confirmados.
+- Registrar no diagnóstico, para cada mensagem:
+  - message ID;
+  - tentativa atual;
+  - horário de cada TX;
+  - horário/canal do ACK;
+  - motivo de cada retry;
+  - momento em que a fila foi cancelada.
 - Adicionar regressões para:
-  - KISS serial válido;
-  - Terminal/PKT textual válido;
-  - bytes binários sem framing;
-  - baud rate incorreto;
-  - migração de configuração;
-  - pacote RF recebido aparecendo no mapa sem depender de APRS-IS.
+  - ACK antes do primeiro retry;
+  - ACK no limite exato do timer;
+  - ACK após um retry;
+  - ACK duplicado;
+  - REJ;
+  - ACK por RF/APRS-IS;
+  - reinício/reconexão sem ressuscitar retries já confirmados.
+- Critério de aceite: após ACK válido, **nenhuma nova retransmissão automática da mesma mensagem deve ocorrer**.
+
+## Encerrado como sintoma de dados legados — PP5AU-7 não aparecia no mapa
+
+- O relato de que a própria estação **PP5AU-7**, recebida via TNC/RF, não aparecia no mapa foi **resolvido em campo ao apagar o banco de dados e iniciar com banco limpo**.
+- Portanto, não tratar mais esse caso como evidência de bug ativo no pipeline RF→mapa.
+- A evidência atual aponta para **estado legado/cache/migração de banco**.
+- Manter apenas como pista para futura auditoria de compatibilidade/migração de bancos antigos, caso o sintoma volte a ocorrer.
+- Não alterar filtros de `own callsign`, ingestão RF ou renderização do mapa com base somente nesse caso já resolvido.
+- Se o problema reaparecer, coletar o banco antigo antes de apagá-lo para identificar exatamente qual registro/estado legado causa a supressão.
 
 ## Implementado na v1.14.17 — Configuração sem barras de rolagem internas
 
