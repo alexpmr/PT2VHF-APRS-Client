@@ -1,3 +1,15 @@
+## Novo — Estatísticas > Ranking: enquadramento automático do trajeto no mapa
+
+- Ao abrir no mapa uma rota/trajeto a partir de **Estatísticas > Ranking**, ajustar automaticamente o enquadramento para o **zoom mais próximo possível** que ainda mantenha **todo o trajeto e todas as estações envolvidas visíveis**.
+- Calcular o `fitBounds` usando o conjunto completo de coordenadas dos nós e enlaces da rota selecionada.
+- Aplicar apenas uma pequena margem visual (`padding`) para evitar que marcadores, labels ou extremidades do trajeto encostem nas bordas do mapa.
+- Não usar um `maxZoom` artificialmente baixo quando o trajeto couber em um nível de zoom maior.
+- Para rotas curtas ou com estações próximas, aproximar significativamente o mapa em vez de manter uma visão regional ampla.
+- Para rotas longas, reduzir o zoom somente o necessário para que nenhuma estação ou trecho fique fora da área visível.
+- Considerar no cálculo todos os nós intermediários da rota, não apenas origem e destino.
+- Recalcular o enquadramento ao selecionar outra rota do ranking.
+- Preservar a possibilidade de o usuário alterar manualmente o zoom após o enquadramento automático.
+
 ## Novo — Mapa: seguir tracklog selecionado
 
 - Ao clicar em um **tracklog** no mapa, ativar um modo de acompanhamento automático.
