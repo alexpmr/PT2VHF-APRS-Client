@@ -1,44 +1,45 @@
-# PT2VHF APRS Client - v1.14.17
+# PT2VHF APRS Client - v1.14.18
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.14.17** corrige o backup completo, adiciona feedback central para operações demoradas e refina hops RF inferidos para reconstruir intermediários quando houver evidência suficiente.
+A **v1.14.18** fecha o backlog de software aberto: acompanhamento explícito de estações no mapa e correção completa do ciclo ACK/retry de mensagens APRS, incluindo ACK por RF/TNC.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.14.17**.
+Os arquivos abaixo apontam diretamente para a **release v1.14.18**.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Setup_x64_v1.14.17.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Portable_x64_v1.14.17.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Setup_ARM64_v1.14.17.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Portable_ARM64_v1.14.17.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_Setup_x64_v1.14.18.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_Portable_x64_v1.14.18.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_Setup_ARM64_v1.14.18.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_Portable_ARM64_v1.14.18.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_x86_64_v1.14.17.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/pt2vhf-aprs-client_1.14.17_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Linux_x86_64_v1.14.17.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_arm64_v1.14.17.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/pt2vhf-aprs-client_1.14.17_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Linux_arm64_v1.14.17.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_x86_64_v1.14.18.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/pt2vhf-aprs-client_1.14.18_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_Linux_x86_64_v1.14.18.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_arm64_v1.14.18.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/pt2vhf-aprs-client_1.14.18_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_Linux_arm64_v1.14.18.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_macOS_arm64_v1.14.17.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_macOS_x86_64_v1.14.17.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_macOS_arm64_v1.14.18.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_macOS_x86_64_v1.14.18.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Manual_v1.14.17.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.18/PT2VHF_APRS_Client_Manual_v1.14.18.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
-## Novidades da v1.14.17
+## Novidades da v1.14.18
 
-- **Backup completo funcional:** salvamento nativo no aplicativo desktop e fallback por download no navegador.
-- **Processando...:** operações demoradas passam a exibir indicador central com mensagem contextual.
-- **Restauração e KML:** também usam o novo feedback de processamento.
-- **Hops inferidos refinados:** trechos longos inferidos pelo path procuram cadeia intermediária conhecida antes de serem apresentados como um único hop.
-- **Intermediários prováveis:** nós reconstruídos são identificados explicitamente; se não houver prova suficiente, o cliente informa que os intermediários não foram identificados.
-- **RF direto preservado:** distância não invalida nem quebra enlace diretamente observado.
-- **Configuração inteira:** cards e subblocos deixam de ter rolagem vertical própria; toda a aba usa somente o scroll principal.
+- **Acompanhar Estação:** novo botão no popup do marcador inicia acompanhamento explícito e fecha o popup automaticamente.
+- **Centralização contínua:** a estação permanece no centro conforme novas posições chegam, preservando o zoom escolhido; arrastar o mapa encerra o acompanhamento.
+- **Painel ao vivo:** durante o acompanhamento, mostra indicativo, velocidade, curso e há quanto tempo chegou o último pacote.
+- **ACK/retry corrigido:** retries reutilizam o mesmo message ID APRS e a mesma mensagem lógica no banco.
+- **ACK terminal:** ACK/REJ não podem mais ser sobrescritos por um estado de TX/retry atrasado.
+- **RF/TNC:** mensagens pessoais recebidas por RF passam a gerar ACK por RF quando o TX do TNC está habilitado e confirmado.
+- **ACK perdido:** uma retransmissão RF idêntica não duplica o histórico, mas provoca novo ACK para permitir que o remetente encerre os retries.
+- **Deduplicação de mensagens:** o mesmo remetente/destino/message ID não cria várias mensagens lógicas durante a janela de retry.
 - Pacotes completos para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.14.11
