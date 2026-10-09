@@ -1,4 +1,4 @@
-## Novo — Topologia/Recordes RF: restaurar algoritmo RF anterior à v1.14.12
+## Implementado na v1.14.13 — Topologia/Recordes RF: restaurar algoritmo RF anterior à v1.14.12
 
 - **Reverter a lógica excessivamente restritiva introduzida na v1.14.12 para validar “100% RF”.**
 - Voltar ao algoritmo usado antes da v1.14.12 para formar o grafo, pesquisar rotas e alimentar os **Recordes RF**.
@@ -104,7 +104,7 @@
 - Reutilizar o mesmo grafo/topologia RF do recurso de pesquisa de rotas para manter coerência de classificação e cálculo de distância.
 - Criar testes para ranking por distância direta entre as estações extremas, cálculo da distância total da rota como dado complementar, múltiplos hops, múltiplas rotas do mesmo par, deduplicação de sentido inverso, exclusão de Internet/APRS-IS e filtro por período.
 
-## Implementado até a v1.14.12 — Estatísticas: exibir blocos completos sem rolagem interna
+## Reforçado na v1.14.13 — Estatísticas: exibir blocos completos sem rolagem interna
 
 - Corrigir especificamente o bloco de **ranking de software/aplicações**, que ainda aparece como uma área separada com barra de rolagem vertical própria.
 - O ranking de software deve ficar **contínuo com os demais blocos abaixo**, fazendo parte do mesmo fluxo vertical da aba Estatísticas.
@@ -162,7 +162,7 @@
 - Validar nos principais breakpoints e com zoom/escala de interface maiores.
 - Criar teste visual/regressão de layout para impedir que novos controles voltem a ultrapassar a largura disponível.
 
-## Implementado até a v1.14.11 — Mapa: pesquisa por indicativo e rota RF entre duas estações
+## Implementado na v1.14.13 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
 - Ao pesquisar **duas estações** pela barra superior do mapa e exibir as rotas entre elas, usar o **mesmo modo visual aplicado ao clicar em um Recorde RF no ranking**.
 - Depois de selecionar origem e destino e clicar em **Pesquisar**:
