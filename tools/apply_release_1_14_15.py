@@ -40,6 +40,8 @@ for marker in (
     "fitRfRouteBounds(routes, payload.eligible_edges || [])",
     "&max_routes=12&max_hops=12",
     "enlaces RF elegíveis",
+    "routeEvidence?.evidence_level === 'inferred'",
+    "inferredRouteEdge ? '5 5'",
 ):
     if marker not in js:
         raise SystemExit(f"v1.14.15 frontend marker missing: {marker}")
