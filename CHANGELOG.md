@@ -1,3 +1,14 @@
+## 1.14.14 - 2026-10-08
+
+- **Terminologia RF consolidada:** painel de rotas, autocomplete e mensagens deixam de usar “RF confirmado” e passam a refletir corretamente o modelo de **RF observado** restaurado na v1.14.13.
+- **Painel de rota:** removida a exibição de confiança/heurística obsoleta da v1.14.12; cada trecho passa a mostrar a origem real da classificação quando disponível.
+- **Pesquisa manual:** preservado o mesmo foco exclusivo dos Recordes RF, mantendo somente origem, destino, intermediários e enlaces das rotas encontradas.
+- **Rotas alternativas:** continuam disponíveis no mesmo painel, com destaque individual e enquadramento automático.
+- **RF × Internet:** APRS-IS/Internet continua sem completar rota RF e permanece como evidência independente.
+- **Estatísticas:** mantido o fluxo vertical contínuo, sem barra vertical interna nos rankings.
+- **Regressão:** novos testes verificam a ausência dos rótulos obsoletos e a preservação do modelo RF observado.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.13 - 2026-10-08
 
 - **Mapa — pesquisa de duas estações:** ao pesquisar origem e destino, a visualização passa a usar o mesmo foco exclusivo dos Recordes RF: ficam visíveis apenas origem, destino, intermediários e enlaces das rotas encontradas.

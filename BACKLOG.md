@@ -1,3 +1,12 @@
+## Consolidado na v1.14.14 — consistência do modelo RF observado
+
+- Uniformizar a terminologia da interface após a reversão da heurística da v1.14.12.
+- Usar **RF observado** em painel de rotas, mensagens e autocomplete.
+- Remover do painel qualquer campo de confiança/plausibilidade que possa sugerir que distância ou quantidade mínima de observações ainda bloqueiam enlaces.
+- Mostrar a origem real da classificação do trecho quando disponível.
+- Preservar foco exclusivo da pesquisa de duas estações, Recordes RF, distinção RF × Internet e Estatísticas sem scroll vertical interno.
+- Adicionar regressão para impedir retorno dos rótulos “RF confirmado”/“confirmed RF” na análise de rotas.
+
 ## Implementado na v1.14.13 — Topologia/Recordes RF: restaurar algoritmo RF anterior à v1.14.12
 
 - **Reverter a lógica excessivamente restritiva introduzida na v1.14.12 para validar “100% RF”.**
