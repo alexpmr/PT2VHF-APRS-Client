@@ -8,11 +8,13 @@ def read(rel: str) -> str:
 
 
 def test_v1416_version_metadata():
-    assert read("VERSION").strip() == "1.14.16"
-    assert '__version__ = "1.14.16"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    assert tuple(int(part) for part in version.split(".")) >= (1, 14, 16)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
+    parts = tuple(int(part) for part in version.split("."))
     win = read("windows/version_info.txt")
-    assert "(1, 14, 16, 0)" in win
-    assert "'1.14.16'" in win
+    assert str(parts + (0,)) in win
+    assert f"'{version}'" in win
 
 
 def test_v1416_tracklog_follow_mode_preserves_zoom():

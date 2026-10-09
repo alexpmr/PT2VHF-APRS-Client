@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.17": {
+        "title": "Backup confiável, feedback de processamento e rotas RF refinadas",
+        "items": [
+            "Backup completo passa a usar salvamento nativo no aplicativo desktop e fallback de download no navegador, com erros e sucesso explícitos.",
+            "Operações demoradas ganham um indicador central de processamento; backup, restauração e exportação KML já usam o novo componente.",
+            "Hops longos apenas inferidos pelo path podem ser decompostos em nós intermediários conhecidos quando existe evidência RF melhor sustentada e próxima no tempo.",
+            "Nós reconstruídos são identificados como prováveis; quando não há evidência suficiente, o trecho continua inferido e informa que os intermediários não foram identificados.",
+            "Enlaces RF diretamente observados continuam válidos independentemente da distância e não são quebrados por heurística geográfica.",
+            "A aba Configuração passa a usar um único fluxo vertical, sem barras de rolagem internas nos cards e subblocos.",
+        ],
+    },
     "1.14.16": {
         "title": "Tracklog acompanhado e rotas totalmente visíveis",
         "items": [

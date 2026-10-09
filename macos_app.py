@@ -7,6 +7,7 @@ import threading
 import time
 import webbrowser
 from pathlib import Path
+from urllib.request import urlopen
 
 
 from pt2vhf_aprs import database as db
@@ -71,6 +72,53 @@ def _exit_for_update() -> None:
 
 class NativeApi:
     """Bridge for native desktop file dialogs used by the web UI."""
+
+    def save_local_download(self, relative_url: str, filename: str) -> dict:
+        """Salva um download gerado pelo backend local usando diálogo nativo."""
+        try:
+            import webview
+            global _window, URL
+            if _window is None:
+                return {"saved": False, "error": "Janela integrada indisponível."}
+            route = str(relative_url or "").strip()
+            allowed = {"/api/v190/backup/full"}
+            if route not in allowed:
+                return {"saved": False, "error": "Rota de download não autorizada."}
+
+            suggested = Path(str(filename or "PT2VHF_APRS_Client_Backup.zip")).name
+            if not suggested.lower().endswith(".zip"):
+                suggested += ".zip"
+            selected = _window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                save_filename=suggested,
+                file_types=("Arquivo ZIP (*.zip)", "Todos os arquivos (*.*)"),
+            )
+            if not selected:
+                return {"saved": False, "cancelled": True}
+            if isinstance(selected, (list, tuple)):
+                selected = selected[0] if selected else ""
+            target = Path(str(selected))
+            if target.suffix.lower() != ".zip":
+                target = target.with_suffix(".zip")
+
+            local_url = str(URL).rstrip("/") + route
+            with urlopen(local_url, timeout=180) as response, target.open("wb") as output:
+                total = 0
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    output.write(chunk)
+                    total += len(chunk)
+            if total <= 0:
+                try:
+                    target.unlink(missing_ok=True)
+                except Exception:
+                    pass
+                return {"saved": False, "error": "O servidor retornou um backup vazio."}
+            return {"saved": True, "path": str(target), "bytes": total}
+        except Exception as exc:
+            return {"saved": False, "error": str(exc)}
 
     def save_text_file(self, filename: str, content: str) -> dict:
         try:

@@ -526,6 +526,10 @@
       hours: String(topologyPeriodValue($('#kmlExportPeriod')?.value || 0)),
     });
 
+    const processingToken = showProcessing(
+      ui('Gerando arquivo KML...', 'Generating KML file...'),
+      ui('Coletando as camadas selecionadas e preparando a exportação.', 'Collecting selected layers and preparing the export.')
+    );
     try {
       const response = await fetch(`/api/export/kml?${params.toString()}`);
       if (!response.ok) {
@@ -560,6 +564,7 @@
       if (status) status.textContent = message;
       toast(message, 'error');
     } finally {
+      hideProcessing(processingToken);
       if (button) button.disabled = false;
       if (cancel) cancel.disabled = false;
     }
@@ -747,6 +752,72 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.add('hidden'), 4200);
   }
+
+  const processingOperations = new Map();
+  let processingSequence = 0;
+
+  function renderProcessingOverlay() {
+    const overlay = $('#globalProcessingOverlay');
+    if (!overlay) return;
+    const entries = [...processingOperations.values()];
+    const active = entries.length > 0;
+    overlay.classList.toggle('hidden', !active);
+    document.documentElement.classList.toggle('is-processing', active);
+    document.body?.setAttribute('aria-busy', active ? 'true' : 'false');
+    if (!active) return;
+    const current = entries[entries.length - 1];
+    const title = $('#globalProcessingTitle');
+    const message = $('#globalProcessingMessage');
+    if (title) title.textContent = current.title || ui('Processando...', 'Processing...');
+    if (message) message.textContent = current.message || ui(
+      'Aguarde enquanto a operação é concluída.',
+      'Please wait while the operation completes.'
+    );
+  }
+
+  function showProcessing(title = '', message = '') {
+    processingSequence += 1;
+    const token = 'processing-' + processingSequence;
+    processingOperations.set(token, {
+      title: title || ui('Processando...', 'Processing...'),
+      message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.')
+    });
+    renderProcessingOverlay();
+    return token;
+  }
+
+  function updateProcessing(token, title = '', message = '') {
+    if (!processingOperations.has(token)) return;
+    const current = processingOperations.get(token) || {};
+    processingOperations.set(token, {
+      title: title || current.title,
+      message: message || current.message
+    });
+    renderProcessingOverlay();
+  }
+
+  function hideProcessing(token) {
+    if (token) processingOperations.delete(token);
+    else processingOperations.clear();
+    renderProcessingOverlay();
+  }
+
+  async function withProcessing(title, message, operation) {
+    const token = showProcessing(title, message);
+    const started = performance.now();
+    try {
+      return await operation(token);
+    } finally {
+      const remaining = 260 - (performance.now() - started);
+      if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
+      hideProcessing(token);
+    }
+  }
+
+  window.pt2vhfShowProcessing = showProcessing;
+  window.pt2vhfUpdateProcessing = updateProcessing;
+  window.pt2vhfHideProcessing = hideProcessing;
+  window.pt2vhfWithProcessing = withProcessing;
 
   function debounce(fn, delay = 300) {
     let timer;
@@ -2941,13 +3012,18 @@
   }
 
   function routePanelHtml(route, index, directDistanceKm) {
-    const edgeRows = (route.edges || []).map(edge =>
-      '<div class="rf-route-edge-row"><span>' + escapeHtml(edge.source) + ' → ' + escapeHtml(edge.target) + '</span>' +
-      '<strong>' + escapeHtml(formatRfDistanceKm(edge.distance_km)) + '</strong>' +
-      '<small>' + Number(edge.packet_count || 0).toLocaleString(currentLocale()) + ' obs. · ' +
-      escapeHtml(edge.evidence_label || edge.classification_source || ui('RF observado', 'Observed RF')) + ' · ' +
-      escapeHtml(fmtDate(edge.last_seen)) + '</small></div>'
-    ).join('');
+    const edgeRows = (route.edges || []).map(edge => {
+      const reconstruction = edge.reconstructed
+        ? ' · ' + ui('reconstruído de', 'reconstructed from') + ' ' + escapeHtml(edge.reconstructed_from || '')
+        : '';
+      return '<div class="rf-route-edge-row' + (edge.reconstructed ? ' reconstructed' : '') + '"><span>' +
+        escapeHtml(edge.source) + ' → ' + escapeHtml(edge.target) + '</span>' +
+        '<strong>' + escapeHtml(formatRfDistanceKm(edge.distance_km)) + '</strong>' +
+        '<small>' + Number(edge.packet_count || 0).toLocaleString(currentLocale()) + ' obs. · ' +
+        escapeHtml(edge.evidence_label || edge.classification_source || ui('RF observado', 'Observed RF')) +
+        reconstruction + ' · ' + escapeHtml(fmtDate(edge.last_seen)) + '</small></div>';
+    }).join('');
+
     const evidenceParts = [];
     if (Number(route.direct_edges || 0)) {
       evidenceParts.push(Number(route.direct_edges || 0) + ' ' + ui('diretos', 'direct'));
@@ -2958,6 +3034,35 @@
     if (Number(route.legacy_edges || 0)) {
       evidenceParts.push(Number(route.legacy_edges || 0) + ' ' + ui('legados', 'legacy'));
     }
+
+    const reconstructedNodes = Array.isArray(route.reconstructed_intermediate_nodes)
+      ? route.reconstructed_intermediate_nodes.filter(Boolean)
+      : [];
+    const reconstructedNotice = reconstructedNodes.length
+      ? '<div class="rf-route-refinement ok"><strong>' +
+        escapeHtml(ui('Intermediários reconstruídos/prováveis', 'Reconstructed/probable intermediate nodes')) +
+        ':</strong> ' + escapeHtml(reconstructedNodes.join(', ')) +
+        '<small>' + escapeHtml(ui(
+          'A cadeia foi reconstruída a partir de evidências RF conhecidas próximas no tempo; esses nós não foram necessariamente explicitados no mesmo pacote.',
+          'The chain was reconstructed from known RF evidence close in time; these nodes were not necessarily explicit in the same packet.'
+        )) + '</small></div>'
+      : '';
+
+    const unresolvedEdges = Array.isArray(route.unresolved_inferred_edges)
+      ? route.unresolved_inferred_edges
+      : [];
+    const unresolvedNotice = unresolvedEdges.length
+      ? '<div class="rf-route-refinement warning"><strong>' +
+        escapeHtml(ui('Intermediários não identificados', 'Intermediate nodes not identified')) +
+        ':</strong> ' + unresolvedEdges.map(edge =>
+          escapeHtml(String(edge.source || '') + ' → ' + String(edge.target || '') + ' (' + formatRfDistanceKm(edge.distance_km) + ')')
+        ).join(' · ') +
+        '<small>' + escapeHtml(ui(
+          'O trecho permanece inferido; o software não inventa estações para preencher a rota.',
+          'The segment remains inferred; the software does not invent stations to fill the route.'
+        )) + '</small></div>'
+      : '';
+
     return '<button type="button" class="rf-route-card" data-rf-route-index="' + index + '">' +
       '<span class="rf-route-card-title">' + ui('Rota', 'Route') + ' ' + (index + 1) + '</span>' +
       '<strong>' + escapeHtml((route.nodes || []).join(' → ')) + '</strong>' +
@@ -2965,6 +3070,7 @@
       '<small>' + ui('Distância direta', 'Direct distance') + ': ' + escapeHtml(formatRfDistanceKm(directDistanceKm)) + '</small>' +
       '<small>' + ui('Evidência', 'Evidence') + ': ' + escapeHtml(evidenceParts.join(' · ') || ui('RF observado', 'Observed RF')) + '</small>' +
       '<small>' + ui('Evidência completa', 'Complete evidence') + ': ' + escapeHtml(fmtDate(route.route_evidence_at)) + '</small>' +
+      reconstructedNotice + unresolvedNotice +
       '<div class="rf-route-edge-list">' + edgeRows + '</div></button>';
   }
 
@@ -9151,10 +9257,18 @@
       if (Number(route.direct_edges || 0)) evidenceParts.push(Number(route.direct_edges || 0) + ' ' + ui('diretos', 'direct'));
       if (Number(route.inferred_edges || 0)) evidenceParts.push(Number(route.inferred_edges || 0) + ' ' + ui('inferidos', 'inferred'));
       if (Number(route.legacy_edges || 0)) evidenceParts.push(Number(route.legacy_edges || 0) + ' ' + ui('legados', 'legacy'));
+      const refinementParts = [];
+      const reconstructedCount = Array.isArray(route.reconstructed_intermediate_nodes)
+        ? route.reconstructed_intermediate_nodes.length : 0;
+      const unresolvedCount = Array.isArray(route.unresolved_inferred_edges)
+        ? route.unresolved_inferred_edges.length : 0;
+      if (reconstructedCount) refinementParts.push(reconstructedCount + ' ' + ui('interm. reconstruídos', 'reconstructed interm.'));
+      if (unresolvedCount) refinementParts.push(unresolvedCount + ' ' + ui('trechos inferidos sem interm.', 'inferred segments without interm.'));
       const meta = Number(route.hops || 0) + ' hops · ' +
         ui('rota', 'route') + ': ' + formatRfDistanceKm(route.distance_km) + ' · ' +
         Number(route.observations || 0).toLocaleString(currentLocale()) + ' obs. · ' +
         (evidenceParts.length ? evidenceParts.join(' · ') + ' · ' : '') +
+        (refinementParts.length ? refinementParts.join(' · ') + ' · ' : '') +
         ui('evidência', 'evidence') + ': ' + fmtDate(route.route_evidence_at);
       return '<button type="button" class="rf-route-record" data-rf-route-record-index="' + index + '">' +
         '<span class="rf-route-record-rank">' + (index + 1) + 'º</span>' +

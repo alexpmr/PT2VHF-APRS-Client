@@ -1,42 +1,44 @@
-# PT2VHF APRS Client - v1.14.16
+# PT2VHF APRS Client - v1.14.17
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
-A **v1.14.16** adiciona acompanhamento de tracklog e corrige a apresentação das rotas para manter todo o trajeto e todos os nós visíveis no maior zoom possível.
+A **v1.14.17** corrige o backup completo, adiciona feedback central para operações demoradas e refina hops RF inferidos para reconstruir intermediários quando houver evidência suficiente.
 
 ## Downloads da versão mais recente
 
-Os arquivos abaixo apontam diretamente para a **release v1.14.16**.
+Os arquivos abaixo apontam diretamente para a **release v1.14.17**.
 
 ### Windows
-- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_Setup_x64_v1.14.16.exe)
-- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_Portable_x64_v1.14.16.exe)
-- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_Setup_ARM64_v1.14.16.exe)
-- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_Portable_ARM64_v1.14.16.exe)
+- [Windows x64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Setup_x64_v1.14.17.exe)
+- [Windows x64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Portable_x64_v1.14.17.exe)
+- [Windows ARM64 — Instalador](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Setup_ARM64_v1.14.17.exe)
+- [Windows ARM64 — Portable](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Portable_ARM64_v1.14.17.exe)
 
 ### Linux
-- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_x86_64_v1.14.16.AppImage)
-- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/pt2vhf-aprs-client_1.14.16_amd64.deb)
-- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_Linux_x86_64_v1.14.16.tar.gz)
-- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_arm64_v1.14.16.AppImage)
-- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/pt2vhf-aprs-client_1.14.16_arm64.deb)
-- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_Linux_arm64_v1.14.16.tar.gz)
+- [Linux x86_64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_x86_64_v1.14.17.AppImage)
+- [Linux x86_64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/pt2vhf-aprs-client_1.14.17_amd64.deb)
+- [Linux x86_64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Linux_x86_64_v1.14.17.tar.gz)
+- [Linux ARM64 — AppImage](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_arm64_v1.14.17.AppImage)
+- [Linux ARM64 — DEB](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/pt2vhf-aprs-client_1.14.17_arm64.deb)
+- [Linux ARM64 — TAR.GZ](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Linux_arm64_v1.14.17.tar.gz)
 
 ### macOS
-- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_macOS_arm64_v1.14.16.dmg)
-- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_macOS_x86_64_v1.14.16.dmg)
+- [macOS — Apple Silicon](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_macOS_arm64_v1.14.17.dmg)
+- [macOS — Intel](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_macOS_x86_64_v1.14.17.dmg)
 
 ### Documentação
-- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.16/PT2VHF_APRS_Client_Manual_v1.14.16.pdf)
+- [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.17/PT2VHF_APRS_Client_Manual_v1.14.17.pdf)
 - [Notas da versão mais recente](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest)
 
-## Novidades da v1.14.16
+## Novidades da v1.14.17
 
-- **Seguir tracklog:** clique no trajeto para acompanhar a última posição automaticamente sem mudar o zoom.
-- **Controle manual:** arrastar o mapa encerra o seguimento; zoom manual é preservado.
-- **Ranking mais próximo:** rotas abertas pelas Estatísticas usam o maior zoom que ainda comporta todo o percurso.
-- **Painel respeitado:** o enquadramento evita deixar a rota escondida sob o painel lateral.
-- **Todos os nós visíveis:** indicativos da rota ganham identificação no mapa mesmo sem marcador APRS normal.
+- **Backup completo funcional:** salvamento nativo no aplicativo desktop e fallback por download no navegador.
+- **Processando...:** operações demoradas passam a exibir indicador central com mensagem contextual.
+- **Restauração e KML:** também usam o novo feedback de processamento.
+- **Hops inferidos refinados:** trechos longos inferidos pelo path procuram cadeia intermediária conhecida antes de serem apresentados como um único hop.
+- **Intermediários prováveis:** nós reconstruídos são identificados explicitamente; se não houver prova suficiente, o cliente informa que os intermediários não foram identificados.
+- **RF direto preservado:** distância não invalida nem quebra enlace diretamente observado.
+- **Configuração inteira:** cards e subblocos deixam de ter rolagem vertical própria; toda a aba usa somente o scroll principal.
 - Pacotes completos para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.14.11

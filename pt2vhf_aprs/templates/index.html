@@ -1735,6 +1735,19 @@
   </div>
 </div>
 
+<div id="globalProcessingOverlay" class="global-processing-overlay hidden" role="status" aria-live="polite" aria-atomic="true">
+  <div class="global-processing-card">
+    <div class="processing-clock" aria-hidden="true">
+      <span class="processing-clock-hand"></span>
+      <span class="processing-clock-center"></span>
+    </div>
+    <div class="global-processing-copy">
+      <strong id="globalProcessingTitle">Processando...</strong>
+      <span id="globalProcessingMessage">Aguarde enquanto a operação é concluída.</span>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast hidden"></div>
 
 <script id="leafletScript" async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"

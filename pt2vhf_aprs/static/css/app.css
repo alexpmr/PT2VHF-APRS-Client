@@ -4444,3 +4444,171 @@ html[data-theme="light"] .rf-route-node-temp {
   color: #5f4b00;
   border-color: #b99500;
 }
+
+
+/* v1.14.17 - feedback global para operações demoradas */
+.global-processing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 22000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 11, 16, .42);
+  backdrop-filter: blur(2px);
+}
+.global-processing-overlay.hidden {
+  display: none !important;
+}
+.global-processing-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: min(360px, calc(100vw - 36px));
+  max-width: min(520px, calc(100vw - 36px));
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 25, 34, .97);
+  color: var(--text);
+  box-shadow: 0 18px 55px rgba(0,0,0,.55);
+}
+.processing-clock {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(59,166,255,.12);
+}
+.processing-clock::before,
+.processing-clock::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: rgba(255,255,255,.18);
+  transform: translateX(-50%);
+}
+.processing-clock::after {
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  bottom: auto;
+  width: auto;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.processing-clock-hand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 15px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform-origin: 50% 100%;
+  animation: pt2vhf-processing-clock 1s linear infinite;
+}
+.processing-clock-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+}
+.global-processing-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.global-processing-copy strong {
+  font-size: 15px;
+  font-weight: 850;
+}
+.global-processing-copy span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+html[data-theme="light"] .global-processing-card {
+  background: rgba(255,255,255,.98);
+}
+html.is-processing {
+  cursor: progress;
+}
+@keyframes pt2vhf-processing-clock {
+  from { transform: translate(-50%, -100%) rotate(0deg); }
+  to { transform: translate(-50%, -100%) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .processing-clock-hand { animation-duration: 2.5s; }
+}
+
+
+/* v1.14.17 - refinamento de hops RF inferidos */
+.rf-route-refinement {
+  display: grid;
+  gap: 3px;
+  margin-top: 7px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(59,166,255,.06);
+  text-align: left;
+}
+.rf-route-refinement.ok {
+  border-color: rgba(89, 201, 126, .5);
+  background: rgba(89, 201, 126, .08);
+}
+.rf-route-refinement.warning {
+  border-color: rgba(255, 190, 72, .65);
+  background: rgba(255, 190, 72, .09);
+}
+.rf-route-refinement strong {
+  font-size: 10px;
+}
+.rf-route-refinement small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.35;
+}
+.rf-route-edge-row.reconstructed {
+  border-left: 3px solid rgba(89, 201, 126, .8);
+  padding-left: 7px;
+}
+
+
+/* v1.14.17 - Configuração usa somente a rolagem principal da aba */
+#tab-config {
+  overflow: hidden;
+}
+#tab-config #configForm.config-grid {
+  height: calc(100% - 78px);
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-gutter: stable;
+}
+/* Cards e subconjuntos da Configuração nunca criam um segundo viewport vertical.
+   A rolagem fica exclusivamente no configForm, inclusive para blocos inseridos
+   dinamicamente por módulos/versionados. */
+#tab-config #configForm > .config-card,
+#tab-config #configForm .config-card,
+#tab-config #configForm .config-card :is(div, section, article, fieldset, ul, ol) {
+  max-height: none !important;
+  height: auto;
+  overflow: visible !important;
+  overscroll-behavior: auto;
+}
+#tab-config #configForm .config-card textarea {
+  max-height: none;
+}
