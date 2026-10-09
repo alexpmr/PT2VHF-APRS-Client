@@ -3206,21 +3206,40 @@
         '&hours=' + encodeURIComponent(state.mapPeriodHours) +
         '&max_routes=12&max_hops=8';
       const payload = await api(url);
+      const routes = Array.isArray(payload?.routes) ? payload.routes : [];
       const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
-      state.rfRouteExclusiveNodes = null;
+
       if (hadExclusiveFocus) {
+        state.rfRouteExclusiveNodes = null;
         setTransientRouteFocusVisibility(true);
         await loadMapData();
       }
+
       state.rfRouteAnalysis = payload;
       state.rfRouteSelectedIndex = -1;
+
+      if (routes.length) {
+        const exclusiveNodes = new Set();
+        for (const route of routes) {
+          for (const node of route.nodes || []) {
+            const call = normalizedCall(node);
+            if (call) exclusiveNodes.add(call);
+          }
+        }
+        state.rfRouteExclusiveNodes = exclusiveNodes;
+        setTransientRouteFocusVisibility(false);
+        await loadMapData();
+      } else {
+        state.rfRouteExclusiveNodes = null;
+      }
+
       await loadTopology();
       renderRfRouteNodeMarkers();
       renderRfRoutePanel();
-      state.rfRouteExclusiveNodes = null;
-      fitRfRouteBounds(payload.routes || []);
-      if (!payload.routes || !payload.routes.length) {
-        toast(ui('Não existe rota RF confirmada entre esses indicativos neste período.', 'No confirmed RF route was found between these callsigns in this period.'), 'error');
+      fitRfRouteBounds(routes);
+
+      if (!routes.length) {
+        toast(ui('Não existe rota RF observada entre esses indicativos neste período.', 'No observed RF route was found between these callsigns in this period.'), 'error');
       }
     } catch (err) {
       toast(String((err && err.message) || err), 'error');
@@ -8907,7 +8926,7 @@
     state.rfRouteRecords = Array.isArray(records) ? records.slice() : [];
     if (!state.rfRouteRecords.length) {
       return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-        escapeHtml(ui('Recordes RF confirmados — maiores distâncias', 'Confirmed RF records — longest distances')) +
+        escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) +
         '</h4><span class="hint">' +
         escapeHtml(ui('Nenhuma rota RF completa com posição conhecida neste período.', 'No complete RF route with known positions in this period.')) +
         '</span></div>';
@@ -8926,9 +8945,9 @@
         '<span class="rf-route-record-meta">' + escapeHtml(meta) + '</span></button>';
     }).join('');
     return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-      escapeHtml(ui('Recordes RF confirmados — maiores distâncias', 'Confirmed RF records — longest distances')) +
+      escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) +
       '</h4><div class="hint">' +
-      escapeHtml(ui('Somente enlaces RF confirmados pela heurística de evidência/plausibilidade. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Only RF links confirmed by the evidence/plausibility heuristic. Click a route to show it by itself on the map.')) +
+      escapeHtml(ui('Somente enlaces RF observados compõem as rotas; APRS-IS/Internet não completa uma rota RF. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Only observed RF links compose the routes; APRS-IS/Internet never completes an RF route. Click a route to show it by itself on the map.')) +
       '</div><div class="rf-route-record-list">' + rows + '</div></div>';
   }
 
