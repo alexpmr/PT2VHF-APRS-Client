@@ -38,6 +38,7 @@ Os arquivos abaixo apontam diretamente para a **release v1.14.17**.
 - **Hops inferidos refinados:** trechos longos inferidos pelo path procuram cadeia intermediária conhecida antes de serem apresentados como um único hop.
 - **Intermediários prováveis:** nós reconstruídos são identificados explicitamente; se não houver prova suficiente, o cliente informa que os intermediários não foram identificados.
 - **RF direto preservado:** distância não invalida nem quebra enlace diretamente observado.
+- **Configuração inteira:** cards e subblocos deixam de ter rolagem vertical própria; toda a aba usa somente o scroll principal.
 - Pacotes completos para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
 
 ## Novidades da v1.14.11
