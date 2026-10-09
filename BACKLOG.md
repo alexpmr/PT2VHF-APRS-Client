@@ -1,3 +1,46 @@
+## Novo — Topologia/Recordes RF: revisar rigorosamente o que é realmente 100% RF
+
+- Revisar a lógica que atualmente classifica enlaces e rotas como **100% RF**, principalmente nos rankings de **Recordes RF** e na análise de rotas entre estações.
+- Não considerar uma rota como RF completa apenas porque existe uma sequência de arestas classificadas como `rf` no grafo.
+- Introduzir uma validação adicional de **plausibilidade física e evidência operacional** para cada trecho e para a rota completa.
+- Avaliar, por trecho, pelo menos:
+  - distância geográfica entre as duas estações;
+  - quantidade de hops intermediários observados;
+  - path APRS original;
+  - digipeaters efetivamente presentes no path;
+  - origem real do pacote (`TNC/RF`, APRS-IS, q-constructs, iGate, replay/importação etc.);
+  - existência de evidência RF direta ou apenas inferida;
+  - quantidade de observações independentes;
+  - consistência temporal entre os trechos;
+  - coerência entre estação transmitente, digipeater(s) e receptor/iGate.
+- Tratar com forte suspeita rotas em que a **distância entre dois nós RF consecutivos seja incompatível com um enlace terrestre plausível**, especialmente quando houver poucos ou nenhum hop intermediário.
+- Exemplo de caso a rejeitar/rebaixar: uma rota com aproximadamente **1.700 km** e apenas **1 hop**, quando não houver evidência RF concreta suficiente que justifique propagação excepcional.
+- Diferenciar claramente níveis de confiança, por exemplo:
+  - **RF confirmado** — evidência direta suficiente;
+  - **RF provável** — evidência coerente, mas não conclusiva;
+  - **RF improvável / inconsistente** — distância/path/evidência não sustentam a classificação;
+  - **Internet/APRS-IS** — evidência explícita de transporte por rede.
+- Somente rotas compostas integralmente por trechos **RF confirmados** devem aparecer como **rota 100% RF**.
+- Rotas que contenham trecho apenas provável, inconsistente ou ambíguo não devem entrar no ranking principal de **Recordes RF** como se fossem RF puro.
+- Para Recordes RF, exigir um grau de confiança mínimo antes de aceitar o par no ranking.
+- Exibir no painel da rota, quando útil, a **confiança da classificação** e o motivo resumido, por exemplo:
+  - `RF confirmado — recebido via TNC`;
+  - `RF provável — path compatível`;
+  - `RF inconsistente — 1.649 km sem hops suficientes`.
+- Criar uma heurística configurável de plausibilidade, evitando um limite fixo simplista de distância, pois condições excepcionais de propagação podem ocorrer.
+- A heurística deve considerar o contexto da banda/meio quando houver dados disponíveis, mas nunca transformar uma simples distância alta em prova automática de erro.
+- Preservar eventos raros reais: se houver **evidência RF forte e verificável**, uma distância excepcional pode permanecer válida.
+- Reavaliar registros históricos já armazenados quando a nova lógica for aplicada, evitando perpetuar classificações antigas incorretas no ranking.
+- Criar testes específicos para:
+  - enlace terrestre curto e confirmado;
+  - rota multi-hop coerente;
+  - trecho muito longo sem hops suficientes;
+  - mistura RF + APRS-IS;
+  - path APRS incompatível;
+  - evidência direta via TNC;
+  - propagação excepcional com evidência forte;
+  - rebaixamento de confiança sem apagar o dado bruto observado.
+
 ## Implementado na v1.14.11 — Menu superior: simplificar textos de status
 
 - No indicador de versão do menu superior, trocar o texto **“Versão atualizada”** por apenas **“Atualizada”**.
