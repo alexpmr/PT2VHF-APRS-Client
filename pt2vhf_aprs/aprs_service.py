@@ -123,6 +123,7 @@ class APRSService:
         self._tx_queue: queue.Queue[dict[str, Any]] = queue.Queue()
         self._tx_stop_event = threading.Event()
         self._tx_guard = threading.Lock()
+        self._retry_lock = threading.RLock()
         self._recent_tx: dict[str, tuple[float, dict[str, Any]]] = {}
         self._stop_event = threading.Event()
         self._msg_counter = int(time.time()) % 1000
@@ -556,11 +557,15 @@ class APRSService:
         ack = re.fullmatch(r"ack([A-Za-z0-9]{1,5})", text, re.IGNORECASE)
         rej = re.fullmatch(r"rej([A-Za-z0-9]{1,5})", text, re.IGNORECASE)
         if ack:
-            db.mark_message_status(ack.group(1), "ACK", from_call)
+            with self._retry_lock:
+                db.mark_message_status(ack.group(1), "ACK", from_call)
             db.resolve_ping_ack(ack.group(1), from_call)
+            diag.log_event("message_ack_received", peer=from_call, message_id=ack.group(1), medium="RF" if via_rf else "APRS-IS")
             return
         if rej:
-            db.mark_message_status(rej.group(1), "REJ", from_call)
+            with self._retry_lock:
+                db.mark_message_status(rej.group(1), "REJ", from_call)
+            diag.log_event("message_rej_received", peer=from_call, message_id=rej.group(1), medium="RF" if via_rf else "APRS-IS")
             return
 
         message_text, msg_id = split_message_id(text)
@@ -586,9 +591,8 @@ class APRSService:
                     return
 
         message_type = classify_message_type(to_call)
-        db.add_message(
-            "in", from_call, to_call, message_text,
-            msg_id=msg_id,
+        _row_id, duplicate_message = db.add_incoming_message_once(
+            from_call, to_call, message_text, msg_id,
             status="Recebida" if message_type == "message" else "Boletim recebido",
             raw=raw,
             message_type=message_type,
@@ -597,14 +601,33 @@ class APRSService:
         # Alerta e ACK somente para mensagem individual endereçada exatamente a esta estação.
         is_personal_message = message_type == "message" and to_call == own_call
 
+        if is_personal_message and msg_id:
+            try:
+                if via_rf:
+                    self.send_rf_ack(from_call, msg_id)
+                elif self.status()["verified"]:
+                    self.send_ack(from_call, msg_id)
+            except Exception as exc:
+                diag.log_event(
+                    "message_ack_send_failed",
+                    peer=from_call,
+                    message_id=msg_id,
+                    medium="RF" if via_rf else "APRS-IS",
+                    error=str(exc),
+                )
+
+        if duplicate_message:
+            diag.log_event(
+                "message_duplicate_suppressed",
+                peer=from_call,
+                destination=to_call,
+                message_id=msg_id or "",
+                medium="RF" if via_rf else "APRS-IS",
+            )
+            return
+
         if is_personal_message and bool(cfg.get("sound_on_personal_message", 1)):
             _notify_personal_message(from_call, message_text)
-
-        if is_personal_message and msg_id and self.status()["verified"] and not via_rf:
-            try:
-                self.send_ack(from_call, msg_id)
-            except Exception:
-                pass
 
         if is_personal_message:
             self._maybe_auto_reply(from_call, message_text, via_rf=via_rf)
@@ -841,79 +864,102 @@ class APRSService:
         }
 
     def retry_message(self, row_id: int, route: str = "auto", path: str = "") -> dict[str, Any]:
-        original = db.get_message(row_id)
-        if not original or original.get("direction") != "out" or original.get("message_type") != "message":
-            raise ValueError("Mensagem de saída não encontrada.")
+        with self._retry_lock:
+            original = db.get_message(row_id)
+            if not original or original.get("direction") != "out" or original.get("message_type") != "message":
+                raise ValueError("Mensagem de saída não encontrada.")
+            if str(original.get("status") or "").upper() in {"ACK", "REJ"}:
+                return {
+                    "id": int(original["id"]),
+                    "message_id": str(original.get("msg_id") or ""),
+                    "retry_count": int(original.get("retry_count") or 0),
+                    "skipped": True,
+                    "reason": "Mensagem já confirmada/rejeitada.",
+                }
 
-        cfg = db.get_config()
-        max_retries = max(0, int(cfg.get("message_retry_attempts") or 0))
-        retry_count = int(original.get("retry_count") or 0)
-        if retry_count >= max_retries:
-            raise ValueError("A mensagem já atingiu o limite configurado de tentativas.")
+            cfg = db.get_config()
+            max_retries = max(0, int(cfg.get("message_retry_attempts") or 0))
+            retry_count = int(original.get("retry_count") or 0)
+            if retry_count >= max_retries:
+                raise ValueError("A mensagem já atingiu o limite configurado de tentativas.")
 
-        requested_route = str(route or "auto").lower().strip().replace("-", "_")
-        if requested_route == "auto":
-            requested_route = "rf_custom" if str(original.get("tx_medium") or "").upper() == "RF" and str(original.get("tx_path") or "").strip() else (
-                "rf_direct" if str(original.get("tx_medium") or "").upper() == "RF" else "aprs_is"
+            requested_route = str(route or "auto").lower().strip().replace("-", "_")
+            if requested_route == "auto":
+                requested_route = "rf_custom" if str(original.get("tx_medium") or "").upper() == "RF" and str(original.get("tx_path") or "").strip() else (
+                    "rf_direct" if str(original.get("tx_medium") or "").upper() == "RF" else "aprs_is"
+                )
+                if not path:
+                    path = str(original.get("tx_path") or "")
+
+            destination = str(original.get("to_call") or "").upper().strip()
+            part = str(original.get("message") or "")
+            source = full_callsign(cfg)
+            msg_id = str(original.get("msg_id") or "").strip()
+            if not re.fullmatch(r"[A-Za-z0-9]{1,5}", msg_id):
+                raise ValueError("A mensagem original não possui ID APRS reutilizável.")
+
+            from .tnc_service import get_tnc_config, normalize_message_rf_path, service as tnc_service
+            aliases = {"aprsis":"aprs_is","rf":"rf_direct","rf_direto":"rf_direct","rf_personalizado":"rf_custom"}
+            requested_route = aliases.get(requested_route, requested_route)
+            if requested_route not in {"aprs_is", "rf_direct", "rf_custom"}:
+                raise ValueError("Rota de retry inválida.")
+
+            medium = "APRS-IS" if requested_route == "aprs_is" else "RF"
+            effective_path = "TCPIP*"
+            if medium == "APRS-IS":
+                status = self.status()
+                if not status.get("connected") or not status.get("verified"):
+                    raise ConnectionError("Retry por APRS-IS exige conexão conectada e verificada.")
+                packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
+                self._send_raw(packet)
+                status_text = "Reenviada"
+            else:
+                tnc_status = tnc_service.status()
+                tnc_cfg = get_tnc_config()
+                if not tnc_status.get("connected") or tnc_status.get("tx_paused") or not tnc_cfg.get("auto_tx_enabled") or not tnc_cfg.get("tx_confirmed"):
+                    raise ConnectionError("Retry por RF exige TNC conectado e TX RF habilitado/confirmado.")
+                path_items = normalize_message_rf_path(path) if requested_route == "rf_custom" else []
+                if requested_route == "rf_custom" and not path_items:
+                    raise ValueError("Informe o path do retry RF personalizado.")
+                effective_path = ",".join(path_items)
+                result = tnc_service.queue_local_message(destination, part, msg_id, effective_path)
+                packet = str(result.get("raw") or "")
+                status_text = "Reenviada"
+
+            updated = db.mark_message_retry_sent(
+                int(original["id"]),
+                retry_count + 1,
+                status_text,
+                packet,
+                medium,
+                effective_path,
             )
-            if not path:
-                path = str(original.get("tx_path") or "")
-
-        destination = str(original.get("to_call") or "").upper().strip()
-        part = str(original.get("message") or "")
-        source = full_callsign(cfg)
-        self._msg_counter = (self._msg_counter + 1) % 1000
-        msg_id = f"{self._msg_counter:03d}"
-
-        from .tnc_service import get_tnc_config, normalize_message_rf_path, service as tnc_service
-        aliases = {"aprsis":"aprs_is","rf":"rf_direct","rf_direto":"rf_direct","rf_personalizado":"rf_custom"}
-        requested_route = aliases.get(requested_route, requested_route)
-        if requested_route not in {"aprs_is", "rf_direct", "rf_custom"}:
-            raise ValueError("Rota de retry inválida.")
-
-        medium = "APRS-IS" if requested_route == "aprs_is" else "RF"
-        effective_path = "TCPIP*"
-        if medium == "APRS-IS":
-            status = self.status()
-            if not status.get("connected") or not status.get("verified"):
-                raise ConnectionError("Retry por APRS-IS exige conexão conectada e verificada.")
-            packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:{part}{{{msg_id}"
-            self._send_raw(packet)
-            status_text = "Reenviada"
-        else:
-            tnc_status = tnc_service.status()
-            tnc_cfg = get_tnc_config()
-            if not tnc_status.get("connected") or tnc_status.get("tx_paused") or not tnc_cfg.get("auto_tx_enabled") or not tnc_cfg.get("tx_confirmed"):
-                raise ConnectionError("Retry por RF exige TNC conectado e TX RF habilitado/confirmado.")
-            path_items = normalize_message_rf_path(path) if requested_route == "rf_custom" else []
-            if requested_route == "rf_custom" and not path_items:
-                raise ValueError("Informe o path do retry RF personalizado.")
-            effective_path = ",".join(path_items)
-            result = tnc_service.queue_local_message(destination, part, msg_id, effective_path)
-            packet = str(result.get("raw") or "")
-            status_text = "Na fila RF"
-
-        db.mark_message_retried(int(original["id"]))
-        new_row = db.add_message(
-            "out", source, destination, part,
-            msg_id=msg_id,
-            status=status_text,
-            raw=packet,
-            message_group_id=original.get("message_group_id"),
-            part_index=original.get("part_index"),
-            part_count=original.get("part_count"),
-            retry_count=retry_count + 1,
-            tx_medium=medium,
-            tx_path=effective_path,
-        )
-        return {
-            "id": new_row,
-            "message_id": msg_id,
-            "retry_count": retry_count + 1,
-            "route": requested_route,
-            "medium": medium,
-            "path": effective_path,
-        }
+            if not updated:
+                current = db.get_message(int(original["id"])) or original
+                return {
+                    "id": int(original["id"]),
+                    "message_id": msg_id,
+                    "retry_count": int(current.get("retry_count") or retry_count),
+                    "skipped": True,
+                    "reason": "ACK/REJ recebido durante o retry; estado terminal preservado.",
+                }
+            diag.log_event(
+                "message_retry_sent",
+                peer=destination,
+                message_id=msg_id,
+                retry_count=retry_count + 1,
+                medium=medium,
+                path=effective_path,
+            )
+            return {
+                "id": int(original["id"]),
+                "message_id": msg_id,
+                "retry_count": retry_count + 1,
+                "route": requested_route,
+                "medium": medium,
+                "path": effective_path,
+                "skipped": False,
+            }
 
     def send_bulletin(self, text: str, bulletin_id: str = "0", group: str = "") -> int:
         status = self.status()
@@ -947,6 +993,50 @@ class APRSService:
         source = full_callsign(cfg)
         packet = f"{source}>{APP_TOCALL},TCPIP*::{destination:<9}:ack{msg_id}"
         self._send_raw(packet)
+
+    def send_rf_ack(self, destination: str, msg_id: str) -> None:
+        """Confirma mensagem recebida pelo TNC usando o mesmo meio RF."""
+        from .tnc_service import service as tnc_service
+        result = tnc_service.queue_local_ack(destination, msg_id)
+        diag.log_event(
+            "message_ack_sent",
+            peer=str(destination or "").upper(),
+            message_id=str(msg_id or ""),
+            medium="RF",
+            queued=bool(result.get("queued")),
+        )
+
+    def handle_duplicate_rf_message(self, raw: str) -> bool:
+        """Reenvia ACK de uma repetição RF suprimida sem duplicar histórico/pacotes."""
+        msg = parse_message_line(raw, {})
+        if not msg:
+            return False
+        text = str(msg.get("text") or "").strip()
+        from_call = str(msg.get("from") or "").upper()
+        to_call = str(msg.get("to") or "").upper()
+        if re.fullmatch(r"(?:ack|rej)[A-Za-z0-9]{1,5}", text, re.IGNORECASE):
+            return False
+        message_text, msg_id = split_message_id(text)
+        own_call = full_callsign(db.get_config()).upper()
+        if not msg_id or to_call != own_call or classify_message_type(to_call) != "message":
+            return False
+        try:
+            self.send_rf_ack(from_call, msg_id)
+            diag.log_event(
+                "message_duplicate_rf_reacked",
+                peer=from_call,
+                message_id=msg_id,
+                message=message_text[:80],
+            )
+            return True
+        except Exception as exc:
+            diag.log_event(
+                "message_duplicate_rf_reack_failed",
+                peer=from_call,
+                message_id=msg_id,
+                error=str(exc),
+            )
+            return False
 
     def send_beacon(self) -> None:
         status = self.status()
