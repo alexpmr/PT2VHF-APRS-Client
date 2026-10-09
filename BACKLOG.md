@@ -1,3 +1,25 @@
+## Novo — Mapa: acompanhar estação em tempo real pelo popup
+
+- No **popup/balão da estação** aberto ao clicar sobre o marcador no mapa, adicionar uma ação explícita chamada **Acompanhar Estação** junto das demais opções existentes.
+- Ao clicar em **Acompanhar Estação**:
+  - fechar automaticamente o popup da estação;
+  - centralizar imediatamente a estação no mapa;
+  - ativar o modo de acompanhamento em tempo real;
+  - manter a estação **sempre centralizada** enquanto novas posições forem recebidas;
+  - atualizar suavemente o marcador/tracklog conforme a estação se deslocar.
+- O acompanhamento deve usar as posições novas já recebidas pelo pipeline normal da estação/tracklog, sem criar uma fonte paralela de dados.
+- Preservar o **nível de zoom atual escolhido pelo usuário** durante o acompanhamento; não executar `fitBounds` ou alterar o zoom a cada atualização.
+- Se o usuário alterar apenas o zoom, continuar acompanhando a estação e recentralizá-la no novo nível.
+- Encerrar o acompanhamento quando houver intenção clara de sair do modo, por exemplo:
+  - arrastar/pan manualmente o mapa;
+  - clicar em **Parar acompanhamento**, se essa ação estiver disponível;
+  - selecionar e iniciar acompanhamento de outra estação.
+- Ao iniciar acompanhamento de outra estação, transferir o foco para ela e cancelar o acompanhamento anterior.
+- Se a estação deixar de transmitir, manter sua última posição conhecida centralizada, sem extrapolar movimento artificialmente.
+- O recurso deve funcionar para estações móveis com tracklog, como carros, HTs ou trackers, e também para qualquer estação que passe a enviar novas coordenadas.
+- Reutilizar/refatorar o mecanismo de **seguir tracklog** já implementado na v1.14.16, evitando dois estados concorrentes de acompanhamento.
+- Critério de aceite: ao clicar em **Acompanhar Estação**, o popup fecha e, a cada nova posição recebida, o marcador da estação continua no centro do mapa até o usuário encerrar o acompanhamento.
+
 ## Novo — Mensagens APRS: evitar duplicação por retry após ACK
 
 - Relato do **PP5AU**: algumas mensagens estão chegando **duplicadas**, em certos casos 2 ou 3 vezes, sugerindo que a retransmissão continua mesmo após o ACK correspondente.
