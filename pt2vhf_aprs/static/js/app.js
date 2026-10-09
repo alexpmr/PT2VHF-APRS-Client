@@ -3341,6 +3341,18 @@
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
       state.topologyEdges = Array.isArray(edges) ? edges : [];
       const routeAllowedPairs = state.rfRouteAnalysis ? rfRouteAllowedPairs() : null;
+      const routeEvidenceByPair = new Map();
+      if (state.rfRouteAnalysis) {
+        for (const routeEdge of state.rfRouteAnalysis.eligible_edges || []) {
+          routeEvidenceByPair.set(rfRoutePairKey(routeEdge.source, routeEdge.target), routeEdge);
+        }
+        for (const route of state.rfRouteAnalysis.routes || []) {
+          for (const routeEdge of route.edges || []) {
+            const key = rfRoutePairKey(routeEdge.source, routeEdge.target);
+            if (!routeEvidenceByPair.has(key)) routeEvidenceByPair.set(key, routeEdge);
+          }
+        }
+      }
       const active = new Set();
 
       // Desenha RF primeiro e APRS-IS depois. Em pares com evidência mista,
@@ -3378,13 +3390,16 @@
         if (!points.flat().every(Number.isFinite)) continue;
 
         let line = state.topologyLines.get(key);
+        const routeEvidence = routeEvidenceByPair.get(rfRoutePairKey(edge.source, edge.target));
+        const inferredRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'inferred';
+        const legacyRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'legacy';
         const style = {
           color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
           weight: edge.kind === 'igate' && edge.mixed_evidence
             ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
             : state.mapConfig.topology_width,
-          opacity: .72,
-          dashArray: edge.kind === 'igate' ? '7 5' : null,
+          opacity: inferredRouteEdge ? .58 : (legacyRouteEdge ? .48 : .72),
+          dashArray: edge.kind === 'igate' ? '7 5' : (inferredRouteEdge ? '5 5' : (legacyRouteEdge ? '2 5' : null)),
           interactive: true,
           bubblingMouseEvents: false,
           pane: 'pt2vhfInteractionPane'
