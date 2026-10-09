@@ -4583,3 +4583,32 @@ html.is-processing {
   border-left: 3px solid rgba(89, 201, 126, .8);
   padding-left: 7px;
 }
+
+
+/* v1.14.17 - Configuração usa somente a rolagem principal da aba */
+#tab-config {
+  overflow: hidden;
+}
+#tab-config #configForm.config-grid {
+  height: calc(100% - 78px);
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-gutter: stable;
+}
+/* Cards e subconjuntos da Configuração nunca criam um segundo viewport vertical.
+   A rolagem fica exclusivamente no configForm, inclusive para blocos inseridos
+   dinamicamente por módulos/versionados. */
+#tab-config #configForm > .config-card,
+#tab-config #configForm .config-card,
+#tab-config #configForm .config-card :is(div, section, article, fieldset, ul, ol) {
+  max-height: none !important;
+  height: auto;
+  overflow: visible !important;
+  overscroll-behavior: auto;
+}
+#tab-config #configForm .config-card textarea {
+  max-height: none;
+}
