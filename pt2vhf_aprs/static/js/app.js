@@ -2856,7 +2856,11 @@
 
   function rfRouteAllowedPairs() {
     const allowed = new Set();
-    for (const route of (state.rfRouteAnalysis && state.rfRouteAnalysis.routes) || []) {
+    const analysis = state.rfRouteAnalysis || {};
+    for (const edge of analysis.eligible_edges || []) {
+      allowed.add(rfRoutePairKey(edge.source, edge.target));
+    }
+    for (const route of analysis.routes || []) {
       for (const edge of route.edges || []) allowed.add(rfRoutePairKey(edge.source, edge.target));
     }
     return allowed;
@@ -2871,9 +2875,16 @@
 
   function renderRfRouteNodeMarkers() {
     clearRfRouteNodeMarkers();
-    if (!state.map || !state.rfRouteAnalysis || !state.rfRouteAnalysis.routes || !state.rfRouteAnalysis.routes.length) return;
+    if (!state.map || !state.rfRouteAnalysis) return;
+    const routes = state.rfRouteAnalysis.routes || [];
+    const eligibleEdges = state.rfRouteAnalysis.eligible_edges || [];
+    if (!routes.length && !eligibleEdges.length) return;
     const nodes = new Map();
-    for (const route of state.rfRouteAnalysis.routes) {
+    for (const edge of eligibleEdges) {
+      nodes.set(normalizedCall(edge.source), [Number(edge.source_lat), Number(edge.source_lon)]);
+      nodes.set(normalizedCall(edge.target), [Number(edge.target_lat), Number(edge.target_lon)]);
+    }
+    for (const route of routes) {
       for (const edge of route.edges || []) {
         nodes.set(normalizedCall(edge.source), [Number(edge.source_lat), Number(edge.source_lon)]);
         nodes.set(normalizedCall(edge.target), [Number(edge.target_lat), Number(edge.target_lon)]);
@@ -2899,15 +2910,25 @@
       '<div class="rf-route-edge-row"><span>' + escapeHtml(edge.source) + ' → ' + escapeHtml(edge.target) + '</span>' +
       '<strong>' + escapeHtml(formatRfDistanceKm(edge.distance_km)) + '</strong>' +
       '<small>' + Number(edge.packet_count || 0).toLocaleString(currentLocale()) + ' obs. · ' +
-      escapeHtml(edge.classification_source || ui('RF observado', 'Observed RF')) + ' · ' +
+      escapeHtml(edge.evidence_label || edge.classification_source || ui('RF observado', 'Observed RF')) + ' · ' +
       escapeHtml(fmtDate(edge.last_seen)) + '</small></div>'
     ).join('');
+    const evidenceParts = [];
+    if (Number(route.direct_edges || 0)) {
+      evidenceParts.push(Number(route.direct_edges || 0) + ' ' + ui('diretos', 'direct'));
+    }
+    if (Number(route.inferred_edges || 0)) {
+      evidenceParts.push(Number(route.inferred_edges || 0) + ' ' + ui('inferidos', 'inferred'));
+    }
+    if (Number(route.legacy_edges || 0)) {
+      evidenceParts.push(Number(route.legacy_edges || 0) + ' ' + ui('legados', 'legacy'));
+    }
     return '<button type="button" class="rf-route-card" data-rf-route-index="' + index + '">' +
       '<span class="rf-route-card-title">' + ui('Rota', 'Route') + ' ' + (index + 1) + '</span>' +
       '<strong>' + escapeHtml((route.nodes || []).join(' → ')) + '</strong>' +
       '<span>' + Number(route.hops || 0) + ' hops · ' + escapeHtml(formatRfDistanceKm(route.distance_km)) + '</span>' +
       '<small>' + ui('Distância direta', 'Direct distance') + ': ' + escapeHtml(formatRfDistanceKm(directDistanceKm)) + '</small>' +
-      '<small>' + ui('Critério', 'Criterion') + ': ' + escapeHtml(ui('RF observado', 'Observed RF')) + '</small>' +
+      '<small>' + ui('Evidência', 'Evidence') + ': ' + escapeHtml(evidenceParts.join(' · ') || ui('RF observado', 'Observed RF')) + '</small>' +
       '<small>' + ui('Evidência completa', 'Complete evidence') + ': ' + escapeHtml(fmtDate(route.route_evidence_at)) + '</small>' +
       '<div class="rf-route-edge-list">' + edgeRows + '</div></button>';
   }
@@ -3009,14 +3030,29 @@
     bindRfRoutePanelDrag();
     requestAnimationFrame(() => applyRfRoutePanelPosition());
     title.textContent = (analysis.source || '—') + ' ↔ ' + (analysis.target || '—');
+
+    const eligibleCount = Number(analysis.eligible_edge_count || (analysis.eligible_edges || []).length || 0);
+    const corridorText = eligibleCount
+      ? ' · ' + eligibleCount + ' ' + (eligibleCount === 1 ? ui('enlace RF elegível', 'eligible RF link') : ui('enlaces RF elegíveis', 'eligible RF links'))
+      : '';
+    const searchWarning = analysis.search_truncated
+      ? '<div class="rf-route-empty">' + escapeHtml(ui(
+          'A malha é muito densa e a busca atingiu o limite de segurança. Os enlaces elegíveis continuam visíveis; refine o período se precisar de mais rotas.',
+          'The mesh is very dense and the search reached its safety limit. Eligible links remain visible; narrow the period if you need more routes.'
+        )) + '</div>'
+      : '';
+
     if (!routes.length) {
-      body.innerHTML = '<div class="rf-route-empty">' + ui('Não existe rota RF observada neste período.', 'No observed RF route was found in this period.') + '</div>';
+      body.innerHTML = '<div class="rf-route-empty">' +
+        ui('Não existe rota RF observada neste período.', 'No observed RF route was found in this period.') +
+        corridorText + '</div>' + searchWarning;
       return;
     }
     body.innerHTML =
       '<div class="rf-route-summary"><strong>' + routes.length + '</strong> ' +
       (routes.length === 1 ? ui('rota RF observada', 'observed RF route') : ui('rotas RF observadas', 'observed RF routes')) +
-      '</div>' + routes.map((route, index) => routePanelHtml(route, index, analysis.direct_distance_km)).join('');
+      corridorText + '</div>' + searchWarning +
+      routes.map((route, index) => routePanelHtml(route, index, analysis.direct_distance_km)).join('');
     body.querySelectorAll('[data-rf-route-index]').forEach(button => {
       button.addEventListener('click', () => focusRfRoute(Number(button.dataset.rfRouteIndex)));
     });
@@ -3055,9 +3091,13 @@
     }
   }
 
-  function fitRfRouteBounds(routes) {
+  function fitRfRouteBounds(routes, eligibleEdges = []) {
     if (!state.map) return;
     const points = [];
+    for (const edge of eligibleEdges || []) {
+      points.push([Number(edge.source_lat), Number(edge.source_lon)]);
+      points.push([Number(edge.target_lat), Number(edge.target_lon)]);
+    }
     for (const route of routes || []) {
       for (const edge of route.edges || []) {
         points.push([Number(edge.source_lat), Number(edge.source_lon)]);
@@ -3203,7 +3243,7 @@
       const url = '/api/topology/rf-routes?source=' + encodeURIComponent(source) +
         '&target=' + encodeURIComponent(target) +
         '&hours=' + encodeURIComponent(state.mapPeriodHours) +
-        '&max_routes=12&max_hops=8';
+        '&max_routes=12&max_hops=12';
       const payload = await api(url);
       const routes = Array.isArray(payload?.routes) ? payload.routes : [];
       const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
@@ -3218,11 +3258,13 @@
       state.rfRouteSelectedIndex = -1;
 
       if (routes.length) {
-        const exclusiveNodes = new Set();
-        for (const route of routes) {
-          for (const node of route.nodes || []) {
-            const call = normalizedCall(node);
-            if (call) exclusiveNodes.add(call);
+        const exclusiveNodes = new Set((payload.eligible_nodes || []).map(normalizedCall).filter(Boolean));
+        if (!exclusiveNodes.size) {
+          for (const route of routes) {
+            for (const node of route.nodes || []) {
+              const call = normalizedCall(node);
+              if (call) exclusiveNodes.add(call);
+            }
           }
         }
         state.rfRouteExclusiveNodes = exclusiveNodes;
@@ -3235,7 +3277,7 @@
       await loadTopology();
       renderRfRouteNodeMarkers();
       renderRfRoutePanel();
-      fitRfRouteBounds(routes);
+      fitRfRouteBounds(routes, payload.eligible_edges || []);
 
       if (!routes.length) {
         toast(ui('Não existe rota RF observada entre esses indicativos neste período.', 'No observed RF route was found between these callsigns in this period.'), 'error');
