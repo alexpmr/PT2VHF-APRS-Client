@@ -1,5 +1,8 @@
 ## 1.14.17 - 2026-10-09
 
+- **Configuração em fluxo único:** removidas barras de rolagem verticais internas dos cards/subblocos; toda a aba passa a usar somente o scroll principal da Configuração.
+- **Blocos dinâmicos incluídos:** a regra também cobre seções adicionadas por módulos como integrações, saúde do banco, resposta automática, backup, grupos e alertas.
+
 - **Backup completo corrigido:** o botão deixa de ser um link simples e passa a executar uma operação explícita, com erro/sucesso visível.
 - **Salvamento nativo no desktop:** Windows, Linux e macOS usam diálogo nativo para escolher onde salvar o ZIP; o modo navegador mantém fallback por Blob/download.
 - **Backend de backup robusto:** falhas retornam erro JSON explícito, ZIP vazio é rejeitado e a resposta recebe headers `no-store`.
