@@ -19,6 +19,7 @@ except ImportError:  # Permite importar o módulo durante validações sem depen
 from . import __version__
 from . import APP_TOCALL
 from . import database as db
+from . import diagnostics as diag
 
 VERSION = __version__
 
