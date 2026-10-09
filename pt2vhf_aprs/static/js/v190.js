@@ -19,6 +19,94 @@
     }
   };
 
+  const withProcessing = async (title, message, task) => {
+    if (typeof window.pt2vhfWithProcessing === 'function') {
+      return window.pt2vhfWithProcessing(title, message, task);
+    }
+    return task('');
+  };
+
+  const responseFilename = (response, fallback) => {
+    const disposition = String(response.headers.get('content-disposition') || '');
+    const utf8 = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8?.[1]) {
+      try { return decodeURIComponent(utf8[1].replace(/^["']|["']$/g, '')); } catch (_) {}
+    }
+    const simple = disposition.match(/filename="?([^";]+)"?/i);
+    return simple?.[1] || fallback;
+  };
+
+  const triggerBlobDownload = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  };
+
+  async function createFullBackup() {
+    const button = $('#v190BackupFull');
+    if (button) button.disabled = true;
+    try {
+      await withProcessing(
+        tr('Gerando backup completo...', 'Creating full backup...', 'Generando backup completo...', 'Création de la sauvegarde complète...'),
+        tr(
+          'Copiando o banco e preparando o arquivo ZIP. Aguarde.',
+          'Copying the database and preparing the ZIP file. Please wait.',
+          'Copiando la base y preparando el archivo ZIP. Espere.',
+          'Copie de la base et préparation du fichier ZIP. Veuillez patienter.'
+        ),
+        async token => {
+          if (token && typeof window.pt2vhfUpdateProcessing === 'function') {
+            window.pt2vhfUpdateProcessing(token,
+              tr('Gerando backup completo...', 'Creating full backup...', 'Generando backup completo...', 'Création de la sauvegarde complète...'),
+              tr('Criando snapshot consistente do banco SQLite...', 'Creating a consistent SQLite snapshot...', 'Creando una instantánea SQLite consistente...', 'Création d’un instantané SQLite cohérent...')
+            );
+          }
+          const response = await fetch('/api/v190/backup/full', {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { 'Accept': 'application/zip' }
+          });
+          if (!response.ok) {
+            let detail = response.statusText || ('HTTP ' + response.status);
+            try {
+              const data = await response.json();
+              detail = data?.error || detail;
+            } catch (_) {}
+            throw new Error(detail);
+          }
+          const blob = await response.blob();
+          if (!blob.size) throw new Error(tr('O servidor retornou um backup vazio.', 'The server returned an empty backup.', 'El servidor devolvió un backup vacío.', 'Le serveur a renvoyé une sauvegarde vide.'));
+          const fallback = 'PT2VHF_APRS_Client_Backup_' + new Date().toISOString().replace(/[-:T]/g,'').slice(0,15) + '.zip';
+          const filename = responseFilename(response, fallback);
+          if (token && typeof window.pt2vhfUpdateProcessing === 'function') {
+            window.pt2vhfUpdateProcessing(token,
+              tr('Backup pronto', 'Backup ready', 'Backup listo', 'Sauvegarde prête'),
+              tr('Iniciando o download do arquivo...', 'Starting the file download...', 'Iniciando la descarga del archivo...', 'Démarrage du téléchargement...')
+            );
+          }
+          triggerBlobDownload(blob, filename);
+          notify(tr('Backup completo gerado: ', 'Full backup created: ', 'Backup completo generado: ', 'Sauvegarde complète créée : ') + filename, 'backup', 'success');
+        }
+      );
+    } catch (e) {
+      console.error('Falha ao gerar backup completo', e);
+      notify(
+        tr('Falha ao gerar backup completo: ', 'Failed to create full backup: ', 'Error al generar el backup completo: ', 'Échec de la création de la sauvegarde complète : ') +
+        String(e?.message || e),
+        'backup',
+        'error'
+      );
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
   function floatPanel(panelId, label) {
     const panel = document.getElementById(panelId);
     if (!panel || panel.dataset.v190FloatReady) return;
@@ -287,7 +375,7 @@
     if(!config || $('#v190ConfigCard')) return;
     const card=document.createElement('div'); card.id='v190ConfigCard'; card.className='config-card full-card config-section';
     card.innerHTML='<h3>'+tr('Backup completo, grupos e alertas','Full backup, groups and alerts','Backup completo, grupos y alertas','Sauvegarde complète, groupes et alertes')+'</h3>'+
-      '<div class="v190-config-grid"><div><h4>'+tr('Backup completo','Full backup','Backup completo','Sauvegarde complète')+'</h4><p>'+tr('Inclui banco, mensagens, estações, favoritos, tracklogs, agendamentos, grupos e preferências.','Includes database, messages, stations, favorites, tracklogs, schedules, groups and preferences.','Incluye base, mensajes, estaciones, favoritos, tracklogs, programaciones, grupos y preferencias.','Inclut base, messages, stations, favoris, traces, planifications, groupes et préférences.')+'</p><a class="btn secondary" href="/api/v190/backup/full">'+tr('Criar backup completo','Create full backup','Crear backup completo','Créer sauvegarde complète')+'</a><input id="v190RestoreFile" type="file" accept=".zip"><button id="v190Restore" type="button" class="btn danger">'+tr('Restaurar backup','Restore backup','Restaurar backup','Restaurer sauvegarde')+'</button></div>'+
+      '<div class="v190-config-grid"><div><h4>'+tr('Backup completo','Full backup','Backup completo','Sauvegarde complète')+'</h4><p>'+tr('Inclui banco, mensagens, estações, favoritos, tracklogs, agendamentos, grupos e preferências.','Includes database, messages, stations, favorites, tracklogs, schedules, groups and preferences.','Incluye base, mensajes, estaciones, favoritos, tracklogs, programaciones, grupos y preferencias.','Inclut base, messages, stations, favoris, traces, planifications, groupes et préférences.')+'</p><button id="v190BackupFull" type="button" class="btn secondary">'+tr('Criar backup completo','Create full backup','Crear backup completo','Créer sauvegarde complète')+'</button><input id="v190RestoreFile" type="file" accept=".zip"><button id="v190Restore" type="button" class="btn danger">'+tr('Restaurar backup','Restore backup','Restaurar backup','Restaurer sauvegarde')+'</button></div>'+
       '<div><h4>'+tr('Grupos de estações','Station groups','Grupos de estaciones','Groupes de stations')+'</h4><div id="v190Groups"></div><div class="v190-group-add"><input id="v190GroupName" placeholder="'+tr('Nome do grupo','Group name','Nombre del grupo','Nom du groupe')+'"><button id="v190GroupAdd" class="btn secondary">'+tr('Adicionar','Add','Agregar','Ajouter')+'</button></div></div>'+
       '<div><h4>'+tr('Alertas configuráveis','Configurable alerts','Alertas configurables','Alertes configurables')+'</h4><div id="v190Alerts" class="v190-alert-list"></div><button id="v190AlertsSave" class="btn secondary">'+tr('Salvar alertas','Save alerts','Guardar alertas','Enregistrer alertes')+'</button></div></div>';
     config.appendChild(card);
@@ -295,11 +383,40 @@
     renderGroups();
     $('#v190Groups',card).addEventListener('click',async ev=>{const b=ev.target.closest('.v190-group-sync');if(!b)return;try{await json('/api/v190/groups/'+b.dataset.groupId+'/sync-recipient-group',{method:'POST',body:'{}'});notify(tr('Grupo sincronizado com as listas de destinatários das mensagens agendadas.','Group synced to scheduled-message recipient lists.','Grupo sincronizado con las listas de destinatarios programados.','Groupe synchronisé avec les listes de destinataires planifiées.'));}catch(e){notify(e.message);}});
     $('#v190GroupAdd',card).onclick=async()=>{const name=$('#v190GroupName',card).value.trim();if(!name)return;await json('/api/v190/groups',{method:'POST',body:JSON.stringify({name})});$('#v190GroupName',card).value='';renderGroups();};
+    $('#v190BackupFull',card).onclick=()=>void createFullBackup();
     $('#v190Restore',card).onclick=async()=>{
-      const file=$('#v190RestoreFile',card).files?.[0]; if(!file){notify(tr('Selecione um backup.','Select a backup.','Seleccione un backup.','Sélectionnez une sauvegarde.'));return;}
-      if(!confirm(tr('Restaurar o backup e substituir os dados atuais? Um backup pré-restauração será criado.','Restore backup and replace current data? A pre-restore backup will be created.','¿Restaurar el backup y reemplazar los datos actuales? Se creará un backup previo.','Restaurer la sauvegarde et remplacer les données actuelles ? Une sauvegarde préalable sera créée.')))return;
-      const fd=new FormData();fd.append('backup',file);
-      const r=await fetch('/api/v190/backup/restore',{method:'POST',body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error||r.statusText);notify(tr('Backup restaurado. Reinicie o aplicativo.','Backup restored. Restart the application.','Backup restaurado. Reinicie la aplicación.','Sauvegarde restaurée. Redémarrez l’application.'));
+      const file=$('#v190RestoreFile',card).files?.[0];
+      if(!file){
+        notify(tr('Selecione um backup.','Select a backup.','Seleccione un backup.','Sélectionnez une sauvegarde.'));
+        return;
+      }
+      if(!confirm(tr(
+        'Restaurar o backup e substituir os dados atuais? Um backup pré-restauração será criado.',
+        'Restore backup and replace current data? A pre-restore backup will be created.',
+        '¿Restaurar el backup y reemplazar los datos actuales? Se creará un backup previo.',
+        'Restaurer la sauvegarde et remplacer les données actuelles ? Une sauvegarde préalable sera créée.'
+      ))) return;
+      const button=$('#v190Restore',card);
+      if(button) button.disabled=true;
+      try{
+        await withProcessing(
+          tr('Restaurando backup...','Restoring backup...','Restaurando backup...','Restauration de la sauvegarde...'),
+          tr('Validando o arquivo e substituindo o banco. Não feche o aplicativo.','Validating the file and replacing the database. Do not close the application.','Validando el archivo y reemplazando la base. No cierre la aplicación.','Validation du fichier et remplacement de la base. Ne fermez pas l’application.'),
+          async()=>{
+            const fd=new FormData(); fd.append('backup',file);
+            const r=await fetch('/api/v190/backup/restore',{method:'POST',body:fd});
+            let d={};
+            try { d=await r.json(); } catch (_) {}
+            if(!r.ok) throw new Error(d.error||r.statusText||('HTTP '+r.status));
+          }
+        );
+        notify(tr('Backup restaurado. Reinicie o aplicativo.','Backup restored. Restart the application.','Backup restaurado. Reinicie la aplicación.','Sauvegarde restaurée. Redémarrez l’application.'),'backup','success');
+      }catch(e){
+        console.error('Falha ao restaurar backup',e);
+        notify(tr('Falha ao restaurar backup: ','Failed to restore backup: ','Error al restaurar el backup: ','Échec de la restauration : ')+String(e?.message||e),'backup','error');
+      }finally{
+        if(button) button.disabled=false;
+      }
     };
     const defs=[['station_appeared',tr('Estação apareceu','Station appeared','Estación apareció','Station apparue')],['station_disappeared',tr('Estação desapareceu','Station disappeared','Estación desapareció','Station disparue')],['favorite_appeared',tr('Favorito apareceu','Favorite appeared','Favorito apareció','Favori apparu')],['new_message',tr('Nova mensagem','New message','Nuevo mensaje','Nouveau message')],['tnc_down',tr('TNC caiu','TNC disconnected','TNC desconectado','TNC déconnecté')],['aprsis_down',tr('APRS-IS caiu','APRS-IS disconnected','APRS-IS desconectado','APRS-IS déconnecté')],['database_problem',tr('Problema no banco','Database problem','Problema de base','Problème de base')]];
     const saveAlertSettings=async(showNotice=false)=>{
