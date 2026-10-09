@@ -17,15 +17,16 @@ def _station(conn, call: str, lat: float, lon: float) -> None:
 def _edge(conn, source: str, target: str, packets: int = 5) -> None:
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     conn.execute(
-        "INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate) VALUES(?,?,?,?,?,?,?)",
-        (source, target, "rf", packets, now, now, None),
+        "INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate,rf_transport_count) VALUES(?,?,?,?,?,?,?,?)",
+        (source, target, "rf", packets, now, now, None, packets),
     )
 
 
 def test_v1411_version_and_header_markers():
     root = Path(__file__).resolve().parent.parent
-    assert (root / "VERSION").read_text(encoding="utf-8").strip() == "1.14.11"
-    assert '__version__ = "1.14.11"' in (root / "pt2vhf_aprs" / "__init__.py").read_text(encoding="utf-8")
+    version = (root / "VERSION").read_text(encoding="utf-8").strip()
+    assert tuple(int(part) for part in version.split(".")) >= (1, 14, 11)
+    assert f'__version__ = "{version}"' in (root / "pt2vhf_aprs" / "__init__.py").read_text(encoding="utf-8")
 
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
