@@ -748,6 +748,72 @@
     toastTimer = setTimeout(() => el.classList.add('hidden'), 4200);
   }
 
+  const processingOperations = new Map();
+  let processingSequence = 0;
+
+  function renderProcessingOverlay() {
+    const overlay = $('#globalProcessingOverlay');
+    if (!overlay) return;
+    const entries = [...processingOperations.values()];
+    const active = entries.length > 0;
+    overlay.classList.toggle('hidden', !active);
+    document.documentElement.classList.toggle('is-processing', active);
+    document.body?.setAttribute('aria-busy', active ? 'true' : 'false');
+    if (!active) return;
+    const current = entries[entries.length - 1];
+    const title = $('#globalProcessingTitle');
+    const message = $('#globalProcessingMessage');
+    if (title) title.textContent = current.title || ui('Processando...', 'Processing...');
+    if (message) message.textContent = current.message || ui(
+      'Aguarde enquanto a operação é concluída.',
+      'Please wait while the operation completes.'
+    );
+  }
+
+  function showProcessing(title = '', message = '') {
+    processingSequence += 1;
+    const token = 'processing-' + processingSequence;
+    processingOperations.set(token, {
+      title: title || ui('Processando...', 'Processing...'),
+      message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.')
+    });
+    renderProcessingOverlay();
+    return token;
+  }
+
+  function updateProcessing(token, title = '', message = '') {
+    if (!processingOperations.has(token)) return;
+    const current = processingOperations.get(token) || {};
+    processingOperations.set(token, {
+      title: title || current.title,
+      message: message || current.message
+    });
+    renderProcessingOverlay();
+  }
+
+  function hideProcessing(token) {
+    if (token) processingOperations.delete(token);
+    else processingOperations.clear();
+    renderProcessingOverlay();
+  }
+
+  async function withProcessing(title, message, operation) {
+    const token = showProcessing(title, message);
+    const started = performance.now();
+    try {
+      return await operation(token);
+    } finally {
+      const remaining = 260 - (performance.now() - started);
+      if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
+      hideProcessing(token);
+    }
+  }
+
+  window.pt2vhfShowProcessing = showProcessing;
+  window.pt2vhfUpdateProcessing = updateProcessing;
+  window.pt2vhfHideProcessing = hideProcessing;
+  window.pt2vhfWithProcessing = withProcessing;
+
   function debounce(fn, delay = 300) {
     let timer;
     return (...args) => {
