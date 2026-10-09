@@ -173,3 +173,13 @@ def test_v1417_backup_endpoint_reports_errors_explicitly():
     assert 'response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"' in backend
     assert '"X-PT2VHF-Backup-Version"' in backend
     assert 'return jsonify({"ok": False, "error": f"Falha ao gerar backup completo: {exc}"}), 500' in backend
+
+
+def test_v1417_configuration_uses_single_vertical_scroll():
+    css = read("pt2vhf_aprs/static/css/app.css")
+    assert "v1.14.17 - Configuração usa somente a rolagem principal da aba" in css
+    assert "#tab-config #configForm.config-grid" in css
+    assert "overflow-y: auto;" in css
+    assert "#tab-config #configForm .config-card :is(div, section, article, fieldset, ul, ol)" in css
+    assert "max-height: none !important;" in css
+    assert "overflow: visible !important;" in css
