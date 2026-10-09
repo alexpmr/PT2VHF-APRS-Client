@@ -1,3 +1,31 @@
+## Novo — Rotas RF: decompor enlaces inferidos longos em nós intermediários conhecidos
+
+- Ao analisar uma rota RF, **não tratar automaticamente um enlace `RF inferido do path` como um único hop físico** quando houver evidência topológica de nós intermediários entre as duas extremidades.
+- Exemplo observado: `PP2RDB-15 → PT2AP-10` apareceu como um único trecho inferido de aproximadamente **796 km**. Esse tipo de aresta deve ser refinado antes de ser apresentado como hop único.
+- A distância, isoladamente, **não deve invalidar** o enlace, pois enlaces RF longos reais podem existir. Ela deve apenas atuar como gatilho para procurar uma decomposição mais plausível quando a evidência for apenas inferida.
+- Para cada aresta com `evidence_level=inferred`:
+  - procurar no grafo RF conhecido um caminho alternativo entre origem e destino **excluindo a própria aresta inferida**;
+  - priorizar arestas com evidência `RF direto observado`;
+  - em seguida, aceitar arestas inferidas com múltiplas observações;
+  - preferir menor número de hops e maior quantidade/recência de evidências;
+  - limitar a busca para evitar explosão combinatória.
+- Se existir um caminho intermediário melhor sustentado, **expandir a aresta no painel e no mapa**, por exemplo:
+  - em vez de `A → D`;
+  - mostrar `A → B → C → D`.
+- Os nós inseridos pela reconstrução devem ser identificados como **intermediários reconstruídos/prováveis**, sem apresentá-los como se tivessem sido explicitamente observados no mesmo pacote.
+- Sempre que possível, usar o histórico temporal próximo da observação original do enlace para evitar montar uma rota artificial combinando evidências de épocas muito diferentes.
+- Se não houver evidência suficiente para identificar os intermediários:
+  - manter o trecho;
+  - continuar exibindo-o tracejado como RF inferido;
+  - indicar no painel **“intermediários não identificados”**;
+  - não inventar estações.
+- Enlaces com `RF direto observado` continuam podendo ser longos e **não devem ser quebrados apenas pela distância**.
+- Adicionar regressões com:
+  - enlace inferido longo com cadeia intermediária conhecida;
+  - enlace inferido longo sem cadeia conhecida;
+  - enlace direto longo legítimo, que deve permanecer intacto;
+  - preferência por cadeia com evidência direta em vez de cadeia apenas inferida.
+
 ## Implementado na v1.14.16 — Mapa: exibir todos os nós envolvidos na rota analisada
 
 - Ao abrir no mapa uma rota a partir de **Estatísticas > Ranking** ou da análise manual entre duas estações, garantir que **todos os nós listados no popup/painel da rota também apareçam visualmente no mapa**.
