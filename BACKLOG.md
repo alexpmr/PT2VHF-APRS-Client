@@ -17,6 +17,18 @@
 
 ## Ajustado na v1.14.11 — Estatísticas: recordes RF por distância entre estações
 
+- Ao abrir no mapa uma rota/recorde RF selecionado, tornar o **popup/painel lateral de análise de rota arrastável**.
+- Permitir mover o painel livremente dentro da área do mapa por **drag-and-drop**, preferencialmente arrastando pelo cabeçalho **“ANÁLISE DE ROTA RF”**.
+- O painel não deve ficar preso ao canto superior direito quando estiver cobrindo estações, hops ou trechos importantes da rota.
+- Manter os botões, seleção de rotas, rolagem interna e demais interações funcionando normalmente após mover o painel.
+- Limitar o deslocamento para que o painel não possa ser arrastado completamente para fora da área visível do mapa.
+- Preservar a posição enquanto a mesma análise/recorde permanecer aberto.
+- Ao fechar e abrir uma nova análise, pode restaurar a posição padrão, salvo se futuramente for implementada persistência da posição.
+- Exibir cursor/feedback visual adequado no cabeçalho para indicar que o painel pode ser movido.
+- Garantir funcionamento com mouse e, quando aplicável, toque/pointer events.
+- Criar regressão de interface para o comportamento de arrastar, limites da área do mapa e fechamento/restauração do painel.
+
+
 - Ao selecionar/clicar em um item do ranking de **Recordes RF**, abrir imediatamente a rota correspondente no mapa em **modo de foco exclusivo**.
 - Nesse modo, exibir somente:
   - a rota RF selecionada;
