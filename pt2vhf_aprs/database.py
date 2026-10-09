@@ -2637,6 +2637,7 @@ def _rf_k_best_routes(
     """
     queue: list[tuple[float, int, tuple[str, ...]]] = [(0.0, 0, (source,))]
     routes: list[dict[str, Any]] = []
+    emitted_node_paths: set[tuple[str, ...]] = set()
     expanded = 0
     max_expansions = max(50_000, route_limit * 5_000)
     truncated = False
@@ -2647,7 +2648,16 @@ def _rf_k_best_routes(
         if node == target:
             payload = _rf_route_payload(list(path), graph, positions)
             if payload:
-                payload["route_cost"] = round(cost, 4)
+                refined_nodes = tuple(str(value) for value in (payload.get("nodes") or []))
+                if refined_nodes in emitted_node_paths:
+                    continue
+                emitted_node_paths.add(refined_nodes)
+                refined_cost = 0.0
+                for index in range(len(refined_nodes) - 1):
+                    refined_edge = graph.get(refined_nodes[index], {}).get(refined_nodes[index + 1])
+                    if refined_edge:
+                        refined_cost += _rf_route_edge_cost(refined_edge)
+                payload["route_cost"] = round(refined_cost or cost, 4)
                 routes.append(payload)
             continue
         if hops >= hop_limit:
