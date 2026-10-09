@@ -2066,6 +2066,125 @@ def _rf_route_callsign(value: Any) -> str:
     return call
 
 
+
+RF_CONFIRMED_SHORT_KM = float(os.getenv("PT2VHF_RF_CONFIRMED_SHORT_KM", "250"))
+RF_CONFIRMED_MEDIUM_KM = float(os.getenv("PT2VHF_RF_CONFIRMED_MEDIUM_KM", "600"))
+RF_CONFIRMED_LONG_KM = float(os.getenv("PT2VHF_RF_CONFIRMED_LONG_KM", "1000"))
+RF_CONFIRMED_MEDIUM_OBS = int(os.getenv("PT2VHF_RF_CONFIRMED_MEDIUM_OBS", "2"))
+RF_CONFIRMED_LONG_OBS = int(os.getenv("PT2VHF_RF_CONFIRMED_LONG_OBS", "5"))
+RF_CONFIRMED_EXCEPTIONAL_OBS = int(os.getenv("PT2VHF_RF_CONFIRMED_EXCEPTIONAL_OBS", "20"))
+RF_PATH_CONFIRMED_MAX_KM = float(os.getenv("PT2VHF_RF_PATH_CONFIRMED_MAX_KM", "80"))
+RF_PATH_CONFIRMED_OBS = int(os.getenv("PT2VHF_RF_PATH_CONFIRMED_OBS", "3"))
+
+
+def _rf_edge_confidence(raw: dict[str, Any], distance_km: float) -> dict[str, Any]:
+    """Classifica a confiança RF sem apagar a evidência bruta observada."""
+    rf_transport = int(raw.get("rf_transport_count") or 0)
+    rf_path = int(raw.get("rf_path_count") or 0)
+    internet = int(raw.get("internet_confirmed_count") or 0)
+    packets = int(raw.get("packet_count") or 0)
+    evidence = max(rf_transport, rf_path, packets)
+
+    if internet > 0 and rf_transport <= 0 and rf_path <= 0:
+        return {
+            "level": "internet",
+            "label": "Internet/APRS-IS",
+            "confirmed": False,
+            "score": 0,
+            "reason": "evidência explícita de transporte APRS-IS",
+        }
+
+    if rf_transport > 0:
+        if distance_km <= RF_CONFIRMED_SHORT_KM:
+            return {
+                "level": "confirmed",
+                "label": "RF confirmado",
+                "confirmed": True,
+                "score": 100,
+                "reason": f"recebido via TNC/RF; trecho de {distance_km:.1f} km",
+            }
+        if distance_km <= RF_CONFIRMED_MEDIUM_KM:
+            if rf_transport >= RF_CONFIRMED_MEDIUM_OBS:
+                return {
+                    "level": "confirmed",
+                    "label": "RF confirmado",
+                    "confirmed": True,
+                    "score": 92,
+                    "reason": f"{rf_transport} recepções via TNC/RF; trecho de {distance_km:.1f} km",
+                }
+            return {
+                "level": "probable",
+                "label": "RF provável",
+                "confirmed": False,
+                "score": 68,
+                "reason": f"trecho de {distance_km:.1f} km com apenas {rf_transport} evidência direta",
+            }
+        if distance_km <= RF_CONFIRMED_LONG_KM:
+            if rf_transport >= RF_CONFIRMED_LONG_OBS:
+                return {
+                    "level": "confirmed",
+                    "label": "RF confirmado",
+                    "confirmed": True,
+                    "score": 86,
+                    "reason": f"{rf_transport} recepções diretas sustentam trecho longo de {distance_km:.1f} km",
+                }
+            return {
+                "level": "inconsistent",
+                "label": "RF inconsistente",
+                "confirmed": False,
+                "score": 38,
+                "reason": f"{distance_km:.1f} km sem evidência direta repetida suficiente",
+            }
+        if rf_transport >= RF_CONFIRMED_EXCEPTIONAL_OBS:
+            return {
+                "level": "confirmed",
+                "label": "RF confirmado",
+                "confirmed": True,
+                "score": 80,
+                "reason": f"propagação excepcional sustentada por {rf_transport} recepções diretas",
+            }
+        return {
+            "level": "inconsistent",
+            "label": "RF inconsistente",
+            "confirmed": False,
+            "score": 20,
+            "reason": f"{distance_km:.1f} km com somente {rf_transport} evidências diretas; requer confirmação excepcional",
+        }
+
+    if rf_path > 0:
+        if distance_km <= RF_PATH_CONFIRMED_MAX_KM and rf_path >= RF_PATH_CONFIRMED_OBS:
+            return {
+                "level": "confirmed",
+                "label": "RF confirmado",
+                "confirmed": True,
+                "score": 82,
+                "reason": f"path RF repetido {rf_path} vezes em trecho curto de {distance_km:.1f} km",
+            }
+        if distance_km <= RF_CONFIRMED_SHORT_KM:
+            return {
+                "level": "probable",
+                "label": "RF provável",
+                "confirmed": False,
+                "score": 60,
+                "reason": f"RF inferido do path; {rf_path} observações em {distance_km:.1f} km",
+            }
+        return {
+            "level": "inconsistent",
+            "label": "RF inconsistente",
+            "confirmed": False,
+            "score": 25,
+            "reason": f"RF apenas inferido do path em trecho de {distance_km:.1f} km",
+        }
+
+    return {
+        "level": "inconsistent",
+        "label": "RF inconsistente",
+        "confirmed": False,
+        "score": 10,
+        "reason": f"sem evidência RF positiva suficiente ({evidence} observações legadas)",
+    }
+
+
 def _rf_route_graph(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]:
     """Monta grafo não-direcional apenas com enlaces que possuem evidência RF real."""
     graph: dict[str, dict[str, dict[str, Any]]] = {}
@@ -2097,6 +2216,7 @@ def _rf_route_graph(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any
         a, b = sorted((source, target))
         item = merged.get((a, b))
         distance = round(haversine_km(*positions[source], *positions[target]), 3)
+        confidence = _rf_edge_confidence(raw, distance)
         candidate = {
             "a": a,
             "b": b,
@@ -2107,6 +2227,12 @@ def _rf_route_graph(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any
             "classification_source": str(raw.get("classification_source") or "RF observado"),
             "rf_transport_count": int(raw.get("rf_transport_count") or 0),
             "rf_path_count": int(raw.get("rf_path_count") or 0),
+            "internet_confirmed_count": int(raw.get("internet_confirmed_count") or 0),
+            "rf_confidence": confidence["level"],
+            "rf_confidence_label": confidence["label"],
+            "rf_confidence_score": confidence["score"],
+            "rf_confidence_reason": confidence["reason"],
+            "rf_confirmed": bool(confidence["confirmed"]),
         }
         if item is None:
             merged[(a, b)] = candidate
@@ -2114,12 +2240,21 @@ def _rf_route_graph(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any
             item["packet_count"] = int(item.get("packet_count") or 0) + candidate["packet_count"]
             item["rf_transport_count"] = int(item.get("rf_transport_count") or 0) + candidate["rf_transport_count"]
             item["rf_path_count"] = int(item.get("rf_path_count") or 0) + candidate["rf_path_count"]
+            item["internet_confirmed_count"] = int(item.get("internet_confirmed_count") or 0) + candidate["internet_confirmed_count"]
+            merged_confidence = _rf_edge_confidence(item, float(item.get("distance_km") or distance))
+            item["rf_confidence"] = merged_confidence["level"]
+            item["rf_confidence_label"] = merged_confidence["label"]
+            item["rf_confidence_score"] = merged_confidence["score"]
+            item["rf_confidence_reason"] = merged_confidence["reason"]
+            item["rf_confirmed"] = bool(merged_confidence["confirmed"])
             first_values = [x for x in (item.get("first_seen"), candidate["first_seen"]) if x]
             last_values = [x for x in (item.get("last_seen"), candidate["last_seen"]) if x]
             item["first_seen"] = min(first_values) if first_values else ""
             item["last_seen"] = max(last_values) if last_values else ""
 
     for (a, b), edge in merged.items():
+        if not bool(edge.get("rf_confirmed")):
+            continue
         graph.setdefault(a, {})[b] = edge
         graph.setdefault(b, {})[a] = edge
     return graph, positions
@@ -2228,6 +2363,10 @@ def _rf_route_payload(
             "first_seen": edge.get("first_seen") or "",
             "last_seen": edge.get("last_seen") or "",
             "classification_source": edge.get("classification_source") or "RF observado",
+            "rf_confidence": edge.get("rf_confidence") or "confirmed",
+            "rf_confidence_label": edge.get("rf_confidence_label") or "RF confirmado",
+            "rf_confidence_score": int(edge.get("rf_confidence_score") or 0),
+            "rf_confidence_reason": edge.get("rf_confidence_reason") or "",
         })
     direct = round(haversine_km(*positions[nodes[0]], *positions[nodes[-1]]), 3)
     return {
@@ -2239,6 +2378,9 @@ def _rf_route_payload(
         "direct_distance_km": direct,
         "route_evidence_at": min(latest_values) if latest_values else "",
         "observations": observations,
+        "rf_confidence": "confirmed",
+        "rf_confidence_label": "RF confirmado",
+        "rf_confidence_reason": "todos os trechos da rota possuem evidência RF confirmada",
         "edges": route_edges,
     }
 
