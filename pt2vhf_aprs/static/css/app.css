@@ -4432,6 +4432,13 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
   font-weight: 900;
   letter-spacing: .015em;
 }
+.rf-route-node-temp.has-normal {
+  padding-left: 7px;
+  background: rgba(12,18,23,.88);
+}
+.rf-route-node-temp.has-normal .rf-route-node-dot {
+  display: none;
+}
 html[data-theme="light"] .rf-route-node-temp {
   background: rgba(255,255,255,.97);
   color: #5f4b00;
