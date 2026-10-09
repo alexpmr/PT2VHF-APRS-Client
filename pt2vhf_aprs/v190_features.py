@@ -513,12 +513,24 @@ def register_v190_routes(app) -> None:
 
     @app.get("/api/v190/backup/full")
     def api_v190_backup_full():
-        payload = io.BytesIO(_snapshot_bytes())
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        return send_file(
-            payload, mimetype="application/zip", as_attachment=True,
-            download_name=f"PT2VHF_APRS_Client_Backup_v{__version__}_{stamp}.zip",
-        )
+        try:
+            payload = io.BytesIO(_snapshot_bytes())
+            if payload.getbuffer().nbytes <= 0:
+                raise RuntimeError("O snapshot gerado está vazio.")
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            response = send_file(
+                payload,
+                mimetype="application/zip",
+                as_attachment=True,
+                download_name=f"PT2VHF_APRS_Client_Backup_v{__version__}_{stamp}.zip",
+                max_age=0,
+            )
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["X-PT2VHF-Backup-Version"] = __version__
+            return response
+        except Exception as exc:
+            return jsonify({"ok": False, "error": f"Falha ao gerar backup completo: {exc}"}), 500
 
     @app.post("/api/v190/backup/restore")
     def api_v190_backup_restore():
