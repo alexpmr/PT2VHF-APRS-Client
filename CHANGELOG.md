@@ -1,3 +1,13 @@
+## 1.14.13 - 2026-10-08
+
+- **Mapa — pesquisa de duas estações:** ao pesquisar origem e destino, a visualização passa a usar o mesmo foco exclusivo dos Recordes RF: ficam visíveis apenas origem, destino, intermediários e enlaces das rotas encontradas.
+- **Rotas alternativas:** quando houver mais de uma rota RF observada, o mapa mantém somente o conjunto de nós/enlaces dessas alternativas e o painel permite destacar cada caminho.
+- **RF observado restaurado:** removidos como filtro de exclusão os thresholds de distância/quantidade de observações introduzidos na v1.14.12; enlaces RF observados voltam a compor o grafo mesmo quando longos ou com poucos hops.
+- **RF × Internet preservado:** APRS-IS/Internet continua sem completar rota RF; evidências RF e Internet do mesmo par permanecem independentes.
+- **Estatísticas:** reforçado o fluxo vertical contínuo do ranking de software e demais blocos, sem barra de rolagem vertical interna.
+- **Regressões:** testes cobrem enlace RF longo observado, exclusão de iGate/APRS-IS do grafo RF e foco exclusivo da pesquisa manual.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.12 - 2026-10-09
 
 - **RF confirmado:** Pesquisa RF e Recordes RF deixam de aceitar automaticamente qualquer aresta marcada como `rf`; cada trecho passa por uma heurística de evidência e plausibilidade.

@@ -4370,3 +4370,25 @@ html[data-theme="light"] #tab-config .config-card .config-card-heading h3 {
 #tab-analysis .station-ranking-table {
   height: auto;
 }
+
+
+/* v1.14.13 - Estatísticas em fluxo contínuo e sem viewport interna no ranking */
+#tab-analysis .analysis-client-version-panel,
+#tab-analysis .client-version-stats-content,
+#tab-analysis .client-version-table,
+#tab-analysis .topology-stats-box,
+#tab-analysis .topology-stats-content,
+#tab-analysis .topology-stat-group,
+#tab-analysis .rf-route-records-group,
+#tab-analysis .rf-route-record-list,
+#tab-analysis .station-ranking-table-wrap {
+  min-height: 0;
+  max-height: none !important;
+  height: auto !important;
+  overflow-y: visible !important;
+}
+#tab-analysis .client-version-stats-content,
+#tab-analysis .station-ranking-table-wrap,
+#tab-analysis .rf-route-record-list {
+  overflow-x: auto;
+}

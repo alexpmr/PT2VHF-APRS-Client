@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.13": {
+        "title": "Rotas RF observadas e foco unificado no mapa",
+        "items": [
+            "A pesquisa manual de duas estações passa a usar o mesmo foco exclusivo dos Recordes RF.",
+            "Somente origem, destino, intermediários e enlaces pertencentes às rotas encontradas permanecem visíveis durante a análise.",
+            "O grafo RF volta a aceitar enlaces observados sem filtros de exclusão por distância, quantidade mínima de observações ou poucos hops.",
+            "APRS-IS/Internet continua separado e nunca completa uma rota RF.",
+            "O ranking de software e os demais blocos das Estatísticas permanecem no fluxo vertical principal, sem scroll vertical interno.",
+        ],
+    },
     "1.14.12": {
         "title": "RF confirmado e Estatísticas sem scroll interno",
         "items": [
