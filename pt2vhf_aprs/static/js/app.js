@@ -8974,9 +8974,14 @@
     }
     const rows = state.rfRouteRecords.map((route, index) => {
       const path = (route.nodes || []).join(' → ');
+      const evidenceParts = [];
+      if (Number(route.direct_edges || 0)) evidenceParts.push(Number(route.direct_edges || 0) + ' ' + ui('diretos', 'direct'));
+      if (Number(route.inferred_edges || 0)) evidenceParts.push(Number(route.inferred_edges || 0) + ' ' + ui('inferidos', 'inferred'));
+      if (Number(route.legacy_edges || 0)) evidenceParts.push(Number(route.legacy_edges || 0) + ' ' + ui('legados', 'legacy'));
       const meta = Number(route.hops || 0) + ' hops · ' +
         ui('rota', 'route') + ': ' + formatRfDistanceKm(route.distance_km) + ' · ' +
         Number(route.observations || 0).toLocaleString(currentLocale()) + ' obs. · ' +
+        (evidenceParts.length ? evidenceParts.join(' · ') + ' · ' : '') +
         ui('evidência', 'evidence') + ': ' + fmtDate(route.route_evidence_at);
       return '<button type="button" class="rf-route-record" data-rf-route-record-index="' + index + '">' +
         '<span class="rf-route-record-rank">' + (index + 1) + 'º</span>' +
