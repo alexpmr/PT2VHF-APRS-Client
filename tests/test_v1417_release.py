@@ -35,12 +35,10 @@ def connect(graph, a: str, b: str, payload):
     graph.setdefault(b, {})[a] = payload
 
 
-def test_v1417_version_metadata():
-    assert read("VERSION").strip() == "1.14.17"
-    assert '__version__ = "1.14.17"' in read("pt2vhf_aprs/__init__.py")
-    win = read("windows/version_info.txt")
-    assert "(1, 14, 17, 0)" in win
-    assert "'1.14.17'" in win
+def test_v1417_release_history_is_preserved():
+    assert "## 1.14.17 - 2026-10-09" in read("CHANGELOG.md")
+    assert '"1.14.17": {' in read("pt2vhf_aprs/version_notes.py")
+    assert "## Implementado na v1.14.17" in read("BACKLOG.md")
 
 
 def test_v1417_long_inferred_edge_is_reconstructed_when_supported():

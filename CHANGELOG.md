@@ -1,3 +1,17 @@
+## 1.14.18 - 2026-10-09
+
+- **Mapa — Acompanhar Estação:** o popup de uma estação ganha ação explícita para iniciar acompanhamento em tempo real.
+- **Centralização contínua:** ao acompanhar, o popup fecha, o mapa preserva o zoom atual e mantém a estação centralizada a cada nova posição; arrastar o mapa encerra o modo.
+- **Painel flutuante:** durante o acompanhamento são exibidos indicativo, velocidade, curso e tempo desde o último pacote, atualizado mesmo quando a estação deixa de transmitir.
+- **Tracklog unificado:** o novo fluxo reutiliza o mecanismo de seguimento já existente, evitando estados paralelos.
+- **Mensagens — retry coerente:** retransmissões reaproveitam o mesmo message ID e atualizam a mesma mensagem lógica em vez de criar uma nova cadeia de IDs.
+- **ACK/REJ terminal:** confirmações e rejeições não podem ser sobrescritas por atualizações tardias de TX ou retry.
+- **Deduplicação de RX:** retransmissões da mesma mensagem, com remetente/destino/ID/texto iguais, não geram entradas lógicas duplicadas no histórico.
+- **ACK por RF/TNC:** mensagens pessoais recebidas por RF passam a ser confirmadas pelo mesmo meio quando o TX RF estiver habilitado e confirmado.
+- **ACK RF resiliente:** frames RF repetidos dentro da janela de supressão continuam sem duplicar dados, mas reenviam o ACK quando aplicável, cobrindo ACK perdido no ar.
+- **Regressões:** testes cobrem terminalidade de ACK, reutilização de ID/linha no retry, deduplicação de RX, ACK RF e interface de acompanhamento.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.17 - 2026-10-09
 
 - **Configuração em fluxo único:** removidas barras de rolagem verticais internas dos cards/subblocos; toda a aba passa a usar somente o scroll principal da Configuração.

@@ -67,6 +67,9 @@
     trackLines: new Map(),
     trackFollowCallsign: '',
     trackFollowLastKey: '',
+    trackFollowStation: null,
+    trackFollowPanel: null,
+    trackFollowPanelTimer: null,
     topologyLines: new Map(),
     topologyEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0'
       || localStorage.getItem('pt2vhf_map_item_igate') !== '0',
@@ -1477,11 +1480,13 @@
     });
     state.map.on('zoomend', () => {
       if (!state.trackFollowCallsign) return;
+      let centered = false;
       for (const [call, line] of state.trackLines) {
         if (normalizedCall(call) !== state.trackFollowCallsign) continue;
-        centerFollowedTrack(call, line._pt2vhfTrackRows || [], { force: true, animate: false });
+        centered = centerFollowedTrack(call, line._pt2vhfTrackRows || [], { force: true, animate: false });
         break;
       }
+      if (!centered) centerFollowedTrack(state.trackFollowCallsign, [], { force: true, animate: false });
     });
 
     if (!window._pt2vhfMapViewportSyncBound) {
@@ -3867,6 +3872,7 @@
       </div>
       <div class="station-popup-actions">
         ${favoriteStarHtml(s.callsign, false)}
+        <button type="button" class="btn secondary station-follow-button" data-callsign="${escapeHtml(s.callsign)}">${escapeHtml(ui('Acompanhar Estação', 'Follow station'))}</button>
         <button type="button" class="btn secondary station-log-button" data-callsign="${escapeHtml(s.callsign)}">Ver logs</button>
         <button type="button" class="btn primary station-message-button" data-callsign="${escapeHtml(s.callsign)}"${interactionDisabled}>Enviar mensagem</button>
       </div>
@@ -4183,9 +4189,90 @@
     }
   }
 
+  function trackFollowStationSnapshot(callsign) {
+    const call = normalizedCall(callsign);
+    if (!call) return null;
+    const marker = state.markers.get(call);
+    if (marker?._pt2vhfStation) return marker._pt2vhfStation;
+    for (const [key, item] of state.markers) {
+      if (normalizedCall(key) === call && item?._pt2vhfStation) return item._pt2vhfStation;
+    }
+    const fromStations = (state.stations || []).find(item => normalizedCall(item?.callsign) === call);
+    return fromStations || null;
+  }
+
+  function ensureTrackFollowPanel() {
+    if (state.trackFollowPanel?.isConnected) return state.trackFollowPanel;
+    const host = state.map?.getContainer?.();
+    if (!host) return null;
+    const panel = document.createElement('div');
+    panel.className = 'station-follow-panel hidden';
+    panel.setAttribute('role', 'status');
+    panel.setAttribute('aria-live', 'polite');
+    panel.innerHTML = `
+      <div class="station-follow-panel-header">
+        <strong data-follow-callsign>—</strong>
+        <button type="button" class="station-follow-stop" title="${escapeHtml(ui('Parar acompanhamento', 'Stop following'))}" aria-label="${escapeHtml(ui('Parar acompanhamento', 'Stop following'))}">×</button>
+      </div>
+      <div class="station-follow-panel-grid">
+        <span>${escapeHtml(ui('Velocidade', 'Speed'))}</span><strong data-follow-speed>—</strong>
+        <span>${escapeHtml(ui('Curso', 'Course'))}</span><strong data-follow-course>—</strong>
+        <span>${escapeHtml(ui('Último pacote', 'Last packet'))}</span><strong data-follow-last>—</strong>
+      </div>`;
+    host.appendChild(panel);
+    panel.querySelector('.station-follow-stop')?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      clearTrackFollow();
+    });
+    if (window.L?.DomEvent) {
+      L.DomEvent.disableClickPropagation(panel);
+      L.DomEvent.disableScrollPropagation(panel);
+    }
+    state.trackFollowPanel = panel;
+    return panel;
+  }
+
+  function updateTrackFollowPanel(station = null, latest = null) {
+    if (!state.trackFollowCallsign) return;
+    const panel = ensureTrackFollowPanel();
+    if (!panel) return;
+    const snapshot = station || state.trackFollowStation || trackFollowStationSnapshot(state.trackFollowCallsign) || {};
+    const speed = latest?.speed ?? snapshot.speed;
+    const course = latest?.course ?? snapshot.course;
+    const lastHeard = latest?.timestamp || snapshot.last_heard || snapshot.timestamp || '';
+    state.trackFollowStation = { ...snapshot, callsign: snapshot.callsign || state.trackFollowCallsign, speed, course, last_heard: lastHeard };
+    const speedText = Number.isFinite(Number(speed)) ? fmtNum(speed, 1, ' km/h') : '—';
+    const courseText = Number.isFinite(Number(course)) ? fmtNum(course, 0, '°') : '—';
+    const lastText = formatRelativeLastHeard(lastHeard) || '—';
+    const callNode = panel.querySelector('[data-follow-callsign]');
+    const speedNode = panel.querySelector('[data-follow-speed]');
+    const courseNode = panel.querySelector('[data-follow-course]');
+    const lastNode = panel.querySelector('[data-follow-last]');
+    if (callNode) callNode.textContent = state.trackFollowCallsign;
+    if (speedNode) speedNode.textContent = speedText;
+    if (courseNode) courseNode.textContent = courseText;
+    if (lastNode) lastNode.textContent = lastText;
+    panel.classList.remove('hidden');
+  }
+
+  function scheduleTrackFollowPanelRefresh() {
+    if (state.trackFollowPanelTimer) clearInterval(state.trackFollowPanelTimer);
+    state.trackFollowPanelTimer = setInterval(() => {
+      if (!state.trackFollowCallsign) return;
+      updateTrackFollowPanel();
+    }, 10000);
+  }
+
   function clearTrackFollow() {
     state.trackFollowCallsign = '';
     state.trackFollowLastKey = '';
+    state.trackFollowStation = null;
+    if (state.trackFollowPanelTimer) {
+      clearInterval(state.trackFollowPanelTimer);
+      state.trackFollowPanelTimer = null;
+    }
+    state.trackFollowPanel?.classList.add('hidden');
     updateTrackFollowStyles();
   }
 
@@ -4193,11 +4280,16 @@
     const call = normalizedCall(callsign);
     if (!state.map || !call || state.trackFollowCallsign !== call) return false;
     const latest = latestTrackRow(rows);
-    if (!latest) return false;
-    const key = trackFollowKey(latest);
-    if (!options.force && key && key === state.trackFollowLastKey) return false;
-    const point = [Number(latest.latitude), Number(latest.longitude)];
+    const station = options.station || trackFollowStationSnapshot(call) || state.trackFollowStation;
+    const latitude = latest?.latitude ?? station?.latitude;
+    const longitude = latest?.longitude ?? station?.longitude;
+    const point = [Number(latitude), Number(longitude)];
     if (!point.every(Number.isFinite)) return false;
+    const key = latest
+      ? trackFollowKey(latest)
+      : [String(station?.last_heard || station?.timestamp || ''), point[0].toFixed(6), point[1].toFixed(6)].join('|');
+    updateTrackFollowPanel(station, latest);
+    if (!options.force && key && key === state.trackFollowLastKey) return false;
     state.trackFollowLastKey = key;
     state.map.panTo(point, {
       animate: options.animate !== false,
@@ -4207,13 +4299,29 @@
     return true;
   }
 
-  function followTracklog(callsign, rows) {
+  function followTracklog(callsign, rows = []) {
     const call = normalizedCall(callsign);
     if (!call) return;
     state.trackFollowCallsign = call;
     state.trackFollowLastKey = '';
+    state.trackFollowStation = trackFollowStationSnapshot(call);
+    state.map?.closePopup?.();
     updateTrackFollowStyles();
+    updateTrackFollowPanel(state.trackFollowStation, latestTrackRow(rows));
+    scheduleTrackFollowPanelRefresh();
     centerFollowedTrack(call, rows, { force: true });
+  }
+
+  function followStation(callsign) {
+    const call = normalizedCall(callsign);
+    if (!call) return;
+    let rows = [];
+    for (const [key, line] of state.trackLines) {
+      if (normalizedCall(key) !== call) continue;
+      rows = line._pt2vhfTrackRows || [];
+      break;
+    }
+    followTracklog(call, rows);
   }
 
   function splitTrackSegments(rows) {
@@ -4291,6 +4399,12 @@
           marker.setLatLng(latlng).setIcon(markerIcon(station));
         }
         marker.setZIndexOffset(1200);
+        marker._pt2vhfStation = station;
+        if (state.trackFollowCallsign === normalizedCall(station.callsign)) {
+          state.trackFollowStation = station;
+          updateTrackFollowPanel(station);
+          centerFollowedTrack(station.callsign, [], { station });
+        }
         const popupMaxHeight = Math.max(220, Math.min(620, (state.map?.getSize?.().y || 700) - 70));
         marker.bindPopup(popupHtml(station), {
           maxWidth: 520,
@@ -6181,6 +6295,14 @@
     $('.tab[data-tab="messages"]')?.click();
     selectMessageRecipient(destination);
   }
+
+  document.addEventListener('click', e => {
+    const button = e.target.closest('.station-follow-button');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    followStation(button.dataset.callsign || '');
+  });
 
   document.addEventListener('click', e => {
     const button = e.target.closest('.station-message-button');

@@ -54,7 +54,7 @@ def current_changelog(version: str) -> list[str]:
         return ["CHANGELOG.md não encontrado no build."]
     text = path.read_text(encoding="utf-8")
     pattern = re.compile(
-        rf"^## v{re.escape(version)}\b[^\n]*\n(?P<body>.*?)(?=^## v|\Z)",
+        rf"^## v?{re.escape(version)}\b[^\n]*\n(?P<body>.*?)(?=^## v?\d|\Z)",
         re.MULTILINE | re.DOTALL,
     )
     match = pattern.search(text)

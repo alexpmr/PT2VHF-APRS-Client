@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.18": {
+        "title": "Acompanhamento ao vivo e mensagens APRS sem retries indevidos",
+        "items": [
+            "O popup da estação ganha Acompanhar Estação; o mapa fecha o popup e mantém o alvo centralizado enquanto novas posições chegam.",
+            "Um painel flutuante mostra indicativo, velocidade, curso e tempo desde o último pacote durante o acompanhamento.",
+            "Retries preservam o mesmo message ID APRS e a mesma mensagem lógica, mantendo ACK/REJ corretamente correlacionados.",
+            "ACK e REJ tornam-se estados terminais que não podem ser sobrescritos por atualizações tardias de transmissão.",
+            "Mensagens repetidas com o mesmo remetente, destino e ID não duplicam o histórico durante a janela de retry.",
+            "Mensagens pessoais recebidas pelo TNC passam a gerar ACK por RF; retransmissões idênticas reenviam o ACK sem duplicar a mensagem.",
+        ],
+    },
     "1.14.17": {
         "title": "Backup confiável, feedback de processamento e rotas RF refinadas",
         "items": [

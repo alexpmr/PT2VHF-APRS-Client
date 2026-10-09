@@ -1857,6 +1857,39 @@ class TNCService:
             "raw": raw_tnc2,
         }
 
+    def queue_local_ack(self, destination: str, msg_id: str, path: str = "") -> dict[str, Any]:
+        """Enfileira ACK APRS puro por RF, sem criar um novo ID de mensagem."""
+        status = self.status()
+        cfg = get_tnc_config()
+        if not status.get("connected"):
+            raise ConnectionError("TNC/RF desconectado; não é possível transmitir ACK.")
+        if self._tx_paused or status.get("tx_paused"):
+            raise PermissionError("TX RF está pausado; ACK não transmitido.")
+        if not cfg.get("auto_tx_enabled") or not cfg.get("tx_confirmed"):
+            raise PermissionError("TX RF não está habilitado/confirmado; ACK não transmitido.")
+
+        source = self._own_call()
+        if not source:
+            raise ValueError("Configure o indicativo/SSID local antes de transmitir ACK por RF.")
+        split_call(destination)
+        destination = normalize_call(destination)
+        clean_id = str(msg_id or "").strip()
+        if not re.fullmatch(r"[A-Za-z0-9]{1,5}", clean_id):
+            raise ValueError("ID APRS do ACK inválido.")
+        path_items = normalize_message_rf_path(path)
+        info = f":{destination:<9}:ack{clean_id}"
+        frame = encode_ax25(source, APP_TOCALL, info, path_items)
+        header = f"{source}>{APP_TOCALL}" + (("," + ",".join(path_items)) if path_items else "")
+        raw_tnc2 = f"{header}:{info}"
+        if not self._enqueue(frame, f"ACK local RF para {destination}", raw_tnc2=raw_tnc2, priority=0):
+            raise PermissionError("O ACK RF foi bloqueado pelas regras de transmissão do TNC.")
+        record_decision(
+            "message_ack_rf", "queued",
+            f"ACK {clean_id} para {destination}; path {','.join(path_items) if path_items else 'direto'}.",
+            source=source, destination=destination, raw_tnc2=raw_tnc2,
+        )
+        return {"queued": True, "source": source, "destination": destination, "path": ",".join(path_items), "raw": raw_tnc2}
+
     def _source_rate_allowed(self, source: str, cfg: dict[str, Any]) -> bool:
         now = time.monotonic()
         bucket = self._source_activity[str(source or "").upper()]
@@ -1915,6 +1948,13 @@ class TNCService:
         if duplicate:
             self._increment_status("duplicates_suppressed")
             record_decision("digi", "suppressed", "Duplicado dentro da janela de supressão.", source=source, destination=destination, raw_tnc2=packet["tnc2"])
+            # Retransmissão da mesma mensagem pode significar que o ACK anterior se perdeu.
+            # Reenvia somente o ACK, sem reinjetar pacote/topologia/histórico.
+            try:
+                from .aprs_service import service as aprs_service
+                aprs_service.handle_duplicate_rf_message(packet["tnc2"])
+            except Exception as exc:
+                diag.log_event("tnc_duplicate_message_reack_error", error=str(exc))
             return
 
         message = parse_message_tnc2(packet["tnc2"])
