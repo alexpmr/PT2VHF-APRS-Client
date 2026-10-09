@@ -1,5 +1,12 @@
 ## Novo — Correção crítica TNC/RF: bytes recebidos pela serial não chegam ao mapa
 
+- **Escopo exato do relato do PP5AU:** “A minha estação RF via TNC **PP5AU-7** não está plotando no mapa.”
+- Portanto, validar especificamente o caso em que **a própria estação/local station**, recebida pelo TNC/RF, precisa ser persistida e exibida no mapa.
+- Não assumir que o defeito afeta necessariamente todas as estações RF remotas; criar teste dedicado para a estação local `PP5AU-7`.
+- Verificar se existe alguma supressão por **próprio indicativo / own callsign / estação local** entre `ingest_rf_packet()`, persistência em `stations/tracks`, filtros do mapa e renderização de marcadores.
+- Critério de aceite: ao receber via TNC um pacote de posição válido originado por `PP5AU-7`, o cliente deve registrar o pacote como **RF**, atualizar posição/tracklog e mostrar **PP5AU-7 no mapa**, mesmo que o indicativo configurado no cliente também seja PP5AU-7.
+
+
 - Cenário real reportado pelo **PP5AU**: a porta serial está conectada e recebe bytes, porém os contadores permanecem em **KISS RX = 0 / AX.25 RX = 0** e nenhuma estação recebida por RF chega ao mapa.
 - A captura mostra **COM10 @ 9600**, bytes chegando pela serial e estado **“Bytes chegando, sem KISS”**.
 - Tratar como problema do pipeline **Serial → framing/protocolo → AX.25 → APRS → mapa**, e não como falha de renderização do mapa.
