@@ -11,6 +11,7 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
             "Hops longos apenas inferidos pelo path podem ser decompostos em nós intermediários conhecidos quando existe evidência RF melhor sustentada e próxima no tempo.",
             "Nós reconstruídos são identificados como prováveis; quando não há evidência suficiente, o trecho continua inferido e informa que os intermediários não foram identificados.",
             "Enlaces RF diretamente observados continuam válidos independentemente da distância e não são quebrados por heurística geográfica.",
+            "A aba Configuração passa a usar um único fluxo vertical, sem barras de rolagem internas nos cards e subblocos.",
         ],
     },
     "1.14.16": {
