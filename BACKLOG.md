@@ -123,6 +123,17 @@
 
 ## Implementado na v1.14.10 — Estatísticas: exibir blocos completos sem rolagem interna
 
+- Reforçar a regra para que **todos os blocos/cards da aba Estatísticas fiquem integralmente na página**, sem barra de rolagem vertical própria.
+- Aplicar explicitamente essa regra ao bloco de **ranking de uso de software/aplicações**, que ainda pode apresentar rolagem vertical interna.
+- Remover `max-height`, alturas fixas e `overflow-y: auto/scroll` de qualquer bloco da aba Estatísticas que ainda limite verticalmente o conteúdo.
+- A aba deve usar **uma única rolagem vertical principal**, correspondente à própria página/área de conteúdo da aba.
+- Tabelas, rankings, listas de software, estações, iGates, digipeaters, Recordes RF e demais painéis devem crescer verticalmente conforme a quantidade de registros exibidos.
+- Preservar apenas rolagem **horizontal** quando necessária para tabelas largas, sem introduzir scroll vertical interno.
+- Garantir que cabeçalhos, ordenação, filtros e cliques permaneçam funcionais após a remoção dos limites de altura.
+- Validar que nenhum bloco fique cortado em notebook, Full HD, escala ampliada do Windows ou janela não maximizada.
+- Criar regressão visual/CSS que detecte a reintrodução de `max-height` ou `overflow-y` vertical nos principais blocos de Estatísticas.
+
+
 - Remover, sempre que possível, as **barras de rolagem internas** dos blocos/cards da aba **Estatísticas**.
 - Os painéis devem crescer verticalmente conforme a quantidade de conteúdo, exibindo tabelas, rankings e demais informações **por inteiro**.
 - Priorizar uma única rolagem vertical da página/aba de Estatísticas, evitando a experiência de “rolagem dentro da rolagem”.
