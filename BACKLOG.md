@@ -1,3 +1,19 @@
+## Implementado na v1.14.15 — rotas RF: não perder enlaces válidos em malhas densas
+
+- Remover o encerramento prematuro da pesquisa após `route_limit * 4` caminhos encontrados.
+- Separar claramente **grafo RF observado**, **cálculo de caminhos** e **limite de apresentação**.
+- Fazer `max_routes` limitar somente quantas rotas aparecem no painel, não quais enlaces podem ser considerados pelo motor.
+- Usar busca best-first sobre caminhos simples, priorizando evidência RF direta e menor custo topológico.
+- Não usar distância absoluta como filtro de exclusão.
+- Classificar cada trecho como RF direto observado, RF inferido do path ou RF observado legado.
+- Exibir no painel quantos trechos da rota são diretos, inferidos ou legados.
+- Calcular e retornar o **corredor completo de enlaces RF elegíveis** entre origem e destino dentro do horizonte de hops.
+- Durante a análise, mostrar no mapa todo esse corredor; ao selecionar uma rota, destacar seus enlaces e deixar os demais elegíveis em segundo plano.
+- Ampliar o horizonte padrão da pesquisa manual de 8 para 12 hops.
+- Manter um limite alto de expansões apenas como proteção contra explosão combinatória e informar explicitamente quando ele for atingido.
+- Preservar APRS-IS/Internet fora do grafo de rotas RF.
+- Criar regressões para malha densa, alternativas de rota, evidência direta versus inferida e enlaces longos observados.
+
 ## Consolidado na v1.14.14 — consistência do modelo RF observado
 
 - Uniformizar a terminologia da interface após a reversão da heurística da v1.14.12.

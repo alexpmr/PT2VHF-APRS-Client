@@ -1,3 +1,16 @@
+## 1.14.15 - 2026-10-09
+
+- **Rotas RF em malhas densas:** removido o corte prematuro da antiga DFS (`route_limit * 4`), que podia ignorar enlaces RF válidos depois dos primeiros caminhos encontrados.
+- **Busca best-first:** caminhos simples passam a ser ordenados pela qualidade da evidência e número de hops; evidência RF direta tem prioridade sobre RF inferido do path.
+- **Sem veto por distância:** comprimento geográfico continua informativo, mas não exclui um enlace RF observado.
+- **Corredor RF completo:** a API retorna todos os enlaces RF elegíveis que podem participar de uma rota entre origem e destino dentro do horizonte de hops.
+- **Mapa coerente com a topologia:** durante a pesquisa, todos os enlaces elegíveis permanecem visíveis; selecionar uma rota apenas destaca seus trechos e reduz a ênfase dos demais.
+- **Evidência por rota:** painel informa quantidade de trechos diretos, inferidos e legados e identifica a evidência de cada hop.
+- **Horizonte ampliado:** pesquisa manual usa 12 hops por padrão, contra 8 anteriormente.
+- **Proteção transparente:** em malhas excepcionalmente combinatórias, um limite alto de expansões protege o cliente; se atingido, a interface informa a truncagem e preserva os enlaces elegíveis.
+- **Regressões:** testes cobrem corredor completo, prioridade de evidência direta, enlace longo sem veto de distância e integração frontend/backend.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.14 - 2026-10-08
 
 - **Terminologia RF consolidada:** painel de rotas, autocomplete e mensagens deixam de usar “RF confirmado” e passam a refletir corretamente o modelo de **RF observado** restaurado na v1.14.13.
