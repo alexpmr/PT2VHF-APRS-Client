@@ -55,6 +55,10 @@ for marker in (
     ".global-processing-overlay",
     "@keyframes pt2vhf-processing-clock",
     ".rf-route-refinement.warning",
+    "v1.14.17 - Configuração usa somente a rolagem principal da aba",
+    "#tab-config #configForm.config-grid",
+    "#tab-config #configForm .config-card :is(div, section, article, fieldset, ul, ol)",
+    "overflow: visible !important;",
 ):
     if marker not in css:
         raise SystemExit(f"v1.14.17 CSS marker missing: {marker}")
