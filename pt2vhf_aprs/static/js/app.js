@@ -65,6 +65,8 @@
     markers: new Map(),
     objectMarkers: new Map(),
     trackLines: new Map(),
+    trackFollowCallsign: '',
+    trackFollowLastKey: '',
     topologyLines: new Map(),
     topologyEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0'
       || localStorage.getItem('pt2vhf_map_item_igate') !== '0',
@@ -1399,6 +1401,9 @@
     addMapControls();
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
+    state.map.on('dragstart', () => {
+      if (state.trackFollowCallsign) clearTrackFollow();
+    });
 
     if (!window._pt2vhfMapViewportSyncBound) {
       window._pt2vhfMapViewportSyncBound = true;
@@ -2873,32 +2878,54 @@
     state.rfRouteNodeMarkers.clear();
   }
 
+  function rfRouteNodeCoordinates() {
+    const nodes = new Map();
+    const analysis = state.rfRouteAnalysis || {};
+    const collectEdge = edge => {
+      const source = normalizedCall(edge?.source);
+      const target = normalizedCall(edge?.target);
+      const sourcePoint = [Number(edge?.source_lat), Number(edge?.source_lon)];
+      const targetPoint = [Number(edge?.target_lat), Number(edge?.target_lon)];
+      if (source && sourcePoint.every(Number.isFinite)) nodes.set(source, sourcePoint);
+      if (target && targetPoint.every(Number.isFinite)) nodes.set(target, targetPoint);
+    };
+    for (const edge of analysis.eligible_edges || []) collectEdge(edge);
+    for (const route of analysis.routes || []) {
+      for (const edge of route.edges || []) collectEdge(edge);
+      for (const callValue of route.nodes || []) {
+        const call = normalizedCall(callValue);
+        if (!call || nodes.has(call)) continue;
+        const normal = state.markers.get(call);
+        const point = normal?.getLatLng?.();
+        if (point && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng))) {
+          nodes.set(call, [Number(point.lat), Number(point.lng)]);
+        }
+      }
+    }
+    return nodes;
+  }
+
   function renderRfRouteNodeMarkers() {
     clearRfRouteNodeMarkers();
     if (!state.map || !state.rfRouteAnalysis) return;
-    const routes = state.rfRouteAnalysis.routes || [];
-    const eligibleEdges = state.rfRouteAnalysis.eligible_edges || [];
-    if (!routes.length && !eligibleEdges.length) return;
-    const nodes = new Map();
-    for (const edge of eligibleEdges) {
-      nodes.set(normalizedCall(edge.source), [Number(edge.source_lat), Number(edge.source_lon)]);
-      nodes.set(normalizedCall(edge.target), [Number(edge.target_lat), Number(edge.target_lon)]);
-    }
-    for (const route of routes) {
-      for (const edge of route.edges || []) {
-        nodes.set(normalizedCall(edge.source), [Number(edge.source_lat), Number(edge.source_lon)]);
-        nodes.set(normalizedCall(edge.target), [Number(edge.target_lat), Number(edge.target_lon)]);
-      }
-    }
+    const nodes = rfRouteNodeCoordinates();
     for (const [call, point] of nodes) {
-      if (!call || !point.every(Number.isFinite) || state.markers.has(call)) continue;
-      const marker = L.circleMarker(point, {
-        radius: 5,
-        weight: 2,
-        opacity: 1,
-        fillOpacity: .75,
+      if (!call || !point.every(Number.isFinite)) continue;
+      const normal = state.markers.get(call);
+      if (normal && state.map.hasLayer(normal)) continue;
+
+      const marker = L.marker(point, {
+        icon: L.divIcon({
+          className: 'rf-route-node-temp-wrap',
+          html: '<div class="rf-route-node-temp"><span class="rf-route-node-dot"></span><strong>' +
+            escapeHtml(call) + '</strong></div>',
+          iconSize: [118, 30],
+          iconAnchor: [10, 15],
+        }),
+        title: call,
         pane: 'pt2vhfMarkerPane',
-        interactive: true
+        interactive: true,
+        zIndexOffset: 2200
       }).addTo(state.map);
       marker.bindTooltip(call, { direction: 'top', permanent: false });
       state.rfRouteNodeMarkers.set(call, marker);
@@ -3091,6 +3118,30 @@
     }
   }
 
+  function rfRouteFitPadding() {
+    const base = 26;
+    const topLeft = [base, base];
+    const bottomRight = [base, base];
+    const panel = $('#rfRoutePanel');
+    const mapContainer = state.map?.getContainer?.();
+    if (!panel || panel.classList.contains('hidden') || !mapContainer) {
+      return { topLeft, bottomRight };
+    }
+    const mapRect = mapContainer.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const overlaps = panelRect.right > mapRect.left && panelRect.left < mapRect.right
+      && panelRect.bottom > mapRect.top && panelRect.top < mapRect.bottom;
+    if (!overlaps) return { topLeft, bottomRight };
+
+    const reserve = Math.min(panelRect.width + 18, mapRect.width * .46);
+    if ((panelRect.left + panelRect.right) / 2 >= (mapRect.left + mapRect.right) / 2) {
+      bottomRight[0] += reserve;
+    } else {
+      topLeft[0] += reserve;
+    }
+    return { topLeft, bottomRight };
+  }
+
   function fitRfRouteBounds(routes, eligibleEdges = []) {
     if (!state.map) return;
     const points = [];
@@ -3104,8 +3155,18 @@
         points.push([Number(edge.target_lat), Number(edge.target_lon)]);
       }
     }
+    for (const point of rfRouteNodeCoordinates().values()) points.push(point);
     const valid = points.filter(point => point.every(Number.isFinite));
-    if (valid.length) state.map.fitBounds(valid, { padding: [42, 42], maxZoom: 13 });
+    if (!valid.length) return;
+
+    state.map.invalidateSize({ animate: false });
+    const bounds = L.latLngBounds(valid);
+    const padding = rfRouteFitPadding();
+    state.map.fitBounds(bounds, {
+      paddingTopLeft: padding.topLeft,
+      paddingBottomRight: padding.bottomRight,
+      animate: true
+    });
   }
 
   async function focusRfRecordRoute(route) {
@@ -3975,6 +4036,72 @@
     </div>`;
   }
 
+  function latestTrackRow(rows) {
+    const valid = [...(rows || [])].filter(row =>
+      Number.isFinite(Number(row?.latitude)) && Number.isFinite(Number(row?.longitude))
+    );
+    if (!valid.length) return null;
+    valid.sort((a, b) =>
+      (stationLastHeardMs({ last_heard: a.timestamp }) || 0) -
+      (stationLastHeardMs({ last_heard: b.timestamp }) || 0)
+    );
+    return valid[valid.length - 1];
+  }
+
+  function trackFollowKey(row) {
+    if (!row) return '';
+    return [
+      String(row.timestamp || ''),
+      Number(row.latitude).toFixed(6),
+      Number(row.longitude).toFixed(6)
+    ].join('|');
+  }
+
+  function updateTrackFollowStyles() {
+    for (const [call, line] of state.trackLines) {
+      const active = normalizedCall(call) === state.trackFollowCallsign;
+      line.setStyle({
+        color: state.mapConfig.track_color,
+        weight: Math.max(1, Number(state.mapConfig.track_width || 2)) + (active ? 2 : 0),
+        opacity: active ? 1 : .78
+      });
+      if (active) line.bringToFront();
+    }
+  }
+
+  function clearTrackFollow() {
+    state.trackFollowCallsign = '';
+    state.trackFollowLastKey = '';
+    updateTrackFollowStyles();
+  }
+
+  function centerFollowedTrack(callsign, rows, options = {}) {
+    const call = normalizedCall(callsign);
+    if (!state.map || !call || state.trackFollowCallsign !== call) return false;
+    const latest = latestTrackRow(rows);
+    if (!latest) return false;
+    const key = trackFollowKey(latest);
+    if (!options.force && key && key === state.trackFollowLastKey) return false;
+    const point = [Number(latest.latitude), Number(latest.longitude)];
+    if (!point.every(Number.isFinite)) return false;
+    state.trackFollowLastKey = key;
+    state.map.panTo(point, {
+      animate: options.animate !== false,
+      duration: .35,
+      easeLinearity: .25
+    });
+    return true;
+  }
+
+  function followTracklog(callsign, rows) {
+    const call = normalizedCall(callsign);
+    if (!call) return;
+    state.trackFollowCallsign = call;
+    state.trackFollowLastKey = '';
+    updateTrackFollowStyles();
+    centerFollowedTrack(call, rows, { force: true });
+  }
+
   function splitTrackSegments(rows) {
     const segments = [];
     let current = [];
@@ -4065,6 +4192,14 @@
           void loadStationRfHeard(station.callsign);
         };
         marker.on('popupopen', marker._pt2vhfQueryPopupHandler);
+        if (!marker._pt2vhfTrackFollowBound) {
+          marker._pt2vhfTrackFollowBound = true;
+          marker.on('click', () => {
+            if (state.trackFollowCallsign && state.trackFollowCallsign !== normalizedCall(station.callsign)) {
+              clearTrackFollow();
+            }
+          });
+        }
       }
 
       const visibleObjects = routeFocusNodes ? [] : periodObjects.filter(objectMatchesViewFilter);
@@ -4133,6 +4268,7 @@
         if (!drawable.has(call)) {
           state.map.removeLayer(line);
           state.trackLines.delete(call);
+          if (state.trackFollowCallsign === normalizedCall(call)) clearTrackFollow();
         }
       }
 
@@ -4151,12 +4287,10 @@
           state.trackLines.set(call, line);
         } else {
           line.setLatLngs(segments);
-          line.setStyle({
-            color: state.mapConfig.track_color,
-            weight: state.mapConfig.track_width,
-            opacity: .78
-          });
         }
+
+        line._pt2vhfTrackCall = normalizedCall(call);
+        line._pt2vhfTrackRows = trackData.rows;
         line._pt2vhfTrackSummary = trackHoverSummary(call, trackData.rows);
         if (!line._pt2vhfHoverBound) {
           line.on('mouseover', () => {
@@ -4166,7 +4300,17 @@
           line.on('mouseout', hideMapHoverInfo);
           line._pt2vhfHoverBound = true;
         }
+        if (!line._pt2vhfFollowBound) {
+          line.on('click', () => {
+            followTracklog(line._pt2vhfTrackCall, line._pt2vhfTrackRows || []);
+          });
+          line._pt2vhfFollowBound = true;
+        }
+        if (state.trackFollowCallsign === line._pt2vhfTrackCall) {
+          centerFollowedTrack(line._pt2vhfTrackCall, trackData.rows);
+        }
       }
+      updateTrackFollowStyles();
       updateMapLegend();
       if (state.topologyEnabled) await loadTopology();
     } catch (err) {
