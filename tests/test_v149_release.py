@@ -17,8 +17,8 @@ def _seed_station(conn, callsign: str, lat: float, lon: float) -> None:
 def _seed_edge(conn, source: str, target: str, kind: str = "rf", packets: int = 5) -> None:
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     conn.execute(
-        "INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate) VALUES(?,?,?,?,?,?,?)",
-        (source, target, kind, packets, now, now, None),
+        "INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate,rf_transport_count,internet_confirmed_count) VALUES(?,?,?,?,?,?,?,?,?)",
+        (source, target, kind, packets, now, now, None, packets if kind == "rf" else 0, packets if kind == "igate" else 0),
     )
 
 
