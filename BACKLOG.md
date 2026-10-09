@@ -1,4 +1,19 @@
-## Novo — Rotas RF: decompor enlaces inferidos longos em nós intermediários conhecidos
+## Implementado na v1.14.17 — Backup completo e indicador global de processamento
+
+- Corrigir o botão **Criar backup completo**, que podia parecer inerte na janela integrada.
+- Trocar o link simples por um fluxo explícito de geração, tratamento de erro e salvamento.
+- Na janela desktop integrada, usar diálogo nativo de salvamento para Windows, Linux e macOS.
+- No navegador, usar fallback por `fetch → Blob → download`.
+- O backend do backup deve devolver erro JSON explícito quando a geração falhar e impedir cache do ZIP.
+- Implementar um **overlay global de processamento** central, com indicador visual tipo relógio, título e mensagem contextual.
+- O overlay deve bloquear cliques enquanto uma operação crítica estiver em andamento e ser removido automaticamente ao concluir ou falhar.
+- Disponibilizar API reutilizável `show/update/hide/withProcessing` para outras operações longas.
+- Aplicar o indicador ao backup completo, restauração de backup e geração de KML.
+- Operações que já possuem progresso dedicado, como a atualização automática, podem manter o componente específico existente.
+- Ao concluir, apresentar feedback explícito de sucesso ou erro ao usuário.
+- Criar regressões para fluxo de download, ponte nativa, overlay e tratamento de falhas.
+
+## Implementado na v1.14.17 — Rotas RF: decompor enlaces inferidos longos em nós intermediários conhecidos
 
 - Ao analisar uma rota RF, **não tratar automaticamente um enlace `RF inferido do path` como um único hop físico** quando houver evidência topológica de nós intermediários entre as duas extremidades.
 - Exemplo observado: `PP2RDB-15 → PT2AP-10` apareceu como um único trecho inferido de aproximadamente **796 km**. Esse tipo de aresta deve ser refinado antes de ser apresentado como hop único.
