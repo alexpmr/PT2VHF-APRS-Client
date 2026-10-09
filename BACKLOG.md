@@ -164,6 +164,28 @@
 
 ## Implementado até a v1.14.11 — Mapa: pesquisa por indicativo e rota RF entre duas estações
 
+- Ao pesquisar **duas estações** pela barra superior do mapa e exibir as rotas entre elas, usar o **mesmo modo visual aplicado ao clicar em um Recorde RF no ranking**.
+- Depois de selecionar origem e destino e clicar em **Pesquisar**:
+  - esconder temporariamente as demais estações;
+  - esconder os demais enlaces RF que não façam parte das rotas encontradas;
+  - esconder enlaces APRS-IS/Internet alheios ao resultado;
+  - esconder objetos, tracklogs e outras camadas que possam poluir a leitura, quando não forem necessárias para o contexto.
+- Manter visíveis somente:
+  - estação de origem;
+  - estação de destino;
+  - todos os digipeaters/estações intermediárias das rotas válidas;
+  - os enlaces que efetivamente compõem essas rotas.
+- Reutilizar exatamente o mesmo **modo de foco exclusivo** já usado pelo ranking de Recordes RF, evitando duas implementações diferentes.
+- Se houver mais de uma rota válida entre as duas estações:
+  - mostrar todas as alternativas no painel lateral;
+  - manter no mapa somente os enlaces pertencentes ao conjunto dessas rotas;
+  - permitir selecionar uma alternativa e destacá-la, deixando as demais em segundo plano.
+- Ajustar automaticamente o zoom para enquadrar o conjunto completo das rotas encontradas.
+- O painel lateral deve usar o mesmo estilo e comportamento do ranking, incluindo o painel arrastável quando essa funcionalidade estiver disponível.
+- Ao limpar a pesquisa ou fechar a análise, restaurar exatamente a visualização anterior do mapa.
+- Criar regressão garantindo que **pesquisa manual entre dois indicativos** e **clique em Recorde RF** usem o mesmo mecanismo de foco, filtragem e restauração do mapa.
+
+
 - Na barra do mapa, renomear o botão **“Rotas RF”** para **“Pesquisar”**, mantendo a mesma ação de consultar/analisar as rotas RF entre os indicativos informados.
 
 - Tornar os campos de **indicativo inicial** e **indicativo final** autocompletáveis desde os primeiros caracteres digitados.
