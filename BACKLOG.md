@@ -1,45 +1,28 @@
-## Implementado na v1.14.12 — Topologia/Recordes RF: validar rigorosamente o que é realmente 100% RF
+## Novo — Topologia/Recordes RF: restaurar algoritmo RF anterior à v1.14.12
 
-- Revisar a lógica que atualmente classifica enlaces e rotas como **100% RF**, principalmente nos rankings de **Recordes RF** e na análise de rotas entre estações.
-- Não considerar uma rota como RF completa apenas porque existe uma sequência de arestas classificadas como `rf` no grafo.
-- Introduzir uma validação adicional de **plausibilidade física e evidência operacional** para cada trecho e para a rota completa.
-- Avaliar, por trecho, pelo menos:
-  - distância geográfica entre as duas estações;
-  - quantidade de hops intermediários observados;
-  - path APRS original;
-  - digipeaters efetivamente presentes no path;
-  - origem real do pacote (`TNC/RF`, APRS-IS, q-constructs, iGate, replay/importação etc.);
-  - existência de evidência RF direta ou apenas inferida;
-  - quantidade de observações independentes;
-  - consistência temporal entre os trechos;
-  - coerência entre estação transmitente, digipeater(s) e receptor/iGate.
-- Tratar com forte suspeita rotas em que a **distância entre dois nós RF consecutivos seja incompatível com um enlace terrestre plausível**, especialmente quando houver poucos ou nenhum hop intermediário.
-- Exemplo de caso a rejeitar/rebaixar: uma rota com aproximadamente **1.700 km** e apenas **1 hop**, quando não houver evidência RF concreta suficiente que justifique propagação excepcional.
-- Diferenciar claramente níveis de confiança, por exemplo:
-  - **RF confirmado** — evidência direta suficiente;
-  - **RF provável** — evidência coerente, mas não conclusiva;
-  - **RF improvável / inconsistente** — distância/path/evidência não sustentam a classificação;
-  - **Internet/APRS-IS** — evidência explícita de transporte por rede.
-- Somente rotas compostas integralmente por trechos **RF confirmados** devem aparecer como **rota 100% RF**.
-- Rotas que contenham trecho apenas provável, inconsistente ou ambíguo não devem entrar no ranking principal de **Recordes RF** como se fossem RF puro.
-- Para Recordes RF, exigir um grau de confiança mínimo antes de aceitar o par no ranking.
-- Exibir no painel da rota, quando útil, a **confiança da classificação** e o motivo resumido, por exemplo:
-  - `RF confirmado — recebido via TNC`;
-  - `RF provável — path compatível`;
-  - `RF inconsistente — 1.649 km sem hops suficientes`.
-- Criar uma heurística configurável de plausibilidade, evitando um limite fixo simplista de distância, pois condições excepcionais de propagação podem ocorrer.
-- A heurística deve considerar o contexto da banda/meio quando houver dados disponíveis, mas nunca transformar uma simples distância alta em prova automática de erro.
-- Preservar eventos raros reais: se houver **evidência RF forte e verificável**, uma distância excepcional pode permanecer válida.
-- Reavaliar registros históricos já armazenados quando a nova lógica for aplicada, evitando perpetuar classificações antigas incorretas no ranking.
-- Criar testes específicos para:
-  - enlace terrestre curto e confirmado;
-  - rota multi-hop coerente;
-  - trecho muito longo sem hops suficientes;
-  - mistura RF + APRS-IS;
-  - path APRS incompatível;
-  - evidência direta via TNC;
-  - propagação excepcional com evidência forte;
-  - rebaixamento de confiança sem apagar o dado bruto observado.
+- **Reverter a lógica excessivamente restritiva introduzida na v1.14.12 para validar “100% RF”.**
+- Voltar ao algoritmo usado antes da v1.14.12 para formar o grafo, pesquisar rotas e alimentar os **Recordes RF**.
+- A classificação deve voltar a priorizar a **evidência APRS/RF observada**, sem eliminar enlaces apenas por serem longos ou por possuírem poucos nós intermediários.
+- Operadores confirmaram que alguns dos enlaces longos anteriormente exibidos eram tecnicamente possíveis e realmente observados; portanto, esses caminhos não devem ser descartados por uma heurística de plausibilidade física.
+- Não usar distância absoluta, número de hops ou combinação entre ambos como filtro de exclusão automática de um enlace RF.
+- Não exigir uma quantidade mínima arbitrária de observações para manter um enlace RF já identificado pela lógica anterior.
+- Preservar como regra objetiva:
+  - enlace explicitamente APRS-IS/Internet **não** pode completar uma rota 100% RF;
+  - evidência RF direta deve permanecer RF;
+  - evidência RF válida extraída do path APRS deve continuar sendo considerada conforme o algoritmo anterior;
+  - RF e APRS-IS do mesmo par devem permanecer como evidências independentes.
+- O ranking de Recordes RF deve voltar a enxergar os mesmos enlaces que eram apresentados antes da v1.14.12, respeitando o período selecionado e a distinção RF × Internet.
+- A distância pode continuar sendo exibida e usada para ordenar os recordes, mas **não para decidir se o enlace é válido ou inválido**.
+- Caso se mantenha algum indicador de plausibilidade/confiança, ele deve ser apenas informativo e não alterar o grafo nem ocultar enlaces.
+- Remover/reverter os thresholds de plausibilidade física introduzidos na v1.14.12 (250 km, 600 km, 1.000 km ou equivalentes) como critérios de inclusão.
+- Reavaliar o comportamento de autocomplete, pesquisa de rotas e Recordes RF para garantir que todos usem novamente o mesmo grafo RF permissivo anterior.
+- Criar testes de regressão garantindo que:
+  - enlace RF longo observado continue aparecendo;
+  - rota longa com poucos hops continue elegível quando a evidência RF existir;
+  - APRS-IS continue sem completar rota RF;
+  - rotas curtas e multi-hop continuem funcionando;
+  - o algoritmo restaurado produza o mesmo conjunto de enlaces RF das versões anteriores à v1.14.12 para os mesmos dados de entrada.
+
 
 ## Implementado na v1.14.11 — Menu superior: simplificar textos de status
 
