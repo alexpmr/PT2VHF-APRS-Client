@@ -526,6 +526,10 @@
       hours: String(topologyPeriodValue($('#kmlExportPeriod')?.value || 0)),
     });
 
+    const processingToken = showProcessing(
+      ui('Gerando arquivo KML...', 'Generating KML file...'),
+      ui('Coletando as camadas selecionadas e preparando a exportação.', 'Collecting selected layers and preparing the export.')
+    );
     try {
       const response = await fetch(`/api/export/kml?${params.toString()}`);
       if (!response.ok) {
@@ -560,6 +564,7 @@
       if (status) status.textContent = message;
       toast(message, 'error');
     } finally {
+      hideProcessing(processingToken);
       if (button) button.disabled = false;
       if (cancel) cancel.disabled = false;
     }
