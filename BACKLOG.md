@@ -1,3 +1,16 @@
+## Novo — Mapa: seguir tracklog selecionado
+
+- Ao clicar em um **tracklog** no mapa, ativar um modo de acompanhamento automático.
+- Enquanto o tracklog/estação continuar recebendo novas posições, manter sua posição **centralizada no mapa** durante o deslocamento.
+- O mapa deve acompanhar suavemente a atualização das coordenadas, evitando saltos visuais desnecessários.
+- O acompanhamento deve cessar quando:
+  - o usuário fechar/desselecionar o tracklog;
+  - selecionar outra estação/tracklog;
+  - ou realizar uma ação manual de navegação que indique intenção de sair do modo de acompanhamento, como arrastar o mapa.
+- Zoom manual deve ser preservado durante o acompanhamento; não reajustar o nível de zoom a cada nova posição.
+- Se o tracklog deixar de receber novas posições, manter a última posição exibida sem movimentações artificiais.
+- Reutilizar o mesmo estado de seleção já usado pelo mapa para evitar criar um segundo mecanismo paralelo de foco.
+
 ## Implementado na v1.14.15 — rotas RF: não perder enlaces válidos em malhas densas
 
 - Remover o encerramento prematuro da pesquisa após `route_limit * 4` caminhos encontrados.
