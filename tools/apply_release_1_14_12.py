@@ -18,7 +18,7 @@ for marker in (
     "RF_CONFIRMED_EXCEPTIONAL_OBS",
     '"rf_confidence"',
     '"rf_confirmed"',
-    "if not bool(edge.get("rf_confirmed"))",
+    'if not bool(edge.get("rf_confirmed"))',
 ):
     if marker not in database:
         raise SystemExit(f"v1.14.12 RF confidence marker missing: {marker}")
