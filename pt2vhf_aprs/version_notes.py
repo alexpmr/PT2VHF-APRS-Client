@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.15": {
+        "title": "Rotas RF completas em malhas densas",
+        "items": [
+            "A pesquisa de rotas deixa de encerrar após um pequeno número de caminhos encontrados e passa a usar busca best-first sobre caminhos simples.",
+            "O mapa mantém visível todo o corredor de enlaces RF elegíveis entre origem e destino, mesmo quando somente as melhores rotas são listadas no painel.",
+            "Evidência RF direta é priorizada sobre RF inferido do path, sem usar distância geográfica como veto.",
+            "Cada rota passa a informar quantos trechos são diretos, inferidos ou legados.",
+            "O horizonte padrão da pesquisa sobe de 8 para 12 hops; o limite de rotas continua sendo apenas um limite de apresentação.",
+            "Se a proteção contra explosão combinatória for atingida, a interface informa explicitamente que a busca foi truncada sem esconder os enlaces elegíveis.",
+        ],
+    },
     "1.14.14": {
         "title": "Consolidação do modelo RF observado",
         "items": [
