@@ -2321,6 +2321,8 @@ def _rf_refine_inferred_edge(
         if node == target:
             if len(path) < 3:
                 continue
+            if any(call not in positions for call in path):
+                continue
             route_edges: list[dict[str, Any]] = []
             direct_count = 0
             inferred_count = 0
@@ -2830,6 +2832,29 @@ def list_rf_routes(
         route_limit,
         hop_limit,
     )
+
+    superseded_pairs = {
+        tuple(sorted((str(segment.get("source") or ""), str(segment.get("target") or ""))))
+        for route in routes
+        for segment in (route.get("reconstructed_segments") or [])
+        if segment.get("source") and segment.get("target")
+    }
+    if superseded_pairs:
+        eligible_edges = [
+            edge for edge in eligible_edges
+            if tuple(sorted((str(edge.get("source") or ""), str(edge.get("target") or "")))) not in superseded_pairs
+        ]
+        known_pairs = {
+            tuple(sorted((str(edge.get("source") or ""), str(edge.get("target") or ""))))
+            for edge in eligible_edges
+        }
+        for route in routes:
+            for edge in route.get("edges") or []:
+                pair = tuple(sorted((str(edge.get("source") or ""), str(edge.get("target") or ""))))
+                if not pair[0] or not pair[1] or pair in known_pairs:
+                    continue
+                eligible_edges.append(dict(edge))
+                known_pairs.add(pair)
 
     direct_distance = None
     if source_call in positions and target_call in positions:
