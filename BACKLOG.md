@@ -1,4 +1,4 @@
-## Novo — Mapa: exibir todos os nós envolvidos na rota analisada
+## Implementado na v1.14.16 — Mapa: exibir todos os nós envolvidos na rota analisada
 
 - Ao abrir no mapa uma rota a partir de **Estatísticas > Ranking** ou da análise manual entre duas estações, garantir que **todos os nós listados no popup/painel da rota também apareçam visualmente no mapa**.
 - A representação do mapa deve ser coerente com a sequência exibida no painel: se a rota mostra `A → B → C → D`, os quatro nós precisam estar visíveis no mapa.
@@ -16,7 +16,7 @@
 - Ao fechar a análise de rota, remover os marcadores temporários sem afetar os marcadores normais do mapa.
 - O `fitBounds` da rota deve considerar também esses nós temporários, garantindo que todos permaneçam dentro da área visível.
 
-## Novo — Estatísticas > Ranking: enquadramento automático do trajeto no mapa
+## Implementado na v1.14.16 — Estatísticas > Ranking: enquadramento automático do trajeto no mapa
 
 - Ao abrir no mapa uma rota/trajeto a partir de **Estatísticas > Ranking**, ajustar automaticamente o enquadramento para o **zoom mais próximo possível** que ainda mantenha **todo o trajeto e todas as estações envolvidas visíveis**.
 - Calcular o `fitBounds` usando o conjunto completo de coordenadas dos nós e enlaces da rota selecionada.
@@ -28,7 +28,7 @@
 - Recalcular o enquadramento ao selecionar outra rota do ranking.
 - Preservar a possibilidade de o usuário alterar manualmente o zoom após o enquadramento automático.
 
-## Novo — Mapa: seguir tracklog selecionado
+## Implementado na v1.14.16 — Mapa: seguir tracklog selecionado
 
 - Ao clicar em um **tracklog** no mapa, ativar um modo de acompanhamento automático.
 - Enquanto o tracklog/estação continuar recebendo novas posições, manter sua posição **centralizada no mapa** durante o deslocamento.
