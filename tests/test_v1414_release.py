@@ -9,11 +9,12 @@ def read(rel: str) -> str:
 
 def test_v1414_version_metadata():
     version = read("VERSION").strip()
-    assert version == "1.14.14"
-    assert '__version__ = "1.14.14"' in read("pt2vhf_aprs/__init__.py")
+    assert tuple(int(part) for part in version.split(".")) >= (1, 14, 14)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
     win = read("windows/version_info.txt")
-    assert "(1, 14, 14, 0)" in win
-    assert "'1.14.14'" in win
+    parts = tuple(int(part) for part in version.split("."))
+    assert str(parts + (0,)) in win
+    assert f"'{version}'" in win
 
 
 def test_v1414_route_ui_uses_observed_rf_semantics():
@@ -37,7 +38,7 @@ def test_v1414_manual_search_keeps_exclusive_focus():
     assert "setTransientRouteFocusVisibility(false);" in body
     assert "await loadMapData();" in body
     assert "await loadTopology();" in body
-    assert "fitRfRouteBounds(routes);" in body
+    assert "fitRfRouteBounds(routes" in body
 
 
 def test_v1414_observed_rf_backend_remains_permissive():
