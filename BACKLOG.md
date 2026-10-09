@@ -1,3 +1,50 @@
+## Novo — Correção crítica TNC/RF: bytes recebidos pela serial não chegam ao mapa
+
+- Cenário real reportado pelo **PP5AU**: a porta serial está conectada e recebe bytes, porém os contadores permanecem em **KISS RX = 0 / AX.25 RX = 0** e nenhuma estação recebida por RF chega ao mapa.
+- A captura mostra **COM10 @ 9600**, bytes chegando pela serial e estado **“Bytes chegando, sem KISS”**.
+- Tratar como problema do pipeline **Serial → framing/protocolo → AX.25 → APRS → mapa**, e não como falha de renderização do mapa.
+- Revisar regressão introduzida/acentuada após a inclusão de `device_profile` e `serial_protocol` na série 1.13:
+  - o cliente passou a distinguir conceitualmente `kiss` e `terminal`;
+  - porém o loop de recepção serial continua encaminhando todo transporte serial não-AGWPE ao `KissStreamDecoder`.
+- Implementar recepção coerente com o protocolo configurado:
+  - `serial_protocol=kiss`: usar exclusivamente framing KISS;
+  - `serial_protocol=terminal`: usar decoder de linhas/monitor TNC2/PKT quando o equipamento fornecer saída textual APRS;
+  - `transport=agwpe`: manter decoder AGWPE atual.
+- Adicionar opção **Auto detectar protocolo serial**:
+  - detectar KISS pela presença/framing `FEND (0xC0)`;
+  - detectar saída terminal/TNC2 por linhas APRS válidas do tipo `CALL>DST,PATH:payload`;
+  - nunca interpretar bytes binários aleatórios como AX.25 sem framing confiável.
+- Se bytes forem recebidos por alguns segundos/quantidade mínima e nenhum KISS válido aparecer:
+  - mostrar diagnóstico claro;
+  - informar protocolo atualmente esperado;
+  - sugerir troca para Terminal/PKT quando houver padrão textual reconhecível;
+  - sugerir baud rate/modo incorreto quando os bytes forem binários sem framing reconhecível.
+- Não alterar automaticamente configuração persistida sem evidência suficiente; oferecer ação explícita **“Usar protocolo detectado”**.
+- Para perfil Kenwood TM-D700/TM-D710 em modo terminal/PKT:
+  - aceitar monitor RX textual quando disponível;
+  - manter TX automático bloqueado nesse modo até validação física específica.
+- Garantir que todo pacote APRS válido recebido em Terminal/PKT siga o mesmo pipeline dos frames KISS:
+  - registrar em TNC/RF;
+  - marcar origem como RF;
+  - atualizar estação/posição;
+  - alimentar mensagens;
+  - atualizar topologia;
+  - aparecer imediatamente no mapa.
+- Verificar migração de configuração entre versões para impedir que um perfil serial anteriormente funcional seja convertido silenciosamente para `generic_kiss / kiss`.
+- Adicionar diagnóstico de framing com contadores separados:
+  - bytes serial;
+  - delimitadores KISS detectados;
+  - linhas terminal/TNC2 detectadas;
+  - frames AX.25 válidos;
+  - pacotes APRS entregues ao serviço principal.
+- Adicionar regressões para:
+  - KISS serial válido;
+  - Terminal/PKT textual válido;
+  - bytes binários sem framing;
+  - baud rate incorreto;
+  - migração de configuração;
+  - pacote RF recebido aparecendo no mapa sem depender de APRS-IS.
+
 ## Implementado na v1.14.17 — Configuração sem barras de rolagem internas
 
 - A aba **Configuração** deve funcionar como uma página única e contínua.
