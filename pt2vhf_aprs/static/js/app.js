@@ -3258,7 +3258,11 @@
       state.rfRouteSelectedIndex = -1;
 
       if (routes.length) {
-        const exclusiveNodes = new Set((payload.eligible_nodes || []).map(normalizedCall).filter(Boolean));
+        const exclusiveNodes = new Set();
+        for (const call of payload.eligible_nodes || []) {
+          const normalized = normalizedCall(call);
+          if (normalized) exclusiveNodes.add(normalized);
+        }
         if (!exclusiveNodes.size) {
           for (const route of routes) {
             for (const node of route.nodes || []) {
@@ -3399,11 +3403,13 @@
             ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
             : state.mapConfig.topology_width,
           opacity: inferredRouteEdge ? .58 : (legacyRouteEdge ? .48 : .72),
-          dashArray: edge.kind === 'igate' ? '7 5' : (inferredRouteEdge ? '5 5' : (legacyRouteEdge ? '2 5' : null)),
+          dashArray: edge.kind === 'igate' ? '7 5' : null,
           interactive: true,
           bubblingMouseEvents: false,
           pane: 'pt2vhfInteractionPane'
         };
+        if (edge.kind !== 'igate' && inferredRouteEdge) style.dashArray = '5 5';
+        if (edge.kind !== 'igate' && legacyRouteEdge) style.dashArray = '2 5';
         if (!line) {
           line = L.polyline(points, style).addTo(state.map);
           state.topologyLines.set(key, line);
