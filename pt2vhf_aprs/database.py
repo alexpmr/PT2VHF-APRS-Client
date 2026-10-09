@@ -4990,9 +4990,85 @@ def reset_config() -> dict[str, Any]:
     return get_config()
 
 
-def mark_message_retried(row_id: int) -> None:
+def mark_message_retry_sent(
+    row_id: int,
+    retry_count: int,
+    status: str,
+    raw: str,
+    tx_medium: str,
+    tx_path: str,
+) -> bool:
+    """Atualiza a mesma mensagem lógica após retry, sem ressuscitar ACK/REJ."""
     with connection() as conn:
-        conn.execute("UPDATE messages SET status='Substituída por retry' WHERE id=?", (int(row_id),))
+        cur = conn.execute(
+            """UPDATE messages
+                  SET retry_count=?, status=?, raw=?, tx_medium=?, tx_path=?, timestamp=?
+                WHERE id=?
+                  AND direction='out'
+                  AND message_type='message'
+                  AND UPPER(COALESCE(status,'')) NOT IN ('ACK','REJ')""",
+            (
+                max(0, int(retry_count or 0)),
+                str(status or "Reenviada"),
+                str(raw or ""),
+                str(tx_medium or "").upper() or None,
+                str(tx_path or "").upper() or None,
+                utc_now_iso(),
+                int(row_id),
+            ),
+        )
+        return bool(cur.rowcount)
+
+
+def add_incoming_message_once(
+    from_call: str,
+    to_call: str,
+    message: str,
+    msg_id: str | None,
+    *,
+    status: str = "Recebida",
+    raw: str | None = None,
+    message_type: str = "message",
+    dedupe_seconds: int = 3600,
+) -> tuple[int, bool]:
+    """Persiste uma mensagem recebida uma vez por remetente/destino/ID numa janela curta."""
+    clean_id = str(msg_id or "").strip()
+    if not clean_id or str(message_type or "").lower() != "message":
+        return add_message(
+            "in", from_call, to_call, message,
+            msg_id=msg_id, status=status, raw=raw, message_type=message_type,
+        ), False
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=max(60, int(dedupe_seconds)))).isoformat(timespec="seconds")
+    with connection() as conn:
+        row = conn.execute(
+            """SELECT id FROM messages
+                WHERE direction='in'
+                  AND message_type='message'
+                  AND UPPER(from_call)=UPPER(?)
+                  AND UPPER(to_call)=UPPER(?)
+                  AND msg_id=?
+                  AND message=?
+                  AND timestamp>=?
+                ORDER BY id DESC LIMIT 1""",
+            (from_call, to_call, clean_id, message, cutoff),
+        ).fetchone()
+        if row:
+            return int(row["id"]), True
+        cur = conn.execute(
+            """INSERT INTO messages(direction,from_call,to_call,message,message_type,msg_id,status,timestamp,raw)
+               VALUES('in',?,?,?,?,?,?,?,?)""",
+            (
+                str(from_call or "").upper(),
+                str(to_call or "").upper(),
+                str(message or ""),
+                "message",
+                clean_id,
+                str(status or "Recebida"),
+                utc_now_iso(),
+                raw,
+            ),
+        )
+        return int(cur.lastrowid), False
 
 
 def list_retry_candidates(timeout_seconds: int, max_retries: int, limit: int = 20) -> list[dict[str, Any]]:
@@ -5015,18 +5091,22 @@ def list_retry_candidates(timeout_seconds: int, max_retries: int, limit: int = 2
     return [dict(r) for r in rows]
 
 
-def mark_message_status(msg_id: str, status: str, peer: str | None = None) -> None:
+def mark_message_status(msg_id: str, status: str, peer: str | None = None) -> int:
+    """ACK/REJ são terminais e nunca podem ser sobrescritos por estado de TX/retry atrasado."""
+    terminal = str(status or "").upper() in {"ACK", "REJ"}
+    terminal_guard = "" if terminal else " AND UPPER(COALESCE(status,'')) NOT IN ('ACK','REJ')"
     with connection() as conn:
         if peer:
-            conn.execute(
-                "UPDATE messages SET status=? WHERE direction='out' AND msg_id=? AND UPPER(to_call)=UPPER(?)",
+            cur = conn.execute(
+                "UPDATE messages SET status=? WHERE direction='out' AND msg_id=? AND UPPER(to_call)=UPPER(?)" + terminal_guard,
                 (status, msg_id, peer),
             )
         else:
-            conn.execute(
-                "UPDATE messages SET status=? WHERE direction='out' AND msg_id=?",
+            cur = conn.execute(
+                "UPDATE messages SET status=? WHERE direction='out' AND msg_id=?" + terminal_guard,
                 (status, msg_id),
             )
+        return max(0, int(cur.rowcount or 0))
 
 
 def list_messages(from_filter: str = "", station_filter: str = "", limit: int = 5000) -> list[dict[str, Any]]:
