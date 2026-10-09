@@ -2442,7 +2442,7 @@ def _rf_refine_route_nodes(
             reconstructed.append({
                 "source": source,
                 "target": target,
-                "distance_km": round(distance, 3),
+                "original_distance_km": round(distance, 3),
                 **candidate,
             })
             for node in chain[1:]:
