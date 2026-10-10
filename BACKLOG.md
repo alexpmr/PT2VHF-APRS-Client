@@ -1,3 +1,28 @@
+## Novo — Filtros do mapa: ocultar entidades sem ocultar os enlaces
+
+- Ao filtrar o mapa para **não mostrar determinados objetos/entidades** (estações, digipeaters, iGates, móveis ou outras categorias), manter os **enlaces/topologia visíveis** na tela quando a camada de enlaces estiver habilitada.
+- A visibilidade dos nós e a visibilidade dos enlaces devem ser controles independentes:
+  - ocultar um nó deve esconder apenas seu marcador/ícone/rótulo;
+  - não deve remover automaticamente os enlaces que usam esse nó como extremidade;
+  - se apenas uma das extremidades estiver visível, o enlace continua desenhado até a coordenada da entidade oculta;
+  - se as duas extremidades estiverem ocultas, o enlace também deve permanecer visível, desde que passe pelos filtros próprios de topologia/período.
+- Para desenhar o enlace, continuar usando as coordenadas conhecidas/históricas da extremidade mesmo quando o marcador estiver filtrado da camada de entidades.
+- Não interpretar a ausência visual do marcador como ausência do nó no grafo.
+- Os filtros de entidade não podem alterar:
+  - ranking/Recordes RF;
+  - contagens de enlaces;
+  - histórico da topologia;
+  - rotas RF calculadas;
+  - classificação RF/APRS-IS.
+- Caso exista um filtro específico de **enlaces/topologia**, somente ele deve controlar se a linha é mostrada ou escondida.
+- Preservar estilos de enlace (RF, APRS-IS, ativo/inativo, histórico) mesmo quando uma ou ambas as extremidades estiverem ocultas.
+- Adicionar regressões para:
+  - origem visível e destino oculto;
+  - origem oculta e destino visível;
+  - ambas as extremidades ocultas;
+  - reexibição dos objetos sem recriar ou duplicar enlaces.
+- **Critério de aceite:** ao desmarcar categorias em **Ver**, os marcadores correspondentes desaparecem, mas os enlaces continuam na tela enquanto a camada/filtro de topologia permanecer ativo.
+
 ## Implementado na v1.14.22 — Ícone APRS na barra de aplicativos
 
 - Usar a imagem APRS fornecida pelo usuário como base do ícone do PT2VHF APRS Client na barra de aplicativos/taskbar.
