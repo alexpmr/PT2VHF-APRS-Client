@@ -1,3 +1,42 @@
+## Novo — Rotas RF: não exibir hop inferido longo como enlace direto quando faltam intermediários
+
+- Corrigir o caso em que a análise de rota apresenta um único hop RF inferido muito longo, mesmo informando **“intermediários não identificados”**.
+- Exemplo observado: **LU9DCE → PU2XTC-4**, aproximadamente **1694,9 km**, aparece como 1 hop, RF inferido do path e é desenhado como uma reta única Buenos Aires → São Paulo.
+- Esse comportamento é inconsistente: se a própria aplicação reconhece que o trecho é **inferido** e que existem intermediários não identificados, ele **não pode ser desenhado nem contabilizado como um único enlace RF físico entre as extremidades**.
+- A reconstrução deve trabalhar primeiro com a **evidência do evento/pacote que originou o enlace**, e não apenas com o grafo agregado por pares de indicativos.
+- Para cada evento RF inferido, analisar o raw/header APRS correspondente e reconstruir, na ordem real, todos os nós explicitamente presentes no path:
+  - origem;
+  - digipeaters efetivamente usados (*);
+  - aliases resolvidos quando houver evidência objetiva;
+  - iGate/q-construct aplicável;
+  - destino/capturador da evidência.
+- Preservar a sequência original do pacote. Se o mesmo frame mostra A → B → C → D, registrar/renderizar **A → B → C → D**, e não colapsar em A → D.
+- Usar os eventos históricos e posições **no mesmo intervalo temporal do pacote**, respeitando o modelo espaço-temporal introduzido na v1.14.19.
+- Ao procurar intermediários adicionais no grafo histórico, considerar somente evidências temporalmente compatíveis com o evento de referência; não usar nós observados horas/dias depois para completar a cadeia.
+- A busca de intermediários deve poder ultrapassar o limite atual de poucos hops quando o path real do pacote trouxer uma cadeia maior. O limite de segurança deve impedir explosão combinatória, não truncar um path explicitamente observado.
+- **Não inventar intermediários por proximidade geográfica.** Estações no caminho visual entre origem e destino só podem entrar na rota se houver evidência APRS/RF que as relacione àquele evento/corredor.
+- Se não houver evidência suficiente para decompor o trecho:
+  - manter o evento no histórico como **“RF inferido — cadeia incompleta”**;
+  - não contabilizá-lo como 1 hop RF direto;
+  - não desenhar uma linha contínua única entre as extremidades;
+  - não incluí-lo em **Recordes RF diretos**;
+  - no mapa, representar no máximo uma indicação de corredor/inferência incompleta, visualmente diferente de um enlace físico confirmado.
+- O painel deve diferenciar claramente:
+  - **hop RF direto observado**;
+  - **cadeia RF reconstruída com intermediários observados**;
+  - **trecho RF inferido com cadeia incompleta**.
+- Quando houver intermediários conhecidos, exibir todos eles no painel e no mapa, com suas posições históricas correspondentes ao evento.
+- O cálculo de distância da rota deve ser a soma dos segmentos realmente reconstruídos; a distância em linha reta entre as extremidades deve permanecer apenas como informação auxiliar.
+- Adicionar regressão específica para **LU9DCE → PU2XTC-4**: um trecho inferido de ~1694,9 km sem cadeia comprovada não pode continuar aparecendo como um único hop RF físico.
+- Adicionar testes para:
+  - path com vários digipeaters explicitamente usados;
+  - path com qAR/qAO após digipeaters;
+  - evento inferido sem intermediários suficientes;
+  - cadeia reconstruída somente com evidências contemporâneas;
+  - não colapsar cadeia multi-hop em aresta origem→iGate;
+  - não inserir nós apenas porque estão geograficamente entre as extremidades.
+- **Critério de aceite:** se os pontos/nós intermediários forem conhecidos, a rota deve passar por eles; se não forem conhecidos, o sistema deve declarar a cadeia incompleta e jamais transformar a lacuna em uma reta RF direta de milhares de quilômetros.
+
 ## Novo — Tracklog: quebrar o trajeto após longos períodos sem posição
 
 - **Não ligar automaticamente dois pontos de tracklog quando existir um intervalo temporal grande entre eles.**
