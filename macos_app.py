@@ -126,21 +126,31 @@ class NativeApi:
             global _window
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
-            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.kml")).name
-            if not suggested.lower().endswith(".kml"):
-                suggested += ".kml"
+            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.txt")).name
+            suffix = Path(suggested).suffix.lower()
+            if suffix == ".json":
+                file_types = ("JSON (*.json)", "Todos os arquivos (*.*)")
+                expected_suffix = ".json"
+            elif suffix == ".kml":
+                file_types = ("KML (*.kml)", "Todos os arquivos (*.*)")
+                expected_suffix = ".kml"
+            else:
+                file_types = ("Arquivo de texto (*.txt)", "Todos os arquivos (*.*)")
+                expected_suffix = suffix or ".txt"
+                if not suffix:
+                    suggested += expected_suffix
             selected = _window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 save_filename=suggested,
-                file_types=("KML (*.kml)", "Todos os arquivos (*.*)"),
+                file_types=file_types,
             )
             if not selected:
                 return {"saved": False, "cancelled": True}
             if isinstance(selected, (list, tuple)):
                 selected = selected[0] if selected else ""
             target = Path(str(selected))
-            if target.suffix.lower() != ".kml":
-                target = target.with_suffix(".kml")
+            if expected_suffix and target.suffix.lower() != expected_suffix:
+                target = target.with_suffix(expected_suffix)
             target.write_text(str(content or ""), encoding="utf-8")
             return {"saved": True, "path": str(target)}
         except Exception as exc:
