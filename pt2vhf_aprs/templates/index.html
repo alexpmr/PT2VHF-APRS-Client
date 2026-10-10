@@ -191,6 +191,7 @@
     </div>
 
     <button id="kmlExportButton" type="button" class="btn secondary map-kml-export" title="Exportar dados geográficos em KML">Exportar KML</button>
+    <button id="jsonExportButton" type="button" class="btn secondary map-kml-export" title="Exportar diagnóstico completo da topologia em JSON">Exportar JSON</button>
   </div>
 </div>
 
@@ -1699,6 +1700,29 @@
       <div class="message-alert-actions">
         <button id="kmlExportConfirm" type="button" class="btn primary">Gerar KML</button>
         <button id="kmlExportCancel" type="button" class="btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="jsonExportModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="jsonExportTitle">
+  <div class="message-alert-card update-dialog">
+    <div class="message-alert-icon">{ }</div>
+    <div class="message-alert-content">
+      <div class="message-alert-eyebrow">Diagnóstico da topologia</div>
+      <h3 id="jsonExportTitle">Exportar diagnóstico em JSON</h3>
+      <p>O arquivo inclui estações, enlaces, digipeaters, iGates, eventos históricos, tracklogs segmentados e rotas RF calculadas. Senhas, tokens e chaves de API não são exportados.</p>
+      <label class="field">
+        <span>Escopo</span>
+        <select id="jsonExportMode">
+          <option value="current">Período atual do mapa</option>
+          <option value="complete" selected>Diagnóstico completo</option>
+        </select>
+      </label>
+      <div id="jsonExportStatus" class="hint" aria-live="polite"></div>
+      <div class="message-alert-actions">
+        <button id="jsonExportConfirm" type="button" class="btn primary">Gerar JSON</button>
+        <button id="jsonExportCancel" type="button" class="btn secondary">Cancelar</button>
       </div>
     </div>
   </div>
