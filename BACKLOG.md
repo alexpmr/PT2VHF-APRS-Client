@@ -1,4 +1,18 @@
-## Novo — Ranking de enlaces: voltar a considerar rotas de alcançabilidade com múltiplos hops
+## Implementado na v1.14.22 — Mapa: filtros de entidades não ocultam enlaces
+
+- Ao desmarcar estações, objetos, digipeaters, iGates ou subtipos no menu **Ver**, ocultar apenas os respectivos marcadores/entidades.
+- Manter os enlaces RF e APRS-IS visíveis mesmo quando uma ou ambas as extremidades estiverem ocultas.
+- A linha só deve desaparecer quando a própria camada **Enlaces RF** ou **Enlaces iGate / APRS-IS** for desativada, ou quando o período selecionado excluir a evidência.
+- Filtros visuais não podem alterar o grafo, o ranking, os Recordes RF nem a contagem histórica.
+
+## Implementado na v1.14.22 — Windows: usar a arte APRS como ícone da barra de tarefas
+
+- Usar a imagem APRS fornecida pelo usuário como fonte do ícone do aplicativo no Windows.
+- Gerar o `.ico` em múltiplas resoluções a partir da arte adaptada.
+- Aplicar ao executável, Portable, instalador, barra de tarefas, Alt+Tab e tray quando aplicável.
+- Definir AppUserModelID próprio para melhorar a associação do ícone e o agrupamento da janela no Windows.
+
+## Implementado na v1.14.22 — Ranking de enlaces: voltar a considerar rotas de alcançabilidade com múltiplos hops
 
 - Corrigir regressão do ranking/Recordes RF: atualmente estão predominando ou aparecendo apenas **enlaces únicos (1 hop)**, enquanto rotas compostas com **múltiplos hops** deixaram de aparecer como deveriam.
 - O objetivo do ranking é medir **alcançabilidade RF entre as extremidades**, não apenas listar arestas físicas individuais.
@@ -15,7 +29,7 @@
 - Garantir que a otimização/caching introduzida para Estatísticas não transforme o ranking em simples lista de arestas.
 - Adicionar regressões com rotas de 2, 3, 4 e mais hops, incluindo malhas com caminhos alternativos e nós móveis.
 
-## Novo — Topologia histórica: enlaces já observados não podem desaparecer no período Completo
+## Implementado na v1.14.22 — Topologia histórica: enlaces já observados não podem desaparecer no período Completo
 
 - Investigar e corrigir enlaces históricos que existiam anteriormente e deixaram de aparecer após as mudanças recentes de topologia/rotas.
 - Caso de referência informado: havia um enlace/rota ligando a região de **Goiânia a Caldas Novas** e ele deixou de aparecer.
@@ -40,7 +54,7 @@
 - Adicionar regressão específica com um enlace antigo válido que permanece no ranking/topologia após os nós ficarem offline e após reiniciar/atualizar o aplicativo.
 - **Critério de aceite:** com período Completo, um enlace válido anteriormente armazenado continua disponível para análise até que o usuário efetivamente apague ou retenha esses dados.
 
-## Novo — Mapa: exportar diagnóstico completo da topologia em JSON
+## Implementado na v1.14.22 — Mapa: exportar diagnóstico completo da topologia em JSON
 
 - Na aba **Mapa**, adicionar um botão **Exportar JSON**, próximo às ferramentas de exportação/KML.
 - Objetivo: gerar um arquivo de diagnóstico que o usuário possa enviar para análise técnica, permitindo reproduzir problemas de enlaces, rotas, estações, iGates, digipeaters, tracklogs e filtros sem precisar compartilhar o banco SQLite inteiro.
