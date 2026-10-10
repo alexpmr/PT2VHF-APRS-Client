@@ -81,6 +81,12 @@
     rfRouteNodeMarkers: new Map(),
     rfRouteCandidateTimer: null,
     rfRouteOriginTimer: null,
+    rfRouteOriginsController: null,
+    rfRouteOriginGeneration: 0,
+    rfRouteOriginCache: new Map(),
+    topologyStatsLastGood: null,
+    topologyStatsGeneration: 0,
+    rfRouteRecordsGeneration: 0,
     rfRouteExclusiveNodes: null,
     rfRouteRecords: [],
     rfRoutePanelPosition: null,
@@ -233,12 +239,14 @@
 
   async function api(url, options = {}) {
     const requestOptions = { ...options };
+    const timeoutMs = Number(requestOptions.timeoutMs ?? 10000);
+    delete requestOptions.timeoutMs;
     let timeoutId = null;
     let controller = null;
-    if (!requestOptions.signal) {
+    if (!requestOptions.signal && Number.isFinite(timeoutMs) && timeoutMs > 0) {
       controller = new AbortController();
       requestOptions.signal = controller.signal;
-      timeoutId = setTimeout(() => controller.abort(), 10000);
+      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     }
     try {
       const response = await fetch(url, requestOptions);
@@ -249,9 +257,10 @@
       return data;
     } catch (err) {
       if (err?.name === 'AbortError') {
+        const seconds = Math.max(1, Math.round(timeoutMs / 1000));
         throw new Error(ui(
-          `O backend local não respondeu em 10 segundos (${url}).`,
-          `The local backend did not respond within 10 seconds (${url}).`
+          `O backend local não respondeu em ${seconds} segundos (${url}).`,
+          `The local backend did not respond within ${seconds} seconds (${url}).`
         ));
       }
       throw err;
@@ -758,17 +767,23 @@
 
   const processingOperations = new Map();
   let processingSequence = 0;
+  const PROCESSING_SHOW_DELAY_MS = 320;
 
   function renderProcessingOverlay() {
     const overlay = $('#globalProcessingOverlay');
     if (!overlay) return;
-    const entries = [...processingOperations.values()];
+    const entries = [...processingOperations.values()].filter(entry => entry.visible);
     const active = entries.length > 0;
     overlay.classList.toggle('hidden', !active);
     document.documentElement.classList.toggle('is-processing', active);
     document.body?.setAttribute('aria-busy', active ? 'true' : 'false');
-    if (!active) return;
+    if (!active) {
+      overlay.classList.remove('nonblocking');
+      return;
+    }
     const current = entries[entries.length - 1];
+    const blocking = entries.some(entry => entry.blocking !== false);
+    overlay.classList.toggle('nonblocking', !blocking);
     const title = $('#globalProcessingTitle');
     const message = $('#globalProcessingMessage');
     if (title) title.textContent = current.title || ui('Processando...', 'Processing...');
@@ -778,41 +793,57 @@
     );
   }
 
-  function showProcessing(title = '', message = '') {
+  function showProcessing(title = '', message = '', options = {}) {
     processingSequence += 1;
     const token = 'processing-' + processingSequence;
-    processingOperations.set(token, {
+    const entry = {
       title: title || ui('Processando...', 'Processing...'),
-      message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.')
-    });
-    renderProcessingOverlay();
+      message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.'),
+      blocking: options?.blocking !== false,
+      visible: false,
+      timer: null,
+    };
+    processingOperations.set(token, entry);
+    const delayMs = options?.immediate === true
+      ? 0
+      : Math.max(0, Number(options?.delayMs ?? PROCESSING_SHOW_DELAY_MS));
+    entry.timer = setTimeout(() => {
+      const current = processingOperations.get(token);
+      if (!current) return;
+      current.visible = true;
+      current.timer = null;
+      renderProcessingOverlay();
+    }, delayMs);
     return token;
   }
 
   function updateProcessing(token, title = '', message = '') {
-    if (!processingOperations.has(token)) return;
-    const current = processingOperations.get(token) || {};
-    processingOperations.set(token, {
-      title: title || current.title,
-      message: message || current.message
-    });
+    const current = processingOperations.get(token);
+    if (!current) return;
+    if (title) current.title = title;
+    if (message) current.message = message;
     renderProcessingOverlay();
   }
 
   function hideProcessing(token) {
-    if (token) processingOperations.delete(token);
-    else processingOperations.clear();
+    if (token) {
+      const current = processingOperations.get(token);
+      if (current?.timer) clearTimeout(current.timer);
+      processingOperations.delete(token);
+    } else {
+      for (const current of processingOperations.values()) {
+        if (current?.timer) clearTimeout(current.timer);
+      }
+      processingOperations.clear();
+    }
     renderProcessingOverlay();
   }
 
-  async function withProcessing(title, message, operation) {
-    const token = showProcessing(title, message);
-    const started = performance.now();
+  async function withProcessing(title, message, operation, options = {}) {
+    const token = showProcessing(title, message, options);
     try {
       return await operation(token);
     } finally {
-      const remaining = 260 - (performance.now() - started);
-      if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
       hideProcessing(token);
     }
   }
@@ -3335,18 +3366,65 @@
     const input = $('#rfRouteSource');
     const list = $('#rfRouteSourceList');
     if (!input || !list) return [];
-    try {
-      const url = '/api/topology/rf-origins?hours=' + encodeURIComponent(state.mapPeriodHours) +
-        '&q=' + encodeURIComponent(query || '') + '&limit=100';
-      const rows = await api(url);
-      list.innerHTML = rows.map(item =>
+
+    const normalizedQuery = String(query || '').toUpperCase().trim();
+    const periodKey = String(state.mapPeriodHours);
+    const cached = state.rfRouteOriginCache.get(periodKey);
+    let serverQuery = '';
+    if (cached && Array.isArray(cached.rows)) {
+      const filtered = normalizedQuery
+        ? cached.rows.filter(item => String(item.callsign || '').includes(normalizedQuery))
+        : cached.rows;
+      list.innerHTML = filtered.slice(0, 100).map(item =>
         '<option value="' + escapeHtml(item.callsign) + '">' +
         Number(item.links || 0) + ' enlaces · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
       ).join('');
-      return rows;
-    } catch (_) {
+      if (cached.complete || !normalizedQuery || filtered.length > 0) return filtered.slice(0, 100);
+      // A base local foi truncada e não contém o texto pesquisado. Nesse caso,
+      // consulta o backend já com filtro; o grafo em si continua compartilhado
+      // pelo cache/single-flight do backend.
+      serverQuery = normalizedQuery;
+    }
+
+    if (state.rfRouteOriginsController) {
+      try { state.rfRouteOriginsController.abort(); } catch (_) {}
+    }
+    const controller = new AbortController();
+    state.rfRouteOriginsController = controller;
+    state.rfRouteOriginGeneration += 1;
+    const generation = state.rfRouteOriginGeneration;
+    const processingToken = showProcessing(
+      ui('Consultando topologia RF…', 'Querying RF topology…'),
+      ui('Carregando os indicativos disponíveis para análise de rota.', 'Loading callsigns available for route analysis.'),
+      { blocking: false }
+    );
+
+    try {
+      // Carrega a base do período sem filtro para que as próximas teclas sejam
+      // resolvidas localmente, evitando reconstruir o grafo a cada caractere.
+      const url = '/api/topology/rf-origins?hours=' + encodeURIComponent(state.mapPeriodHours) +
+        '&q=' + encodeURIComponent(serverQuery) + '&limit=' + (serverQuery ? '100' : '200');
+      const rows = await api(url, { signal: controller.signal, timeoutMs: 60000 });
+      if (generation !== state.rfRouteOriginGeneration) return [];
+      const normalizedRows = Array.isArray(rows) ? rows : [];
+      if (!serverQuery) {
+        state.rfRouteOriginCache.set(periodKey, { rows: normalizedRows, complete: normalizedRows.length < 200 });
+      }
+      const filtered = normalizedQuery
+        ? normalizedRows.filter(item => String(item.callsign || '').includes(normalizedQuery))
+        : normalizedRows;
+      list.innerHTML = filtered.slice(0, 100).map(item =>
+        '<option value="' + escapeHtml(item.callsign) + '">' +
+        Number(item.links || 0) + ' enlaces · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
+      ).join('');
+      return filtered.slice(0, 100);
+    } catch (err) {
+      if (controller.signal.aborted) return [];
       list.innerHTML = '';
       return [];
+    } finally {
+      if (generation === state.rfRouteOriginGeneration) state.rfRouteOriginsController = null;
+      hideProcessing(processingToken);
     }
   }
 
@@ -3430,6 +3508,11 @@
     }
     const button = $('#rfRouteApply');
     if (button) button.disabled = true;
+    const processingToken = showProcessing(
+      ui('Analisando rotas RF…', 'Analyzing RF routes…'),
+      ui('Reconstruindo a alcançabilidade entre os indicativos selecionados.', 'Reconstructing reachability between the selected callsigns.'),
+      { blocking: false }
+    );
     try {
       const url = '/api/topology/rf-routes?source=' + encodeURIComponent(source) +
         '&target=' + encodeURIComponent(target) +
@@ -3480,6 +3563,7 @@
     } catch (err) {
       toast(String((err && err.message) || err), 'error');
     } finally {
+      hideProcessing(processingToken);
       if (button) button.disabled = false;
     }
   }
@@ -9440,85 +9524,182 @@
       '</div><div class="rf-route-record-list">' + rows + '</div></div>';
   }
 
+  function renderTopologyStatsData(data) {
+    const box = $('#topologyStatsContent');
+    if (!box) return;
+
+    const list = (items, formatter) => items.length
+      ? '<ol>' + items.map(formatter).join('') + '</ol>'
+      : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
+    const mapCall = (callsign) => `<button type="button" class="stats-map-link" data-map-callsign="${escapeHtml(callsign)}">${escapeHtml(callsign)}</button>`;
+    const evidence = value => value
+      ? `<span class="stats-evidence">${escapeHtml(ui('evidência', 'evidence'))}: ${escapeHtml(value)}</span>`
+      : '';
+
+    const reception = data.reception_media || {};
+    const receptionSummary =
+      '<div class="topology-stat-group reception-media-summary"><h4>' + ui('Recepção RF × APRS-IS', 'RF × APRS-IS reception') + '</h4>' +
+      '<div class="topology-stat-cards">' +
+        '<div><span>' + ui('Pacotes RF', 'RF packets') + '</span><strong>' + Number(reception.rf_packets || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+        '<div><span>' + ui('Estações únicas RF', 'Unique RF stations') + '</span><strong>' + Number(reception.rf_unique_stations || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+        '<div><span>' + ui('Frames RF recebidos', 'RF frames received') + '</span><strong>' + Number(reception.rf_frames_received || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+        '<div><span>' + ui('Pacotes APRS-IS', 'APRS-IS packets') + '</span><strong>' + Number(reception.aprsis_packets || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+        '<div><span>' + ui('Estações nos dois meios', 'Stations on both media') + '</span><strong>' + Number(reception.both_media_stations || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+        '<div><span>' + ui('Pacotes lógicos sem duplicar meios', 'Logical packets without cross-medium duplicates') + '</span><strong>' + Number(reception.logical_packets_deduplicated || 0).toLocaleString(currentLocale()) + '</strong></div>' +
+      '</div>' +
+      '<div class="hint">' + ui(
+        'RF e APRS-IS são preservados como evidências separadas. O total lógico correlaciona a mesma transmissão observada pelos dois meios em uma janela curta.',
+        'RF and APRS-IS are preserved as separate evidence. The logical total correlates the same transmission seen through both media in a short window.'
+      ) + '</div></div>';
+
+    const routePlaceholder =
+      '<div id="rfRouteRecordsHost">' +
+        '<div class="topology-stat-group rf-route-records-group">' +
+          '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
+          '<span class="hint">' + escapeHtml(ui('Calculando rotas RF em segundo plano…', 'Calculating RF routes in the background…')) + '</span>' +
+        '</div>' +
+      '</div>';
+
+    box.innerHTML =
+      receptionSummary +
+      routePlaceholder +
+      renderStationStatsTable(data.station_rankings || []) +
+
+      '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
+      list(data.digipeaters || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+
+      '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
+      list(data.igates || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
+
+      '<div class="topology-stat-group"><h4>' + ui('Estações com problemas', 'Stations with problems') + '</h4>' +
+      '<div class="hint">' + ui('Anomalias observadas; um evento isolado não implica necessariamente defeito da estação.', 'Observed anomalies; a single event does not necessarily mean the station is faulty.') + '</div>' +
+      list(data.problem_stations || [], x => `<li>${mapCall(x.callsign)} — ${escapeHtml(x.problem || x.issue_type || '')} · ${Number(x.occurrences||0).toLocaleString(currentLocale())} · ${escapeHtml(x.recurrence || '')} <button type="button" class="callsign-link station-log-button" data-callsign="${escapeHtml(x.callsign)}">${escapeHtml(ui('Logs', 'Logs'))}</button></li>`) + '</div>' +
+
+      '<div class="topology-stat-group"><h4>' + ui('Possíveis melhorias', 'Possible improvements') + '</h4>' +
+      '<div class="hint">' + ui('Sugestões inferidas do tráfego observado; não substituem estudo de propagação RF.', 'Suggestions inferred from observed traffic; they do not replace an RF propagation study.') + '</div>' +
+      list(data.improvement_suggestions || [], x => `<li>${x.callsign ? mapCall(x.callsign) + ' — ' : ''}<strong>${escapeHtml(x.title || '')}</strong>: ${escapeHtml(x.detail || '')} ${evidence(x.evidence)}</li>`) + '</div>' +
+
+      '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
+      list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>' +
+
+      '<div class="topology-stat-group"><h4>' + ui(data.complete ? 'Histórico completo' : 'Comparação com período anterior', data.complete ? 'Complete history' : 'Comparison with previous period') + '</h4>' +
+      '<div class="hint">' +
+      (data.complete
+        ? ui(
+            `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos armazenados no histórico disponível.`,
+            `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events stored in the available history.`
+          )
+        : ui(
+            `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
+            `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
+          )) + '</div></div>';
+
+    if ($('#analysisMetricPeriod')) $('#analysisMetricPeriod').textContent = topologyPeriodLabel();
+    if ($('#analysisMetricEdges')) $('#analysisMetricEdges').textContent = Number(data.edges || 0).toLocaleString(currentLocale());
+    if ($('#analysisMetricPackets')) {
+      const logicalPackets = Number(data.reception_media?.logical_packets_deduplicated);
+      $('#analysisMetricPackets').textContent = Number.isFinite(logicalPackets)
+        ? logicalPackets.toLocaleString(currentLocale())
+        : Number(data.packets || 0).toLocaleString(currentLocale());
+    }
+    if ($('#analysisMetricEvents')) $('#analysisMetricEvents').textContent = Number(data.comparison?.current_events || 0).toLocaleString(currentLocale());
+    renderClientVersionStats(data.client_versions);
+  }
+
+  async function refreshRfRouteRecordsDeferred(generation, hours) {
+    state.rfRouteRecordsGeneration += 1;
+    const localGeneration = state.rfRouteRecordsGeneration;
+    const token = showProcessing(
+      ui('Calculando recordes RF…', 'Calculating RF records…'),
+      ui('Reconstruindo a alcançabilidade da malha em segundo plano.', 'Reconstructing network reachability in the background.'),
+      { blocking: false, delayMs: 500 }
+    );
+    try {
+      const payload = await api(
+        '/api/topology/rf-records?hours=' + encodeURIComponent(hours) + '&limit=10&max_hops=6',
+        { timeoutMs: 60000 }
+      );
+      if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
+      const records = Array.isArray(payload?.records) ? payload.records : [];
+      state.rfRouteRecords = records;
+      const host = $('#rfRouteRecordsHost');
+      if (host) host.innerHTML = renderRfRouteRecords(records);
+    } catch (err) {
+      if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
+      const host = $('#rfRouteRecordsHost');
+      if (host) {
+        host.innerHTML =
+          '<div class="topology-stat-group rf-route-records-group"><h4>' +
+          escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) +
+          '</h4><span class="hint">' +
+          escapeHtml(ui('Recordes RF temporariamente indisponíveis; as demais estatísticas continuam válidas.', 'RF records are temporarily unavailable; the remaining statistics are still valid.')) +
+          '</span></div>';
+      }
+      console.warn('Falha ao calcular Recordes RF:', err);
+    } finally {
+      hideProcessing(token);
+    }
+  }
+
   async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
     if (!box) return;
     const periodSelect = $('#analysisPeriod');
     state.topologyHours = statisticsPeriodValue(state.topologyHours);
     if (periodSelect) periodSelect.value = String(state.topologyHours);
-    box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');
-    try {
-      const data = await api(`/api/topology/stats?hours=${encodeURIComponent(state.topologyHours)}`);
-      const list = (items, formatter) => items.length
-        ? '<ol>' + items.map(formatter).join('') + '</ol>'
-        : '<span class="hint">' + ui('Sem dados.', 'No data.') + '</span>';
-      const mapCall = (callsign) => `<button type="button" class="stats-map-link" data-map-callsign="${escapeHtml(callsign)}">${escapeHtml(callsign)}</button>`;
-      const evidence = value => value
-        ? `<span class="stats-evidence">${escapeHtml(ui('evidência', 'evidence'))}: ${escapeHtml(value)}</span>`
-        : '';
 
-      const reception = data.reception_media || {};
-      const receptionSummary =
-        '<div class="topology-stat-group reception-media-summary"><h4>' + ui('Recepção RF × APRS-IS', 'RF × APRS-IS reception') + '</h4>' +
-        '<div class="topology-stat-cards">' +
-          '<div><span>' + ui('Pacotes RF', 'RF packets') + '</span><strong>' + Number(reception.rf_packets || 0).toLocaleString(currentLocale()) + '</strong></div>' +
-          '<div><span>' + ui('Estações únicas RF', 'Unique RF stations') + '</span><strong>' + Number(reception.rf_unique_stations || 0).toLocaleString(currentLocale()) + '</strong></div>' +
-          '<div><span>' + ui('Frames RF recebidos', 'RF frames received') + '</span><strong>' + Number(reception.rf_frames_received || 0).toLocaleString(currentLocale()) + '</strong></div>' +
-          '<div><span>' + ui('Pacotes APRS-IS', 'APRS-IS packets') + '</span><strong>' + Number(reception.aprsis_packets || 0).toLocaleString(currentLocale()) + '</strong></div>' +
-          '<div><span>' + ui('Estações nos dois meios', 'Stations on both media') + '</span><strong>' + Number(reception.both_media_stations || 0).toLocaleString(currentLocale()) + '</strong></div>' +
-          '<div><span>' + ui('Pacotes lógicos sem duplicar meios', 'Logical packets without cross-medium duplicates') + '</span><strong>' + Number(reception.logical_packets_deduplicated || 0).toLocaleString(currentLocale()) + '</strong></div>' +
-        '</div>' +
-        '<div class="hint">' + ui(
-          'RF e APRS-IS são preservados como evidências separadas. O total lógico correlaciona a mesma transmissão observada pelos dois meios em uma janela curta.',
-          'RF and APRS-IS are preserved as separate evidence. The logical total correlates the same transmission seen through both media in a short window.'
-        ) + '</div></div>';
+    state.topologyStatsGeneration += 1;
+    const generation = state.topologyStatsGeneration;
+    const previous = state.topologyStatsLastGood;
 
-      box.innerHTML =
-        receptionSummary +
-        renderRfRouteRecords(data.rf_route_records || []) +
-        renderStationStatsTable(data.station_rankings || []) +
-
-        '<div class="topology-stat-group"><h4>' + ui('Digipeaters mais utilizados', 'Most used digipeaters') + '</h4>' +
-        list(data.digipeaters || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
-
-        '<div class="topology-stat-group"><h4>' + ui('IGates mais ativos', 'Most active IGates') + '</h4>' +
-        list(data.igates || [], x => `<li>${mapCall(x.callsign)} — ${Number(x.packets||0).toLocaleString(currentLocale())}</li>`) + '</div>' +
-
-        '<div class="topology-stat-group"><h4>' + ui('Estações com problemas', 'Stations with problems') + '</h4>' +
-        '<div class="hint">' + ui('Anomalias observadas; um evento isolado não implica necessariamente defeito da estação.', 'Observed anomalies; a single event does not necessarily mean the station is faulty.') + '</div>' +
-        list(data.problem_stations || [], x => `<li>${mapCall(x.callsign)} — ${escapeHtml(x.problem || x.issue_type || '')} · ${Number(x.occurrences||0).toLocaleString(currentLocale())} · ${escapeHtml(x.recurrence || '')} <button type="button" class="callsign-link station-log-button" data-callsign="${escapeHtml(x.callsign)}">${escapeHtml(ui('Logs', 'Logs'))}</button></li>`) + '</div>' +
-
-        '<div class="topology-stat-group"><h4>' + ui('Possíveis melhorias', 'Possible improvements') + '</h4>' +
-        '<div class="hint">' + ui('Sugestões inferidas do tráfego observado; não substituem estudo de propagação RF.', 'Suggestions inferred from observed traffic; they do not replace an RF propagation study.') + '</div>' +
-        list(data.improvement_suggestions || [], x => `<li>${x.callsign ? mapCall(x.callsign) + ' — ' : ''}<strong>${escapeHtml(x.title || '')}</strong>: ${escapeHtml(x.detail || '')} ${evidence(x.evidence)}</li>`) + '</div>' +
-
-        '<div class="topology-stat-group"><h4>' + ui('Enlaces que deixaram de aparecer', 'Links no longer seen') + '</h4>' +
-        list(data.recently_disappeared || [], x => `<li>${escapeHtml(x.source)} → ${escapeHtml(x.target)} · ${escapeHtml(fmtDate(x.last_seen))}</li>`) + '</div>' +
-
-        '<div class="topology-stat-group"><h4>' + ui(data.complete ? 'Histórico completo' : 'Comparação com período anterior', data.complete ? 'Complete history' : 'Comparison with previous period') + '</h4>' +
-        '<div class="hint">' +
-        (data.complete
-          ? ui(
-              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos armazenados no histórico disponível.`,
-              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events stored in the available history.`
-            )
-          : ui(
-              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
-              `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
-            )) + '</div></div>';
-
-      if ($('#analysisMetricPeriod')) $('#analysisMetricPeriod').textContent = topologyPeriodLabel();
-      if ($('#analysisMetricEdges')) $('#analysisMetricEdges').textContent = Number(data.edges || 0).toLocaleString(currentLocale());
-      if ($('#analysisMetricPackets')) {
-        const logicalPackets = Number(data.reception_media?.logical_packets_deduplicated);
-        $('#analysisMetricPackets').textContent = Number.isFinite(logicalPackets)
-          ? logicalPackets.toLocaleString(currentLocale())
-          : Number(data.packets || 0).toLocaleString(currentLocale());
+    if (!previous) {
+      box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');
+      for (const selector of ['#analysisMetricEdges', '#analysisMetricPackets', '#analysisMetricEvents']) {
+        const metric = $(selector);
+        if (metric) metric.textContent = '…';
       }
-      if ($('#analysisMetricEvents')) $('#analysisMetricEvents').textContent = Number(data.comparison?.current_events || 0).toLocaleString(currentLocale());
-      renderClientVersionStats(data.client_versions);
+    }
+
+    const processingToken = showProcessing(
+      state.topologyHours <= 0
+        ? ui('Calculando estatísticas do histórico…', 'Calculating full-history statistics…')
+        : ui('Calculando estatísticas…', 'Calculating statistics…'),
+      ui('O aplicativo continua ativo enquanto os indicadores são preparados.', 'The application remains active while the indicators are prepared.'),
+      { blocking: false }
+    );
+
+    try {
+      const data = await api(
+        `/api/topology/stats?hours=${encodeURIComponent(state.topologyHours)}`,
+        { timeoutMs: 30000 }
+      );
+      if (generation !== state.topologyStatsGeneration) return;
+      state.topologyStatsLastGood = data;
+      renderTopologyStatsData(data);
+      void refreshRfRouteRecordsDeferred(generation, state.topologyHours);
     } catch (err) {
-      box.textContent = err.message;
+      if (generation !== state.topologyStatsGeneration) return;
+      if (previous) {
+        // Mantém a última leitura válida: timeout não vira "0".
+        renderTopologyStatsData(previous);
+        const host = $('#rfRouteRecordsHost');
+        if (host && state.rfRouteRecords.length) host.innerHTML = renderRfRouteRecords(state.rfRouteRecords);
+        toast(
+          ui('Não foi possível atualizar agora; mantendo os últimos valores válidos.', 'Could not refresh now; keeping the last valid values.'),
+          'error'
+        );
+      } else {
+        box.innerHTML =
+          '<div class="topology-stat-group"><strong>' +
+          escapeHtml(ui('Estatísticas temporariamente indisponíveis.', 'Statistics temporarily unavailable.')) +
+          '</strong><div class="hint">' + escapeHtml(String(err?.message || err)) + '</div></div>';
+        for (const selector of ['#analysisMetricEdges', '#analysisMetricPackets', '#analysisMetricEvents']) {
+          const metric = $(selector);
+          if (metric) metric.textContent = ui('Indisponível', 'Unavailable');
+        }
+      }
+    } finally {
+      hideProcessing(processingToken);
     }
   }
 

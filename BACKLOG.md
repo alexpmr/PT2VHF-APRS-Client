@@ -1,4 +1,4 @@
-## Novo — Estatísticas: unificar conteúdo em um único bloco sem rolagem interna
+## Implementado na v1.14.21 — Estatísticas: unificar conteúdo em um único bloco sem rolagem interna
 
 - Na aba **Estatísticas**, apresentar todo o conteúdo em **um único fluxo/bloco vertical**, utilizando somente a rolagem principal da aba/página.
 - Remover barras de rolagem internas dos blocos de estatísticas.
@@ -11,7 +11,7 @@
 - Garantir comportamento consistente nos temas claro/escuro e em telas menores.
 - **Critério de aceite:** ao abrir Estatísticas, o usuário deve poder percorrer todo o conteúdo usando uma única barra de rolagem; o bloco **Software / dispositivos APRS** não pode possuir scroll interno próprio.
 
-## Novo — Estatísticas/Topologia: evitar timeout no período Completo
+## Implementado na v1.14.21 — Estatísticas/Topologia: evitar timeout no período Completo
 
 - **Diagnóstico confirmado com log da v1.14.20 (10/10/2026):** o problema não é apenas visual; existem operações de topologia que excedem o timeout do frontend e saturam o pool de workers.
 - No log analisado, `/api/topology/stats` teve **11 respostas concluídas**, com mediana aproximada de **9,6 s**, média de **9,4 s** e pico de **12,2 s**; pelo menos **4 chamadas ultrapassaram 10 s**, embora o backend tenha terminado depois com HTTP 200.
@@ -58,7 +58,7 @@
   - o indicador global de processamento aparece enquanto a análise pesada estiver em andamento e desaparece ao concluir ou falhar.
 - **Critério de aceite:** ao abrir Estatísticas com **Período = Completo**, a interface deve continuar responsiva, mostrar claramente que está processando, apresentar resultados reais assim que disponíveis e não exibir cartões zerados apenas porque `/api/topology/stats?hours=0` demorou mais de 10 segundos.
 
-## Novo — Indicador global de processamento em primeiro plano
+## Implementado na v1.14.21 — Indicador global de processamento em primeiro plano
 
 - Sempre que o aplicativo estiver executando uma operação que possa levar tempo perceptível ao usuário, exibir um **indicador visual centralizado sobre a interface**, deixando claro que existe processamento em andamento.
 - Reutilizar e ampliar o mecanismo de **global processing overlay** já existente, evitando criar um segundo sistema paralelo de estado/overlay.

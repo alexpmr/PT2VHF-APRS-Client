@@ -44,6 +44,90 @@ UPDATE_CACHE_SECONDS = 5 * 60
 _update_cache: dict[str, object] = {"timestamp": 0.0, "payload": None}
 _update_cache_lock = threading.Lock()
 
+TOPOLOGY_STATS_CACHE_SECONDS = 30.0
+_topology_stats_cache_lock = threading.RLock()
+_topology_stats_cache: dict[int, tuple[float, dict]] = {}
+_topology_stats_builds: dict[int, threading.Event] = {}
+_topology_stats_errors: dict[int, BaseException] = {}
+
+
+def _topology_stats_payload(hours: int) -> dict:
+    """Calcula indicadores leves uma vez e compartilha o resultado entre workers."""
+    try:
+        key = int(hours or 0)
+    except (TypeError, ValueError):
+        key = 0
+    key = 0 if key <= 0 else max(1, min(key, 24 * 30))
+    now = time.monotonic()
+
+    with _topology_stats_cache_lock:
+        cached = _topology_stats_cache.get(key)
+        if cached and now - cached[0] <= TOPOLOGY_STATS_CACHE_SECONDS:
+            payload = dict(cached[1])
+            payload["cache_hit"] = True
+            return payload
+        waiter = _topology_stats_builds.get(key)
+        if waiter is None:
+            waiter = threading.Event()
+            _topology_stats_builds[key] = waiter
+            _topology_stats_errors.pop(key, None)
+            owner = True
+        else:
+            owner = False
+
+    if not owner:
+        waited_started = time.monotonic()
+        waiter.wait(timeout=45.0)
+        waited_ms = (time.monotonic() - waited_started) * 1000.0
+        with _topology_stats_cache_lock:
+            cached = _topology_stats_cache.get(key)
+            error = _topology_stats_errors.get(key)
+        if cached:
+            payload = dict(cached[1])
+            payload["cache_hit"] = True
+            if waited_ms >= 250:
+                diag.log_event("topology_stats_singleflight_wait", hours=key, duration_ms=round(waited_ms, 1))
+            return payload
+        if error is not None:
+            raise RuntimeError(f"Falha ao calcular estatísticas: {error}") from error
+
+    started = time.monotonic()
+    try:
+        component = time.monotonic()
+        payload = db.topology_stats(key, include_routes=False)
+        core_ms = (time.monotonic() - component) * 1000.0
+        if core_ms >= 250:
+            diag.log_event("topology_stats_component", component="core_without_routes", hours=key, duration_ms=round(core_ms, 1))
+
+        component = time.monotonic()
+        payload["comparison"] = db.topology_period_comparison(key)
+        comparison_ms = (time.monotonic() - component) * 1000.0
+        if comparison_ms >= 250:
+            diag.log_event("topology_stats_component", component="comparison", hours=key, duration_ms=round(comparison_ms, 1))
+
+        component = time.monotonic()
+        hours = key
+        payload["reception_media"] = tnc_reception_stats(hours)
+        reception_ms = (time.monotonic() - component) * 1000.0
+        if reception_ms >= 250:
+            diag.log_event("topology_stats_component", component="reception_media", hours=key, duration_ms=round(reception_ms, 1))
+
+        payload["cache_hit"] = False
+        payload["rf_route_records_deferred"] = True
+        payload["stats_duration_ms"] = round((time.monotonic() - started) * 1000.0, 1)
+        with _topology_stats_cache_lock:
+            _topology_stats_cache[key] = (time.monotonic(), dict(payload))
+        return payload
+    except BaseException as exc:
+        with _topology_stats_cache_lock:
+            _topology_stats_errors[key] = exc
+        raise
+    finally:
+        with _topology_stats_cache_lock:
+            event = _topology_stats_builds.pop(key, None)
+            if event is not None:
+                event.set()
+
 
 def get_elevation_tile(z: int, x: int, y: int) -> bytes:
     z = int(z)
@@ -869,12 +953,30 @@ def create_app() -> Flask:
     def api_topology_stats():
         try:
             hours = int(request.args.get("hours", 0))
+            payload = _topology_stats_payload(hours)
+            return jsonify(payload)
+        except Exception as exc:
+            diag.log_event("topology_stats_failed", error=str(exc))
+            return jsonify({"error": str(exc), "partial": True}), 500
+
+    @app.get("/api/topology/rf-records")
+    def api_topology_rf_records():
+        try:
+            hours = int(request.args.get("hours", 0))
+            limit = int(request.args.get("limit", 10))
+            max_hops = int(request.args.get("max_hops", 6))
         except (TypeError, ValueError):
-            hours = 0
-        payload = db.topology_stats(hours)
-        payload["comparison"] = db.topology_period_comparison(hours)
-        payload["reception_media"] = tnc_reception_stats(hours)
-        return jsonify(payload)
+            hours, limit, max_hops = 0, 10, 6
+        started = time.monotonic()
+        try:
+            records = db.list_rf_route_records(hours=hours, limit=limit, max_hops=max_hops)
+            duration_ms = (time.monotonic() - started) * 1000.0
+            if duration_ms >= 250:
+                diag.log_event("topology_stats_component", component="rf_route_records_endpoint", hours=hours, duration_ms=round(duration_ms, 1))
+            return jsonify({"records": records, "duration_ms": round(duration_ms, 1)})
+        except Exception as exc:
+            diag.log_event("rf_route_records_failed", error=str(exc))
+            return jsonify({"records": [], "error": str(exc)}), 500
 
     @app.get("/api/topology/timeline")
     def api_topology_timeline():

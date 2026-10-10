@@ -4671,3 +4671,47 @@ html.is-processing {
     max-width: calc(100% - 20px);
   }
 }
+
+
+/* v1.14.21 - Estatísticas em fluxo único e indicador de processamento não bloqueante */
+#tab-analysis .analysis-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+#tab-analysis .analysis-client-version-panel,
+#tab-analysis .client-version-stats-content,
+#tab-analysis .client-version-table,
+#tab-analysis .topology-stats-box,
+#tab-analysis .topology-stats-content,
+#tab-analysis .topology-stat-group,
+#tab-analysis .rf-route-records-group,
+#tab-analysis .rf-route-record-list,
+#tab-analysis .station-ranking-table-wrap,
+#tab-analysis .station-ranking-table {
+  min-height: 0 !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+#tab-analysis .client-version-table,
+#tab-analysis .station-ranking-table {
+  width: 100%;
+  table-layout: fixed;
+}
+#tab-analysis .client-version-table th,
+#tab-analysis .client-version-table td,
+#tab-analysis .station-ranking-table th,
+#tab-analysis .station-ranking-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.global-processing-overlay.nonblocking {
+  pointer-events: none;
+  background: rgba(5, 11, 16, .16);
+  backdrop-filter: none;
+}
+.global-processing-overlay.nonblocking .global-processing-card {
+  pointer-events: none;
+}

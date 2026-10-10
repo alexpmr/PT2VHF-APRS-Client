@@ -1,3 +1,18 @@
+## 1.14.21 - 2026-10-10
+
+- **Estatísticas sem timeout falso:** o carregamento principal deixa de depender do cálculo pesado de Recordes RF e retorna os indicadores essenciais primeiro.
+- **Recordes RF progressivos:** rotas/recordes passam para endpoint independente e são atualizados em segundo plano sem derrubar o restante da aba.
+- **Cache de Estatísticas:** resultados por período são compartilhados por 30 segundos entre workers, evitando recomputações repetidas do histórico completo.
+- **Single-flight do grafo RF:** somente um worker reconstrói cada grafo por período/banco; requisições concorrentes aguardam e reutilizam o mesmo resultado.
+- **Cache RF coalescido:** ingestão APRS contínua não apaga imediatamente um grafo recém-calculado; a atualização permanece limitada ao TTL curto.
+- **Autocomplete de rotas:** chamadas antigas de origem são canceladas, resultados base são reutilizados localmente e consultas filtradas só ocorrem quando necessárias.
+- **Diagnóstico de performance:** tempos de cálculo dos principais componentes de Estatísticas e do grafo RF passam a ser registrados quando excedem o limiar.
+- **Último resultado válido:** falha ou timeout de atualização não zera os cartões; a interface mantém a última leitura válida ou mostra “Indisponível”.
+- **Indicador global de processamento:** spinner/relógio central passa a aparecer somente após 320 ms, suporta operações concorrentes e modo não bloqueante.
+- **Rotas e Estatísticas:** análise de rota RF, histórico completo e Recordes RF usam o indicador de processamento durante operações demoradas.
+- **Estatísticas em fluxo único:** removida a rolagem interna do ranking Software / dispositivos APRS e dos demais subblocos; somente a área principal da aba rola verticalmente.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.20 - 2026-10-10
 
 - **Rotas RF como alcançabilidade:** a análise deixa de exigir que um pacote tenha percorrido toda a cadeia de uma só vez; enlaces RF válidos observados em momentos distintos podem formar uma rota histórica.

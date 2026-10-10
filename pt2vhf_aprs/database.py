@@ -3920,8 +3920,13 @@ def manual_conversation_stats(hours: int = 0, limit: int = 20) -> list[dict[str,
     return result[: max(1, min(int(limit or 20), 100))]
 
 
-def topology_stats(hours: int = 0) -> dict[str, Any]:
-    """Resumo agregado da topologia observada para diagnóstico rápido."""
+def topology_stats(hours: int = 0, *, include_routes: bool = True) -> dict[str, Any]:
+    """Resumo agregado da topologia observada para diagnóstico rápido.
+
+    include_routes=False permite que a interface carregue os indicadores leves
+    antes dos Recordes RF, que dependem da reconstrução do grafo histórico.
+    """
+    stats_started = time.monotonic()
     hours = int(hours or 0)
     complete = hours <= 0
     params: list[Any] = []
@@ -4051,10 +4056,14 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
             f"SELECT COUNT(*) AS edges, COALESCE(SUM(packet_count),0) AS packets FROM topology_edges WHERE 1=1 {time_filter}",
             params,
         ).fetchone()
+    component_started = time.monotonic()
     manual_rows = [
         item for item in manual_conversation_stats(0 if complete else hours, limit=100)
         if str(item.get("callsign") or "").upper().strip() not in excluded_set
     ]
+    manual_ms = (time.monotonic() - component_started) * 1000.0
+    if manual_ms >= 250:
+        diag.log_event("topology_stats_component", component="manual_conversations", hours=0 if complete else hours, duration_ms=round(manual_ms, 1))
     manual_by_call = {
         str(item.get("callsign") or "").upper().strip(): item
         for item in manual_rows
@@ -4118,6 +4127,42 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         item["rank"] = rank
     station_rankings = station_rankings[:50]
 
+    component_started = time.monotonic()
+    problem_stations = station_problem_stats(0 if complete else hours)
+    problem_ms = (time.monotonic() - component_started) * 1000.0
+    if problem_ms >= 250:
+        diag.log_event("topology_stats_component", component="problem_stations", hours=0 if complete else hours, duration_ms=round(problem_ms, 1))
+
+    component_started = time.monotonic()
+    improvement_suggestions = network_improvement_suggestions(0 if complete else hours)
+    improvements_ms = (time.monotonic() - component_started) * 1000.0
+    if improvements_ms >= 250:
+        diag.log_event("topology_stats_component", component="improvement_suggestions", hours=0 if complete else hours, duration_ms=round(improvements_ms, 1))
+
+    component_started = time.monotonic()
+    client_versions = client_version_stats(0 if complete else hours)
+    client_versions_ms = (time.monotonic() - component_started) * 1000.0
+    if client_versions_ms >= 250:
+        diag.log_event("topology_stats_component", component="client_versions", hours=0 if complete else hours, duration_ms=round(client_versions_ms, 1))
+
+    route_records: list[dict[str, Any]] = []
+    route_ms = 0.0
+    if include_routes:
+        component_started = time.monotonic()
+        route_records = list_rf_route_records(0 if complete else hours, limit=10, max_hops=6)
+        route_ms = (time.monotonic() - component_started) * 1000.0
+        if route_ms >= 250:
+            diag.log_event("topology_stats_component", component="rf_route_records", hours=0 if complete else hours, duration_ms=round(route_ms, 1))
+
+    total_ms = (time.monotonic() - stats_started) * 1000.0
+    if total_ms >= 250:
+        diag.log_event(
+            "topology_stats_total",
+            hours=0 if complete else hours,
+            include_routes=bool(include_routes),
+            duration_ms=round(total_ms, 1),
+        )
+
     return {
         "hours": 0 if complete else hours,
         "complete": complete,
@@ -4130,10 +4175,11 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "digipeaters": digis,
         "igates": igates,
         "recently_disappeared": stale,
-        "problem_stations": station_problem_stats(0 if complete else hours),
-        "improvement_suggestions": network_improvement_suggestions(0 if complete else hours),
-        "rf_route_records": list_rf_route_records(0 if complete else hours, limit=10, max_hops=6),
-        "client_versions": client_version_stats(0 if complete else hours),
+        "problem_stations": problem_stations,
+        "improvement_suggestions": improvement_suggestions,
+        "rf_route_records": route_records,
+        "rf_route_records_deferred": not include_routes,
+        "client_versions": client_versions,
     }
 
 
