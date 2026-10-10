@@ -335,25 +335,33 @@ class NativeApi:
             global _window
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
-            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.kml")).name
-            if not suggested.lower().endswith(".kml"):
-                suggested += ".kml"
+
+            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.txt")).name
+            suffix = Path(suggested).suffix.lower() or ".txt"
+            if suffix == ".kml":
+                file_types = ("KML (*.kml)", "Todos os arquivos (*.*)")
+            elif suffix == ".json":
+                file_types = ("JSON (*.json)", "Todos os arquivos (*.*)")
+            else:
+                file_types = ("Arquivo de texto (*.txt)", "Todos os arquivos (*.*)")
+
             selected = _window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 save_filename=suggested,
-                file_types=("KML (*.kml)", "Todos os arquivos (*.*)"),
+                file_types=file_types,
             )
             if not selected:
                 return {"saved": False, "cancelled": True}
             if isinstance(selected, (list, tuple)):
                 selected = selected[0] if selected else ""
-            path = Path(str(selected))
-            if path.suffix.lower() != ".kml":
-                path = path.with_suffix(".kml")
-            path.write_text(str(content or ""), encoding="utf-8")
-            return {"saved": True, "path": str(path)}
+            target = Path(str(selected))
+            if target.suffix.lower() != suffix:
+                target = target.with_suffix(suffix)
+            target.write_text(str(content or ""), encoding="utf-8")
+            return {"saved": True, "path": str(target)}
         except Exception as exc:
             return {"saved": False, "error": str(exc)}
+
 
 
 def _run_browser_mode(icon: pystray.Icon) -> int:
@@ -417,6 +425,14 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
 def main() -> int:
     global _browser_mode, _tray_icon, _server_handle, PORT, URL
     _browser_mode = "--browser" in sys.argv[1:]
+
+    if os.name == "nt":
+        try:
+            # Faz o Windows usar de forma consistente o ícone do executável na
+            # barra de tarefas, Alt+Tab e agrupamento de janelas.
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("PT2VHF.APRS.Client")
+        except Exception:
+            pass
 
     if _already_running():
         if _browser_mode:

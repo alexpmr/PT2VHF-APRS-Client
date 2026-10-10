@@ -16,8 +16,10 @@ def read(rel: str) -> str:
 
 
 def test_v1421_version_metadata_and_release_markers():
-    assert read("VERSION").strip() == "1.14.21"
-    assert '__version__ = "1.14.21"' in read("pt2vhf_aprs/__init__.py")
+    version_text = read("VERSION").strip()
+    version = tuple(int(part) for part in version_text.split("."))
+    assert version >= (1, 14, 21)
+    assert f'__version__ = "{version_text}"' in read("pt2vhf_aprs/__init__.py")
 
     overlay = read("pt2vhf_aprs/spacetime_topology.py")
     for marker in (

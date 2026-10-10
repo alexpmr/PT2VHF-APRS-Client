@@ -9,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from flask import Flask, Response, g, jsonify, render_template, request, send_file
 
@@ -127,6 +127,140 @@ def _topology_stats_payload(hours: int) -> dict:
             event = _topology_stats_builds.pop(key, None)
             if event is not None:
                 event.set()
+
+
+def _topology_diagnostic_payload(hours: float = 0, *, full: bool = False) -> dict:
+    """Exporta evidência suficiente para diagnosticar topologia sem segredos."""
+    try:
+        safe_hours = float(hours or 0)
+    except (TypeError, ValueError):
+        safe_hours = 0.0
+    if full:
+        safe_hours = 0.0
+    elif safe_hours > 0:
+        safe_hours = max(0.25, min(safe_hours, 24 * 30))
+    else:
+        safe_hours = 0.0
+
+    cutoff = None
+    if safe_hours > 0:
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=safe_hours)).isoformat(timespec="seconds")
+
+    row_limits = {
+        "topology_events": 50000 if full else 15000,
+        "tracks": 50000 if full else 15000,
+        "objects": 10000 if full else 5000,
+    }
+    payload: dict[str, object] = {
+        "schema_version": "pt2vhf-topology-diagnostic-1",
+        "app_version": __version__,
+        "exported_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "mode": "full" if full else "current_period",
+        "hours": 0 if safe_hours <= 0 else safe_hours,
+        "route_parameters": {
+            "max_hops": 10,
+            "event_position_max_age_hours": getattr(getattr(db, "_spacetime_topology", None), "EVENT_POSITION_MAX_AGE_HOURS", None),
+            "historical_reachability": True,
+        },
+        "retention": {
+            "topology_events": getattr(db, "TOPOLOGY_EVENT_RETENTION", None),
+            "packets": getattr(db, "PACKET_RETENTION", None),
+            "tracks": getattr(db, "TRACK_RETENTION", None),
+        },
+        "truncated": {},
+    }
+
+    with db.connection() as conn:
+        payload["db_user_version"] = int(conn.execute("PRAGMA user_version").fetchone()[0] or 0)
+        table_names = {
+            str(row["name"])
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        }
+
+        counts: dict[str, int] = {}
+        for table in ("stations", "aprs_objects", "tracks", "topology_edges", "topology_events", "packets"):
+            if table in table_names:
+                counts[table] = int(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] or 0)
+        payload["table_counts"] = counts
+
+        def rows_for(table: str, where_sql: str = "", params: tuple = (), limit: int | None = None):
+            if table not in table_names:
+                return []
+            sql = f"SELECT * FROM {table}"
+            if where_sql:
+                sql += " WHERE " + where_sql
+            if "timestamp" in {str(row["name"]) for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}:
+                sql += " ORDER BY timestamp ASC"
+            elif table == "topology_edges":
+                sql += " ORDER BY last_seen ASC"
+            elif table == "stations":
+                sql += " ORDER BY last_heard ASC"
+            if limit:
+                sql += " LIMIT ?"
+                params = (*params, int(limit))
+            return [dict(row) for row in conn.execute(sql, params).fetchall()]
+
+        payload["stations"] = rows_for("stations")
+        payload["objects"] = rows_for(
+            "aprs_objects",
+            "last_heard>=?" if cutoff else "",
+            (cutoff,) if cutoff else (),
+            row_limits["objects"],
+        )
+        payload["tracks"] = rows_for(
+            "tracks",
+            "timestamp>=?" if cutoff else "",
+            (cutoff,) if cutoff else (),
+            row_limits["tracks"],
+        )
+        payload["topology_edges_raw"] = rows_for(
+            "topology_edges",
+            "last_seen>=?" if cutoff else "",
+            (cutoff,) if cutoff else (),
+        )
+        payload["topology_events"] = rows_for(
+            "topology_events",
+            "timestamp>=?" if cutoff else "",
+            (cutoff,) if cutoff else (),
+            row_limits["topology_events"],
+        )
+
+        for name, table_name in (("objects", "aprs_objects"), ("tracks", "tracks"), ("topology_events", "topology_events")):
+            actual = len(payload.get(name) or [])
+            total = counts.get(table_name, actual)
+            payload["truncated"][name] = bool(total > actual and not cutoff)
+
+    topology = db.list_topology_edges(safe_hours)
+    payload["topology"] = topology
+
+    digis: dict[str, dict] = {}
+    igates: dict[str, dict] = {}
+    for edge in topology:
+        if str(edge.get("kind") or "").lower() == "rf":
+            call = str(edge.get("target") or "").upper().strip()
+            if call:
+                item = digis.setdefault(call, {"callsign": call, "packets": 0, "last_seen": ""})
+                item["packets"] += int(edge.get("packet_count") or 0)
+                item["last_seen"] = max(str(item.get("last_seen") or ""), str(edge.get("last_seen") or ""))
+        gate = str(edge.get("igate") or "").upper().strip()
+        if gate:
+            item = igates.setdefault(gate, {"callsign": gate, "packets": 0, "last_seen": ""})
+            item["packets"] += int(edge.get("packet_count") or 0)
+            item["last_seen"] = max(str(item.get("last_seen") or ""), str(edge.get("last_seen") or ""))
+    payload["digipeaters"] = sorted(digis.values(), key=lambda item: (-int(item["packets"]), item["callsign"]))
+    payload["igates"] = sorted(igates.values(), key=lambda item: (-int(item["packets"]), item["callsign"]))
+
+    try:
+        payload["rf_route_records"] = db.list_rf_route_records(
+            hours=safe_hours,
+            limit=50,
+            max_hops=10,
+        )
+    except Exception as exc:
+        payload["rf_route_records"] = []
+        payload["rf_route_records_error"] = str(exc)
+
+    return payload
 
 
 def get_elevation_tile(z: int, x: int, y: int) -> bytes:
@@ -871,6 +1005,30 @@ def create_app() -> Flask:
             )
         except Exception as exc:
             diag.log_event("kml_export_failed", error=str(exc))
+            return jsonify({"error": str(exc)}), 400
+
+    @app.get("/api/export/topology-json")
+    def api_export_topology_json():
+        try:
+            try:
+                hours = float(request.args.get("hours", 0))
+            except (TypeError, ValueError):
+                hours = 0.0
+            full = str(request.args.get("full", "0")).lower() in {"1", "true", "yes", "on"}
+            payload = _topology_diagnostic_payload(hours, full=full)
+            content = json.dumps(payload, indent=2, ensure_ascii=False).encode("utf-8")
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"PT2VHF_APRS_Diagnostico_{stamp}.json"
+            return Response(
+                content,
+                mimetype="application/json",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{filename}"',
+                    "Cache-Control": "no-store",
+                },
+            )
+        except Exception as exc:
+            diag.log_event("topology_json_export_failed", error=str(exc))
             return jsonify({"error": str(exc)}), 400
 
     @app.post("/api/queries/send")

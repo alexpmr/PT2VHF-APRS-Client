@@ -509,6 +509,111 @@
     return { saved: true, path: ui('pasta de downloads do navegador', 'browser downloads folder'), browserFallback: true };
   }
 
+  async function saveJsonContent(filename, content) {
+    const nativeSave = window.pywebview?.api?.save_text_file;
+    if (nativeSave) {
+      const result = await nativeSave(filename, content);
+      if (result?.cancelled) return { cancelled: true };
+      if (!result?.saved) throw new Error(result?.error || ui('Não foi possível salvar o diagnóstico JSON.', 'Could not save the JSON diagnostic.'));
+      return { saved: true, path: String(result.path || filename), native: true };
+    }
+
+    if (typeof window.showSaveFilePicker === 'function') {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+          excludeAcceptAllOption: false,
+        });
+        const writable = await handle.createWritable();
+        await writable.write(new Blob([content], { type: 'application/json;charset=utf-8' }));
+        await writable.close();
+        return { saved: true, path: handle.name || filename, native: false };
+      } catch (err) {
+        if (err?.name === 'AbortError') return { cancelled: true };
+        throw err;
+      }
+    }
+
+    const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    return { saved: true, path: ui('pasta de downloads do navegador', 'browser downloads folder'), browserFallback: true };
+  }
+
+  async function exportTopologyJson() {
+    const choice = window.prompt(ui(
+      'Exportar diagnóstico JSON:\n1 = período atual\n2 = diagnóstico completo\n\nDigite 1 ou 2.',
+      'Export JSON diagnostic:\n1 = current period\n2 = full diagnostic\n\nEnter 1 or 2.'
+    ), '2');
+    if (choice === null) return;
+    const full = String(choice).trim() === '2';
+    const processingToken = showProcessing(
+      ui('Gerando diagnóstico JSON…', 'Generating JSON diagnostic…'),
+      full
+        ? ui('Coletando todo o histórico disponível de topologia.', 'Collecting all available topology history.')
+        : ui('Coletando os dados do período atual do mapa.', 'Collecting data for the current map period.'),
+      { blocking: false, delayMs: 320 }
+    );
+
+    try {
+      const params = new URLSearchParams({
+        hours: String(topologyPeriodValue(state.mapPeriodHours)),
+        full: full ? '1' : '0',
+      });
+      const response = await fetch('/api/export/topology-json?' + params.toString());
+      if (!response.ok) {
+        let message = 'Erro HTTP ' + response.status;
+        try {
+          const data = await response.json();
+          if (data?.error) message = data.error;
+        } catch (_) {}
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+      data.frontend_state = {
+        map_period_hours: topologyPeriodValue(state.mapPeriodHours),
+        layers: {
+          stations: !!state.stationsEnabled,
+          digipeaters: !!state.digisEnabled,
+          igates: !!state.igatesEnabled,
+          objects: !!state.objectsEnabled,
+          tracklogs: !!state.tracklogEnabled,
+          rf_links: !!state.rfLinksEnabled,
+          igate_links: !!state.igateLinksEnabled,
+          packets: !!state.packetsEnabled,
+        },
+        view_filters: { ...(state.mapViewFilters || {}) },
+        route_focus_nodes: state.rfRouteExclusiveNodes ? [...state.rfRouteExclusiveNodes] : [],
+      };
+
+      const disposition = String(response.headers.get('content-disposition') || '');
+      const match = disposition.match(/filename="?([^";]+)"?/i);
+      const fallback = 'PT2VHF_APRS_Diagnostico_' + new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15) + '.json';
+      const filename = match?.[1] || fallback;
+      const content = JSON.stringify(data, null, 2);
+      const result = await saveJsonContent(filename, content);
+      if (result?.cancelled) return;
+      toast(
+        result?.path
+          ? ui('Diagnóstico JSON salvo em: ' + result.path, 'JSON diagnostic saved to: ' + result.path)
+          : ui('Diagnóstico JSON salvo.', 'JSON diagnostic saved.'),
+        'ok'
+      );
+    } catch (err) {
+      toast(String(err?.message || err), 'error');
+    } finally {
+      hideProcessing(processingToken);
+    }
+  }
+
   async function exportKml() {
     const selected = {
       stations: !!$('#kmlStations')?.checked,
@@ -582,6 +687,7 @@
     }
   }
 
+  $('#topologyJsonExportButton')?.addEventListener('click', () => void exportTopologyJson());
   $('#kmlExportButton')?.addEventListener('click', openKmlExportModal);
   $('#kmlExportCancel')?.addEventListener('click', () => $('#kmlExportModal')?.classList.add('hidden'));
   $('#kmlExportConfirm')?.addEventListener('click', () => void exportKml());
@@ -3650,18 +3756,9 @@
           if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue;
         }
 
-        const sourceCall = normalizedCall(edge.source);
-        const targetCall = normalizedCall(edge.target);
-        // A visibilidade da camada de enlaces Internet/iGate é independente da
-        // visibilidade dos marcadores e seus subtipos. Um filtro que oculta
-        // iGates não deve apagar enlaces APRS-IS que já foram comprovados.
-        if (edge.kind !== 'igate') {
-          if (!routeAllowedPairs) {
-            if (sourceCall && state.mapKnownCallsigns.has(sourceCall) && !state.mapVisibleCallsigns.has(sourceCall)) continue;
-            if (targetCall && state.mapKnownCallsigns.has(targetCall) && !state.mapVisibleCallsigns.has(targetCall)) continue;
-          }
-        }
-
+        // v1.14.22: filtros de estações/objetos controlam somente os
+        // marcadores. Enlaces possuem camada própria e permanecem visíveis
+        // mesmo quando uma ou ambas as entidades das extremidades estão ocultas.
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
         const routeEvidence = routeEvidenceByPair.get(rfRoutePairKey(edge.source, edge.target));

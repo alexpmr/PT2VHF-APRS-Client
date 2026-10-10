@@ -920,7 +920,11 @@ def test_v1624_official_logo_is_single_branding_source():
     assert 'type="image/png"' in html
     assert html.count("img/app_logo.png") >= 2
     assert "app_logo.svg" not in html
-    assert "app_logo.png" in win_icon
+    version = tuple(map(int, (root / "VERSION").read_text(encoding="utf-8").strip().split(".")))
+    if version >= (1, 14, 22):
+        assert "aprs_taskbar_icon.png" in win_icon
+    else:
+        assert "app_logo.png" in win_icon
     assert "app_logo.png" in mac_icon
     assert "ImageDraw" not in mac_icon
     assert "app_logo.png" in linux_build
@@ -1512,7 +1516,12 @@ def test_v176_kml_save_as_and_map_toolbar_controls():
     for source in (windows, linux, macos):
         assert "def save_text_file" in source
         assert "SAVE_DIALOG" in source
-        assert 'file_types=("KML (*.kml)", "Todos os arquivos (*.*)")' in source
+        version = tuple(map(int, (root / "VERSION").read_text(encoding="utf-8").strip().split(".")))
+        if version >= (1, 14, 22):
+            assert '"KML (*.kml)"' in source
+            assert '"JSON (*.json)"' in source
+        else:
+            assert 'file_types=("KML (*.kml)", "Todos os arquivos (*.*)")' in source
 
 
 def test_v176_windows_updater_uses_native_cmd_helper(monkeypatch, tmp_path):
