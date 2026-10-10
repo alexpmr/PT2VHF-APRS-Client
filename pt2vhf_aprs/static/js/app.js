@@ -3370,6 +3370,7 @@
     const normalizedQuery = String(query || '').toUpperCase().trim();
     const periodKey = String(state.mapPeriodHours);
     const cached = state.rfRouteOriginCache.get(periodKey);
+    let serverQuery = '';
     if (cached && Array.isArray(cached.rows)) {
       const filtered = normalizedQuery
         ? cached.rows.filter(item => String(item.callsign || '').includes(normalizedQuery))
@@ -3378,7 +3379,11 @@
         '<option value="' + escapeHtml(item.callsign) + '">' +
         Number(item.links || 0) + ' enlaces · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
       ).join('');
-      if (cached.complete || filtered.length >= 100 || normalizedQuery) return filtered.slice(0, 100);
+      if (cached.complete || !normalizedQuery || filtered.length > 0) return filtered.slice(0, 100);
+      // A base local foi truncada e não contém o texto pesquisado. Nesse caso,
+      // consulta o backend já com filtro; o grafo em si continua compartilhado
+      // pelo cache/single-flight do backend.
+      serverQuery = normalizedQuery;
     }
 
     if (state.rfRouteOriginsController) {
@@ -3398,11 +3403,13 @@
       // Carrega a base do período sem filtro para que as próximas teclas sejam
       // resolvidas localmente, evitando reconstruir o grafo a cada caractere.
       const url = '/api/topology/rf-origins?hours=' + encodeURIComponent(state.mapPeriodHours) +
-        '&q=&limit=200';
+        '&q=' + encodeURIComponent(serverQuery) + '&limit=' + (serverQuery ? '100' : '200');
       const rows = await api(url, { signal: controller.signal, timeoutMs: 60000 });
       if (generation !== state.rfRouteOriginGeneration) return [];
       const normalizedRows = Array.isArray(rows) ? rows : [];
-      state.rfRouteOriginCache.set(periodKey, { rows: normalizedRows, complete: normalizedRows.length < 200 });
+      if (!serverQuery) {
+        state.rfRouteOriginCache.set(periodKey, { rows: normalizedRows, complete: normalizedRows.length < 200 });
+      }
       const filtered = normalizedQuery
         ? normalizedRows.filter(item => String(item.callsign || '').includes(normalizedQuery))
         : normalizedRows;
