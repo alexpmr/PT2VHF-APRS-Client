@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.21": {
+        "title": "Estatísticas responsivas e feedback global de processamento",
+        "items": [
+            "A aba Estatísticas deixa de bloquear nos Recordes RF: os indicadores principais carregam primeiro e as rotas pesadas são calculadas em segundo plano.",
+            "O histórico completo ganha cache compartilhado entre workers e preserva o último resultado válido em caso de falha temporária, sem transformar timeout em zeros falsos.",
+            "A construção do grafo RF passa a usar single-flight: requisições concorrentes reutilizam o mesmo cálculo em vez de saturar todos os workers.",
+            "A pesquisa de origem de rotas cancela consultas obsoletas e reutiliza uma base local por período, reduzindo reconstruções enquanto o usuário digita.",
+            "Operações demoradas exibem um relógio/spinner central após um pequeno atraso, evitando flicker em ações rápidas e suportando tarefas concorrentes.",
+            "Estatísticas passam a usar uma única rolagem vertical; o ranking de Software / dispositivos APRS deixa de criar uma barra de rolagem interna.",
+        ],
+    },
     "1.14.20": {
         "title": "Alcançabilidade RF histórica e tracklogs contínuos",
         "items": [
