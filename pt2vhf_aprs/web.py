@@ -178,7 +178,7 @@ def _topology_diagnostic_payload(hours: float = 0, *, full: bool = False) -> dic
         }
 
         counts: dict[str, int] = {}
-        for table in ("stations", "objects", "tracks", "topology_edges", "topology_events", "packets"):
+        for table in ("stations", "aprs_objects", "tracks", "topology_edges", "topology_events", "packets"):
             if table in table_names:
                 counts[table] = int(conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] or 0)
         payload["table_counts"] = counts
@@ -202,7 +202,7 @@ def _topology_diagnostic_payload(hours: float = 0, *, full: bool = False) -> dic
 
         payload["stations"] = rows_for("stations")
         payload["objects"] = rows_for(
-            "objects",
+            "aprs_objects",
             "last_heard>=?" if cutoff else "",
             (cutoff,) if cutoff else (),
             row_limits["objects"],
@@ -225,9 +225,9 @@ def _topology_diagnostic_payload(hours: float = 0, *, full: bool = False) -> dic
             row_limits["topology_events"],
         )
 
-        for name in ("objects", "tracks", "topology_events"):
+        for name, table_name in (("objects", "aprs_objects"), ("tracks", "tracks"), ("topology_events", "topology_events")):
             actual = len(payload.get(name) or [])
-            total = counts.get(name, actual)
+            total = counts.get(table_name, actual)
             payload["truncated"][name] = bool(total > actual and not cutoff)
 
     topology = db.list_topology_edges(safe_hours)
