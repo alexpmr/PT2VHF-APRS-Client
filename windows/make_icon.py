@@ -1,15 +1,17 @@
 from pathlib import Path
-import sys
+
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
-from tools.compact_icon import render_compact_icon
-
-# Logo oficial permanece em pt2vhf_aprs/static/img/app_logo.png.
-SOURCE = ROOT / "pt2vhf_aprs" / "static" / "img" / "app_logo.png"
+SOURCE = ROOT / "windows" / "aprs_taskbar_icon.png"
 OUTPUT = ROOT / "windows" / "app_icon.ico"
 
-canvas = render_compact_icon(1024)
+source = Image.open(SOURCE).convert("RGBA")
+canvas = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+source.thumbnail((960, 960), Image.Resampling.LANCZOS)
+offset = ((1024 - source.width) // 2, (1024 - source.height) // 2)
+canvas.alpha_composite(source, offset)
+
 canvas.save(
     OUTPUT,
     format="ICO",
