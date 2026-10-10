@@ -9,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from flask import Flask, Response, g, jsonify, render_template, request, send_file
 
@@ -326,6 +326,193 @@ def _split_track_rows(rows: list[dict]) -> list[list[dict]]:
     if len(current) >= 2:
         segments.append(current)
     return segments
+
+
+DIAGNOSTIC_EXPORT_MAX_EVENTS = 50000
+DIAGNOSTIC_EXPORT_MAX_TRACKS = 50000
+
+
+def _topology_diagnostic_payload(hours: float = 0, *, complete: bool = False) -> dict:
+    """Exporta topologia suficiente para análise externa sem segredos de configuração."""
+    try:
+        requested_hours = float(hours or 0)
+    except (TypeError, ValueError):
+        requested_hours = 0.0
+    if complete or requested_hours <= 0:
+        effective_hours = 0.0
+        cutoff = None
+    else:
+        effective_hours = max(0.25, min(requested_hours, 24 * 30))
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=effective_hours)).isoformat(timespec="seconds")
+
+    def filter_clause(column: str) -> tuple[str, list]:
+        if cutoff:
+            return f" WHERE {column} >= ?", [cutoff]
+        return "", []
+
+    with db.connection() as conn:
+        table_counts = {
+            str(row["name"]): int(conn.execute(f'SELECT COUNT(*) FROM "{row["name"]}"').fetchone()[0])
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+            ).fetchall()
+            if str(row["name"])
+        }
+
+        station_rows = [
+            dict(row) for row in conn.execute(
+                """SELECT callsign,latitude,longitude,altitude,last_heard,raw,info,symbol,path
+                   FROM stations ORDER BY callsign"""
+            ).fetchall()
+        ]
+
+        edge_where, edge_params = filter_clause("last_seen")
+        topology_edges = [
+            dict(row) for row in conn.execute(
+                f"""SELECT source,target,kind,packet_count,first_seen,last_seen,igate,
+                           rf_transport_count,rf_path_count,internet_confirmed_count
+                    FROM topology_edges{edge_where}
+                    ORDER BY last_seen,source,target""",
+                edge_params,
+            ).fetchall()
+        ]
+
+        event_where, event_params = filter_clause("timestamp")
+        event_total = int(conn.execute(
+            f"SELECT COUNT(*) FROM topology_events{event_where}",
+            event_params,
+        ).fetchone()[0])
+        event_rows = [
+            dict(row) for row in conn.execute(
+                f"""SELECT id,timestamp,source,target,kind,medium,evidence_level,
+                           source_lat,source_lon,target_lat,target_lon,raw,rx_fingerprint
+                    FROM topology_events{event_where}
+                    ORDER BY id DESC LIMIT ?""",
+                (*event_params, DIAGNOSTIC_EXPORT_MAX_EVENTS),
+            ).fetchall()
+        ]
+        event_rows.reverse()
+
+        track_where, track_params = filter_clause("timestamp")
+        track_total = int(conn.execute(
+            f"SELECT COUNT(*) FROM tracks{track_where}",
+            track_params,
+        ).fetchone()[0])
+        track_rows = [
+            dict(row) for row in conn.execute(
+                f"""SELECT callsign,timestamp,latitude,longitude,altitude,speed,course
+                    FROM tracks{track_where}
+                    ORDER BY id DESC LIMIT ?""",
+                (*track_params, DIAGNOSTIC_EXPORT_MAX_TRACKS),
+            ).fetchall()
+        ]
+        track_rows.reverse()
+
+    igate_calls = {
+        str(edge.get("igate") or "").upper().strip()
+        for edge in topology_edges
+        if str(edge.get("igate") or "").strip()
+    }
+    digi_calls = {
+        str(edge.get("target") or "").upper().strip()
+        for edge in topology_edges
+        if str(edge.get("kind") or "").lower() == "rf" and str(edge.get("target") or "").strip()
+    }
+
+    stations = []
+    for row in station_rows:
+        call = str(row.get("callsign") or "").upper().strip()
+        try:
+            device = db.aprs_map_device_metadata(
+                str(row.get("raw") or ""),
+                str(row.get("info") or ""),
+                str(row.get("symbol") or ""),
+            )
+        except Exception:
+            device = {}
+        item = dict(row)
+        item["callsign"] = call
+        item["is_igate"] = call in igate_calls
+        item["is_digipeater"] = call in digi_calls
+        item["device"] = {
+            key: device.get(key)
+            for key in ("identifier", "friendly_name", "vendor", "model", "class", "map_role", "identified")
+            if key in device
+        }
+        stations.append(item)
+
+    segmented_tracks: list[dict] = []
+    by_call: dict[str, list[dict]] = {}
+    for row in track_rows:
+        call = str(row.get("callsign") or "").upper().strip()
+        if call:
+            by_call.setdefault(call, []).append(row)
+    for call, rows in by_call.items():
+        for segment_index, segment in enumerate(_split_track_rows(rows), start=1):
+            for row in segment:
+                item = dict(row)
+                item["segment"] = segment_index
+                segmented_tracks.append(item)
+
+    safe_cfg = db.get_config()
+    safe_config = {
+        key: safe_cfg.get(key)
+        for key in (
+            "callsign", "ssid", "language", "map_type", "beacon_minutes",
+            "topology_width", "traffic_animation_enabled", "update_check_minutes",
+        )
+    }
+
+    try:
+        records = db.list_rf_route_records(hours=effective_hours, limit=50, max_hops=12)
+    except Exception as exc:
+        records = []
+        diag.log_event("diagnostic_json_route_records_failed", error=str(exc))
+
+    return {
+        "schema_version": "pt2vhf-topology-diagnostic-1",
+        "app_version": __version__,
+        "exported_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "period": {
+            "hours": effective_hours,
+            "complete": effective_hours <= 0,
+            "cutoff": cutoff,
+        },
+        "route_engine": {
+            "semantics": "historical_reachability",
+            "max_hops_exported": 12,
+            "event_position_max_age_hours": 12,
+            "shared_node_compatibility_km": 25,
+            "inferred_long_hop_km": 250,
+        },
+        "retention": {
+            "packet_limit": getattr(db, "PACKET_RETENTION", None),
+            "track_limit": getattr(db, "TRACK_RETENTION", None),
+            "topology_event_limit": getattr(db, "TOPOLOGY_EVENT_RETENTION", None),
+        },
+        "config_safe": safe_config,
+        "table_counts": table_counts,
+        "summary": {
+            "stations": len(stations),
+            "topology_edges": len(topology_edges),
+            "topology_events_exported": len(event_rows),
+            "topology_events_available": event_total,
+            "tracks_exported": len(track_rows),
+            "tracks_available": track_total,
+            "rf_route_records": len(records),
+        },
+        "truncated": {
+            "topology_events": event_total > len(event_rows),
+            "tracks": track_total > len(track_rows),
+        },
+        "stations": stations,
+        "igates": sorted(igate_calls),
+        "digipeaters": sorted(digi_calls),
+        "topology_edges": topology_edges,
+        "topology_events": event_rows,
+        "tracks": segmented_tracks,
+        "rf_route_records": records,
+    }
 
 
 def _kml_document(
@@ -871,6 +1058,38 @@ def create_app() -> Flask:
             )
         except Exception as exc:
             diag.log_event("kml_export_failed", error=str(exc))
+            return jsonify({"error": str(exc)}), 400
+
+    @app.get("/api/export/topology-json")
+    def api_export_topology_json():
+        started = time.monotonic()
+        try:
+            mode = str(request.args.get("mode") or "current").lower().strip()
+            complete = mode in {"complete", "full", "all"}
+            try:
+                hours = float(request.args.get("hours", 0))
+            except (TypeError, ValueError):
+                hours = 0.0
+            payload = _topology_diagnostic_payload(hours, complete=complete)
+            content = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"PT2VHF_APRS_Diagnostico_{stamp}.json"
+            diag.log_event(
+                "topology_json_export",
+                mode="complete" if complete else "current",
+                duration_ms=round((time.monotonic() - started) * 1000.0, 1),
+                bytes=len(content),
+            )
+            return Response(
+                content,
+                mimetype="application/json",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{filename}"',
+                    "Cache-Control": "no-store",
+                },
+            )
+        except Exception as exc:
+            diag.log_event("topology_json_export_failed", error=str(exc))
             return jsonify({"error": str(exc)}), 400
 
     @app.post("/api/queries/send")
