@@ -4,6 +4,9 @@ import runpy
 ROOT = Path(__file__).resolve().parent.parent
 
 _current_version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+if _current_version == "1.14.21":
+    runpy.run_path(str(ROOT / "tools" / "apply_release_1_14_21.py"), run_name="__main__")
+    raise SystemExit(0)
 if _current_version == "1.14.20":
     runpy.run_path(str(ROOT / "tools" / "apply_release_1_14_20.py"), run_name="__main__")
     raise SystemExit(0)
