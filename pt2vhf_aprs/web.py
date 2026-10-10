@@ -1232,9 +1232,9 @@ def create_app() -> Flask:
         try:
             hours = int(request.args.get("hours", 0))
             limit = int(request.args.get("limit", 10))
-            max_hops = int(request.args.get("max_hops", 6))
+            max_hops = int(request.args.get("max_hops", 12))
         except (TypeError, ValueError):
-            hours, limit, max_hops = 0, 10, 6
+            hours, limit, max_hops = 0, 10, 12
         started = time.monotonic()
         try:
             records = db.list_rf_route_records(hours=hours, limit=limit, max_hops=max_hops)
