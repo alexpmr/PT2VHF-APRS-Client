@@ -171,6 +171,77 @@ def get_update_status(force: bool = False) -> dict:
 
 
 KML_NS = "http://www.opengis.net/kml/2.2"
+TRACKLOG_MAX_GAP_SECONDS = 30 * 60
+
+
+def _track_timestamp(value: object) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        parsed = datetime.fromisoformat(text)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def _split_track_rows(rows: list[dict]) -> list[list[dict]]:
+    """Quebra tracklog por silêncio prolongado e pelos saltos geográficos já protegidos no mapa."""
+    ordered = [
+        row for row in rows
+        if row.get("latitude") is not None and row.get("longitude") is not None
+    ]
+    ordered.sort(key=lambda row: _track_timestamp(row.get("timestamp")) or datetime.max.replace(tzinfo=timezone.utc))
+
+    segments: list[list[dict]] = []
+    current: list[dict] = []
+    previous: dict | None = None
+    for row in ordered:
+        try:
+            lat = float(row["latitude"])
+            lon = float(row["longitude"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        if not db._valid_geo_position(lat, lon):
+            continue
+
+        split = False
+        if previous is not None:
+            distance = db.haversine_km(
+                float(previous["latitude"]),
+                float(previous["longitude"]),
+                lat,
+                lon,
+            )
+            previous_time = _track_timestamp(previous.get("timestamp"))
+            current_time = _track_timestamp(row.get("timestamp"))
+            elapsed_seconds = (
+                max(0.0, (current_time - previous_time).total_seconds())
+                if previous_time is not None and current_time is not None
+                else 0.0
+            )
+            elapsed_hours = elapsed_seconds / 3600.0 if elapsed_seconds > 0 else 0.0
+            implied_speed = distance / elapsed_hours if elapsed_hours > 0 else 0.0
+            split = (
+                elapsed_seconds > TRACKLOG_MAX_GAP_SECONDS
+                or distance >= 250.0
+                or (distance >= 75.0 and elapsed_hours > 0 and implied_speed > 1200.0)
+            )
+
+        if split:
+            if len(current) >= 2:
+                segments.append(current)
+            current = []
+        current.append(row)
+        previous = row
+
+    if len(current) >= 2:
+        segments.append(current)
+    return segments
 
 
 def _kml_document(
@@ -243,17 +314,18 @@ def _kml_document(
             if call:
                 grouped.setdefault(call, []).append(row)
         for call, rows in grouped.items():
-            if len(rows) < 2:
-                continue
-            placemark = ET.SubElement(track_folder, f"{{{KML_NS}}}Placemark")
-            ET.SubElement(placemark, f"{{{KML_NS}}}name").text = call
-            line = ET.SubElement(placemark, f"{{{KML_NS}}}LineString")
-            ET.SubElement(line, f"{{{KML_NS}}}tessellate").text = "1"
-            coordinates = []
-            for row in rows:
-                alt = float(row.get("altitude") or 0.0)
-                coordinates.append(f"{float(row['longitude']):.7f},{float(row['latitude']):.7f},{alt:.1f}")
-            ET.SubElement(line, f"{{{KML_NS}}}coordinates").text = " ".join(coordinates)
+            segments = _split_track_rows(rows)
+            for index, segment in enumerate(segments, start=1):
+                placemark = ET.SubElement(track_folder, f"{{{KML_NS}}}Placemark")
+                name = call if len(segments) == 1 else f"{call} — segmento {index}"
+                ET.SubElement(placemark, f"{{{KML_NS}}}name").text = name
+                line = ET.SubElement(placemark, f"{{{KML_NS}}}LineString")
+                ET.SubElement(line, f"{{{KML_NS}}}tessellate").text = "1"
+                coordinates = []
+                for row in segment:
+                    alt = float(row.get("altitude") or 0.0)
+                    coordinates.append(f"{float(row['longitude']):.7f},{float(row['latitude']):.7f},{alt:.1f}")
+                ET.SubElement(line, f"{{{KML_NS}}}coordinates").text = " ".join(coordinates)
 
     if include_topology:
         topology_folder = folder("Topology")
