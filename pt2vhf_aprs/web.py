@@ -369,10 +369,15 @@ def _topology_diagnostic_payload(hours: float = 0, *, complete: bool = False) ->
         edge_where, edge_params = filter_clause("last_seen")
         topology_edges = [
             dict(row) for row in conn.execute(
-                f"""SELECT source,target,kind,packet_count,first_seen,last_seen,igate,
-                           rf_transport_count,rf_path_count,internet_confirmed_count
-                    FROM topology_edges{edge_where}
-                    ORDER BY last_seen,source,target""",
+                f"""SELECT e.source,e.target,e.kind,e.packet_count,e.first_seen,e.last_seen,e.igate,
+                           e.rf_transport_count,e.rf_path_count,e.internet_confirmed_count,
+                           s1.latitude AS source_lat,s1.longitude AS source_lon,
+                           s2.latitude AS target_lat,s2.longitude AS target_lon
+                    FROM topology_edges e
+                    LEFT JOIN stations s1 ON s1.callsign=e.source
+                    LEFT JOIN stations s2 ON s2.callsign=e.target
+                    {edge_where.replace("last_seen", "e.last_seen")}
+                    ORDER BY e.last_seen,e.source,e.target""",
                 edge_params,
             ).fetchall()
         ]
@@ -407,6 +412,32 @@ def _topology_diagnostic_payload(hours: float = 0, *, complete: bool = False) ->
             ).fetchall()
         ]
         track_rows.reverse()
+
+    now_utc = datetime.now(timezone.utc)
+    for edge in topology_edges:
+        slat, slon = edge.get("source_lat"), edge.get("source_lon")
+        tlat, tlon = edge.get("target_lat"), edge.get("target_lon")
+        if db._valid_geo_position(slat, slon) and db._valid_geo_position(tlat, tlon):
+            edge["distance_km"] = round(
+                db.haversine_km(float(slat), float(slon), float(tlat), float(tlon)),
+                3,
+            )
+        else:
+            edge["distance_km"] = None
+        rf_transport = int(edge.get("rf_transport_count") or 0)
+        rf_path = int(edge.get("rf_path_count") or 0)
+        kind = str(edge.get("kind") or "").lower()
+        edge["evidence_level"] = (
+            "internet" if kind == "igate"
+            else "direct" if rf_transport > 0
+            else "inferred" if rf_path > 0
+            else "legacy"
+        )
+        last_seen = _track_timestamp(edge.get("last_seen"))
+        edge["active_recent"] = bool(
+            last_seen is not None
+            and (now_utc - last_seen).total_seconds() <= 24 * 3600
+        )
 
     igate_calls = {
         str(edge.get("igate") or "").upper().strip()
@@ -506,8 +537,26 @@ def _topology_diagnostic_payload(hours: float = 0, *, complete: bool = False) ->
             "tracks": track_total > len(track_rows),
         },
         "stations": stations,
-        "igates": sorted(igate_calls),
-        "digipeaters": sorted(digi_calls),
+        "igates": [
+            {
+                "callsign": item.get("callsign"),
+                "latitude": item.get("latitude"),
+                "longitude": item.get("longitude"),
+                "last_heard": item.get("last_heard"),
+                "device": item.get("device"),
+            }
+            for item in stations if item.get("is_igate")
+        ],
+        "digipeaters": [
+            {
+                "callsign": item.get("callsign"),
+                "latitude": item.get("latitude"),
+                "longitude": item.get("longitude"),
+                "last_heard": item.get("last_heard"),
+                "device": item.get("device"),
+            }
+            for item in stations if item.get("is_digipeater")
+        ],
         "topology_edges": topology_edges,
         "topology_events": event_rows,
         "tracks": segmented_tracks,
