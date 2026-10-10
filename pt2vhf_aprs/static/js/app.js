@@ -9710,7 +9710,7 @@
     );
     try {
       const payload = await api(
-        '/api/topology/rf-records?hours=' + encodeURIComponent(hours) + '&limit=10&max_hops=6',
+        '/api/topology/rf-records?hours=' + encodeURIComponent(hours) + '&limit=10&max_hops=12',
         { timeoutMs: 60000 }
       );
       if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
