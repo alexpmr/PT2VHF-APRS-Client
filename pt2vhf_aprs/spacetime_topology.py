@@ -552,7 +552,30 @@ def _build_route_graph_uncached(hours: float = 0):
     # não possuam eventos espaço-temporais utilizáveis. Isso evita que um enlace
     # antigo simplesmente desapareça do período Completo após uma migração.
     try:
-        legacy_rows = _original_list_topology_edges(hours)
+        legacy_params: list[Any] = []
+        legacy_where = ""
+        if hours > 0:
+            legacy_cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+            legacy_where = " AND e.last_seen >= ?"
+            legacy_params.append(legacy_cutoff)
+        with db.connection() as legacy_conn:
+            legacy_rows = [
+                dict(row) for row in legacy_conn.execute(
+                    f"""SELECT e.source,e.target,e.kind,e.packet_count,e.first_seen,e.last_seen,e.igate,
+                               e.rf_transport_count,e.rf_path_count,e.internet_confirmed_count,
+                               s1.latitude AS source_lat,s1.longitude AS source_lon,
+                               s2.latitude AS target_lat,s2.longitude AS target_lon
+                        FROM topology_edges e
+                        JOIN stations s1 ON s1.callsign=e.source
+                        JOIN stations s2 ON s2.callsign=e.target
+                        WHERE e.kind='rf'
+                          AND s1.latitude IS NOT NULL AND s1.longitude IS NOT NULL
+                          AND s2.latitude IS NOT NULL AND s2.longitude IS NOT NULL
+                          {legacy_where}
+                        ORDER BY e.last_seen ASC,e.source,e.target""",
+                    legacy_params,
+                ).fetchall()
+            ]
     except Exception:
         legacy_rows = []
     for raw in legacy_rows:
