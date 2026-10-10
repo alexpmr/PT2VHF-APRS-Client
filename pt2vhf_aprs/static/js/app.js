@@ -4340,7 +4340,7 @@
     followTracklog(call, rows);
   }
 
-  const TRACKLOG_MAX_GAP_MS = 30 * 60 * 1000;
+  const TRACKLOG_MAX_GAP_MS = 30 * 60_000;
 
   function splitTrackSegments(rows) {
     const ordered = [...(rows || [])]
