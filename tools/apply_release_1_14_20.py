@@ -28,7 +28,7 @@ for marker in (
 
 app = read("pt2vhf_aprs/static/js/app.js")
 for marker in (
-    "TRACKLOG_MAX_GAP_MS = 30 * 60 * 1000",
+    "TRACKLOG_MAX_GAP_MS = 30 * 60_000",
     "const temporalGap = elapsedMs > TRACKLOG_MAX_GAP_MS",
     "Alcançabilidade histórica",
     "geometryEdge = routeEvidence || edge",
