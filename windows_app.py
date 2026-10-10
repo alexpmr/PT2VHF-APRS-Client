@@ -34,6 +34,7 @@ HOST = "127.0.0.1"
 PORT = configured_start_port()
 URL = f"http://{HOST}:{PORT}"
 MUTEX_NAME = "Global\\PT2VHF_APRS_Client_SingleInstance"
+APP_USER_MODEL_ID = "PT2VHF.APRS.Client"
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 850
 WINDOW_MIN_WIDTH = 1100
@@ -44,6 +45,16 @@ _tray_icon: pystray.Icon | None = None
 _browser_mode = False
 _quitting = False
 _server_handle = None
+
+
+def _configure_windows_identity() -> None:
+    """Garante identidade própria na taskbar e usa o ícone embutido no EXE."""
+    if os.name != "nt":
+        return
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
+    except Exception:
+        pass
 
 
 def _already_running() -> bool:
@@ -426,6 +437,7 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
 
 def main() -> int:
     global _browser_mode, _tray_icon, _server_handle, PORT, URL
+    _configure_windows_identity()
     _browser_mode = "--browser" in sys.argv[1:]
 
     if _already_running():
