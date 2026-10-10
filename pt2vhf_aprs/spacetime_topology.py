@@ -363,19 +363,30 @@ def _route_graph(hours: float = 0):
         where += " AND te.timestamp>=?"
         params.append(cutoff)
 
-    with db.connection() as conn:
-        rows = conn.execute(
-            f"""SELECT te.id,te.timestamp,te.source,te.target,te.medium,
-                       te.evidence_level,te.source_lat,te.source_lon,
-                       te.target_lat,te.target_lon,te.raw,te.rx_fingerprint,
-                       e.rf_transport_count,e.rf_path_count
-                FROM topology_events te
-                LEFT JOIN topology_edges e
-                  ON e.source=te.source AND e.target=te.target AND e.kind=te.kind
-                {where}
-                ORDER BY te.timestamp ASC,te.id ASC""",
-            params,
-        ).fetchall()
+    try:
+        with db.connection() as conn:
+            rows = conn.execute(
+                f"""SELECT te.id,te.timestamp,te.source,te.target,te.medium,
+                           te.evidence_level,te.source_lat,te.source_lon,
+                           te.target_lat,te.target_lon,te.raw,te.rx_fingerprint,
+                           e.rf_transport_count,e.rf_path_count
+                    FROM topology_events te
+                    LEFT JOIN topology_edges e
+                      ON e.source=te.source AND e.target=te.target AND e.kind=te.kind
+                    {where}
+                    ORDER BY te.timestamp ASC,te.id ASC""",
+                params,
+            ).fetchall()
+    except Exception as exc:
+        # Compatibilidade com bancos/testes que ainda não executaram init_db().
+        # O fallback conserva o comportamento legado sem afetar bancos já
+        # migrados para o modelo espaço-temporal.
+        if "no such table" in str(exc).lower() or "no such column" in str(exc).lower():
+            return _original_route_graph(hours)
+        raise
+
+    if not rows:
+        return _original_route_graph(hours)
 
     for row in rows:
         source = db._rf_route_callsign(row["source"])
@@ -761,6 +772,7 @@ def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_wi
 
 
 _original_init_db = db.init_db
+_original_route_graph = db._rf_route_graph
 _original_list_rf_routes = db.list_rf_routes
 
 
