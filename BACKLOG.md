@@ -15,6 +15,12 @@
 - A classe histórica/plausível deve ser permitida para análise de cobertura, malha e alcance potencial, mas **não deve ser apresentada como se tivesse ocorrido de ponta a ponta em um único evento**.
 - Para nós fixos, a composição histórica pode usar enlaces observados em momentos diferentes, desde que não exista evidência de mudança relevante de posição, configuração ou função.
 - Para nós móveis/tracker/digi móvel, a composição histórica só pode usar dois hops através do mesmo nó se as posições históricas daquele nó forem compatíveis com ambos os enlaces. Um tracker que esteve em Goiás e horas depois no Sul não pode unir essas duas redes em uma única rota.
+- **Regra de coordenadas para nós móveis:** cada hop deve usar a **posição do nó no instante em que aquele contato/enlace foi observado**, nunca a posição atual nem uma posição registrada em outro momento.
+- Se um tracker móvel serviu como elo em diferentes regiões ao longo de uma viagem, cada participação dele no grafo deve ser tratada como um **estado espaço-temporal distinto** do mesmo indicativo.
+- Exemplo: se B estava em Brasília quando ocorreu A → B e depois estava em Formosa quando ocorreu B → C, o motor não pode usar a posição de Formosa para reinterpretar A → B, nem usar a posição de Brasília para reinterpretar B → C.
+- Para compor uma rota histórica através de um nó móvel, comparar as coordenadas históricas associadas aos hops envolvidos. A composição só é válida quando essas posições representam um contexto físico compatível para o papel de elo.
+- O cálculo da distância de cada hop deve sempre usar as coordenadas históricas correspondentes ao próprio evento de evidência.
+- Quando não houver coordenada histórica confiável para um nó móvel no instante do enlace, o hop pode permanecer como evidência topológica, mas sua distância deve ser marcada como indeterminada e ele não deve ser usado para criar uma composição espacialmente afirmativa.
 - Para cada nó intermediário, verificar:
   - posição histórica compatível;
   - ausência de deslocamento incompatível entre os eventos usados;
