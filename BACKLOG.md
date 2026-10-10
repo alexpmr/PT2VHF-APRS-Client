@@ -1,3 +1,39 @@
+## Novo — Rotas RF: inferir alcançabilidade histórica por composição de enlaces observados
+
+- Permitir que o motor reconheça **alcançabilidade RF potencial** mesmo quando os hops que formam a cadeia não tenham sido observados no mesmo pacote.
+- Exemplo: se em um momento foi observado **A → B** e, em outro momento, foi observado **B → C**, o sistema pode concluir que existe uma **rota RF historicamente plausível A → B → C** e, portanto, que **A pode alcançar C via B**, desde que os enlaces individuais sejam válidos e compatíveis.
+- Essa inferência **não transforma A → C em enlace RF direto**. O resultado deve ser representado como **alcançabilidade/rota composta via intermediário**, preservando explicitamente B.
+- O mesmo princípio vale para cadeias maiores: A → B, B → C e C → D, observados em eventos distintos, podem sustentar uma rota histórica plausível A → B → C → D.
+- Separar semanticamente três classes:
+  - **Rota RF observada no mesmo evento/pacote** — evidência mais forte;
+  - **Rota RF reconstruída por eventos contemporâneos** — hops observados em eventos distintos, porém próximos no tempo e espacialmente coerentes;
+  - **Rota RF histórica/plausível** — hops observados em momentos diferentes, usados para inferir alcançabilidade potencial da rede.
+- A classe histórica/plausível deve ser permitida para análise de cobertura, malha e alcance potencial, mas **não deve ser apresentada como se tivesse ocorrido de ponta a ponta em um único evento**.
+- Para nós fixos, a composição histórica pode usar enlaces observados em momentos diferentes, desde que não exista evidência de mudança relevante de posição, configuração ou função.
+- Para nós móveis/tracker/digi móvel, a composição histórica só pode usar dois hops através do mesmo nó se as posições históricas daquele nó forem compatíveis com ambos os enlaces. Um tracker que esteve em Goiás e horas depois no Sul não pode unir essas duas redes em uma única rota.
+- Para cada nó intermediário, verificar:
+  - posição histórica compatível;
+  - ausência de deslocamento incompatível entre os eventos usados;
+  - frequência/banda/canal compatíveis quando essa informação existir;
+  - função de digipeater/relay válida no contexto;
+  - direção do enlace, quando a evidência não for bidirecional.
+- O motor deve guardar e exibir a origem da evidência de cada hop, com timestamp próprio. Não resumir toda a cadeia com um único timestamp.
+- A interface deve mostrar algo como:
+  - **A → B** — observado às 10:12;
+  - **B → C** — observado às 11:03;
+  - resultado: **A → C via B — alcançabilidade histórica plausível**.
+- O usuário deve conseguir distinguir claramente **“observado”** de **“possível pela topologia histórica”**.
+- Rotas históricas/plausíveis podem participar de análises de conectividade e cobertura, mas devem ter ranking/identificação próprios e não contam como recorde de enlace RF direto.
+- O cálculo de distância deve continuar sendo feito por hop, usando as posições válidas no instante de cada observação; nunca usar uma única posição atual para toda a cadeia.
+- Não exigir que todos os hops pertençam ao mesmo pacote para inferir alcançabilidade potencial; exigir apenas que cada hop tenha evidência própria e que a composição seja fisicamente/topologicamente coerente.
+- Adicionar regressões para:
+  - A → B e B → C em pacotes diferentes, formando alcançabilidade A → C via B;
+  - A → B, B → C e C → D em momentos distintos, formando A → D via B/C;
+  - nó intermediário móvel em posições incompatíveis, bloqueando a composição;
+  - cadeia histórica válida que não seja confundida com enlace direto;
+  - exibição separada dos timestamps/evidências de cada hop.
+- **Critério de aceite:** o sistema deve reconhecer que uma sequência de enlaces RF reais observados em momentos diferentes pode demonstrar **alcançabilidade técnica entre as extremidades**, sem afirmar falsamente que houve um pacote único de ponta a ponta nem colapsar a cadeia em um enlace direto inexistente.
+
 ## Novo — Rotas RF: não exibir hop inferido longo como enlace direto quando faltam intermediários
 
 - Corrigir o caso em que a análise de rota apresenta um único hop RF inferido muito longo, mesmo informando **“intermediários não identificados”**.
