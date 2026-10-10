@@ -128,6 +128,7 @@
 
 ## Implementado na v1.14.20 — Tracklog: quebrar o trajeto após longos períodos sem posição
 
+- **Validação em campo:** ajuste confirmado pelo usuário como correto na v1.14.20; o tracklog passou a interromper adequadamente a linha após longos períodos sem posição, eliminando as retas artificiais entre trechos desconectados.
 - **Não ligar automaticamente dois pontos de tracklog quando existir um intervalo temporal grande entre eles.**
 - Problema observado: o tracker registrou um ponto no Aeroporto de Brasília, foi desligado e voltou a transmitir somente em Formosa. A interface ligou os dois pontos com uma linha reta, criando um deslocamento que nunca foi efetivamente registrado.
 - Tratar o tracklog como uma sequência de **segmentos temporalmente contínuos**, e não como uma única polyline por indicativo.
