@@ -362,6 +362,13 @@ def _route_graph(hours: float = 0):
     except (TypeError, ValueError):
         normalized_hours = 0.0
     normalized_hours = max(0.25, min(normalized_hours, 24 * 30)) if normalized_hours > 0 else 0.0
+
+    # Extensões/testes podem substituir a fonte legada de topologia. Nesse
+    # cenário o cache normal não é válido, porque a função substituta pode
+    # representar um snapshot diferente a cada chamada.
+    if db.list_topology_edges is not _original_list_topology_edges:
+        return _build_route_graph_uncached(normalized_hours)
+
     key = (normalized_hours, str(db.DB_PATH))
     started = time.monotonic()
 
@@ -991,6 +998,7 @@ def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_wi
 
 _original_init_db = db.init_db
 _original_route_graph = db._rf_route_graph
+_original_list_topology_edges = db.list_topology_edges
 _original_list_rf_routes = db.list_rf_routes
 
 
