@@ -1,3 +1,38 @@
+## Novo — Estatísticas/Topologia: evitar timeout no período Completo
+
+- Corrigir o timeout observado na aba **Estatísticas** ao selecionar/permanecer no período **Completo**, com a mensagem: **“O backend local não respondeu em 10 segundos (/api/topology/stats?hours=0)”**.
+- O endpoint `/api/topology/stats?hours=0` não pode bloquear a interface por mais de 10 segundos nem fazer a tela parecer vazia quando existem dados no banco.
+- O problema atual é agravado porque `topology_stats(0)` executa, em uma única chamada, várias consultas/agregações potencialmente pesadas sobre todo o histórico, incluindo rankings, anomalias, sugestões, rotas RF, identificação de software/dispositivos, comparação histórica e estatísticas de recepção.
+- **Não mostrar 0 como se fosse dado real quando a consulta falhar ou expirar.** Enquanto o resultado não estiver disponível, os cartões devem exibir estado de **Carregando…/Processando…** ou **Indisponível**, preservando o último valor válido quando existir.
+- Integrar esta operação ao **indicador global de processamento**: ao abrir Estatísticas ou trocar para **Completo**, mostrar o spinner/relógio central com texto como **“Calculando estatísticas do histórico…”**.
+- Otimizar o backend para que o período completo seja utilizável mesmo com banco grande. Priorizar:
+  - índices adequados para `packets.timestamp`, `packets.from_call`, `topology_events.timestamp`, `topology_edges.last_seen` e demais campos usados nos agrupamentos;
+  - evitar varreduras repetidas da mesma tabela dentro da mesma atualização;
+  - reutilizar resultados intermediários entre blocos da tela;
+  - cachear agregações do período completo e invalidar o cache somente quando novos dados relevantes forem gravados;
+  - pré-agregar métricas pesadas quando isso trouxer ganho mensurável.
+- Avaliar separar `/api/topology/stats` em blocos independentes/assíncronos, para que uma seção pesada — por exemplo **rotas RF/Recordes RF** — não impeça que contadores, rankings e software/dispositivos apareçam.
+- Se uma subseção exceder o tempo de cálculo, retornar as demais normalmente e marcar apenas aquela subseção como **processando/indisponível**, em vez de invalidar toda a tela.
+- O frontend deve suportar resposta parcial e atualizar os blocos progressivamente conforme os resultados ficarem disponíveis.
+- Não resolver apenas aumentando indiscriminadamente o timeout global de 10 segundos. O objetivo é **reduzir o custo da consulta e melhorar a experiência assíncrona**, mantendo proteção contra backend travado.
+- Registrar no diagnóstico o tempo gasto por cada componente de `topology_stats`, por exemplo:
+  - ranking de estações;
+  - digipeaters/iGates;
+  - anomalias;
+  - sugestões;
+  - rotas/recordes RF;
+  - software/dispositivos;
+  - recepção RF × APRS-IS.
+- Quando qualquer bloco ultrapassar um limiar, registrar `duration_ms` no log para identificar regressões de performance.
+- Adicionar testes com base de histórico volumosa garantindo que:
+  - o período Completo não retorna falsos zeros por timeout;
+  - o frontend mantém o último resultado válido durante recálculo;
+  - falha de uma subseção não derruba as demais;
+  - cache do histórico completo é reutilizado quando o banco não mudou;
+  - inserção de novos pacotes invalida somente o necessário;
+  - o indicador global de processamento aparece enquanto a análise pesada estiver em andamento e desaparece ao concluir ou falhar.
+- **Critério de aceite:** ao abrir Estatísticas com **Período = Completo**, a interface deve continuar responsiva, mostrar claramente que está processando, apresentar resultados reais assim que disponíveis e não exibir cartões zerados apenas porque `/api/topology/stats?hours=0` demorou mais de 10 segundos.
+
 ## Novo — Indicador global de processamento em primeiro plano
 
 - Sempre que o aplicativo estiver executando uma operação que possa levar tempo perceptível ao usuário, exibir um **indicador visual centralizado sobre a interface**, deixando claro que existe processamento em andamento.
