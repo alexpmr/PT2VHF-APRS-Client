@@ -1,4 +1,4 @@
-## Novo — Rotas RF: inferir alcançabilidade histórica por composição de enlaces observados
+## Implementado na v1.14.20 — Rotas RF: inferir alcançabilidade histórica por composição de enlaces observados
 
 - **Princípio funcional:** o objetivo desta análise de rotas é mostrar a **alcançabilidade RF conhecida/potencial da rede**, e não provar que um único pacote percorreu toda a rota de origem a destino de uma só vez.
 - A rota representa um **caminho topológico possível**, composto por enlaces RF que já foram observados individualmente e podem ter ocorrido em momentos diferentes.
@@ -44,7 +44,7 @@
   - exibição separada dos timestamps/evidências de cada hop.
 - **Critério de aceite:** o sistema deve reconhecer que uma sequência de enlaces RF reais observados em momentos diferentes pode demonstrar **alcançabilidade técnica entre as extremidades**, sem afirmar falsamente que houve um pacote único de ponta a ponta nem colapsar a cadeia em um enlace direto inexistente.
 
-## Novo — Rotas RF: não exibir hop inferido longo como enlace direto quando faltam intermediários
+## Implementado na v1.14.20 — Rotas RF: não exibir hop inferido longo como enlace direto quando faltam intermediários
 
 - Corrigir o caso em que a análise de rota apresenta um único hop RF inferido muito longo, mesmo informando **“intermediários não identificados”**.
 - Exemplo observado: **LU9DCE → PU2XTC-4**, aproximadamente **1694,9 km**, aparece como 1 hop, RF inferido do path e é desenhado como uma reta única Buenos Aires → São Paulo.
@@ -84,7 +84,7 @@
   - não inserir nós apenas porque estão geograficamente entre as extremidades.
 - **Critério de aceite:** se os pontos/nós intermediários forem conhecidos, a rota deve passar por eles; se não forem conhecidos, o sistema deve declarar a cadeia incompleta e jamais transformar a lacuna em uma reta RF direta de milhares de quilômetros.
 
-## Novo — Tracklog: quebrar o trajeto após longos períodos sem posição
+## Implementado na v1.14.20 — Tracklog: quebrar o trajeto após longos períodos sem posição
 
 - **Não ligar automaticamente dois pontos de tracklog quando existir um intervalo temporal grande entre eles.**
 - Problema observado: o tracker registrou um ponto no Aeroporto de Brasília, foi desligado e voltou a transmitir somente em Formosa. A interface ligou os dois pontos com uma linha reta, criando um deslocamento que nunca foi efetivamente registrado.
