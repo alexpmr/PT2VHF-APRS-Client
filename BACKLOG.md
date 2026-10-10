@@ -1,3 +1,16 @@
+## Novo — Estatísticas: unificar conteúdo em um único bloco sem rolagem interna
+
+- Na aba **Estatísticas**, apresentar todo o conteúdo em **um único fluxo/bloco vertical**, utilizando somente a rolagem principal da aba/página.
+- Remover barras de rolagem internas dos blocos de estatísticas.
+- Problema observado: o ranking de **Software / dispositivos APRS** está atualmente dentro de um contêiner com altura limitada e **barra de rolagem própria**, criando uma segunda área de navegação dentro da aba.
+- O ranking de aplicativos/dispositivos deve crescer verticalmente conforme a quantidade de itens, exatamente como os demais blocos da aba.
+- Remover do bloco de Software / dispositivos APRS qualquer `max-height`, `height` fixa, `overflow-y: auto`, `overflow: scroll` ou regra equivalente que gere rolagem interna.
+- Aplicar o mesmo princípio aos demais componentes da aba Estatísticas: rankings, anomalias, digipeaters, iGates, Recordes RF, problemas, melhorias e demais seções devem compartilhar a **mesma rolagem principal**.
+- Preservar cabeçalhos, filtros e controles existentes, mas evitar painéis aninhados com scroll independente.
+- Em listas extensas, preferir renderização normal no fluxo da página; se futuramente for necessário reduzir altura visual, utilizar paginação, “mostrar mais” ou recolhimento explícito, e não uma barra de rolagem interna.
+- Garantir comportamento consistente nos temas claro/escuro e em telas menores.
+- **Critério de aceite:** ao abrir Estatísticas, o usuário deve poder percorrer todo o conteúdo usando uma única barra de rolagem; o bloco **Software / dispositivos APRS** não pode possuir scroll interno próprio.
+
 ## Novo — Estatísticas/Topologia: evitar timeout no período Completo
 
 - Corrigir o timeout observado na aba **Estatísticas** ao selecionar/permanecer no período **Completo**, com a mensagem: **“O backend local não respondeu em 10 segundos (/api/topology/stats?hours=0)”**.
