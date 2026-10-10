@@ -19,7 +19,7 @@ for marker in (
     "legacy_fallback",
     "ranking_scope",
     "multihop",
-    'seen_modes: set[tuple[str, str]]',
+    'best_depth_seen: dict[tuple[str, int], int]',
 ):
     if marker not in overlay:
         raise SystemExit(f"v1.14.22 topology marker missing: {marker}")
