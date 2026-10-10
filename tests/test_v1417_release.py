@@ -73,12 +73,16 @@ def test_v1417_long_inferred_edge_stays_inferred_when_no_supported_chain():
 
     payload = db._rf_route_payload(["A", "D"], graph, positions)
 
-    assert payload is not None
-    assert payload["nodes"] == ["A", "D"]
-    assert payload["refinement_applied"] is False
-    assert len(payload["unresolved_inferred_edges"]) == 1
-    assert payload["unresolved_inferred_edges"][0]["source"] == "A"
-    assert payload["unresolved_inferred_edges"][0]["target"] == "D"
+    current = tuple(int(part) for part in read("VERSION").strip().split("."))
+    if current >= (1, 14, 20):
+        assert payload is None
+    else:
+        assert payload is not None
+        assert payload["nodes"] == ["A", "D"]
+        assert payload["refinement_applied"] is False
+        assert len(payload["unresolved_inferred_edges"]) == 1
+        assert payload["unresolved_inferred_edges"][0]["source"] == "A"
+        assert payload["unresolved_inferred_edges"][0]["target"] == "D"
 
 
 def test_v1417_long_direct_rf_edge_is_never_broken_only_by_distance():
@@ -126,10 +130,17 @@ def test_v1417_refinement_respects_temporal_proximity():
 
     payload = db._rf_route_payload(["A", "D"], graph, positions)
 
+    current = tuple(int(part) for part in read("VERSION").strip().split("."))
     assert payload is not None
-    assert payload["nodes"] == ["A", "D"]
-    assert payload["refinement_applied"] is False
-    assert len(payload["unresolved_inferred_edges"]) == 1
+    if current >= (1, 14, 20):
+        # v1.14.20 permite compor alcançabilidade histórica: o tempo classifica
+        # a evidência, mas não elimina uma cadeia espacialmente coerente.
+        assert payload["nodes"] == ["A", "B", "D"]
+        assert payload["refinement_applied"] is True
+    else:
+        assert payload["nodes"] == ["A", "D"]
+        assert payload["refinement_applied"] is False
+        assert len(payload["unresolved_inferred_edges"]) == 1
 
 
 def test_v1417_full_backup_button_uses_explicit_download_flow():

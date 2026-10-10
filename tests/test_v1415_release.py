@@ -77,12 +77,21 @@ def test_v1415_route_search_prefers_direct_evidence_without_distance_veto():
     routes, truncated, expanded = db._rf_k_best_routes("A", "D", graph, positions, 2, 4)
     assert truncated is False
     assert expanded > 0
-    assert len(routes) == 2
-    assert routes[0]["nodes"] == ["A", "B", "C", "D"]
-    assert routes[0]["direct_edges"] == 3
-    assert routes[0]["inferred_edges"] == 0
-    assert routes[1]["nodes"] == ["A", "X", "D"]
-    assert routes[1]["inferred_edges"] == 2
+    current = tuple(int(part) for part in read("VERSION").strip().split("."))
+    if current >= (1, 14, 20):
+        # v1.14.20: hops inferidos longos sem intermediários sustentados deixam
+        # de competir como enlaces físicos diretos.
+        assert len(routes) == 1
+        assert routes[0]["nodes"] == ["A", "B", "C", "D"]
+        assert routes[0]["direct_edges"] == 3
+        assert routes[0]["inferred_edges"] == 0
+    else:
+        assert len(routes) == 2
+        assert routes[0]["nodes"] == ["A", "B", "C", "D"]
+        assert routes[0]["direct_edges"] == 3
+        assert routes[0]["inferred_edges"] == 0
+        assert routes[1]["nodes"] == ["A", "X", "D"]
+        assert routes[1]["inferred_edges"] == 2
 
 
 def test_v1415_long_direct_rf_edge_is_not_rejected_by_distance():

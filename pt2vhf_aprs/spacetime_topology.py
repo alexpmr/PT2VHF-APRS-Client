@@ -20,8 +20,10 @@ from . import diagnostics as diag
 
 EVENT_POSITION_MAX_AGE_HOURS = 12.0
 ROUTE_TEMPORAL_WINDOW_MINUTES = 30.0
-SHARED_NODE_BASE_KM = 15.0
-SHARED_NODE_SPEED_KMH = 100.0
+SHARED_NODE_COMPATIBILITY_KM = 25.0
+ROUTE_EVENT_SAMPLE_LIMIT = 160
+ROUTE_EVENT_BEAM_WIDTH = 24
+INFERRED_LONG_HOP_KM = 250.0
 GRAPH_CACHE_SECONDS = 10.0
 
 _graph_cache_lock = threading.RLock()
@@ -501,56 +503,98 @@ def _event_position(node: str, edge: dict[str, Any], event: dict[str, Any]) -> t
     return float(lat), float(lon)
 
 
-def _temporal_events(nodes: list[str], graph: dict[str, dict[str, dict[str, Any]]]):
+def _sample_route_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Amostra o histórico sem privilegiar apenas a posição atual de um móvel."""
+    ordered = sorted(
+        [event for event in events if _event_epoch(event) is not None],
+        key=lambda event: (float(_event_epoch(event) or 0.0), int(event.get("id") or 0)),
+    )
+    if len(ordered) <= ROUTE_EVENT_SAMPLE_LIMIT:
+        return ordered
+    last = len(ordered) - 1
+    indexes = {
+        round(index * last / (ROUTE_EVENT_SAMPLE_LIMIT - 1))
+        for index in range(ROUTE_EVENT_SAMPLE_LIMIT)
+    }
+    return [ordered[index] for index in sorted(indexes)]
+
+
+def _compatible_events(nodes: list[str], graph: dict[str, dict[str, dict[str, Any]]]):
+    """Seleciona uma evidência histórica por hop preservando o local do nó intermediário.
+
+    Os hops podem ter sido observados em momentos diferentes. A composição só é
+    aceita quando o mesmo nó intermediário aparece em coordenadas compatíveis
+    nas duas evidências adjacentes. Assim, um tracker que viajou centenas de
+    quilômetros não conecta artificialmente as redes visitadas durante a viagem.
+    """
     if len(nodes) < 2:
         return []
+
     edges: list[dict[str, Any]] = []
-    lists: list[list[dict[str, Any]]] = []
+    event_lists: list[list[dict[str, Any]]] = []
     for a, b in zip(nodes, nodes[1:]):
         edge = graph.get(a, {}).get(b)
         if not edge:
             return None
-        events = [event for event in (edge.get("events") or []) if _event_epoch(event) is not None]
+        events = _sample_route_events(list(edge.get("events") or []))
         if not events:
             return None
-        events.sort(key=lambda event: float(_event_epoch(event) or 0.0))
         edges.append(edge)
-        lists.append(events)
+        event_lists.append(events)
 
-    pointers = [0] * len(lists)
-    best: tuple[float, float, list[dict[str, Any]]] | None = None
-    window = ROUTE_TEMPORAL_WINDOW_MINUTES * 60.0
-    while True:
-        selected = [lists[i][pointers[i]] for i in range(len(lists))]
-        epochs = [float(_event_epoch(event) or 0.0) for event in selected]
-        low, high = min(epochs), max(epochs)
-        span = high - low
-        coherent = span <= window
+    # Beam search: minimiza a divergência espacial nos nós compartilhados.
+    states: list[tuple[float, float, list[dict[str, Any]]]] = []
+    for event in event_lists[0]:
+        epoch = float(_event_epoch(event) or 0.0)
+        states.append((0.0, -epoch, [event]))
+    states.sort(key=lambda item: (item[0], item[1]))
+    states = states[:ROUTE_EVENT_BEAM_WIDTH]
 
-        if coherent and len(nodes) > 2:
-            for index in range(1, len(nodes) - 1):
-                shared = nodes[index]
-                left_pos = _event_position(shared, edges[index - 1], selected[index - 1])
-                right_pos = _event_position(shared, edges[index], selected[index])
-                if left_pos is None or right_pos is None:
-                    coherent = False
-                    break
-                delta_hours = abs(epochs[index] - epochs[index - 1]) / 3600.0
-                allowed_km = SHARED_NODE_BASE_KM + SHARED_NODE_SPEED_KMH * delta_hours
-                if db.haversine_km(*left_pos, *right_pos) > allowed_km:
-                    coherent = False
-                    break
+    for edge_index in range(1, len(edges)):
+        shared_node = nodes[edge_index]
+        next_states: list[tuple[float, float, list[dict[str, Any]]]] = []
+        for score, _recency, chosen in states:
+            previous_event = chosen[-1]
+            previous_pos = _event_position(shared_node, edges[edge_index - 1], previous_event)
+            if previous_pos is None:
+                continue
+            for event in event_lists[edge_index]:
+                current_pos = _event_position(shared_node, edges[edge_index], event)
+                if current_pos is None:
+                    continue
+                mismatch_km = db.haversine_km(*previous_pos, *current_pos)
+                if mismatch_km > SHARED_NODE_COMPATIBILITY_KM:
+                    continue
+                epochs = [float(_event_epoch(item) or 0.0) for item in chosen]
+                epochs.append(float(_event_epoch(event) or 0.0))
+                newest = max(epochs)
+                next_states.append((
+                    score + mismatch_km,
+                    -newest,
+                    chosen + [event],
+                ))
+        if not next_states:
+            return None
+        next_states.sort(key=lambda item: (item[0], item[1]))
+        states = next_states[:ROUTE_EVENT_BEAM_WIDTH]
 
-        if coherent:
-            score = (span, -high)
-            if best is None or score < (best[0], best[1]):
-                best = (span, -high, [dict(event) for event in selected])
+    return states[0][2] if states else None
 
-        oldest = min(range(len(epochs)), key=lambda idx: epochs[idx])
-        pointers[oldest] += 1
-        if pointers[oldest] >= len(lists[oldest]):
-            break
-    return best[2] if best is not None else None
+
+def _reachability_class(selected_events: list[dict[str, Any]]) -> tuple[str, float | None]:
+    if not selected_events:
+        return "legacy", None
+    epochs = [float(_event_epoch(event) or 0.0) for event in selected_events]
+    span_minutes = (max(epochs) - min(epochs)) / 60.0 if epochs else 0.0
+    raws = [str(event.get("raw") or "") for event in selected_events]
+    timestamps = [str(event.get("timestamp") or "") for event in selected_events]
+    same_packet = bool(raws and all(raws) and len(set(raws)) == 1 and len(set(timestamps)) == 1)
+    if same_packet:
+        return "same_packet", round(span_minutes, 2)
+    if span_minutes <= ROUTE_TEMPORAL_WINDOW_MINUTES:
+        return "contemporary", round(span_minutes, 2)
+    return "historical", round(span_minutes, 2)
+
 
 
 def _edge_payload(source: str, target: str, edge: dict[str, Any], positions, event=None):
@@ -630,9 +674,38 @@ def _route_payload(nodes, graph, positions, *, refine_inferred=True):
     route_graph_edges = [graph.get(a, {}).get(b) for a, b in zip(nodes, nodes[1:])]
     if any(edge is None for edge in route_graph_edges):
         return None
-    temporal_graph = all(bool(edge.get("events")) for edge in route_graph_edges if edge)
-    selected_events = _temporal_events(nodes, graph) if temporal_graph else None
-    if temporal_graph and selected_events is None:
+
+    # Um hop inferido longo sem intermediários conhecidos não pode ser tratado
+    # como um único enlace físico. A busca de rotas deve continuar procurando
+    # uma cadeia histórica A->B->C... no grafo.
+    unresolved_long: list[dict[str, Any]] = []
+    reconstructed_original_pairs = {
+        tuple(sorted((str(item.get("source") or ""), str(item.get("target") or ""))))
+        for item in reconstructed
+    }
+    for a, b, edge in zip(nodes, nodes[1:], route_graph_edges):
+        level, _label = db._rf_route_evidence(edge)
+        events = list(edge.get("events") or [])
+        event_distances = [
+            float(event.get("distance_km") or 0.0)
+            for event in events
+            if float(event.get("distance_km") or 0.0) > 0
+        ]
+        edge_distance = min(event_distances) if event_distances else float(edge.get("distance_km") or 0.0)
+        pair = tuple(sorted((a, b)))
+        if level == "inferred" and edge_distance >= INFERRED_LONG_HOP_KM and pair not in reconstructed_original_pairs:
+            unresolved_long.append({
+                "source": a,
+                "target": b,
+                "distance_km": round(edge_distance, 3),
+                "reason": "cadeia RF incompleta",
+            })
+    if unresolved_long:
+        return None
+
+    event_graph = all(bool(edge.get("events")) for edge in route_graph_edges if edge)
+    selected_events = _compatible_events(nodes, graph) if event_graph else None
+    if event_graph and selected_events is None:
         return None
 
     route_edges: list[dict[str, Any]] = []
@@ -663,7 +736,7 @@ def _route_payload(nodes, graph, positions, *, refine_inferred=True):
         start_epoch, end_epoch = min(epochs), max(epochs)
         route_start = datetime.fromtimestamp(start_epoch, timezone.utc).replace(microsecond=0).isoformat()
         route_end = datetime.fromtimestamp(end_epoch, timezone.utc).replace(microsecond=0).isoformat()
-        span_minutes = round((end_epoch - start_epoch) / 60.0, 2)
+        reachability_class, span_minutes = _reachability_class(selected_events)
         direct = round(db.haversine_km(
             float(route_edges[0]["source_lat"]), float(route_edges[0]["source_lon"]),
             float(route_edges[-1]["target_lat"]), float(route_edges[-1]["target_lon"]),
@@ -672,6 +745,7 @@ def _route_payload(nodes, graph, positions, *, refine_inferred=True):
         route_start = min(latest_values) if latest_values else ""
         route_end = max(latest_values) if latest_values else ""
         span_minutes = None
+        reachability_class = "legacy"
         direct = round(db.haversine_km(*positions[nodes[0]], *positions[nodes[-1]]), 3)
 
     evidence_class = (
@@ -698,8 +772,11 @@ def _route_payload(nodes, graph, positions, *, refine_inferred=True):
         "route_evidence_start": route_start,
         "route_evidence_end": route_end,
         "temporal_span_minutes": span_minutes,
-        "temporal_window_minutes": ROUTE_TEMPORAL_WINDOW_MINUTES if selected_events is not None else None,
+        "temporal_window_minutes": ROUTE_TEMPORAL_WINDOW_MINUTES,
         "spatiotemporal_validated": selected_events is not None,
+        "reachability_class": reachability_class,
+        "historical_reachability": reachability_class == "historical",
+        "same_packet_observed": reachability_class == "same_packet",
         "observations": observations,
         "direct_edges": counts["direct"],
         "inferred_edges": counts["inferred"],
@@ -708,9 +785,73 @@ def _route_payload(nodes, graph, positions, *, refine_inferred=True):
         "refinement_applied": bool(reconstructed),
         "reconstructed_intermediate_nodes": reconstructed_nodes,
         "reconstructed_segments": reconstructed,
-        "unresolved_inferred_edges": unresolved,
+        "unresolved_inferred_edges": [],
         "edges": route_edges,
     }
+
+
+
+def _list_rf_route_candidates(source: str, hours: float = 0, query: str = "", limit: int = 80):
+    """Destinos realmente alcançáveis por uma cadeia RF espacialmente compatível."""
+    source_call = db._rf_route_callsign(source)
+    if not source_call:
+        return []
+    query_norm = str(query or "").upper().strip()
+    graph, positions = _route_graph(hours)
+    if source_call not in graph:
+        return []
+
+    queue: list[list[str]] = [[source_call]]
+    best_hops: dict[str, int] = {source_call: 0}
+    candidates: dict[str, dict[str, Any]] = {}
+    max_hops = 12
+
+    while queue:
+        path = queue.pop(0)
+        node = path[-1]
+        if len(path) - 1 >= max_hops:
+            continue
+        neighbors = sorted(
+            graph.get(node, {}).items(),
+            key=lambda pair: (
+                -int(pair[1].get("packet_count") or 0),
+                str(pair[1].get("last_seen") or ""),
+                pair[0],
+            ),
+        )
+        for nxt, edge in neighbors:
+            if nxt in path:
+                continue
+            next_path = path + [nxt]
+            payload = _route_payload(next_path, graph, positions, refine_inferred=False)
+            if not payload:
+                continue
+            hops = len(next_path) - 1
+            previous_hops = best_hops.get(nxt)
+            if previous_hops is None or hops < previous_hops:
+                best_hops[nxt] = hops
+                queue.append(next_path)
+            if query_norm and query_norm not in nxt:
+                continue
+            current = candidates.get(nxt)
+            candidate = {
+                "callsign": nxt,
+                "hops": hops,
+                "last_seen": str(payload.get("route_evidence_end") or edge.get("last_seen") or ""),
+                "packet_count": int(payload.get("observations") or edge.get("packet_count") or 0),
+                "reachability_class": str(payload.get("reachability_class") or "historical"),
+            }
+            if current is None or hops < int(current.get("hops") or 999):
+                candidates[nxt] = candidate
+
+    rows = list(candidates.values())
+    rows.sort(key=lambda item: (
+        0 if query_norm and str(item["callsign"]).startswith(query_norm) else 1,
+        int(item.get("hops") or 0),
+        -int(item.get("packet_count") or 0),
+        str(item.get("callsign") or ""),
+    ))
+    return rows[: max(1, min(int(limit or 80), 200))]
 
 
 def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_width: int = 500):
@@ -786,18 +927,41 @@ def _list_rf_routes(*args: Any, **kwargs: Any) -> dict[str, Any]:
     routes = payload.get("routes") or []
     if routes:
         payload["direct_distance_km"] = routes[0].get("direct_distance_km")
+
+    # Não mostrar como corredor físico uma aresta inferida longa que não tenha
+    # sido decomposta em uma rota válida com nós intermediários.
+    allowed_pairs = {
+        tuple(sorted((str(edge.get("source") or ""), str(edge.get("target") or ""))))
+        for route in routes
+        for edge in (route.get("edges") or [])
+    }
+    filtered_edges = []
+    for edge in payload.get("eligible_edges") or []:
+        pair = tuple(sorted((str(edge.get("source") or ""), str(edge.get("target") or ""))))
+        level = str(edge.get("evidence_level") or "legacy")
+        distance = float(edge.get("distance_km") or 0.0)
+        if level == "inferred" and distance >= INFERRED_LONG_HOP_KM and pair not in allowed_pairs:
+            continue
+        filtered_edges.append(edge)
+    payload["eligible_edges"] = filtered_edges
+    payload["eligible_edge_count"] = len(filtered_edges)
     payload["temporal_window_minutes"] = ROUTE_TEMPORAL_WINDOW_MINUTES
+    payload["route_semantics"] = "historical_reachability"
     return payload
 
 
 def install() -> None:
-    """Instala o modelo v1.14.19 preservando as assinaturas públicas existentes."""
-    db.RF_INFERRED_REFINEMENT_WINDOW_HOURS = ROUTE_TEMPORAL_WINDOW_MINUTES / 60.0
+    """Instala o modelo v1.14.20 de alcançabilidade RF histórica."""
+    # Refinamento pode usar enlaces observados em momentos distintos; a
+    # validação espacial por coordenadas históricas é feita em _route_payload.
+    db.RF_INFERRED_REFINEMENT_WINDOW_HOURS = 24.0 * 3650.0
+    db.RF_INFERRED_REFINEMENT_MAX_HOPS = max(int(getattr(db, "RF_INFERRED_REFINEMENT_MAX_HOPS", 5)), 12)
     db.init_db = _init_db
     db._record_topology_from_raw_conn = _record_topology_from_raw_conn
     db.process_received_packet = _process_received_packet
     db._rf_route_graph = _route_graph
     db._rf_route_edge_payload = _edge_payload
     db._rf_route_payload = _route_payload
+    db.list_rf_route_candidates = _list_rf_route_candidates
     db.list_rf_route_records = _route_records
     db.list_rf_routes = _list_rf_routes

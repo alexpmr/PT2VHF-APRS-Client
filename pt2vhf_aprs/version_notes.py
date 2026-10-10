@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.20": {
+        "title": "Alcançabilidade RF histórica e tracklogs contínuos",
+        "items": [
+            "Rotas RF passam a representar alcançabilidade da malha: hops observados em momentos diferentes podem compor um caminho histórico válido.",
+            "Cada hop usa as coordenadas registradas no instante do contato; um tracker móvel não transporta artificialmente conectividade entre regiões diferentes.",
+            "Nós intermediários são preservados e hops inferidos longos sem cadeia sustentada deixam de aparecer como enlaces físicos diretos.",
+            "As rotas distinguem observação no mesmo pacote, reconstrução contemporânea e alcançabilidade histórica.",
+            "Tracklogs são quebrados após 30 minutos sem posição, evitando retas artificiais quando um tracker é desligado e ligado novamente em outro local.",
+            "A mesma quebra temporal é aplicada à exportação KML.",
+        ],
+    },
     "1.14.19": {
         "title": "Rotas RF espaço-temporais para digis e trackers móveis",
         "items": [
