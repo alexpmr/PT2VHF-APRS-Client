@@ -1,3 +1,17 @@
+## 1.14.20 - 2026-10-10
+
+- **Rotas RF como alcançabilidade:** a análise deixa de exigir que um pacote tenha percorrido toda a cadeia de uma só vez; enlaces RF válidos observados em momentos distintos podem formar uma rota histórica.
+- **Coordenadas por evento:** cada hop usa a posição histórica das estações no instante daquele contato, preservando corretamente digis/trackers móveis.
+- **Continuidade espacial:** um nó móvel só conecta dois hops históricos quando suas coordenadas nos dois eventos são compatíveis; deslocamentos entre regiões não viram pontes artificiais.
+- **Intermediários preservados:** cadeias A→B, B→C, C→D são exibidas como A→B→C→D, sem colapsar automaticamente em um falso A→D.
+- **Inferidos longos:** hops RF inferidos de 250 km ou mais, sem cadeia intermediária sustentada, deixam de ser tratados como enlace físico direto.
+- **Semântica explícita:** rotas distinguem observada no mesmo pacote, reconstruída por eventos contemporâneos e alcançabilidade histórica.
+- **Mapa de rotas:** usa as coordenadas históricas selecionadas para cada hop, não a posição atual dos nós.
+- **Tracklog:** intervalo superior a 30 minutos sem nova posição encerra o segmento; o próximo ponto inicia novo segmento.
+- **KML:** exportação aplica a mesma segmentação temporal do mapa, evitando retas entre pontos separados por longos períodos sem rastreamento.
+- **Testes:** regressões cobrem alcançabilidade histórica, tracker móvel, hop inferido longo e segmentação temporal do tracklog/KML.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.19 - 2026-10-10
 
 - **Topologia RF espaço-temporal:** rotas deixam de tratar um indicativo móvel como um vértice fixo ao longo de todo o histórico.
