@@ -1,3 +1,45 @@
+## Novo — Indicador global de processamento em primeiro plano
+
+- Sempre que o aplicativo estiver executando uma operação que possa levar tempo perceptível ao usuário, exibir um **indicador visual centralizado sobre a interface**, deixando claro que existe processamento em andamento.
+- Reutilizar e ampliar o mecanismo de **global processing overlay** já existente, evitando criar um segundo sistema paralelo de estado/overlay.
+- O indicador deve aparecer **no centro da tela**, sobre o conteúdo atual, com aparência discreta porém inequívoca.
+- Usar um elemento animado de atividade, preferencialmente **spinner/relógio girando**, acompanhado de mensagem curta quando o tipo de operação for conhecido.
+- Exemplos de texto:
+  - **Processando…**
+  - **Carregando dados…**
+  - **Analisando rotas RF…**
+  - **Gerando backup…**
+  - **Exportando KML…**
+  - **Aplicando configurações…**
+- O overlay deve ser utilizado principalmente quando uma operação:
+  - bloquear temporariamente outra ação;
+  - executar cálculo/análise relevante no backend;
+  - carregar grande quantidade de dados;
+  - gerar/exportar arquivo;
+  - importar/restaurar dados;
+  - executar atualização/migração;
+  - realizar busca ou reconstrução de topologia/rotas que não seja praticamente instantânea.
+- Evitar piscar o overlay em operações muito rápidas. Adotar um pequeno **delay de exibição**, por exemplo **250–400 ms**, para que ações concluídas imediatamente não provoquem ruído visual.
+- Se a operação continuar após esse delay, mostrar o indicador e mantê-lo visível até a conclusão real.
+- O indicador deve desaparecer obrigatoriamente em **sucesso, erro, cancelamento ou timeout**, inclusive quando ocorrer exceção.
+- Operações assíncronas concorrentes não podem fazer o overlay desaparecer enquanto outra operação ainda estiver ativa. Implementar **contador/token de processamento** ou mecanismo equivalente.
+- Quando várias tarefas estiverem simultaneamente ativas, priorizar a mensagem da operação mais recente/relevante sem perder a referência das demais.
+- O overlay não deve congelar a animação: mesmo quando o backend estiver ocupado, a interface deve continuar renderizando o spinner sempre que tecnicamente possível.
+- Quando a operação não exigir bloqueio total da interface, permitir modo **não bloqueante**, mantendo o indicador de atividade visível mas sem impedir navegação desnecessariamente.
+- Para operações destrutivas ou que não podem ser interrompidas, manter o modo bloqueante existente.
+- Garantir contraste adequado nos temas claro e escuro e funcionamento em diferentes resoluções.
+- Adicionar acessibilidade com **role/status**, **aria-live** e texto equivalente para leitores de tela.
+- Centralizar esse comportamento em funções reutilizáveis, por exemplo `showProcessing()`, `updateProcessing()`, `hideProcessing()` e/ou `withProcessing()`, em vez de implementar spinners isolados em cada funcionalidade.
+- Revisar as principais operações já existentes e conectar ao indicador global onde ainda não houver feedback visual de processamento.
+- Adicionar regressões garantindo:
+  - exibição após o delay configurado;
+  - ausência de flicker para operação rápida;
+  - ocultação em sucesso e erro;
+  - manutenção do overlay quando existem duas operações simultâneas;
+  - atualização do texto durante etapas diferentes da mesma operação;
+  - nenhum overlay residual após exceção.
+- **Critério de aceite:** se o usuário iniciar uma ação que demore perceptivelmente, deve existir no centro da tela um sinal animado de atividade indicando que o aplicativo continua trabalhando, sem deixar a impressão de travamento.
+
 ## Implementado na v1.14.20 — Rotas RF: inferir alcançabilidade histórica por composição de enlaces observados
 
 - **Princípio funcional:** o objetivo desta análise de rotas é mostrar a **alcançabilidade RF conhecida/potencial da rede**, e não provar que um único pacote percorreu toda a rota de origem a destino de uma só vez.
