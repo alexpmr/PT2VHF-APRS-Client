@@ -1,3 +1,29 @@
+## Novo — Tracklog: quebrar o trajeto após longos períodos sem posição
+
+- **Não ligar automaticamente dois pontos de tracklog quando existir um intervalo temporal grande entre eles.**
+- Problema observado: o tracker registrou um ponto no Aeroporto de Brasília, foi desligado e voltou a transmitir somente em Formosa. A interface ligou os dois pontos com uma linha reta, criando um deslocamento que nunca foi efetivamente registrado.
+- Tratar o tracklog como uma sequência de **segmentos temporalmente contínuos**, e não como uma única polyline por indicativo.
+- Ao ultrapassar o limite de continuidade temporal, encerrar o segmento atual e iniciar outro no próximo ponto.
+- Usar como referência inicial um limite padrão de **30 minutos sem nova posição**, mantendo o valor tecnicamente configurável para ajuste futuro.
+- O corte por tempo deve atuar **independentemente da distância**: mesmo que dois pontos estejam relativamente próximos, um intervalo longo não comprova o caminho percorrido entre eles.
+- Preservar os dois pontos históricos no banco e no mapa; apenas **não desenhar a linha entre eles**.
+- Não apagar nem invalidar posições legítimas por causa do intervalo. O objetivo é impedir a interpolação visual de um trajeto inexistente.
+- Manter também as proteções atuais contra saltos geográficos/velocidades implausíveis; a nova regra temporal é complementar.
+- Aplicar a mesma segmentação em:
+  - mapa principal;
+  - acompanhamento/seleção de tracklog;
+  - histórico completo e períodos filtrados;
+  - exportação KML;
+  - qualquer cálculo futuro de distância percorrida baseado no tracklog.
+- Quando um tracker voltar a transmitir após o intervalo, o primeiro ponto recebido deve aparecer como **início de um novo segmento**, sem linha de ligação com o segmento anterior.
+- A lógica deve considerar o timestamp real de cada ponto e ordenar os pontos cronologicamente antes de formar os segmentos.
+- Adicionar regressões para:
+  - dois pontos separados por várias horas e grande distância, sem linha entre eles;
+  - dois pontos separados por várias horas mesmo com pequena distância, também sem linha;
+  - pontos sucessivos dentro da janela temporal, mantendo o tracklog normal;
+  - combinação de corte temporal com a proteção já existente contra saltos geográficos.
+- **Critério de aceite:** no exemplo Brasília → Formosa, se o tracker ficou desligado durante o deslocamento, o mapa deve mostrar o fim do tracklog em Brasília e um novo segmento começando em Formosa, sem a reta artificial entre as duas cidades.
+
 ## Implementado na v1.14.19 — Topologia RF espaço-temporal para digis/trackers móveis
 
 - Corrigido o erro estrutural em que um indicativo móvel era tratado como um único vértice fixo durante todo o histórico.
