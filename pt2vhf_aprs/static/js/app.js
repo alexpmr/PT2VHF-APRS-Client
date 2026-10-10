@@ -3544,7 +3544,9 @@
         for (const route of state.rfRouteAnalysis.routes || []) {
           for (const routeEdge of route.edges || []) {
             const key = rfRoutePairKey(routeEdge.source, routeEdge.target);
-            if (!routeEvidenceByPair.has(key)) routeEvidenceByPair.set(key, routeEdge);
+            // A geometria escolhida para a rota (posição histórica do evento)
+            // prevalece sobre a geometria agregada da topologia.
+            routeEvidenceByPair.set(key, routeEdge);
           }
         }
       }
