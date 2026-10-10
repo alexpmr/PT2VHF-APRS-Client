@@ -510,9 +510,9 @@ def _build_route_graph_uncached(hours: float = 0):
             return _original_route_graph(hours)
         raise
 
-    if not rows:
-        return _original_route_graph(hours)
-
+    # Mesmo que topology_events esteja vazio, continue para o fallback de
+    # topology_edges abaixo. Isso mantém enlaces históricos legados no período
+    # Completo sem depender de uma migração perfeita dos eventos detalhados.
     for row in rows:
         source = db._rf_route_callsign(row["source"])
         target = db._rf_route_callsign(row["target"])
