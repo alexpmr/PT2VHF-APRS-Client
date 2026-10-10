@@ -13,6 +13,18 @@
 
 ## Novo — Estatísticas/Topologia: evitar timeout no período Completo
 
+- **Diagnóstico confirmado com log da v1.14.20 (10/10/2026):** o problema não é apenas visual; existem operações de topologia que excedem o timeout do frontend e saturam o pool de workers.
+- No log analisado, `/api/topology/stats` teve **11 respostas concluídas**, com mediana aproximada de **9,6 s**, média de **9,4 s** e pico de **12,2 s**; pelo menos **4 chamadas ultrapassaram 10 s**, embora o backend tenha terminado depois com HTTP 200.
+- Isso explica a tela mostrar **“O backend local não respondeu em 10 segundos”** mesmo quando o cálculo termina pouco depois: o frontend aborta antes do backend.
+- Foi identificado um segundo gargalo ainda mais severo em `/api/topology/rf-origins`: houve chamadas de aproximadamente **36,8 s** e **40,9 s**.
+- Durante esse episódio, até **7 workers Waitress** ficaram simultaneamente presos em `list_rf_route_origins() → _route_graph()`, enquanto o oitavo worker atendia outras requisições. O watchdog registrou falhas consecutivas de health probe e o servidor chegou a ficar com **8 requisições ativas**.
+- O thread dump confirma um problema de **thundering herd**: várias chamadas concorrentes de `rf-origins` iniciam a construção do mesmo grafo ao mesmo tempo.
+- O cache atual de `_route_graph()` não impede esse cenário porque verifica o cache sob lock, libera o lock durante a construção pesada e só grava o resultado ao final; múltiplos misses simultâneos executam o mesmo trabalho em paralelo.
+- Corrigir com mecanismo **single-flight por chave de cache**: quando um grafo para o mesmo período já estiver sendo calculado, as demais chamadas devem aguardar/reutilizar o mesmo resultado, e não reconstruí-lo em paralelo.
+- No frontend, `refreshRfRouteOrigins()` também deve cancelar/ignorar requisições obsoletas. O debounce atual de aproximadamente **140 ms** pode disparar novas consultas enquanto uma anterior ainda está em andamento. Usar `AbortController`, generation token ou mecanismo equivalente.
+- Evitar recalcular todo o grafo a cada tecla digitada no campo de origem. Preferir carregar/cachear a lista base uma vez por período e filtrar localmente quando possível.
+- `topology_stats()` inclui cálculo de **Recordes/Rotas RF**, portanto a reconstrução cara de `_route_graph()` pode afetar diretamente o tempo da aba Estatísticas. Separar/cachar esse componente para não bloquear os demais indicadores.
+- O log também mostrou `/api/map-data` chegando a aproximadamente **9,5 s** em situação de contenção, com 10.000 pontos de tracklog carregados; considerar o efeito combinado de consultas pesadas concorrentes sobre SQLite.
 - Corrigir o timeout observado na aba **Estatísticas** ao selecionar/permanecer no período **Completo**, com a mensagem: **“O backend local não respondeu em 10 segundos (/api/topology/stats?hours=0)”**.
 - O endpoint `/api/topology/stats?hours=0` não pode bloquear a interface por mais de 10 segundos nem fazer a tela parecer vazia quando existem dados no banco.
 - O problema atual é agravado porque `topology_stats(0)` executa, em uma única chamada, várias consultas/agregações potencialmente pesadas sobre todo o histórico, incluindo rankings, anomalias, sugestões, rotas RF, identificação de software/dispositivos, comparação histórica e estatísticas de recepção.
