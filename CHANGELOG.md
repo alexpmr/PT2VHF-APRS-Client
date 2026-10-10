@@ -1,3 +1,15 @@
+## 1.14.22 - 2026-10-10
+
+- **Ranking RF multi-hop:** Recordes RF passam a manter rotas de alcançabilidade com intermediários explícitos e podem preferir uma cadeia multi-hop válida para o mesmo par de extremidades.
+- **Histórico preservado:** topology_edges antigos sem topology_events completos ganham fallback por coordenadas históricas próximas ao last_seen; nós móveis não usam posição atual distante para reinterpretar o passado.
+- **Período Completo:** enlaces históricos válidos permanecem disponíveis enquanto seus dados existirem no banco.
+- **Exportar JSON:** novo botão na aba Mapa gera diagnóstico técnico versionado com estações, objetos, tracklogs, topologia, eventos históricos, digipeaters, iGates e Recordes RF.
+- **Privacidade do diagnóstico:** a exportação não inclui configuração sensível, senhas, tokens ou chaves de API.
+- **Filtros do Mapa:** ocultar uma estação, objeto, digi ou iGate não remove automaticamente as linhas de enlace; a visibilidade das linhas depende das próprias camadas RF/APRS-IS.
+- **Ícone Windows:** a arte APRS fornecida passa a ser a fonte do ícone do executável/barra de tarefas/Alt+Tab, com AppUserModelID dedicado.
+- **Salvar como:** a ponte nativa de arquivos de texto aceita KML e JSON conforme a extensão solicitada.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.21 - 2026-10-10
 
 - **Estatísticas sem timeout falso:** o carregamento principal deixa de depender do cálculo pesado de Recordes RF e retorna os indicadores essenciais primeiro.
