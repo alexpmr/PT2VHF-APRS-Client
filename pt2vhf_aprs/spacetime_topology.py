@@ -104,6 +104,42 @@ def _position_at_event_conn(
     return float(row["latitude"]), float(row["longitude"])
 
 
+def _legacy_position_at_event_conn(
+    conn: Any,
+    callsign: str,
+    timestamp: str,
+) -> tuple[float, float] | None:
+    """Posição histórica de fallback para aresta legada.
+
+    Prioriza o tracklog mais próximo do timestamp da evidência. Somente usa a
+    posição da tabela stations quando o last_heard também é temporalmente
+    próximo do enlace, evitando transportar um tracker para outra região.
+    """
+    position = _position_at_event_conn(conn, callsign, timestamp)
+    if position is not None:
+        return position
+
+    call = str(callsign or "").upper().strip()
+    when = _parse_dt(timestamp)
+    if not call or when is None:
+        return None
+    row = conn.execute(
+        """SELECT last_heard,latitude,longitude
+           FROM stations
+           WHERE UPPER(TRIM(callsign))=?
+           LIMIT 1""",
+        (call,),
+    ).fetchone()
+    if row is None or not db._valid_geo_position(row["latitude"], row["longitude"]):
+        return None
+    heard = _parse_dt(row["last_heard"])
+    if heard is None:
+        return None
+    if abs((heard - when).total_seconds()) > EVENT_POSITION_MAX_AGE_HOURS * 3600.0:
+        return None
+    return float(row["latitude"]), float(row["longitude"])
+
+
 def _ensure_schema_and_backfill() -> int:
     """Adiciona geometria/evidência aos eventos antigos e executa uma única vez."""
     with db.connection() as conn:
@@ -550,6 +586,85 @@ def _build_route_graph_uncached(hours: float = 0):
                 positions[call] = (lat, lon)
                 position_seen[call] = epoch
 
+    # v1.14.22: preserve historical RF edges that predate detailed
+    # topology_events or whose event geometry could not be backfilled. Without
+    # this bridge, a valid old link can disappear from full-history reachability.
+    fallback_params: list[Any] = []
+    fallback_where = "WHERE e.kind='rf'"
+    if hours > 0:
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat(timespec="seconds")
+        fallback_where += " AND e.last_seen>=?"
+        fallback_params.append(cutoff)
+
+    with db.connection() as conn:
+        legacy_rows = conn.execute(
+            f"""SELECT e.source,e.target,e.packet_count,e.first_seen,e.last_seen,
+                       e.rf_transport_count,e.rf_path_count
+                FROM topology_edges e
+                {fallback_where}
+                ORDER BY e.last_seen ASC""",
+            fallback_params,
+        ).fetchall()
+
+        for row in legacy_rows:
+            source = db._rf_route_callsign(row["source"])
+            target = db._rf_route_callsign(row["target"])
+            if not source or not target or source == target:
+                continue
+            a, b = sorted((source, target))
+            if (a, b) in merged:
+                continue
+
+            observed_at = str(row["last_seen"] or row["first_seen"] or "")
+            source_pos = _legacy_position_at_event_conn(conn, source, observed_at)
+            target_pos = _legacy_position_at_event_conn(conn, target, observed_at)
+            if source_pos is None or target_pos is None:
+                continue
+
+            direct_count = int(row["rf_transport_count"] or 0)
+            inferred_count = int(row["rf_path_count"] or 0)
+            level = (
+                "direct" if direct_count > 0 and inferred_count <= 0 else
+                "inferred" if inferred_count > 0 and direct_count <= 0 else
+                "legacy"
+            )
+            if source == a:
+                a_pos, b_pos = source_pos, target_pos
+            else:
+                a_pos, b_pos = target_pos, source_pos
+            when = _parse_dt(observed_at)
+            epoch = when.timestamp() if when is not None else 0.0
+            event = {
+                "id": 0,
+                "timestamp": observed_at,
+                "_epoch": epoch,
+                "a_lat": a_pos[0],
+                "a_lon": a_pos[1],
+                "b_lat": b_pos[0],
+                "b_lon": b_pos[1],
+                "distance_km": round(db.haversine_km(*a_pos, *b_pos), 3),
+                "evidence_level": level,
+                "medium": "RF" if direct_count > 0 else "",
+                "raw": "",
+                "rx_fingerprint": "",
+                "legacy_fallback": True,
+            }
+            merged[(a, b)] = {
+                "a": a,
+                "b": b,
+                "packet_count": int(row["packet_count"] or 0),
+                "first_seen": str(row["first_seen"] or observed_at),
+                "last_seen": observed_at,
+                "distance_km": event["distance_km"],
+                "classification_source": "RF observado (legado reconstruído)",
+                "rf_transport_count": direct_count,
+                "rf_path_count": inferred_count,
+                "events": [event],
+                "legacy_fallback": True,
+            }
+            positions[source] = source_pos
+            positions[target] = target_pos
+
     for (a, b), edge in merged.items():
         edge["events"].sort(key=lambda event: (float(event.get("_epoch") or 0.0), int(event.get("id") or 0)))
         if int(edge["rf_transport_count"]) > 0:
@@ -939,49 +1054,70 @@ def _list_rf_route_candidates(source: str, hours: float = 0, query: str = "", li
 
 
 def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_width: int = 500):
+    """Ranking por alcançabilidade entre extremidades, preservando rotas multi-hop."""
     graph, positions = _route_graph(hours)
     route_limit = max(1, min(int(limit or 10), 50))
     hop_limit = max(1, min(int(max_hops or 6), 10))
-    candidates: list[tuple[float, int, int, str, list[str]]] = []
+    expansion_limit = max(250, min(int(beam_width or 500) * 4, 4000))
+    candidates: list[tuple[float, int, int, int, str, list[str]]] = []
 
     for source in sorted(graph):
         if source not in positions:
             continue
         queue: list[list[str]] = [[source]]
-        visited = {source}
-        while queue:
+        # Um nó pode ser alcançado uma vez diretamente e uma vez por cadeia.
+        # Isso impede que uma aresta A-D esconda A-B-C-D no ranking.
+        seen_modes: set[tuple[str, str]] = {(source, "root")}
+        expansions = 0
+
+        while queue and expansions < expansion_limit:
             path = queue.pop(0)
             node = path[-1]
             if len(path) - 1 >= hop_limit:
                 continue
             neighbors = sorted(
                 graph.get(node, {}).items(),
-                key=lambda pair: (str(pair[1].get("last_seen") or ""), int(pair[1].get("packet_count") or 0)),
+                key=lambda pair: (
+                    int(pair[1].get("rf_transport_count") or 0),
+                    int(pair[1].get("packet_count") or 0),
+                    str(pair[1].get("last_seen") or ""),
+                ),
                 reverse=True,
             )
             for nxt, _edge in neighbors:
-                if nxt in path or nxt in visited:
+                if nxt in path:
                     continue
                 next_path = path + [nxt]
                 payload = _route_payload(next_path, graph, positions, refine_inferred=False)
                 if not payload:
                     continue
-                visited.add(nxt)
-                queue.append(next_path)
+                expansions += 1
+                hops = int(payload.get("hops") or (len(next_path) - 1))
+                mode = "direct" if hops == 1 else "multihop"
+                state_key = (nxt, mode)
+                if state_key not in seen_modes:
+                    seen_modes.add(state_key)
+                    if hops < hop_limit:
+                        queue.append(next_path)
+
                 if nxt not in positions or source >= nxt:
                     continue
                 candidates.append((
                     float(payload.get("direct_distance_km") or 0.0),
+                    1 if hops > 1 else 0,
                     int(payload.get("observations") or 0),
-                    -int(payload.get("hops") or 0),
+                    -hops,
                     str(payload.get("route_evidence_end") or ""),
                     next_path,
                 ))
 
-    candidates.sort(key=lambda item: (item[0], item[1], item[2], item[3]), reverse=True)
+    # Distância entre extremidades continua sendo o critério principal. Para o
+    # mesmo par/distância, uma cadeia multi-hop válida é preferida para tornar a
+    # alcançabilidade explícita em vez de reduzir tudo a uma aresta adjacente.
+    candidates.sort(key=lambda item: (item[0], item[1], item[2], item[3], item[4]), reverse=True)
     result: list[dict[str, Any]] = []
     emitted: set[tuple[str, str]] = set()
-    for _direct, _obs, _neg_hops, _evidence, path in candidates:
+    for _direct, _multi, _obs, _neg_hops, _evidence, path in candidates:
         pair = tuple(sorted((path[0], path[-1])))
         if pair in emitted:
             continue
@@ -990,6 +1126,8 @@ def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_wi
             continue
         emitted.add(pair)
         payload["rank"] = len(result) + 1
+        payload["ranking_scope"] = "rf_reachability"
+        payload["multihop"] = int(payload.get("hops") or 0) > 1
         result.append(payload)
         if len(result) >= route_limit:
             break
