@@ -1,3 +1,101 @@
+## Novo — Ranking de enlaces: voltar a considerar rotas de alcançabilidade com múltiplos hops
+
+- Corrigir regressão do ranking/Recordes RF: atualmente estão predominando ou aparecendo apenas **enlaces únicos (1 hop)**, enquanto rotas compostas com **múltiplos hops** deixaram de aparecer como deveriam.
+- O objetivo do ranking é medir **alcançabilidade RF entre as extremidades**, não apenas listar arestas físicas individuais.
+- Uma cadeia historicamente válida como **A → B → C → D** deve poder gerar um registro/ranking de **A ↔ D via B/C**, mesmo que cada hop tenha sido observado em momentos diferentes, respeitando as regras espaço-temporais já definidas.
+- Manter explicitamente os intermediários da rota no resultado; nunca colapsar a cadeia em um falso enlace RF direto A ↔ D.
+- Ordenar o ranking pela **distância geográfica entre as estações extremas** quando o objetivo for “maiores alcances”, mantendo como informação complementar:
+  - quantidade de hops;
+  - sequência completa dos nós;
+  - soma das distâncias dos hops;
+  - evidência/timestamp de cada hop;
+  - classificação da rota como observada no mesmo pacote, contemporânea ou alcançabilidade histórica.
+- Deduplicar por par de extremidades, mas permitir abrir/ver as alternativas de rota para o mesmo par quando existirem.
+- O algoritmo de ranking deve explorar a conectividade multi-hop do grafo até o limite configurado e não encerrar a análise apenas nas arestas adjacentes ao nó de origem.
+- Garantir que a otimização/caching introduzida para Estatísticas não transforme o ranking em simples lista de arestas.
+- Adicionar regressões com rotas de 2, 3, 4 e mais hops, incluindo malhas com caminhos alternativos e nós móveis.
+
+## Novo — Topologia histórica: enlaces já observados não podem desaparecer no período Completo
+
+- Investigar e corrigir enlaces históricos que existiam anteriormente e deixaram de aparecer após as mudanças recentes de topologia/rotas.
+- Caso de referência informado: havia um enlace/rota ligando a região de **Goiânia a Caldas Novas** e ele deixou de aparecer.
+- No período **Completo**, todo enlace RF válido já observado deve continuar disponível enquanto os dados correspondentes existirem no banco e a retenção configurada não os tiver removido.
+- Nó offline ou sem transmissão recente não deve remover automaticamente seu enlace histórico.
+- Separar claramente:
+  - **enlace histórico conhecido**;
+  - **enlace ativo/recente**;
+  - **enlace atualmente visível pelo filtro de período**.
+- O estado ativo/inativo deve alterar a aparência, não apagar o fato histórico.
+- Verificar especialmente se a perda ocorre por:
+  - ausência de coordenada histórica após migração;
+  - filtros de `topology_events`;
+  - descarte de eventos antigos na construção do grafo espaço-temporal;
+  - retenção de banco;
+  - deduplicação;
+  - cache;
+  - regras para hops inferidos;
+  - limite de hops/expansões;
+  - ranking progressivo de Recordes RF.
+- Quando houver `topology_edges` histórico válido mas eventos detalhados incompletos/legados, preservar o enlace como evidência histórica legada em vez de simplesmente descartá-lo, deixando explícita a qualidade da evidência.
+- Adicionar regressão específica com um enlace antigo válido que permanece no ranking/topologia após os nós ficarem offline e após reiniciar/atualizar o aplicativo.
+- **Critério de aceite:** com período Completo, um enlace válido anteriormente armazenado continua disponível para análise até que o usuário efetivamente apague ou retenha esses dados.
+
+## Novo — Mapa: exportar diagnóstico completo da topologia em JSON
+
+- Na aba **Mapa**, adicionar um botão **Exportar JSON**, próximo às ferramentas de exportação/KML.
+- Objetivo: gerar um arquivo de diagnóstico que o usuário possa enviar para análise técnica, permitindo reproduzir problemas de enlaces, rotas, estações, iGates, digipeaters, tracklogs e filtros sem precisar compartilhar o banco SQLite inteiro.
+- O JSON deve usar formato versionado, por exemplo `schema_version`, e incluir no topo:
+  - versão do PT2VHF APRS Client;
+  - data/hora da exportação em UTC;
+  - período selecionado;
+  - filtros/camadas relevantes do mapa;
+  - versão/schema do banco;
+  - configurações de retenção relacionadas ao histórico/topologia;
+  - parâmetros do motor de rotas relevantes, como limite de hops e critérios espaço-temporais.
+- Exportar **estações** com, quando disponível:
+  - indicativo;
+  - latitude/longitude atual;
+  - último pacote/última escuta;
+  - símbolo/tipo/role;
+  - software/dispositivo identificado;
+  - indicação de móvel/fixo quando inferível.
+- Exportar **digipeaters e iGates** com classificação, coordenadas, primeira/última observação, contagens e estado recente/histórico.
+- Exportar **enlaces/topologia** com:
+  - origem e destino;
+  - tipo RF/APRS-IS;
+  - evidência direta/inferida/legada;
+  - contagem de observações;
+  - primeira e última observação;
+  - coordenadas históricas usadas;
+  - distância;
+  - indicação de ativo/inativo;
+  - dados necessários para entender por que o enlace entrou ou não no grafo.
+- Exportar **eventos históricos de topologia** necessários para reconstrução, incluindo timestamp e coordenadas das duas extremidades no instante do contato.
+- Incluir amostras de **raw/path APRS** associadas às evidências quando disponíveis e tecnicamente úteis, de forma limitada para não gerar arquivo gigantesco.
+- Exportar **rotas/Recordes RF calculados**, incluindo:
+  - extremidades;
+  - sequência completa de nós;
+  - hops;
+  - distância direta das extremidades;
+  - distância acumulada;
+  - classe de alcançabilidade;
+  - evidência selecionada por hop;
+  - motivo de exclusão quando uma rota/enlace candidato não entrou no ranking, quando disponível.
+- Exportar **tracklogs** segmentados com timestamp e coordenadas, preservando as quebras por descontinuidade temporal introduzidas na v1.14.20.
+- Oferecer pelo menos duas opções:
+  - **Período atual** — respeita o período/filtros selecionados;
+  - **Diagnóstico completo** — inclui todo o histórico disponível necessário para investigar desaparecimento de enlaces e reconstrução de rotas.
+- O modo completo deve incluir um resumo de tabelas/contagens e flags de truncamento caso algum conjunto seja limitado.
+- Não exportar senhas, tokens, credenciais, cookies, chaves QRZ/API nem outros segredos de configuração.
+- Gerar o arquivo com nome semelhante a `PT2VHF_APRS_Diagnostico_YYYYMMDD_HHMMSS.json`.
+- Integrar a geração ao **indicador global de processamento**, exibindo algo como **“Gerando diagnóstico JSON…”**.
+- Adicionar testes de schema e regressão garantindo que o JSON seja válido e contenha dados suficientes para reconstruir casos como:
+  - rota multi-hop ausente no ranking;
+  - enlace histórico que desapareceu;
+  - tracker móvel usado em posições diferentes;
+  - enlace inferido longo sem intermediários comprovados.
+- **Critério de aceite:** ao receber esse JSON, deve ser possível analisar externamente por que determinado enlace/rota aparece, não aparece ou foi descartado, sem depender do banco SQLite original.
+
 ## Implementado na v1.14.21 — Estatísticas: unificar conteúdo em um único bloco sem rolagem interna
 
 - Na aba **Estatísticas**, apresentar todo o conteúdo em **um único fluxo/bloco vertical**, utilizando somente a rolagem principal da aba/página.
