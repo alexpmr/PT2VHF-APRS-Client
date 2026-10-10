@@ -53,4 +53,11 @@ version_info = version_info.replace("(1, 14, 18, 0)", "(1, 14, 19, 0)")
 version_info = version_info.replace("'1.14.18'", "'1.14.19'")
 version_info_path.write_text(version_info, encoding="utf-8")
 
+# README é validado pelos testes de release antes da publicação. Atualizamos o
+# checkout de build para que os links de produção acompanhem VERSION.
+readme_path = ROOT / "README.md"
+readme = readme_path.read_text(encoding="utf-8")
+readme = readme.replace("1.14.18", "1.14.19")
+readme_path.write_text(readme, encoding="utf-8")
+
 print("v1.14.19 validation OK")
