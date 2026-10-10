@@ -106,7 +106,8 @@ def _topology_stats_payload(hours: int) -> dict:
             diag.log_event("topology_stats_component", component="comparison", hours=key, duration_ms=round(comparison_ms, 1))
 
         component = time.monotonic()
-        payload["reception_media"] = tnc_reception_stats(key)
+        hours = key
+        payload["reception_media"] = tnc_reception_stats(hours)
         reception_ms = (time.monotonic() - component) * 1000.0
         if reception_ms >= 250:
             diag.log_event("topology_stats_component", component="reception_media", hours=key, duration_ms=round(reception_ms, 1))
