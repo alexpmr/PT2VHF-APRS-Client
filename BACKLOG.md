@@ -1,5 +1,9 @@
 ## Novo — Rotas RF: inferir alcançabilidade histórica por composição de enlaces observados
 
+- **Princípio funcional:** o objetivo desta análise de rotas é mostrar a **alcançabilidade RF conhecida/potencial da rede**, e não provar que um único pacote percorreu toda a rota de origem a destino de uma só vez.
+- A rota representa um **caminho topológico possível**, composto por enlaces RF que já foram observados individualmente e podem ter ocorrido em momentos diferentes.
+- Portanto, não exigir contemporaneidade entre todos os hops para formar uma rota de alcançabilidade. A contemporaneidade serve para classificar a força da evidência, não para eliminar uma cadeia histórica válida.
+- Exemplo: A → B observado hoje e B → C observado ontem podem sustentar **A → C via B** como alcançabilidade histórica, desde que B represente o mesmo contexto físico/topológico compatível.
 - Permitir que o motor reconheça **alcançabilidade RF potencial** mesmo quando os hops que formam a cadeia não tenham sido observados no mesmo pacote.
 - Exemplo: se em um momento foi observado **A → B** e, em outro momento, foi observado **B → C**, o sistema pode concluir que existe uma **rota RF historicamente plausível A → B → C** e, portanto, que **A pode alcançar C via B**, desde que os enlaces individuais sejam válidos e compatíveis.
 - Essa inferência **não transforma A → C em enlace RF direto**. O resultado deve ser representado como **alcançabilidade/rota composta via intermediário**, preservando explicitamente B.
@@ -48,7 +52,8 @@
   - destino/capturador da evidência.
 - Preservar a sequência original do pacote. Se o mesmo frame mostra A → B → C → D, registrar/renderizar **A → B → C → D**, e não colapsar em A → D.
 - Usar os eventos históricos e posições **no mesmo intervalo temporal do pacote**, respeitando o modelo espaço-temporal introduzido na v1.14.19.
-- Ao procurar intermediários adicionais no grafo histórico, considerar somente evidências temporalmente compatíveis com o evento de referência; não usar nós observados horas/dias depois para completar a cadeia.
+- Ao procurar intermediários adicionais no grafo histórico, **não exigir que todos tenham sido observados no mesmo instante ou no mesmo pacote**. A finalidade é reconstruir a alcançabilidade da malha a partir de enlaces RF reais observados individualmente.
+- Usar o tempo como metadado de evidência e como proteção contra combinações fisicamente inválidas, especialmente para nós móveis; para nós fixos, enlaces observados em momentos distintos podem compor a mesma rota histórica.
 - A busca de intermediários deve poder ultrapassar o limite atual de poucos hops quando o path real do pacote trouxer uma cadeia maior. O limite de segurança deve impedir explosão combinatória, não truncar um path explicitamente observado.
 - **Não inventar intermediários por proximidade geográfica.** Estações no caminho visual entre origem e destino só podem entrar na rota se houver evidência APRS/RF que as relacione àquele evento/corredor.
 - Se não houver evidência suficiente para decompor o trecho:
