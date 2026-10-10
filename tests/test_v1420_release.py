@@ -57,7 +57,7 @@ def test_v1420_version_and_release_markers():
     assert "SHARED_NODE_COMPATIBILITY_KM = 25.0" in overlay
     assert 'payload["route_semantics"] = "historical_reachability"' in overlay
     app = read("pt2vhf_aprs/static/js/app.js")
-    assert "TRACKLOG_MAX_GAP_MS = 30 * 60 * 1000" in app
+    assert "TRACKLOG_MAX_GAP_MS = 30 * 60_000" in app
     assert "temporalGap" in app
 
 
