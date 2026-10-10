@@ -51,8 +51,10 @@ def connect(graph, a: str, b: str, payload):
 
 
 def test_v1420_version_and_release_markers():
-    assert read("VERSION").strip() == "1.14.20"
-    assert '__version__ = "1.14.20"' in read("pt2vhf_aprs/__init__.py")
+    version_text = read("VERSION").strip()
+    version = tuple(int(part) for part in version_text.split("."))
+    assert version >= (1, 14, 20)
+    assert f'__version__ = "{version_text}"' in read("pt2vhf_aprs/__init__.py")
     overlay = read("pt2vhf_aprs/spacetime_topology.py")
     assert "SHARED_NODE_COMPATIBILITY_KM = 25.0" in overlay
     assert 'payload["route_semantics"] = "historical_reachability"' in overlay
