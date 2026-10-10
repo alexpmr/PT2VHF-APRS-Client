@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.19": {
+        "title": "Rotas RF espaço-temporais para digis e trackers móveis",
+        "items": [
+            "Rotas RF deixam de unir enlaces históricos de um mesmo indicativo móvel quando esses enlaces ocorreram em locais e horários incompatíveis.",
+            "Eventos de topologia passam a congelar a posição das duas extremidades no instante da observação, evitando recalcular enlaces antigos com a posição atual.",
+            "O histórico existente é migrado automaticamente usando o ponto de tracklog mais próximo do timestamp de cada evento, quando disponível.",
+            "Uma rota observada precisa caber numa janela temporal máxima de 30 minutos e manter continuidade espacial nos nós intermediários.",
+            "O refinamento de hops inferidos passa de uma janela de 36 horas para 30 minutos, impedindo reconstruções que misturem etapas distintas de uma viagem.",
+            "Ranking e análise de rotas usam a geometria histórica selecionada, eliminando falsos enlaces de centenas de quilômetros causados por trackers móveis.",
+        ],
+    },
     "1.14.18": {
         "title": "Acompanhamento ao vivo e mensagens APRS sem retries indevidos",
         "items": [
