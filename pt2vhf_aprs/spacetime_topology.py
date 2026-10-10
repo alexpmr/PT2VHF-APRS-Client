@@ -24,10 +24,12 @@ SHARED_NODE_COMPATIBILITY_KM = 25.0
 ROUTE_EVENT_SAMPLE_LIMIT = 160
 ROUTE_EVENT_BEAM_WIDTH = 24
 INFERRED_LONG_HOP_KM = 250.0
-GRAPH_CACHE_SECONDS = 10.0
+GRAPH_CACHE_SECONDS = 20.0
 
 _graph_cache_lock = threading.RLock()
-_graph_cache: dict[float, tuple[float, str, tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]]] = {}
+_graph_cache: dict[tuple[float, str], tuple[float, tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]]] = {}
+_graph_builds: dict[tuple[float, str], threading.Event] = {}
+_graph_build_errors: dict[tuple[float, str], BaseException] = {}
 
 
 def _parse_dt(value: Any) -> datetime | None:
@@ -46,8 +48,17 @@ def _parse_dt(value: Any) -> datetime | None:
 
 
 def _invalidate_graph_cache() -> None:
+    """Mantém uma pequena janela de cache mesmo durante ingestão APRS contínua.
+
+    Antes, cada pacote novo limpava o cache imediatamente. Em tráfego ativo isso
+    fazia várias requisições reconstruírem o mesmo grafo quase ao mesmo tempo.
+    Entradas expiram por TTL; dados novos aparecem em até GRAPH_CACHE_SECONDS.
+    """
+    cutoff = time.monotonic() - GRAPH_CACHE_SECONDS
     with _graph_cache_lock:
-        _graph_cache.clear()
+        stale = [key for key, value in _graph_cache.items() if value[0] < cutoff]
+        for key in stale:
+            _graph_cache.pop(key, None)
 
 
 def _position_at_event_conn(
@@ -340,19 +351,88 @@ def _process_received_packet(
 
 
 def _route_graph(hours: float = 0):
+    """Retorna o grafo RF com cache TTL e single-flight por período/banco.
+
+    Se várias requisições perderem o cache simultaneamente, somente uma delas
+    monta o grafo. As demais aguardam o mesmo resultado em vez de saturar todos
+    os workers do servidor com reconstruções idênticas.
+    """
+    try:
+        normalized_hours = float(hours or 0)
+    except (TypeError, ValueError):
+        normalized_hours = 0.0
+    normalized_hours = max(0.25, min(normalized_hours, 24 * 30)) if normalized_hours > 0 else 0.0
+    key = (normalized_hours, str(db.DB_PATH))
+    started = time.monotonic()
+
+    with _graph_cache_lock:
+        cached = _graph_cache.get(key)
+        if cached and started - cached[0] <= GRAPH_CACHE_SECONDS:
+            return cached[1]
+        waiter = _graph_builds.get(key)
+        if waiter is None:
+            waiter = threading.Event()
+            _graph_builds[key] = waiter
+            _graph_build_errors.pop(key, None)
+            owner = True
+        else:
+            owner = False
+
+    if not owner:
+        wait_started = time.monotonic()
+        waiter.wait(timeout=60.0)
+        waited_ms = (time.monotonic() - wait_started) * 1000.0
+        with _graph_cache_lock:
+            cached = _graph_cache.get(key)
+            error = _graph_build_errors.get(key)
+        if cached:
+            if waited_ms >= 250:
+                diag.log_event(
+                    "rf_route_graph_singleflight_wait",
+                    hours=normalized_hours,
+                    duration_ms=round(waited_ms, 1),
+                )
+            return cached[1]
+        if error is not None:
+            raise RuntimeError(f"Falha ao construir grafo RF: {error}") from error
+        # Proteção caso o owner morra ou ultrapasse o timeout.
+        diag.log_event(
+            "rf_route_graph_singleflight_timeout",
+            hours=normalized_hours,
+            duration_ms=round(waited_ms, 1),
+        )
+        return _build_route_graph_uncached(normalized_hours)
+
+    try:
+        payload = _build_route_graph_uncached(normalized_hours)
+        with _graph_cache_lock:
+            _graph_cache[key] = (time.monotonic(), payload)
+        elapsed_ms = (time.monotonic() - started) * 1000.0
+        if elapsed_ms >= 250:
+            diag.log_event(
+                "rf_route_graph_build",
+                hours=normalized_hours,
+                duration_ms=round(elapsed_ms, 1),
+                nodes=len(payload[0]),
+            )
+        return payload
+    except BaseException as exc:
+        with _graph_cache_lock:
+            _graph_build_errors[key] = exc
+        raise
+    finally:
+        with _graph_cache_lock:
+            event = _graph_builds.pop(key, None)
+            if event is not None:
+                event.set()
+
+
+def _build_route_graph_uncached(hours: float = 0):
     try:
         hours = float(hours or 0)
     except (TypeError, ValueError):
         hours = 0.0
     hours = max(0.25, min(hours, 24 * 30)) if hours > 0 else 0.0
-    cache_key = hours
-    db_path = str(db.DB_PATH)
-    now = time.monotonic()
-    with _graph_cache_lock:
-        cached = _graph_cache.get(cache_key)
-        if cached and cached[1] == db_path and now - cached[0] <= GRAPH_CACHE_SECONDS:
-            return cached[2]
-
     graph: dict[str, dict[str, dict[str, Any]]] = {}
     positions: dict[str, tuple[float, float]] = {}
     position_seen: dict[str, float] = {}
@@ -474,10 +554,7 @@ def _route_graph(hours: float = 0):
         graph.setdefault(a, {})[b] = edge
         graph.setdefault(b, {})[a] = edge
 
-    payload = (graph, positions)
-    with _graph_cache_lock:
-        _graph_cache[cache_key] = (time.monotonic(), db_path, payload)
-    return payload
+    return graph, positions
 
 
 def _event_epoch(event: dict[str, Any]) -> float | None:
