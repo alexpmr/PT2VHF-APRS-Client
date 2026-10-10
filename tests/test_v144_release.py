@@ -54,7 +54,11 @@ def test_v144_icon_compact_and_brand_kept():
     assert icon.size == (256, 256)
     assert icon.getpixel((0, 0))[3] == 0
     assert icon.getpixel((128, 128))[3] == 255
-    assert "app_logo.png" in text("windows/make_icon.py")
+    version = tuple(int(part) for part in text("VERSION").strip().split("."))
+    if version >= (1, 14, 22):
+        assert "aprs_taskbar_icon.png" in text("windows/make_icon.py")
+    else:
+        assert "app_logo.png" in text("windows/make_icon.py")
     assert "app_logo.png" in text("macos/make_icon.py")
     assert "render_compact_icon(256)" in text("linux/build_linux.sh")
     assert "img/app_logo.png" in text("pt2vhf_aprs/templates/index.html")
