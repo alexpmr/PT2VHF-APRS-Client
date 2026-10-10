@@ -1,3 +1,16 @@
+## 1.14.19 - 2026-10-10
+
+- **Topologia RF espaço-temporal:** rotas deixam de tratar um indicativo móvel como um vértice fixo ao longo de todo o histórico.
+- **Digis/trackers móveis:** um nó como PT2AP-10 pode atuar como elo enquanto está próximo das estações envolvidas, mas enlaces observados horas depois e centenas de quilômetros adiante não são mais costurados na mesma rota.
+- **Posição no instante do enlace:** novos eventos de topologia passam a gravar latitude/longitude das duas extremidades no momento da observação; distâncias históricas deixam de usar a posição mais recente da estação.
+- **Migração automática do histórico:** eventos legados recebem, quando disponível, a posição do tracklog mais próxima de seu timestamp, sem apagar o banco existente.
+- **Janela temporal de rota:** uma rota RF observada exige que todos os hops coexistam numa janela máxima de 30 minutos.
+- **Continuidade espacial:** o nó compartilhado entre dois hops precisa permanecer espacialmente compatível no intervalo, evitando pontes artificiais criadas por estações móveis em viagem.
+- **Refinamento inferido mais conservador:** a janela de reconstrução de hops inferidos cai de 36 horas para 30 minutos.
+- **Ranking de enlaces/rotas:** distâncias passam a ser calculadas pela geometria histórica selecionada para a rota, eliminando falsos recordes causados pelo deslocamento posterior de trackers.
+- **Caso de regressão real:** adicionados testes para o cenário PP2ITG-15 → PT2AP-10 em Itumbiara versus PT2AP-10 → PY5CTV-13 muitas horas depois no Sul.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.18 - 2026-10-09
 
 - **Mapa — Acompanhar Estação:** o popup de uma estação ganha ação explícita para iniciar acompanhamento em tempo real.

@@ -1,3 +1,16 @@
+## Implementado na v1.14.19 — Topologia RF espaço-temporal para digis/trackers móveis
+
+- Corrigido o erro estrutural em que um indicativo móvel era tratado como um único vértice fixo durante todo o histórico.
+- Cada observação nova de topologia passa a registrar a posição histórica de origem e destino no instante do evento.
+- Bancos existentes recebem migração automática dos eventos legados usando o ponto de tracklog temporalmente mais próximo, quando disponível.
+- Rotas RF observadas só são aceitas quando todos os hops cabem em uma janela de **30 minutos**.
+- O nó compartilhado entre hops também precisa manter continuidade espacial compatível no mesmo período.
+- Enlaces verdadeiros de um digi/tracker móvel continuam preservados em cada local por onde ele passou, mas não podem mais formar uma ponte artificial entre regiões visitadas em horários diferentes.
+- Distâncias históricas e Recordes RF deixam de usar a posição atual/mais recente de uma estação móvel.
+- O refinamento de enlaces inferidos reduz a janela temporal de 36 horas para **30 minutos**.
+- Regressão baseada no caso real do **PT2AP-10**: PP2ITG-15 → PT2AP-10 observado na região de Itumbiara não pode ser unido a PT2AP-10 → PY5CTV-13 observado muitas horas depois no Sul.
+- Critério de aceite: a posição atual de um tracker não altera retroativamente a distância de um enlace antigo, e rotas compostas por eventos de épocas/localizações incompatíveis deixam de aparecer como rota RF observada.
+
 ## Implementado na v1.14.18 — Mapa: acompanhar estação em tempo real pelo popup
 
 - No **popup/balão da estação** aberto ao clicar sobre o marcador no mapa, adicionar uma ação explícita chamada **Acompanhar Estação** junto das demais opções existentes.

@@ -12,11 +12,13 @@ def read(rel: str) -> str:
 
 
 def test_v1418_version_metadata():
-    assert read("VERSION").strip() == "1.14.18"
-    assert '__version__ = "1.14.18"' in read("pt2vhf_aprs/__init__.py")
+    version = read("VERSION").strip()
+    parts = tuple(int(part) for part in version.split("."))
+    assert parts >= (1, 14, 18)
+    assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
     win = read("windows/version_info.txt")
-    assert "(1, 14, 18, 0)" in win
-    assert "'1.14.18'" in win
+    assert str(parts + (0,)) in win
+    assert f"'{version}'" in win
 
 
 def test_v1418_station_follow_action_and_live_panel():

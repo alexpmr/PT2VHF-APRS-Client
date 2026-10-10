@@ -1,7 +1,11 @@
 from pathlib import Path
+import runpy
 
 ROOT = Path(__file__).resolve().parent.parent
 
+if (ROOT / "VERSION").read_text(encoding="utf-8").strip() == "1.14.19":
+    runpy.run_path(str(ROOT / "tools" / "apply_release_1_14_19.py"), run_name="__main__")
+    raise SystemExit(0)
 
 def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
