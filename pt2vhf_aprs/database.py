@@ -3920,8 +3920,12 @@ def manual_conversation_stats(hours: int = 0, limit: int = 20) -> list[dict[str,
     return result[: max(1, min(int(limit or 20), 100))]
 
 
-def topology_stats(hours: int = 0) -> dict[str, Any]:
-    """Resumo agregado da topologia observada para diagnóstico rápido."""
+def topology_stats(hours: int = 0, *, include_routes: bool = True) -> dict[str, Any]:
+    """Resumo agregado da topologia observada para diagnóstico rápido.
+
+    include_routes=False permite que a interface carregue os indicadores leves
+    antes dos Recordes RF, que dependem da reconstrução do grafo histórico.
+    """
     hours = int(hours or 0)
     complete = hours <= 0
     params: list[Any] = []
@@ -4132,7 +4136,11 @@ def topology_stats(hours: int = 0) -> dict[str, Any]:
         "recently_disappeared": stale,
         "problem_stations": station_problem_stats(0 if complete else hours),
         "improvement_suggestions": network_improvement_suggestions(0 if complete else hours),
-        "rf_route_records": list_rf_route_records(0 if complete else hours, limit=10, max_hops=6),
+        "rf_route_records": (
+            list_rf_route_records(0 if complete else hours, limit=10, max_hops=6)
+            if include_routes else []
+        ),
+        "rf_route_records_deferred": not include_routes,
         "client_versions": client_version_stats(0 if complete else hours),
     }
 
