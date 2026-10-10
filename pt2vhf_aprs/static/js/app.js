@@ -3048,8 +3048,8 @@
         escapeHtml(ui('Intermediários reconstruídos/prováveis', 'Reconstructed/probable intermediate nodes')) +
         ':</strong> ' + escapeHtml(reconstructedNodes.join(', ')) +
         '<small>' + escapeHtml(ui(
-          'A cadeia foi reconstruída a partir de evidências RF conhecidas próximas no tempo; esses nós não foram necessariamente explicitados no mesmo pacote.',
-          'The chain was reconstructed from known RF evidence close in time; these nodes were not necessarily explicit in the same packet.'
+          'A cadeia representa alcançabilidade RF histórica composta por enlaces observados individualmente e compatíveis pelas coordenadas dos nós.',
+          'The chain represents historical RF reachability composed from individually observed links whose node coordinates are compatible.'
         )) + '</small></div>'
       : '';
 
@@ -3068,13 +3068,24 @@
         )) + '</small></div>'
       : '';
 
+    const reachabilityClass = String(route.reachability_class || 'historical');
+    const reachabilityLabel = reachabilityClass === 'same_packet'
+      ? ui('Observada no mesmo pacote', 'Observed in the same packet')
+      : reachabilityClass === 'contemporary'
+        ? ui('Reconstruída por eventos contemporâneos', 'Reconstructed from contemporary events')
+        : ui('Alcançabilidade histórica', 'Historical reachability');
+    const evidencePeriod = route.route_evidence_start && route.route_evidence_end
+      ? fmtDate(route.route_evidence_start) + ' → ' + fmtDate(route.route_evidence_end)
+      : fmtDate(route.route_evidence_at);
+
     return '<button type="button" class="rf-route-card" data-rf-route-index="' + index + '">' +
-      '<span class="rf-route-card-title">' + ui('Rota', 'Route') + ' ' + (index + 1) + '</span>' +
+      '<span class="rf-route-card-title">' + ui('Rota de alcançabilidade', 'Reachability route') + ' ' + (index + 1) + '</span>' +
       '<strong>' + escapeHtml((route.nodes || []).join(' → ')) + '</strong>' +
       '<span>' + Number(route.hops || 0) + ' hops · ' + escapeHtml(formatRfDistanceKm(route.distance_km)) + '</span>' +
-      '<small>' + ui('Distância direta', 'Direct distance') + ': ' + escapeHtml(formatRfDistanceKm(directDistanceKm)) + '</small>' +
-      '<small>' + ui('Evidência', 'Evidence') + ': ' + escapeHtml(evidenceParts.join(' · ') || ui('RF observado', 'Observed RF')) + '</small>' +
-      '<small>' + ui('Evidência completa', 'Complete evidence') + ': ' + escapeHtml(fmtDate(route.route_evidence_at)) + '</small>' +
+      '<small>' + ui('Tipo', 'Type') + ': ' + escapeHtml(reachabilityLabel) + '</small>' +
+      '<small>' + ui('Distância entre extremidades', 'Endpoint distance') + ': ' + escapeHtml(formatRfDistanceKm(directDistanceKm)) + '</small>' +
+      '<small>' + ui('Evidência dos hops', 'Hop evidence') + ': ' + escapeHtml(evidenceParts.join(' · ') || ui('RF observado', 'Observed RF')) + '</small>' +
+      '<small>' + ui('Período das evidências', 'Evidence period') + ': ' + escapeHtml(evidencePeriod) + '</small>' +
       reconstructedNotice + unresolvedNotice +
       '<div class="rf-route-edge-list">' + edgeRows + '</div></button>';
   }
@@ -3190,7 +3201,7 @@
 
     if (!routes.length) {
       body.innerHTML = '<div class="rf-route-empty">' +
-        ui('Não existe rota RF observada neste período.', 'No observed RF route was found in this period.') +
+        ui('Não existe alcançabilidade RF sustentada neste período.', 'No supported RF reachability route was found in this period.') +
         corridorText + '</div>' + searchWarning;
       return;
     }
@@ -3382,8 +3393,8 @@
         Number(item.hops || 0) + ' hops · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
       ).join('');
       if (status) status.textContent = candidates.length
-        ? candidates.length + ' ' + ui('destinos com rota RF observada', 'destinations with a observed RF route')
-        : ui('Nenhum destino com rota RF observada neste período.', 'No destination has a observed RF route in this period.');
+        ? candidates.length + ' ' + ui('destinos alcançáveis pela topologia RF', 'destinations reachable through the RF topology')
+        : ui('Nenhum destino alcançável pela topologia RF neste período.', 'No destination is reachable through the RF topology in this period.');
       if (options.preserveTarget && targetInput.value.trim()) {
         const current = normalizedCall(targetInput.value);
         if (!candidates.some(item => normalizedCall(item.callsign) === current)) {
@@ -3464,7 +3475,7 @@
       fitRfRouteBounds(routes, payload.eligible_edges || []);
 
       if (!routes.length) {
-        toast(ui('Não existe rota RF observada entre esses indicativos neste período.', 'No observed RF route was found between these callsigns in this period.'), 'error');
+        toast(ui('Não existe alcançabilidade RF sustentada entre esses indicativos neste período.', 'No supported RF reachability route was found between these callsigns in this period.'), 'error');
       }
     } catch (err) {
       toast(String((err && err.message) || err), 'error');
@@ -3567,14 +3578,15 @@
 
         const key = `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
+        const routeEvidence = routeEvidenceByPair.get(rfRoutePairKey(edge.source, edge.target));
+        const geometryEdge = routeEvidence || edge;
         const points = [
-          [Number(edge.source_lat), Number(edge.source_lon)],
-          [Number(edge.target_lat), Number(edge.target_lon)]
+          [Number(geometryEdge.source_lat), Number(geometryEdge.source_lon)],
+          [Number(geometryEdge.target_lat), Number(geometryEdge.target_lon)]
         ];
         if (!points.flat().every(Number.isFinite)) continue;
 
         let line = state.topologyLines.get(key);
-        const routeEvidence = routeEvidenceByPair.get(rfRoutePairKey(edge.source, edge.target));
         const inferredRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'inferred';
         const legacyRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'legacy';
         const style = {
@@ -3598,7 +3610,9 @@
         }
 
         if (edge.kind === 'igate') line.bringToFront();
-        line._pt2vhfEdge = edge;
+        line._pt2vhfEdge = routeEvidence
+          ? { ...edge, ...routeEvidence, kind: edge.kind }
+          : edge;
         if (!line._pt2vhfHoverBound) {
           line.on('mouseover', () => showTopologyHover(line._pt2vhfEdge));
           line.on('mouseout', hideMapHoverInfo);
@@ -4324,24 +4338,42 @@
     followTracklog(call, rows);
   }
 
+  const TRACKLOG_MAX_GAP_MS = 30 * 60 * 1000;
+
   function splitTrackSegments(rows) {
+    const ordered = [...(rows || [])]
+      .filter(row => Number.isFinite(Number(row?.latitude)) && Number.isFinite(Number(row?.longitude)))
+      .sort((a, b) => {
+        const aMs = stationLastHeardMs({ last_heard: a?.timestamp });
+        const bMs = stationLastHeardMs({ last_heard: b?.timestamp });
+        if (!Number.isFinite(aMs) && !Number.isFinite(bMs)) return 0;
+        if (!Number.isFinite(aMs)) return 1;
+        if (!Number.isFinite(bMs)) return -1;
+        return aMs - bMs;
+      });
+
     const segments = [];
     let current = [];
     let previous = null;
-    for (const row of rows) {
+    for (const row of ordered) {
       const lat = Number(row.latitude), lon = Number(row.longitude);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
       let split = false;
       if (previous) {
         const distance = mapDistanceKm(previous, row);
         const prevMs = stationLastHeardMs({ last_heard: previous.timestamp });
         const nowMs = stationLastHeardMs({ last_heard: row.timestamp });
-        const elapsedHours = Number.isFinite(prevMs) && Number.isFinite(nowMs)
-          ? Math.max((nowMs - prevMs) / 3600000, 1 / 3600)
+        const elapsedMs = Number.isFinite(prevMs) && Number.isFinite(nowMs)
+          ? Math.max(0, nowMs - prevMs)
           : 0;
+        const elapsedHours = elapsedMs > 0 ? elapsedMs / 3600000 : 0;
         const impliedSpeed = elapsedHours > 0 ? distance / elapsedHours : 0;
-        // Never draw a giant connecting line across a relocation or a corrupt position.
-        split = distance >= 250 || (distance >= 75 && elapsedHours > 0 && impliedSpeed > 1200);
+        const temporalGap = elapsedMs > TRACKLOG_MAX_GAP_MS;
+        // Um intervalo longo encerra o segmento: não interpolamos uma viagem
+        // enquanto o tracker esteve desligado. As proteções geográficas antigas
+        // continuam válidas como uma segunda barreira.
+        split = temporalGap
+          || distance >= 250
+          || (distance >= 75 && elapsedHours > 0 && impliedSpeed > 1200);
       }
       if (split) {
         if (current.length >= 2) segments.push(current);
