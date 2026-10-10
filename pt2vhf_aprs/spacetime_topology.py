@@ -1072,7 +1072,7 @@ def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_wi
         # Permite chegar ao mesmo nó uma vez por profundidade até o limite,
         # evitando que um caminho de 1 hop impeça a descoberta de outro com
         # intermediários. Mantém proteção contra ciclos pelo próprio path.
-        best_depth_seen: dict[tuple[str, int], int] = {}
+        best_depth_seen: dict[tuple[str, int, str], int] = {}
         expansions = 0
 
         while queue and expansions < expansion_limit:
@@ -1101,7 +1101,10 @@ def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_wi
                 expansions += 1
                 hops = int(payload.get("hops") or (len(next_path) - 1))
 
-                state_key = (nxt, hops)
+                # Preserve rotas alternativas de mesma profundidade quando
+                # chegam ao nó por predecessores diferentes. Caso contrário,
+                # A-D-C pode suprimir A-B-C e impedir a descoberta A-B-C-D.
+                state_key = (nxt, hops, node)
                 if state_key not in best_depth_seen:
                     best_depth_seen[state_key] = 1
                     if hops < hop_limit:
