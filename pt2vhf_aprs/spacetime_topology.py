@@ -1054,27 +1054,34 @@ def _list_rf_route_candidates(source: str, hours: float = 0, query: str = "", li
 
 
 def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_width: int = 500):
-    """Ranking por alcançabilidade entre extremidades, preservando rotas multi-hop."""
+    """Ranking de alcançabilidade entre extremidades, preservando multi-hop."""
     graph, positions = _route_graph(hours)
     route_limit = max(1, min(int(limit or 10), 50))
     hop_limit = max(1, min(int(max_hops or 6), 10))
-    expansion_limit = max(250, min(int(beam_width or 500) * 4, 4000))
-    candidates: list[tuple[float, int, int, int, str, list[str]]] = []
+    expansion_limit = max(500, min(int(beam_width or 500) * 8, 8000))
+
+    # Guarda a melhor rota por par de extremidades. Se existir uma cadeia
+    # multi-hop válida, ela representa melhor a alcançabilidade da malha do que
+    # uma aresta adjacente isolada do mesmo par e, portanto, tem preferência.
+    best_by_pair: dict[tuple[str, str], dict[str, Any]] = {}
 
     for source in sorted(graph):
         if source not in positions:
             continue
         queue: list[list[str]] = [[source]]
-        # Um nó pode ser alcançado uma vez diretamente e uma vez por cadeia.
-        # Isso impede que uma aresta A-D esconda A-B-C-D no ranking.
-        seen_modes: set[tuple[str, str]] = {(source, "root")}
+        # Permite chegar ao mesmo nó uma vez por profundidade até o limite,
+        # evitando que um caminho de 1 hop impeça a descoberta de outro com
+        # intermediários. Mantém proteção contra ciclos pelo próprio path.
+        best_depth_seen: dict[tuple[str, int], int] = {}
         expansions = 0
 
         while queue and expansions < expansion_limit:
             path = queue.pop(0)
             node = path[-1]
-            if len(path) - 1 >= hop_limit:
+            hops_so_far = len(path) - 1
+            if hops_so_far >= hop_limit:
                 continue
+
             neighbors = sorted(
                 graph.get(node, {}).items(),
                 key=lambda pair: (
@@ -1093,44 +1100,59 @@ def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_wi
                     continue
                 expansions += 1
                 hops = int(payload.get("hops") or (len(next_path) - 1))
-                mode = "direct" if hops == 1 else "multihop"
-                state_key = (nxt, mode)
-                if state_key not in seen_modes:
-                    seen_modes.add(state_key)
+
+                state_key = (nxt, hops)
+                if state_key not in best_depth_seen:
+                    best_depth_seen[state_key] = 1
                     if hops < hop_limit:
                         queue.append(next_path)
 
                 if nxt not in positions or source >= nxt:
                     continue
-                candidates.append((
-                    float(payload.get("direct_distance_km") or 0.0),
-                    1 if hops > 1 else 0,
-                    int(payload.get("observations") or 0),
-                    -hops,
-                    str(payload.get("route_evidence_end") or ""),
-                    next_path,
-                ))
 
-    # Distância entre extremidades continua sendo o critério principal. Para o
-    # mesmo par/distância, uma cadeia multi-hop válida é preferida para tornar a
-    # alcançabilidade explícita em vez de reduzir tudo a uma aresta adjacente.
-    candidates.sort(key=lambda item: (item[0], item[1], item[2], item[3], item[4]), reverse=True)
-    result: list[dict[str, Any]] = []
-    emitted: set[tuple[str, str]] = set()
-    for _direct, _multi, _obs, _neg_hops, _evidence, path in candidates:
-        pair = tuple(sorted((path[0], path[-1])))
-        if pair in emitted:
-            continue
-        payload = _route_payload(path, graph, positions)
-        if not payload:
-            continue
-        emitted.add(pair)
-        payload["rank"] = len(result) + 1
-        payload["ranking_scope"] = "rf_reachability"
-        payload["multihop"] = int(payload.get("hops") or 0) > 1
-        result.append(payload)
-        if len(result) >= route_limit:
-            break
+                pair = tuple(sorted((source, nxt)))
+                candidate = dict(payload)
+                candidate["ranking_scope"] = "rf_reachability"
+                candidate["multihop"] = hops > 1
+                previous = best_by_pair.get(pair)
+                if previous is None:
+                    best_by_pair[pair] = candidate
+                    continue
+
+                previous_multi = int(previous.get("hops") or 0) > 1
+                candidate_multi = hops > 1
+                # Para o mesmo par, preferir uma rota composta válida. Entre
+                # duas rotas compostas, priorizar mais evidência e, depois,
+                # menor número de hops.
+                previous_score = (
+                    1 if previous_multi else 0,
+                    int(previous.get("observations") or 0),
+                    -int(previous.get("hops") or 0),
+                    str(previous.get("route_evidence_end") or ""),
+                )
+                candidate_score = (
+                    1 if candidate_multi else 0,
+                    int(candidate.get("observations") or 0),
+                    -hops,
+                    str(candidate.get("route_evidence_end") or ""),
+                )
+                if candidate_score > previous_score:
+                    best_by_pair[pair] = candidate
+
+    records = list(best_by_pair.values())
+    records.sort(
+        key=lambda item: (
+            float(item.get("direct_distance_km") or 0.0),
+            1 if int(item.get("hops") or 0) > 1 else 0,
+            int(item.get("observations") or 0),
+            -int(item.get("hops") or 0),
+            str(item.get("route_evidence_end") or ""),
+        ),
+        reverse=True,
+    )
+    result = records[:route_limit]
+    for index, payload in enumerate(result, start=1):
+        payload["rank"] = index
     return result
 
 
