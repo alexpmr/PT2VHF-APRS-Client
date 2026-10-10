@@ -791,6 +791,69 @@ def _route_payload(nodes, graph, positions, *, refine_inferred=True):
 
 
 
+def _list_rf_route_candidates(source: str, hours: float = 0, query: str = "", limit: int = 80):
+    """Destinos realmente alcançáveis por uma cadeia RF espacialmente compatível."""
+    source_call = db._rf_route_callsign(source)
+    if not source_call:
+        return []
+    query_norm = str(query or "").upper().strip()
+    graph, positions = _route_graph(hours)
+    if source_call not in graph:
+        return []
+
+    queue: list[list[str]] = [[source_call]]
+    best_hops: dict[str, int] = {source_call: 0}
+    candidates: dict[str, dict[str, Any]] = {}
+    max_hops = 12
+
+    while queue:
+        path = queue.pop(0)
+        node = path[-1]
+        if len(path) - 1 >= max_hops:
+            continue
+        neighbors = sorted(
+            graph.get(node, {}).items(),
+            key=lambda pair: (
+                -int(pair[1].get("packet_count") or 0),
+                str(pair[1].get("last_seen") or ""),
+                pair[0],
+            ),
+        )
+        for nxt, edge in neighbors:
+            if nxt in path:
+                continue
+            next_path = path + [nxt]
+            payload = _route_payload(next_path, graph, positions, refine_inferred=False)
+            if not payload:
+                continue
+            hops = len(next_path) - 1
+            previous_hops = best_hops.get(nxt)
+            if previous_hops is None or hops < previous_hops:
+                best_hops[nxt] = hops
+                queue.append(next_path)
+            if query_norm and query_norm not in nxt:
+                continue
+            current = candidates.get(nxt)
+            candidate = {
+                "callsign": nxt,
+                "hops": hops,
+                "last_seen": str(payload.get("route_evidence_end") or edge.get("last_seen") or ""),
+                "packet_count": int(payload.get("observations") or edge.get("packet_count") or 0),
+                "reachability_class": str(payload.get("reachability_class") or "historical"),
+            }
+            if current is None or hops < int(current.get("hops") or 999):
+                candidates[nxt] = candidate
+
+    rows = list(candidates.values())
+    rows.sort(key=lambda item: (
+        0 if query_norm and str(item["callsign"]).startswith(query_norm) else 1,
+        int(item.get("hops") or 0),
+        -int(item.get("packet_count") or 0),
+        str(item.get("callsign") or ""),
+    ))
+    return rows[: max(1, min(int(limit or 80), 200))]
+
+
 def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_width: int = 500):
     graph, positions = _route_graph(hours)
     route_limit = max(1, min(int(limit or 10), 50))
@@ -899,5 +962,6 @@ def install() -> None:
     db._rf_route_graph = _route_graph
     db._rf_route_edge_payload = _edge_payload
     db._rf_route_payload = _route_payload
+    db.list_rf_route_candidates = _list_rf_route_candidates
     db.list_rf_route_records = _route_records
     db.list_rf_routes = _list_rf_routes
