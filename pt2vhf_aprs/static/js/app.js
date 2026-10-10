@@ -3501,6 +3501,11 @@
     }
     const button = $('#rfRouteApply');
     if (button) button.disabled = true;
+    const processingToken = showProcessing(
+      ui('Analisando rotas RF…', 'Analyzing RF routes…'),
+      ui('Reconstruindo a alcançabilidade entre os indicativos selecionados.', 'Reconstructing reachability between the selected callsigns.'),
+      { blocking: false }
+    );
     try {
       const url = '/api/topology/rf-routes?source=' + encodeURIComponent(source) +
         '&target=' + encodeURIComponent(target) +
@@ -3551,6 +3556,7 @@
     } catch (err) {
       toast(String((err && err.message) || err), 'error');
     } finally {
+      hideProcessing(processingToken);
       if (button) button.disabled = false;
     }
   }
