@@ -426,6 +426,14 @@ def main() -> int:
     global _browser_mode, _tray_icon, _server_handle, PORT, URL
     _browser_mode = "--browser" in sys.argv[1:]
 
+    if os.name == "nt":
+        try:
+            # Faz o Windows usar de forma consistente o ícone do executável na
+            # barra de tarefas, Alt+Tab e agrupamento de janelas.
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("PT2VHF.APRS.Client")
+        except Exception:
+            pass
+
     if _already_running():
         if _browser_mode:
             _open_browser()
