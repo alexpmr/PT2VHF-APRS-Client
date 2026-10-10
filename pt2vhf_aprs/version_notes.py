@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.22": {
+        "title": "Rotas multi-hop, diagnóstico JSON e ícone APRS",
+        "items": [
+            "O ranking de Recordes RF volta a explorar rotas de alcançabilidade com múltiplos hops, preservando os nós intermediários.",
+            "Enlaces históricos legados deixam de desaparecer do período Completo quando ainda existem em topology_edges, mesmo que faltem eventos espaço-temporais detalhados.",
+            "A aba Mapa ganha Exportar JSON com diagnóstico versionado de estações, digipeaters, iGates, enlaces, eventos históricos, tracklogs e rotas RF.",
+            "O JSON pode usar o período atual ou todo o histórico disponível e nunca inclui passcodes, tokens ou chaves de API.",
+            "A imagem APRS fornecida passa a ser usada como base do ícone do executável/taskbar do Windows, com múltiplas resoluções.",
+            "O Windows recebe AppUserModelID próprio para manter a identidade correta na taskbar.",
+            "A versão inclui também todas as otimizações da v1.14.21 para Estatísticas, single-flight do grafo RF e indicador global de processamento.",
+        ],
+    },
     "1.14.21": {
         "title": "Estatísticas responsivas e feedback global de processamento",
         "items": [

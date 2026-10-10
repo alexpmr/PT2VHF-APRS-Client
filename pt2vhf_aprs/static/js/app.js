@@ -586,6 +586,100 @@
   $('#kmlExportCancel')?.addEventListener('click', () => $('#kmlExportModal')?.classList.add('hidden'));
   $('#kmlExportConfirm')?.addEventListener('click', () => void exportKml());
 
+  function openJsonExportModal() {
+    if ($('#jsonExportMode')) $('#jsonExportMode').value = 'complete';
+    if ($('#jsonExportStatus')) $('#jsonExportStatus').textContent = '';
+    $('#jsonExportModal')?.classList.remove('hidden');
+  }
+
+  async function saveJsonContent(filename, content) {
+    const nativeSave = window.pywebview?.api?.save_text_file;
+    if (nativeSave) {
+      const result = await nativeSave(filename, content);
+      if (result?.cancelled) return { cancelled: true };
+      if (!result?.saved) throw new Error(result?.error || ui('Não foi possível salvar o arquivo JSON.', 'Could not save the JSON file.'));
+      return { saved: true, path: String(result.path || filename), native: true };
+    }
+    if (typeof window.showSaveFilePicker === 'function') {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+          excludeAcceptAllOption: false,
+        });
+        const writable = await handle.createWritable();
+        await writable.write(new Blob([content], { type: 'application/json;charset=utf-8' }));
+        await writable.close();
+        return { saved: true, path: handle.name || filename, native: false };
+      } catch (err) {
+        if (err?.name === 'AbortError') return { cancelled: true };
+        throw err;
+      }
+    }
+    const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    return { saved: true, path: ui('pasta de downloads do navegador', 'browser downloads folder') };
+  }
+
+  async function exportTopologyJson() {
+    const mode = String($('#jsonExportMode')?.value || 'complete');
+    const status = $('#jsonExportStatus');
+    const confirm = $('#jsonExportConfirm');
+    const cancel = $('#jsonExportCancel');
+    if (confirm) confirm.disabled = true;
+    if (cancel) cancel.disabled = true;
+    if (status) status.textContent = ui('Gerando diagnóstico JSON…', 'Generating JSON diagnostics…');
+    const params = new URLSearchParams({
+      mode,
+      hours: String(mode === 'complete' ? 0 : topologyPeriodValue(state.mapPeriodHours)),
+    });
+    const token = showProcessing(
+      ui('Gerando diagnóstico JSON…', 'Generating JSON diagnostics…'),
+      ui('Coletando estações, enlaces, iGates, digipeaters, eventos e rotas RF.', 'Collecting stations, links, iGates, digipeaters, events and RF routes.'),
+      { blocking: false, delayMs: 320 }
+    );
+    try {
+      const response = await fetch('/api/export/topology-json?' + params.toString());
+      if (!response.ok) {
+        let message = 'Erro HTTP ' + response.status;
+        try { const data = await response.json(); if (data?.error) message = data.error; } catch (_) {}
+        throw new Error(message);
+      }
+      const disposition = String(response.headers.get('content-disposition') || '');
+      const match = disposition.match(/filename="?([^";]+)"?/i);
+      const fallbackStamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
+      const filename = match?.[1] || ('PT2VHF_APRS_Diagnostico_' + fallbackStamp + '.json');
+      const content = await response.text();
+      if (status) status.textContent = ui('Escolha onde deseja salvar o arquivo…', 'Choose where to save the file…');
+      const result = await saveJsonContent(filename, content);
+      if (result?.cancelled) { if (status) status.textContent = ui('Exportação cancelada.', 'Export cancelled.'); return; }
+      const savedMessage = result?.path
+        ? ui('JSON salvo em: ' + result.path, 'JSON saved to: ' + result.path)
+        : ui('JSON salvo com sucesso.', 'JSON saved successfully.');
+      if (status) status.textContent = savedMessage;
+      toast(savedMessage, 'ok');
+      setTimeout(() => $('#jsonExportModal')?.classList.add('hidden'), 900);
+    } catch (err) {
+      const message = String(err?.message || err);
+      if (status) status.textContent = message;
+      toast(message, 'error');
+    } finally {
+      hideProcessing(token);
+      if (confirm) confirm.disabled = false;
+      if (cancel) cancel.disabled = false;
+    }
+  }
+
+  $('#jsonExportButton')?.addEventListener('click', openJsonExportModal);
+  $('#jsonExportCancel')?.addEventListener('click', () => $('#jsonExportModal')?.classList.add('hidden'));
+  $('#jsonExportConfirm')?.addEventListener('click', () => void exportTopologyJson());
   async function installLatestUpdate() {
     let data = state.updateInfo;
     if (!data || data.status !== 'update_available') {
@@ -9616,7 +9710,7 @@
     );
     try {
       const payload = await api(
-        '/api/topology/rf-records?hours=' + encodeURIComponent(hours) + '&limit=10&max_hops=6',
+        '/api/topology/rf-records?hours=' + encodeURIComponent(hours) + '&limit=10&max_hops=12',
         { timeoutMs: 60000 }
       );
       if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;

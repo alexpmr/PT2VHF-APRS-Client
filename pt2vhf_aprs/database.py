@@ -4149,7 +4149,7 @@ def topology_stats(hours: int = 0, *, include_routes: bool = True) -> dict[str, 
     route_ms = 0.0
     if include_routes:
         component_started = time.monotonic()
-        route_records = list_rf_route_records(0 if complete else hours, limit=10, max_hops=6)
+        route_records = list_rf_route_records(0 if complete else hours, limit=10, max_hops=12)
         route_ms = (time.monotonic() - component_started) * 1000.0
         if route_ms >= 250:
             diag.log_event("topology_stats_component", component="rf_route_records", hours=0 if complete else hours, duration_ms=round(route_ms, 1))

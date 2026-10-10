@@ -1,4 +1,39 @@
-## Novo — Ranking de enlaces: voltar a considerar rotas de alcançabilidade com múltiplos hops
+## Novo — Filtros do mapa: ocultar entidades sem ocultar os enlaces
+
+- Ao filtrar o mapa para **não mostrar determinados objetos/entidades** (estações, digipeaters, iGates, móveis ou outras categorias), manter os **enlaces/topologia visíveis** na tela quando a camada de enlaces estiver habilitada.
+- A visibilidade dos nós e a visibilidade dos enlaces devem ser controles independentes:
+  - ocultar um nó deve esconder apenas seu marcador/ícone/rótulo;
+  - não deve remover automaticamente os enlaces que usam esse nó como extremidade;
+  - se apenas uma das extremidades estiver visível, o enlace continua desenhado até a coordenada da entidade oculta;
+  - se as duas extremidades estiverem ocultas, o enlace também deve permanecer visível, desde que passe pelos filtros próprios de topologia/período.
+- Para desenhar o enlace, continuar usando as coordenadas conhecidas/históricas da extremidade mesmo quando o marcador estiver filtrado da camada de entidades.
+- Não interpretar a ausência visual do marcador como ausência do nó no grafo.
+- Os filtros de entidade não podem alterar:
+  - ranking/Recordes RF;
+  - contagens de enlaces;
+  - histórico da topologia;
+  - rotas RF calculadas;
+  - classificação RF/APRS-IS.
+- Caso exista um filtro específico de **enlaces/topologia**, somente ele deve controlar se a linha é mostrada ou escondida.
+- Preservar estilos de enlace (RF, APRS-IS, ativo/inativo, histórico) mesmo quando uma ou ambas as extremidades estiverem ocultas.
+- Adicionar regressões para:
+  - origem visível e destino oculto;
+  - origem oculta e destino visível;
+  - ambas as extremidades ocultas;
+  - reexibição dos objetos sem recriar ou duplicar enlaces.
+- **Critério de aceite:** ao desmarcar categorias em **Ver**, os marcadores correspondentes desaparecem, mas os enlaces continuam na tela enquanto a camada/filtro de topologia permanecer ativo.
+
+## Implementado na v1.14.22 — Ícone APRS na barra de aplicativos
+
+- Usar a imagem APRS fornecida pelo usuário como base do ícone do PT2VHF APRS Client na barra de aplicativos/taskbar.
+- A arte foi preparada em canvas quadrado com transparência e preservação do globo/legenda APRS para melhor leitura em tamanhos pequenos.
+- Gerar o `.ico` do Windows com múltiplas resoluções (16, 24, 32, 48, 64, 128 e 256 px) durante o build.
+- Aplicar o ícone ao executável, portable, instalador e bandeja do sistema.
+- Definir um AppUserModelID próprio no Windows para evitar que a taskbar use ícone genérico do runtime/WebView.
+- Preservar fallback para o ícone compacto anterior caso o asset APRS não esteja disponível no checkout.
+- **Critério de aceite:** com o aplicativo aberto, a taskbar e o executável exibem a identidade visual APRS fornecida.
+
+## Implementado na v1.14.22 — Ranking de enlaces: voltar a considerar rotas de alcançabilidade com múltiplos hops
 
 - Corrigir regressão do ranking/Recordes RF: atualmente estão predominando ou aparecendo apenas **enlaces únicos (1 hop)**, enquanto rotas compostas com **múltiplos hops** deixaram de aparecer como deveriam.
 - O objetivo do ranking é medir **alcançabilidade RF entre as extremidades**, não apenas listar arestas físicas individuais.
@@ -15,7 +50,7 @@
 - Garantir que a otimização/caching introduzida para Estatísticas não transforme o ranking em simples lista de arestas.
 - Adicionar regressões com rotas de 2, 3, 4 e mais hops, incluindo malhas com caminhos alternativos e nós móveis.
 
-## Novo — Topologia histórica: enlaces já observados não podem desaparecer no período Completo
+## Implementado na v1.14.22 — Topologia histórica: enlaces já observados não podem desaparecer no período Completo
 
 - Investigar e corrigir enlaces históricos que existiam anteriormente e deixaram de aparecer após as mudanças recentes de topologia/rotas.
 - Caso de referência informado: havia um enlace/rota ligando a região de **Goiânia a Caldas Novas** e ele deixou de aparecer.
@@ -40,7 +75,7 @@
 - Adicionar regressão específica com um enlace antigo válido que permanece no ranking/topologia após os nós ficarem offline e após reiniciar/atualizar o aplicativo.
 - **Critério de aceite:** com período Completo, um enlace válido anteriormente armazenado continua disponível para análise até que o usuário efetivamente apague ou retenha esses dados.
 
-## Novo — Mapa: exportar diagnóstico completo da topologia em JSON
+## Implementado na v1.14.22 — Mapa: exportar diagnóstico completo da topologia em JSON
 
 - Na aba **Mapa**, adicionar um botão **Exportar JSON**, próximo às ferramentas de exportação/KML.
 - Objetivo: gerar um arquivo de diagnóstico que o usuário possa enviar para análise técnica, permitindo reproduzir problemas de enlaces, rotas, estações, iGates, digipeaters, tracklogs e filtros sem precisar compartilhar o banco SQLite inteiro.

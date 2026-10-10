@@ -34,6 +34,7 @@ HOST = "127.0.0.1"
 PORT = configured_start_port()
 URL = f"http://{HOST}:{PORT}"
 MUTEX_NAME = "Global\\PT2VHF_APRS_Client_SingleInstance"
+APP_USER_MODEL_ID = "PT2VHF.APRS.Client"
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 850
 WINDOW_MIN_WIDTH = 1100
@@ -44,6 +45,16 @@ _tray_icon: pystray.Icon | None = None
 _browser_mode = False
 _quitting = False
 _server_handle = None
+
+
+def _configure_windows_identity() -> None:
+    """Garante identidade própria na taskbar e usa o ícone embutido no EXE."""
+    if os.name != "nt":
+        return
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
+    except Exception:
+        pass
 
 
 def _already_running() -> bool:
@@ -335,23 +346,33 @@ class NativeApi:
             global _window
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
-            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.kml")).name
-            if not suggested.lower().endswith(".kml"):
-                suggested += ".kml"
+            suggested = Path(str(filename or "PT2VHF_APRS_Client_export.txt")).name
+            suffix = Path(suggested).suffix.lower()
+            if suffix == ".json":
+                file_types = ("JSON (*.json)", "Todos os arquivos (*.*)")
+                expected_suffix = ".json"
+            elif suffix == ".kml":
+                file_types = ("KML (*.kml)", "Todos os arquivos (*.*)")
+                expected_suffix = ".kml"
+            else:
+                file_types = ("Arquivo de texto (*.txt)", "Todos os arquivos (*.*)")
+                expected_suffix = suffix or ".txt"
+                if not suffix:
+                    suggested += expected_suffix
             selected = _window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 save_filename=suggested,
-                file_types=("KML (*.kml)", "Todos os arquivos (*.*)"),
+                file_types=file_types,
             )
             if not selected:
                 return {"saved": False, "cancelled": True}
             if isinstance(selected, (list, tuple)):
                 selected = selected[0] if selected else ""
-            path = Path(str(selected))
-            if path.suffix.lower() != ".kml":
-                path = path.with_suffix(".kml")
-            path.write_text(str(content or ""), encoding="utf-8")
-            return {"saved": True, "path": str(path)}
+            target = Path(str(selected))
+            if expected_suffix and target.suffix.lower() != expected_suffix:
+                target = target.with_suffix(expected_suffix)
+            target.write_text(str(content or ""), encoding="utf-8")
+            return {"saved": True, "path": str(target)}
         except Exception as exc:
             return {"saved": False, "error": str(exc)}
 
@@ -416,6 +437,7 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
 
 def main() -> int:
     global _browser_mode, _tray_icon, _server_handle, PORT, URL
+    _configure_windows_identity()
     _browser_mode = "--browser" in sys.argv[1:]
 
     if _already_running():

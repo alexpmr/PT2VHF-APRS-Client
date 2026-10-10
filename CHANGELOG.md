@@ -1,3 +1,18 @@
+## 1.14.22 - 2026-10-10
+
+- **Recordes RF multi-hop:** o ranking volta a explorar caminhos completos de alcançabilidade, sem parar nos enlaces de 1 hop.
+- **Intermediários preservados:** uma cadeia A→B→C→D permanece explícita e pode gerar alcance A↔D via B/C, sem criar falso enlace direto.
+- **Histórico preservado:** enlaces válidos existentes em `topology_edges` recebem fallback histórico legado quando faltam eventos espaço-temporais utilizáveis, evitando desaparecimento no período Completo.
+- **Diagnóstico JSON:** novo botão **Exportar JSON** na aba Mapa gera arquivo versionado com estações, digipeaters, iGates, topologia, eventos históricos, tracklogs segmentados e Recordes RF.
+- **Escopo de exportação:** escolha entre período atual do mapa e diagnóstico completo; o arquivo informa contagens e flags de truncamento.
+- **Privacidade:** passcodes, tokens, cookies e chaves de API não são exportados.
+- **Ícone APRS:** a arte fornecida pelo usuário passa a ser a base do ícone do executável, portable, instalador e bandeja no Windows.
+- **Taskbar Windows:** AppUserModelID próprio evita ícone genérico do WebView/runtime e mantém a identidade APRS.
+- **Compatibilidade:** exportação nativa de texto passa a aceitar JSON além de KML no Windows, Linux e macOS.
+- **Performance:** mantém todas as correções da v1.14.21 para Estatísticas responsivas, cache/single-flight de topologia e indicador global de processamento.
+- **Regressões:** testes cobrem ranking multi-hop, exportação JSON, ausência de segredos e ícone APRS.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.21 - 2026-10-10
 
 - **Estatísticas sem timeout falso:** o carregamento principal deixa de depender do cálculo pesado de Recordes RF e retorna os indicadores essenciais primeiro.
