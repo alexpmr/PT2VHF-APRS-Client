@@ -81,6 +81,12 @@
     rfRouteNodeMarkers: new Map(),
     rfRouteCandidateTimer: null,
     rfRouteOriginTimer: null,
+    rfRouteOriginsController: null,
+    rfRouteOriginGeneration: 0,
+    rfRouteOriginCache: new Map(),
+    topologyStatsLastGood: null,
+    topologyStatsGeneration: 0,
+    rfRouteRecordsGeneration: 0,
     rfRouteExclusiveNodes: null,
     rfRouteRecords: [],
     rfRoutePanelPosition: null,
@@ -233,12 +239,14 @@
 
   async function api(url, options = {}) {
     const requestOptions = { ...options };
+    const timeoutMs = Number(requestOptions.timeoutMs ?? 10000);
+    delete requestOptions.timeoutMs;
     let timeoutId = null;
     let controller = null;
-    if (!requestOptions.signal) {
+    if (!requestOptions.signal && Number.isFinite(timeoutMs) && timeoutMs > 0) {
       controller = new AbortController();
       requestOptions.signal = controller.signal;
-      timeoutId = setTimeout(() => controller.abort(), 10000);
+      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     }
     try {
       const response = await fetch(url, requestOptions);
@@ -249,9 +257,10 @@
       return data;
     } catch (err) {
       if (err?.name === 'AbortError') {
+        const seconds = Math.max(1, Math.round(timeoutMs / 1000));
         throw new Error(ui(
-          `O backend local não respondeu em 10 segundos (${url}).`,
-          `The local backend did not respond within 10 seconds (${url}).`
+          `O backend local não respondeu em ${seconds} segundos (${url}).`,
+          `The local backend did not respond within ${seconds} seconds (${url}).`
         ));
       }
       throw err;
@@ -758,17 +767,23 @@
 
   const processingOperations = new Map();
   let processingSequence = 0;
+  const PROCESSING_SHOW_DELAY_MS = 320;
 
   function renderProcessingOverlay() {
     const overlay = $('#globalProcessingOverlay');
     if (!overlay) return;
-    const entries = [...processingOperations.values()];
+    const entries = [...processingOperations.values()].filter(entry => entry.visible);
     const active = entries.length > 0;
     overlay.classList.toggle('hidden', !active);
     document.documentElement.classList.toggle('is-processing', active);
     document.body?.setAttribute('aria-busy', active ? 'true' : 'false');
-    if (!active) return;
+    if (!active) {
+      overlay.classList.remove('nonblocking');
+      return;
+    }
     const current = entries[entries.length - 1];
+    const blocking = entries.some(entry => entry.blocking !== false);
+    overlay.classList.toggle('nonblocking', !blocking);
     const title = $('#globalProcessingTitle');
     const message = $('#globalProcessingMessage');
     if (title) title.textContent = current.title || ui('Processando...', 'Processing...');
@@ -778,41 +793,57 @@
     );
   }
 
-  function showProcessing(title = '', message = '') {
+  function showProcessing(title = '', message = '', options = {}) {
     processingSequence += 1;
     const token = 'processing-' + processingSequence;
-    processingOperations.set(token, {
+    const entry = {
       title: title || ui('Processando...', 'Processing...'),
-      message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.')
-    });
-    renderProcessingOverlay();
+      message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.'),
+      blocking: options?.blocking !== false,
+      visible: false,
+      timer: null,
+    };
+    processingOperations.set(token, entry);
+    const delayMs = options?.immediate === true
+      ? 0
+      : Math.max(0, Number(options?.delayMs ?? PROCESSING_SHOW_DELAY_MS));
+    entry.timer = setTimeout(() => {
+      const current = processingOperations.get(token);
+      if (!current) return;
+      current.visible = true;
+      current.timer = null;
+      renderProcessingOverlay();
+    }, delayMs);
     return token;
   }
 
   function updateProcessing(token, title = '', message = '') {
-    if (!processingOperations.has(token)) return;
-    const current = processingOperations.get(token) || {};
-    processingOperations.set(token, {
-      title: title || current.title,
-      message: message || current.message
-    });
+    const current = processingOperations.get(token);
+    if (!current) return;
+    if (title) current.title = title;
+    if (message) current.message = message;
     renderProcessingOverlay();
   }
 
   function hideProcessing(token) {
-    if (token) processingOperations.delete(token);
-    else processingOperations.clear();
+    if (token) {
+      const current = processingOperations.get(token);
+      if (current?.timer) clearTimeout(current.timer);
+      processingOperations.delete(token);
+    } else {
+      for (const current of processingOperations.values()) {
+        if (current?.timer) clearTimeout(current.timer);
+      }
+      processingOperations.clear();
+    }
     renderProcessingOverlay();
   }
 
-  async function withProcessing(title, message, operation) {
-    const token = showProcessing(title, message);
-    const started = performance.now();
+  async function withProcessing(title, message, operation, options = {}) {
+    const token = showProcessing(title, message, options);
     try {
       return await operation(token);
     } finally {
-      const remaining = 260 - (performance.now() - started);
-      if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
       hideProcessing(token);
     }
   }
@@ -3335,18 +3366,58 @@
     const input = $('#rfRouteSource');
     const list = $('#rfRouteSourceList');
     if (!input || !list) return [];
-    try {
-      const url = '/api/topology/rf-origins?hours=' + encodeURIComponent(state.mapPeriodHours) +
-        '&q=' + encodeURIComponent(query || '') + '&limit=100';
-      const rows = await api(url);
-      list.innerHTML = rows.map(item =>
+
+    const normalizedQuery = String(query || '').toUpperCase().trim();
+    const periodKey = String(state.mapPeriodHours);
+    const cached = state.rfRouteOriginCache.get(periodKey);
+    if (cached && Array.isArray(cached.rows)) {
+      const filtered = normalizedQuery
+        ? cached.rows.filter(item => String(item.callsign || '').includes(normalizedQuery))
+        : cached.rows;
+      list.innerHTML = filtered.slice(0, 100).map(item =>
         '<option value="' + escapeHtml(item.callsign) + '">' +
         Number(item.links || 0) + ' enlaces · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
       ).join('');
-      return rows;
-    } catch (_) {
+      if (cached.complete || filtered.length >= 100 || normalizedQuery) return filtered.slice(0, 100);
+    }
+
+    if (state.rfRouteOriginsController) {
+      try { state.rfRouteOriginsController.abort(); } catch (_) {}
+    }
+    const controller = new AbortController();
+    state.rfRouteOriginsController = controller;
+    state.rfRouteOriginGeneration += 1;
+    const generation = state.rfRouteOriginGeneration;
+    const processingToken = showProcessing(
+      ui('Consultando topologia RF…', 'Querying RF topology…'),
+      ui('Carregando os indicativos disponíveis para análise de rota.', 'Loading callsigns available for route analysis.'),
+      { blocking: false }
+    );
+
+    try {
+      // Carrega a base do período sem filtro para que as próximas teclas sejam
+      // resolvidas localmente, evitando reconstruir o grafo a cada caractere.
+      const url = '/api/topology/rf-origins?hours=' + encodeURIComponent(state.mapPeriodHours) +
+        '&q=&limit=200';
+      const rows = await api(url, { signal: controller.signal, timeoutMs: 60000 });
+      if (generation !== state.rfRouteOriginGeneration) return [];
+      const normalizedRows = Array.isArray(rows) ? rows : [];
+      state.rfRouteOriginCache.set(periodKey, { rows: normalizedRows, complete: normalizedRows.length < 200 });
+      const filtered = normalizedQuery
+        ? normalizedRows.filter(item => String(item.callsign || '').includes(normalizedQuery))
+        : normalizedRows;
+      list.innerHTML = filtered.slice(0, 100).map(item =>
+        '<option value="' + escapeHtml(item.callsign) + '">' +
+        Number(item.links || 0) + ' enlaces · ' + Number(item.packet_count || 0).toLocaleString('pt-BR') + ' obs.</option>'
+      ).join('');
+      return filtered.slice(0, 100);
+    } catch (err) {
+      if (controller.signal.aborted) return [];
       list.innerHTML = '';
       return [];
+    } finally {
+      if (generation === state.rfRouteOriginGeneration) state.rfRouteOriginsController = null;
+      hideProcessing(processingToken);
     }
   }
 
