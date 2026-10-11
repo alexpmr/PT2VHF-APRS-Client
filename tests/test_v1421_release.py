@@ -152,9 +152,14 @@ def test_v1421_statistics_load_rf_records_independently():
 
     assert "rf_route_records_deferred" in db_source
     assert "include_routes: bool = True" in db_source
-    assert "/api/topology/rf-records?hours=" in app
+    version = tuple(int(part) for part in read("VERSION").strip().split("."))
+    if version >= (1, 14, 24):
+        assert "/api/topology/rf-records/jobs" in app
+        assert '@app.post("/api/topology/rf-records/jobs")' in web_source
+    else:
+        assert "/api/topology/rf-records?hours=" in app
+        assert "Recordes RF temporariamente indisponíveis" in app
     assert 'id="rfRouteRecordsHost"' in app
-    assert "Recordes RF temporariamente indisponíveis" in app
     assert '@app.get("/api/topology/rf-records")' in web_source
 
 
