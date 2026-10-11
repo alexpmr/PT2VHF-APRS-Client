@@ -19,7 +19,7 @@
   const fetchJson = async (url) => {
     const r = await fetch(url, {cache:'no-store'});
     const data = await r.json();
-    if (!r.ok) throw new Error(data?.error || r.statusText);
+    if (!r.ok) throw new Error(tx(data?.error || r.statusText));
     return data;
   };
 
@@ -71,7 +71,7 @@
       try {
         const resp = await fetch('/api/queries/send', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({to:row.callsign, query_type:btn.dataset.query})});
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data?.error || resp.statusText);
+        if (!resp.ok) throw new Error(tx(data?.error || resp.statusText));
         if (out) out.textContent = t('Consulta enviada.','Query sent.','Consulta enviada.','Requête envoyée.');
       } catch (err) {
         if (out) out.textContent = String(err.message || err);
@@ -202,4 +202,4 @@
     installDelegatedStationPanel();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-})();
+})();\n  const tx = value => { const raw = String(value ?? ''); return typeof window.PT2VHF_TRANSLATE === 'function' ? window.PT2VHF_TRANSLATE(raw) : raw; };
