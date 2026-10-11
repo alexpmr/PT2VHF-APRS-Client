@@ -221,11 +221,11 @@
   }
 
   function translatedText(pt, en) {
-    if (state.language === 'en') return en || pt;
-    if (state.language !== 'pt-BR') {
-      return EXTRA_I18N[state.language]?.[pt] || en || EN_TEXT?.get?.(pt) || pt;
-    }
-    return pt;
+    if (state.language === 'pt-BR') return pt;
+    if (state.language === 'en') return en || EN_TEXT?.get?.(pt) || pt;
+    // Nunca masque uma tradução ausente com inglês: em idiomas não ingleses,
+    // a ausência da chave deve ficar visível em português e ser capturada pela auditoria.
+    return EXTRA_I18N[state.language]?.[pt] || pt;
   }
 
   function ui(pt, en) {
@@ -8745,6 +8745,34 @@
     return translatedText(value, map[value] || value);
   }
 
+  const I18N_REVERSE_CACHE = new Map();
+
+  function sourceTextFromCurrentLocale(value) {
+    const text = String(value ?? '');
+    if (!text || state.language === 'pt-BR') return text;
+    const locale = state.language;
+    if (!I18N_REVERSE_CACHE.has(locale)) {
+      const reverse = new Map();
+      if (locale === 'en') {
+        for (const [pt, translated] of EN_TEXT.entries()) {
+          if (translated && !reverse.has(translated)) reverse.set(translated, pt);
+        }
+      } else {
+        for (const [pt, translated] of Object.entries(EXTRA_I18N[locale] || {})) {
+          if (translated && !reverse.has(translated)) reverse.set(translated, pt);
+        }
+      }
+      I18N_REVERSE_CACHE.set(locale, reverse);
+    }
+    return I18N_REVERSE_CACHE.get(locale)?.get(text) || text;
+  }
+
+  function translationForSource(source) {
+    if (state.language === 'pt-BR') return source;
+    if (state.language === 'en') return EN_TEXT.get(source) || source;
+    return EXTRA_I18N[state.language]?.[source] || source;
+  }
+
   function translateDom(root = document.body) {
     if (!root) return;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -8753,30 +8781,31 @@
     for (const node of nodes) {
       const parent = node.parentElement;
       if (!parent || ['SCRIPT','STYLE','CODE'].includes(parent.tagName)) continue;
-      if (node._pt2vhfOriginalText === undefined) node._pt2vhfOriginalText = node.nodeValue;
+      if (node._pt2vhfOriginalText === undefined) {
+        node._pt2vhfOriginalText = sourceTextFromCurrentLocale(node.nodeValue);
+      }
       const original = node._pt2vhfOriginalText;
       const trimmed = original.trim();
       if (!trimmed) continue;
-      const translated = state.language === 'en'
-        ? EN_TEXT.get(trimmed)
-        : (EXTRA_I18N[state.language]?.[trimmed] || EN_TEXT.get(trimmed));
-      const chosen = state.language === 'pt-BR' ? trimmed : (translated || trimmed);
+      const chosen = translationForSource(trimmed);
       const lead = original.match(/^\s*/)?.[0] || '';
       const trail = original.match(/\s*$/)?.[0] || '';
       node.nodeValue = lead + chosen + trail;
     }
 
     const attrs = ['placeholder', 'title', 'aria-label'];
-    for (const el of root.querySelectorAll?.('*') || []) {
+    const elements = [];
+    if (root.nodeType === Node.ELEMENT_NODE) elements.push(root);
+    elements.push(...(root.querySelectorAll?.('*') || []));
+    for (const el of elements) {
       for (const attr of attrs) {
         if (!el.hasAttribute(attr)) continue;
         const key = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
-        if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
+        if (!(key in el.dataset)) {
+          el.dataset[key] = sourceTextFromCurrentLocale(el.getAttribute(attr) || '');
+        }
         const original = el.dataset[key];
-        const translated = state.language === 'en'
-          ? EN_TEXT.get(original)
-          : (EXTRA_I18N[state.language]?.[original] || EN_TEXT.get(original));
-        el.setAttribute(attr, state.language === 'pt-BR' ? original : (translated || original));
+        el.setAttribute(attr, translationForSource(original));
       }
     }
   }
@@ -8872,15 +8901,48 @@
     if (e.key === 'Escape') setLanguageMenuOpen(false);
   });
 
+  const languageObserverOptions = {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['placeholder', 'title', 'aria-label'],
+  };
+
   const languageObserver = new MutationObserver(records => {
     if (state.language === 'pt-BR') return;
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        if (node.nodeType === Node.ELEMENT_NODE) translateDom(node);
+    // Desconecta durante a tradução para que as próprias alterações de i18n
+    // não voltem para a fila do observer.
+    languageObserver.disconnect();
+    try {
+      for (const record of records) {
+        if (record.type === 'childList') {
+          for (const node of record.addedNodes) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              translateDom(node);
+            } else if (node.nodeType === Node.TEXT_NODE && node.parentElement) {
+              node._pt2vhfOriginalText = sourceTextFromCurrentLocale(node.nodeValue);
+              translateDom(node.parentElement);
+            }
+          }
+        } else if (record.type === 'characterData') {
+          const node = record.target;
+          node._pt2vhfOriginalText = sourceTextFromCurrentLocale(node.nodeValue);
+          if (node.parentElement) translateDom(node.parentElement);
+        } else if (record.type === 'attributes') {
+          const el = record.target;
+          const attr = record.attributeName;
+          if (!attr || !el?.hasAttribute?.(attr)) continue;
+          const key = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
+          el.dataset[key] = sourceTextFromCurrentLocale(el.getAttribute(attr) || '');
+          translateDom(el);
+        }
       }
+    } finally {
+      languageObserver.observe(document.body, languageObserverOptions);
     }
   });
-  languageObserver.observe(document.body, { childList: true, subtree: true });
+  languageObserver.observe(document.body, languageObserverOptions);
 
   function showConfigSection(_section) {
     state.configSection = 'all';
