@@ -1,0 +1,10 @@
+# PT2VHF APRS Client - Windows 7 SP1 x64 legacy test build
+# Keep this environment isolated from the normal Windows 10/11 build.
+Flask==3.0.3
+aprslib==0.7.2
+pyserial==3.5
+waitress==3.0.0
+pystray==0.19.5
+Pillow==10.4.0
+psutil==6.1.1
+pyinstaller==5.13.2
