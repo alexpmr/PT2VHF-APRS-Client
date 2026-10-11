@@ -1,5 +1,16 @@
 ## 1.14.24 - 2026-10-11
 
+## 1.14.25 — 2026-10-11
+
+- Auditoria integral de internacionalização em toda a interface e módulos auxiliares.
+- Removido o fallback automático para inglês quando um idioma não inglês não possui uma chave.
+- Adicionado catálogo suplementar para cobrir textos estáticos e dinâmicos em todos os 10 idiomas suportados.
+- Mensagens parametrizadas passam a ser traduzidas preservando valores variáveis como versão, indicativo, contadores e caminhos.
+- O observador de idioma agora acompanha inserções, alterações de texto e mudanças em title, placeholder e aria-label.
+- A auditoria estrita de i18n passa a bloquear a release em caso de chave ausente, catálogo incompleto ou regressão de fallback.
+- Release completa multiplataforma e Manual PDF.
+
+
 - **Recordes RF — algoritmo:** o ranking deixa de recalcular `_compatible_events()` para o caminho inteiro a cada expansão e passa a propagar incrementalmente a evidência histórica selecionada hop a hop.
 - **Desempenho:** eventos por enlace são pré-amostrados uma única vez, preservando diversidade espacial para digis/trackers móveis; estados equivalentes são podados por posição/hop e cada origem possui orçamento de expansões.
 - **Cache e single-flight:** resultados do ranking são cacheados por período/parâmetros e cálculos concorrentes reutilizam a mesma execução.
