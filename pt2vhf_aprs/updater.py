@@ -47,6 +47,8 @@ def _is_frozen() -> bool:
 def current_update_mode() -> str:
     exe = Path(sys.executable)
     if sys.platform == "win32":
+        if os.getenv("PT2VHF_WIN7_LEGACY") == "1" or "win7_legacy" in exe.name.lower():
+            return "windows-legacy"
         return "windows-portable" if "portable" in exe.name.lower() else "windows-installer"
     if sys.platform == "darwin":
         return "macos-dmg"
@@ -72,6 +74,8 @@ def desired_asset_name(version: str) -> str:
     version = str(version or "").lstrip("vV")
     mode = current_update_mode()
     machine = _machine()
+    if mode == "windows-legacy":
+        return f"PT2VHF_APRS_Client_Win7_Legacy_x64_v{version}.exe"
     if mode == "windows-portable":
         arch = "ARM64" if machine == "arm64" else "x64"
         return f"PT2VHF_APRS_Client_Portable_{arch}_v{version}.exe"
@@ -96,6 +100,8 @@ def install_supported(mode: str | None = None) -> bool:
     if not _is_frozen() and os.getenv("PT2VHF_ALLOW_SOURCE_UPDATE") != "1":
         return False
     machine = _machine()
+    if mode == "windows-legacy":
+        return False
     if mode.startswith("windows-"):
         return sys.platform == "win32" and machine in {"x86_64", "arm64"}
     if mode == "macos-dmg":
