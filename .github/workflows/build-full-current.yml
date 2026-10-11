@@ -49,6 +49,8 @@ jobs:
           node --check pt2vhf_aprs\static\js\i18n_pl.js
           node --check pt2vhf_aprs\static\js\i18n_nl.js
           node --check pt2vhf_aprs\static\js\i18n_zh.js
+          node --check pt2vhf_aprs\static\js\i18n_extra.js
+          node --check pt2vhf_aprs\static\js\i18n_runtime.js
           node --check pt2vhf_aprs\static\js\v142.js
 
       - name: Run tests
@@ -134,6 +136,8 @@ jobs:
           node --check pt2vhf_aprs\static\js\i18n_pl.js
           node --check pt2vhf_aprs\static\js\i18n_nl.js
           node --check pt2vhf_aprs\static\js\i18n_zh.js
+          node --check pt2vhf_aprs\static\js\i18n_extra.js
+          node --check pt2vhf_aprs\static\js\i18n_runtime.js
 
       - name: Run tests
         shell: pwsh
