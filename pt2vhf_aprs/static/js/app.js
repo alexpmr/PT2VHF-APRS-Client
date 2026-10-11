@@ -222,7 +222,7 @@
 
   function translatedText(pt, en) {
     if (state.language === 'pt-BR') return pt;
-    if (state.language === 'en') return en || EN_TEXT?.get?.(pt) || pt;
+    if (state.language === 'en') return EXTRA_I18N.en?.[pt] || en || EN_TEXT?.get?.(pt) || pt;
     // Nunca masque uma tradução ausente com inglês: em idiomas não ingleses,
     // a ausência da chave deve ficar visível em português e ser capturada pela auditoria.
     return EXTRA_I18N[state.language]?.[pt] || pt;
@@ -8769,7 +8769,7 @@
 
   function translationForSource(source) {
     if (state.language === 'pt-BR') return source;
-    if (state.language === 'en') return EN_TEXT.get(source) || source;
+    if (state.language === 'en') return EXTRA_I18N.en?.[source] || EN_TEXT.get(source) || source;
     return EXTRA_I18N[state.language]?.[source] || source;
   }
 
