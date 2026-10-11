@@ -26,10 +26,24 @@ ROUTE_EVENT_BEAM_WIDTH = 24
 INFERRED_LONG_HOP_KM = 250.0
 GRAPH_CACHE_SECONDS = 20.0
 
+# v1.14.24 — o ranking de Recordes RF usa uma busca incremental. A versão
+# anterior recalculava toda a compatibilidade espaço-temporal a cada extensão
+# de caminho, levando dezenas de segundos ou minutos em bases reais.
+RF_RECORDS_CACHE_SECONDS = 90.0
+RF_RECORD_EVENT_REPRESENTATIVES = 24
+RF_RECORD_STATE_BEAM = 5
+RF_RECORD_MAX_EXPANSIONS_PER_SOURCE = 1400
+RF_RECORD_DEFAULT_DEADLINE_SECONDS = 45.0
+
 _graph_cache_lock = threading.RLock()
 _graph_cache: dict[tuple[float, str], tuple[float, tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]]] = {}
 _graph_builds: dict[tuple[float, str], threading.Event] = {}
 _graph_build_errors: dict[tuple[float, str], BaseException] = {}
+
+_rf_records_cache_lock = threading.RLock()
+_rf_records_cache: dict[tuple[float, int, int, int, str], tuple[float, list[dict[str, Any]]]] = {}
+_rf_records_builds: dict[tuple[float, int, int, int, str], threading.Event] = {}
+_rf_records_errors: dict[tuple[float, int, int, int, str], BaseException] = {}
 
 
 def _parse_dt(value: Any) -> datetime | None:
@@ -859,7 +873,7 @@ def _edge_payload(source: str, target: str, edge: dict[str, Any], positions, eve
     }
 
 
-def _route_payload(nodes, graph, positions, *, refine_inferred=True):
+def _route_payload(nodes, graph, positions, *, refine_inferred=True, selected_events_override=None):
     if len(nodes) < 2:
         return None
 
@@ -903,7 +917,12 @@ def _route_payload(nodes, graph, positions, *, refine_inferred=True):
         return None
 
     event_graph = all(bool(edge.get("events")) for edge in route_graph_edges if edge)
-    selected_events = _compatible_events(nodes, graph) if event_graph else None
+    if selected_events_override is not None:
+        selected_events = list(selected_events_override)
+        if len(selected_events) != len(route_graph_edges):
+            return None
+    else:
+        selected_events = _compatible_events(nodes, graph) if event_graph else None
     if event_graph and selected_events is None:
         return None
 
@@ -1053,110 +1072,447 @@ def _list_rf_route_candidates(source: str, hours: float = 0, query: str = "", li
     return rows[: max(1, min(int(limit or 80), 200))]
 
 
-def _route_records(hours: float = 0, limit: int = 10, max_hops: int = 6, beam_width: int = 500):
-    """Ranking de alcançabilidade entre extremidades, preservando multi-hop."""
+def _record_edge_key(a: str, b: str) -> tuple[str, str]:
+    return tuple(sorted((str(a or ""), str(b or ""))))
+
+
+def _record_event_representatives(edge: dict[str, Any]) -> list[dict[str, Any]]:
+    """Mantém diversidade espacial/temporal sem carregar até 160 eventos por hop."""
+    events = _sample_route_events(list(edge.get("events") or []))
+    if len(events) <= RF_RECORD_EVENT_REPRESENTATIVES:
+        return events
+
+    # Um tracker/digi móvel precisa manter representantes de regiões diferentes.
+    # O bin de ~0,2 grau é deliberadamente menor que deslocamentos interestaduais
+    # e próximo da tolerância espacial de 25 km usada na composição.
+    chosen: dict[tuple[int, int, int, int], dict[str, Any]] = {}
+    for event in events:
+        try:
+            a_lat, a_lon = float(event["a_lat"]), float(event["a_lon"])
+            b_lat, b_lon = float(event["b_lat"]), float(event["b_lon"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        key = (
+            round(a_lat / 0.2), round(a_lon / 0.2),
+            round(b_lat / 0.2), round(b_lon / 0.2),
+        )
+        previous = chosen.get(key)
+        if previous is None or float(_event_epoch(event) or 0.0) >= float(_event_epoch(previous) or 0.0):
+            chosen[key] = event
+
+    diverse = sorted(
+        chosen.values(),
+        key=lambda event: (float(_event_epoch(event) or 0.0), int(event.get("id") or 0)),
+    )
+    if len(diverse) <= RF_RECORD_EVENT_REPRESENTATIVES:
+        return diverse
+
+    last = len(diverse) - 1
+    indexes = {
+        round(index * last / (RF_RECORD_EVENT_REPRESENTATIVES - 1))
+        for index in range(RF_RECORD_EVENT_REPRESENTATIVES)
+    }
+    return [diverse[index] for index in sorted(indexes)]
+
+
+def _record_edge_allowed(edge: dict[str, Any]) -> bool:
+    level, _label = db._rf_route_evidence(edge)
+    if level != "inferred":
+        return True
+    distances = [
+        float(event.get("distance_km") or 0.0)
+        for event in (edge.get("events") or [])
+        if float(event.get("distance_km") or 0.0) > 0
+    ]
+    distance = min(distances) if distances else float(edge.get("distance_km") or 0.0)
+    return distance < INFERRED_LONG_HOP_KM
+
+
+def _record_position_bin(position: tuple[float, float] | None) -> tuple[int, int]:
+    if position is None:
+        return (0, 0)
+    return (round(position[0] / 0.2), round(position[1] / 0.2))
+
+
+def _record_progress(callback, phase: str, percent: float, completed: int = 0, total: int = 0, **extra: Any) -> None:
+    if callback is None:
+        return
+    payload = {
+        "phase": phase,
+        "percent": max(0.0, min(100.0, float(percent))),
+        "completed": int(completed or 0),
+        "total": int(total or 0),
+    }
+    payload.update(extra)
+    try:
+        callback(payload)
+    except Exception:
+        # Progresso nunca pode interromper o cálculo.
+        pass
+
+
+def _route_records_uncached(
+    hours: float = 0,
+    limit: int = 10,
+    max_hops: int = 6,
+    beam_width: int = 500,
+    *,
+    progress_callback=None,
+    deadline_seconds: float | None = RF_RECORD_DEFAULT_DEADLINE_SECONDS,
+    cancel_check=None,
+):
+    started = time.monotonic()
+    _record_progress(progress_callback, "preparing", 0, message="Preparando dados / indexando histórico")
+
     graph, positions = _route_graph(hours)
+    nodes = [node for node in sorted(graph) if node in positions]
+    if not nodes:
+        _record_progress(progress_callback, "done", 100, 0, 0, message="Nenhuma rota RF disponível")
+        return []
+
     route_limit = max(1, min(int(limit or 10), 50))
     hop_limit = max(1, min(int(max_hops or 6), 10))
-    expansion_limit = max(500, min(int(beam_width or 500) * 8, 8000))
+    expansion_limit = max(250, min(int(beam_width or 500) * 3, RF_RECORD_MAX_EXPANSIONS_PER_SOURCE))
+    deadline = started + float(deadline_seconds) if deadline_seconds and float(deadline_seconds) > 0 else None
 
-    # Guarda a melhor rota por par de extremidades. Se existir uma cadeia
-    # multi-hop válida, ela representa melhor a alcançabilidade da malha do que
-    # uma aresta adjacente isolada do mesmo par e, portanto, tem preferência.
+    # Amostra cada aresta uma única vez. Esse cache local elimina a repetição de
+    # ordenação/amostragem dentro de milhares de caminhos candidatos.
+    edge_events: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    eligible_edges = 0
+    unique_edges = {
+        _record_edge_key(a, b): edge
+        for a, neighbors in graph.items()
+        for b, edge in neighbors.items()
+        if a < b
+    }
+    total_edges = max(1, len(unique_edges))
+    for index, (pair, edge) in enumerate(unique_edges.items(), start=1):
+        if _record_edge_allowed(edge):
+            reps = _record_event_representatives(edge)
+            if reps:
+                edge_events[pair] = reps
+                eligible_edges += 1
+        if index == total_edges or index % 25 == 0:
+            _record_progress(
+                progress_callback,
+                "indexing",
+                5.0 + 15.0 * index / total_edges,
+                index,
+                total_edges,
+                message=f"Indexando enlaces RF: {index} de {total_edges}",
+                nodes=len(nodes),
+                edges=eligible_edges,
+            )
+
     best_by_pair: dict[tuple[str, str], dict[str, Any]] = {}
+    total_sources = len(nodes)
+    total_candidates = 0
 
-    for source in sorted(graph):
-        if source not in positions:
-            continue
-        queue: list[list[str]] = [[source]]
-        # Permite chegar ao mesmo nó uma vez por profundidade até o limite,
-        # evitando que um caminho de 1 hop impeça a descoberta de outro com
-        # intermediários. Mantém proteção contra ciclos pelo próprio path.
-        best_depth_seen: dict[tuple[str, int, str], int] = {}
+    for source_index, source in enumerate(nodes, start=1):
+        if cancel_check and cancel_check():
+            raise RuntimeError("Cálculo de Recordes RF cancelado.")
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError("Cálculo de Recordes RF excedeu o orçamento interno de tempo.")
+
+        # Estado incremental:
+        # nodes, events, score, newest_epoch.
+        queue: list[tuple[tuple[str, ...], tuple[dict[str, Any], ...], float, float]] = []
+        state_buckets: dict[tuple[str, int, str, tuple[int, int]], list[tuple[float, float]]] = {}
         expansions = 0
 
-        while queue and expansions < expansion_limit:
-            path = queue.pop(0)
+        # Primeiro hop: cria poucos estados espacialmente diversos por vizinho.
+        for nxt, edge in graph.get(source, {}).items():
+            pair_key = _record_edge_key(source, nxt)
+            reps = edge_events.get(pair_key)
+            if not reps:
+                continue
+            for event in reps:
+                target_pos = _event_position(nxt, edge, event)
+                source_pos = _event_position(source, edge, event)
+                if target_pos is None or source_pos is None:
+                    continue
+                queue.append(((source, nxt), (event,), 0.0, float(_event_epoch(event) or 0.0)))
+
+        # Mais recente primeiro; o beam por posição reduz estados redundantes.
+        queue.sort(key=lambda item: item[3], reverse=True)
+        if len(queue) > expansion_limit:
+            queue = queue[:expansion_limit]
+
+        cursor = 0
+        while cursor < len(queue) and expansions < expansion_limit:
+            path, chosen_events, score, newest_epoch = queue[cursor]
+            cursor += 1
             node = path[-1]
-            hops_so_far = len(path) - 1
-            if hops_so_far >= hop_limit:
+            hops = len(path) - 1
+            if hops <= 0:
                 continue
 
-            neighbors = sorted(
-                graph.get(node, {}).items(),
-                key=lambda pair: (
-                    int(pair[1].get("rf_transport_count") or 0),
-                    int(pair[1].get("packet_count") or 0),
-                    str(pair[1].get("last_seen") or ""),
-                ),
-                reverse=True,
-            )
-            for nxt, _edge in neighbors:
-                if nxt in path:
-                    continue
-                next_path = path + [nxt]
-                payload = _route_payload(next_path, graph, positions, refine_inferred=False)
-                if not payload:
-                    continue
-                expansions += 1
-                hops = int(payload.get("hops") or (len(next_path) - 1))
+            first_edge = graph.get(path[0], {}).get(path[1])
+            last_edge = graph.get(path[-2], {}).get(path[-1])
+            source_pos = _event_position(path[0], first_edge, chosen_events[0]) if first_edge else None
+            target_pos = _event_position(path[-1], last_edge, chosen_events[-1]) if last_edge else None
 
-                # Preserve rotas alternativas de mesma profundidade quando
-                # chegam ao nó por predecessores diferentes. Caso contrário,
-                # A-D-C pode suprimir A-B-C e impedir a descoberta A-B-C-D.
-                state_key = (nxt, hops, node)
-                if state_key not in best_depth_seen:
-                    best_depth_seen[state_key] = 1
-                    if hops < hop_limit:
-                        queue.append(next_path)
-
-                if nxt not in positions or source >= nxt:
-                    continue
-
-                pair = tuple(sorted((source, nxt)))
-                candidate = dict(payload)
-                candidate["ranking_scope"] = "rf_reachability"
-                candidate["multihop"] = hops > 1
+            if path[-1] in positions and source < path[-1] and source_pos is not None and target_pos is not None:
+                pair = tuple(sorted((source, path[-1])))
+                direct_distance = db.haversine_km(*source_pos, *target_pos)
+                observations = sum(
+                    int(graph.get(a, {}).get(b, {}).get("packet_count") or 0)
+                    for a, b in zip(path, path[1:])
+                )
+                candidate = {
+                    "path": path,
+                    "events": chosen_events,
+                    "direct_distance_km": direct_distance,
+                    "observations": observations,
+                    "hops": hops,
+                    "score": score,
+                    "newest_epoch": newest_epoch,
+                }
                 previous = best_by_pair.get(pair)
                 if previous is None:
                     best_by_pair[pair] = candidate
+                else:
+                    previous_score = (
+                        1 if int(previous["hops"]) > 1 else 0,
+                        float(previous["direct_distance_km"]),
+                        int(previous["observations"]),
+                        -float(previous["score"]),
+                        float(previous["newest_epoch"]),
+                    )
+                    candidate_score = (
+                        1 if hops > 1 else 0,
+                        float(direct_distance),
+                        int(observations),
+                        -float(score),
+                        float(newest_epoch),
+                    )
+                    if candidate_score > previous_score:
+                        best_by_pair[pair] = candidate
+                total_candidates += 1
+
+            if hops >= hop_limit:
+                continue
+
+            previous_edge = graph.get(path[-2], {}).get(node)
+            previous_event = chosen_events[-1]
+            previous_pos = _event_position(node, previous_edge, previous_event) if previous_edge else None
+            if previous_pos is None:
+                continue
+
+            for nxt, next_edge in graph.get(node, {}).items():
+                if nxt in path:
+                    continue
+                reps = edge_events.get(_record_edge_key(node, nxt))
+                if not reps:
                     continue
 
-                previous_multi = int(previous.get("hops") or 0) > 1
-                candidate_multi = hops > 1
-                # Para o mesmo par, preferir uma rota composta válida. Entre
-                # duas rotas compostas, priorizar mais evidência e, depois,
-                # menor número de hops.
-                previous_score = (
-                    1 if previous_multi else 0,
-                    int(previous.get("observations") or 0),
-                    -int(previous.get("hops") or 0),
-                    str(previous.get("route_evidence_end") or ""),
-                )
-                candidate_score = (
-                    1 if candidate_multi else 0,
-                    int(candidate.get("observations") or 0),
-                    -hops,
-                    str(candidate.get("route_evidence_end") or ""),
-                )
-                if candidate_score > previous_score:
-                    best_by_pair[pair] = candidate
+                compatible: list[tuple[float, float, dict[str, Any], tuple[float, float]]] = []
+                for event in reps:
+                    current_pos = _event_position(node, next_edge, event)
+                    next_pos = _event_position(nxt, next_edge, event)
+                    if current_pos is None or next_pos is None:
+                        continue
+                    mismatch = db.haversine_km(*previous_pos, *current_pos)
+                    if mismatch > SHARED_NODE_COMPATIBILITY_KM:
+                        continue
+                    epoch = float(_event_epoch(event) or 0.0)
+                    compatible.append((mismatch, -epoch, event, next_pos))
 
-    records = list(best_by_pair.values())
-    records.sort(
+                # Por estado anterior bastam as melhores transições. A
+                # diversidade geográfica é preservada pelo bin da posição no
+                # próximo nó e por RF_RECORD_STATE_BEAM.
+                compatible.sort(key=lambda item: (item[0], item[1]))
+                for mismatch, _neg_epoch, event, next_pos in compatible[:3]:
+                    next_hops = hops + 1
+                    state_key = (nxt, next_hops, node, _record_position_bin(next_pos))
+                    bucket = state_buckets.setdefault(state_key, [])
+                    next_score = score + mismatch
+                    next_newest = max(newest_epoch, float(_event_epoch(event) or 0.0))
+                    dominance = (next_score, -next_newest)
+                    if any(existing <= dominance for existing in bucket):
+                        continue
+                    bucket.append(dominance)
+                    bucket.sort()
+                    if len(bucket) > RF_RECORD_STATE_BEAM:
+                        del bucket[RF_RECORD_STATE_BEAM:]
+                    if dominance not in bucket:
+                        continue
+                    queue.append((path + (nxt,), chosen_events + (event,), next_score, next_newest))
+                    expansions += 1
+                    if expansions >= expansion_limit:
+                        break
+                if expansions >= expansion_limit:
+                    break
+
+        percent = 20.0 + 70.0 * source_index / total_sources
+        _record_progress(
+            progress_callback,
+            "reachability",
+            percent,
+            source_index,
+            total_sources,
+            message=f"Calculando alcançabilidade: {source_index} de {total_sources} nós",
+            nodes=total_sources,
+            edges=eligible_edges,
+            candidates=total_candidates,
+            elapsed_ms=round((time.monotonic() - started) * 1000.0, 1),
+        )
+
+    _record_progress(
+        progress_callback,
+        "consolidating",
+        92,
+        len(best_by_pair),
+        len(best_by_pair),
+        message="Ordenando e consolidando Recordes RF",
+        candidates=total_candidates,
+    )
+
+    ordered = sorted(
+        best_by_pair.values(),
         key=lambda item: (
-            float(item.get("direct_distance_km") or 0.0),
-            1 if int(item.get("hops") or 0) > 1 else 0,
-            int(item.get("observations") or 0),
-            -int(item.get("hops") or 0),
-            str(item.get("route_evidence_end") or ""),
+            float(item["direct_distance_km"]),
+            1 if int(item["hops"]) > 1 else 0,
+            int(item["observations"]),
+            -int(item["hops"]),
+            float(item["newest_epoch"]),
         ),
         reverse=True,
     )
-    result = records[:route_limit]
-    for index, payload in enumerate(result, start=1):
-        payload["rank"] = index
+
+    result: list[dict[str, Any]] = []
+    for candidate in ordered:
+        payload = _route_payload(
+            list(candidate["path"]),
+            graph,
+            positions,
+            refine_inferred=False,
+            selected_events_override=list(candidate["events"]),
+        )
+        if not payload:
+            continue
+        payload["ranking_scope"] = "rf_reachability"
+        payload["multihop"] = int(payload.get("hops") or 0) > 1
+        payload["rank"] = len(result) + 1
+        result.append(payload)
+        if len(result) >= route_limit:
+            break
+
+    elapsed_ms = (time.monotonic() - started) * 1000.0
+    _record_progress(
+        progress_callback,
+        "done",
+        100,
+        len(result),
+        route_limit,
+        message="Recordes RF prontos",
+        nodes=total_sources,
+        edges=eligible_edges,
+        candidates=total_candidates,
+        elapsed_ms=round(elapsed_ms, 1),
+    )
+    if elapsed_ms >= 250:
+        diag.log_event(
+            "rf_route_records_build",
+            hours=float(hours or 0),
+            duration_ms=round(elapsed_ms, 1),
+            nodes=total_sources,
+            edges=eligible_edges,
+            candidates=total_candidates,
+            records=len(result),
+        )
     return result
+
+
+def _route_records(
+    hours: float = 0,
+    limit: int = 10,
+    max_hops: int = 6,
+    beam_width: int = 500,
+    *,
+    progress_callback=None,
+    deadline_seconds: float | None = RF_RECORD_DEFAULT_DEADLINE_SECONDS,
+    cancel_check=None,
+    force: bool = False,
+):
+    """Ranking RF com cache, single-flight e fallback para último resultado válido."""
+    try:
+        normalized_hours = float(hours or 0)
+    except (TypeError, ValueError):
+        normalized_hours = 0.0
+    normalized_hours = max(0.25, min(normalized_hours, 24 * 30)) if normalized_hours > 0 else 0.0
+    route_limit = max(1, min(int(limit or 10), 50))
+    hop_limit = max(1, min(int(max_hops or 6), 10))
+    beam = max(50, min(int(beam_width or 500), 2000))
+    key = (normalized_hours, route_limit, hop_limit, beam, str(db.DB_PATH))
+    now = time.monotonic()
+
+    with _rf_records_cache_lock:
+        cached = _rf_records_cache.get(key)
+        if cached and not force and now - cached[0] <= RF_RECORDS_CACHE_SECONDS:
+            _record_progress(progress_callback, "cache", 100, len(cached[1]), len(cached[1]), message="Carregando resultado em cache", cache_hit=True)
+            return [dict(item) for item in cached[1]]
+        stale = [dict(item) for item in cached[1]] if cached else None
+        waiter = _rf_records_builds.get(key)
+        if waiter is None:
+            waiter = threading.Event()
+            _rf_records_builds[key] = waiter
+            _rf_records_errors.pop(key, None)
+            owner = True
+        else:
+            owner = False
+
+    if not owner:
+        _record_progress(progress_callback, "waiting", 5, 0, 0, message="Aguardando cálculo já em andamento")
+        wait_started = time.monotonic()
+        wait_timeout = max(5.0, float(deadline_seconds or RF_RECORD_DEFAULT_DEADLINE_SECONDS) + 5.0)
+        waiter.wait(timeout=wait_timeout)
+        waited_ms = (time.monotonic() - wait_started) * 1000.0
+        with _rf_records_cache_lock:
+            cached = _rf_records_cache.get(key)
+            error = _rf_records_errors.get(key)
+        if cached:
+            _record_progress(progress_callback, "cache", 100, len(cached[1]), len(cached[1]), message="Cálculo compartilhado concluído", cache_hit=True)
+            return [dict(item) for item in cached[1]]
+        if stale:
+            diag.log_event("rf_route_records_stale_fallback", hours=normalized_hours, duration_ms=round(waited_ms, 1))
+            _record_progress(progress_callback, "stale", 100, len(stale), len(stale), message="Usando último ranking válido", stale=True)
+            return stale
+        if error is not None:
+            raise RuntimeError(f"Falha ao calcular Recordes RF: {error}") from error
+        raise TimeoutError("Tempo esgotado aguardando cálculo compartilhado de Recordes RF.")
+
+    try:
+        result = _route_records_uncached(
+            normalized_hours,
+            route_limit,
+            hop_limit,
+            beam,
+            progress_callback=progress_callback,
+            deadline_seconds=deadline_seconds,
+            cancel_check=cancel_check,
+        )
+        with _rf_records_cache_lock:
+            _rf_records_cache[key] = (time.monotonic(), [dict(item) for item in result])
+        return result
+    except BaseException as exc:
+        with _rf_records_cache_lock:
+            _rf_records_errors[key] = exc
+        if stale and not isinstance(exc, RuntimeError):
+            diag.log_event(
+                "rf_route_records_stale_fallback",
+                hours=normalized_hours,
+                error=str(exc),
+                records=len(stale),
+            )
+            _record_progress(progress_callback, "stale", 100, len(stale), len(stale), message="Usando último ranking válido", stale=True)
+            return stale
+        raise
+    finally:
+        with _rf_records_cache_lock:
+            event = _rf_records_builds.pop(key, None)
+            if event is not None:
+                event.set()
 
 
 _original_init_db = db.init_db
