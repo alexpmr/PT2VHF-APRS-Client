@@ -174,12 +174,19 @@
     if (lang.startsWith('en')) return 'en';
     if (lang.startsWith('es')) return 'es';
     if (lang.startsWith('fr')) return 'fr';
+    if (lang.startsWith('de')) return 'de-DE';
+    if (lang.startsWith('it')) return 'it-IT';
+    if (lang.startsWith('ja')) return 'ja-JP';
+    if (lang.startsWith('pl')) return 'pl-PL';
+    if (lang.startsWith('nl')) return 'nl-NL';
+    if (lang.startsWith('zh')) return 'zh-CN';
     return 'pt-BR';
   }
 
   function tr(pt) {
     const lang = tncLanguage();
-    return lang === 'pt-BR' ? pt : (TNC_I18N[lang]?.[pt] || pt);
+    if (lang === 'pt-BR') return pt;
+    return TNC_I18N[lang]?.[pt] || window.PT2VHF_I18N?.[lang]?.[pt] || pt;
   }
 
   function translateTncStatic() {
