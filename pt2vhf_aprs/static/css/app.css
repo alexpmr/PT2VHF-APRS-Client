@@ -4715,3 +4715,68 @@ html.is-processing {
 .global-processing-overlay.nonblocking .global-processing-card {
   pointer-events: none;
 }
+
+
+/* v1.14.23 - Estatísticas usa exclusivamente a rolagem principal da janela */
+body.analysis-page-active {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+body.analysis-page-active main {
+  height: auto;
+  min-height: calc(100vh - 143px);
+  overflow: visible;
+}
+body.map-context-visible.analysis-page-active main {
+  height: auto;
+  min-height: calc(100vh - 143px - var(--map-context-height, 41px));
+}
+#tab-analysis.active {
+  height: auto !important;
+  min-height: 100%;
+  overflow: visible !important;
+}
+#tab-analysis .analysis-content {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  scrollbar-gutter: auto;
+}
+#tab-analysis .analysis-content :is(
+  .analysis-client-version-panel,
+  .client-version-stats-content,
+  .client-version-table,
+  .topology-stats-box,
+  .topology-stats-content,
+  .topology-stat-group,
+  .rf-route-records-group,
+  .rf-route-record-list,
+  .station-ranking-table-wrap,
+  .station-ranking-table
+) {
+  max-height: none !important;
+  height: auto !important;
+  overflow-y: visible !important;
+}
+/* Tabelas podem rolar apenas horizontalmente quando realmente necessário;
+   não criam um segundo viewport vertical. */
+#tab-analysis .client-version-stats-content,
+#tab-analysis .station-ranking-table-wrap {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Idiomas CJK e rótulos mais longos: evite truncamento na troca de idioma. */
+html[lang="ja"] body,
+html[lang="zh-CN"] body {
+  font-family: "Segoe UI", "Yu Gothic UI", "Meiryo UI", "Microsoft YaHei UI", system-ui, sans-serif;
+}
+.language-quick-menu {
+  max-height: min(70vh, 420px);
+  overflow-y: auto;
+}
+.language-quick-option span,
+.language-quick-current span {
+  white-space: nowrap;
+}
