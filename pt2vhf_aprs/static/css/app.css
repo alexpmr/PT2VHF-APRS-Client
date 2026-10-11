@@ -4780,3 +4780,74 @@ html[lang="zh-CN"] body {
 .language-quick-current span {
   white-space: nowrap;
 }
+
+
+/* v1.14.24 - progresso real dos cálculos RF */
+.processing-progress {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+.processing-progress.hidden {
+  display: none !important;
+}
+.processing-progress-track,
+.rf-record-progress-track {
+  position: relative;
+  overflow: hidden;
+  height: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+}
+.processing-progress-bar,
+.rf-record-progress-bar {
+  height: 100%;
+  min-width: 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width .22s ease;
+}
+.processing-progress > span {
+  min-width: 40px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+}
+.rf-record-progress {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+}
+.rf-record-progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+.rf-record-progress-head strong {
+  font-size: 12px;
+}
+.rf-record-progress-head span {
+  color: var(--accent);
+  font-weight: 900;
+}
+.rf-record-progress-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.rf-route-records-stale-note {
+  margin: 7px 0;
+  color: #f3c05e;
+  font-size: 10px;
+}
+.rf-record-retry {
+  margin-top: 8px;
+}
