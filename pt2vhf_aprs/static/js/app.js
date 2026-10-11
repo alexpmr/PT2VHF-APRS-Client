@@ -88,6 +88,9 @@
     topologyStatsLastGood: null,
     topologyStatsGeneration: 0,
     rfRouteRecordsGeneration: 0,
+    rfRouteRecordsJobId: '',
+    rfRouteRecordsJobHours: null,
+    rfRouteRecordsLastGood: new Map(),
     rfRouteExclusiveNodes: null,
     rfRouteRecords: [],
     rfRoutePanelPosition: null,
@@ -910,6 +913,18 @@
       'Aguarde enquanto a operação é concluída.',
       'Please wait while the operation completes.'
     );
+    const progressWrap = $('#globalProcessingProgress');
+    const progressBar = $('#globalProcessingProgressBar');
+    const progressText = $('#globalProcessingProgressText');
+    const percent = Number(current.progress);
+    const hasProgress = Number.isFinite(percent);
+    progressWrap?.classList.toggle('hidden', !hasProgress);
+    progressWrap?.setAttribute('aria-hidden', hasProgress ? 'false' : 'true');
+    if (hasProgress) {
+      const bounded = Math.max(0, Math.min(100, percent));
+      if (progressBar) progressBar.style.width = bounded.toFixed(1) + '%';
+      if (progressText) progressText.textContent = Math.round(bounded) + '%';
+    }
   }
 
   function showProcessing(title = '', message = '', options = {}) {
@@ -919,6 +934,7 @@
       title: title || ui('Processando...', 'Processing...'),
       message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.'),
       blocking: options?.blocking !== false,
+      progress: Number.isFinite(Number(options?.progress)) ? Number(options.progress) : null,
       visible: false,
       timer: null,
     };
@@ -936,11 +952,15 @@
     return token;
   }
 
-  function updateProcessing(token, title = '', message = '') {
+  function updateProcessing(token, title = '', message = '', progress = undefined) {
     const current = processingOperations.get(token);
     if (!current) return;
     if (title) current.title = title;
     if (message) current.message = message;
+    if (progress !== undefined) {
+      const value = Number(progress);
+      current.progress = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : null;
+    }
     renderProcessingOverlay();
   }
 
@@ -9635,6 +9655,64 @@
     </div>`;
   }
 
+  function rfRecordProgressLabel(progress) {
+    const phase = String(progress?.phase || '');
+    const labels = {
+      queued: ui('Preparando cálculo…', 'Preparing calculation…'),
+      preparing: ui('Preparando dados / indexando histórico…', 'Preparing data / indexing history…'),
+      indexing: ui('Indexando enlaces RF…', 'Indexing RF links…'),
+      reachability: ui('Calculando alcançabilidade multi-hop…', 'Calculating multi-hop reachability…'),
+      consolidating: ui('Consolidando Recordes RF…', 'Consolidating RF records…'),
+      waiting: ui('Aguardando cálculo compartilhado…', 'Waiting for shared calculation…'),
+      cache: ui('Carregando resultado em cache…', 'Loading cached result…'),
+      stale: ui('Carregando último ranking válido…', 'Loading last valid ranking…'),
+      done: ui('Recordes RF prontos', 'RF records ready'),
+      error: ui('Falha no cálculo de Recordes RF', 'RF records calculation failed'),
+      cancelled: ui('Cálculo cancelado', 'Calculation cancelled'),
+    };
+    return labels[phase] || String(progress?.message || ui('Calculando Recordes RF…', 'Calculating RF records…'));
+  }
+
+  function renderRfRouteRecordsProgress(progress = {}) {
+    const percentValue = Number(progress.percent);
+    const percent = Number.isFinite(percentValue) ? Math.max(0, Math.min(100, percentValue)) : 0;
+    const completed = Number(progress.completed || 0);
+    const total = Number(progress.total || 0);
+    const details = [];
+    if (total > 0) details.push(completed.toLocaleString(currentLocale()) + ' / ' + total.toLocaleString(currentLocale()));
+    if (Number(progress.nodes || 0)) details.push(Number(progress.nodes).toLocaleString(currentLocale()) + ' ' + ui('nós', 'nodes'));
+    if (Number(progress.edges || 0)) details.push(Number(progress.edges).toLocaleString(currentLocale()) + ' ' + ui('enlaces', 'links'));
+    if (Number(progress.candidates || 0)) details.push(Number(progress.candidates).toLocaleString(currentLocale()) + ' ' + ui('candidatos', 'candidates'));
+    if (Number(progress.elapsed_ms || 0) > 0) details.push((Number(progress.elapsed_ms) / 1000).toFixed(1) + ' s');
+
+    return '<div class="topology-stat-group rf-route-records-group">' +
+      '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
+      '<div class="rf-record-progress" role="status" aria-live="polite">' +
+        '<div class="rf-record-progress-head"><strong>' + escapeHtml(rfRecordProgressLabel(progress)) + '</strong>' +
+        '<span>' + Math.round(percent) + '%</span></div>' +
+        '<div class="rf-record-progress-track" aria-label="' + escapeHtml(ui('Progresso do cálculo dos enlaces', 'RF link calculation progress')) + '">' +
+          '<div class="rf-record-progress-bar" style="width:' + percent.toFixed(1) + '%"></div>' +
+        '</div>' +
+        '<div class="rf-record-progress-detail">' + details.map(value => '<span>' + escapeHtml(value) + '</span>').join('') + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderRfRouteRecordsError(message, previousRecords = []) {
+    const stale = Array.isArray(previousRecords) && previousRecords.length
+      ? '<div class="rf-route-records-stale-note">' +
+          escapeHtml(ui('Mantendo o último ranking válido enquanto uma nova tentativa é feita.', 'Keeping the last valid ranking while a new attempt is made.')) +
+        '</div>' + renderRfRouteRecords(previousRecords)
+      : '';
+    return '<div class="topology-stat-group rf-route-records-group">' +
+      '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
+      '<div class="hint">' + escapeHtml(message || ui('Não foi possível concluir o cálculo dos Recordes RF.', 'Could not complete the RF records calculation.')) + '</div>' +
+      '<button type="button" class="btn secondary rf-record-retry" data-rf-record-retry="1">' +
+        escapeHtml(ui('Tentar novamente', 'Try again')) +
+      '</button>' +
+    '</div>' + stale;
+  }
+
   function renderRfRouteRecords(records) {
     state.rfRouteRecords = Array.isArray(records) ? records.slice() : [];
     if (!state.rfRouteRecords.length) {
@@ -9707,10 +9785,11 @@
 
     const routePlaceholder =
       '<div id="rfRouteRecordsHost">' +
-        '<div class="topology-stat-group rf-route-records-group">' +
-          '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
-          '<span class="hint">' + escapeHtml(ui('Calculando rotas RF em segundo plano…', 'Calculating RF routes in the background…')) + '</span>' +
-        '</div>' +
+        renderRfRouteRecordsProgress({
+          phase: 'queued',
+          percent: 0,
+          message: ui('Preparando cálculo dos Recordes RF…', 'Preparing RF records calculation…')
+        }) +
       '</div>';
 
     box.innerHTML =
@@ -9759,40 +9838,126 @@
     renderClientVersionStats(data.client_versions);
   }
 
-  async function refreshRfRouteRecordsDeferred(generation, hours) {
+  async function cancelRfRouteRecordsJobIfNeeded(nextHours) {
+    const currentJob = String(state.rfRouteRecordsJobId || '');
+    if (!currentJob || Number(state.rfRouteRecordsJobHours) === Number(nextHours)) return;
+    state.rfRouteRecordsJobId = '';
+    state.rfRouteRecordsJobHours = null;
+    try {
+      await api('/api/topology/rf-records/jobs/' + encodeURIComponent(currentJob), {
+        method: 'DELETE',
+        timeoutMs: 3000,
+      });
+    } catch (_) {}
+  }
+
+  async function refreshRfRouteRecordsDeferred(generation, hours, options = {}) {
     state.rfRouteRecordsGeneration += 1;
     const localGeneration = state.rfRouteRecordsGeneration;
+    const normalizedHours = statisticsPeriodValue(hours);
+    await cancelRfRouteRecordsJobIfNeeded(normalizedHours);
+
+    const previous = state.rfRouteRecordsLastGood.get(String(normalizedHours))
+      || (state.rfRouteRecords.length ? state.rfRouteRecords.slice() : []);
     const token = showProcessing(
       ui('Calculando recordes RF…', 'Calculating RF records…'),
-      ui('Reconstruindo a alcançabilidade da malha em segundo plano.', 'Reconstructing network reachability in the background.'),
-      { blocking: false, delayMs: 500 }
+      ui('Preparando indexação e cálculo da alcançabilidade.', 'Preparing indexing and reachability calculation.'),
+      { blocking: false, delayMs: 320, progress: 0 }
     );
+
     try {
-      const payload = await api(
-        '/api/topology/rf-records?hours=' + encodeURIComponent(hours) + '&limit=10&max_hops=6',
-        { timeoutMs: 60000 }
-      );
+      let job = await api('/api/topology/rf-records/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hours: normalizedHours,
+          limit: 10,
+          max_hops: 6,
+          force: options?.force === true,
+        }),
+        timeoutMs: 8000,
+      });
+
       if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
-      const records = Array.isArray(payload?.records) ? payload.records : [];
-      state.rfRouteRecords = records;
-      const host = $('#rfRouteRecordsHost');
-      if (host) host.innerHTML = renderRfRouteRecords(records);
+      state.rfRouteRecordsJobId = String(job?.job_id || '');
+      state.rfRouteRecordsJobHours = normalizedHours;
+
+      let lastPercent = 0;
+      while (job && ['queued', 'running'].includes(String(job.status || ''))) {
+        if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
+        const percent = Math.max(lastPercent, Number(job.percent || 0));
+        lastPercent = percent;
+        const host = $('#rfRouteRecordsHost');
+        if (host) host.innerHTML = renderRfRouteRecordsProgress({ ...job, percent });
+        updateProcessing(
+          token,
+          ui('Calculando recordes RF…', 'Calculating RF records…') + ' ' + Math.round(percent) + '%',
+          String(job.message || rfRecordProgressLabel(job)),
+          percent
+        );
+        await new Promise(resolve => setTimeout(resolve, 650));
+        job = await api(
+          '/api/topology/rf-records/jobs/' + encodeURIComponent(state.rfRouteRecordsJobId),
+          { timeoutMs: 5000 }
+        );
+      }
+
+      if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
+
+      if (String(job?.status || '') === 'done') {
+        const records = Array.isArray(job?.records) ? job.records : [];
+        state.rfRouteRecords = records;
+        state.rfRouteRecordsLastGood.set(String(normalizedHours), records.slice());
+        const host = $('#rfRouteRecordsHost');
+        if (host) {
+          host.innerHTML = (job?.stale
+            ? '<div class="rf-route-records-stale-note">' +
+                escapeHtml(ui('Exibindo o último ranking válido enquanto o cálculo atual é retomado.', 'Showing the last valid ranking while the current calculation is resumed.')) +
+              '</div>'
+            : '') + renderRfRouteRecords(records);
+        }
+        updateProcessing(
+          token,
+          ui('Recordes RF prontos', 'RF records ready'),
+          Number(job?.cache_hit)
+            ? ui('Resultado carregado do cache.', 'Result loaded from cache.')
+            : ui('Indexação e cálculo concluídos.', 'Indexing and calculation completed.'),
+          100
+        );
+        return;
+      }
+
+      if (String(job?.status || '') === 'cancelled') return;
+      throw new Error(String(job?.error || job?.message || ui('Falha ao calcular Recordes RF.', 'Failed to calculate RF records.')));
     } catch (err) {
       if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
       const host = $('#rfRouteRecordsHost');
-      if (host) {
-        host.innerHTML =
-          '<div class="topology-stat-group rf-route-records-group"><h4>' +
-          escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) +
-          '</h4><span class="hint">' +
-          escapeHtml(ui('Recordes RF temporariamente indisponíveis; as demais estatísticas continuam válidas.', 'RF records are temporarily unavailable; the remaining statistics are still valid.')) +
-          '</span></div>';
+      if (previous.length) {
+        state.rfRouteRecords = previous.slice();
+        if (host) {
+          host.innerHTML =
+            '<div class="rf-route-records-stale-note">' +
+            escapeHtml(ui('O novo cálculo falhou; mantendo o último ranking válido.', 'The new calculation failed; keeping the last valid ranking.')) +
+            '</div>' + renderRfRouteRecords(previous) +
+            '<button type="button" class="btn secondary rf-record-retry" data-rf-record-retry="1">' +
+            escapeHtml(ui('Tentar novamente', 'Try again')) + '</button>';
+        }
+      } else if (host) {
+        host.innerHTML = renderRfRouteRecordsError(
+          String(err?.message || err || ui('Recordes RF temporariamente indisponíveis.', 'RF records are temporarily unavailable.')),
+          []
+        );
       }
       console.warn('Falha ao calcular Recordes RF:', err);
     } finally {
+      if (generation === state.topologyStatsGeneration && localGeneration === state.rfRouteRecordsGeneration) {
+        state.rfRouteRecordsJobId = '';
+        state.rfRouteRecordsJobHours = null;
+      }
       hideProcessing(token);
     }
   }
+
 
   async function refreshTopologyAnalysis() {
     const box = $('#topologyStatsContent');
@@ -9869,6 +10034,17 @@
     event.preventDefault();
     event.stopPropagation();
     void focusStationOnMap(link.dataset.mapCallsign || '');
+  });
+
+  document.addEventListener('click', event => {
+    const retry = event.target.closest('[data-rf-record-retry]');
+    if (!retry) return;
+    event.preventDefault();
+    void refreshRfRouteRecordsDeferred(
+      state.topologyStatsGeneration,
+      state.topologyHours,
+      { force: true }
+    );
   });
 
   document.addEventListener('click', event => {
