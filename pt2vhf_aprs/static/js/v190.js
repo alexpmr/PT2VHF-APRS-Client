@@ -4,7 +4,18 @@
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lang = () => (document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
-  const tr = (pt,en,es,fr) => lang().startsWith('en')?en:lang().startsWith('es')?es:lang().startsWith('fr')?fr:pt;
+  const tr = (pt,en,es,fr) => {
+    const l = lang();
+    const locale = l.startsWith('de') ? 'de-DE'
+      : l.startsWith('it') ? 'it-IT'
+      : l.startsWith('ja') ? 'ja-JP'
+      : l.startsWith('pl') ? 'pl-PL'
+      : l.startsWith('nl') ? 'nl-NL'
+      : l.startsWith('zh') ? 'zh-CN' : '';
+    const extended = locale ? window.PT2VHF_I18N?.[locale]?.[pt] : '';
+    if (extended) return extended;
+    return l.startsWith('en') ? en : l.startsWith('es') ? es : l.startsWith('fr') ? fr : pt;
+  };
   const json = async (url, opts={}) => {
     const r = await fetch(url, {cache:'no-store', headers:{'Content-Type':'application/json', ...(opts.headers||{})}, ...opts});
     const d = await r.json();
