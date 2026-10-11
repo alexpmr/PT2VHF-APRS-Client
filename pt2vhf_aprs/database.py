@@ -926,7 +926,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
 
     if "app_theme" in provided and merged["app_theme"] not in {"dark", "light"}:
         raise ValueError("Tema da aplicação inválido.")
-    if "language" in provided and merged["language"] not in {"pt-BR", "en", "es", "fr"}:
+    if "language" in provided and merged["language"] not in {"pt-BR", "en", "es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN"}:
         raise ValueError("Idioma da aplicação inválido.")
 
     allowed_fonts = {"system", "segoe", "arial", "verdana", "tahoma", "consolas"}
