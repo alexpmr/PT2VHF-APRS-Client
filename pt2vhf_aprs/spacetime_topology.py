@@ -1555,7 +1555,7 @@ def _list_rf_routes(*args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def install() -> None:
-    """Instala o modelo v1.14.20 de alcançabilidade RF histórica."""
+    """Instala o modelo v1.14.24 de alcançabilidade RF histórica e ranking incremental."""
     # Refinamento pode usar enlaces observados em momentos distintos; a
     # validação espacial por coordenadas históricas é feita em _route_payload.
     db.RF_INFERRED_REFINEMENT_WINDOW_HOURS = 24.0 * 3650.0
