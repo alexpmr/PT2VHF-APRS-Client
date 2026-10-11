@@ -1,5 +1,3 @@
-## Novo — Internacionalização: auditoria completa de todas as traduções da aplicação
-
 ## Implementado na v1.14.25 — Auditoria integral de traduções
 
 - [x] Revisar todas as telas, abas, menus, botões, tooltips, pop-ups, diálogos, placeholders, cabeçalhos, filtros, estatísticas, configurações, logs e atualizador.
