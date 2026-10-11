@@ -2,6 +2,14 @@
   'use strict';
   const t = (pt, en, es, fr) => {
     const lang = (document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
+    const locale = lang.startsWith('de') ? 'de-DE'
+      : lang.startsWith('it') ? 'it-IT'
+      : lang.startsWith('ja') ? 'ja-JP'
+      : lang.startsWith('pl') ? 'pl-PL'
+      : lang.startsWith('nl') ? 'nl-NL'
+      : lang.startsWith('zh') ? 'zh-CN' : '';
+    const extended = locale ? window.PT2VHF_I18N?.[locale]?.[pt] : '';
+    if (extended) return extended;
     if (lang.startsWith('en')) return en;
     if (lang.startsWith('es')) return es;
     if (lang.startsWith('fr')) return fr;
