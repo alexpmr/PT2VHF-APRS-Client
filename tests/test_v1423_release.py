@@ -22,8 +22,10 @@ def _pack_value_count(locale_file: str) -> int:
 
 
 def test_v1423_version_and_language_catalogs():
-    assert read("VERSION").strip() == "1.14.23"
-    assert '__version__ = "1.14.23"' in read("pt2vhf_aprs/__init__.py")
+    version_text = read("VERSION").strip()
+    version = tuple(int(part) for part in version_text.split("."))
+    assert version >= (1, 14, 23)
+    assert f'__version__ = "{version_text}"' in read("pt2vhf_aprs/__init__.py")
 
     html = read("pt2vhf_aprs/templates/index.html")
     app = read("pt2vhf_aprs/static/js/app.js")
