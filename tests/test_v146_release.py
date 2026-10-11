@@ -127,7 +127,12 @@ def test_v146_aprsis_link_survives_database_query_even_with_rf_same_pair():
 
 def test_v146_frontend_keeps_layers_independent_and_internet_visible():
     js = text("pt2vhf_aprs/static/js/app.js")
-    assert "const orderedEdges = [...edges].sort" in js
+    version = tuple(map(int, text("VERSION").strip().split(".")))
+    if version >= (1, 14, 23):
+        assert "const renderEdges = [...edges];" in js
+        assert "const orderedEdges = renderEdges.sort" in js
+    else:
+        assert "const orderedEdges = [...edges].sort" in js
     assert "if (edge.kind === 'igate' && !state.igateLinksEnabled) continue" in js
     assert "if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue" in js
     assert "line.bringToFront()" in js
