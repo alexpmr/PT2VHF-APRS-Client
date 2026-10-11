@@ -303,7 +303,7 @@
       let data = null;
       const ct = response.headers.get('content-type') || '';
       if (ct.includes('application/json')) data = await response.json();
-      if (!response.ok) throw new Error(data?.error || `Erro HTTP ${response.status}`);
+      if (!response.ok) {\n        const rawError = data?.error || `HTTP ${response.status}`;\n        throw new Error(translationForSource(String(rawError)));\n      }
       return data;
     } catch (err) {
       if (err?.name === 'AbortError') {
@@ -8807,7 +8807,7 @@
     return EXTRA_I18N[state.language]?.[source] || translatedPatternText(source, state.language) || source;
   }
 
-  function translateDom(root = document.body) {
+  window.PT2VHF_TRANSLATE = value => translationForSource(String(value ?? ''));\n\n  function translateDom(root = document.body) {
     if (!root) return;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     const nodes = [];
