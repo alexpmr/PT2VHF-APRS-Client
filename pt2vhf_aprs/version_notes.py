@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.24": {
+        "title": "Recordes RF rápidos, resilientes e com progresso real",
+        "items": [
+            "O ranking de Recordes RF passa a usar busca incremental de alcançabilidade, evitando recalcular toda a compatibilidade espaço-temporal a cada hop.",
+            "Amostragem de eventos, beam por posição, limite de expansões, cache TTL e single-flight reduzem o custo do cálculo em bases reais.",
+            "O cálculo pesado roda como job em segundo plano com fases, percentual real de 0 a 100%, nós, enlaces, candidatos e tempo decorrido.",
+            "A aba Estatísticas mostra barra de progresso contextual e o relógio global também exibe percentual quando a operação possui progresso determinado.",
+            "Falhas transitórias preservam o último ranking válido do mesmo período e oferecem nova tentativa.",
+            "Jobs podem ser cancelados ao trocar de período e chamadas concorrentes para o mesmo cálculo são compartilhadas.",
+        ],
+    },
     "1.14.23": {
         "title": "10 idiomas, rotas RF sincronizadas e Estatísticas sem scroll interno",
         "items": [
