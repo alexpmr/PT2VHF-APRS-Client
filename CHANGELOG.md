@@ -1,3 +1,15 @@
+## 1.14.23 - 2026-10-10
+
+- **10 idiomas:** adicionados Alemão (de-DE), Italiano (it-IT), Japonês (ja-JP), Polonês (pl-PL), Holandês (nl-NL) e Chinês simplificado (zh-CN), mantendo PT, EN, ES e FR.
+- **Catálogos dedicados:** os seis novos idiomas recebem catálogos completos alinhados ao catálogo principal, opções no seletor rápido e em Configuração, bandeiras próprias e locale para datas/números.
+- **CJK:** Japonês e Chinês recebem fallback tipográfico apropriado para renderização Unicode.
+- **Auditoria i18n:** o verificador de traduções passa a validar presença e quantidade de entradas dos seis novos catálogos.
+- **Estatísticas:** removida a rolagem vertical interna remanescente; a aba passa a expandir no documento e usar somente a rolagem principal da janela.
+- **Rota RF no mapa:** `route.edges` passa a ser fonte autoritativa durante o foco da rota, criando imediatamente segmentos aceitos pelo motor mesmo quando ainda não constam no snapshot de `/api/topology`.
+- **Refresh de topologia:** chamadas concorrentes não são mais descartadas quando `topologyLoadBusy` está ativo; uma nova passagem é enfileirada e executada ao final.
+- **Caso PY4RC-15:** o hop final inferido PY1MRG-15 → PY4RC-15 passa a aparecer imediatamente quando já estiver incluído na rota calculada.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.22 - 2026-10-10
 
 - **Ranking RF multi-hop:** Recordes RF passam a manter rotas de alcançabilidade com intermediários explícitos e podem preferir uma cadeia multi-hop válida para o mesmo par de extremidades.
