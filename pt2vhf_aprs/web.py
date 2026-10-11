@@ -8,6 +8,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -49,6 +50,184 @@ _topology_stats_cache_lock = threading.RLock()
 _topology_stats_cache: dict[int, tuple[float, dict]] = {}
 _topology_stats_builds: dict[int, threading.Event] = {}
 _topology_stats_errors: dict[int, BaseException] = {}
+
+RF_RECORD_JOB_TTL_SECONDS = 10 * 60.0
+_rf_record_jobs_lock = threading.RLock()
+_rf_record_jobs: dict[str, dict] = {}
+_rf_record_job_by_key: dict[tuple[int, int, int], str] = {}
+
+
+def _rf_record_job_public(job: dict) -> dict:
+    return {
+        "job_id": str(job.get("job_id") or ""),
+        "status": str(job.get("status") or "queued"),
+        "hours": int(job.get("hours") or 0),
+        "limit": int(job.get("limit") or 10),
+        "max_hops": int(job.get("max_hops") or 6),
+        "phase": str(job.get("phase") or "queued"),
+        "percent": round(float(job.get("percent") or 0.0), 1),
+        "completed": int(job.get("completed") or 0),
+        "total": int(job.get("total") or 0),
+        "message": str(job.get("message") or ""),
+        "elapsed_ms": round(float(job.get("elapsed_ms") or 0.0), 1),
+        "nodes": int(job.get("nodes") or 0),
+        "edges": int(job.get("edges") or 0),
+        "candidates": int(job.get("candidates") or 0),
+        "cache_hit": bool(job.get("cache_hit")),
+        "stale": bool(job.get("stale")),
+        "records": list(job.get("records") or []) if job.get("status") == "done" else [],
+        "error": str(job.get("error") or ""),
+    }
+
+
+def _prune_rf_record_jobs() -> None:
+    cutoff = time.monotonic() - RF_RECORD_JOB_TTL_SECONDS
+    with _rf_record_jobs_lock:
+        stale_ids = [
+            job_id for job_id, job in _rf_record_jobs.items()
+            if float(job.get("updated_monotonic") or 0.0) < cutoff
+            and str(job.get("status") or "") in {"done", "error", "cancelled"}
+        ]
+        for job_id in stale_ids:
+            job = _rf_record_jobs.pop(job_id, None)
+            if not job:
+                continue
+            key = job.get("key")
+            if key is not None and _rf_record_job_by_key.get(key) == job_id:
+                _rf_record_job_by_key.pop(key, None)
+
+
+def _run_rf_record_job(job_id: str) -> None:
+    with _rf_record_jobs_lock:
+        job = _rf_record_jobs.get(job_id)
+        if not job:
+            return
+        job["status"] = "running"
+        job["phase"] = "preparing"
+        job["message"] = "Preparando dados / indexando histórico"
+        job["started_monotonic"] = time.monotonic()
+        job["updated_monotonic"] = time.monotonic()
+        cancel_event = job["cancel_event"]
+        hours = int(job["hours"])
+        limit = int(job["limit"])
+        max_hops = int(job["max_hops"])
+
+    def progress(payload: dict) -> None:
+        with _rf_record_jobs_lock:
+            current = _rf_record_jobs.get(job_id)
+            if not current:
+                return
+            previous_percent = float(current.get("percent") or 0.0)
+            next_percent = float(payload.get("percent") or 0.0)
+            # Progresso não retrocede durante a mesma execução.
+            current["percent"] = max(previous_percent, min(100.0, next_percent))
+            for key in ("phase", "completed", "total", "message", "nodes", "edges", "candidates", "cache_hit", "stale"):
+                if key in payload:
+                    current[key] = payload[key]
+            current["elapsed_ms"] = (time.monotonic() - float(current.get("started_monotonic") or time.monotonic())) * 1000.0
+            current["updated_monotonic"] = time.monotonic()
+
+    try:
+        records = db.list_rf_route_records(
+            hours=hours,
+            limit=limit,
+            max_hops=max_hops,
+            progress_callback=progress,
+            deadline_seconds=45.0,
+            cancel_check=cancel_event.is_set,
+        )
+        with _rf_record_jobs_lock:
+            current = _rf_record_jobs.get(job_id)
+            if not current:
+                return
+            if cancel_event.is_set():
+                current["status"] = "cancelled"
+                current["phase"] = "cancelled"
+                current["message"] = "Cálculo cancelado"
+            else:
+                current["status"] = "done"
+                current["phase"] = "done"
+                current["percent"] = 100.0
+                current["message"] = "Recordes RF prontos"
+                current["records"] = list(records or [])
+            current["elapsed_ms"] = (time.monotonic() - float(current.get("started_monotonic") or time.monotonic())) * 1000.0
+            current["updated_monotonic"] = time.monotonic()
+    except Exception as exc:
+        with _rf_record_jobs_lock:
+            current = _rf_record_jobs.get(job_id)
+            if not current:
+                return
+            cancelled = cancel_event.is_set() or "cancel" in str(exc).lower()
+            current["status"] = "cancelled" if cancelled else "error"
+            current["phase"] = "cancelled" if cancelled else "error"
+            current["error"] = "" if cancelled else str(exc)
+            current["message"] = "Cálculo cancelado" if cancelled else "Falha ao calcular Recordes RF"
+            current["elapsed_ms"] = (time.monotonic() - float(current.get("started_monotonic") or time.monotonic())) * 1000.0
+            current["updated_monotonic"] = time.monotonic()
+        if not cancelled:
+            diag.log_event(
+                "rf_route_records_job_failed",
+                job_id=job_id,
+                hours=hours,
+                error=str(exc),
+                duration_ms=round(float(current.get("elapsed_ms") or 0.0), 1),
+                phase=str(current.get("phase") or ""),
+                nodes=int(current.get("nodes") or 0),
+                edges=int(current.get("edges") or 0),
+                candidates=int(current.get("candidates") or 0),
+            )
+    finally:
+        _prune_rf_record_jobs()
+
+
+def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool = False) -> dict:
+    _prune_rf_record_jobs()
+    normalized_hours = 0 if int(hours or 0) <= 0 else max(1, min(int(hours), 24 * 30))
+    normalized_limit = max(1, min(int(limit or 10), 50))
+    normalized_hops = max(1, min(int(max_hops or 6), 10))
+    key = (normalized_hours, normalized_limit, normalized_hops)
+
+    with _rf_record_jobs_lock:
+        existing_id = _rf_record_job_by_key.get(key)
+        existing = _rf_record_jobs.get(existing_id or "")
+        if existing and not force and existing.get("status") in {"queued", "running", "done"}:
+            return _rf_record_job_public(existing)
+
+        job_id = uuid.uuid4().hex
+        job = {
+            "job_id": job_id,
+            "key": key,
+            "hours": normalized_hours,
+            "limit": normalized_limit,
+            "max_hops": normalized_hops,
+            "status": "queued",
+            "phase": "queued",
+            "percent": 0.0,
+            "completed": 0,
+            "total": 0,
+            "message": "Preparando cálculo de Recordes RF",
+            "elapsed_ms": 0.0,
+            "nodes": 0,
+            "edges": 0,
+            "candidates": 0,
+            "records": [],
+            "error": "",
+            "cache_hit": False,
+            "stale": False,
+            "cancel_event": threading.Event(),
+            "updated_monotonic": time.monotonic(),
+        }
+        _rf_record_jobs[job_id] = job
+        _rf_record_job_by_key[key] = job_id
+
+    thread = threading.Thread(
+        target=_run_rf_record_job,
+        args=(job_id,),
+        name=f"rf-records-{normalized_hours}-{job_id[:8]}",
+        daemon=True,
+    )
+    thread.start()
+    return _rf_record_job_public(job)
 
 
 def _topology_stats_payload(hours: int) -> dict:
@@ -1117,8 +1296,45 @@ def create_app() -> Flask:
             diag.log_event("topology_stats_failed", error=str(exc))
             return jsonify({"error": str(exc), "partial": True}), 500
 
+    @app.post("/api/topology/rf-records/jobs")
+    def api_start_topology_rf_records_job():
+        data = request.get_json(silent=True) or {}
+        try:
+            hours = int(data.get("hours", request.args.get("hours", 0)) or 0)
+            limit = int(data.get("limit", request.args.get("limit", 10)) or 10)
+            max_hops = int(data.get("max_hops", request.args.get("max_hops", 6)) or 6)
+            force = bool(data.get("force", False))
+        except (TypeError, ValueError):
+            hours, limit, max_hops, force = 0, 10, 6, False
+        payload = _start_rf_record_job(hours, limit, max_hops, force=force)
+        return jsonify(payload), (202 if payload.get("status") in {"queued", "running"} else 200)
+
+    @app.get("/api/topology/rf-records/jobs/<job_id>")
+    def api_topology_rf_records_job_status(job_id: str):
+        _prune_rf_record_jobs()
+        with _rf_record_jobs_lock:
+            job = _rf_record_jobs.get(str(job_id or ""))
+            if not job:
+                return jsonify({"error": "Job de Recordes RF não encontrado.", "status": "missing"}), 404
+            return jsonify(_rf_record_job_public(job))
+
+    @app.delete("/api/topology/rf-records/jobs/<job_id>")
+    def api_cancel_topology_rf_records_job(job_id: str):
+        with _rf_record_jobs_lock:
+            job = _rf_record_jobs.get(str(job_id or ""))
+            if not job:
+                return jsonify({"ok": False, "error": "Job de Recordes RF não encontrado."}), 404
+            job["cancel_event"].set()
+            if job.get("status") == "queued":
+                job["status"] = "cancelled"
+                job["phase"] = "cancelled"
+                job["message"] = "Cálculo cancelado"
+                job["updated_monotonic"] = time.monotonic()
+            return jsonify({"ok": True, **_rf_record_job_public(job)})
+
     @app.get("/api/topology/rf-records")
     def api_topology_rf_records():
+        """Compatibilidade: cálculo síncrono com cache e orçamento interno."""
         try:
             hours = int(request.args.get("hours", 0))
             limit = int(request.args.get("limit", 10))
@@ -1127,14 +1343,36 @@ def create_app() -> Flask:
             hours, limit, max_hops = 0, 10, 6
         started = time.monotonic()
         try:
-            records = db.list_rf_route_records(hours=hours, limit=limit, max_hops=max_hops)
+            records = db.list_rf_route_records(
+                hours=hours,
+                limit=limit,
+                max_hops=max_hops,
+                deadline_seconds=45.0,
+            )
             duration_ms = (time.monotonic() - started) * 1000.0
             if duration_ms >= 250:
-                diag.log_event("topology_stats_component", component="rf_route_records_endpoint", hours=hours, duration_ms=round(duration_ms, 1))
+                diag.log_event(
+                    "topology_stats_component",
+                    component="rf_route_records_endpoint",
+                    hours=hours,
+                    duration_ms=round(duration_ms, 1),
+                    records=len(records or []),
+                )
             return jsonify({"records": records, "duration_ms": round(duration_ms, 1)})
         except Exception as exc:
-            diag.log_event("rf_route_records_failed", error=str(exc))
-            return jsonify({"records": [], "error": str(exc)}), 500
+            duration_ms = (time.monotonic() - started) * 1000.0
+            diag.log_event(
+                "rf_route_records_failed",
+                error=str(exc),
+                hours=hours,
+                duration_ms=round(duration_ms, 1),
+            )
+            return jsonify({
+                "records": [],
+                "error": str(exc),
+                "duration_ms": round(duration_ms, 1),
+                "retryable": True,
+            }), 503
 
     @app.get("/api/topology/timeline")
     def api_topology_timeline():
