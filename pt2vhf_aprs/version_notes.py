@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.23": {
+        "title": "10 idiomas, rotas RF sincronizadas e Estatísticas sem scroll interno",
+        "items": [
+            "A interface passa a oferecer Alemão, Italiano, Japonês, Polonês, Holandês e Chinês simplificado, além de Português, Inglês, Espanhol e Francês.",
+            "Os novos idiomas possuem catálogos dedicados, bandeiras, locale para datas/números e suporte a caracteres CJK.",
+            "A auditoria de traduções valida a paridade dos seis novos catálogos com o catálogo principal.",
+            "A aba Estatísticas passa a usar somente a rolagem vertical principal da janela, removendo o viewport interno remanescente.",
+            "Durante a análise de rota RF, os hops aceitos em route.edges tornam-se autoritativos para o desenho, inclusive quando a aresta ainda não chegou no snapshot geral de topologia.",
+            "Atualizações de topologia solicitadas enquanto outra carga está em andamento deixam de ser descartadas e são executadas em seguida, eliminando o atraso visual de hops como PY1MRG-15 → PY4RC-15.",
+        ],
+    },
     "1.14.22": {
         "title": "Alcançabilidade multi-hop, diagnóstico JSON e ícone APRS",
         "items": [
