@@ -53,8 +53,10 @@ def _connect(graph, a: str, b: str, edge):
 
 
 def test_v1422_version_and_markers():
-    assert read("VERSION").strip() == "1.14.22"
-    assert '__version__ = "1.14.22"' in read("pt2vhf_aprs/__init__.py")
+    version_text = read("VERSION").strip()
+    version = tuple(int(part) for part in version_text.split("."))
+    assert version >= (1, 14, 22)
+    assert f'__version__ = "{version_text}"' in read("pt2vhf_aprs/__init__.py")
     app = read("pt2vhf_aprs/static/js/app.js")
     html = read("pt2vhf_aprs/templates/index.html")
     web_source = read("pt2vhf_aprs/web.py")
