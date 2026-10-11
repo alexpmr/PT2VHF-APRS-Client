@@ -1,7 +1,7 @@
-__version__ = "1.14.24"
+__version__ = "1.14.25"
 APP_TOCALL = "APZVHF"
 
-# v1.14.24: instala o modelo de topologia RF espaço-temporal após as
+# Instala o modelo de topologia RF espaço-temporal após as
 # constantes do pacote estarem disponíveis para database.py.
 from . import spacetime_topology as _spacetime_topology
 
