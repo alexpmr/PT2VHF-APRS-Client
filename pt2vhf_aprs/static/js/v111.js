@@ -18,7 +18,7 @@
   };
   const req=async(url,opts={})=>{
     const r=await fetch(url,{cache:'no-store',headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});
-    const d=await r.json(); if(!r.ok) throw new Error(d?.error||r.statusText); return d;
+    const d=await r.json(); if(!r.ok) throw new Error(tx(d?.error||r.statusText)); return d;
   };
   const toast=msg=>{const t=$('#toast');if(t){t.textContent=msg;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),4500);}};
 
@@ -151,7 +151,7 @@
     $('#v148AutoReplySave').onclick=async()=>{
       const payload={auto_reply_enabled:$('#v148AutoReplyEnabled').checked,auto_reply_text:$('#v148AutoReplyText').value,auto_reply_cooldown_seconds:Number($('#v148AutoReplyCooldown').value||300)};
       const saved=await req('/api/config',{method:'POST',body:JSON.stringify(payload)});
-      if(saved && saved.ok===false)throw new Error(saved.error||'Erro');
+      if(saved && saved.ok===false)throw new Error(tx(saved.error||'Erro'));
       toast(tr('Resposta automática salva.','Automatic reply saved.','Respuesta automática guardada.','Réponse automatique enregistrée.'));
       load();
     };
@@ -177,4 +177,4 @@
 
   function boot(){installNotificationCenter();installTncOperations();installDatabaseHealth();installAutoReply();watchStation();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-})();
+})();\n  const tx = value => { const raw = String(value ?? ''); return typeof window.PT2VHF_TRANSLATE === 'function' ? window.PT2VHF_TRANSLATE(raw) : raw; };
