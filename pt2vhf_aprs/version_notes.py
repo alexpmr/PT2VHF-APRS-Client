@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.25": {
+        "title": "Internacionalização completa e auditoria estrita",
+        "items": [
+            "Revisão integral de traduções em toda a interface e nos módulos complementares dos 10 idiomas suportados.",
+            "Idiomas não ingleses deixam de cair silenciosamente para inglês quando uma chave está ausente.",
+            "Mensagens dinâmicas parametrizadas preservam versões, indicativos, contadores e demais valores dentro da tradução correta.",
+            "Alterações de texto e atributos title, placeholder e aria-label realizadas após a carga inicial também são traduzidas.",
+            "Novo catálogo suplementar fecha lacunas de textos estáticos e dinâmicos sem substituir termos técnicos deliberados.",
+            "A auditoria de i18n passa a bloquear a release se houver chave faltante, catálogo inconsistente ou regressão de fallback.",
+        ],
+    },
     "1.14.24": {
         "title": "Recordes RF rápidos, resilientes e com progresso real",
         "items": [
