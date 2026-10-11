@@ -1,3 +1,17 @@
+## 1.14.24 - 2026-10-11
+
+- **Recordes RF — algoritmo:** o ranking deixa de recalcular `_compatible_events()` para o caminho inteiro a cada expansão e passa a propagar incrementalmente a evidência histórica selecionada hop a hop.
+- **Desempenho:** eventos por enlace são pré-amostrados uma única vez, preservando diversidade espacial para digis/trackers móveis; estados equivalentes são podados por posição/hop e cada origem possui orçamento de expansões.
+- **Cache e single-flight:** resultados do ranking são cacheados por período/parâmetros e cálculos concorrentes reutilizam a mesma execução.
+- **Deadline interno:** o backend possui orçamento próprio de cálculo para impedir workers presos por vários minutos; quando existe resultado anterior válido, ele pode ser reutilizado como fallback.
+- **Jobs assíncronos:** novo fluxo `/api/topology/rf-records/jobs` executa o ranking em segundo plano, fornece status/progresso e suporta cancelamento.
+- **Progresso real:** Estatísticas mostra 0–100%, etapa atual, itens concluídos, nós, enlaces, candidatos e tempo decorrido.
+- **Overlay global:** o relógio central passa a exibir barra e percentual para operações que fornecem progresso determinado.
+- **Resiliência:** erro transitório não apaga o último ranking válido do mesmo período; a interface informa o problema e oferece **Tentar novamente**.
+- **Compatibilidade:** `GET /api/topology/rf-records` permanece disponível com cache e erro estruturado.
+- **Testes:** novas regressões cobrem multi-hop incremental, ausência de reprocessamento integral do caminho, progresso monotônico, cache, job assíncrono e preservação do último ranking válido.
+- Release completa para Windows x64/ARM64, Linux x86_64/ARM64, macOS ARM64/Intel e Manual PDF.
+
 ## 1.14.23 - 2026-10-10
 
 - **10 idiomas:** adicionados Alemão (de-DE), Italiano (it-IT), Japonês (ja-JP), Polonês (pl-PL), Holandês (nl-NL) e Chinês simplificado (zh-CN), mantendo PT, EN, ES e FR.
