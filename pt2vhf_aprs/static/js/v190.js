@@ -19,7 +19,7 @@
   const json = async (url, opts={}) => {
     const r = await fetch(url, {cache:'no-store', headers:{'Content-Type':'application/json', ...(opts.headers||{})}, ...opts});
     const d = await r.json();
-    if (!r.ok) throw new Error(d?.error || r.statusText);
+    if (!r.ok) throw new Error(tx(d?.error || r.statusText));
     return d;
   };
   const notify = (msg, category='alert', severity='info', entity='') => {
@@ -85,7 +85,7 @@
             }
             const result = await nativeApi.save_local_download('/api/v190/backup/full', suggested);
             if (result?.cancelled) return { cancelled: true };
-            if (!result?.saved) throw new Error(result?.error || tr('Não foi possível salvar o backup.','Could not save the backup.','No se pudo guardar el backup.','Impossible d’enregistrer la sauvegarde.'));
+            if (!result?.saved) throw new Error(result?.error ? tx(result.error) : tr('Não foi possível salvar o backup.','Could not save the backup.','No se pudo guardar el backup.','Impossible d’enregistrer la sauvegarde.'));
             notify(
               tr('Backup completo salvo em: ', 'Full backup saved to: ', 'Backup completo guardado en: ', 'Sauvegarde complète enregistrée dans : ') +
               String(result.path || suggested),
@@ -112,7 +112,7 @@
               const data = await response.json();
               detail = data?.error || detail;
             } catch (_) {}
-            throw new Error(detail);
+            throw new Error(tx(detail));
           }
           const blob = await response.blob();
           if (!blob.size) throw new Error(tr('O servidor retornou um backup vazio.', 'The server returned an empty backup.', 'El servidor devolvió un backup vacío.', 'Le serveur a renvoyé une sauvegarde vide.'));
@@ -441,7 +441,7 @@
             const r=await fetch('/api/v190/backup/restore',{method:'POST',body:fd});
             let d={};
             try { d=await r.json(); } catch (_) {}
-            if(!r.ok) throw new Error(d.error||r.statusText||('HTTP '+r.status));
+            if(!r.ok) throw new Error(tx(d.error||r.statusText||('HTTP '+r.status)));
           }
         );
         notify(tr('Backup restaurado. Reinicie o aplicativo.','Backup restored. Restart the application.','Backup restaurado. Reinicie la aplicación.','Sauvegarde restaurée. Redémarrez l’application.'),'backup','success');
@@ -526,7 +526,7 @@
     const tnc=$('#tab-tnc .panel-header') || $('#tab-tnc');
     if(tnc && !$('#v190TestTnc')){
       const b=document.createElement('button');b.id='v190TestTnc';b.className='btn secondary';b.type='button';b.textContent=tr('Testar TNC','Test TNC','Probar TNC','Tester TNC');
-      tnc.appendChild(b);b.onclick=async()=>{b.disabled=true;try{const r=await json('/api/v190/tnc/test',{method:'POST',body:'{}'});notify((r.ok?'✓ ':'✗ ')+(r.summary||r.error||''));}catch(e){notify('✗ '+e.message);}finally{b.disabled=false;}};
+      tnc.appendChild(b);b.onclick=async()=>{b.disabled=true;try{const r=await json('/api/v190/tnc/test',{method:'POST',body:'{}'});notify((r.ok?'✓ ':'✗ ')+tx(r.summary||r.error||''));}catch(e){notify('✗ '+e.message);}finally{b.disabled=false;}};
     }
   }
 
@@ -623,4 +623,4 @@
     alertPoll();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-})();
+})();\n  const tx = value => { const raw = String(value ?? ''); return typeof window.PT2VHF_TRANSLATE === 'function' ? window.PT2VHF_TRANSLATE(raw) : raw; };
