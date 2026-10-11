@@ -9857,8 +9857,7 @@
     const normalizedHours = statisticsPeriodValue(hours);
     await cancelRfRouteRecordsJobIfNeeded(normalizedHours);
 
-    const previous = state.rfRouteRecordsLastGood.get(String(normalizedHours))
-      || (state.rfRouteRecords.length ? state.rfRouteRecords.slice() : []);
+    const previous = state.rfRouteRecordsLastGood.get(String(normalizedHours)) || [];
     const token = showProcessing(
       ui('Calculando recordes RF…', 'Calculating RF records…'),
       ui('Preparando indexação e cálculo da alcançabilidade.', 'Preparing indexing and reachability calculation.'),
@@ -10001,7 +10000,11 @@
         // Mantém a última leitura válida: timeout não vira "0".
         renderTopologyStatsData(previous);
         const host = $('#rfRouteRecordsHost');
-        if (host && state.rfRouteRecords.length) host.innerHTML = renderRfRouteRecords(state.rfRouteRecords);
+        const lastGoodRecords = state.rfRouteRecordsLastGood.get(String(state.topologyHours)) || [];
+        if (host && lastGoodRecords.length) {
+          state.rfRouteRecords = lastGoodRecords.slice();
+          host.innerHTML = renderRfRouteRecords(lastGoodRecords);
+        }
         toast(
           ui('Não foi possível atualizar agora; mantendo os últimos valores válidos.', 'Could not refresh now; keeping the last valid values.'),
           'error'
