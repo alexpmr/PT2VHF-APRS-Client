@@ -23,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.22 production release
+      - name: Validate v1.14.23 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_22.py
+        run: python tools\apply_release_1_14_23.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -39,6 +39,12 @@ jobs:
           python -m compileall -q pt2vhf_aprs windows_app.py linux_app.py macos_app.py tools
           node --check pt2vhf_aprs\static\js\app.js
           node --check pt2vhf_aprs\static\js\tnc.js
+          node --check pt2vhf_aprs\static\js\i18n_de.js
+          node --check pt2vhf_aprs\static\js\i18n_it.js
+          node --check pt2vhf_aprs\static\js\i18n_ja.js
+          node --check pt2vhf_aprs\static\js\i18n_pl.js
+          node --check pt2vhf_aprs\static\js\i18n_nl.js
+          node --check pt2vhf_aprs\static\js\i18n_zh.js
           node --check pt2vhf_aprs\static\js\v1818.js
           node --check pt2vhf_aprs\static\js\v190.js
           node --check pt2vhf_aprs\static\js\v110.js
@@ -106,9 +112,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.14.22 production release
+      - name: Validate v1.14.23 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_22.py
+        run: python tools\apply_release_1_14_23.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -122,6 +128,12 @@ jobs:
           python -m compileall -q pt2vhf_aprs windows_app.py tools
           node --check pt2vhf_aprs\static\js\app.js
           node --check pt2vhf_aprs\static\js\tnc.js
+          node --check pt2vhf_aprs\static\js\i18n_de.js
+          node --check pt2vhf_aprs\static\js\i18n_it.js
+          node --check pt2vhf_aprs\static\js\i18n_ja.js
+          node --check pt2vhf_aprs\static\js\i18n_pl.js
+          node --check pt2vhf_aprs\static\js\i18n_nl.js
+          node --check pt2vhf_aprs\static\js\i18n_zh.js
           node --check pt2vhf_aprs\static\js\v1818.js
           node --check pt2vhf_aprs\static\js\v190.js
           node --check pt2vhf_aprs\static\js\v110.js
@@ -186,9 +198,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.22 production release
+      - name: Validate v1.14.23 production release
         shell: bash
-        run: python tools/apply_release_1_14_22.py
+        run: python tools/apply_release_1_14_23.py
 
       - name: Build Linux packages
         shell: bash
@@ -221,9 +233,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.22 production release
+      - name: Validate v1.14.23 production release
         shell: bash
-        run: python tools/apply_release_1_14_22.py
+        run: python tools/apply_release_1_14_23.py
 
       - name: Build Linux ARM64 packages
         shell: bash
@@ -262,7 +274,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_14_22.py
+          python tools/apply_release_1_14_23.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -292,9 +304,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.22 production release
+      - name: Validate v1.14.23 production release
         shell: bash
-        run: python tools/apply_release_1_14_22.py
+        run: python tools/apply_release_1_14_23.py
 
       - name: Build macOS DMG
         shell: bash
@@ -330,9 +342,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.14.22 production release
+      - name: Validate v1.14.23 production release
         shell: bash
-        run: python tools/apply_release_1_14_22.py
+        run: python tools/apply_release_1_14_23.py
 
       - name: Generate versioned PDF manual
         shell: bash
