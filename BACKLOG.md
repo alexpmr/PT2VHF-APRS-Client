@@ -1,4 +1,4 @@
-## Novo — Estatísticas: indicador de processamento com barra de progresso real de 0 a 100%
+## Implementado na v1.14.24 — Estatísticas: indicador de processamento com barra de progresso real de 0 a 100%
 
 - Na aba **Estatísticas**, durante operações pesadas de indexação, reconstrução da topologia e cálculo de **Recordes/Enlaces RF**, substituir o simples indicador indefinido por um feedback mais completo:
   - manter o **relógio/spinner animado**;
@@ -64,7 +64,7 @@
   - duas execuções concorrentes sem mistura de progresso.
 - **Critério de aceite:** ao atualizar Estatísticas e iniciar a reconstrução/cálculo dos enlaces, o usuário deve ver claramente que o aplicativo continua trabalhando, qual etapa está sendo executada e um progresso real de **0% a 100%** até a conclusão do ranking.
 
-## Novo — Estatísticas: ranking de Recordes RF fica indisponível
+## Implementado na v1.14.24 — Estatísticas: ranking de Recordes RF fica indisponível
 
 - **Regressão observada na v1.14.23:** a seção **“Recordes RF observados — maiores distâncias”** pode deixar de exibir o ranking e apresentar apenas a mensagem **“Recordes RF temporariamente indisponíveis; as demais estatísticas continuam válidas.”**
 - Tratar a indisponibilidade como falha do cálculo/carregamento dos Recordes RF, não como ausência legítima de dados quando existem enlaces/rotas históricos no banco.
