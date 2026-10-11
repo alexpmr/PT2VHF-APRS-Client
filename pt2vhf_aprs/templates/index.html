@@ -54,6 +54,30 @@
           <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_france.svg') }}" alt="France">
           <span>Français</span>
         </button>
+        <button type="button" class="language-quick-option" data-language="de-DE" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_germany.svg') }}" alt="Deutschland">
+          <span>Deutsch</span>
+        </button>
+        <button type="button" class="language-quick-option" data-language="it-IT" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_italy.svg') }}" alt="Italia">
+          <span>Italiano</span>
+        </button>
+        <button type="button" class="language-quick-option" data-language="ja-JP" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_japan.svg') }}" alt="日本">
+          <span>日本語</span>
+        </button>
+        <button type="button" class="language-quick-option" data-language="pl-PL" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_poland.svg') }}" alt="Polska">
+          <span>Polski</span>
+        </button>
+        <button type="button" class="language-quick-option" data-language="nl-NL" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_netherlands.svg') }}" alt="Nederland">
+          <span>Nederlands</span>
+        </button>
+        <button type="button" class="language-quick-option" data-language="zh-CN" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_china.svg') }}" alt="中国">
+          <span>简体中文</span>
+        </button>
       </div>
     </div>
     <div id="trafficActivityIndicator" class="traffic-activity-indicator" title="Sem tráfego APRS nesta sessão" aria-label="Atividade de tráfego APRS">
@@ -1227,6 +1251,12 @@
                 <option value="en">English</option>
                 <option value="es">Español</option>
                 <option value="fr">Français</option>
+                <option value="de-DE">Deutsch</option>
+                <option value="it-IT">Italiano</option>
+                <option value="ja-JP">日本語</option>
+                <option value="pl-PL">Polski</option>
+                <option value="nl-NL">Nederlands</option>
+                <option value="zh-CN">简体中文</option>
               </select>
             </div>
             <small>O idioma é aplicado imediatamente à interface.</small>
@@ -1754,6 +1784,12 @@
 <script id="leafletScript" async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="{{ url_for('static', filename='js/i18n_extra.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_de.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_it.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_ja.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_pl.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_nl.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_zh.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
