@@ -95,6 +95,103 @@ def _dictionary_keys() -> tuple[set[str], set[str]]:
     return set(key_re.findall(es_block)), set(key_re.findall(fr_block))
 
 
+EXTENDED_LANGUAGE_PACKS = {
+    "de-DE": "i18n_de.js",
+    "it-IT": "i18n_it.js",
+    "ja-JP": "i18n_ja.js",
+    "pl-PL": "i18n_pl.js",
+    "nl-NL": "i18n_nl.js",
+    "zh-CN": "i18n_zh.js",
+}
+
+
+def _extended_pack_counts(expected_keys: int) -> tuple[dict[str, int], list[dict]]:
+    counts: dict[str, int] = {}
+    errors: list[dict] = []
+    value_re = re.compile(r'^"((?:[^"\\]|\\.)*)",?\s*    malformed = []
+    tr_count = 0
+    for path in JS_FILES:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        expected_args = 4 if path.name in {"v190.js", "v110.js"} else 1
+        for snippet, raw_args in _iter_tr_calls(text):
+            args = _split_js_args(raw_args)
+            tr_count += 1
+            if len(args) < expected_args:
+                malformed.append({
+                    "file": str(path.relative_to(ROOT)),
+                    "snippet": snippet[:180],
+                    "args": len(args),
+                    "expected_min_args": expected_args,
+                })
+
+    hardcoded = []
+    for path in HTML_FILES:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for match in VISIBLE_HTML.finditer(text):
+            value = re.sub(r"\s+", " ", match.group(1)).strip()
+            if not value or "{{" in value or "{%" in value or IGNORE_HTML.match(value):
+                continue
+            if re.search(r"[A-Za-zÀ-ÿ]{3,}", value):
+                hardcoded.append({"file": str(path.relative_to(ROOT)), "text": value[:160]})
+
+    es_keys, fr_keys = _dictionary_keys()
+    missing_es = sorted(fr_keys - es_keys)
+    missing_fr = sorted(es_keys - fr_keys)
+    dict_total = len(es_keys | fr_keys)
+    extended_counts, extended_errors = _extended_pack_counts(len(es_keys))
+    dict_coverage = 100.0 if not (missing_es or missing_fr) else round((dict_total * 2 - len(missing_es) - len(missing_fr)) * 100.0 / max(1, dict_total * 2), 2)
+    coverage = 100.0 if tr_count and not malformed else (0.0 if not tr_count else round((tr_count - len(malformed)) * 100 / tr_count, 2))
+    return {
+        "tr_calls": tr_count,
+        "malformed_tr_calls": malformed,
+        "technical_coverage_percent": coverage,
+        "dictionary_coverage_percent": dict_coverage,
+        "missing_es_keys": missing_es,
+        "missing_fr_keys": missing_fr,
+        "extended_language_pack_counts": extended_counts,
+        "extended_language_pack_errors": extended_errors,
+        "hardcoded_visible_candidates": hardcoded,
+        "hardcoded_candidate_count": len(hardcoded),
+    }
+
+
+if __name__ == "__main__":
+    result = audit()
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    strict = "--strict" in sys.argv
+    if strict and (
+        result["malformed_tr_calls"]
+        or result["missing_es_keys"]
+        or result["missing_fr_keys"]
+        or result["extended_language_pack_errors"]
+    ):
+        raise SystemExit(1)
+, re.M)
+    for locale, filename in EXTENDED_LANGUAGE_PACKS.items():
+        path = ROOT / "pt2vhf_aprs" / "static" / "js" / filename
+        if not path.exists():
+            counts[locale] = 0
+            errors.append({"locale": locale, "file": filename, "error": "missing_file"})
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        start = text.find("const values = [")
+        end = text.find("];", start + 1)
+        values = value_re.findall(text[start:end] if start >= 0 and end > start else "")
+        counts[locale] = len(values)
+        if len(values) != expected_keys:
+            errors.append({
+                "locale": locale,
+                "file": filename,
+                "error": "catalog_size_mismatch",
+                "expected": expected_keys,
+                "actual": len(values),
+            })
+        marker = f"window.PT2VHF_I18N['{locale}']"
+        if marker not in text:
+            errors.append({"locale": locale, "file": filename, "error": "locale_marker_missing"})
+    return counts, errors
+
+
 def audit() -> dict:
     malformed = []
     tr_count = 0
