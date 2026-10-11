@@ -75,6 +75,7 @@
       || localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     topologyHours: Number(localStorage.getItem('pt2vhf_topology_hours') || 0),
     topologyLoadBusy: false,
+    topologyLoadQueued: false,
     topologyEdges: [],
     rfRouteAnalysis: null,
     rfRouteSelectedIndex: -1,
@@ -204,13 +205,21 @@
 
   const EXTRA_I18N = window.PT2VHF_I18N || {};
 
+  const SUPPORTED_LANGUAGES = ['pt-BR', 'en', 'es', 'fr', 'de-DE', 'it-IT', 'ja-JP', 'pl-PL', 'nl-NL', 'zh-CN'];
+
   function normalizeLanguage(value) {
-    return ['pt-BR', 'en', 'es', 'fr'].includes(String(value || '')) ? String(value) : 'pt-BR';
+    const raw = String(value || '').trim();
+    const aliases = {
+      de: 'de-DE', it: 'it-IT', ja: 'ja-JP', pl: 'pl-PL', nl: 'nl-NL',
+      zh: 'zh-CN', 'zh-Hans': 'zh-CN', 'zh-SG': 'zh-CN'
+    };
+    const normalized = aliases[raw] || raw;
+    return SUPPORTED_LANGUAGES.includes(normalized) ? normalized : 'pt-BR';
   }
 
   function translatedText(pt, en) {
     if (state.language === 'en') return en || pt;
-    if (state.language === 'es' || state.language === 'fr') {
+    if (state.language !== 'pt-BR') {
       return EXTRA_I18N[state.language]?.[pt] || en || EN_TEXT?.get?.(pt) || pt;
     }
     return pt;
@@ -221,7 +230,11 @@
   }
 
   function currentLocale() {
-    return ({'pt-BR':'pt-BR', en:'en-US', es:'es-ES', fr:'fr-FR'})[state.language] || 'pt-BR';
+    return ({
+      'pt-BR':'pt-BR', en:'en-US', es:'es-ES', fr:'fr-FR',
+      'de-DE':'de-DE', 'it-IT':'it-IT', 'ja-JP':'ja-JP',
+      'pl-PL':'pl-PL', 'nl-NL':'nl-NL', 'zh-CN':'zh-CN'
+    })[state.language] || 'pt-BR';
   }
 
   function fmtDate(value) {
@@ -1267,6 +1280,7 @@
 
   function activateTab(tab) {
     state.activeTab = tab;
+    document.body.classList.toggle('analysis-page-active', tab === 'analysis');
     $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
     syncMapContextBar();
@@ -3720,7 +3734,10 @@
 
   async function loadTopology() {
     if (!state.map || (!state.topologyEnabled && !state.rfRouteAnalysis) || state.activeTab !== 'map') return;
-    if (state.topologyLoadBusy) return;
+    if (state.topologyLoadBusy) {
+      state.topologyLoadQueued = true;
+      return;
+    }
     state.topologyLoadBusy = true;
     try {
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
@@ -3742,9 +3759,38 @@
       }
       const active = new Set();
 
+      // v1.14.23: a rota calculada é autoritativa durante o foco. Se um hop
+      // aceito pelo motor ainda não apareceu no snapshot de /api/topology,
+      // crie uma aresta visual diretamente de route.edges para que o mapa e o
+      // painel lateral sejam sempre idênticos.
+      const renderEdges = [...edges];
+      if (routeAllowedPairs) {
+        const serverPairs = new Set(
+          renderEdges
+            .filter(edge => edge.kind !== 'igate')
+            .map(edge => rfRoutePairKey(edge.source, edge.target))
+        );
+        for (const [pair, routeEdge] of routeEvidenceByPair.entries()) {
+          const coords = [
+            Number(routeEdge.source_lat), Number(routeEdge.source_lon),
+            Number(routeEdge.target_lat), Number(routeEdge.target_lon)
+          ];
+          if (serverPairs.has(pair) || !coords.every(Number.isFinite)) continue;
+          renderEdges.push({
+            ...routeEdge,
+            kind: 'rf',
+            source: routeEdge.source,
+            target: routeEdge.target,
+            classification_source: routeEdge.classification_source || routeEdge.evidence_label || ui('RF inferido do path', 'RF inferred from path'),
+            synthetic_route_edge: true,
+          });
+          serverPairs.add(pair);
+        }
+      }
+
       // Desenha RF primeiro e APRS-IS depois. Em pares com evidência mista,
       // a linha Internet fica visível sobre a linha RF sem reclassificar o RF.
-      const orderedEdges = [...edges].sort(
+      const orderedEdges = renderEdges.sort(
         (a, b) => Number(a.kind === 'igate') - Number(b.kind === 'igate')
       );
       for (const edge of orderedEdges) {
@@ -3833,6 +3879,10 @@
       console.warn(err);
     } finally {
       state.topologyLoadBusy = false;
+      if (state.topologyLoadQueued) {
+        state.topologyLoadQueued = false;
+        setTimeout(() => { void loadTopology(); }, 0);
+      }
     }
   }
 
@@ -8651,6 +8701,12 @@
     en: { label: 'English', flag: '/static/img/flag_england.svg', alt: 'England', htmlLang: 'en' },
     es: { label: 'Español', flag: '/static/img/flag_spain.svg', alt: 'España', htmlLang: 'es' },
     fr: { label: 'Français', flag: '/static/img/flag_france.svg', alt: 'France', htmlLang: 'fr' },
+    'de-DE': { label: 'Deutsch', flag: '/static/img/flag_germany.svg', alt: 'Deutschland', htmlLang: 'de' },
+    'it-IT': { label: 'Italiano', flag: '/static/img/flag_italy.svg', alt: 'Italia', htmlLang: 'it' },
+    'ja-JP': { label: '日本語', flag: '/static/img/flag_japan.svg', alt: '日本', htmlLang: 'ja' },
+    'pl-PL': { label: 'Polski', flag: '/static/img/flag_poland.svg', alt: 'Polska', htmlLang: 'pl' },
+    'nl-NL': { label: 'Nederlands', flag: '/static/img/flag_netherlands.svg', alt: 'Nederland', htmlLang: 'nl' },
+    'zh-CN': { label: '简体中文', flag: '/static/img/flag_china.svg', alt: '中国', htmlLang: 'zh-CN' },
   };
 
   function translateConnectionState(value) {
