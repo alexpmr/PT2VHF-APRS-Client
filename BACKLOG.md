@@ -1,5 +1,16 @@
 ## Novo — Internacionalização: auditoria completa de todas as traduções da aplicação
 
+## Implementado na v1.14.25 — Auditoria integral de traduções
+
+- [x] Revisar todas as telas, abas, menus, botões, tooltips, pop-ups, diálogos, placeholders, cabeçalhos, filtros, estatísticas, configurações, logs e atualizador.
+- [x] Eliminar strings residuais em inglês quando outro idioma estiver selecionado.
+- [x] Remover fallback indevido para inglês em PT/ES/FR/DE/IT/JA/PL/NL/ZH.
+- [x] Cobrir textos gerados dinamicamente e mensagens com parâmetros variáveis.
+- [x] Traduzir conteúdo inserido após a carga inicial e atributos title, placeholder e aria-label.
+- [x] Validar os 10 idiomas suportados com auditoria automatizada e bloqueio de release para chaves ausentes.
+- [x] Preservar termos técnicos deliberados como APRS-IS, TNC, RF, AX.25, KISS, ACK/REJ e iGate quando apropriado.
+
+
 - Revisar **todas as partes da aplicação** nos dez idiomas suportados: **PT-BR, EN, ES, FR, DE, IT, JA, PL, NL e ZH-CN**.
 - Corrigir casos em que, após selecionar um idioma diferente de Inglês, partes da interface continuam aparecendo em **Inglês** por fallback indevido, ausência de chave ou tradução incompleta.
 - A revisão deve cobrir toda a interface, inclusive conteúdos que hoje podem escapar do catálogo principal:
