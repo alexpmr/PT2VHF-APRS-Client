@@ -213,9 +213,7 @@
   const I18N_PATTERN_CACHE = new Map();
 
   function escapeRegexText(value) {
-    return String(value).replace(/[.*+?^$()|[\]\\]/g, '\\  const SUPPORTED_LANGUAGES = ['pt-BR', 'en', 'es', 'fr', 'de-DE', 'it-IT', 'ja-JP', 'pl-PL', 'nl-NL', 'zh-CN'];
-
-');
+    return String(value).replace(/[.*+?^$()|[\]\\]/g, '\\$&');
   }
 
   function translatedPatternText(source, locale) {
@@ -233,7 +231,20 @@
           regex += '([\\s\\S]+?)';
           cursor = match.index + match[0].length;
         }
-        regex += escapeRegexText(pattern.slice(cursor)) + '  function normalizeLanguage(value) {
+        regex += escapeRegexText(pattern.slice(cursor)) + '$';
+        compiled.push({ regex: new RegExp(regex), translated });
+      }
+      I18N_PATTERN_CACHE.set(locale, compiled);
+    }
+    for (const item of I18N_PATTERN_CACHE.get(locale) || []) {
+      const match = String(source).match(item.regex);
+      if (!match) continue;
+      return item.translated.replace(/__ARG(\d+)__/g, (_token, index) => match[Number(index) + 1] ?? '');
+    }
+    return '';
+  }
+
+  function normalizeLanguage(value) {
     const raw = String(value || '').trim();
     const aliases = {
       de: 'de-DE', it: 'it-IT', ja: 'ja-JP', pl: 'pl-PL', nl: 'nl-NL',
