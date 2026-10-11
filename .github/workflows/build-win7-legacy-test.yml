@@ -1,0 +1,86 @@
+name: Build Windows 7 Legacy Test
+
+on:
+  push:
+    branches:
+      - win7-legacy-test-1-14-24
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  win7-legacy-x64:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout test branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.8.10 x64
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8.10'
+          architecture: 'x64'
+          cache: 'pip'
+          cache-dependency-path: requirements-windows7.txt
+
+      - name: Install legacy build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade "pip==24.3.1"
+          python -m pip install -r requirements-windows7.txt
+          python --version
+          python -m pip freeze
+
+      - name: Validate Python 3.8 compatibility
+        shell: pwsh
+        run: |
+          python -m compileall -q pt2vhf_aprs windows_app.py windows_legacy_app.py
+          python -c "import pkgutil,importlib,pt2vhf_aprs; [importlib.import_module(m.name) for m in pkgutil.iter_modules(pt2vhf_aprs.__path__, pt2vhf_aprs.__name__+'.')]; print('PT2VHF runtime imports OK on Python 3.8')"
+          python -c "from pt2vhf_aprs.web import create_app; app=create_app(); print('Flask app OK:', len(list(app.url_map.iter_rules())))"
+
+      - name: Generate icon
+        shell: pwsh
+        run: python windows\make_icon.py
+
+      - name: Build Windows 7 legacy Portable
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean windows\PT2VHF_APRS_Client_Win7_Legacy.spec
+          $version = (Get-Content VERSION -Raw).Trim()
+          New-Item -ItemType Directory -Force dist-win7 | Out-Null
+          Copy-Item dist\PT2VHF_APRS_Client_Win7_Legacy_x64.exe "dist-win7\PT2VHF_APRS_Client_Win7_Legacy_x64_v$version.exe" -Force
+          Get-Item "dist-win7\PT2VHF_APRS_Client_Win7_Legacy_x64_v$version.exe" | Format-List Name,Length,LastWriteTime
+
+      - name: Upload test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Win7-Legacy-Test
+          path: dist-win7\PT2VHF_APRS_Client_Win7_Legacy_x64_v*.exe
+          if-no-files-found: error
+
+      - name: Publish Win7 test prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $tag = "win7-test-v$version"
+          $asset = "dist-win7\PT2VHF_APRS_Client_Win7_Legacy_x64_v$version.exe"
+          $notes = @"
+          TEST BUILD - Windows 7 SP1 x64 only.
+
+          - Python 3.8.10 legacy runtime
+          - no WebView2 dependency
+          - interface opens in the default browser
+          - in-app automatic installation disabled for this legacy channel
+          - Windows XP/Vista are not supported
+          - this prerelease does not replace the normal Windows 10/11 builds
+          "@
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --target $env:GITHUB_SHA --title "PT2VHF APRS Client - Win7 Legacy Test v$version" --notes $notes --prerelease
+          } else {
+            gh release edit $tag --title "PT2VHF APRS Client - Win7 Legacy Test v$version" --notes $notes --prerelease
+          }
+          gh release upload $tag $asset --clobber
