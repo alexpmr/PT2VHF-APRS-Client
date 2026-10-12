@@ -1,0 +1,50 @@
+name: Publish Win7 v1.14.32 Test Installer
+on:
+  push:
+    branches:
+      - release-win7-v1.14.32-test
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish-win7:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified Win7 setup and portable build
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download 38308145643 \
+            --repo "$GITHUB_REPOSITORY" \
+            --name PT2VHF-APRS-Client-Windows-Win7-Legacy-x64 \
+            --dir win7-package
+          ls -lh win7-package
+          test -s win7-package/PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.32.exe
+          test -s win7-package/PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.32.exe
+          sha256sum win7-package/*.exe
+
+      - name: Publish isolated Windows 7 test prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="v1.14.32-win7-test"
+          setup="win7-package/PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.32.exe"
+          portable="win7-package/PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.32.exe"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" "$setup" "$portable" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$tag" "$setup" "$portable" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target e9ff8c47dd92388628e6512383fd4de34cc61b26 \
+              --title "PT2VHF APRS Client v1.14.32 — Windows 7 Legacy (teste)" \
+              --notes "Build Win7 SP1 x64 de validação: Setup e Portable v1.14.32. Artefatos do job Windows 7 Legacy aprovado no GitHub Actions. A interface Web LAN já foi validada entre dois Windows 11, mas o uso no Windows 7 real e a janela transitória permanecem em validação. Não é a release multiplataforma final. Use somente em Windows 7 SP1 x64." \
+              --prerelease
+          fi
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets,url
