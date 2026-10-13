@@ -29,7 +29,7 @@ jobs:
 
       - name: Validate v1.14.36 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_35.py
+        run: python tools\apply_release_1_14_36.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -118,7 +118,7 @@ jobs:
 
       - name: Validate v1.14.36 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_35.py
+        run: python tools\apply_release_1_14_36.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -206,7 +206,7 @@ jobs:
 
       - name: Validate v1.14.35 release metadata
         shell: pwsh
-        run: python tools\apply_release_1_14_35.py
+        run: python tools\apply_release_1_14_36.py
 
       - name: Install Win7 Legacy dependencies
         shell: pwsh
