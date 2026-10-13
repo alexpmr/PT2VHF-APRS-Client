@@ -3984,11 +3984,15 @@
           [Number(geometryEdge.source_lat), Number(geometryEdge.source_lon)],
           [Number(geometryEdge.target_lat), Number(geometryEdge.target_lon)]
         ];
-        // Never fall back to a mobile station's *current* position for history.
+        // Preserve historical coordinates: null or blank coordinates must never turn into (0,0).
+        const rawCoords = [geometryEdge.source_lat, geometryEdge.source_lon, geometryEdge.target_lat, geometryEdge.target_lon];
+        if (rawCoords.some(v => v === null || v === undefined || v === '' || !Number.isFinite(Number(v)))) continue;
         if (!points.flat().every(Number.isFinite)) continue;
+        if (Math.abs(points[0][0]) < .01 && Math.abs(points[0][1]) < .01) continue;
+        if (Math.abs(points[1][0]) < .01 && Math.abs(points[1][1]) < .01) continue;
 
         let line = state.topologyLines.get(key);
-        const inferredRouteEdge = edge.kind !== 'igate' && !(routeEvidence ? (routeEvidence.evidence_level === 'direct' && routeEvidence.medium === 'RF') : edge.direct_rf_confirmed === true);
+        const inferredRouteEdge = edge.kind !== 'igate' && !(routeEvidence ? (routeEvidence.evidence_level === 'direct' && Number(routeEvidence.rf_transport_count || 0) > 0) : edge.direct_rf_confirmed === true);
         const legacyRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'legacy';
         const style = {
           color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : (inferredRouteEdge ? '#94a3b8' : state.mapConfig.topology_rf_color),
@@ -4002,6 +4006,13 @@
           pane: 'pt2vhfInteractionPane'
         };
         if (edge.kind !== 'igate' && inferredRouteEdge) style.dashArray = '5 7';
+        // Suppress unverified inferred long hops on the overview map, but keep them
+        // available on explicitly selected routes and in historical diagnostics.
+        // This is a display threshold, not evidence of impossible RF propagation.
+        if (!routeAllowedPairs && inferredRouteEdge && topologyEdgeDistanceKm(geometryEdge) > 250) {
+          active.delete(key);
+          continue;
+        }
         if (edge.kind !== 'igate' && legacyRouteEdge) style.dashArray = '2 5';
         if (!line) {
           line = L.polyline(points, style).addTo(state.map);
@@ -4024,7 +4035,7 @@
           <div class="topology-popup">
             <h3>Topologia observada</h3>
             <div><strong>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</strong></div>
-            <div>Tipo: ${edge.kind === 'igate' ? 'Internet/APRS-IS' : 'Enlace RF observado'}</div>
+            <div>Tipo: ${edge.kind === 'igate' ? 'Internet/APRS-IS' : (inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC')}</div>
             ${edge.mixed_evidence
               ? (edge.kind === 'igate'
                 ? `<div>Também observado por RF: ${Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')}</div>`
@@ -4061,6 +4072,10 @@
   }
 
   function locateBrowser(button) {
+    if (!window.isSecureContext) {
+      toast(ui('A geolocalização exige HTTPS ou localhost. Acesso HTTP por IP da rede não permite obter localização automaticamente.', 'Geolocation requires HTTPS or localhost. HTTP LAN IP addresses are not allowed.'), 'error');
+      return;
+    }
     if (!navigator.geolocation) {
       toast('Este navegador não oferece geolocalização.', 'error');
       return;
