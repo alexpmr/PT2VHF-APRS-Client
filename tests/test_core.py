@@ -380,7 +380,7 @@ def test_new_install_defaults_and_required_station_fields():
             assert saved["callsign"] == "PY2ABC"
             assert saved["altitude"] == 0
             assert saved["altitude_source"] == "fallback_zero"
-            assert saved["aprs_filter"] == db.BRAZIL_FILTER
+            assert saved["aprs_filter"] == db.DEFAULT_APRS_FILTER
 
             invalid = db.save_config({
                 "callsign": "PY2-ABC",
