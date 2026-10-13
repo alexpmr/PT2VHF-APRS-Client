@@ -3988,10 +3988,10 @@
         if (!points.flat().every(Number.isFinite)) continue;
 
         let line = state.topologyLines.get(key);
-        const inferredRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'inferred';
+        const inferredRouteEdge = edge.kind !== 'igate' && !(routeEvidence ? (routeEvidence.evidence_level === 'direct' && routeEvidence.medium === 'RF') : edge.direct_rf_confirmed === true);
         const legacyRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'legacy';
         const style = {
-          color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+          color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : (inferredRouteEdge ? '#94a3b8' : state.mapConfig.topology_rf_color),
           weight: edge.kind === 'igate' && edge.mixed_evidence
             ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
             : state.mapConfig.topology_width,
@@ -4001,7 +4001,7 @@
           bubblingMouseEvents: false,
           pane: 'pt2vhfInteractionPane'
         };
-        if (edge.kind !== 'igate' && inferredRouteEdge) style.dashArray = '5 5';
+        if (edge.kind !== 'igate' && inferredRouteEdge) style.dashArray = '5 7';
         if (edge.kind !== 'igate' && legacyRouteEdge) style.dashArray = '2 5';
         if (!line) {
           line = L.polyline(points, style).addTo(state.map);
