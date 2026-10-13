@@ -1,3 +1,11 @@
+## Corrigido no código da v1.14.36 — classificação RF e filtro APRS-IS
+
+- RF inferido pelo path é representado em cinza tracejado; trechos inferidos acima de 250 km ficam fora do mapa geral, preservados na análise selecionada e no histórico. Distância não é prova de impossibilidade física.
+- A agregação de eventos RF históricos usa todas as evidências disponíveis, não apenas o primeiro evento.
+- O novo filtro APRS-IS padrão para bases novas é `r/4000` com centro nas coordenadas da estação, sem alterar filtros personalizados existentes.
+- A interface explica a restrição HTTPS para geolocalização automática pela LAN.
+- A validação definitiva ainda exige dados RF reais e checagem de algumas rotas/rankings complexos.
+
 ## Pendente — Analisar rotas RF plausíveis Brasília ↔ Sul sem criar enlaces falsos (issue #86)
 
 - **Pedido em 13/10/2026:** a captura de "Análise de rota RF" apresenta `PP1MSC-15 ↔ PY2PJA` com 6 saltos/872,7 km de percurso/809,6 km entre extremidades, porém o mapa geral sugere que pode haver outra cadeia Brasília → Sul. Oferecer **Busca de caminhos possíveis** por origem/destino sem afirmar que um único pacote percorreu todos os saltos.

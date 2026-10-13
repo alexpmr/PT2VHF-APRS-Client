@@ -68,6 +68,9 @@ def test_mobile_pt2ap_historical_rf_edges_cannot_stretch_to_latest_gps(monkeypat
             assert by_source["PY4UBA-9"]["target_lat"] == -19.73
             assert by_source["PY4UBA-9"]["distance_km"] < 15
             assert by_source["PY5SUL-9"]["classification_source"].startswith("RF inferido")
+            assert by_source["PY5SUL-9"]["rf_inferred"] is True
+            assert by_source["PY5SUL-9"]["direct_rf_confirmed"] is False
+            assert by_source["PY4UBA-9"]["direct_rf_confirmed"] is True
             assert by_source["PY4UBA-9"]["classification_source"].startswith("RF recebido")
             # Update the moving station yet again: history MUST stay identical.
             with db.connection() as conn:
@@ -177,3 +180,19 @@ def test_frontend_and_kml_export_never_use_latest_positions_for_rf_links():
     assert "historical_geometry" in app
     assert "FROM topology_events" in map_source
     assert "JOIN stations" not in map_source
+
+
+def test_long_aprs_path_is_never_displayed_as_confirmed_direct_rf():
+    now = datetime.now(timezone.utc).isoformat()
+    rows = [dict(timestamp=now, source="LU9DCE", target="PU2XTC-4", kind="rf",
+                 medium="APRS-IS", evidence_level="inferred",
+                 source_lat=-34.6, source_lon=-58.4, target_lat=-22.9, target_lon=-47.1)]
+    edge = topology_map._segments_from_events(rows)[0]
+    assert edge["distance_km"] > 1000
+    assert edge["rf_inferred"] is True
+    assert edge["direct_rf_confirmed"] is False
+    assert edge["rf_path_count"] == 1
+    assert edge["rf_transport_count"] == 0
+    app = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
+    assert "inferredRouteEdge ? '#94a3b8'" in app
+    assert "style.dashArray = '5 7'" in app

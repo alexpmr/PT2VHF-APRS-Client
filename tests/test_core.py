@@ -328,7 +328,7 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["altitude_source"] == "manual"
             assert cfg["server"] == "soam.aprs2.net"
             assert cfg["port"] == 14580
-            assert cfg["aprs_filter"] == db.BRAZIL_FILTER
+            assert cfg["aprs_filter"] == db.DEFAULT_APRS_FILTER == "r/4000"
             assert cfg["app_theme"] == "dark"
             assert cfg["topology_rf_color"] == "#ffff00"
             assert cfg["topology_igate_color"] == "#ffff00"
@@ -380,7 +380,7 @@ def test_new_install_defaults_and_required_station_fields():
             assert saved["callsign"] == "PY2ABC"
             assert saved["altitude"] == 0
             assert saved["altitude_source"] == "fallback_zero"
-            assert saved["aprs_filter"] == db.BRAZIL_FILTER
+            assert saved["aprs_filter"] == db.DEFAULT_APRS_FILTER
 
             invalid = db.save_config({
                 "callsign": "PY2-ABC",
@@ -583,7 +583,7 @@ def test_reset_config_preserves_operational_data():
             reset = db.reset_config()
             assert reset["callsign"] == ""
             assert reset["app_theme"] == "dark"
-            assert reset["aprs_filter"] == db.BRAZIL_FILTER
+            assert reset["aprs_filter"] == db.DEFAULT_APRS_FILTER
             assert reset["connect_on_start"] == 1
             assert len(db.list_messages()) == 1
     finally:
@@ -2271,4 +2271,4 @@ def test_v1111_frontend_keeps_rf_and_internet_distinct_for_mixed_topology():
     assert "line.bringToFront()" in js
     assert "Também observado via APRS-IS" in js
     assert "Também observado por RF" in js
-    assert "edge.kind === 'igate' ? 'Internet/APRS-IS' : 'Enlace RF observado'" in js
+    assert "inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC'" in js

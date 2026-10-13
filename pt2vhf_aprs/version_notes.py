@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.36": {
+        "title": "Evidência RF confiável, filtro geográfico APRS-IS e diagnóstico web",
+        "items": [
+            "Enlaces inferidos via path APRS aparecem em cinza tracejado, sem serem classificados visualmente como RF direto confirmado.",
+            "Na visão geral do mapa, trechos inferidos muito longos e sem confirmação direta não viram retas RF artificiais; os eventos continuam no banco e na análise de rota.",
+            "Segmentos históricos mistos consolidam todas as evidências; coordenadas nulas não criam linhas para 0,0.",
+            "Novas instalações: filtro APRS-IS r/4000 em torno da estação; filtros personalizados antigos permanecem preservados.",
+            "Acesso web sem HTTPS informa por que a geolocalização automática foi bloqueada pelo navegador.",
+            "Regressões automatizadas incluem LU9DCE/PU2XTC-4 e builds multiplataforma; teste RF externo recomendado.",
+        ],
+    },
     "1.14.35": {
         "title": "Enlaces RF históricos de digipeaters móveis sem distorção",
         "items": [

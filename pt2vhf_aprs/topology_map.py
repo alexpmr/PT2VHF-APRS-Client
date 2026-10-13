@@ -73,6 +73,7 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
                 "event_timestamp": time_text,
                 "packet_count": 0,
                 "rf_transport_count": 0, "rf_path_count": 0,
+                "rf_direct_count": 0,
                 "internet_confirmed_count": 0,
                 "igate": dst if kind == "igate" else None,
                 "evidence_level": evidence if evidence in {"direct", "inferred", "legacy", "internet"} else ("internet" if kind == "igate" else "legacy"),
@@ -91,6 +92,8 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
         if kind == "rf":
             if medium == "RF" and evidence != "inferred":
                 segment["rf_transport_count"] += 1
+                if evidence == "direct":
+                    segment["rf_direct_count"] += 1
             else:
                 segment["rf_path_count"] += 1
         else:
@@ -113,6 +116,11 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
             "RF recebido pelo TNC (posição histórica)" if edge["rf_transport_count"] > 0 else
             "RF inferido do path (posição histórica)"
         )
+        # APRS path evidence is not proof of a verified direct RF hop.
+        edge["direct_rf_confirmed"] = bool(
+            edge["kind"] == "rf" and edge["rf_direct_count"] > 0
+        )
+        edge["rf_inferred"] = edge["kind"] == "rf" and not edge["direct_rf_confirmed"]
         edge["distance_km"] = round(db.haversine_km(
             edge["source_lat"], edge["source_lon"],
             edge["target_lat"], edge["target_lon"],

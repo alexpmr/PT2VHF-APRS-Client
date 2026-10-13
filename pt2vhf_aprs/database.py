@@ -39,6 +39,7 @@ def _default_data_dir() -> Path:
 DB_PATH = _default_data_dir() / "pt2vhf_aprs.db"
 
 BRAZIL_FILTER = "p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ"
+DEFAULT_APRS_FILTER = "r/4000"  # Expansão para r/lat/lon/4000 no login
 
 PACKET_RETENTION = 100_000
 APRS_LOG_RETENTION = 100_000
@@ -137,7 +138,7 @@ DEFAULT_CONFIG = {
     "server": "soam.aprs2.net",
     "port": 14580,
     "passcode": "",
-    "aprs_filter": BRAZIL_FILTER,
+    "aprs_filter": DEFAULT_APRS_FILTER,
     "connect_on_start": 1,
     "open_browser_on_start": 0,
     "web_lan_enabled": 1,
@@ -275,7 +276,7 @@ def init_db() -> None:
                 server TEXT NOT NULL DEFAULT 'soam.aprs2.net',
                 port INTEGER NOT NULL DEFAULT 14580,
                 passcode TEXT NOT NULL DEFAULT '',
-                aprs_filter TEXT NOT NULL DEFAULT 'p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ',
+                aprs_filter TEXT NOT NULL DEFAULT 'r/4000',
                 connect_on_start INTEGER NOT NULL DEFAULT 1,
                 open_browser_on_start INTEGER NOT NULL DEFAULT 0,
                 web_lan_enabled INTEGER NOT NULL DEFAULT 1,
