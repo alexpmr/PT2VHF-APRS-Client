@@ -583,7 +583,7 @@ def test_reset_config_preserves_operational_data():
             reset = db.reset_config()
             assert reset["callsign"] == ""
             assert reset["app_theme"] == "dark"
-            assert reset["aprs_filter"] == db.BRAZIL_FILTER
+            assert reset["aprs_filter"] == db.DEFAULT_APRS_FILTER
             assert reset["connect_on_start"] == 1
             assert len(db.list_messages()) == 1
     finally:
@@ -2271,4 +2271,4 @@ def test_v1111_frontend_keeps_rf_and_internet_distinct_for_mixed_topology():
     assert "line.bringToFront()" in js
     assert "Também observado via APRS-IS" in js
     assert "Também observado por RF" in js
-    assert "edge.kind === 'igate' ? 'Internet/APRS-IS' : 'Enlace RF observado'" in js
+    assert "inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC'" in js
