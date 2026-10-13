@@ -1,3 +1,13 @@
+## 1.14.36 - 2026-10-13
+
+- Mapa RF: segmentos inferidos a partir de paths APRS-IS aparecem em cinza tracejado e não são apresentados como RF direto comprovado.
+- Mapa geral: hops inferidos sem evidência direta e com separação geográfica acima de 250 km não recebem linha reta; permanecem no histórico e podem ser analisados ao selecionar explicitamente a rota. O limiar é apenas visual, não um limite físico de propagação.
+- Eventos: cálculo de confirmação RF considera todos os registros do segmento, incluindo quando coexistem evidências inferidas e recepção via TNC.
+- Topologia: impede traçados com coordenadas históricas nulas convertidas inadvertidamente em 0/0.
+- Configurações APRS-IS: novas instalações usam `r/4000`, expandido para `r/latitude/longitude/4000` com base na estação. Filtros já salvos permanecem inalterados.
+- Navegador: diagnóstico específico quando HTTP na rede local impede geolocalização sem HTTPS ou localhost.
+- Regressões: LU9DCE ↔ PU2XTC-4, digipeater móvel, caminhos inferidos, evidências mistas, filtro radial e matriz de compilação.
+
 ## 1.14.35 - 2026-10-12
 
 - Mapa/topologia: corrigido o efeito elástico dos enlaces de digipeaters e iGates móveis, exemplificado pelo PT2AP com Starlink ao viajar do Sul a Brasília.

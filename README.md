@@ -1,6 +1,8 @@
-# PT2VHF APRS Client - v1.14.35
+# PT2VHF APRS Client - v1.14.36
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
+
+A **v1.14.36** corrige a apresentação de enlaces RF inferidos (cinza tracejado, sem marcá-los como RF direto confirmado); no mapa geral, trechos inferidos acima de 250 km sem comprovação direta não são desenhados como uma reta física, mas seguem no histórico e na análise de rotas. A validação da posição histórica foi reforçada. Novas instalações recebem o filtro APRS-IS `r/4000` (raio de 4.000 km em torno da estação; requer latitude/longitude válidas); instalações existentes conservam os filtros salvos. O botão de geolocalização explica a necessidade de HTTPS ou localhost, sem tentar contornar as restrições do navegador. A validação com os registros RF reais permanece necessária.
 
 A **v1.14.35** corrige a geometria histórica dos enlaces RF de **digipeaters/iGates móveis**. O PT2AP pode ter repetido estações do Sul por RF de verdade: esses contatos permanecem onde ocorreram, mesmo após o carro chegar a Uberaba e Brasília. O mapa agora usa registros `topology_events` com coordenadas e instante do evento, divide contatos por localidades e preserva a classificação RF/APRS-IS. Se o histórico não contiver coordenadas confiáveis, não inventa uma linha até a posição atual da estação. O histórico SQLite e os recordes não são apagados; a exportação KML também usa geometria histórica. As correções das versões anteriores permanecem incluídas. **A aceitação definitiva depende de teste com os dados reais do PT2AP.** O ciclo completo inclui Windows 10/11 x64/ARM64, Windows 7 Legacy, Linux x64/ARM64, macOS Intel/Apple Silicon e manual em PDF.
 
