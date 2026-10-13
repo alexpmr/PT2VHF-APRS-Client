@@ -328,7 +328,7 @@ def test_new_install_defaults_and_required_station_fields():
             assert cfg["altitude_source"] == "manual"
             assert cfg["server"] == "soam.aprs2.net"
             assert cfg["port"] == 14580
-            assert cfg["aprs_filter"] == db.BRAZIL_FILTER
+            assert cfg["aprs_filter"] == db.DEFAULT_APRS_FILTER == "r/4000"
             assert cfg["app_theme"] == "dark"
             assert cfg["topology_rf_color"] == "#ffff00"
             assert cfg["topology_igate_color"] == "#ffff00"
