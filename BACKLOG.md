@@ -6,7 +6,7 @@
 - A interface explica a restrição HTTPS para geolocalização automática pela LAN.
 - A validação definitiva ainda exige dados RF reais e checagem de algumas rotas/rankings complexos.
 
-## Pendente — Analisar rotas RF plausíveis Brasília ↔ Sul sem criar enlaces falsos (issue #86)
+## Implementado no código da v1.14.37 — Busca de caminhos RF possíveis, validação de campo pendente (issue #86)
 
 - **Pedido em 13/10/2026:** a captura de "Análise de rota RF" apresenta `PP1MSC-15 ↔ PY2PJA` com 6 saltos/872,7 km de percurso/809,6 km entre extremidades, porém o mapa geral sugere que pode haver outra cadeia Brasília → Sul. Oferecer **Busca de caminhos possíveis** por origem/destino sem afirmar que um único pacote percorreu todos os saltos.
 - **Evidência da exportação diagnóstica v1.14.34 (12/10):** 872 relações, 606 RF, 36.951 eventos e 50 rotas listadas. O grafo histórico contém caminho de `PT2ON-15` a `PP5APR-10`, mas a ligação curta passa por **`PT2AP-9`**, digi móvel em várias localidades. **Não é prova de conectividade contínua:** RF legítimo local de momentos diferentes não pode ser unido como rota operacional no mesmo instante.
@@ -14,16 +14,16 @@
 - **Geometria:** utilizar posições e horários contemporâneos do pacote. Impedir "ponte" virtual quando o mesmo digi móvel esteve no Sul e perto de Brasília em tempos diferentes; preservar as observações RF verdadeiras; jamais converter backhaul Starlink/APRS-IS em VHF.
 - **Ranking #1:** deixar explícito se o critério é **distância direta entre extremidades** ou **soma dos saltos** e permitir alternar a ordenação. Na exportação, o primeiro registro soma ~965 km e o sexto ~1006 km; isso é compatível com ordem pelo alcance direto, mas não com uma tabela identificada somente como "maior extensão percorrida".
 - **Aceite:** consulta Brasília ↔ Sul mostra opções plausíveis e seus impedimentos/nível de evidência, sem inserir enlaces inexistentes no banco. Buscar direção origem→destino e não depender de o caminho entrar no top 50 do ranking. Validar com testes sintéticos de múltiplos SSIDs e do PT2AP móvel. Relacionado à #85.
-- **Rastreamento:** [issue #86](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/86). **Não implementado.**
+- **Rastreamento:** [issue #86](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/86). **Implementada a busca independente de origem/destino, classes de evidência, bloqueios espaço-temporais e interface não cartográfica para hipóteses.** Ainda pendem testes RF de campo e ordenação alternativa dos recordes por soma de saltos; não considerar a issue integralmente concluída.
 
-## Pendente — Filtro APRS-IS padrão com raio de 4.000 km (issue #87)
+## Implementado na v1.14.36 — Filtro APRS-IS padrão de 4.000 km (issue #87)
 
 - **Pedido em 13/10/2026:** Configurações → Filtro APRS-IS com **raio padrão de 4.000 km**, referido informalmente como `/r4000`.
 - **Sintaxe correta no aplicativo:** **`r/4000`** (sem barra inicial e com a barra entre `r` e `4000`). `aprs_service.expand_filter()` já reconhece `r/RAIO` e envia ao servidor **`r/<latitude>/<longitude>/4000`**, usando como centro a posição configurada da estação. A string literal `/r4000` não é sintaxe válida APRS-IS.
 - **Estado anterior:** `database.BRAZIL_FILTER` usa `p/PP/PQ/PR/PS/PT/PU/PV/PW/PX/PY/ZV/ZW/ZX/ZY/ZZ` e ainda é o default da v1.14.35; não declarar a alteração implementada.
 - **Implementação:** alterar default de instalações novas (config, schema, HTML, editor e ajuda, traduções, README/manual/tests), e mostrar prévia da expansão para lat/lon. **Não sobrescrever filtros personalizados já salvos**. Exigir posição válida antes de conectar; erro explicativo se faltar.
 - **Atenção:** um raio de 4.000 km pode aumentar bastante o tráfego RX em comparação ao filtro de prefixos brasileiros; monitorar performance/memória/CPU e informar ao usuário.
-- **Rastreamento:** [issue #87](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/87). **Não implementado.**
+- **Rastreamento:** [issue #87](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/87). **Implementado na v1.14.36**, mantendo configurações preexistentes; monitorar carga RX.
 
 ## Implementado no código da v1.14.35 — PT2AP móvel: geometria RF histórica (issue #85; validação em campo pendente)
 
