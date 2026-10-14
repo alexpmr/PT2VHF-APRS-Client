@@ -1,10 +1,10 @@
-## Correções implementadas no código da v1.14.38 — validação em campo pendente (#90, #91)
+## Implementado e validado pelo mantenedor na v1.14.38 — issues #90 e #91 encerradas
 
-- **#91 — RF x Internet:** mapa passa a desenhar todos os enlaces RF exibidos com linha **contínua**, cor e espessura das Configurações. Internet/iGate permanece tracejada. Classificações RF `inferred`, `legacy` e `direct` não mudam e continuam identificadas no popup; bloqueios de salto inferido >250 km e geometria histórica móvel (PT2AP) são preservados. Testes automatizados adicionados. **Validar mapa e preferências em estação real antes de encerrar issue.**
-- **#90 — atualizador Windows 10:** consulta GitHub passa a admitir timeout maior, retry controlado, fallback HTTPS via Windows PowerShell/.NET com TLS e certificados nativos (sem desativar verificação) e confirmação limitada de tag pela página oficial quando a API não estiver acessível. Resposta da API e UI agora mostram classe do erro, diagnóstico e última checagem válida em memória quando existir; falta **teste físico no Windows 10 recém-instalado** cujo relógio NTP já estava correto e Windows atualizado. Em versões antigas que não conseguem localizar a nova release, primeiro update pode requerer **instalação manual**, preservando dados.
-- **Limites:** o sucesso de CI não prova correção na instalação Windows 10 específica; outras issues históricas, como #83 Portable e #86 alternância de ranking, permanecem em validação/pendentes. Não declarar backlog integralmente concluído.
+- **#91 — RF x Internet:** mapa passa a desenhar todos os enlaces RF exibidos com linha **contínua**, cor e espessura das Configurações. Internet/iGate permanece tracejada. Classificações RF `inferred`, `legacy` e `direct` não mudam e continuam identificadas no popup; bloqueios de salto inferido >250 km e geometria histórica móvel (PT2AP) são preservados. Testes automatizados adicionados. **Mantenedor confirmou em 14/10/2026: “Enlaces na configuração indicada.” Issue #91 encerrada com aceite visual.**
+- **#90 — atualizador Windows 10:** consulta GitHub passa a admitir timeout maior, retry controlado, fallback HTTPS via Windows PowerShell/.NET com TLS e certificados nativos (sem desativar verificação) e confirmação limitada de tag pela página oficial quando a API não estiver acessível. Resposta da API e UI agora mostram classe do erro, diagnóstico e última checagem válida em memória quando existir; **Mantenedor confirmou em 14/10/2026: “Cheque de versão funcionando bem, agora.” Issue #90 encerrada com aceite funcional relatado.** Em versões antigas que não conseguem localizar a nova release, primeiro update pode requerer **instalação manual**, preservando dados.
+- **Limites:** aceites reportados contemplam funcionamento da checagem de versão e aparência dos enlaces; não comprovam todos os cenários TLS, todas as plataformas nem as questões históricas #83 Portable, #85 geometria móvel e #86 alternância do ranking. Não declarar backlog integralmente concluído.
 
-## PENDENTE — Regressão no mapa: enlaces RF devem respeitar cor configurada e linha contínua (issue #91, 14/10/2026)
+## RESOLVIDO — Regressão do mapa: enlaces RF na cor configurada e linha contínua (issue #91, 14/10/2026)
 
 - **Relato:** nas versões recentes, os enlaces RF passaram a ser desenhados com tracejado/pontilhado e em cinza em vez da cor escolhida pelo usuário. Pedido explícito do mantenedor: **todos os enlaces RF exibidos devem ser contínuos e seguir a cor/largura definida em Configurações**; apenas Internet/APRS-IS conserva tracejado e sua cor específica.
 - **Esclarecimento 14/10:** os enlaces RF estão sendo visualmente apresentados **como se fossem iGate/Internet**. Não usar classe de evidência `inferred` ou `legacy` para atribuir tracejado. O estilo deve depender de `edge.kind` (RF sólido versus iGate tracejado); RF e Internet podem coexistir no mesmo par sem confundir evidências.
@@ -12,9 +12,9 @@
 - **Não alterar a semântica:** manter classificação `RF recebido no TNC / RF inferido do path / legado` em popups, tooltips, registros e exportações; **cor e linha contínua não comprovam RF direto**.
 - **Não regredir a topologia:** preservar filtros de geometria histórica, prevenção de links artificiais (PT2AP móvel/Starlink) e exclusão de hops longos inferidos sem comprovação no mapa geral.
 - **Aceite:** quaisquer enlaces RF apresentados no mapa/foco de rota são contínuos na cor configurada; iGate/Internet é tracejado com cor própria; aplicar alteração de configuração sem reiniciar; testar temas, evidências mistas e vários períodos.
-- **Rastreamento:** [issue #91](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/91). **Não implementado.**
+- **Rastreamento:** [issue #91](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/91). **Corrigido no código da v1.14.38 e encerrado após confirmação visual do mantenedor em 14/10/2026.**
 
-## PENDENTE — Atualizador: “verificação indisponível” nas duas últimas versões (issue #90, 14/10/2026)
+## RESOLVIDO — Atualizador: “verificação indisponível” nas duas últimas versões (issue #90, 14/10/2026)
 
 - **Relato:** últimas duas versões testadas não conseguem consultar a última versão publicada e mostram **“verificação indisponível”**. Versionamento a confirmar pelo diagnóstico; GitHub já possui release v1.14.37 publicada.
 - **Novo diagnóstico diferencial 14/10:** em **Windows 10 recém-instalado**, o cliente não verifica atualizações; **outro computador com Windows 11** verifica a versão e atualiza normalmente. Investigar instalação/ambiente Win10 (certificados TLS/CA raiz, hora/data, atualizações Windows, IPv4/IPv6, proxy/firewall, DNS, timeout, permissões e pacote PyInstaller), **sem afirmar causa antes de obter erro real**. Confirmar versão, arquitetura, tipo de pacote e equivalência da rede.
@@ -25,7 +25,7 @@
 - **Causa em investigação:** backend consulta apenas `api.github.com/.../releases/latest` com timeout de 5 segundos; frontend faz timeout em 8 segundos e mostra falha genérica.
 - **Ações previstas:** diagnosticar erros reais (DNS, TLS, proxy/firewall, HTTP 403/rate limit/404, timeout/JSON); retry/backoff controlado, último status comprovado com data, diferenciação entre falha de consulta e pacote ausente, reconsulta manual e testes Win7/Win10/Win11.
 - **Aceite:** estado correto da release quando disponível e erro específico e recuperável quando indisponível, nunca afirmar que a versão está atualizada sem confirmação válida.
-- **Rastreamento:** [issue #90](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/90). **Não implementado.**
+- **Rastreamento:** [issue #90](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/90). **Corrigido no código da v1.14.38 e encerrado após confirmação funcional do mantenedor em 14/10/2026.**
 
 ## Corrigido no código da v1.14.36 — classificação RF e filtro APRS-IS
 
