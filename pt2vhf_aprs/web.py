@@ -20,6 +20,7 @@ from . import topology_map
 from .route_hypotheses import explore_possible_routes
 from . import diagnostics as diag
 from . import updater
+from . import release_check
 from . import retention
 from .aprs_service import full_callsign, service
 from .scheduled_messages import prepare_schedule_payload, service as scheduled_message_service
@@ -512,19 +513,17 @@ def get_update_status(force: bool = False) -> dict:
         "status": "unknown",
         "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "error": None,
+        "error_code": None,
+        "check_source": None,
+        "limited_metadata": False,
+        "last_success_at": None,
     }
 
     try:
-        req = urllib.request.Request(
-            GITHUB_LATEST_RELEASE_API,
-            headers={
-                "Accept": "application/vnd.github+json",
-                "User-Agent": f"PT2VHF-APRS-Client/{__version__}",
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=5) as response:
-            release = json.loads(response.read().decode("utf-8"))
+        release, check_source = release_check.fetch_latest_release()
+        payload["check_source"] = check_source
+        payload["limited_metadata"] = bool(release.get("limited_metadata"))
+        payload["error_code"] = None
 
         latest = str(release.get("tag_name") or "").strip().lstrip("vV")
         if not latest:
@@ -555,7 +554,11 @@ def get_update_status(force: bool = False) -> dict:
         if latest_v > current_v:
             payload["status"] = "update_available"
             if not asset:
-                payload["error"] = "A nova Release existe, mas o pacote desta plataforma ainda não foi publicado."
+                payload["error"] = (
+                    "Versão confirmada pela página GitHub, mas pacotes não puderam ser consultados automaticamente; use a página da Release."
+                    if payload["limited_metadata"] else
+                    "A nova Release existe, mas o pacote desta plataforma ainda não foi publicado."
+                )
         elif latest_v == current_v:
             payload["status"] = "latest"
         else:
@@ -566,10 +569,16 @@ def get_update_status(force: bool = False) -> dict:
         with _update_cache_lock:
             _update_cache["timestamp"] = now
             _update_cache["payload"] = dict(payload)
+            _update_cache["last_success_at"] = payload["checked_at"]
         return payload
     except Exception as exc:
+        issue = release_check.classify_error(exc)
         payload["status"] = "error"
-        payload["error"] = str(exc)
+        payload["error_code"] = issue.code
+        payload["error"] = str(issue)
+        with _update_cache_lock:
+            payload["last_success_at"] = _update_cache.get("last_success_at")
+        diag.log_event("update_check_failed", error_code=issue.code, error=str(issue))
         return payload
 
 
