@@ -17,6 +17,7 @@ from flask import Flask, Response, g, jsonify, render_template, request, send_fi
 from . import __version__
 from . import database as db
 from . import topology_map
+from .route_hypotheses import explore_possible_routes
 from . import diagnostics as diag
 from . import updater
 from . import retention
@@ -1368,6 +1369,22 @@ def create_app() -> Flask:
             hours=hours,
             max_routes=max_routes,
             max_hops=max_hops,
+        ))
+
+    @app.get("/api/topology/rf-possible-routes")
+    def api_topology_rf_possible_routes():
+        source = str(request.args.get("source") or "").upper().strip()
+        target = str(request.args.get("target") or "").upper().strip()
+        try:
+            hours = float(request.args.get("hours", 0))
+            max_hops = int(request.args.get("max_hops", 12))
+            limit = int(request.args.get("limit", 12))
+        except (ValueError, TypeError):
+            return jsonify({"error": "Parâmetros numéricos inválidos."}), 400
+        if not source or not target:
+            return jsonify({"error": "Informe origem e destino."}), 400
+        return jsonify(explore_possible_routes(
+            source, target, hours=hours, max_hops=max_hops, limit=limit,
         ))
 
     @app.get("/api/topology/stats")
