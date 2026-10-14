@@ -4010,7 +4010,7 @@
     try {
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
       state.topologyEdges = Array.isArray(edges) ? edges : [];
-      const routeAllowedPairs = state.rfRouteAnalysis ? rfRouteAllowedPairs() : null;
+      const routeAllowedPairs = (state.rfRouteAnalysis && !state.rfPossibleRoutes) ? rfRouteAllowedPairs() : null;
       const routeEvidenceByPair = new Map();
       if (state.rfRouteAnalysis) {
         for (const routeEdge of state.rfRouteAnalysis.eligible_edges || []) {
