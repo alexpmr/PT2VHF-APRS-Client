@@ -1,3 +1,20 @@
+## PENDENTE — Regressão no mapa: enlaces RF devem respeitar cor configurada e linha contínua (issue #91, 14/10/2026)
+
+- **Relato:** nas versões recentes, os enlaces RF passaram a ser desenhados com tracejado/pontilhado e em cinza em vez da cor escolhida pelo usuário. Pedido explícito do mantenedor: **todos os enlaces RF exibidos devem ser contínuos e seguir a cor/largura definida em Configurações**; apenas Internet/APRS-IS conserva tracejado e sua cor específica.
+- **Causa verificada no código:** `static/js/app.js::loadTopology()` (mudança da v1.14.36 mantida na v1.14.37) aplica `'#94a3b8'` e `style.dashArray='5 7'` para RF inferido, mais `'2 5'` para legado. A v1.14.35 ainda aplicava a cor RF configurada, embora já pontilhasse certos inferidos.
+- **Não alterar a semântica:** manter classificação `RF recebido no TNC / RF inferido do path / legado` em popups, tooltips, registros e exportações; **cor e linha contínua não comprovam RF direto**.
+- **Não regredir a topologia:** preservar filtros de geometria histórica, prevenção de links artificiais (PT2AP móvel/Starlink) e exclusão de hops longos inferidos sem comprovação no mapa geral.
+- **Aceite:** quaisquer enlaces RF apresentados no mapa/foco de rota são contínuos na cor configurada; iGate/Internet é tracejado com cor própria; aplicar alteração de configuração sem reiniciar; testar temas, evidências mistas e vários períodos.
+- **Rastreamento:** [issue #91](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/91). **Não implementado.**
+
+## PENDENTE — Atualizador: “verificação indisponível” nas duas últimas versões (issue #90, 14/10/2026)
+
+- **Relato:** últimas duas versões testadas não conseguem consultar a última versão publicada e mostram **“verificação indisponível”**. Versionamento a confirmar pelo diagnóstico; GitHub já possui release v1.14.37 publicada.
+- **Causa em investigação:** backend consulta apenas `api.github.com/.../releases/latest` com timeout de 5 segundos; frontend faz timeout em 8 segundos e mostra falha genérica.
+- **Ações previstas:** diagnosticar erros reais (DNS, TLS, proxy/firewall, HTTP 403/rate limit/404, timeout/JSON); retry/backoff controlado, último status comprovado com data, diferenciação entre falha de consulta e pacote ausente, reconsulta manual e testes Win7/Win10/Win11.
+- **Aceite:** estado correto da release quando disponível e erro específico e recuperável quando indisponível, nunca afirmar que a versão está atualizada sem confirmação válida.
+- **Rastreamento:** [issue #90](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/90). **Não implementado.**
+
 ## Corrigido no código da v1.14.36 — classificação RF e filtro APRS-IS
 
 - RF inferido pelo path é representado em cinza tracejado; trechos inferidos acima de 250 km ficam fora do mapa geral, preservados na análise selecionada e no histórico. Distância não é prova de impossibilidade física.
