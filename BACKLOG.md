@@ -11,6 +11,9 @@
 ## PENDENTE — Atualizador: “verificação indisponível” nas duas últimas versões (issue #90, 14/10/2026)
 
 - **Relato:** últimas duas versões testadas não conseguem consultar a última versão publicada e mostram **“verificação indisponível”**. Versionamento a confirmar pelo diagnóstico; GitHub já possui release v1.14.37 publicada.
+- **Novo diagnóstico diferencial 14/10:** em **Windows 10 recém-instalado**, o cliente não verifica atualizações; **outro computador com Windows 11** verifica a versão e atualiza normalmente. Investigar instalação/ambiente Win10 (certificados TLS/CA raiz, hora/data, atualizações Windows, IPv4/IPv6, proxy/firewall, DNS, timeout, permissões e pacote PyInstaller), **sem afirmar causa antes de obter erro real**. Confirmar versão, arquitetura, tipo de pacote e equivalência da rede.
+- **Diagnóstico reprodutível:** comparar no mesmo ambiente o acesso ao endpoint público de Releases pelo navegador e ao JSON local `/api/update-status?force=1`; capturar `status`, `error`, tipo de exceção e HTTP code. Não contornar falhas TLS desativando verificação de certificados.
+- **Aceite de campo prioritário:** Windows 10 recém-instalado deve localizar release e permitir atualização compatível; Windows 11 deve continuar funcionando, com regressões de instalação Setup/Portable.
 - **Causa em investigação:** backend consulta apenas `api.github.com/.../releases/latest` com timeout de 5 segundos; frontend faz timeout em 8 segundos e mostra falha genérica.
 - **Ações previstas:** diagnosticar erros reais (DNS, TLS, proxy/firewall, HTTP 403/rate limit/404, timeout/JSON); retry/backoff controlado, último status comprovado com data, diferenciação entre falha de consulta e pacote ausente, reconsulta manual e testes Win7/Win10/Win11.
 - **Aceite:** estado correto da release quando disponível e erro específico e recuperável quando indisponível, nunca afirmar que a versão está atualizada sem confirmação válida.
