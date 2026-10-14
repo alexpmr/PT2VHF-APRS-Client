@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.37": {
+        "title": "Caminhos RF possíveis com evidência e impedimentos explícitos",
+        "items": [
+            "Novo botão Caminhos possíveis na análise de rota RF: busca origem-destino independente dos Recordes RF.",
+            "Mesmo pacote, observações contemporâneas, alcançabilidade histórica compatível e hipóteses aparecem em classes separadas.",
+            "PT2AP e digis móveis: coordenadas históricas incompatíveis, horários distintos e saltos inferidos longos viram avisos, nunca pontes artificiais.",
+            "Hipóteses não são desenhadas como enlaces RF nem inseridas no banco; os eventos existentes são preservados.",
+            "Regressões sintéticas automatizadas; validação com dados RF reais ainda necessária.",
+        ],
+    },
     "1.14.36": {
         "title": "Evidência RF confiável, filtro geográfico APRS-IS e diagnóstico web",
         "items": [

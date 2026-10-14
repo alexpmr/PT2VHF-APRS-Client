@@ -1,3 +1,13 @@
+## 1.14.37 - 2026-10-14
+
+- Novo botão Caminhos possíveis: busca explícita origem-destino fora do ranking de Recordes RF.
+- Resultados separados: mesmo pacote/path, eventos contemporâneos, alcançabilidade histórica compatível e hipótese sem prova conjunta.
+- Digis móveis: posição histórica incompatível entre dois contatos reais RF é bloqueio, não prova de rota interestadual contínua.
+- Alertas para saltos longos inferidos, observações afastadas no tempo e ausência de geometria do evento.
+- Hipóteses não viram linhas no mapa nem registros de enlaces no SQLite.
+- Ranking atual continua classificado pela distância entre extremidades; seletor de ordenação por soma de hops permanece no backlog.
+- Regressões sintéticas incluídas; validação com histórico RF de campo e com instalações Windows permanece necessária.
+
 ## 1.14.36 - 2026-10-13
 
 - Mapa RF: segmentos inferidos a partir de paths APRS-IS aparecem em cinza tracejado e não são apresentados como RF direto comprovado.

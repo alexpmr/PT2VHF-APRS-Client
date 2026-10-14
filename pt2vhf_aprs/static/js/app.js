@@ -93,6 +93,7 @@
     rfRouteRecordsLastGood: new Map(),
     rfRouteExclusiveNodes: null,
     rfRouteRecords: [],
+    rfPossibleRoutes: null,
     rfRoutePanelPosition: null,
     rfRoutePanelDragBound: false,
     mapLegendElement: null,
@@ -2467,6 +2468,7 @@
     const rfSource = $('#rfRouteSource');
     const rfTarget = $('#rfRouteTarget');
     const rfApply = $('#rfRouteApply');
+    const rfPossible = $('#rfPossibleRoutes');
     const rfClear = $('#rfRouteClear');
     const rfClose = $('#rfRoutePanelClose');
 
@@ -2521,6 +2523,10 @@
     if (rfApply && rfApply.dataset.bound !== '1') {
       rfApply.dataset.bound = '1';
       rfApply.addEventListener('click', () => void applyRfRouteAnalysis());
+    }
+    if (rfPossible && rfPossible.dataset.bound !== '1') {
+      rfPossible.dataset.bound = '1';
+      rfPossible.addEventListener('click', () => void exploreRfPossibleRoutes());
     }
     if (rfClear && rfClear.dataset.bound !== '1') {
       rfClear.dataset.bound = '1';
@@ -3495,6 +3501,7 @@
     const title = $('#rfRoutePanelTitle');
     if (!panel || !body || !title) return;
     const analysis = state.rfRouteAnalysis;
+    const possible = state.rfPossibleRoutes;
     const routes = (analysis && analysis.routes) || [];
     if (!analysis) {
       panel.classList.add('hidden');
@@ -3505,6 +3512,57 @@
     bindRfRoutePanelDrag();
     requestAnimationFrame(() => applyRfRoutePanelPosition());
     title.textContent = (analysis.source || '—') + ' ↔ ' + (analysis.target || '—');
+
+    // Uma hipótese NÃO é uma polyline RF. Mostra evidência e impedimentos
+    // em painel independente sem materializar arestas no mapa/banco.
+    if (possible) {
+      const rows = Array.isArray(possible.possible_routes) ? possible.possible_routes : [];
+      const names = {
+        same_packet: ui('Mesmo pacote/path observado', 'Observed in same packet/path'),
+        contemporary: ui('Eventos contemporâneos', 'Contemporary events'),
+        historical_compatible: ui('Alcançabilidade histórica compatível', 'Historically compatible reachability'),
+        hypothesis_only: ui('Somente hipótese — NÃO COMPROVADA', 'Hypothesis only — NOT PROVEN'),
+      };
+      const blockers = {
+        long_inferred_hop: ui('Trecho longo inferido sem confirmação RF direta', 'Long inferred hop without direct RF proof'),
+        mobile_spatial_bridge: ui('Posições históricas incompatíveis do nó móvel', 'Incompatible historical positions of mobile node'),
+        different_observation_times: ui('Observações em horários distintos', 'Observations occurred at different times'),
+        missing_shared_node_position: ui('Sem posição histórica no nó intermediário', 'Missing historical position of intermediate node'),
+        missing_event_geometry: ui('Sem geometria histórica do enlace', 'Missing historical link geometry'),
+        no_joint_event_proof: ui('Não há evidência conjunta que comprove a rota', 'No joint evidence proving this path'),
+      };
+      body.innerHTML =
+        '<div class="rf-route-summary"><strong>' + rows.length + '</strong> ' +
+        escapeHtml(ui('caminhos no grafo RF histórico', 'paths in the historical RF graph')) + '</div>' +
+        '<div class="hint">' + escapeHtml(ui(
+          'Busca independente do top 50. Os nós e enlaces já constam no histórico, mas uma sequência sugerida NÃO comprova passagem de pacote nem RF direto. Nenhuma hipótese é desenhada ou gravada como enlace.',
+          'Independent of the top 50 ranking. Nodes and links are in the history, but a suggested chain does NOT prove packet traversal or direct RF. Hypotheses are never drawn or stored as links.'
+        )) + '</div>' +
+        (possible.search_truncated ? '<div class="rf-route-empty">' +
+          escapeHtml(ui('Busca limitada por segurança; refine o período.', 'Search capped for safety; narrow the time range.')) + '</div>' : '') +
+        (rows.length ? rows.map((route, index) => {
+          const status = String(route.status || 'hypothesis_only');
+          const flags = Array.isArray(route.blockers) ? route.blockers : [];
+          const warnings = flags.map(item => {
+            let label = blockers[item.code] || item.code || '';
+            if (item.node) label += ' — ' + item.node;
+            if (Number.isFinite(Number(item.position_gap_km))) label += ' (' + item.position_gap_km + ' km)';
+            if (Number.isFinite(Number(item.time_gap_minutes))) label += ' (' + item.time_gap_minutes + ' min)';
+            return '<li>' + escapeHtml(label) + '</li>';
+          }).join('');
+          return '<div class="rf-route-card"><strong>' +
+            escapeHtml(String(index + 1) + '. ' + (route.nodes || []).join(' → ')) + '</strong>' +
+            '<small>' + escapeHtml(names[status] || names.hypothesis_only) + '</small>' +
+            '<small>' + Number(route.hops || 0) + ' hops · ' +
+            escapeHtml(ui('soma geométrica hipotética', 'hypothetical sum of geographic hops')) +
+            ': ' + escapeHtml(formatRfDistanceKm(route.sum_hops_km)) + '</small>' +
+            (warnings ? '<ul class="rf-route-refinement warning">' + warnings + '</ul>' : '') +
+            '</div>';
+        }).join('') : '<div class="rf-route-empty">' +
+          escapeHtml(ui('Nenhum caminho foi encontrado entre os indicativos neste período.', 'No path was found between these callsigns in this period.')) +
+          '</div>');
+      return;
+    }
 
     const eligibleCount = Number(analysis.eligible_edge_count || (analysis.eligible_edges || []).length || 0);
     const corridorText = eligibleCount
@@ -3719,6 +3777,7 @@
     const hadExclusiveFocus = !!state.rfRouteExclusiveNodes;
     resetRfRoutePanelPosition();
     state.rfRouteAnalysis = null;
+    state.rfPossibleRoutes = null;
     state.rfRouteSelectedIndex = -1;
     state.rfRouteExclusiveNodes = null;
     clearRfRouteNodeMarkers();
@@ -3786,6 +3845,7 @@
   }
 
   async function applyRfRouteAnalysis() {
+    state.rfPossibleRoutes = null;
     const source = normalizedCall($('#rfRouteSource') && $('#rfRouteSource').value);
     resetRfRoutePanelPosition();
     const target = normalizedCall($('#rfRouteTarget') && $('#rfRouteTarget').value);
@@ -3855,6 +3915,45 @@
     }
   }
 
+  async function exploreRfPossibleRoutes() {
+    const source = normalizedCall($('#rfRouteSource')?.value);
+    const target = normalizedCall($('#rfRouteTarget')?.value);
+    if (!source || !target) {
+      toast(ui('Informe origem e destino.', 'Enter source and destination.'), 'error');
+      return;
+    }
+    const button = $('#rfPossibleRoutes');
+    if (button) button.disabled = true;
+    const token = showProcessing(
+      ui('Buscando caminhos possíveis…', 'Exploring possible paths…'),
+      ui('Avaliando evidências históricas e possíveis pontes de digis móveis.', 'Checking historical evidence and possible mobile digi bridges.'),
+      { blocking: false }
+    );
+    try {
+      const payload = await api('/api/topology/rf-possible-routes?source=' +
+        encodeURIComponent(source) + '&target=' + encodeURIComponent(target) +
+        '&hours=' + encodeURIComponent(state.mapPeriodHours) +
+        '&limit=12&max_hops=12', { timeoutMs: 60000 });
+      const hadExclusive = !!state.rfRouteExclusiveNodes;
+      state.rfRouteExclusiveNodes = null;
+      state.rfRouteAnalysis = { source, target, routes: [], eligible_edges: [] };
+      state.rfPossibleRoutes = payload;
+      state.rfRouteSelectedIndex = -1;
+      resetRfRoutePanelPosition();
+      if (hadExclusive) {
+        setTransientRouteFocusVisibility(true);
+        await loadMapData();
+      }
+      if (state.topologyEnabled) await loadTopology();
+      renderRfRoutePanel();
+    } catch (err) {
+      toast(String(err?.message || err), 'error');
+    } finally {
+      hideProcessing(token);
+      if (button) button.disabled = false;
+    }
+  }
+
   function showTopologyHover(edge) {
     if (!edge) return;
     const isInternet = edge.kind === 'igate';
@@ -3911,7 +4010,7 @@
     try {
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
       state.topologyEdges = Array.isArray(edges) ? edges : [];
-      const routeAllowedPairs = state.rfRouteAnalysis ? rfRouteAllowedPairs() : null;
+      const routeAllowedPairs = (state.rfRouteAnalysis && !state.rfPossibleRoutes) ? rfRouteAllowedPairs() : null;
       const routeEvidenceByPair = new Map();
       if (state.rfRouteAnalysis) {
         for (const routeEdge of state.rfRouteAnalysis.eligible_edges || []) {
