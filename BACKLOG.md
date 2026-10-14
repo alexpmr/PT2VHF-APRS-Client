@@ -1,6 +1,7 @@
 ## PENDENTE — Regressão no mapa: enlaces RF devem respeitar cor configurada e linha contínua (issue #91, 14/10/2026)
 
 - **Relato:** nas versões recentes, os enlaces RF passaram a ser desenhados com tracejado/pontilhado e em cinza em vez da cor escolhida pelo usuário. Pedido explícito do mantenedor: **todos os enlaces RF exibidos devem ser contínuos e seguir a cor/largura definida em Configurações**; apenas Internet/APRS-IS conserva tracejado e sua cor específica.
+- **Esclarecimento 14/10:** os enlaces RF estão sendo visualmente apresentados **como se fossem iGate/Internet**. Não usar classe de evidência `inferred` ou `legacy` para atribuir tracejado. O estilo deve depender de `edge.kind` (RF sólido versus iGate tracejado); RF e Internet podem coexistir no mesmo par sem confundir evidências.
 - **Causa verificada no código:** `static/js/app.js::loadTopology()` (mudança da v1.14.36 mantida na v1.14.37) aplica `'#94a3b8'` e `style.dashArray='5 7'` para RF inferido, mais `'2 5'` para legado. A v1.14.35 ainda aplicava a cor RF configurada, embora já pontilhasse certos inferidos.
 - **Não alterar a semântica:** manter classificação `RF recebido no TNC / RF inferido do path / legado` em popups, tooltips, registros e exportações; **cor e linha contínua não comprovam RF direto**.
 - **Não regredir a topologia:** preservar filtros de geometria histórica, prevenção de links artificiais (PT2AP móvel/Starlink) e exclusão de hops longos inferidos sem comprovação no mapa geral.
