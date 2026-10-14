@@ -194,5 +194,6 @@ def test_long_aprs_path_is_never_displayed_as_confirmed_direct_rf():
     assert edge["rf_path_count"] == 1
     assert edge["rf_transport_count"] == 0
     app = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
-    assert "inferredRouteEdge ? '#94a3b8'" in app
-    assert "style.dashArray = '5 7'" in app
+    assert "inferredRouteEdge ? '#94a3b8'" not in app
+    assert "style.dashArray = '5 7'" not in app
+    assert "inferredRouteEdge && topologyEdgeDistanceKm(geometryEdge) > 250" in app
