@@ -8,7 +8,7 @@ A **v1.14.36** corrige a apresentação de enlaces RF inferidos (cinza tracejado
 
 A **v1.14.35** corrige a geometria histórica dos enlaces RF de **digipeaters/iGates móveis**. O PT2AP pode ter repetido estações do Sul por RF de verdade: esses contatos permanecem onde ocorreram, mesmo após o carro chegar a Uberaba e Brasília. O mapa agora usa registros `topology_events` com coordenadas e instante do evento, divide contatos por localidades e preserva a classificação RF/APRS-IS. Se o histórico não contiver coordenadas confiáveis, não inventa uma linha até a posição atual da estação. O histórico SQLite e os recordes não são apagados; a exportação KML também usa geometria histórica. As correções das versões anteriores permanecem incluídas. **A aceitação definitiva depende de teste com os dados reais do PT2AP.** O ciclo completo inclui Windows 10/11 x64/ARM64, Windows 7 Legacy, Linux x64/ARM64, macOS Intel/Apple Silicon e manual em PDF.
 
-## Downloads — última release binária verificada v1.14.36
+## Downloads — versão 1.14.36
 
 **Links diretos de todos os instaladores e edições portáteis publicados na release v1.14.36.**
 
