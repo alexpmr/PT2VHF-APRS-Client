@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.38": {
+        "title": "Enlaces RF contínuos e atualização mais confiável no Windows 10",
+        "items": [
+            "Todo enlace RF exibido é contínuo e utiliza a cor configurada; Internet/iGate mantém o traço pontilhado separado.",
+            "RF inferido continua identificado nos detalhes, e as restrições de geometria histórica seguem ativas.",
+            "Verificação de updates com timeout melhorado, nova tentativa e mensagens específicas para falhas TLS, DNS ou HTTP.",
+            "Windows tenta consultar o GitHub pela pilha de certificados do próprio sistema caso o HTTPS Python falhe, sem reduzir a segurança.",
+            "Página oficial GitHub é alternativa limitada para confirmar a tag, sem prometer instalador automático quando não há metadados.",
+            "Validação física do atualizador em Windows 10 recém-instalado e relatos anteriores de Portable ainda pendentes.",
+        ],
+    },
     "1.14.37": {
         "title": "Caminhos RF possíveis com evidência e impedimentos explícitos",
         "items": [
