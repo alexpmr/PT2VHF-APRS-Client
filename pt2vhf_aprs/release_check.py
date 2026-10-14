@@ -80,7 +80,7 @@ def _windows_native_api(timeout: int = 12) -> dict[str, Any]:
         raise ReleaseLookupError("fallback_unavailable", "Fallback TLS nativo disponível apenas no Windows.")
     script = (
         "$ErrorActionPreference='Stop';"
-        "[Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false);"
+        "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
         "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;"
         "$r=Invoke-RestMethod -Uri '" + API_URL + "' -Method Get "
         "-TimeoutSec " + str(int(timeout)) + " -Headers @{'User-Agent'='PT2VHF-APRS-Client-Updater'};"
