@@ -41,7 +41,12 @@ if len(asset_names) < 15:
 blob = api(BASE + "/contents/README.md?ref=main")
 source = base64.b64decode(blob["content"]).decode("utf-8")
 start = source.index("## Downloads — versão ")
-end = source.index("## Novidades da v" + VERSION, start)
+# Delimit the Downloads section using the next generic Markdown H2.
+# A release is valid even without a version-named "Novidades" heading.
+next_heading = re.search(r"(?m)^## ", source[start + len("## Downloads — versão "):])
+if not next_heading:
+    raise SystemExit("Could not locate the heading following Downloads")
+end = start + len("## Downloads — versão ") + next_heading.start()
 section = source[start:end]
 old_version_match = re.search(r"## Downloads — versão (\d+\.\d+\.\d+)", section)
 if not old_version_match:
