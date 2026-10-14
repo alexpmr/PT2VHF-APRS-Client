@@ -137,10 +137,11 @@ def test_v1415_frontend_uses_eligible_edges_and_twelve_hop_horizon():
     assert "payload.eligible_nodes || []" in js
     assert "fitRfRouteBounds(routes, payload.eligible_edges || [])" in js
     assert "&max_routes=12&max_hops=12" in js
-    # v1.14.36: toda aresta não comprovada como RF direto é cinza/tracejada.
+    # v1.14.38: inferência permanece auditável, mas o meio RF usa linha sólida.
     assert "edge.direct_rf_confirmed === true" in js
-    assert "inferredRouteEdge ? '#94a3b8'" in js
-    assert "style.dashArray = '5 7'" in js
+    assert "inferredRouteEdge ? '#94a3b8'" not in js
+    assert "style.dashArray = '5 7'" not in js
+    assert "dashArray: edge.kind === 'igate' ? '7 5' : null" in js
     assert 'request.args.get("max_hops", 12)' in web
 
 
