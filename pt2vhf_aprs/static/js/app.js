@@ -307,7 +307,8 @@
     textEl.textContent = ui('Verificando versão…', 'Checking version…');
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 45000);
+    state.updateInfo = null;
     try {
       const data = await api(`/api/update-status${force ? '?force=1' : ''}`, { signal: controller.signal });
       state.updateInfo = data;
@@ -340,15 +341,12 @@
       textEl.textContent = current
         ? ui(`${current} · verificação indisponível`, `${current} · check unavailable`)
         : ui('Falha temporária na verificação', 'Temporary check failure');
-      el.title = ui(
-        'Não foi possível verificar agora; nova tentativa será feita automaticamente.',
-        'Could not check now; another attempt will be made automatically.'
-      );
+      const detail = state.updateInfo?.error || err?.message || ui('Erro não identificado', 'Unknown error');
+      const code = state.updateInfo?.error_code;
+      const diagnostic = [code ? `[${code}]` : '', detail].filter(Boolean).join(' ');
+      el.title = ui(`Verificação falhou: ${diagnostic}. Clique para tentar novamente.`, `Update check failed: ${diagnostic}. Click to retry.`);
       const status = $('#updateSettingsStatus');
-      if (status) status.textContent = ui(
-        'Não foi possível verificar agora; nova tentativa será feita automaticamente.',
-        'Could not check now; another attempt will be made automatically.'
-      );
+      if (status) status.textContent = ui(`Falha na verificação: ${diagnostic}`, `Update check failed: ${diagnostic}`);
     } finally {
       clearTimeout(timeout);
       state.versionCheckInProgress = false;
@@ -4094,17 +4092,16 @@
         const inferredRouteEdge = edge.kind !== 'igate' && !(routeEvidence ? (routeEvidence.evidence_level === 'direct' && Number(routeEvidence.rf_transport_count || 0) > 0) : edge.direct_rf_confirmed === true);
         const legacyRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'legacy';
         const style = {
-          color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : (inferredRouteEdge ? '#94a3b8' : state.mapConfig.topology_rf_color),
+          color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
           weight: edge.kind === 'igate' && edge.mixed_evidence
             ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
             : state.mapConfig.topology_width,
-          opacity: inferredRouteEdge ? .58 : (legacyRouteEdge ? .48 : .72),
+          opacity: edge.kind === 'igate' ? .72 : .84,
           dashArray: edge.kind === 'igate' ? '7 5' : null,
           interactive: true,
           bubblingMouseEvents: false,
           pane: 'pt2vhfInteractionPane'
         };
-        if (edge.kind !== 'igate' && inferredRouteEdge) style.dashArray = '5 7';
         // Suppress unverified inferred long hops on the overview map, but keep them
         // available on explicitly selected routes and in historical diagnostics.
         // This is a display threshold, not evidence of impossible RF propagation.
@@ -4112,7 +4109,6 @@
           active.delete(key);
           continue;
         }
-        if (edge.kind !== 'igate' && legacyRouteEdge) style.dashArray = '2 5';
         if (!line) {
           line = L.polyline(points, style).addTo(state.map);
           state.topologyLines.set(key, line);
