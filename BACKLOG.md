@@ -1,3 +1,9 @@
+## Correções implementadas no código da v1.14.38 — validação em campo pendente (#90, #91)
+
+- **#91 — RF x Internet:** mapa passa a desenhar todos os enlaces RF exibidos com linha **contínua**, cor e espessura das Configurações. Internet/iGate permanece tracejada. Classificações RF `inferred`, `legacy` e `direct` não mudam e continuam identificadas no popup; bloqueios de salto inferido >250 km e geometria histórica móvel (PT2AP) são preservados. Testes automatizados adicionados. **Validar mapa e preferências em estação real antes de encerrar issue.**
+- **#90 — atualizador Windows 10:** consulta GitHub passa a admitir timeout maior, retry controlado, fallback HTTPS via Windows PowerShell/.NET com TLS e certificados nativos (sem desativar verificação) e confirmação limitada de tag pela página oficial quando a API não estiver acessível. Resposta da API e UI agora mostram classe do erro, diagnóstico e última checagem válida em memória quando existir; falta **teste físico no Windows 10 recém-instalado** cujo relógio NTP já estava correto e Windows atualizado. Em versões antigas que não conseguem localizar a nova release, primeiro update pode requerer **instalação manual**, preservando dados.
+- **Limites:** o sucesso de CI não prova correção na instalação Windows 10 específica; outras issues históricas, como #83 Portable e #86 alternância de ranking, permanecem em validação/pendentes. Não declarar backlog integralmente concluído.
+
 ## PENDENTE — Regressão no mapa: enlaces RF devem respeitar cor configurada e linha contínua (issue #91, 14/10/2026)
 
 - **Relato:** nas versões recentes, os enlaces RF passaram a ser desenhados com tracejado/pontilhado e em cinza em vez da cor escolhida pelo usuário. Pedido explícito do mantenedor: **todos os enlaces RF exibidos devem ser contínuos e seguir a cor/largura definida em Configurações**; apenas Internet/APRS-IS conserva tracejado e sua cor específica.
