@@ -1,3 +1,12 @@
+## 1.14.38 - 2026-10-14
+
+- RF no mapa: todo enlace classificado como RF exibido usa linha contínua, cor e espessura das Configurações; Internet/iGate continua tracejada e com cor própria.
+- RF inferido e RF legado mantêm classificação auditável nos detalhes. Continua ativo o bloqueio visual de hops inferidos >250 km sem comprovação; sem regressão para digipeaters móveis PT2AP.
+- Atualizador: diagnóstico por categoria (TLS/certificado, DNS, timeout, HTTP 403 e indisponibilidade), sem ocultar o erro original; opção de retentativa manual.
+- HTTPS: duas consultas ao endpoint GitHub com timeout moderado e, no Windows, fallback seguro via PowerShell/.NET com certificados/proxy do sistema operacional, sem desabilitar TLS.
+- Fallback final à página oficial do GitHub identifica somente a tag; sem metadados de assets, instalação automática é corretamente bloqueada.
+- Testes regressivos para erros SSL, Win10, publicação limitada, classificação RF e preservação da verificação segura. O sucesso real em Windows 10 recém-instalado depende de novo teste na máquina afetada.
+
 ## 1.14.37 - 2026-10-14
 
 - Novo botão Caminhos possíveis: busca explícita origem-destino fora do ranking de Recordes RF.

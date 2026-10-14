@@ -1,0 +1,41 @@
+"""Valida a integração e os metadados da release v1.14.38."""
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def read(path):
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+version = "1.14.38"
+assert read("VERSION").strip() == version
+assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
+assert "filevers=(1, 14, 38, 0)" in read("windows/version_info.txt")
+assert "prodvers=(1, 14, 38, 0)" in read("windows/version_info.txt")
+assert "## 1.14.38 - 2026-10-14" in read("CHANGELOG.md")
+assert '"1.14.38": {' in read("pt2vhf_aprs/version_notes.py")
+assert "# PT2VHF APRS Client - v1.14.38" in read("README.md")
+assert "issue #90" in read("BACKLOG.md") or "#90" in read("BACKLOG.md")
+assert "#91" in read("BACKLOG.md")
+for workflow in (".github/workflows/build-production-current.yml",
+                 ".github/workflows/build-full-current.yml"):
+    assert "apply_release_1_14_38.py" in read(workflow)
+js = read("pt2vhf_aprs/static/js/app.js")
+assert "color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in js
+assert "dashArray: edge.kind === 'igate' ? '7 5' : null" in js
+assert "style.dashArray = '5 7'" not in js
+assert "style.dashArray = '2 5'" not in js
+assert "controller.abort(), 45000" in js
+backend = read("pt2vhf_aprs/web.py")
+assert "release_check.fetch_latest_release()" in backend
+assert 'payload["error_code"] = issue.code' in backend
+assert "diag.log_event(\"update_check_failed\"" in backend
+native = read("pt2vhf_aprs/release_check.py")
+assert "Invoke-RestMethod" in native
+assert "_github_web_tag" in native
+assert "ServerCertificateValidationCallback" not in native
+assert "test_windows_native_fallback_after_python_certificate_failure" in read("tests/test_v1438_release.py")
+if any(line.startswith("## Novo —") for line in read("BACKLOG.md").splitlines()):
+    raise SystemExit("Entrada não triada no backlog")
+print("v1.14.38 release validation OK")

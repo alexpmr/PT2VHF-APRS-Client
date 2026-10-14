@@ -59,7 +59,10 @@ def test_frontend_does_not_display_unverified_long_hops_as_normal_rf():
     from pathlib import Path
     root = Path(__file__).resolve().parents[1]
     js = (root / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
-    assert "inferredRouteEdge ? '#94a3b8'" in js
-    assert "style.dashArray = '5 7'" in js
+    assert "inferredRouteEdge ? '#94a3b8'" not in js
+    assert "style.dashArray = '5 7'" not in js
+    assert "if (edge.kind !== 'igate' && legacyRouteEdge) style.dashArray" not in js
+    assert "color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in js
+    assert "dashArray: edge.kind === 'igate' ? '7 5' : null" in js
     assert "topologyEdgeDistanceKm(geometryEdge) > 250" in js
     assert "if (!window.isSecureContext)" in js
