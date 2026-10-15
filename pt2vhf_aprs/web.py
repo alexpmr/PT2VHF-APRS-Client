@@ -75,6 +75,7 @@ def _rf_record_job_public(job: dict) -> dict:
         "total": int(job.get("total") or 0),
         "message": str(job.get("message") or ""),
         "elapsed_ms": round(float(job.get("elapsed_ms") or 0.0), 1),
+        "eta_seconds": job.get("eta_seconds"),
         "nodes": int(job.get("nodes") or 0),
         "edges": int(job.get("edges") or 0),
         "candidates": int(job.get("candidates") or 0),
@@ -122,6 +123,16 @@ def _run_rf_record_job(job_id: str) -> None:
             current = _rf_record_jobs.get(job_id)
             if not current:
                 return
+            current_phase = str(payload.get("phase") or current.get("phase") or "")
+            if current_phase != str(current.get("phase") or ""):
+                current["phase_started_monotonic"] = time.monotonic()
+                current["eta_seconds"] = None
+            completed = int(payload.get("completed") or 0)
+            total = int(payload.get("total") or 0)
+            phase_elapsed = time.monotonic() - float(current.get("phase_started_monotonic") or time.monotonic())
+            # Estimate only from measured work units within the current phase.
+            if current_phase in {"indexing", "reachability"} and total >= 8 and completed >= 3 and completed < total and phase_elapsed >= 3:
+                current["eta_seconds"] = round(min(86400.0, phase_elapsed * (total - completed) / completed))
             previous_percent = float(current.get("percent") or 0.0)
             next_percent = float(payload.get("percent") or 0.0)
             # Progresso não retrocede durante a mesma execução.
@@ -138,7 +149,7 @@ def _run_rf_record_job(job_id: str) -> None:
             limit=limit,
             max_hops=max_hops,
             progress_callback=progress,
-            deadline_seconds=45.0,
+            deadline_seconds=None,  # background job: user cancellation, not wall-clock timeout
             cancel_check=cancel_event.is_set,
         )
         with _rf_record_jobs_lock:
@@ -212,6 +223,8 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
             "total": 0,
             "message": "Preparando cálculo de Recordes RF",
             "elapsed_ms": 0.0,
+            "eta_seconds": None,
+            "phase_started_monotonic": time.monotonic(),
             "nodes": 0,
             "edges": 0,
             "candidates": 0,
