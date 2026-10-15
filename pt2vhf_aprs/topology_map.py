@@ -34,6 +34,35 @@ def _validated_position(lat: Any, lon: Any) -> tuple[float, float] | None:
     return float(lat), float(lon)
 
 
+def moving_rf_repeaters(rows: list[Any]) -> set[str]:
+    """Detect moving repeaters from *repeated* historical RF positions.
+
+    One erroneous APRS GPS fix must not hide the links of a fixed digi:
+    require two spatial clusters, each seen in at least two RF events,
+    separated by at least 25 km. SSIDs remain distinct identities.
+    """
+    positions: dict[str, dict[tuple[int, int], list[float]]] = defaultdict(dict)
+    for raw in rows:
+        row = dict(raw)
+        if str(row.get("kind") or "").lower() != "rf":
+            continue
+        call = str(row.get("target") or "").strip().upper()
+        pos = _validated_position(row.get("target_lat"), row.get("target_lon"))
+        if not call or pos is None:
+            continue
+        # Around 5 km buckets so GPS jitter does not imply movement.
+        bucket = (math.floor(pos[0] / 0.05), math.floor(pos[1] / 0.05))
+        entry = positions[call].setdefault(bucket, [pos[0], pos[1], 0])
+        entry[2] += 1
+    moving = set()
+    for call, bins in positions.items():
+        established = [item for item in bins.values() if item[2] >= 2]
+        if any(db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
+               for i, a in enumerate(established) for b in established[i + 1:]):
+            moving.add(call)
+    return moving
+
+
 def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT) -> list[dict[str, Any]]:
     """Group near-coincident event geometries while keeping true GPS snapshots.
 
@@ -42,12 +71,17 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     """
     segments: dict[tuple[Any, ...], dict[str, Any]] = {}
     media_by_pair: dict[tuple[str, str], set[str]] = defaultdict(set)
+    mobile_repeaters = moving_rf_repeaters(rows)
     for raw in rows:
         row = dict(raw)
         src = str(row.get("source") or "").strip().upper()
         dst = str(row.get("target") or "").strip().upper()
         kind = str(row.get("kind") or "").strip().lower()
         if not src or not dst or src == dst or kind not in {"rf", "igate"}:
+            continue
+        # Preserve real RF events for history/coverage, but never draw
+        # spider lines for a repeater observed in multiple distinct regions.
+        if kind == "rf" and (src in mobile_repeaters or dst in mobile_repeaters):
             continue
         source_pos = _validated_position(row.get("source_lat"), row.get("source_lon"))
         target_pos = _validated_position(row.get("target_lat"), row.get("target_lon"))
