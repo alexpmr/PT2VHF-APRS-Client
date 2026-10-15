@@ -22,6 +22,7 @@ from . import diagnostics as diag
 from . import updater
 from . import release_check
 from . import retention
+from . import category_statistics, category_clear
 from .aprs_service import full_callsign, service
 from .scheduled_messages import prepare_schedule_payload, service as scheduled_message_service
 from .local_server import runtime_info as local_server_runtime_info, lan_ipv4_candidates
@@ -982,6 +983,47 @@ def create_app() -> Flask:
             return jsonify({"ok": False, "error": "Confirme a remoção de registros expirados."}), 400
         result = retention.apply_retention()
         return jsonify(result), (200 if result.get("ok") else 409)
+
+    @app.get("/api/retention/clear/<category>/preview")
+    def api_retention_clear_preview(category: str):
+        try:
+            return jsonify(category_clear.preview(category))
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.post("/api/retention/clear/<category>")
+    def api_retention_clear_start(category: str):
+        # A cross-origin page must never be able to clear data from a local APRS server.
+        origin = request.headers.get("Origin", "")
+        if origin:
+            from urllib.parse import urlsplit
+            if urlsplit(origin).netloc.lower() != request.host.lower():
+                return jsonify({"error": "Origem não autorizada."}), 403
+        if request.headers.get("X-PT2VHF-Operation") != "category-clear" or not request.is_json:
+            return jsonify({"error": "Requisição de manutenção inválida."}), 403
+        try:
+            data = request.get_json(silent=True) or {}
+            return jsonify(category_clear.start(category, str(data.get("confirmation") or ""))), 202
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 409
+
+    @app.get("/api/retention/clear/jobs/<job_id>")
+    def api_retention_clear_job(job_id: str):
+        value = category_clear.status(job_id)
+        return jsonify(value) if value is not None else (jsonify({"error": "Job inexistente."}), 404)
+
+    @app.delete("/api/retention/clear/jobs/<job_id>")
+    def api_retention_clear_cancel(job_id: str):
+        return jsonify({"ok": category_clear.cancel(job_id)})
+
+    @app.get("/api/statistics/categories")
+    def api_statistics_categories():
+        try:
+            return jsonify(category_statistics.category_counts(int(request.args.get("hours", 0))))
+        except (TypeError, ValueError) as exc:
+            return jsonify({"error": str(exc)}), 400
 
     @app.post("/api/retention/reset")
     def api_retention_reset():
