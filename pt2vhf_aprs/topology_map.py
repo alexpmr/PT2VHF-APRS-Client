@@ -198,3 +198,68 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
                 return []
             raise
     return _segments_from_events(rows)
+
+
+def list_mobile_rf_coverage(hours: float = 0, limit: int = 1200) -> list[dict[str, Any]]:
+    """Observed RF repeater activity locations, not predicted continuous coverage.
+
+    Return spatial cells as points; do not interpolate the unmeasured areas.
+    APRS-IS-only events ('igate' kind) never become RF coverage evidence.
+    """
+    try:
+        period = float(hours or 0)
+    except (TypeError, ValueError):
+        period = 0.0
+    period = min(max(period, 0.25), 720.0) if math.isfinite(period) and period > 0 else 0.0
+    where = "WHERE kind='rf' AND target_lat IS NOT NULL AND target_lon IS NOT NULL"
+    params: list[Any] = []
+    if period:
+        where += " AND timestamp>=?"
+        params.append((datetime.now(timezone.utc) - timedelta(hours=period)).isoformat(timespec="seconds"))
+    params.append(MAP_EVENT_SCAN_LIMIT)
+    with db.connection() as conn:
+        rows = [dict(row) for row in conn.execute(
+            f"""SELECT timestamp,source,target,kind,medium,evidence_level,
+                       source_lat,source_lon,target_lat,target_lon
+                  FROM topology_events {where}
+                 ORDER BY timestamp DESC,id DESC LIMIT ?""", params
+        ).fetchall()]
+        # For a short visible period, detect mobility across the retained
+        # history too, not only from the currently filtered local snapshots.
+        if period:
+            reference = [dict(row) for row in conn.execute(
+                """SELECT source,target,kind,medium,evidence_level,
+                          source_lat,source_lon,target_lat,target_lon
+                   FROM topology_events WHERE kind='rf'
+                   ORDER BY timestamp DESC,id DESC LIMIT ?""",
+                (MAP_EVENT_SCAN_LIMIT,)
+            ).fetchall()]
+        else:
+            reference = rows
+    mobile = moving_rf_repeaters(reference)
+    cells: dict[tuple[str, int, int, str], dict[str, Any]] = {}
+    for row in rows:
+        call = str(row.get("target") or "").strip().upper()
+        if call not in mobile:
+            continue
+        pos = _validated_position(row.get("target_lat"), row.get("target_lon"))
+        if pos is None:
+            continue
+        direct = str(row.get("medium") or "").upper() == "RF" and str(row.get("evidence_level") or "") != "inferred"
+        evidence = "direct" if direct else "inferred"
+        # Approximately 2 km cells, with positions averaged only within
+        # observed cells. Never join distant cells into lines/polygons.
+        a, b = int(math.floor(pos[0] / 0.02)), int(math.floor(pos[1] / 0.02))
+        key = (call, a, b, evidence)
+        item = cells.get(key)
+        if item is None:
+            item = {"callsign": call, "latitude": pos[0], "longitude": pos[1],
+                    "count": 0, "first_seen": row.get("timestamp"),
+                    "last_seen": row.get("timestamp"), "evidence": evidence,
+                    "label": "RF observado" if direct else "RF inferido pelo path"}
+            cells[key] = item
+        item["count"] += 1
+        timestamp = str(row.get("timestamp") or "")
+        item["first_seen"] = min(str(item["first_seen"] or timestamp), timestamp)
+        item["last_seen"] = max(str(item["last_seen"] or timestamp), timestamp)
+    return sorted(cells.values(), key=lambda x: (x["last_seen"], x["count"]), reverse=True)[:max(1, min(int(limit), 3000))]
