@@ -10254,6 +10254,45 @@
       '</div><div class="rf-route-record-list">' + rows + '</div></div>';
   }
 
+  const statisticCategories = [
+    ['stations','Estações únicas','Unique stations'],
+    ['messages','Mensagens','Messages'],
+    ['messages_rx','Mensagens RX','Messages RX'],
+    ['messages_tx','Mensagens TX','Messages TX'],
+    ['objects','Objetos APRS','APRS objects'],
+    ['packets','Pacotes armazenados','Stored packets'],
+    ['trackpoints','Pontos de tracklog','Track points'],
+    ['digis','Digipeaters','Digipeaters'],
+    ['igates','iGates','iGates'],
+    ['rf_links','Enlaces RF','RF links'],
+    ['internet_links','Enlaces Internet','Internet links'],
+    ['bulletins','Boletins','Bulletins'],
+    ['groups','Mensagens de grupo','Group messages'],
+    ['topology_events','Eventos de topologia','Topology events'],
+  ];
+  async function refreshStatisticCategories(hours, generation) {
+    const host = $('#analysisCategoryCounts');
+    if (!host) return;
+    try {
+      const stats = await api('/api/statistics/categories?hours=' + encodeURIComponent(statisticsPeriodValue(hours)),
+        { timeoutMs: 30000 });
+      if (generation !== state.topologyStatsGeneration) return;
+      host.innerHTML = '<h3>' + escapeHtml(ui('Quantidades por categoria', 'Counts by category')) + '</h3>' +
+        '<p class="hint">' + escapeHtml(ui('Registros ainda presentes no banco, no período selecionado. Estações, digis e iGates são identidades distintas; eventos e pacotes não são a mesma unidade.',
+        'Retained database records within the chosen period. Station identities differ from packets and events.')) + '</p>' +
+        '<div class="analysis-category-grid">' +
+        statisticCategories.map(([key, pt, en]) =>
+          '<div class="analysis-category-metric"><span>' + escapeHtml(ui(pt,en)) + '</span><strong>' +
+          Number(stats[key] ?? 0).toLocaleString(currentLocale()) + '</strong></div>'
+        ).join('') + '</div>';
+    } catch (err) {
+      if (generation !== state.topologyStatsGeneration) return;
+      // Never replace an existing valid statistic with a false zero.
+      if (!host.querySelector('.analysis-category-grid')) host.textContent =
+        ui('Contagens por categoria indisponíveis: ', 'Category counts unavailable: ') + String(err?.message || err);
+    }
+  }
+
   function renderTopologyStatsData(data) {
     const box = $('#topologyStatsContent');
     if (!box) return;
@@ -10524,6 +10563,7 @@
       if (generation !== state.topologyStatsGeneration) return;
       state.topologyStatsLastGood = data;
       renderTopologyStatsData(data);
+      void refreshStatisticCategories(state.topologyHours, generation);
       void refreshRfRouteRecordsDeferred(generation, state.topologyHours);
     } catch (err) {
       if (generation !== state.topologyStatsGeneration) return;
