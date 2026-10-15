@@ -170,31 +170,6 @@
       </div>
     </div>
 
-    <label class="map-context-field" for="topologySpeed">
-      <span>Velocidade</span>
-      <select id="topologySpeed" title="Velocidade da animação do mapa" aria-label="Velocidade da animação do mapa">
-        <option value="0.5">0,5x</option>
-        <option value="1" selected>1x</option>
-        <option value="2">2x</option>
-        <option value="5">5x</option>
-      </select>
-    </label>
-
-    <label class="map-context-field" for="mapTypeQuick">
-      <span>Tipo de mapa</span>
-      <select id="mapTypeQuick" title="Tipo de mapa" aria-label="Tipo de mapa">
-        <option value="osm">OSM</option>
-        <option value="topo">Topográfico</option>
-        <option value="light">Claro</option>
-        <option value="dark">Escuro</option>
-        <option value="cyclosm">CyclOSM</option>
-        <option value="humanitarian">Humanitário / HOT</option>
-        <option value="osmde">OSM.DE</option>
-        <option value="opnv">ÖPNVKarte</option>
-        <option value="satellite">Satélite</option>
-      </select>
-    </label>
-
     <div class="map-layers-control">
       <button id="mapLayersButton" type="button" class="btn secondary map-layers-button" aria-haspopup="true" aria-expanded="false">Camadas ▾</button>
       <div id="mapLayersMenu" class="map-layers-menu hidden" role="menu">
@@ -1140,6 +1115,15 @@
               <option value="osmde">OSM.DE</option>
               <option value="opnv">ÖPNVKarte</option>
               <option value="satellite">Satélite — Esri World Imagery</option>
+            </select>
+          </label>
+          <label class="field" for="topologySpeed">
+            <span>Velocidade da animação</span>
+            <select id="topologySpeed" title="Velocidade da animação do mapa" aria-label="Velocidade da animação do mapa">
+              <option value="0.5">0,5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="5">5x</option>
             </select>
           </label>
           <label class="field">
