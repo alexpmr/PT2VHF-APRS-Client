@@ -1229,8 +1229,10 @@ def test_v172_map_controls_share_history_context_row():
     main_start = html.index("<main>")
     context_html = html[context_start:main_start]
     assert 'id="mapHistoryToggle"' in context_html
-    for control in ("mapPeriodHours", "mapItemsButton", "topologySpeed", "mapTypeQuick"):
+    for control in ("mapPeriodHours", "mapItemsButton"):
         assert f'id="{control}"' in context_html
+    assert 'id="topologySpeed"' not in context_html
+    assert 'id="mapTypeQuick"' not in context_html
     assert 'class="map-top-toolbar"' not in html
     assert "height: 41px;" in css[css.index(".map-context-bar"):css.index(".map-context-bar.hidden")]
     assert "overflow-x: auto;" in css
@@ -1650,9 +1652,10 @@ def test_v179_map_speed_control_and_version_label():
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
 
     speed_pos = html.index('id="topologySpeed"')
-    type_pos = html.index('id="mapTypeQuick"')
-    assert speed_pos < type_pos
-    speed_block = html[speed_pos:type_pos]
+    config_pos = html.index('<h3>Mapa</h3>')
+    assert speed_pos > config_pos
+    assert 'id="mapTypeQuick"' not in html
+    speed_block = html[speed_pos:html.index('<span>Cor dos tracklogs</span>', speed_pos)]
     for value, label in (("0.5", "0,5x"), ("1", "1x"), ("2", "2x"), ("5", "5x")):
         assert f'<option value="{value}"' in speed_block
         assert label in speed_block
@@ -1674,10 +1677,11 @@ def test_v1710_unified_map_items_objects_and_internet_handoff():
     assert 'id="mapViewTree"' in html
     assert 'id="mapViewSelectAllButton"' in html
     assert 'id="mapViewClearAllButton"' in html
-    assert 'id="mapTypeQuick"' in html
-    assert '<option value="osm">OSM</option>' in html
-    assert '<option value="topo">Topográfico</option>' in html
-    assert '<option value="satellite">Satélite</option>' in html
+    assert 'id="mapTypeQuick"' not in html
+    assert 'name="map_type"' in html
+    assert '<option value="osm">OpenStreetMap</option>' in html
+    assert '<option value="topo">OpenTopoMap</option>' in html
+    assert '<option value="satellite">Satélite — Esri World Imagery</option>' in html
 
     for removed in ("stationsHours", "tracklogHours", "topologyHours", "topologyToggle"):
         assert f'id="{removed}"' not in html
