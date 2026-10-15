@@ -4956,3 +4956,19 @@ html[lang="zh-CN"] body {
 .global-processing-card { position: relative; }
 .global-processing-cancel { align-self: flex-start; margin-left: 6px; }
 @media (max-width: 640px) { .retention-category-row { flex-wrap: wrap; } .retention-clear-button { width: 100%; } }
+
+
+/* Map toolbar: compact layout without clipping menus or forcing horizontal scrolling. */
+.map-context-bar { max-width: 100%; box-sizing: border-box; }
+.map-context-controls { min-width: 0; row-gap: 7px; column-gap: 6px; align-items: center; }
+.map-context-controls > * { max-width: 100%; }
+.map-context-controls .rf-route-search { min-width: 0; }
+.map-context-controls button, .map-context-controls select { white-space: nowrap; }
+@media (max-width: 1180px) {
+  .map-context-controls { align-items: center; }
+  .map-context-controls .rf-route-search { order: 0; }
+}
+@media (max-width: 760px) {
+  .map-context-controls .rf-route-search { display: flex; flex-wrap: wrap; width: 100%; }
+  .map-context-controls .rf-route-search > * { max-width: 100%; }
+}
