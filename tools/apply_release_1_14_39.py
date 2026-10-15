@@ -20,7 +20,7 @@ assert "issue #90" in read("BACKLOG.md") or "#90" in read("BACKLOG.md")
 assert "#91" in read("BACKLOG.md")
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_1_14_38.py" in read(workflow)
+    assert "apply_release_1_14_39.py" in read(workflow)
 js = read("pt2vhf_aprs/static/js/app.js")
 assert "color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in js
 assert "dashArray: edge.kind === 'igate' ? '7 5' : null" in js
