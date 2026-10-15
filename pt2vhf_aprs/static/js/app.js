@@ -5886,8 +5886,16 @@
         option.textContent = ui(labelPt, labelEn);
         select.appendChild(option);
       }
+      const clearButton = document.createElement('button');
+      clearButton.type = 'button';
+      clearButton.className = 'btn secondary retention-clear-button';
+      clearButton.dataset.retentionClearCategory = key;
+      clearButton.textContent = ui('Limpar tudo', 'Clear all');
+      const row = document.createElement('div');
+      row.className = 'retention-category-row';
       label.append(text, select);
-      grid.appendChild(label);
+      row.append(label, clearButton);
+      grid.appendChild(row);
     }
   }
 
@@ -5921,6 +5929,71 @@
       policies[el.dataset.retentionCategory] = Number(el.value);
     return { policies, enabled: !!$('#retentionEnabled')?.checked };
   }
+
+  let activeClearJob = '';
+  async function clearRetentionCategory(category, button) {
+    if (activeClearJob) {
+      toast(ui('Outra limpeza está em execução.', 'Another cleanup is running.'), 'error');
+      return;
+    }
+    let preview;
+    try {
+      preview = await api('/api/retention/clear/' + encodeURIComponent(category) + '/preview');
+    } catch (err) { toast(String(err?.message || err), 'error'); return; }
+    if (preview.pending_messages) {
+      toast(ui('Há mensagens TX pendentes; conclua-as antes de limpar.', 'Pending TX messages must finish before clearing.'), 'error');
+      return;
+    }
+    const choice = retentionCategories.find(row => row[0] === category);
+    const label = choice ? ui(choice[1], choice[2]) : category;
+    const count = Number(preview.count || 0).toLocaleString(currentLocale());
+    if (!window.confirm(ui(
+      'Eliminar TODOS os ' + count + ' registros da categoria ' + label + '? Esta operação não pode ser desfeita. Recomenda-se backup do SQLite. As demais categorias e políticas de retenção serão preservadas.',
+      'Permanently delete ALL ' + count + ' records from ' + label + '? This cannot be undone. Back up SQLite first. Other categories and retention rules are preserved.'
+    ))) return;
+    if (window.prompt(ui('Para confirmar, digite exatamente: ', 'To confirm, type exactly: ') + category) !== category) return;
+    button.disabled = true;
+    const status = $('#retentionResultStatus');
+    try {
+      const job = await api('/api/retention/clear/' + encodeURIComponent(category), {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-PT2VHF-Operation':'category-clear'},
+        body:JSON.stringify({confirmation:'CLEAR:' + category}),
+        timeoutMs: 15000
+      });
+      activeClearJob = String(job.job_id || '');
+      let snapshot = job;
+      while (['queued','running'].includes(String(snapshot.status || ''))) {
+        if (status) status.textContent = ui('Limpando ', 'Clearing ') + label + ': ' +
+          Number(snapshot.deleted || 0).toLocaleString(currentLocale()) + ' / ' + count +
+          ' · ' + ui('Aguarde…', 'Please wait…');
+        await new Promise(resolve => setTimeout(resolve, 800));
+        snapshot = await api('/api/retention/clear/jobs/' + encodeURIComponent(activeClearJob),
+          { timeoutMs: 15000 });
+      }
+      if (snapshot.status === 'error') throw Error(snapshot.error || 'Erro ao limpar a categoria.');
+      if (status) status.textContent = label + ': ' +
+        Number(snapshot.deleted || 0).toLocaleString(currentLocale()) + ' ' +
+        ui('registros removidos.', 'records removed.');
+      await loadRetentionInfo();
+      state.topologyStatsLastGood = null;
+      if (state.activeTab === 'analysis') void refreshTopologyAnalysis();
+      if (state.activeTab === 'map') { void loadMapData(); void loadTopology(); }
+    } catch (err) {
+      toast(String(err?.message || err), 'error');
+      if (status) status.textContent = String(err?.message || err);
+    } finally {
+      activeClearJob = '';
+      button.disabled = false;
+    }
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-retention-clear-category]');
+    if (!button) return;
+    event.preventDefault();
+    void clearRetentionCategory(button.dataset.retentionClearCategory, button);
+  });
 
   $('#saveRetentionPolicy')?.addEventListener('click', async () => {
     try {
