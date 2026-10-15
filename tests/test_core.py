@@ -952,8 +952,11 @@ def test_map_controls_are_above_map_not_overlaid():
     map_pos = html.index('id="map"')
     assert context_pos < history_pos < main_pos < map_pos
 
-    for control in ("mapPeriodHours", "mapItemsButton", "topologySpeed", "mapTypeQuick", "kmlExportButton"):
+    for control in ("mapPeriodHours", "mapItemsButton", "kmlExportButton"):
         assert context_pos < html.index(f'id="{control}"') < main_pos
+
+    assert html.index('id="topologySpeed"') > main_pos
+    assert 'id="mapTypeQuick"' not in html
 
     for removed in ("stationsHours", "tracklogHours", "topologyHours", "topologyToggle"):
         assert f'id="{removed}"' not in html
