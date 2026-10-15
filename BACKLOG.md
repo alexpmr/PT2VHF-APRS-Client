@@ -1,3 +1,11 @@
+## Implementado em código para v1.14.39 — aguarda CI e testes reais (#93, #94, #95, #96)
+
+- **#93 Recordes RF:** job assíncrono sem prazo fixo de 45 s; cancelamento X integrado ao backend, checkpoints de cancelamento durante indexação e expansão de rotas, tempo decorrido e ETA por fase com amostras suficientes. **A medição real em banco grande e tempo de cancelamento durante montagem inicial do grafo ainda não foram validados.** Não considerar resolvido por compilação apenas.
+- **#94 Repetidores móveis e cobertura:** suprimiu linhas RF de repetidores com mobilidade confirmada por histórico consistente (ao menos duas observações por região e separação de 25 km); a camada Ver → Cobertura RF observada agrega pontos de RF direto/inferido em células históricas. **Validar com PT2AP real e falsas posições GPS; não há polígonos de cobertura previstos.**
+- **#95 Contagens Estatísticas:** resumo independente do job RF por categoria, respeitando período/retidos. **Conferir contagens reais em banco com retenção e diferenças entre estações atuais e histórico de pacotes.**
+- **#96 Retenção:** categoria Pacotes já existia; adicionados botões Limpar tudo com prévia e confirmação textual, limpeza em lotes e bloqueio de TX pendente. **Executar testes de integridade SQLite/backups e LAN antes de declarar concluído.**
+- **Release:** código pronto para testes; publicação oficial e aceites físicos ainda pendentes.
+
 ## PENDENTE — Estatísticas: quantitativos de mensagens, estações, objetos e demais categorias (issue #95, 14/10/2026)
 
 - **Pedido do mantenedor:** adicionar à aba **Estatísticas** um resumo numérico dos dados armazenados/observados: **quantidade de mensagens, estações, objetos APRS etc.** A página hoje exibe período, enlaces, pacotes e eventos, mas falta uma visão clara de contagens por categoria.

@@ -4938,3 +4938,21 @@ html[lang="zh-CN"] body {
 .rf-record-retry {
   margin-top: 8px;
 }
+
+/* v1.14.39: category statistics, retention controls and cancelable RF processing. */
+.analysis-category-counts { margin: 10px 0 14px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; }
+.analysis-category-counts h3 { margin: 0 0 5px; font-size: 14px; }
+.analysis-category-counts > .hint { margin: 0 0 10px; }
+.analysis-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px,1fr)); gap: 8px; }
+.analysis-category-metric { padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); display: grid; gap: 5px; min-width: 0; }
+.analysis-category-metric span { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.analysis-category-metric strong { color: var(--text); font-size: 19px; font-variant-numeric: tabular-nums; }
+.retention-category-row { display: flex; align-items: flex-end; gap: 8px; min-width: 0; }
+.retention-category-row > .field { flex: 1; min-width: 0; }
+.retention-clear-button { flex-shrink: 0; font-size: 11px; padding: 8px; min-height: 34px; }
+.rf-record-cancel, .global-processing-cancel { cursor: pointer; color: var(--text); background: transparent; border: 1px solid var(--line); border-radius: 6px; font-size: 21px; line-height: 1; padding: 2px 7px; }
+.rf-record-progress-head { display: flex; gap: 10px; align-items: center; }
+.rf-record-progress-head strong { flex: 1; }
+.global-processing-card { position: relative; }
+.global-processing-cancel { align-self: flex-start; margin-left: 6px; }
+@media (max-width: 640px) { .retention-category-row { flex-wrap: wrap; } .retention-clear-button { width: 100%; } }

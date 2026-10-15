@@ -22,6 +22,7 @@ from . import diagnostics as diag
 from . import updater
 from . import release_check
 from . import retention
+from . import category_statistics, category_clear
 from .aprs_service import full_callsign, service
 from .scheduled_messages import prepare_schedule_payload, service as scheduled_message_service
 from .local_server import runtime_info as local_server_runtime_info, lan_ipv4_candidates
@@ -75,6 +76,7 @@ def _rf_record_job_public(job: dict) -> dict:
         "total": int(job.get("total") or 0),
         "message": str(job.get("message") or ""),
         "elapsed_ms": round(float(job.get("elapsed_ms") or 0.0), 1),
+        "eta_seconds": job.get("eta_seconds"),
         "nodes": int(job.get("nodes") or 0),
         "edges": int(job.get("edges") or 0),
         "candidates": int(job.get("candidates") or 0),
@@ -122,6 +124,16 @@ def _run_rf_record_job(job_id: str) -> None:
             current = _rf_record_jobs.get(job_id)
             if not current:
                 return
+            current_phase = str(payload.get("phase") or current.get("phase") or "")
+            if current_phase != str(current.get("phase") or ""):
+                current["phase_started_monotonic"] = time.monotonic()
+                current["eta_seconds"] = None
+            completed = int(payload.get("completed") or 0)
+            total = int(payload.get("total") or 0)
+            phase_elapsed = time.monotonic() - float(current.get("phase_started_monotonic") or time.monotonic())
+            # Estimate only from measured work units within the current phase.
+            if current_phase in {"indexing", "reachability"} and total >= 8 and completed >= 3 and completed < total and phase_elapsed >= 3:
+                current["eta_seconds"] = round(min(86400.0, phase_elapsed * (total - completed) / completed))
             previous_percent = float(current.get("percent") or 0.0)
             next_percent = float(payload.get("percent") or 0.0)
             # Progresso não retrocede durante a mesma execução.
@@ -138,7 +150,7 @@ def _run_rf_record_job(job_id: str) -> None:
             limit=limit,
             max_hops=max_hops,
             progress_callback=progress,
-            deadline_seconds=45.0,
+            deadline_seconds=None,  # background job: user cancellation, not wall-clock timeout
             cancel_check=cancel_event.is_set,
         )
         with _rf_record_jobs_lock:
@@ -195,7 +207,7 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
     with _rf_record_jobs_lock:
         existing_id = _rf_record_job_by_key.get(key)
         existing = _rf_record_jobs.get(existing_id or "")
-        if existing and not force and existing.get("status") in {"queued", "running", "done"}:
+        if existing and (existing.get("status") in {"queued", "running"} or (not force and existing.get("status") == "done")):
             return _rf_record_job_public(existing)
 
         job_id = uuid.uuid4().hex
@@ -212,6 +224,8 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
             "total": 0,
             "message": "Preparando cálculo de Recordes RF",
             "elapsed_ms": 0.0,
+            "eta_seconds": None,
+            "phase_started_monotonic": time.monotonic(),
             "nodes": 0,
             "edges": 0,
             "candidates": 0,
@@ -970,6 +984,47 @@ def create_app() -> Flask:
         result = retention.apply_retention()
         return jsonify(result), (200 if result.get("ok") else 409)
 
+    @app.get("/api/retention/clear/<category>/preview")
+    def api_retention_clear_preview(category: str):
+        try:
+            return jsonify(category_clear.preview(category))
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.post("/api/retention/clear/<category>")
+    def api_retention_clear_start(category: str):
+        # A cross-origin page must never be able to clear data from a local APRS server.
+        origin = request.headers.get("Origin", "")
+        if origin:
+            from urllib.parse import urlsplit
+            if urlsplit(origin).netloc.lower() != request.host.lower():
+                return jsonify({"error": "Origem não autorizada."}), 403
+        if request.headers.get("X-PT2VHF-Operation") != "category-clear" or not request.is_json:
+            return jsonify({"error": "Requisição de manutenção inválida."}), 403
+        try:
+            data = request.get_json(silent=True) or {}
+            return jsonify(category_clear.start(category, str(data.get("confirmation") or ""))), 202
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 409
+
+    @app.get("/api/retention/clear/jobs/<job_id>")
+    def api_retention_clear_job(job_id: str):
+        value = category_clear.status(job_id)
+        return jsonify(value) if value is not None else (jsonify({"error": "Job inexistente."}), 404)
+
+    @app.delete("/api/retention/clear/jobs/<job_id>")
+    def api_retention_clear_cancel(job_id: str):
+        return jsonify({"ok": category_clear.cancel(job_id)})
+
+    @app.get("/api/statistics/categories")
+    def api_statistics_categories():
+        try:
+            return jsonify(category_statistics.category_counts(int(request.args.get("hours", 0))))
+        except (TypeError, ValueError) as exc:
+            return jsonify({"error": str(exc)}), 400
+
     @app.post("/api/retention/reset")
     def api_retention_reset():
         return jsonify({"ok": True, **retention.save_policy(
@@ -1340,6 +1395,14 @@ def create_app() -> Flask:
         except (TypeError, ValueError):
             hours = 0.0
         return jsonify(topology_map.list_map_edges(hours))
+
+    @app.get("/api/topology/rf-coverage")
+    def api_topology_rf_coverage():
+        try:
+            hours = float(request.args.get("hours", 0))
+        except (TypeError, ValueError):
+            hours = 0
+        return jsonify(topology_map.list_mobile_rf_coverage(hours))
 
     @app.get("/api/topology/rf-origins")
     def api_topology_rf_origins():

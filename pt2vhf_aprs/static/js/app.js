@@ -19,6 +19,8 @@
     objectsEnabled: localStorage.getItem('pt2vhf_map_item_objects') !== '0',
     tracklogEnabled: localStorage.getItem('pt2vhf_map_item_tracklogs') !== '0',
     rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
+    rfCoverageEnabled: localStorage.getItem('pt2vhf_map_item_rf_coverage') === '1',
+    rfCoverageLayer: null,
     igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
     mapViewFilters: (() => {
@@ -903,6 +905,7 @@
     document.body?.setAttribute('aria-busy', active ? 'true' : 'false');
     if (!active) {
       overlay.classList.remove('nonblocking');
+      $('#globalProcessingCancel')?.classList.add('hidden');
       return;
     }
     const current = entries[entries.length - 1];
@@ -915,6 +918,8 @@
       'Aguarde enquanto a operação é concluída.',
       'Please wait while the operation completes.'
     );
+    const cancelControl = $('#globalProcessingCancel');
+    if (cancelControl) cancelControl.classList.toggle('hidden', !current.cancelable);
     const progressWrap = $('#globalProcessingProgress');
     const progressBar = $('#globalProcessingProgressBar');
     const progressText = $('#globalProcessingProgressText');
@@ -937,6 +942,7 @@
       message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.'),
       blocking: options?.blocking !== false,
       progress: Number.isFinite(Number(options?.progress)) ? Number(options.progress) : null,
+      cancelable: options?.cancelable === true,
       visible: false,
       timer: null,
     };
@@ -2233,6 +2239,7 @@
     objectsEnabled: 'pt2vhf_map_item_objects',
     tracklogEnabled: 'pt2vhf_map_item_tracklogs',
     rfLinksEnabled: 'pt2vhf_map_item_rf',
+    rfCoverageEnabled: 'pt2vhf_map_item_rf_coverage',
     igateLinksEnabled: 'pt2vhf_map_item_igate',
     packetsEnabled: 'pt2vhf_map_item_packets',
   };
@@ -2559,6 +2566,7 @@
       },
       { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled' },
       { id: 'root:rf', label: ui('Enlaces RF', 'RF links'), stateKey: 'rfLinksEnabled' },
+      { id: 'root:rf-coverage', label: ui('Cobertura RF observada (pontos de digis móveis)', 'Observed RF coverage (moving digis)'), stateKey: 'rfCoverageEnabled' },
       { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
       { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
     ];
@@ -2641,6 +2649,7 @@
     if (!state.packetsEnabled) clearTrafficReplayLayers();
     await loadMapData();
     if (!state.topologyEnabled) clearTopologyLines();
+    await loadRfCoverage();
     if (state.stations.length) {
       renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : state.stations);
       renderStations();
@@ -3998,6 +4007,37 @@
     state.topologyLines.clear();
   }
 
+  async function loadRfCoverage() {
+    if (!state.map || !state.rfCoverageEnabled || state.activeTab !== 'map' || state.rfRouteAnalysis) {
+      if (state.rfCoverageLayer) { state.map?.removeLayer(state.rfCoverageLayer); state.rfCoverageLayer = null; }
+      return;
+    }
+    try {
+      const samples = await api('/api/topology/rf-coverage?hours=' + encodeURIComponent(state.mapPeriodHours),
+        { timeoutMs: 30000 });
+      if (!state.map || !state.rfCoverageEnabled || state.rfRouteAnalysis) return;
+      const layer = L.layerGroup();
+      for (const sample of (Array.isArray(samples) ? samples : [])) {
+        const lat = Number(sample.latitude), lon = Number(sample.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+        const direct = sample.evidence === 'direct';
+        const color = direct ? '#22c55e' : '#f59e0b';
+        L.circleMarker([lat, lon], { radius: Math.min(9, 4 + Math.log2(1 + Number(sample.count || 1))),
+          weight: 1, color, fillColor: color, opacity: .95, fillOpacity: .65,
+          pane: 'pt2vhfInteractionPane' })
+          .bindPopup('<strong>' + escapeHtml(sample.callsign || '') + '</strong><div>' +
+            escapeHtml(ui('Cobertura RF amostrada — não é previsão de cobertura contínua.', 'Sampled RF coverage — not a prediction.')) +
+            '</div><div>' + escapeHtml(direct ? ui('RF observado', 'Observed RF') :
+            ui('Inferido pelo path APRS', 'Inferred from APRS path')) + '</div><div>' +
+            escapeHtml(ui('Observações: ', 'Observations: ') + Number(sample.count || 0)) +
+            '</div><div>' + escapeHtml(fmtDate(sample.last_seen)) + '</div>')
+          .addTo(layer);
+      }
+      if (state.rfCoverageLayer) state.map.removeLayer(state.rfCoverageLayer);
+      state.rfCoverageLayer = layer.addTo(state.map);
+    } catch (err) { console.warn('Observed RF coverage:', err); }
+  }
+
   async function loadTopology() {
     if (!state.map || (!state.topologyEnabled && !state.rfRouteAnalysis) || state.activeTab !== 'map') return;
     if (state.topologyLoadBusy) {
@@ -4155,6 +4195,7 @@
       if (routeAllowedPairs && state.rfRouteAnalysis?.routes?.length) {
         focusRfRoute(state.rfRouteSelectedIndex);
       }
+      await loadRfCoverage();
     } catch (err) {
       console.warn(err);
     } finally {
@@ -5882,8 +5923,16 @@
         option.textContent = ui(labelPt, labelEn);
         select.appendChild(option);
       }
+      const clearButton = document.createElement('button');
+      clearButton.type = 'button';
+      clearButton.className = 'btn secondary retention-clear-button';
+      clearButton.dataset.retentionClearCategory = key;
+      clearButton.textContent = ui('Limpar tudo', 'Clear all');
+      const row = document.createElement('div');
+      row.className = 'retention-category-row';
       label.append(text, select);
-      grid.appendChild(label);
+      row.append(label, clearButton);
+      grid.appendChild(row);
     }
   }
 
@@ -5917,6 +5966,71 @@
       policies[el.dataset.retentionCategory] = Number(el.value);
     return { policies, enabled: !!$('#retentionEnabled')?.checked };
   }
+
+  let activeClearJob = '';
+  async function clearRetentionCategory(category, button) {
+    if (activeClearJob) {
+      toast(ui('Outra limpeza está em execução.', 'Another cleanup is running.'), 'error');
+      return;
+    }
+    let preview;
+    try {
+      preview = await api('/api/retention/clear/' + encodeURIComponent(category) + '/preview');
+    } catch (err) { toast(String(err?.message || err), 'error'); return; }
+    if (preview.pending_messages) {
+      toast(ui('Há mensagens TX pendentes; conclua-as antes de limpar.', 'Pending TX messages must finish before clearing.'), 'error');
+      return;
+    }
+    const choice = retentionCategories.find(row => row[0] === category);
+    const label = choice ? ui(choice[1], choice[2]) : category;
+    const count = Number(preview.count || 0).toLocaleString(currentLocale());
+    if (!window.confirm(ui(
+      'Eliminar TODOS os ' + count + ' registros da categoria ' + label + '? Esta operação não pode ser desfeita. Recomenda-se backup do SQLite. As demais categorias e políticas de retenção serão preservadas.',
+      'Permanently delete ALL ' + count + ' records from ' + label + '? This cannot be undone. Back up SQLite first. Other categories and retention rules are preserved.'
+    ))) return;
+    if (window.prompt(ui('Para confirmar, digite exatamente: ', 'To confirm, type exactly: ') + category) !== category) return;
+    button.disabled = true;
+    const status = $('#retentionResultStatus');
+    try {
+      const job = await api('/api/retention/clear/' + encodeURIComponent(category), {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-PT2VHF-Operation':'category-clear'},
+        body:JSON.stringify({confirmation:'CLEAR:' + category}),
+        timeoutMs: 15000
+      });
+      activeClearJob = String(job.job_id || '');
+      let snapshot = job;
+      while (['queued','running'].includes(String(snapshot.status || ''))) {
+        if (status) status.textContent = ui('Limpando ', 'Clearing ') + label + ': ' +
+          Number(snapshot.deleted || 0).toLocaleString(currentLocale()) + ' / ' + count +
+          ' · ' + ui('Aguarde…', 'Please wait…');
+        await new Promise(resolve => setTimeout(resolve, 800));
+        snapshot = await api('/api/retention/clear/jobs/' + encodeURIComponent(activeClearJob),
+          { timeoutMs: 15000 });
+      }
+      if (snapshot.status === 'error') throw Error(snapshot.error || 'Erro ao limpar a categoria.');
+      if (status) status.textContent = label + ': ' +
+        Number(snapshot.deleted || 0).toLocaleString(currentLocale()) + ' ' +
+        ui('registros removidos.', 'records removed.');
+      await loadRetentionInfo();
+      state.topologyStatsLastGood = null;
+      if (state.activeTab === 'analysis') void refreshTopologyAnalysis();
+      if (state.activeTab === 'map') { void loadMapData(); void loadTopology(); }
+    } catch (err) {
+      toast(String(err?.message || err), 'error');
+      if (status) status.textContent = String(err?.message || err);
+    } finally {
+      activeClearJob = '';
+      button.disabled = false;
+    }
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-retention-clear-category]');
+    if (!button) return;
+    event.preventDefault();
+    void clearRetentionCategory(button.dataset.retentionClearCategory, button);
+  });
 
   $('#saveRetentionPolicy')?.addEventListener('click', async () => {
     try {
@@ -10170,13 +10284,21 @@
     if (Number(progress.nodes || 0)) details.push(Number(progress.nodes).toLocaleString(currentLocale()) + ' ' + ui('nós', 'nodes'));
     if (Number(progress.edges || 0)) details.push(Number(progress.edges).toLocaleString(currentLocale()) + ' ' + ui('enlaces', 'links'));
     if (Number(progress.candidates || 0)) details.push(Number(progress.candidates).toLocaleString(currentLocale()) + ' ' + ui('candidatos', 'candidates'));
-    if (Number(progress.elapsed_ms || 0) > 0) details.push((Number(progress.elapsed_ms) / 1000).toFixed(1) + ' s');
+    if (Number(progress.elapsed_ms || 0) > 0) details.push(ui('Decorrido: ', 'Elapsed: ') + (Number(progress.elapsed_ms) / 1000).toFixed(0) + ' s');
+    const eta = Number(progress.eta_seconds);
+    details.push(ui('Restante estimado: ', 'Estimated remaining: ') +
+      (Number.isFinite(eta) && eta >= 0 && progress.eta_seconds !== null && progress.eta_seconds !== undefined
+        ? (eta < 120 ? Math.ceil(eta) + ' s' : Math.ceil(eta / 60) + ' min')
+        : ui('calculando…', 'calculating…')));
 
     return '<div class="topology-stat-group rf-route-records-group">' +
       '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
       '<div class="rf-record-progress" role="status" aria-live="polite">' +
         '<div class="rf-record-progress-head"><strong>' + escapeHtml(rfRecordProgressLabel(progress)) + '</strong>' +
-        '<span>' + Math.round(percent) + '%</span></div>' +
+        '<span>' + Math.round(percent) + '%</span>' +
+        '<button type="button" class="rf-record-cancel" data-rf-record-cancel="1" title="' +
+          escapeHtml(ui('Cancelar processamento e fechar', 'Cancel calculation and close')) + '" aria-label="' +
+          escapeHtml(ui('Cancelar processamento e fechar', 'Cancel calculation and close')) + '">×</button></div>' +
         '<div class="rf-record-progress-track" aria-label="' + escapeHtml(ui('Progresso do cálculo dos enlaces', 'RF link calculation progress')) + '">' +
           '<div class="rf-record-progress-bar" style="width:' + percent.toFixed(1) + '%"></div>' +
         '</div>' +
@@ -10240,6 +10362,45 @@
       '</h4><div class="hint">' +
       escapeHtml(ui('Somente enlaces RF observados compõem as rotas; APRS-IS/Internet não completa uma rota RF. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Only observed RF links compose the routes; APRS-IS/Internet never completes an RF route. Click a route to show it by itself on the map.')) +
       '</div><div class="rf-route-record-list">' + rows + '</div></div>';
+  }
+
+  const statisticCategories = [
+    ['stations','Estações únicas','Unique stations'],
+    ['messages','Mensagens','Messages'],
+    ['messages_rx','Mensagens RX','Messages RX'],
+    ['messages_tx','Mensagens TX','Messages TX'],
+    ['objects','Objetos APRS','APRS objects'],
+    ['packets','Pacotes armazenados','Stored packets'],
+    ['trackpoints','Pontos de tracklog','Track points'],
+    ['digis','Digipeaters','Digipeaters'],
+    ['igates','iGates','iGates'],
+    ['rf_links','Enlaces RF','RF links'],
+    ['internet_links','Enlaces Internet','Internet links'],
+    ['bulletins','Boletins','Bulletins'],
+    ['groups','Mensagens de grupo','Group messages'],
+    ['topology_events','Eventos de topologia','Topology events'],
+  ];
+  async function refreshStatisticCategories(hours, generation) {
+    const host = $('#analysisCategoryCounts');
+    if (!host) return;
+    try {
+      const stats = await api('/api/statistics/categories?hours=' + encodeURIComponent(statisticsPeriodValue(hours)),
+        { timeoutMs: 30000 });
+      if (generation !== state.topologyStatsGeneration) return;
+      host.innerHTML = '<h3>' + escapeHtml(ui('Quantidades por categoria', 'Counts by category')) + '</h3>' +
+        '<p class="hint">' + escapeHtml(ui('Registros ainda presentes no banco, no período selecionado. Estações, digis e iGates são identidades distintas; eventos e pacotes não são a mesma unidade.',
+        'Retained database records within the chosen period. Station identities differ from packets and events.')) + '</p>' +
+        '<div class="analysis-category-grid">' +
+        statisticCategories.map(([key, pt, en]) =>
+          '<div class="analysis-category-metric"><span>' + escapeHtml(ui(pt,en)) + '</span><strong>' +
+          Number(stats[key] ?? 0).toLocaleString(currentLocale()) + '</strong></div>'
+        ).join('') + '</div>';
+    } catch (err) {
+      if (generation !== state.topologyStatsGeneration) return;
+      // Never replace an existing valid statistic with a false zero.
+      if (!host.querySelector('.analysis-category-grid')) host.textContent =
+        ui('Contagens por categoria indisponíveis: ', 'Category counts unavailable: ') + String(err?.message || err);
+    }
   }
 
   function renderTopologyStatsData(data) {
@@ -10325,6 +10486,37 @@
     renderClientVersionStats(data.client_versions);
   }
 
+  async function cancelRfRecordsAndClose() {
+    const jobId = String(state.rfRouteRecordsJobId || '');
+    state.rfRouteRecordsGeneration += 1;
+    state.rfRouteCancelPending = true;
+    state.rfRouteRecordsJobId = '';
+    state.rfRouteRecordsJobHours = null;
+    const token = state.rfRouteRecordsToken;
+    state.rfRouteRecordsToken = null;
+    if (token) hideProcessing(token);
+    const host = $('#rfRouteRecordsHost');
+    if (host) host.innerHTML = renderRfRouteRecordsError(
+      ui('Processamento cancelado pelo usuário.', 'Calculation cancelled by user.'),
+      state.rfRouteRecordsLastGood.get(String(state.topologyHours)) || []
+    );
+    if (jobId) {
+      try {
+        await api('/api/topology/rf-records/jobs/' + encodeURIComponent(jobId),
+          { method: 'DELETE', timeoutMs: 15000 });
+      } catch (err) { console.warn('RF cancellation request:', err); }
+    }
+  }
+
+  $('#globalProcessingCancel')?.addEventListener('click', () => { void cancelRfRecordsAndClose(); });
+
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-rf-record-cancel]')) {
+      event.preventDefault();
+      void cancelRfRecordsAndClose();
+    }
+  });
+
   async function cancelRfRouteRecordsJobIfNeeded(nextHours) {
     const currentJob = String(state.rfRouteRecordsJobId || '');
     if (!currentJob || Number(state.rfRouteRecordsJobHours) === Number(nextHours)) return;
@@ -10342,14 +10534,16 @@
     state.rfRouteRecordsGeneration += 1;
     const localGeneration = state.rfRouteRecordsGeneration;
     const normalizedHours = statisticsPeriodValue(hours);
+    state.rfRouteCancelPending = false;
     await cancelRfRouteRecordsJobIfNeeded(normalizedHours);
 
     const previous = state.rfRouteRecordsLastGood.get(String(normalizedHours)) || [];
     const token = showProcessing(
       ui('Calculando recordes RF…', 'Calculating RF records…'),
       ui('Preparando indexação e cálculo da alcançabilidade.', 'Preparing indexing and reachability calculation.'),
-      { blocking: false, delayMs: 320, progress: 0 }
+      { blocking: false, delayMs: 320, progress: 0, cancelable: true }
     );
+    state.rfRouteRecordsToken = token;
 
     try {
       let job = await api('/api/topology/rf-records/jobs', {
@@ -10364,11 +10558,18 @@
         timeoutMs: 8000,
       });
 
-      if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
+      if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) {
+        if (state.rfRouteCancelPending && job?.job_id) {
+          try { await api('/api/topology/rf-records/jobs/' + encodeURIComponent(job.job_id),
+            { method: 'DELETE', timeoutMs: 15000 }); } catch (_) {}
+        }
+        return;
+      }
       state.rfRouteRecordsJobId = String(job?.job_id || '');
       state.rfRouteRecordsJobHours = normalizedHours;
 
       let lastPercent = 0;
+      let pollFailures = 0;
       while (job && ['queued', 'running'].includes(String(job.status || ''))) {
         if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
         const percent = Math.max(lastPercent, Number(job.percent || 0));
@@ -10382,10 +10583,22 @@
           percent
         );
         await new Promise(resolve => setTimeout(resolve, 650));
-        job = await api(
-          '/api/topology/rf-records/jobs/' + encodeURIComponent(state.rfRouteRecordsJobId),
-          { timeoutMs: 5000 }
-        );
+        try {
+          job = await api(
+            '/api/topology/rf-records/jobs/' + encodeURIComponent(state.rfRouteRecordsJobId),
+            { timeoutMs: 20000 }
+          );
+          pollFailures = 0;
+        } catch (pollError) {
+          // A slow HTTP poll is NOT evidence that the background RF job stopped.
+          // Keep retrying while the user may cancel with X.
+          pollFailures += 1;
+          console.warn('RF records progress poll, retry ' + pollFailures, pollError);
+          updateProcessing(token, ui('Recalculando Recordes RF…', 'Recalculating RF records…'),
+            ui('Sem resposta momentânea do progresso; tentando reconectar…',
+               'Progress temporarily unavailable; reconnecting…'), lastPercent);
+          await new Promise(resolve => setTimeout(resolve, Math.min(5000, 750 * pollFailures)));
+        }
       }
 
       if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
@@ -10441,6 +10654,7 @@
         state.rfRouteRecordsJobHours = null;
       }
       hideProcessing(token);
+      if (state.rfRouteRecordsToken === token) state.rfRouteRecordsToken = null;
     }
   }
 
@@ -10455,6 +10669,9 @@
     state.topologyStatsGeneration += 1;
     const generation = state.topologyStatsGeneration;
     const previous = state.topologyStatsLastGood;
+
+    // Category counts remain available even when expensive topology stats fail.
+    void refreshStatisticCategories(state.topologyHours, generation);
 
     if (!previous) {
       box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');

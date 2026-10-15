@@ -1187,6 +1187,8 @@ def _route_records_uncached(
     }
     total_edges = max(1, len(unique_edges))
     for index, (pair, edge) in enumerate(unique_edges.items(), start=1):
+        if cancel_check and index % 16 == 0 and cancel_check():
+            raise RuntimeError("Cálculo de Recordes RF cancelado.")
         if _record_edge_allowed(edge):
             reps = _record_event_representatives(edge)
             if reps:
@@ -1240,6 +1242,8 @@ def _route_records_uncached(
 
         cursor = 0
         while cursor < len(queue) and expansions < expansion_limit:
+            if cancel_check and cursor % 24 == 0 and cancel_check():
+                raise RuntimeError("Cálculo de Recordes RF cancelado.")
             path, chosen_events, score, newest_epoch = queue[cursor]
             cursor += 1
             node = path[-1]
@@ -1344,6 +1348,8 @@ def _route_records_uncached(
                 if expansions >= expansion_limit:
                     break
 
+        if cancel_check and cancel_check():
+            raise RuntimeError("Cálculo de Recordes RF cancelado.")
         percent = 20.0 + 70.0 * source_index / total_sources
         _record_progress(
             progress_callback,
@@ -1382,6 +1388,8 @@ def _route_records_uncached(
 
     result: list[dict[str, Any]] = []
     for candidate in ordered:
+        if cancel_check and cancel_check():
+            raise RuntimeError("Cálculo de Recordes RF cancelado.")
         payload = _route_payload(
             list(candidate["path"]),
             graph,

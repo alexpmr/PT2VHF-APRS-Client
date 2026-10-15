@@ -34,6 +34,35 @@ def _validated_position(lat: Any, lon: Any) -> tuple[float, float] | None:
     return float(lat), float(lon)
 
 
+def moving_rf_repeaters(rows: list[Any]) -> set[str]:
+    """Detect moving repeaters from *repeated* historical RF positions.
+
+    One erroneous APRS GPS fix must not hide the links of a fixed digi:
+    require two spatial clusters, each seen in at least two RF events,
+    separated by at least 25 km. SSIDs remain distinct identities.
+    """
+    positions: dict[str, dict[tuple[int, int], list[float]]] = defaultdict(dict)
+    for raw in rows:
+        row = dict(raw)
+        if str(row.get("kind") or "").lower() != "rf":
+            continue
+        call = str(row.get("target") or "").strip().upper()
+        pos = _validated_position(row.get("target_lat"), row.get("target_lon"))
+        if not call or pos is None:
+            continue
+        # Around 5 km buckets so GPS jitter does not imply movement.
+        bucket = (math.floor(pos[0] / 0.05), math.floor(pos[1] / 0.05))
+        entry = positions[call].setdefault(bucket, [pos[0], pos[1], 0])
+        entry[2] += 1
+    moving = set()
+    for call, bins in positions.items():
+        established = [item for item in bins.values() if item[2] >= 2]
+        if any(db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
+               for i, a in enumerate(established) for b in established[i + 1:]):
+            moving.add(call)
+    return moving
+
+
 def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT) -> list[dict[str, Any]]:
     """Group near-coincident event geometries while keeping true GPS snapshots.
 
@@ -42,12 +71,17 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     """
     segments: dict[tuple[Any, ...], dict[str, Any]] = {}
     media_by_pair: dict[tuple[str, str], set[str]] = defaultdict(set)
+    mobile_repeaters = moving_rf_repeaters(rows)
     for raw in rows:
         row = dict(raw)
         src = str(row.get("source") or "").strip().upper()
         dst = str(row.get("target") or "").strip().upper()
         kind = str(row.get("kind") or "").strip().lower()
         if not src or not dst or src == dst or kind not in {"rf", "igate"}:
+            continue
+        # Preserve real RF events for history/coverage, but never draw
+        # spider lines for a repeater observed in multiple distinct regions.
+        if kind == "rf" and (src in mobile_repeaters or dst in mobile_repeaters):
             continue
         source_pos = _validated_position(row.get("source_lat"), row.get("source_lon"))
         target_pos = _validated_position(row.get("target_lat"), row.get("target_lon"))
@@ -164,3 +198,68 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
                 return []
             raise
     return _segments_from_events(rows)
+
+
+def list_mobile_rf_coverage(hours: float = 0, limit: int = 1200) -> list[dict[str, Any]]:
+    """Observed RF repeater activity locations, not predicted continuous coverage.
+
+    Return spatial cells as points; do not interpolate the unmeasured areas.
+    APRS-IS-only events ('igate' kind) never become RF coverage evidence.
+    """
+    try:
+        period = float(hours or 0)
+    except (TypeError, ValueError):
+        period = 0.0
+    period = min(max(period, 0.25), 720.0) if math.isfinite(period) and period > 0 else 0.0
+    where = "WHERE kind='rf' AND target_lat IS NOT NULL AND target_lon IS NOT NULL"
+    params: list[Any] = []
+    if period:
+        where += " AND timestamp>=?"
+        params.append((datetime.now(timezone.utc) - timedelta(hours=period)).isoformat(timespec="seconds"))
+    params.append(MAP_EVENT_SCAN_LIMIT)
+    with db.connection() as conn:
+        rows = [dict(row) for row in conn.execute(
+            f"""SELECT timestamp,source,target,kind,medium,evidence_level,
+                       source_lat,source_lon,target_lat,target_lon
+                  FROM topology_events {where}
+                 ORDER BY timestamp DESC,id DESC LIMIT ?""", params
+        ).fetchall()]
+        # For a short visible period, detect mobility across the retained
+        # history too, not only from the currently filtered local snapshots.
+        if period:
+            reference = [dict(row) for row in conn.execute(
+                """SELECT source,target,kind,medium,evidence_level,
+                          source_lat,source_lon,target_lat,target_lon
+                   FROM topology_events WHERE kind='rf'
+                   ORDER BY timestamp DESC,id DESC LIMIT ?""",
+                (MAP_EVENT_SCAN_LIMIT,)
+            ).fetchall()]
+        else:
+            reference = rows
+    mobile = moving_rf_repeaters(reference)
+    cells: dict[tuple[str, int, int, str], dict[str, Any]] = {}
+    for row in rows:
+        call = str(row.get("target") or "").strip().upper()
+        if call not in mobile:
+            continue
+        pos = _validated_position(row.get("target_lat"), row.get("target_lon"))
+        if pos is None:
+            continue
+        direct = str(row.get("medium") or "").upper() == "RF" and str(row.get("evidence_level") or "") != "inferred"
+        evidence = "direct" if direct else "inferred"
+        # Approximately 2 km cells, with positions averaged only within
+        # observed cells. Never join distant cells into lines/polygons.
+        a, b = int(math.floor(pos[0] / 0.02)), int(math.floor(pos[1] / 0.02))
+        key = (call, a, b, evidence)
+        item = cells.get(key)
+        if item is None:
+            item = {"callsign": call, "latitude": pos[0], "longitude": pos[1],
+                    "count": 0, "first_seen": row.get("timestamp"),
+                    "last_seen": row.get("timestamp"), "evidence": evidence,
+                    "label": "RF observado" if direct else "RF inferido pelo path"}
+            cells[key] = item
+        item["count"] += 1
+        timestamp = str(row.get("timestamp") or "")
+        item["first_seen"] = min(str(item["first_seen"] or timestamp), timestamp)
+        item["last_seen"] = max(str(item["last_seen"] or timestamp), timestamp)
+    return sorted(cells.values(), key=lambda x: (x["last_seen"], x["count"]), reverse=True)[:max(1, min(int(limit), 3000))]

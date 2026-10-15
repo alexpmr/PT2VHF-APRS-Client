@@ -1,3 +1,12 @@
+## 1.14.39 - 2026-10-14
+
+- Recordes RF observados: remover o prazo absoluto de 45 s dos jobs de cálculo em segundo plano, incluir botão X para cancelamento efetivo, tempo decorrido e ETA baseado na evolução de cada fase; polling com timeout mais tolerante.
+- Estatísticas: novo resumo por categoria com quantidades de estações únicas, mensagens RX/TX, boletins, grupos, objetos APRS, pacotes, pontos de tracklog, digis, iGates e enlaces. Endpoint independente da análise pesada de Recordes RF.
+- Configurações/Retenção: realçar categoria Pacotes (já existente), adicionar botões Limpar tudo por categoria, prévia, confirmação expressa e limpeza assíncrona em lotes, preservando as demais categorias, políticas e mensagens TX pendentes.
+- Mapa/Topologia: ocultar na vista geral enlaces RF associados a repetidores com deslocamento confirmado por evidências geográficas múltiplas; dados históricos permanecem intactos.
+- Camada Ver > Cobertura RF observada: amostras por célula de digipeaters móveis, separando RF direto e inferido e sem interpolar cobertura não amostrada.
+- Testes de regressão de processamento, estatísticas, retenção e mapa. A confirmação operacional em bancos reais grandes continua sendo necessária.
+
 ## 1.14.38 - 2026-10-14
 
 - RF no mapa: todo enlace classificado como RF exibido usa linha contínua, cor e espessura das Configurações; Internet/iGate continua tracejada e com cor própria.

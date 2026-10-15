@@ -1,4 +1,4 @@
-__version__ = "1.14.38"
+__version__ = "1.14.39"
 APP_TOCALL = "APZVHF"
 
 # v1.14.24: instala o modelo de topologia RF espaço-temporal após as
