@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.40": {
+        "title": "Organização do mapa e controle de apresentação",
+        "items": [
+            "Barra do mapa reorganizada para reduzir sobreposição em janelas menores.",
+            "Velocidade de animação movida para Configuração > Mapa.",
+            "Tipo de mapa disponível em Configuração > Mapa, sem seletor duplicado na barra.",
+            "Botão Apresentação alterna entrada e saída do modo de tela cheia.",
+            "Testes automatizados atualizados para a nova organização; validação visual em Windows permanece necessária.",
+        ],
+    },
     "1.14.39": {
         "title": "Recordes RF sem prazo rígido, limpeza seletiva e cobertura observada",
         "items": [
