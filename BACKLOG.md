@@ -1,3 +1,12 @@
+## PENDENTE — Formatação do menu do mapa e transferência de Velocidade/Tipo de mapa para Configuração (issue #98, 15/10/2026)
+
+- **Relato na v1.14.39:** o menu/barra de controles do mapa continua com **formatação incorreta**; usuário solicita remover **Velocidade** e **Tipo de mapa** da barra principal e colocá-los em **Configuração → Mapa**.
+- **Diagnóstico:** `templates/index.html` possui `#topologySpeed` e `#mapTypeQuick` em `#mapContextBar`. **Tipo de mapa já está presente na seção Configuração → Mapa**, como `select[name="map_type"]`: reutilizar, não duplicar. O novo campo **Velocidade da animação APRS** deve oferecer 0,5×, 1×, 2× e 5× (padrão 1×).
+- **Persistência:** conservar `pt2vhf_traffic_speed`, temporizadores, animação de pacotes e sincronismo com o controle da área de replay (`#trafficSpeed`). Conservar `map_type`, provedor selecionado, sincronismo com formulário, fallback OSM em erro de tiles, preferências do usuário e suporte à migração sem perda.
+- **Formatação/UX:** barra principal mais limpa mantendo Histórico, Período, busca/rotas RF, Ver, Camadas e Exportar KML/JSON; corrigir rótulos cortados, sobreposição de botões/dropdowns, espaçamentos, alturas e quebras responsivas. Checar menu sem scroll horizontal forçado ou campos fora da área visível, inclusive janela não maximizada, escala 125/150%, 1366×768, Full HD, temas e idiomas.
+- **Aceite:** Velocidade e Tipo de mapa **não aparecem mais** na barra, estão em Configuração → Mapa e funcionam após salvar/reiniciar; menu responsivo sem perda de comandos; i18n e testes DOM/JS/visuais. Relacionado ao histórico de correções da barra responsiva v1.14.10.
+- **Rastreamento:** [issue #98](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/98). **Registrado, não implementado na v1.14.39.**
+
 ## PENDENTE — Regressão v1.14.39: enlaces RF órfãos de digipeaters móveis ainda aparecem (#94, 15/10/2026)
 
 - **Evidência visual enviada pelo mantenedor:** no mapa do noroeste do Paraná, entre Maringá, Mandaguaçu e Faxinal, diversas **linhas amarelas convergem para repetidores e terminam em posições sem estação correspondente visível**. A nova versão v1.14.39 **não suprimiu todos os enlaces gerados por digis móveis**. Importante: ausência de ícone na extremidade, isoladamente, pode decorrer dos filtros de marcadores; identificar se a geometria histórica é válida antes de atribuir causa.
