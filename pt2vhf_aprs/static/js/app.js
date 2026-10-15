@@ -19,6 +19,8 @@
     objectsEnabled: localStorage.getItem('pt2vhf_map_item_objects') !== '0',
     tracklogEnabled: localStorage.getItem('pt2vhf_map_item_tracklogs') !== '0',
     rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
+    rfCoverageEnabled: localStorage.getItem('pt2vhf_map_item_rf_coverage') === '1',
+    rfCoverageLayer: null,
     igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
     mapViewFilters: (() => {
@@ -2237,6 +2239,7 @@
     objectsEnabled: 'pt2vhf_map_item_objects',
     tracklogEnabled: 'pt2vhf_map_item_tracklogs',
     rfLinksEnabled: 'pt2vhf_map_item_rf',
+    rfCoverageEnabled: 'pt2vhf_map_item_rf_coverage',
     igateLinksEnabled: 'pt2vhf_map_item_igate',
     packetsEnabled: 'pt2vhf_map_item_packets',
   };
@@ -2563,6 +2566,7 @@
       },
       { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled' },
       { id: 'root:rf', label: ui('Enlaces RF', 'RF links'), stateKey: 'rfLinksEnabled' },
+      { id: 'root:rf-coverage', label: ui('Cobertura RF observada (pontos de digis móveis)', 'Observed RF coverage (moving digis)'), stateKey: 'rfCoverageEnabled' },
       { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
       { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
     ];
@@ -2645,6 +2649,7 @@
     if (!state.packetsEnabled) clearTrafficReplayLayers();
     await loadMapData();
     if (!state.topologyEnabled) clearTopologyLines();
+    await loadRfCoverage();
     if (state.stations.length) {
       renderAuxViewTrees(state.stationCatalog.length ? state.stationCatalog : state.stations);
       renderStations();
@@ -4002,6 +4007,37 @@
     state.topologyLines.clear();
   }
 
+  async function loadRfCoverage() {
+    if (!state.map || !state.rfCoverageEnabled || state.activeTab !== 'map' || state.rfRouteAnalysis) {
+      if (state.rfCoverageLayer) { state.map?.removeLayer(state.rfCoverageLayer); state.rfCoverageLayer = null; }
+      return;
+    }
+    try {
+      const samples = await api('/api/topology/rf-coverage?hours=' + encodeURIComponent(state.mapPeriodHours),
+        { timeoutMs: 30000 });
+      if (!state.map || !state.rfCoverageEnabled || state.rfRouteAnalysis) return;
+      const layer = L.layerGroup();
+      for (const sample of (Array.isArray(samples) ? samples : [])) {
+        const lat = Number(sample.latitude), lon = Number(sample.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+        const direct = sample.evidence === 'direct';
+        const color = direct ? '#22c55e' : '#f59e0b';
+        L.circleMarker([lat, lon], { radius: Math.min(9, 4 + Math.log2(1 + Number(sample.count || 1))),
+          weight: 1, color, fillColor: color, opacity: .95, fillOpacity: .65,
+          pane: 'pt2vhfInteractionPane' })
+          .bindPopup('<strong>' + escapeHtml(sample.callsign || '') + '</strong><div>' +
+            escapeHtml(ui('Cobertura RF amostrada — não é previsão de cobertura contínua.', 'Sampled RF coverage — not a prediction.')) +
+            '</div><div>' + escapeHtml(direct ? ui('RF observado', 'Observed RF') :
+            ui('Inferido pelo path APRS', 'Inferred from APRS path')) + '</div><div>' +
+            escapeHtml(ui('Observações: ', 'Observations: ') + Number(sample.count || 0)) +
+            '</div><div>' + escapeHtml(fmtDate(sample.last_seen)) + '</div>')
+          .addTo(layer);
+      }
+      if (state.rfCoverageLayer) state.map.removeLayer(state.rfCoverageLayer);
+      state.rfCoverageLayer = layer.addTo(state.map);
+    } catch (err) { console.warn('Observed RF coverage:', err); }
+  }
+
   async function loadTopology() {
     if (!state.map || (!state.topologyEnabled && !state.rfRouteAnalysis) || state.activeTab !== 'map') return;
     if (state.topologyLoadBusy) {
@@ -4159,6 +4195,7 @@
       if (routeAllowedPairs && state.rfRouteAnalysis?.routes?.length) {
         focusRfRoute(state.rfRouteSelectedIndex);
       }
+      await loadRfCoverage();
     } catch (err) {
       console.warn(err);
     } finally {
