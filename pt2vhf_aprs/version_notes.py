@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.39": {
+        "title": "Recordes RF sem prazo rígido, limpeza seletiva e cobertura observada",
+        "items": [
+            "Cálculos de Recordes RF podem durar mais de 45 segundos e oferecem cancelamento com X e estimativa de tempo restante.",
+            "Estatísticas mostram contagens independentes de mensagens, estações, objetos, pacotes, tracklogs, digis e iGates.",
+            "Configurações permitem limpar uma única categoria do banco por vez, com prévia, confirmação e preservação das demais categorias.",
+            "Mapa oculta linhas espúrias de digipeaters comprovadamente móveis; nova camada mostra locais com cobertura RF observada.",
+            "Provas de conceito e testes automatizados incluídos; validar em campo o histórico completo e a topologia móvel.",
+        ],
+    },
     "1.14.38": {
         "title": "Enlaces RF contínuos e atualização mais confiável no Windows 10",
         "items": [
