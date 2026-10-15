@@ -10569,6 +10569,7 @@
       state.rfRouteRecordsJobHours = normalizedHours;
 
       let lastPercent = 0;
+      let pollFailures = 0;
       while (job && ['queued', 'running'].includes(String(job.status || ''))) {
         if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
         const percent = Math.max(lastPercent, Number(job.percent || 0));
@@ -10582,10 +10583,22 @@
           percent
         );
         await new Promise(resolve => setTimeout(resolve, 650));
-        job = await api(
-          '/api/topology/rf-records/jobs/' + encodeURIComponent(state.rfRouteRecordsJobId),
-          { timeoutMs: 20000 }
-        );
+        try {
+          job = await api(
+            '/api/topology/rf-records/jobs/' + encodeURIComponent(state.rfRouteRecordsJobId),
+            { timeoutMs: 20000 }
+          );
+          pollFailures = 0;
+        } catch (pollError) {
+          // A slow HTTP poll is NOT evidence that the background RF job stopped.
+          // Keep retrying while the user may cancel with X.
+          pollFailures += 1;
+          console.warn('RF records progress poll, retry ' + pollFailures, pollError);
+          updateProcessing(token, ui('Recalculando Recordes RF…', 'Recalculating RF records…'),
+            ui('Sem resposta momentânea do progresso; tentando reconectar…',
+               'Progress temporarily unavailable; reconnecting…'), lastPercent);
+          await new Promise(resolve => setTimeout(resolve, Math.min(5000, 750 * pollFailures)));
+        }
       }
 
       if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
