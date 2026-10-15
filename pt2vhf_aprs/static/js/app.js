@@ -10657,6 +10657,9 @@
     const generation = state.topologyStatsGeneration;
     const previous = state.topologyStatsLastGood;
 
+    // Category counts remain available even when expensive topology stats fail.
+    void refreshStatisticCategories(state.topologyHours, generation);
+
     if (!previous) {
       box.textContent = ui('Carregando estatísticas…', 'Loading statistics…');
       for (const selector of ['#analysisMetricEdges', '#analysisMetricPackets', '#analysisMetricEvents']) {
@@ -10681,7 +10684,6 @@
       if (generation !== state.topologyStatsGeneration) return;
       state.topologyStatsLastGood = data;
       renderTopologyStatsData(data);
-      void refreshStatisticCategories(state.topologyHours, generation);
       void refreshRfRouteRecordsDeferred(generation, state.topologyHours);
     } catch (err) {
       if (generation !== state.topologyStatsGeneration) return;
