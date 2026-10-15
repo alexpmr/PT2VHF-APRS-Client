@@ -1,6 +1,8 @@
-# PT2VHF APRS Client - v1.14.39
+# PT2VHF APRS Client - v1.14.40
 
 Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
+
+A **v1.14.40** reorganiza os controles do mapa, transfere velocidade e tipo de mapa para Configuração → Mapa, aprimora a barra responsiva e permite sair do modo Apresentação pelo próprio botão. A identificação e movimentação de **OPÇÃO** para Histórico permanecem pendentes de validação visual; outras pendências do backlog também continuam abertas. Os downloads da versão anterior continuam indicados abaixo até a publicação dos novos binários.
 
 A **v1.14.39** amplia as Estatísticas com **contagens de estações, mensagens, objetos e pacotes**, permite **Limpar tudo por categoria** com confirmação, elimina o prazo rígido de 45 segundos para calcular Recordes RF no background (botão X e previsão de tempo) e cria a camada **Cobertura RF observada**, com pontos históricos de repetidores móveis em vez de linhas espúrias. Em bancos grandes e estações reais, a validação funcional ainda é necessária. Os downloads abaixo ainda são da última release publicada até que o pipeline de produção gere e valide os novos instaladores.
 
