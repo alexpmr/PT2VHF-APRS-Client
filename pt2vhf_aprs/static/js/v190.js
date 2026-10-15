@@ -538,11 +538,36 @@
 
   function installPresentationMode() {
     const bar=$('.map-context-controls'); if(!bar || $('#v190Presentation')) return;
-    const b=document.createElement('button');b.id='v190Presentation';b.className='btn secondary';b.type='button';b.textContent='⛶ '+tr('Apresentação','Presentation','Presentación','Présentation');bar.appendChild(b);
-    const exit=document.createElement('button');exit.id='v190PresentationExit';exit.className='btn secondary hidden';exit.textContent='× '+tr('Sair','Exit','Salir','Quitter');document.body.appendChild(exit);
-    const off=()=>{document.body.classList.remove('v190-presentation');exit.classList.add('hidden');if(document.fullscreenElement)document.exitFullscreen?.();};
-    b.onclick=()=>{document.body.classList.add('v190-presentation');exit.classList.remove('hidden');document.documentElement.requestFullscreen?.().catch(()=>{});setTimeout(()=>window.map?.invalidateSize?.(),200);};
-    exit.onclick=off;document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('v190-presentation'))off();});
+    const b=document.createElement('button');
+    b.id='v190Presentation'; b.className='btn secondary'; b.type='button';
+    b.textContent='⛶ '+tr('Apresentação','Presentation','Presentación','Présentation');
+    b.setAttribute('aria-pressed','false'); bar.appendChild(b);
+    const exit=document.createElement('button'); exit.id='v190PresentationExit';
+    exit.className='btn secondary hidden'; exit.type='button';
+    exit.textContent='× '+tr('Sair','Exit','Salir','Quitter'); document.body.appendChild(exit);
+    const resize=()=>setTimeout(()=>window.map?.invalidateSize?.(),200);
+    const off=()=>{
+      document.body.classList.remove('v190-presentation');
+      exit.classList.add('hidden'); b.setAttribute('aria-pressed','false');
+      b.textContent='⛶ '+tr('Apresentação','Presentation','Presentación','Présentation');
+      b.removeAttribute('style'); bar.appendChild(b);
+      if(document.fullscreenElement) document.exitFullscreen?.().catch(()=>{});
+      resize();
+    };
+    const on=()=>{
+      document.body.classList.add('v190-presentation');
+      exit.classList.remove('hidden'); b.setAttribute('aria-pressed','true');
+      b.textContent='× '+tr('Sair da apresentação','Exit presentation','Salir de presentación','Quitter la présentation');
+      document.body.appendChild(b);
+      Object.assign(b.style,{position:'fixed',right:'16px',top:'12px',zIndex:'2147483647'});
+      document.documentElement.requestFullscreen?.().catch(()=>{});
+      resize();
+    };
+    b.onclick=()=>document.body.classList.contains('v190-presentation')?off():on();
+    exit.onclick=off;
+    document.addEventListener('fullscreenchange',()=>{
+      if(!document.fullscreenElement && document.body.classList.contains('v190-presentation')) off();
+    });
   }
 
   async function alertPoll() {
