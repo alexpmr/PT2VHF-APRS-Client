@@ -903,6 +903,7 @@
     document.body?.setAttribute('aria-busy', active ? 'true' : 'false');
     if (!active) {
       overlay.classList.remove('nonblocking');
+      $('#globalProcessingCancel')?.classList.add('hidden');
       return;
     }
     const current = entries[entries.length - 1];
@@ -915,6 +916,8 @@
       'Aguarde enquanto a operação é concluída.',
       'Please wait while the operation completes.'
     );
+    const cancelControl = $('#globalProcessingCancel');
+    if (cancelControl) cancelControl.classList.toggle('hidden', !current.cancelable);
     const progressWrap = $('#globalProcessingProgress');
     const progressBar = $('#globalProcessingProgressBar');
     const progressText = $('#globalProcessingProgressText');
@@ -937,6 +940,7 @@
       message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.'),
       blocking: options?.blocking !== false,
       progress: Number.isFinite(Number(options?.progress)) ? Number(options.progress) : null,
+      cancelable: options?.cancelable === true,
       visible: false,
       timer: null,
     };
@@ -10170,13 +10174,21 @@
     if (Number(progress.nodes || 0)) details.push(Number(progress.nodes).toLocaleString(currentLocale()) + ' ' + ui('nós', 'nodes'));
     if (Number(progress.edges || 0)) details.push(Number(progress.edges).toLocaleString(currentLocale()) + ' ' + ui('enlaces', 'links'));
     if (Number(progress.candidates || 0)) details.push(Number(progress.candidates).toLocaleString(currentLocale()) + ' ' + ui('candidatos', 'candidates'));
-    if (Number(progress.elapsed_ms || 0) > 0) details.push((Number(progress.elapsed_ms) / 1000).toFixed(1) + ' s');
+    if (Number(progress.elapsed_ms || 0) > 0) details.push(ui('Decorrido: ', 'Elapsed: ') + (Number(progress.elapsed_ms) / 1000).toFixed(0) + ' s');
+    const eta = Number(progress.eta_seconds);
+    details.push(ui('Restante estimado: ', 'Estimated remaining: ') +
+      (Number.isFinite(eta) && eta >= 0 && progress.eta_seconds !== null && progress.eta_seconds !== undefined
+        ? (eta < 120 ? Math.ceil(eta) + ' s' : Math.ceil(eta / 60) + ' min')
+        : ui('calculando…', 'calculating…')));
 
     return '<div class="topology-stat-group rf-route-records-group">' +
       '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
       '<div class="rf-record-progress" role="status" aria-live="polite">' +
         '<div class="rf-record-progress-head"><strong>' + escapeHtml(rfRecordProgressLabel(progress)) + '</strong>' +
-        '<span>' + Math.round(percent) + '%</span></div>' +
+        '<span>' + Math.round(percent) + '%</span>' +
+        '<button type="button" class="rf-record-cancel" data-rf-record-cancel="1" title="' +
+          escapeHtml(ui('Cancelar processamento e fechar', 'Cancel calculation and close')) + '" aria-label="' +
+          escapeHtml(ui('Cancelar processamento e fechar', 'Cancel calculation and close')) + '">×</button></div>' +
         '<div class="rf-record-progress-track" aria-label="' + escapeHtml(ui('Progresso do cálculo dos enlaces', 'RF link calculation progress')) + '">' +
           '<div class="rf-record-progress-bar" style="width:' + percent.toFixed(1) + '%"></div>' +
         '</div>' +
@@ -10325,6 +10337,36 @@
     renderClientVersionStats(data.client_versions);
   }
 
+  async function cancelRfRecordsAndClose() {
+    const jobId = String(state.rfRouteRecordsJobId || '');
+    state.rfRouteRecordsGeneration += 1;
+    state.rfRouteRecordsJobId = '';
+    state.rfRouteRecordsJobHours = null;
+    const token = state.rfRouteRecordsToken;
+    state.rfRouteRecordsToken = null;
+    if (token) hideProcessing(token);
+    const host = $('#rfRouteRecordsHost');
+    if (host) host.innerHTML = renderRfRouteRecordsError(
+      ui('Processamento cancelado pelo usuário.', 'Calculation cancelled by user.'),
+      state.rfRouteRecordsLastGood.get(String(state.topologyHours)) || []
+    );
+    if (jobId) {
+      try {
+        await api('/api/topology/rf-records/jobs/' + encodeURIComponent(jobId),
+          { method: 'DELETE', timeoutMs: 15000 });
+      } catch (err) { console.warn('RF cancellation request:', err); }
+    }
+  }
+
+  $('#globalProcessingCancel')?.addEventListener('click', () => { void cancelRfRecordsAndClose(); });
+
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-rf-record-cancel]')) {
+      event.preventDefault();
+      void cancelRfRecordsAndClose();
+    }
+  });
+
   async function cancelRfRouteRecordsJobIfNeeded(nextHours) {
     const currentJob = String(state.rfRouteRecordsJobId || '');
     if (!currentJob || Number(state.rfRouteRecordsJobHours) === Number(nextHours)) return;
@@ -10348,8 +10390,9 @@
     const token = showProcessing(
       ui('Calculando recordes RF…', 'Calculating RF records…'),
       ui('Preparando indexação e cálculo da alcançabilidade.', 'Preparing indexing and reachability calculation.'),
-      { blocking: false, delayMs: 320, progress: 0 }
+      { blocking: false, delayMs: 320, progress: 0, cancelable: true }
     );
+    state.rfRouteRecordsToken = token;
 
     try {
       let job = await api('/api/topology/rf-records/jobs', {
@@ -10384,7 +10427,7 @@
         await new Promise(resolve => setTimeout(resolve, 650));
         job = await api(
           '/api/topology/rf-records/jobs/' + encodeURIComponent(state.rfRouteRecordsJobId),
-          { timeoutMs: 5000 }
+          { timeoutMs: 20000 }
         );
       }
 
@@ -10441,6 +10484,7 @@
         state.rfRouteRecordsJobHours = null;
       }
       hideProcessing(token);
+      if (state.rfRouteRecordsToken === token) state.rfRouteRecordsToken = null;
     }
   }
 
