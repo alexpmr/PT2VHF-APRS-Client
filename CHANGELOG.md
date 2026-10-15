@@ -1,3 +1,11 @@
+## 1.14.40 - 2026-10-15
+
+- Mapa: remover os controles duplicados de Velocidade e Tipo de mapa da barra principal; conservar o tipo de mapa em Configuração > Mapa e transferir a velocidade da animação para o mesmo bloco.
+- Apresentação: o botão passa a alternar entrada e saída, permanecendo acessível em tela cheia; ESC permanece compatível.
+- Interface: melhorar quebra de linha e organização responsiva da barra do mapa.
+- Regressão: adaptar as verificações automatizadas à nova localização dos controles.
+- **Limitações conhecidas:** a identificação contextual do controle “OPÇÃO” e sua inclusão dentro de Histórico ainda requer validação na interface em execução; testes reais de RF, LAN e Windows Legacy seguem pendentes.
+
 ## 1.14.39 - 2026-10-14
 
 - Recordes RF observados: remover o prazo absoluto de 45 s dos jobs de cálculo em segundo plano, incluir botão X para cancelamento efetivo, tempo decorrido e ETA baseado na evolução de cada fase; polling com timeout mais tolerante.
