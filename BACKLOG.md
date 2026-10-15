@@ -1,3 +1,19 @@
+## PENDENTE — Menu Histórico contextual, Apresentação alternável e organização da barra (#98, 15/10/2026)
+
+- **Novo relato com captura na v1.14.39:** a barra/menu continua desformatada. **OPÇÃO** deve sair da barra principal e aparecer somente dentro do menu/painel **Histórico** enquanto estiver aberto; ocultar ao fechar e não perder estado dos comandos de replay. Não há controle com texto literal OPÇÃO no HTML estático; identificar o grupo equivalente na execução antes de alterá-lo.
+- **Mover Velocidade (0,5×/1×/2×/5×)** exclusivamente da barra para **Configuração → Mapa**; preservar preferência `pt2vhf_traffic_speed`, animação e sincronismo com o painel de Histórico. **Tipo de mapa** também deve sair da barra e continuar no campo existente `map_type` da configuração, sem duplicação ou perda de seleção/fallback OSM.
+- **Botão Apresentação toggle:** primeiro clique entra em modo apresentação e fullscreen; **segundo clique no mesmo botão restaura modo normal**, sem Esc. Manter o botão disponível durante apresentação, com estado `aria-pressed`, ação de sair, rótulo acessível, sincronismo com `fullscreenchange` e atualização de tamanho Leaflet. Esc deve continuar funcionando. **Causa confirmada:** `v190.js::installPresentationMode()` configura atualmente o clique principal apenas para entrar, com saída por botão secundário ou Esc.
+- **UI:** ordem/layout compacto e responsivo (Histórico, Período, busca RF, Ver, Camadas, Exportações, Apresentação), menus sem cortes, labels alinhados e sem sobreposição em janela reduzida, zoom 125–150%, Windows 7/10/11, claro/escuro e idiomas.
+- **Rastreamento:** [issue #98](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/98). **Requisito complementado; não implementado nem validado na v1.14.39.**
+
+## PENDENTE — Cabeçalho Web: IP:porta como botão e ativação LAN antes de abrir navegador (#99, 15/10/2026)
+
+- **Captura de cabeçalho:** atualmente mostra `Web em uso: 192.168.10.61:8080` como etiqueta. Exibir **somente um botão `IP:porta`** (sem “Web em uso”/“Web LAN”/“Web local”, sem protocolo), mantendo sinais de estado e acessibilidade por tooltip/título.
+- **Ação:** ao clicar no IP, abrir navegador padrão externo com a URL completa e atual do listener. **Se Web LAN estiver desativado, ativar e esperar servidor no IP LAN responder antes de abrir**. Evitar abrir URL inativa; porta/IP devem vir do runtime, inclusive após fallback ou mudança de interface. Não navegar para um destino arbitrário fornecido pelo frontend.
+- **Implementação:** em Windows, o servidor inicia em `127.0.0.1` ou `0.0.0.0` conforme `web_lan_enabled` (`windows_app.py`); `/api/config` marca `restart_required` quando a opção muda. A ativação precisa reconfigurar/reiniciar listener/instância com segurança, preservando TNC/APRS, e checar health antes da abertura. Falhas de firewall/porta devem mostrar erro, não falsa disponibilidade. Em navegador LAN já remoto, abrir nova aba sem tentar reinício indevido da máquina remota.
+- **Segurança:** ativação LAN somente por pedido explícito, tratamento de redes públicas/firewall, proteção de endpoints administrativos, feedback 'ativando/abrindo/erro' e evitar múltiplas ativações por duplo clique. Preservar `open_browser_on_start=0`; o clique manual não deve mudar essa preferência.
+- **Rastreamento:** [issue #99](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/99), relacionada a #78/#79/#80. **Registrada; não implementada nem validada na v1.14.39.**
+
 ## PENDENTE — Formatação do menu do mapa e transferência de Velocidade/Tipo de mapa para Configuração (issue #98, 15/10/2026)
 
 - **Relato na v1.14.39:** o menu/barra de controles do mapa continua com **formatação incorreta**; usuário solicita remover **Velocidade** e **Tipo de mapa** da barra principal e colocá-los em **Configuração → Mapa**.
