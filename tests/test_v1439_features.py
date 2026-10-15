@@ -61,7 +61,7 @@ def test_fast_category_statistics_count_retained_data_without_duplicate_stations
             with db.connection() as conn:
                 conn.execute("INSERT INTO stations(callsign,last_heard) VALUES('PT2VHF',?)", (now,))
                 for _ in range(3):
-                    conn.execute("INSERT INTO packets(timestamp,from_call) VALUES(?,'PT2VHF')", (now,))
+                    conn.execute("INSERT INTO packets(timestamp,from_call,raw) VALUES(?,'PT2VHF','PT2VHF>APRS:test')", (now,))
                 conn.execute("INSERT INTO messages(timestamp,direction,from_call,to_call,message,message_type) VALUES(?,'in','PT2A','PT2VHF','A','message')", (now,))
                 conn.execute("INSERT INTO messages(timestamp,direction,from_call,to_call,message,message_type) VALUES(?,'out','PT2VHF','PT2A','B','message')", (now,))
                 conn.execute("INSERT INTO messages(timestamp,direction,from_call,to_call,message,message_type) VALUES(?,'in','PT2A','CQ','C','bulletin')", (now,))
