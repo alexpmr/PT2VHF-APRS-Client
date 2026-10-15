@@ -10489,6 +10489,7 @@
   async function cancelRfRecordsAndClose() {
     const jobId = String(state.rfRouteRecordsJobId || '');
     state.rfRouteRecordsGeneration += 1;
+    state.rfRouteCancelPending = true;
     state.rfRouteRecordsJobId = '';
     state.rfRouteRecordsJobHours = null;
     const token = state.rfRouteRecordsToken;
@@ -10533,6 +10534,7 @@
     state.rfRouteRecordsGeneration += 1;
     const localGeneration = state.rfRouteRecordsGeneration;
     const normalizedHours = statisticsPeriodValue(hours);
+    state.rfRouteCancelPending = false;
     await cancelRfRouteRecordsJobIfNeeded(normalizedHours);
 
     const previous = state.rfRouteRecordsLastGood.get(String(normalizedHours)) || [];
@@ -10556,7 +10558,13 @@
         timeoutMs: 8000,
       });
 
-      if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) return;
+      if (generation !== state.topologyStatsGeneration || localGeneration !== state.rfRouteRecordsGeneration) {
+        if (state.rfRouteCancelPending && job?.job_id) {
+          try { await api('/api/topology/rf-records/jobs/' + encodeURIComponent(job.job_id),
+            { method: 'DELETE', timeoutMs: 15000 }); } catch (_) {}
+        }
+        return;
+      }
       state.rfRouteRecordsJobId = String(job?.job_id || '');
       state.rfRouteRecordsJobHours = normalizedHours;
 
