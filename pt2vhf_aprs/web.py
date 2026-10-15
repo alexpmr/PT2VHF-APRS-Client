@@ -207,7 +207,7 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
     with _rf_record_jobs_lock:
         existing_id = _rf_record_job_by_key.get(key)
         existing = _rf_record_jobs.get(existing_id or "")
-        if existing and not force and existing.get("status") in {"queued", "running", "done"}:
+        if existing and (existing.get("status") in {"queued", "running"} or (not force and existing.get("status") == "done")):
             return _rf_record_job_public(existing)
 
         job_id = uuid.uuid4().hex
@@ -1395,6 +1395,14 @@ def create_app() -> Flask:
         except (TypeError, ValueError):
             hours = 0.0
         return jsonify(topology_map.list_map_edges(hours))
+
+    @app.get("/api/topology/rf-coverage")
+    def api_topology_rf_coverage():
+        try:
+            hours = float(request.args.get("hours", 0))
+        except (TypeError, ValueError):
+            hours = 0
+        return jsonify(topology_map.list_mobile_rf_coverage(hours))
 
     @app.get("/api/topology/rf-origins")
     def api_topology_rf_origins():
