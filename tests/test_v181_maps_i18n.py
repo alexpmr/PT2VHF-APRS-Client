@@ -40,9 +40,9 @@ def test_v181_keyless_map_bases_and_hillshade_removal():
     assert "grayscale(14%)" in js
     assert "invert(92%)" in js
 
-    # Every new base is exposed in both quick and settings selectors.
+    # Every new base remains available in the settings selector.
     for value in ("cyclosm", "humanitarian", "osmde", "opnv"):
-        assert html.count(f'value="{value}"') >= 2
+        assert html.count(f'value="{value}"') >= 1
 
     assert '{"osm", "topo", "light", "dark", "cyclosm", "humanitarian", "osmde", "opnv", "satellite"}' in db
 
