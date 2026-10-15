@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
 import platform
 import shlex
+import ssl
 import shutil
 import subprocess
 import sys
 import tarfile
 import threading
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -284,6 +287,60 @@ def _request_exit_after(delay: float = 1.25) -> None:
     threading.Thread(target=worker, name="pt2vhf-update-exit", daemon=True).start()
 
 
+def _is_tls_certificate_error(exc: BaseException) -> bool:
+    """Restrict Windows fallback to TLS certificate validation/handshake errors."""
+    reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+    return isinstance(reason, (ssl.SSLError, ssl.CertificateError))
+
+
+def _windows_native_download(url: str, target: Path, timeout: int = 150) -> None:
+    """Download with the Windows trusted certificate store, keeping TLS validation enabled.
+
+    PowerShell follows GitHub's HTTPS redirects using Windows/.NET trust. It does
+    not disable verification or accept untrusted certificates. Caller verifies
+    release metadata, byte length and GitHub SHA-256 after download.
+    """
+    if sys.platform != "win32":
+        raise RuntimeError("O download TLS nativo está disponível somente no Windows.")
+    quoted_url = url.replace("'", "''")
+    quoted_path = str(target).replace("'", "''")
+    script = (
+        "$ErrorActionPreference='Stop';"
+        "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;"
+        "Invoke-WebRequest -UseBasicParsing -Uri '" + quoted_url + "' "
+        "-OutFile '" + quoted_path + "' -MaximumRedirection 8 "
+        "-TimeoutSec " + str(int(timeout)) + " "
+        "-Headers @{'User-Agent'='PT2VHF-APRS-Client-Updater'};"
+    )
+    encoded = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+    try:
+        result = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded],
+            capture_output=True,
+            check=False,
+            timeout=int(timeout) + 15,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError(
+            "O download HTTPS com os certificados do Windows não respondeu. "
+            "Verifique relógio, atualizações de certificados raiz, proxy e antivírus."
+        ) from exc
+    if result.returncode != 0 or not target.is_file():
+        stderr = result.stderr.decode("utf-8", errors="replace")[-700:]
+        diag.log_event(
+            "update_download_windows_tls_failed",
+            exit_code=result.returncode,
+            stderr=stderr,
+        )
+        raise RuntimeError(
+            "Falha de certificado HTTPS/TLS também ao usar os certificados do Windows. "
+            "Não foi ignorada a validação de segurança. "
+            "Verifique data/hora, certificados raiz, proxy ou inspeção HTTPS; "
+            "como alternativa, acesse a Release oficial pelo navegador."
+        )
+
+
 def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     url = str(asset.get("url") or "").strip()
     name = str(asset.get("name") or "").strip()
@@ -317,13 +374,30 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
             url,
             headers={"User-Agent": f"PT2VHF-APRS-Client/{__version__}"},
         )
-        with urllib.request.urlopen(req, timeout=45) as response, temp.open("wb") as out:
-            while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                out.write(chunk)
-                digest.update(chunk)
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response, temp.open("wb") as out:
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    out.write(chunk)
+                    digest.update(chunk)
+        except Exception as exc:
+            if sys.platform != "win32" or not _is_tls_certificate_error(exc):
+                raise
+            # A certificate failure in Python must not disable HTTPS checks.
+            # Windows may have a valid enterprise/system CA that the bundled
+            # Python runtime cannot see. Reuse the native trusted store.
+            temp.unlink(missing_ok=True)
+            diag.log_event(
+                "update_download_windows_tls_fallback",
+                reason=type(exc).__name__,
+                asset=name,
+            )
+            _windows_native_download(url, temp)
+            with temp.open("rb") as downloaded:
+                for chunk in iter(lambda: downloaded.read(1024 * 1024), b""):
+                    digest.update(chunk)
 
         actual_size = temp.stat().st_size
         if expected_size > 0 and actual_size != expected_size:
