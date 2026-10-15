@@ -13,7 +13,7 @@ assert read("VERSION").strip() == version
 assert f'__version__ = "{version}"' in read("pt2vhf_aprs/__init__.py")
 assert "filevers=(1, 14, 40, 0)" in read("windows/version_info.txt")
 assert "prodvers=(1, 14, 40, 0)" in read("windows/version_info.txt")
-assert "## 1.14.40 - 2026-10-14" in read("CHANGELOG.md")
+assert "## 1.14.40 - 2026-10-15" in read("CHANGELOG.md")
 assert '"1.14.40": {' in read("pt2vhf_aprs/version_notes.py")
 assert "# PT2VHF APRS Client - v1.14.40" in read("README.md")
 assert "issue #90" in read("BACKLOG.md") or "#90" in read("BACKLOG.md")
