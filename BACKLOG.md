@@ -29,6 +29,8 @@
 - **Testar:** histórico grande em Completo que excede 45 s mas evolui e conclui; cancelamento manual com X durante indexação (~0–5%) e busca de rotas; ETA inicial/sob carga; reabrir Estatísticas; manter outros painéis responsivos; nenhuma perda de pacotes RF ou ranking salvo. Relacionado à [issue #93](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/93). **Ainda não implementado.**
 
 
+- **Complemento funcional de 14/10:** durante Estatísticas, se o popup de Recordes RF observar **progresso real no backend**, mesmo com percentual momentaneamente estável, **não interromper o job por timeout fixo**. Distinguir contadores efetivamente processados de heartbeat ocioso, reiniciar apenas um watchdog de inatividade real, manter polling e ETA; cancelamento pelo X continua imediato. Testar execução por vários minutos com trabalho verdadeiro sem abortar aos 45 s.
+
 ## Implementado e validado pelo mantenedor na v1.14.38 — issues #90 e #91 encerradas
 
 - **#91 — RF x Internet:** mapa passa a desenhar todos os enlaces RF exibidos com linha **contínua**, cor e espessura das Configurações. Internet/iGate permanece tracejada. Classificações RF `inferred`, `legacy` e `direct` não mudam e continuam identificadas no popup; bloqueios de salto inferido >250 km e geometria histórica móvel (PT2AP) são preservados. Testes automatizados adicionados. **Mantenedor confirmou em 14/10/2026: “Enlaces na configuração indicada.” Issue #91 encerrada com aceite visual.**
