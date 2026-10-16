@@ -110,6 +110,15 @@ def capture(output_dir: Path) -> None:
                 page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
                 page_errors = []
                 page.on("pageerror", lambda exc: page_errors.append(str(exc)))
+                # Route the CDN URL to the identical official npm Leaflet
+                # dist file in screenshot CI. This tests an actual map even
+                # when unpkg.com is unavailable from the CI environment.
+                leaflet_path = Path(os.environ.get("PT2VHF_MANUAL_LEAFLET_JS", ""))
+                if leaflet_path.is_file():
+                    page.route(
+                        "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+                        lambda route: route.fulfill(path=str(leaflet_path), content_type="text/javascript")
+                    )
                 page.goto(local_url, wait_until="networkidle")
                 # Leaflet comes from a CDN. Bootstrap waits up to ten seconds
                 # before showing a graceful map error; do not take screenshots
