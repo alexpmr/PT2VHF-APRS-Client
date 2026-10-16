@@ -74,7 +74,8 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
 
 
 
-def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT, *,\n                          mobile_callsigns: set[str] | None = None) -> list[dict[str, Any]]:
+def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT, *,
+                          mobile_callsigns: set[str] | None = None) -> list[dict[str, Any]]:
     """Group near-coincident event geometries while keeping true GPS snapshots.
 
     The packet-level source/target positions MUST come from topology_events;
