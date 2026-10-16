@@ -47,12 +47,16 @@ def test_mixed_inferred_then_direct_events_produce_auditable_aggregate():
     }
     rows = [dict(base, medium="APRS-IS", evidence_level="inferred"),
             dict(base, medium="RF", evidence_level="direct")]
-    result = topology_map._segments_from_events(rows)[0]
-    assert result["packet_count"] == 2
-    assert result["rf_direct_count"] == 1
-    assert result["rf_transport_count"] == 1
-    assert result["rf_path_count"] == 1
-    assert result["direct_rf_confirmed"] is True
+    result = topology_map._segments_from_events(rows)
+    # Inferred APRS-IS and direct TNC observations remain distinct records;
+    # they must not inflate each other's direct RF evidence.
+    by_kind = {edge["kind"]: edge for edge in result}
+    assert set(by_kind) == {"rf", "rf_temp"}
+    assert by_kind["rf"]["rf_path_count"] == 1
+    assert by_kind["rf"]["direct_rf_confirmed"] is False
+    assert by_kind["rf_temp"]["rf_transport_count"] == 1
+    assert by_kind["rf_temp"]["rf_direct_count"] == 1
+    assert by_kind["rf_temp"]["direct_rf_confirmed"] is True
 
 
 def test_frontend_does_not_display_unverified_long_hops_as_normal_rf():
@@ -62,7 +66,8 @@ def test_frontend_does_not_display_unverified_long_hops_as_normal_rf():
     assert "inferredRouteEdge ? '#94a3b8'" not in js
     assert "style.dashArray = '5 7'" not in js
     assert "if (edge.kind !== 'igate' && legacyRouteEdge) style.dashArray" not in js
-    assert "color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in js
+    assert "state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in js
+    assert "temporaryRf ? state.mapConfig.topology_rf_temporary_color" in js
     assert "dashArray: edge.kind === 'igate' ? '7 5' : null" in js
     assert "topologyEdgeDistanceKm(geometryEdge) > 250" in js
     assert "if (!window.isSecureContext)" in js

@@ -67,7 +67,8 @@ def test_fixed_only_rf_is_still_visible_even_without_internet():
     rows = [event("PT2FIX-1", "PT2FIX-2", FIXED_A, FIXED_B)]
     edges = topology_map._segments_from_events(rows)
     assert len(edges) == 1
-    assert edges[0]["kind"] == "rf"
+    # One new, directly heard fixed-to-fixed RF contact is temporary for 3h.
+    assert edges[0]["kind"] == "rf_temp"
     assert edges[0]["direct_rf_confirmed"] is True
     assert edges[0]["source_lat"] == FIXED_A[0]
 

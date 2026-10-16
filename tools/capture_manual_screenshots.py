@@ -108,7 +108,44 @@ def capture(output_dir: Path) -> None:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
+                page_errors = []
+                page.on("pageerror", lambda exc: page_errors.append(
+                    "JS EXCEPTION: " + str(exc) + " STACK: " + str(getattr(exc, "stack", ""))))
+                page.on("console", lambda msg: page_errors.append(
+                    "CONSOLE ERROR: " + str(msg.location) + " " + msg.text)
+                    if msg.type == "error" else None)
+                cdp = page.context.new_cdp_session(page)
+                cdp.send("Runtime.enable")
+                cdp.on("Runtime.exceptionThrown", lambda event: page_errors.append(
+                    "CDP EXCEPTION: " + repr(event.get("exceptionDetails", {}))))
+                # Route the CDN URL to the identical official npm Leaflet
+                # dist file in screenshot CI. This tests an actual map even
+                # when unpkg.com is unavailable from the CI environment.
+                leaflet_path = Path(os.environ.get("PT2VHF_MANUAL_LEAFLET_JS", ""))
+                if leaflet_path.is_file():
+                    page.route(
+                        "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+                        lambda route: route.fulfill(path=str(leaflet_path), content_type="text/javascript")
+                    )
                 page.goto(local_url, wait_until="networkidle")
+                # Leaflet comes from a CDN. Bootstrap waits up to ten seconds
+                # before showing a graceful map error; do not take screenshots
+                # or navigate the app while that async startup is still pending.
+                try:
+                    page.wait_for_function(
+                        """() => Boolean(window.pt2vhfMainMap && typeof window.pt2vhfMainMap.hasLayer === 'function')
+                               || (document.querySelector('#map')?.textContent || '').includes('O mapa não pôde ser carregado')""",
+                        timeout=18000,
+                    )
+                except Exception as exc:
+                    details = page.evaluate("""() => ({
+                      leaflet: typeof window.L, mapObject: typeof window.pt2vhfMainMap,
+                      content: (document.querySelector('#map')?.textContent || '').slice(0, 180),
+                      activeTab: document.querySelector('.tab-panel.active')?.id || null
+                    })""")
+                    print(f"Manual map startup diagnostic: {details!r}; browser errors: {page_errors[-8:]!r}; {exc}", flush=True)
+                    # A slow or unavailable third-party CDN must not prevent
+                    # the remaining local configuration screenshots/tests.
                 page.wait_for_timeout(1800)
                 # Em release nova, o popup legítimo "Novidades" cobre as abas.
                 # Confirmá-lo antes dos testes reais de clique (em vez de usar
@@ -127,6 +164,19 @@ def capture(output_dir: Path) -> None:
                 page.wait_for_timeout(700)
                 # A v1.6 usa uma única página de Configuração, compartimentalizada por seções.
                 page.screenshot(path=str(output_dir / "config-aprs.png"))
+                # SPA startup can be delayed by the first API/config fetch. Confirm
+                # actual user-visible navigation, never force-click hidden controls.
+                for attempt in range(3):
+                    if page.locator("#toggleFilterBuilderButton").is_visible():
+                        break
+                    page.locator('.tab[data-tab="config"]').click()
+                    page.wait_for_timeout(900)
+                if not page.locator("#toggleFilterBuilderButton").is_visible():
+                    active = page.locator("#tab-config").get_attribute("class")
+                    raise RuntimeError(
+                        f"Manual screenshot: filter editor not visible after config tab navigation "
+                        f"(tab={active!r}, page_errors={page_errors[-5:]!r})"
+                    )
                 page.locator("#toggleFilterBuilderButton").scroll_into_view_if_needed()
                 page.evaluate("() => document.querySelector('#toggleFilterBuilderButton').click()")
                 page.wait_for_timeout(350)

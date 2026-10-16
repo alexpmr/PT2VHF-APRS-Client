@@ -963,6 +963,7 @@
               <select id="coordinateInputMode">
                 <option value="decimal">Decimal</option>
                 <option value="dms">Graus / minutos / segundos</option>
+                <option value="grid">Grid Locator (Maidenhead)</option>
               </select>
             </label>
             <button id="useCurrentLocationButton" type="button" class="btn secondary location-fill-button">Usar minha localização atual</button>
@@ -971,6 +972,23 @@
           <div id="coordinateDecimalFields" class="coordinate-decimal-grid full">
             <label class="field"><span>Latitude <em class="required-badge">Obrigatório</em></span><input name="latitude" id="latitudeDecimal" type="number" step="0.000001" min="-90" max="90" placeholder="Ex.: -15.800000"></label>
             <label class="field"><span>Longitude <em class="required-badge">Obrigatório</em></span><input name="longitude" id="longitudeDecimal" type="number" step="0.000001" min="-180" max="180" placeholder="Ex.: -47.900000"></label>
+          </div>
+          <div id="coordinateGridFields" class="coordinate-tools full hidden">
+            <label class="field coordinate-mode-field">
+              <span>Grid Locator Maidenhead</span>
+              <input id="gridLocatorInput" type="text" maxlength="10" autocomplete="off" spellcheck="false" placeholder="Ex.: GH64" aria-describedby="gridLocatorStatus">
+            </label>
+            <label class="field coordinate-mode-field">
+              <span>Precisão do Grid</span>
+              <select id="gridLocatorPrecision">
+                <option value="4">4 caracteres</option>
+                <option value="6" selected>6 caracteres</option>
+                <option value="8">8 caracteres</option>
+                <option value="10">10 caracteres</option>
+              </select>
+            </label>
+            <button type="button" id="gridLocatorApply" class="btn secondary">Usar estas coordenadas</button>
+            <span id="gridLocatorStatus" class="hint coordinate-location-status" role="status" aria-live="polite">O centro da célula é uma posição aproximada; nenhuma coordenada será alterada até a confirmação.</span>
           </div>
           <div id="coordinateDmsFields" class="coordinate-dms-grid full hidden">
             <div class="coordinate-dms-group">
@@ -1188,6 +1206,21 @@
             <div class="color-field-row">
               <input name="topology_rf_color" type="color" value="#ffff00" aria-label="Cor dos enlaces RF">
               <input id="topologyRfColorText" type="text" value="#ffff00" maxlength="7" placeholder="#ffff00">
+            </div>
+          </label>
+          <label class="field">
+            <span>Cor RF temporário (3 h)</span>
+            <div class="color-field-row">
+              <input name="topology_rf_temporary_color" type="color" value="#00d9ef" aria-label="Cor dos enlaces RF temporários">
+              <input id="topologyRfTemporaryColorText" type="text" value="#00d9ef" maxlength="7" placeholder="#00d9ef">
+            </div>
+            <small>Contatos RF pontuais entre estações fixas; expiram 3 horas após o último contato confirmado.</small>
+          </label>
+          <label class="field">
+            <span>Espessura RF temporário</span>
+            <div class="range-field-row">
+              <input name="topology_rf_temporary_width" id="topologyRfTemporaryWidth" type="range" min="1" max="10" step="1" value="3">
+              <output id="topologyRfTemporaryWidthValue" for="topologyRfTemporaryWidth">3 px</output>
             </div>
           </label>
           <label class="field">
@@ -1814,6 +1847,7 @@
 <script src="{{ url_for('static', filename='js/i18n_v1425.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_v1426.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_v1430.js') }}"></script>
+<script src="{{ url_for('static', filename='js/maidenhead.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>

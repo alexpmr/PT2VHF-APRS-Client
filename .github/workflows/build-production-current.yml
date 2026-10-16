@@ -23,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.40 production release
+      - name: Validate v1.14.41 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_40.py
+        run: python tools\apply_release_1_14_41.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -116,9 +116,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.14.40 production release
+      - name: Validate v1.14.41 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_40.py
+        run: python tools\apply_release_1_14_41.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -211,7 +211,7 @@ jobs:
 
       - name: Validate v1.14.38 release metadata
         shell: pwsh
-        run: python tools\apply_release_1_14_40.py
+        run: python tools\apply_release_1_14_41.py
 
       - name: Install Win7 Legacy dependencies
         shell: pwsh
@@ -300,9 +300,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.40 production release
+      - name: Validate v1.14.41 production release
         shell: bash
-        run: python tools/apply_release_1_14_40.py
+        run: python tools/apply_release_1_14_41.py
 
       - name: Build Linux packages
         shell: bash
@@ -335,9 +335,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.40 production release
+      - name: Validate v1.14.41 production release
         shell: bash
-        run: python tools/apply_release_1_14_40.py
+        run: python tools/apply_release_1_14_41.py
 
       - name: Build Linux ARM64 packages
         shell: bash
@@ -376,7 +376,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_14_40.py
+          python tools/apply_release_1_14_41.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -406,9 +406,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.40 production release
+      - name: Validate v1.14.41 production release
         shell: bash
-        run: python tools/apply_release_1_14_40.py
+        run: python tools/apply_release_1_14_41.py
 
       - name: Build macOS DMG
         shell: bash
@@ -444,9 +444,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.14.40 production release
+      - name: Validate v1.14.41 production release
         shell: bash
-        run: python tools/apply_release_1_14_40.py
+        run: python tools/apply_release_1_14_41.py
 
       - name: Generate versioned PDF manual
         shell: bash
@@ -458,7 +458,10 @@ jobs:
           version="$(tr -d '\r\n ' < VERSION)"
           mkdir -p dist-docs/screenshots
           cp pt2vhf_aprs/static/img/app_logo.png dist-docs/manual_logo.png
-          python tools/capture_manual_screenshots.py --output-dir dist-docs/screenshots
+          # Pin the exact Leaflet version used by the app and serve it
+          # locally to Playwright; GitHub-hosted runners cannot rely on CDN.
+          npm install --prefix dist-docs/leaflet-runtime --no-save --ignore-scripts --silent leaflet@1.9.4
+          PT2VHF_MANUAL_LEAFLET_JS="$PWD/dist-docs/leaflet-runtime/node_modules/leaflet/dist/leaflet.js" python tools/capture_manual_screenshots.py --output-dir dist-docs/screenshots
           python tools/generate_manual.py --logo dist-docs/manual_logo.png --screenshots-dir dist-docs/screenshots --output "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
           python tools/validate_manual.py "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
 
