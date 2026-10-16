@@ -1191,6 +1191,21 @@
             </div>
           </label>
           <label class="field">
+            <span>Cor RF temporário (3 h)</span>
+            <div class="color-field-row">
+              <input name="topology_rf_temporary_color" type="color" value="#00d9ef" aria-label="Cor dos enlaces RF temporários">
+              <input id="topologyRfTemporaryColorText" type="text" value="#00d9ef" maxlength="7" placeholder="#00d9ef">
+            </div>
+            <small>Contatos RF pontuais entre estações fixas; expiram 3 horas após o último contato confirmado.</small>
+          </label>
+          <label class="field">
+            <span>Espessura RF temporário</span>
+            <div class="range-field-row">
+              <input name="topology_rf_temporary_width" id="topologyRfTemporaryWidth" type="range" min="1" max="10" step="1" value="3">
+              <output id="topologyRfTemporaryWidthValue" for="topologyRfTemporaryWidth">3 px</output>
+            </div>
+          </label>
+          <label class="field">
             <span>Cor da topologia via IGate</span>
             <div class="color-field-row">
               <input name="topology_igate_color" type="color" value="#ffff00" aria-label="Cor dos enlaces IGate">

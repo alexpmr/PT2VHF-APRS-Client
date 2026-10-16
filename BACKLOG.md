@@ -1,3 +1,10 @@
+## EM IMPLEMENTAÇÃO — RF temporário (3 horas) — #107
+
+- **Requisito:** novo tipo de enlace temporário, com cor/espessura próprias e expiração **3h depois do último contato RF confirmado**, renovada a cada contato, sem reintrodução dos trackers móveis já corrigidos.
+- **Critério operacional inicial:** contato RF direto entre entidades de posições fixas válidas é temporário enquanto não houver recorrência demonstrada por contatos diretos separados por pelo menos 3h; após isso classificar como RF regular. Rajadas de pacotes não estabelecem permanência.
+- **Implementação candidata:** tipo `rf_temp`, hora `expires_at`, cor padrão #00D9EF, 3px configuráveis em Configuração → Mapa, legenda e popup, limpeza automática em 30s sem apagar eventos históricos. APRS-IS/inferência não renova expiração.
+- **Validações:** fronteira temporal, recorrência, mobilidade em source/target, migração SQLite, interface e testes multi-SO. Ver [issue #107](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/107). Código ainda não publicado.
+
 ## CAMPO — v1.14.40: atualizador OK; barra do mapa alta; enlaces móveis persistem (16/10/2026)
 
 - **Resultado positivo em uso real:** mantenedor relata que o **Update via app está funcionando bem** nesta nova observação. Registrar sucesso sem extrapolar para todos os sistemas/cenários; as falhas anteriores no Windows 10 (#103) exigem confirmação de que o problema deixou de ocorrer de modo reproduzível antes de fechar a issue.
