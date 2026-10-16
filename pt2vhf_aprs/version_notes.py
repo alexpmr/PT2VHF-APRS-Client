@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.41": {
+        "title": "RF temporário, Grid Locator e melhorias de interface",
+        "items": [
+            "RF temporário expira após 3 h sem contato direto, com cor e espessura ajustáveis.",
+            "Entrada de localização via Maidenhead de 4 a 10 caracteres, aplicada somente após confirmação.",
+            "Indicadores CPU/RAM empilhados para economizar espaço no cabeçalho.",
+            "Mapa mantém proteção contra enlaces de trackers móveis e pesquisa RF compacta.",
+            "Permanecem pendências de campo e melhorias adicionais listadas no BACKLOG.md.",
+        ],
+    },
     "1.14.40": {
         "title": "Organização do mapa e controle de apresentação",
         "items": [
