@@ -1,3 +1,12 @@
+## 1.14.41 - 2026-10-16
+
+- Novo tipo RF temporário de duração de 3 horas após o último contato RF confirmado, com cor ciano e espessura independentes, exibidas na Configuração > Mapa.
+- Enlaces móveis permanecem filtrados da topologia, com posições históricas preservadas para a camada de cobertura RF observada.
+- Barra superior: gauges de CPU e RAM empilhados, poupando largura sem perder indicadores nem alertas.
+- Atualizador Windows: fallback de download HTTPS com cadeia de confiança do Windows, sem desabilitar certificados, mais validação SHA-256.
+- Estação: Grid Locator Maidenhead de 4/6/8/10 caracteres com conversão para centro de célula e confirmação explícita; coordenadas canônicas e banco preservados.
+- Nova bateria de testes de TTL, regressão de topologia móvel, certificados TLS, layout e conversão de coordenadas.
+- Limitações: validação física RF, diagnóstico de falso sucesso de instalação Windows 10 (#103), cobertura real de Brasília e itens históricos do backlog continuam pendentes; a release não encerra integralmente o backlog.
 ## 1.14.40 - 2026-10-15
 
 - Mapa: remover os controles duplicados de Velocidade e Tipo de mapa da barra principal; conservar o tipo de mapa em Configuração > Mapa e transferir a velocidade da animação para o mesmo bloco.
