@@ -9828,6 +9828,7 @@
         if ($('#altitudeSourceInput')) $('#altitudeSourceInput').value = altitudeSource;
       }
       syncDmsFromDecimal();
+      syncMaidenheadFromDecimal();
       updateAltitudeSourceStatus(altitudeSource, altitudeValue);
       refreshRequiredFieldHighlights();
       if (state.activeTab === 'config' && state.configLoaded && !state.configLoading) markConfigDirty();
