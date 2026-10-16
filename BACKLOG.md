@@ -1,3 +1,10 @@
+## PENDENTE — Gauges CPU e RAM empilhados no cabeçalho (#109, 16/10/2026)
+
+- **Interface:** na barra superior, apresentar as duas métricas em um bloco vertical estreito, **CPU acima de RAM**, em vez de dois cards lado a lado; reduzir o espaço horizontal consumido sem aumentar desnecessariamente a altura da barra.
+- **Manter:** leitura atual CPU (%) e RAM (MB), barras de progresso com escala e cores existentes, alertas de aviso/crítico, tooltip diagnóstico, IDs `headerCpuUsage`/`headerMemoryUsage`, atualização periódica e responsividade. Garantir largura para os valores em ambientes com RAM elevada.
+- **Aceite visual:** zoom 100/125/150%, temas claro/escuro, Windows 7/10/11 e navegadores LAN; não deslocar versão, TNC, conexão ou idioma, sem corte/overflow. Alteração CSS isolada; não alterar API nem cálculo das métricas.
+- **Rastreamento:** [issue #109](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/109). Ainda não publicado na v1.14.40.
+
 ## CAMPO — v1.14.40: atualizador OK; barra do mapa alta; enlaces móveis persistem (16/10/2026)
 
 - **Resultado positivo em uso real:** mantenedor relata que o **Update via app está funcionando bem** nesta nova observação. Registrar sucesso sem extrapolar para todos os sistemas/cenários; as falhas anteriores no Windows 10 (#103) exigem confirmação de que o problema deixou de ocorrer de modo reproduzível antes de fechar a issue.
