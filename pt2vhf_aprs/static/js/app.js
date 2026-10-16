@@ -4065,34 +4065,10 @@
       }
       const active = new Set();
 
-      // v1.14.23: a rota calculada é autoritativa durante o foco. Se um hop
-      // aceito pelo motor ainda não apareceu no snapshot de /api/topology,
-      // crie uma aresta visual diretamente de route.edges para que o mapa e o
-      // painel lateral sejam sempre idênticos.
+      // The ordinary map draws only geometry independently accepted by
+      // /api/topology. Route analysis must not reintroduce links suppressed
+      // because of mobile endpoints, missing geometry or uncertain evidence.
       const renderEdges = [...edges];
-      if (routeAllowedPairs) {
-        const serverPairs = new Set(
-          renderEdges
-            .filter(edge => edge.kind !== 'igate')
-            .map(edge => rfRoutePairKey(edge.source, edge.target))
-        );
-        for (const [pair, routeEdge] of routeEvidenceByPair.entries()) {
-          const coords = [
-            Number(routeEdge.source_lat), Number(routeEdge.source_lon),
-            Number(routeEdge.target_lat), Number(routeEdge.target_lon)
-          ];
-          if (serverPairs.has(pair) || !coords.every(Number.isFinite)) continue;
-          renderEdges.push({
-            ...routeEdge,
-            kind: 'rf',
-            source: routeEdge.source,
-            target: routeEdge.target,
-            classification_source: routeEdge.classification_source || routeEdge.evidence_label || ui('RF inferido do path', 'RF inferred from path'),
-            synthetic_route_edge: true,
-          });
-          serverPairs.add(pair);
-        }
-      }
 
       // Desenha RF primeiro e APRS-IS depois. Em pares com evidência mista,
       // a linha Internet fica visível sobre a linha RF sem reclassificar o RF.
@@ -4115,8 +4091,7 @@
         // Each historical spatial segment needs a stable, independent layer key.
         const key = edge.segment_id || `${edge.source}>${edge.target}:${edge.kind}`;
         active.add(key);
-        const routeEvidence = routeEvidenceByPair.get(rfRoutePairKey(edge.source, edge.target));
-        const geometryEdge = edge.kind !== 'igate' && routeEvidence ? routeEvidence : edge;
+        const geometryEdge = edge;
         const points = [
           [Number(geometryEdge.source_lat), Number(geometryEdge.source_lon)],
           [Number(geometryEdge.target_lat), Number(geometryEdge.target_lon)]
@@ -4129,8 +4104,8 @@
         if (Math.abs(points[1][0]) < .01 && Math.abs(points[1][1]) < .01) continue;
 
         let line = state.topologyLines.get(key);
-        const inferredRouteEdge = edge.kind !== 'igate' && !(routeEvidence ? (routeEvidence.evidence_level === 'direct' && Number(routeEvidence.rf_transport_count || 0) > 0) : edge.direct_rf_confirmed === true);
-        const legacyRouteEdge = edge.kind !== 'igate' && routeEvidence?.evidence_level === 'legacy';
+        const inferredRouteEdge = edge.kind !== 'igate' && edge.direct_rf_confirmed !== true;
+        const legacyRouteEdge = edge.kind !== 'igate' && edge.evidence_level === 'legacy';
         const style = {
           color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
           weight: edge.kind === 'igate' && edge.mixed_evidence
@@ -4157,9 +4132,7 @@
         }
 
         if (edge.kind === 'igate') line.bringToFront();
-        line._pt2vhfEdge = routeEvidence
-          ? { ...edge, ...routeEvidence, kind: edge.kind }
-          : edge;
+        line._pt2vhfEdge = edge;
         if (!line._pt2vhfHoverBound) {
           line.on('mouseover', () => showTopologyHover(line._pt2vhfEdge));
           line.on('mouseout', hideMapHoverInfo);
