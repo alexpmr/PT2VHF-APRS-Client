@@ -109,7 +109,11 @@ def capture(output_dir: Path) -> None:
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
                 page_errors = []
-                page.on("pageerror", lambda exc: page_errors.append(str(exc)))
+                page.on("pageerror", lambda exc: page_errors.append(
+                    "JS EXCEPTION: " + str(exc) + " STACK: " + str(getattr(exc, "stack", ""))))
+                page.on("console", lambda msg: page_errors.append(
+                    "CONSOLE ERROR: " + str(msg.location) + " " + msg.text)
+                    if msg.type == "error" else None)
                 # Route the CDN URL to the identical official npm Leaflet
                 # dist file in screenshot CI. This tests an actual map even
                 # when unpkg.com is unavailable from the CI environment.
