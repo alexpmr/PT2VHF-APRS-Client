@@ -77,14 +77,14 @@ def test_v1423_statistics_use_window_scroll_only():
     assert "height: auto !important;" in tail
 
 
-def test_v1423_route_edges_are_authoritative_for_map_rendering():
+def test_route_focus_respects_mobile_and_missing_geometry_suppression():
     app = read("pt2vhf_aprs/static/js/app.js")
     assert "topologyLoadQueued: false" in app
     assert "state.topologyLoadQueued = true" in app
-    assert "synthetic_route_edge: true" in app
     assert "const renderEdges = [...edges];" in app
-    assert "for (const [pair, routeEdge] of routeEvidenceByPair.entries())" in app
-    assert "renderEdges.push({" in app
+    assert "synthetic_route_edge: true" not in app
+    assert "const geometryEdge = edge;" in app
+    assert "line._pt2vhfEdge = edge;" in app
     assert "setTimeout(() => { void loadTopology(); }, 0);" in app
 
 
