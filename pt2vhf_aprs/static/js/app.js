@@ -8240,6 +8240,10 @@
   }
 
   async function saveConfigForm() {
+    if ($('#coordinateInputMode')?.value === 'grid' && $('#gridLocatorInput')?.dataset.pending === 'true') {
+      toast(ui('Clique em Usar estas coordenadas para aplicar o Grid Locator antes de salvar.', 'Click Use these coordinates to apply the Grid Locator before saving.'), 'error');
+      return { ok: false, error: 'grid-not-applied' };
+    }
     syncDecimalFromDmsIfNeeded();
     markConfigDirty();
     const data = configFormValues();
@@ -9576,9 +9580,9 @@
       const first = missing[0];
       let focusTarget = first?.input;
       if (first?.key === 'latitude') {
-        focusTarget = $('#coordinateInputMode')?.value === 'dms' ? $('#latDeg') : $('#latitudeDecimal');
+        focusTarget = $('#coordinateInputMode')?.value === 'grid' ? $('#gridLocatorInput') : ($('#coordinateInputMode')?.value === 'dms' ? $('#latDeg') : $('#latitudeDecimal');
       } else if (first?.key === 'longitude') {
-        focusTarget = $('#coordinateInputMode')?.value === 'dms' ? $('#lonDeg') : $('#longitudeDecimal');
+        focusTarget = $('#coordinateInputMode')?.value === 'grid' ? $('#gridLocatorInput') : ($('#coordinateInputMode')?.value === 'dms' ? $('#lonDeg') : $('#longitudeDecimal');
       }
       focusTarget?.focus();
       focusTarget?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -9613,6 +9617,7 @@
   }
 
   function syncDmsFromDecimal() {
+    syncGridFromDecimal();
     const lat = decimalToDms($('#latitudeDecimal')?.value, true);
     const lon = decimalToDms($('#longitudeDecimal')?.value, false);
     if (lat) {
@@ -9632,14 +9637,78 @@
     return lat !== null && lon !== null;
   }
 
+  function syncGridFromDecimal() {
+    const input = $('#gridLocatorInput');
+    const precision = Number($('#gridLocatorPrecision')?.value || 6);
+    if (!input || input.dataset.pending === 'true') return;
+    const latText = String($('#latitudeDecimal')?.value || '').trim();
+    const lonText = String($('#longitudeDecimal')?.value || '').trim();
+    if (!latText || !lonText) return;
+    try {
+      input.value = window.PT2VHFMaidenhead.encode(Number(latText), Number(lonText), precision);
+      previewGridLocator();
+    } catch (_) { /* Incomplete station positions are permitted while editing. */ }
+  }
+
+  function previewGridLocator() {
+    const input = $('#gridLocatorInput');
+    const status = $('#gridLocatorStatus');
+    if (!input || !status) return false;
+    try {
+      const position = window.PT2VHFMaidenhead.decode(input.value);
+      status.textContent = ui(
+        `Centro aproximado: ${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)} · célula ${position.latitudeSpan.toFixed(6)}° × ${position.longitudeSpan.toFixed(6)}°. Clique em Usar estas coordenadas para aplicar.`,
+        `Approximate cell center: ${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)} · cell ${position.latitudeSpan.toFixed(6)}° × ${position.longitudeSpan.toFixed(6)}°. Click Use these coordinates to apply.`
+      );
+      status.dataset.valid = 'true';
+      return true;
+    } catch (error) {
+      status.textContent = ui('Grid Locator inválido. Use 4, 6, 8 ou 10 caracteres.', 'Invalid Grid Locator. Enter 4, 6, 8 or 10 characters.');
+      status.dataset.valid = 'false';
+      return false;
+    }
+  }
+
+  function applyGridLocator() {
+    if (!previewGridLocator()) {
+      toast(ui('Informe um Grid Locator válido.', 'Enter a valid Grid Locator.'), 'error');
+      return;
+    }
+    const grid = window.PT2VHFMaidenhead.decode($('#gridLocatorInput').value);
+    $('#latitudeDecimal').value = grid.latitude.toFixed(6);
+    $('#longitudeDecimal').value = grid.longitude.toFixed(6);
+    $('#gridLocatorInput').dataset.pending = 'false';
+    syncDmsFromDecimal();
+    refreshRequiredFieldHighlights();
+    markConfigDirty();
+    toast(ui('Coordenadas aproximadas aplicadas. Salve a configuração para persistir.', 'Approximate coordinates applied. Save settings to persist.'), 'ok');
+  }
+
   function applyCoordinateMode(mode) {
-    const selected = mode === 'dms' ? 'dms' : 'decimal';
+    const selected = ['decimal', 'dms', 'grid'].includes(mode) ? mode : 'decimal';
     if ($('#coordinateInputMode')) $('#coordinateInputMode').value = selected;
     $('#coordinateDecimalFields')?.classList.toggle('hidden', selected !== 'decimal');
     $('#coordinateDmsFields')?.classList.toggle('hidden', selected !== 'dms');
+    $('#coordinateGridFields')?.classList.toggle('hidden', selected !== 'grid');
     localStorage.setItem('pt2vhf_coordinate_mode', selected);
     if (selected === 'dms') syncDmsFromDecimal();
+    if (selected === 'grid') {
+      const input = $('#gridLocatorInput');
+      if (input) input.dataset.pending = 'false';
+      syncGridFromDecimal();
+    }
   }
+
+  $('#gridLocatorInput')?.addEventListener('input', e => {
+    e.target.dataset.pending = 'true';
+    previewGridLocator();
+  });
+  $('#gridLocatorPrecision')?.addEventListener('change', () => {
+    const input = $('#gridLocatorInput');
+    if (input) input.dataset.pending = 'false';
+    syncGridFromDecimal();
+  });
+  $('#gridLocatorApply')?.addEventListener('click', applyGridLocator);
 
   $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
   for (const id of ['latDeg','latMin','latSec','latHem','lonDeg','lonMin','lonSec','lonHem']) {
