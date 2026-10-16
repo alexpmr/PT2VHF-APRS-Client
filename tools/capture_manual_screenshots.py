@@ -108,6 +108,8 @@ def capture(output_dir: Path) -> None:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
+                page_errors = []
+                page.on("pageerror", lambda exc: page_errors.append(str(exc)))
                 page.goto(local_url, wait_until="networkidle")
                 page.wait_for_timeout(1800)
                 # Em release nova, o popup legítimo "Novidades" cobre as abas.
@@ -127,6 +129,19 @@ def capture(output_dir: Path) -> None:
                 page.wait_for_timeout(700)
                 # A v1.6 usa uma única página de Configuração, compartimentalizada por seções.
                 page.screenshot(path=str(output_dir / "config-aprs.png"))
+                # SPA startup can be delayed by the first API/config fetch. Confirm
+                # actual user-visible navigation, never force-click hidden controls.
+                for attempt in range(3):
+                    if page.locator("#toggleFilterBuilderButton").is_visible():
+                        break
+                    page.locator('.tab[data-tab="config"]').click()
+                    page.wait_for_timeout(900)
+                if not page.locator("#toggleFilterBuilderButton").is_visible():
+                    active = page.locator("#tab-config").get_attribute("class")
+                    raise RuntimeError(
+                        f"Manual screenshot: filter editor not visible after config tab navigation "
+                        f"(tab={active!r}, page_errors={page_errors[-5:]!r})"
+                    )
                 page.locator("#toggleFilterBuilderButton").scroll_into_view_if_needed()
                 page.evaluate("() => document.querySelector('#toggleFilterBuilderButton').click()")
                 page.wait_for_timeout(350)
