@@ -9612,6 +9612,96 @@
     return value;
   }
 
+  // A Maidenhead cell is not an exact GPS fix. Conversions only change
+  // persisted latitude/longitude when the operator explicitly presses Apply.
+  const maidenheadLonSteps = [20, 2, 1 / 12, 1 / 120, 1 / 2880];
+  const maidenheadLatSteps = [10, 1, 1 / 24, 1 / 240, 1 / 5760];
+
+  function maidenheadDecode(value) {
+    const grid = String(value || '').trim().toUpperCase();
+    if (![4, 6, 8, 10].includes(grid.length)) return null;
+    let lon = -180, lat = -90, lonCell = 360, latCell = 180;
+    for (let pair = 0; pair < grid.length / 2; pair++) {
+      const alphabetic = pair % 2 === 0;
+      const count = pair === 0 ? 18 : alphabetic ? 24 : 10;
+      const base = alphabetic ? 65 : 48;
+      const x = grid.charCodeAt(pair * 2) - base;
+      const y = grid.charCodeAt(pair * 2 + 1) - base;
+      if (x < 0 || y < 0 || x >= count || y >= count) return null;
+      lonCell = maidenheadLonSteps[pair];
+      latCell = maidenheadLatSteps[pair];
+      lon += x * lonCell;
+      lat += y * latCell;
+    }
+    return { grid: grid, lat: lat + latCell / 2, lon: lon + lonCell / 2,
+      latCell: latCell, lonCell: lonCell };
+  }
+
+  function maidenheadEncode(latitude, longitude, characters = 6) {
+    let lat = Number(latitude), lon = Number(longitude);
+    const length = Number(characters);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) ||
+        lat < -90 || lat > 90 || lon < -180 || lon > 180 ||
+        ![4, 6, 8, 10].includes(length)) return '';
+    lat = Math.min(180 - 1e-12, lat + 90);
+    lon = Math.min(360 - 1e-12, lon + 180);
+    let output = '';
+    for (let pair = 0; pair < length / 2; pair++) {
+      const lonStep = maidenheadLonSteps[pair];
+      const latStep = maidenheadLatSteps[pair];
+      const count = pair === 0 ? 18 : pair % 2 === 0 ? 24 : 10;
+      const x = Math.min(count - 1, Math.floor(lon / lonStep + 1e-10));
+      const y = Math.min(count - 1, Math.floor(lat / latStep + 1e-10));
+      const base = pair % 2 === 0 ? 65 : 48;
+      output += String.fromCharCode(base + x, base + y);
+      lon = Math.max(0, lon - x * lonStep);
+      lat = Math.max(0, lat - y * latStep);
+    }
+    return output;
+  }
+
+  function updateMaidenheadPreview() {
+    const status = $('#maidenheadStatus');
+    const button = $('#maidenheadApply');
+    const decoded = maidenheadDecode($('#maidenheadInput')?.value);
+    if (button) button.disabled = !decoded;
+    if (!status) return;
+    if (!decoded) {
+      status.textContent = ui('Grid inválido: use 4, 6, 8 ou 10 caracteres Maidenhead.',
+        'Invalid grid: use 4, 6, 8 or 10 Maidenhead characters.');
+      return;
+    }
+    status.textContent = decoded.grid + ' → ' + decoded.lat.toFixed(6) +
+      ', ' + decoded.lon.toFixed(6) + ' · ' +
+      ui('Célula aproximada: ', 'Approximate cell: ') +
+      decoded.latCell.toFixed(6) + '° lat × ' + decoded.lonCell.toFixed(6) + '° lon';
+  }
+
+  function syncMaidenheadFromDecimal() {
+    const lat = $('#latitudeDecimal')?.value;
+    const lon = $('#longitudeDecimal')?.value;
+    if (lat === '' || lon === '' || lat == null || lon == null) return;
+    const grid = maidenheadEncode(lat, lon, $('#maidenheadPrecision')?.value || 6);
+    if (grid && $('#maidenheadInput')) $('#maidenheadInput').value = grid;
+    updateMaidenheadPreview();
+  }
+
+  $('#maidenheadApply')?.addEventListener('click', () => {
+    const cell = maidenheadDecode($('#maidenheadInput')?.value);
+    if (!cell) { updateMaidenheadPreview(); return; }
+    $('#latitudeDecimal').value = cell.lat.toFixed(6);
+    $('#longitudeDecimal').value = cell.lon.toFixed(6);
+    $('#maidenheadInput').value = cell.grid;
+    syncDmsFromDecimal();
+    refreshRequiredFieldHighlights();
+    markConfigDirty();
+    updateMaidenheadPreview();
+    toast(ui('Centro do grid aplicado. Salve a configuração para persistir.',
+      'Grid center applied. Save configuration to persist.'), 'ok');
+  });
+  $('#maidenheadInput')?.addEventListener('input', updateMaidenheadPreview);
+  $('#maidenheadPrecision')?.addEventListener('change', syncMaidenheadFromDecimal);
+
   function syncDmsFromDecimal() {
     const lat = decimalToDms($('#latitudeDecimal')?.value, true);
     const lon = decimalToDms($('#longitudeDecimal')?.value, false);
@@ -9633,12 +9723,14 @@
   }
 
   function applyCoordinateMode(mode) {
-    const selected = mode === 'dms' ? 'dms' : 'decimal';
+    const selected = ['decimal', 'dms', 'grid'].includes(mode) ? mode : 'decimal';
     if ($('#coordinateInputMode')) $('#coordinateInputMode').value = selected;
     $('#coordinateDecimalFields')?.classList.toggle('hidden', selected !== 'decimal');
     $('#coordinateDmsFields')?.classList.toggle('hidden', selected !== 'dms');
+    $('#coordinateGridFields')?.classList.toggle('hidden', selected !== 'grid');
     localStorage.setItem('pt2vhf_coordinate_mode', selected);
     if (selected === 'dms') syncDmsFromDecimal();
+    if (selected === 'grid') syncMaidenheadFromDecimal();
   }
 
   $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
@@ -9652,8 +9744,8 @@
       refreshRequiredFieldHighlights();
     });
   }
-  $('#latitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
-  $('#longitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
+  $('#latitudeDecimal')?.addEventListener('change', () => { syncDmsFromDecimal(); syncMaidenheadFromDecimal(); });
+  $('#longitudeDecimal')?.addEventListener('change', () => { syncDmsFromDecimal(); syncMaidenheadFromDecimal(); });
 
   function updateAltitudeSourceStatus(source, altitude) {
     const status = $('#altitudeSourceStatus');
