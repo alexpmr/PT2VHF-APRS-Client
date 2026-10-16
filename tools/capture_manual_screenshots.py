@@ -114,11 +114,21 @@ def capture(output_dir: Path) -> None:
                 # Leaflet comes from a CDN. Bootstrap waits up to ten seconds
                 # before showing a graceful map error; do not take screenshots
                 # or navigate the app while that async startup is still pending.
-                page.wait_for_function(
-                    """() => Boolean(window.pt2vhfMainMap && typeof window.pt2vhfMainMap.hasLayer === 'function')
-                           || (document.querySelector('#map')?.textContent || '').includes('O mapa não pôde ser carregado')""",
-                    timeout=25000,
-                )
+                try:
+                    page.wait_for_function(
+                        """() => Boolean(window.pt2vhfMainMap && typeof window.pt2vhfMainMap.hasLayer === 'function')
+                               || (document.querySelector('#map')?.textContent || '').includes('O mapa não pôde ser carregado')""",
+                        timeout=18000,
+                    )
+                except Exception as exc:
+                    details = page.evaluate("""() => ({
+                      leaflet: typeof window.L, mapObject: typeof window.pt2vhfMainMap,
+                      content: (document.querySelector('#map')?.textContent || '').slice(0, 180),
+                      activeTab: document.querySelector('.tab-panel.active')?.id || null
+                    })""")
+                    print(f"Manual map startup diagnostic: {details!r}; browser errors: {page_errors[-8:]!r}; {exc}", flush=True)
+                    # A slow or unavailable third-party CDN must not prevent
+                    # the remaining local configuration screenshots/tests.
                 page.wait_for_timeout(1800)
                 # Em release nova, o popup legítimo "Novidades" cobre as abas.
                 # Confirmá-lo antes dos testes reais de clique (em vez de usar
