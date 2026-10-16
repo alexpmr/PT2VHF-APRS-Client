@@ -1,3 +1,9 @@
+## REGRESSÃO REPRODUZIDA EM 16/10/2026 — Enlaces amarelos órfãos na v1.14.40 (#94)
+
+- **Captura nova, mapa de Brasília:** persistem linhas amarelas radiais e segmentos aparentemente órfãos, convergindo no noroeste do Parque Nacional de Brasília e nas proximidades de Lago Norte, com traçados rumo a Águas Lindas/Ceilândia e outras áreas. Identidade e mobilidade de cada extremidade exigem correlação com o JSON de topologia e o histórico APRS; não classificar automaticamente toda linha sem ícone como enlace espúrio.
+- **Regra de aceite:** somente ligações entre entidades comprovadamente fixas no mapa principal, inclusive RF real; ligação com qualquer nó/digi móvel é suprimida visualmente, mas eventos/tracklogs e posições RF contemporâneas são preservados para cobertura observada. Validar Período Completo/1h/24h, rotas em foco, path, posição histórica e filtros de marcadores.
+- **Implementação candidata:** [PR #105](https://github.com/alexpmr/PT2VHF-APRS-Client/pull/105), CI [38840906830](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/38840906830) aprovado, mas **sem merge e sem validação no banco real**. A v1.14.40 instalada não contém essa correção. Regressão mantém [issue #94](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/94) aberta.
+
 ## PENDENTE — Entrada de coordenadas por Grid Locator / Maidenhead (#106, 16/10/2026)
 
 - **Solicitação:** adicionar em **Configuração → Estação → Formato das coordenadas** uma terceira modalidade `Grid Locator (Maidenhead)` ao lado de Decimal e DMS. Issue: [#106](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/106).
