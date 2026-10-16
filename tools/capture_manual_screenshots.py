@@ -114,6 +114,10 @@ def capture(output_dir: Path) -> None:
                 page.on("console", lambda msg: page_errors.append(
                     "CONSOLE ERROR: " + str(msg.location) + " " + msg.text)
                     if msg.type == "error" else None)
+                cdp = page.context.new_cdp_session(page)
+                cdp.send("Runtime.enable")
+                cdp.on("Runtime.exceptionThrown", lambda event: page_errors.append(
+                    "CDP EXCEPTION: " + repr(event.get("exceptionDetails", {}))))
                 # Route the CDN URL to the identical official npm Leaflet
                 # dist file in screenshot CI. This tests an actual map even
                 # when unpkg.com is unavailable from the CI environment.
