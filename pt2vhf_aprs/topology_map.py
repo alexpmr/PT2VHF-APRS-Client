@@ -162,7 +162,7 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
         dst_bin = _rounded_bin(*target_pos)
         key = (src, dst, kind, *src_bin, *dst_bin)
         pair = (src, dst)
-        media_by_pair[pair].add(kind)
+        media_by_pair[pair].add("rf" if kind == "rf_temp" else kind)
 
         segment = segments.get(key)
         if segment is None:
