@@ -5003,7 +5003,7 @@ html[lang="zh-CN"] body {
   min-width: 0;
   margin: 0;
 }
-.map-context-controls .rf-route-search label:has(#rfRouteTarget) {
+.map-context-controls .rf-route-search label:nth-of-type(2) {
   flex-basis: 115px;
 }
 .map-context-controls .rf-route-search label > span {
