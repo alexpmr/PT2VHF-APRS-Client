@@ -1,3 +1,13 @@
+## 1.14.41 - 2026-10-16
+
+- Mapa: enlace RF temporário com cor ciano e espessura 3 px por padrão, configuráveis, validade de 3 h desde o último contato direto; novo contato renova o prazo e linhas expiradas saem do mapa sem refresh.
+- Topologia: incorpora correções de filtragem de digi/trackers móveis, histórico geográfico e bloqueio de linhas sintéticas; preservar dados para Cobertura RF observada.
+- Estação: modo Grid Locator Maidenhead (4/6/8/10 caracteres), conversão bidirecional e aplicação explícita do centro da célula sem alterar precisão só por trocar o modo.
+- Interface: CPU e RAM empilhados no cabeçalho; busca RF compactada em uma linha no desktop.
+- Diagnóstico: fallback seguro da pilha de certificados do Windows nos downloads do atualizador.
+- Testes automatizados de regressão para RF temporário, trackers móveis, layout e Grid Locator.
+- **Pendências conhecidas:** não representa solução integral do backlog; requer validação física de rádio/APRS, histórico de cobertura RF e atualização em máquinas com falha, Web LAN e outras issues abertas.
+
 ## 1.14.40 - 2026-10-15
 
 - Mapa: remover os controles duplicados de Velocidade e Tipo de mapa da barra principal; conservar o tipo de mapa em Configuração > Mapa e transferir a velocidade da animação para o mesmo bloco.

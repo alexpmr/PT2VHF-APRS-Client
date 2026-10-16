@@ -44,6 +44,8 @@
       track_color: '#3ba6ff',
       track_width: 2,
       topology_rf_color: '#ffff00',
+      topology_rf_temporary_color: '#00d9ef',
+      topology_rf_temporary_width: 3,
       topology_igate_color: '#ffff00',
       topology_width: 1,
       map_brightness: 100,
@@ -1698,6 +1700,8 @@
       track_color: cfg.track_color || state.mapConfig.track_color || '#3ba6ff',
       track_width: Number(cfg.track_width || state.mapConfig.track_width || 2),
       topology_rf_color: cfg.topology_rf_color || state.mapConfig.topology_rf_color || '#ffff00',
+      topology_rf_temporary_color: cfg.topology_rf_temporary_color || state.mapConfig.topology_rf_temporary_color || '#00d9ef',
+      topology_rf_temporary_width: Number(cfg.topology_rf_temporary_width || state.mapConfig.topology_rf_temporary_width || 3),
       topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#ffff00',
       topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 1),
       map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100),
@@ -3042,6 +3046,7 @@
           <div class="map-legend-body">
             <div class="map-legend-item" data-legend="track"><span class="legend-line"></span><span>${ui('Tracklog', 'Tracklog')}</span></div>
             <div class="map-legend-item" data-legend="rf"><span class="legend-line"></span><span>${ui('Enlace RF', 'RF link')}</span></div>
+            <div class="map-legend-item" data-legend="rf-temp"><span class="legend-line"></span><span>${ui('RF temporário (3h)', 'Temporary RF (3h)')}</span></div>
             <div class="map-legend-item" data-legend="igate"><span class="legend-line"></span><span>${ui('Via IGate/APRS-IS', 'Via IGate/APRS-IS')}</span></div>
             <div class="map-legend-item" data-legend="replay"><span class="legend-line"></span><span>${ui('Animação temporal', 'Timeline replay')}</span></div>
             <div class="map-legend-item" data-legend="packet"><span class="legend-packet"></span><span>${ui('Pacote em movimento', 'Moving packet')}</span></div>
@@ -3067,6 +3072,7 @@
     if (!root) return;
     const track = root.querySelector('[data-legend="track"] .legend-line');
     const rf = root.querySelector('[data-legend="rf"] .legend-line');
+    const rfTemp = root.querySelector('[data-legend="rf-temp"] .legend-line');
     const igate = root.querySelector('[data-legend="igate"] .legend-line');
     const replay = root.querySelector('[data-legend="replay"] .legend-line');
     if (track) {
@@ -3076,6 +3082,11 @@
     if (rf) {
       rf.style.borderTopColor = state.mapConfig.topology_rf_color;
       rf.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width)}px`;
+    }
+    if (rfTemp) {
+      rfTemp.style.borderTopColor = state.mapConfig.topology_rf_temporary_color;
+      rfTemp.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_rf_temporary_width)}px`;
+      rfTemp.style.borderTopStyle = 'solid';
     }
     if (igate) {
       igate.style.borderTopColor = state.mapConfig.topology_igate_color;
@@ -3089,6 +3100,7 @@
     }
     root.querySelector('[data-legend="track"]')?.classList.toggle('legend-muted', !state.tracklogEnabled);
     root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.rfLinksEnabled);
+    root.querySelector('[data-legend="rf-temp"]')?.classList.toggle('legend-muted', !state.rfLinksEnabled);
     root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.igateLinksEnabled);
     const packetAnimating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
     root.querySelector('[data-legend="replay"]')?.classList.toggle('legend-muted', !state.timelineReplayActive);
@@ -4076,6 +4088,10 @@
         // A moving digi can have multiple real RF links in different locations.
         // Each historical spatial segment needs a stable, independent layer key.
         const key = edge.segment_id || `${edge.source}>${edge.target}:${edge.kind}`;
+        // Client-side expiry is authoritative even if API data was cached.
+        if (edge.kind === 'rf_temp' && (!edge.expires_at ||
+            !Number.isFinite(Date.parse(edge.expires_at)) ||
+            Date.parse(edge.expires_at) <= Date.now())) continue;
         active.add(key);
         const geometryEdge = edge;
         const points = [
@@ -4090,13 +4106,16 @@
         if (Math.abs(points[1][0]) < .01 && Math.abs(points[1][1]) < .01) continue;
 
         let line = state.topologyLines.get(key);
+        const temporaryRf = edge.kind === 'rf_temp';
         const inferredRouteEdge = edge.kind !== 'igate' && !(edge.direct_rf_confirmed === true);
         const legacyRouteEdge = edge.kind !== 'igate' && edge.evidence_level === 'legacy';
         const style = {
-          color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-          weight: edge.kind === 'igate' && edge.mixed_evidence
-            ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
-            : state.mapConfig.topology_width,
+          color: temporaryRf ? state.mapConfig.topology_rf_temporary_color
+            : edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+          weight: temporaryRf ? state.mapConfig.topology_rf_temporary_width
+            : edge.kind === 'igate' && edge.mixed_evidence
+              ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
+              : state.mapConfig.topology_width,
           opacity: edge.kind === 'igate' ? .72 : .84,
           dashArray: edge.kind === 'igate' ? '7 5' : null,
           interactive: true,
@@ -4129,7 +4148,8 @@
           <div class="topology-popup">
             <h3>Topologia observada</h3>
             <div><strong>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</strong></div>
-            <div>Tipo: ${edge.kind === 'igate' ? 'Internet/APRS-IS' : (inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC')}</div>
+            <div>Tipo: ${temporaryRf ? 'RF temporário (até 3h do último contato)' : edge.kind === 'igate' ? 'Internet/APRS-IS' : (inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC')}</div>
+            ${temporaryRf ? '<div>Expira em: ' + escapeHtml(fmtDate(edge.expires_at)) + '</div>' : ''}
             ${edge.mixed_evidence
               ? (edge.kind === 'igate'
                 ? `<div>Também observado por RF: ${Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')}</div>`
@@ -4165,6 +4185,21 @@
       }
     }
   }
+
+  // Expire transient RF overlays independently from network polling or
+  // period selection: no contact for 3h => disappears without a refresh.
+  setInterval(() => {
+    if (!state.map || !state.topologyLines.size) return;
+    for (const [key, line] of state.topologyLines) {
+      const edge = line._pt2vhfEdge;
+      if (edge?.kind !== 'rf_temp') continue;
+      const expires = Date.parse(edge.expires_at || '');
+      if (!Number.isFinite(expires) || expires <= Date.now()) {
+        state.map.removeLayer(line);
+        state.topologyLines.delete(key);
+      }
+    }
+  }, 30000);
 
   function locateBrowser(button) {
     if (!window.isSecureContext) {
@@ -8409,6 +8444,10 @@
     const elevationMaxValue = $('#elevationSliderMaxValue');
     const elevationOpacityInput = form.elements.namedItem('elevation_opacity');
     const elevationOpacityValue = $('#elevationOpacityValue');
+    const temporaryColor = form.elements.namedItem('topology_rf_temporary_color');
+    const temporaryColorText = $('#topologyRfTemporaryColorText');
+    const temporaryWidth = form.elements.namedItem('topology_rf_temporary_width');
+    const temporaryWidthValue = $('#topologyRfTemporaryWidthValue');
     const topologyRfColor = form.elements.namedItem('topology_rf_color');
     const topologyRfColorText = $('#topologyRfColorText');
     const topologyIgateColor = form.elements.namedItem('topology_igate_color');
@@ -8424,6 +8463,8 @@
     if (elevationMaxInput && elevationMaxValue) elevationMaxValue.textContent = elevationMetersText(elevationMaxInput.value || 3000);
     if (elevationOpacityInput && elevationOpacityValue) elevationOpacityValue.textContent = `${elevationOpacityInput.value || 55}%`;
     syncElevationControls();
+    if (temporaryColor && temporaryColorText) temporaryColorText.value = temporaryColor.value || '#00d9ef';
+    if (temporaryWidth && temporaryWidthValue) temporaryWidthValue.textContent = `${temporaryWidth.value || 3} px`;
     if (topologyRfColor && topologyRfColorText) topologyRfColorText.value = topologyRfColor.value || '#ffff00';
     if (topologyIgateColor && topologyIgateColorText) topologyIgateColorText.value = topologyIgateColor.value || '#ffff00';
     if (topologyWidth && topologyWidthValue) topologyWidthValue.textContent = `${topologyWidth.value || 1} px`;
@@ -8506,6 +8547,8 @@
   function previewTopologyStyleFromForm() {
     const form = $('#configForm');
     if (!form) return;
+    state.mapConfig.topology_rf_temporary_color = form.elements.namedItem('topology_rf_temporary_color')?.value || '#00d9ef';
+    state.mapConfig.topology_rf_temporary_width = Number(form.elements.namedItem('topology_rf_temporary_width')?.value || 3);
     state.mapConfig.topology_rf_color = form.elements.namedItem('topology_rf_color')?.value || '#ffff00';
     state.mapConfig.topology_igate_color = form.elements.namedItem('topology_igate_color')?.value || '#ffff00';
     state.mapConfig.topology_width = Number(form.elements.namedItem('topology_width')?.value || 1);
@@ -8513,10 +8556,11 @@
     if (state.topologyEnabled) loadTopology();
     else {
       for (const line of state.topologyLines.values()) {
-        const kind = line.options?.dashArray ? 'igate' : 'rf';
+        const kind = line._pt2vhfEdge?.kind || (line.options?.dashArray ? 'igate' : 'rf');
         line.setStyle({
-          color: kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-          weight: state.mapConfig.topology_width
+          color: kind === 'rf_temp' ? state.mapConfig.topology_rf_temporary_color :
+            kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+          weight: kind === 'rf_temp' ? state.mapConfig.topology_rf_temporary_width : state.mapConfig.topology_width
         });
       }
     }
@@ -8540,6 +8584,8 @@
     });
   }
 
+  bindTopologyColor('topology_rf_temporary_color', '#topologyRfTemporaryColorText');
+  $('#topologyRfTemporaryWidth')?.addEventListener('input', previewTopologyStyleFromForm);
   bindTopologyColor('topology_rf_color', '#topologyRfColorText');
   bindTopologyColor('topology_igate_color', '#topologyIgateColorText');
   $('#topologyWidth')?.addEventListener('input', previewTopologyStyleFromForm);
@@ -8547,6 +8593,8 @@
   $('#resetTopologyStyleButton')?.addEventListener('click', () => {
     const form = $('#configForm');
     if (!form) return;
+    form.elements.namedItem('topology_rf_temporary_color').value = '#00d9ef';
+    form.elements.namedItem('topology_rf_temporary_width').value = '3';
     form.elements.namedItem('topology_rf_color').value = '#ffff00';
     form.elements.namedItem('topology_igate_color').value = '#ffff00';
     form.elements.namedItem('topology_width').value = '1';
@@ -9564,6 +9612,96 @@
     return value;
   }
 
+  // A Maidenhead cell is not an exact GPS fix. Conversions only change
+  // persisted latitude/longitude when the operator explicitly presses Apply.
+  const maidenheadLonSteps = [20, 2, 1 / 12, 1 / 120, 1 / 2880];
+  const maidenheadLatSteps = [10, 1, 1 / 24, 1 / 240, 1 / 5760];
+
+  function maidenheadDecode(value) {
+    const grid = String(value || '').trim().toUpperCase();
+    if (![4, 6, 8, 10].includes(grid.length)) return null;
+    let lon = -180, lat = -90, lonCell = 360, latCell = 180;
+    for (let pair = 0; pair < grid.length / 2; pair++) {
+      const alphabetic = pair % 2 === 0;
+      const count = pair === 0 ? 18 : alphabetic ? 24 : 10;
+      const base = alphabetic ? 65 : 48;
+      const x = grid.charCodeAt(pair * 2) - base;
+      const y = grid.charCodeAt(pair * 2 + 1) - base;
+      if (x < 0 || y < 0 || x >= count || y >= count) return null;
+      lonCell = maidenheadLonSteps[pair];
+      latCell = maidenheadLatSteps[pair];
+      lon += x * lonCell;
+      lat += y * latCell;
+    }
+    return { grid: grid, lat: lat + latCell / 2, lon: lon + lonCell / 2,
+      latCell: latCell, lonCell: lonCell };
+  }
+
+  function maidenheadEncode(latitude, longitude, characters = 6) {
+    let lat = Number(latitude), lon = Number(longitude);
+    const length = Number(characters);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) ||
+        lat < -90 || lat > 90 || lon < -180 || lon > 180 ||
+        ![4, 6, 8, 10].includes(length)) return '';
+    lat = Math.min(180 - 1e-12, lat + 90);
+    lon = Math.min(360 - 1e-12, lon + 180);
+    let output = '';
+    for (let pair = 0; pair < length / 2; pair++) {
+      const lonStep = maidenheadLonSteps[pair];
+      const latStep = maidenheadLatSteps[pair];
+      const count = pair === 0 ? 18 : pair % 2 === 0 ? 24 : 10;
+      const x = Math.min(count - 1, Math.floor(lon / lonStep + 1e-10));
+      const y = Math.min(count - 1, Math.floor(lat / latStep + 1e-10));
+      const base = pair % 2 === 0 ? 65 : 48;
+      output += String.fromCharCode(base + x, base + y);
+      lon = Math.max(0, lon - x * lonStep);
+      lat = Math.max(0, lat - y * latStep);
+    }
+    return output;
+  }
+
+  function updateMaidenheadPreview() {
+    const status = $('#maidenheadStatus');
+    const button = $('#maidenheadApply');
+    const decoded = maidenheadDecode($('#maidenheadInput')?.value);
+    if (button) button.disabled = !decoded;
+    if (!status) return;
+    if (!decoded) {
+      status.textContent = ui('Grid inválido: use 4, 6, 8 ou 10 caracteres Maidenhead.',
+        'Invalid grid: use 4, 6, 8 or 10 Maidenhead characters.');
+      return;
+    }
+    status.textContent = decoded.grid + ' → ' + decoded.lat.toFixed(6) +
+      ', ' + decoded.lon.toFixed(6) + ' · ' +
+      ui('Célula aproximada: ', 'Approximate cell: ') +
+      decoded.latCell.toFixed(6) + '° lat × ' + decoded.lonCell.toFixed(6) + '° lon';
+  }
+
+  function syncMaidenheadFromDecimal() {
+    const lat = $('#latitudeDecimal')?.value;
+    const lon = $('#longitudeDecimal')?.value;
+    if (lat === '' || lon === '' || lat == null || lon == null) return;
+    const grid = maidenheadEncode(lat, lon, $('#maidenheadPrecision')?.value || 6);
+    if (grid && $('#maidenheadInput')) $('#maidenheadInput').value = grid;
+    updateMaidenheadPreview();
+  }
+
+  $('#maidenheadApply')?.addEventListener('click', () => {
+    const cell = maidenheadDecode($('#maidenheadInput')?.value);
+    if (!cell) { updateMaidenheadPreview(); return; }
+    $('#latitudeDecimal').value = cell.lat.toFixed(6);
+    $('#longitudeDecimal').value = cell.lon.toFixed(6);
+    $('#maidenheadInput').value = cell.grid;
+    syncDmsFromDecimal();
+    refreshRequiredFieldHighlights();
+    markConfigDirty();
+    updateMaidenheadPreview();
+    toast(ui('Centro do grid aplicado. Salve a configuração para persistir.',
+      'Grid center applied. Save configuration to persist.'), 'ok');
+  });
+  $('#maidenheadInput')?.addEventListener('input', updateMaidenheadPreview);
+  $('#maidenheadPrecision')?.addEventListener('change', syncMaidenheadFromDecimal);
+
   function syncDmsFromDecimal() {
     const lat = decimalToDms($('#latitudeDecimal')?.value, true);
     const lon = decimalToDms($('#longitudeDecimal')?.value, false);
@@ -9585,12 +9723,14 @@
   }
 
   function applyCoordinateMode(mode) {
-    const selected = mode === 'dms' ? 'dms' : 'decimal';
+    const selected = ['decimal', 'dms', 'grid'].includes(mode) ? mode : 'decimal';
     if ($('#coordinateInputMode')) $('#coordinateInputMode').value = selected;
     $('#coordinateDecimalFields')?.classList.toggle('hidden', selected !== 'decimal');
     $('#coordinateDmsFields')?.classList.toggle('hidden', selected !== 'dms');
+    $('#coordinateGridFields')?.classList.toggle('hidden', selected !== 'grid');
     localStorage.setItem('pt2vhf_coordinate_mode', selected);
     if (selected === 'dms') syncDmsFromDecimal();
+    if (selected === 'grid') syncMaidenheadFromDecimal();
   }
 
   $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
@@ -9604,8 +9744,8 @@
       refreshRequiredFieldHighlights();
     });
   }
-  $('#latitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
-  $('#longitudeDecimal')?.addEventListener('change', syncDmsFromDecimal);
+  $('#latitudeDecimal')?.addEventListener('change', () => { syncDmsFromDecimal(); syncMaidenheadFromDecimal(); });
+  $('#longitudeDecimal')?.addEventListener('change', () => { syncDmsFromDecimal(); syncMaidenheadFromDecimal(); });
 
   function updateAltitudeSourceStatus(source, altitude) {
     const status = $('#altitudeSourceStatus');
@@ -9688,6 +9828,7 @@
         if ($('#altitudeSourceInput')) $('#altitudeSourceInput').value = altitudeSource;
       }
       syncDmsFromDecimal();
+      syncMaidenheadFromDecimal();
       updateAltitudeSourceStatus(altitudeSource, altitudeValue);
       refreshRequiredFieldHighlights();
       if (state.activeTab === 'config' && state.configLoaded && !state.configLoading) markConfigDirty();

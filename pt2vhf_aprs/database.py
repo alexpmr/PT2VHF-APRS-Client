@@ -157,6 +157,8 @@ DEFAULT_CONFIG = {
     "track_color": "#3ba6ff",
     "track_width": 2,
     "topology_rf_color": "#ffff00",
+    "topology_rf_temporary_color": "#00d9ef",
+    "topology_rf_temporary_width": 3,
     "topology_igate_color": "#ffff00",
     "topology_width": 1,
     "map_brightness": 100,
@@ -295,6 +297,8 @@ def init_db() -> None:
                 track_color TEXT NOT NULL DEFAULT '#3ba6ff',
                 track_width INTEGER NOT NULL DEFAULT 2,
                 topology_rf_color TEXT NOT NULL DEFAULT '#ffff00',
+                topology_rf_temporary_color TEXT NOT NULL DEFAULT '#00d9ef',
+                topology_rf_temporary_width INTEGER NOT NULL DEFAULT 3,
                 topology_igate_color TEXT NOT NULL DEFAULT '#ffff00',
                 topology_width INTEGER NOT NULL DEFAULT 1,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
@@ -622,6 +626,10 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN track_color TEXT NOT NULL DEFAULT '#3ba6ff'")
         if "track_width" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN track_width INTEGER NOT NULL DEFAULT 2")
+        if "topology_rf_temporary_color" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_temporary_color TEXT NOT NULL DEFAULT '#00d9ef'")
+        if "topology_rf_temporary_width" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_temporary_width INTEGER NOT NULL DEFAULT 3")
         if "topology_rf_color" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN topology_rf_color TEXT NOT NULL DEFAULT '#ffff00'")
         if "topology_igate_color" not in config_columns:
@@ -840,6 +848,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
     merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()
     merged["track_width"] = int(merged["track_width"] or 2)
+    merged["topology_rf_temporary_color"] = str(merged["topology_rf_temporary_color"] or "#00d9ef").lower().strip()
+    merged["topology_rf_temporary_width"] = int(merged["topology_rf_temporary_width"] or 3)
     merged["topology_rf_color"] = str(merged["topology_rf_color"] or "#ffff00").lower().strip()
     merged["topology_igate_color"] = str(merged["topology_igate_color"] or "#ffff00").lower().strip()
     merged["topology_width"] = int(merged["topology_width"] or 1)
@@ -903,6 +913,10 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Espessura do tracklog deve estar entre 1 e 10.")
     if "map_zoom_step" in provided and merged["map_zoom_step"] not in {0.05, 0.10, 0.25, 0.50, 1.00}:
         raise ValueError("Step do zoom deve ser 0,05, 0,10, 0,25, 0,50 ou 1,00.")
+    if "topology_rf_temporary_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_temporary_color"]):
+        raise ValueError("Cor de RF temporário inválida.")
+    if "topology_rf_temporary_width" in provided and not (1 <= merged["topology_rf_temporary_width"] <= 10):
+        raise ValueError("Espessura de RF temporário deve estar entre 1 e 10.")
     if "topology_rf_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_color"]):
         raise ValueError("Cor dos enlaces RF da topologia inválida.")
     if "topology_igate_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_igate_color"]):

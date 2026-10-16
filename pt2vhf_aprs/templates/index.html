@@ -963,6 +963,7 @@
               <select id="coordinateInputMode">
                 <option value="decimal">Decimal</option>
                 <option value="dms">Graus / minutos / segundos</option>
+                <option value="grid">Grid Locator (Maidenhead)</option>
               </select>
             </label>
             <button id="useCurrentLocationButton" type="button" class="btn secondary location-fill-button">Usar minha localização atual</button>
@@ -988,6 +989,19 @@
               <select id="lonHem"><option value="E">E</option><option value="W">W</option></select>
             </div>
             <small class="hint">Os valores em graus/minutos/segundos são convertidos automaticamente para decimal antes de salvar.</small>
+          </div>
+          <div id="coordinateGridFields" class="field full hidden">
+            <label class="field"><span>Grid Locator (Maidenhead)</span>
+              <input id="maidenheadInput" type="text" maxlength="10" inputmode="text" spellcheck="false" autocomplete="off" placeholder="GH64" aria-describedby="maidenheadStatus">
+            </label>
+            <label class="field"><span>Precisão do grid</span>
+              <select id="maidenheadPrecision">
+                <option value="4">4 caracteres</option><option value="6" selected>6 caracteres</option>
+                <option value="8">8 caracteres</option><option value="10">10 caracteres</option>
+              </select>
+            </label>
+            <small id="maidenheadStatus" class="hint" aria-live="polite">O Grid Locator representa uma área. Aplicar utiliza o centro aproximado da célula.</small>
+            <button id="maidenheadApply" type="button" class="btn secondary">Usar estas coordenadas</button>
           </div>
           <label class="field" id="altitudeField"><span>Altitude (m) <em class="required-badge">Obrigatório</em></span>
             <input name="altitude" id="altitudeInput" type="number" step="0.1" placeholder="Ex.: 1000">
@@ -1188,6 +1202,21 @@
             <div class="color-field-row">
               <input name="topology_rf_color" type="color" value="#ffff00" aria-label="Cor dos enlaces RF">
               <input id="topologyRfColorText" type="text" value="#ffff00" maxlength="7" placeholder="#ffff00">
+            </div>
+          </label>
+          <label class="field">
+            <span>Cor RF temporário (3 h)</span>
+            <div class="color-field-row">
+              <input name="topology_rf_temporary_color" type="color" value="#00d9ef" aria-label="Cor dos enlaces RF temporários">
+              <input id="topologyRfTemporaryColorText" type="text" value="#00d9ef" maxlength="7" placeholder="#00d9ef">
+            </div>
+            <small>Contatos RF pontuais entre estações fixas; expiram 3 horas após o último contato confirmado.</small>
+          </label>
+          <label class="field">
+            <span>Espessura RF temporário</span>
+            <div class="range-field-row">
+              <input name="topology_rf_temporary_width" id="topologyRfTemporaryWidth" type="range" min="1" max="10" step="1" value="3">
+              <output id="topologyRfTemporaryWidthValue" for="topologyRfTemporaryWidth">3 px</output>
             </div>
           </label>
           <label class="field">

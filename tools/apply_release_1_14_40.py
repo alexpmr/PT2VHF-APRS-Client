@@ -22,7 +22,8 @@ for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
     assert "apply_release_1_14_40.py" in read(workflow)
 js = read("pt2vhf_aprs/static/js/app.js")
-assert "color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in js
+assert "state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in js
+assert "temporaryRf ? state.mapConfig.topology_rf_temporary_color" in js
 assert "dashArray: edge.kind === 'igate' ? '7 5' : null" in js
 assert "style.dashArray = '5 7'" not in js
 assert "style.dashArray = '2 5'" not in js
