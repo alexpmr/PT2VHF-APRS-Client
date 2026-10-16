@@ -103,7 +103,11 @@ function currentHours() {
 }
 
 function mapInstance() {
-  return window.pt2vhfMainMap || window.map || null;
+  // Browsers expose <div id="map"> as window.map before Leaflet starts.
+  // That element is NOT a Leaflet instance; wait for the real map instead.
+  const candidate = window.pt2vhfMainMap || window.map;
+  return candidate && typeof candidate.hasLayer === 'function' &&
+    typeof candidate.addLayer === 'function' ? candidate : null;
 }
 
 function updateCoverageToggle() {
