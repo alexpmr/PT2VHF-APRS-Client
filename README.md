@@ -1,6 +1,8 @@
 # PT2VHF APRS Client - v1.14.41
 
-A **v1.14.41** introduz RF temporário por 3 horas, entrada de coordenadas por Grid Locator Maidenhead e gauges CPU/RAM compactos, preservando as correções de trackers móveis e da barra do mapa. **Ainda há pendências abertas no BACKLOG.md** (incluindo correlação avançada de cobertura RF, Web LAN e validação do atualizador em máquinas afetadas). Não há declaração de backlog integralmente encerrado.\n\nCliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
+A **v1.14.41** introduz RF temporário por 3 horas, entrada de coordenadas por Grid Locator Maidenhead e gauges CPU/RAM compactos, preservando as correções de trackers móveis e da barra do mapa. **Ainda há pendências abertas no BACKLOG.md** (incluindo correlação avançada de cobertura RF, Web LAN e validação do atualizador em máquinas afetadas). Não há declaração de backlog integralmente encerrado.
+
+Cliente APRS-IS multiplataforma para **Windows, Linux e macOS**, com mapa, mensagens, estações, tracklogs, topologia observada, Log TNC2, banco SQLite local e atualização integrada.
 
 A **v1.14.40** reorganiza os controles do mapa, transfere velocidade e tipo de mapa para Configuração → Mapa, aprimora a barra responsiva e permite sair do modo Apresentação pelo próprio botão. A identificação e movimentação de **OPÇÃO** para Histórico permanecem pendentes de validação visual; outras pendências do backlog também continuam abertas. Os downloads da versão anterior continuam indicados abaixo até a publicação dos novos binários.
 
