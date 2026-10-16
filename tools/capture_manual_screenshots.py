@@ -111,6 +111,14 @@ def capture(output_dir: Path) -> None:
                 page_errors = []
                 page.on("pageerror", lambda exc: page_errors.append(str(exc)))
                 page.goto(local_url, wait_until="networkidle")
+                # Leaflet comes from a CDN. Bootstrap waits up to ten seconds
+                # before showing a graceful map error; do not take screenshots
+                # or navigate the app while that async startup is still pending.
+                page.wait_for_function(
+                    """() => Boolean(window.pt2vhfMainMap && typeof window.pt2vhfMainMap.hasLayer === 'function')
+                           || (document.querySelector('#map')?.textContent || '').includes('O mapa não pôde ser carregado')""",
+                    timeout=25000,
+                )
                 page.wait_for_timeout(1800)
                 # Em release nova, o popup legítimo "Novidades" cobre as abas.
                 # Confirmá-lo antes dos testes reais de clique (em vez de usar
