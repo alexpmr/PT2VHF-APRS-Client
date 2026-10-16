@@ -1,3 +1,12 @@
+## PENDENTE — Entrada de coordenadas por Grid Locator / Maidenhead (#106, 16/10/2026)
+
+- **Solicitação:** adicionar em **Configuração → Estação → Formato das coordenadas** uma terceira modalidade `Grid Locator (Maidenhead)` ao lado de Decimal e DMS. Issue: [#106](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/106).
+- **Entrada:** campo para locator de 4, 6, 8 ou 10 caracteres, normalização de maiúsculas/minúsculas, validação rigorosa conforme segmentos alfanuméricos Maidenhead e mensagem clara em caso de erro. Usar o **centro da célula** para converter o grid em latitude/longitude decimal e informar que a posição é aproximada e qual a resolução espacial do grid; não fingir precisão GPS.
+- **Integração:** atualizar os campos `latitude`/`longitude` decimais atualmente persistidos e sincronizar DMS, mapa, beacons APRS e filtros. Também converter decimal → Maidenhead para facilitar conferência do grid correspondente à localização atual; padrão de apresentação de 6 caracteres com seleção de precisão.
+- **Sem perda silenciosa de precisão:** entrar ou sair do modo Grid não modifica coordenadas de maior precisão já registradas. Exigir ação explícita **Usar estas coordenadas** para substituir a posição da estação pela localização aproximada do centro de uma célula; mudança do grid inválida ou incompleta não deve corromper os campos originais.
+- **Compatibilidade e testes:** persistir preferência `pt2vhf_coordinate_mode`, respeitar geolocalização automática e os campos obrigatórios; verificar limites geográficos, hemisférios, 4/6/8/10 caracteres, ida/volta, formatos inválidos, valores de centro/precisão, preservação ao reiniciar, i18n e Windows 7/10/11/Web LAN. Nenhum campo independente de localização deve divergir da latitude/longitude canônica.
+- **Status:** registrado em backlog e issue #106. **Não implementado nem validado na v1.14.40.**
+
 ## PENDENTE — Tracklogs como evidência georreferenciada de cobertura RF observada (15/10/2026, #94)
 
 - **Proposta:** aproveitar os pontos de tracklog APRS, inclusive de estações/digipeaters móveis, como candidatos a amostras na camada separada **Ver → Cobertura RF observada**. **Tracklog por si só comprova localização/trajetória, não recepção RF**: um ponto só entra como cobertura quando sua estação+SSID, timestamp e coordenada contemporânea podem ser associados a um pacote efetivamente ouvido/repetido por RF, com proveniência auditável.
