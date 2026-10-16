@@ -458,7 +458,10 @@ jobs:
           version="$(tr -d '\r\n ' < VERSION)"
           mkdir -p dist-docs/screenshots
           cp pt2vhf_aprs/static/img/app_logo.png dist-docs/manual_logo.png
-          python tools/capture_manual_screenshots.py --output-dir dist-docs/screenshots
+          # Pin the exact Leaflet version used by the app and serve it
+          # locally to Playwright; GitHub-hosted runners cannot rely on CDN.
+          npm install --prefix dist-docs/leaflet-runtime --no-save --ignore-scripts --silent leaflet@1.9.4
+          PT2VHF_MANUAL_LEAFLET_JS="$PWD/dist-docs/leaflet-runtime/node_modules/leaflet/dist/leaflet.js" python tools/capture_manual_screenshots.py --output-dir dist-docs/screenshots
           python tools/generate_manual.py --logo dist-docs/manual_logo.png --screenshots-dir dist-docs/screenshots --output "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
           python tools/validate_manual.py "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
 
