@@ -12,7 +12,7 @@ def test_search_toolbar_is_one_row_and_clear_does_not_create_second_row():
     assert "display: flex;" in tail
     assert "flex-wrap: nowrap;" in tail
     assert ".rf-route-search label > span" in tail
-    assert "#rfRouteClear" in html
+    assert 'id="rfRouteClear"' in html
     assert 'placeholder="Destino RF"' in html
     for name in ("rfRouteSource", "rfRouteTarget", "rfRouteApply", "rfPossibleRoutes", "rfRouteClear"):
         assert f'id="{name}"' in html
