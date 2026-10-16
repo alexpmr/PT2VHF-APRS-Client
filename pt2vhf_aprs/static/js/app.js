@@ -4049,20 +4049,6 @@
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
       state.topologyEdges = Array.isArray(edges) ? edges : [];
       const routeAllowedPairs = (state.rfRouteAnalysis && !state.rfPossibleRoutes) ? rfRouteAllowedPairs() : null;
-      const routeEvidenceByPair = new Map();
-      if (state.rfRouteAnalysis) {
-        for (const routeEdge of state.rfRouteAnalysis.eligible_edges || []) {
-          routeEvidenceByPair.set(rfRoutePairKey(routeEdge.source, routeEdge.target), routeEdge);
-        }
-        for (const route of state.rfRouteAnalysis.routes || []) {
-          for (const routeEdge of route.edges || []) {
-            const key = rfRoutePairKey(routeEdge.source, routeEdge.target);
-            // A geometria escolhida para a rota (posição histórica do evento)
-            // prevalece sobre a geometria agregada da topologia.
-            routeEvidenceByPair.set(key, routeEdge);
-          }
-        }
-      }
       const active = new Set();
 
       // The ordinary map draws only geometry independently accepted by
