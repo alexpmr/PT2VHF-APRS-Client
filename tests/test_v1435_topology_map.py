@@ -60,18 +60,16 @@ def test_mobile_pt2ap_historical_rf_edges_cannot_stretch_to_latest_gps(monkeypat
                     ("PY4UBA-9", now.isoformat(), -19.75, -47.93),
                 )
             edges = topology_map.list_map_edges(24)
-            assert len(edges) == 2
+            # The 4h-old one-off RF direct contact must expire; the 15h-old
+            # path-inferred historical segment remains separately classified.
+            assert len(edges) == 1
             by_source = {e["source"]: e for e in edges}
             assert by_source["PY5SUL-9"]["kind"] == "rf"
             assert by_source["PY5SUL-9"]["target_lat"] == -25.39
             assert by_source["PY5SUL-9"]["distance_km"] < 15
-            assert by_source["PY4UBA-9"]["target_lat"] == -19.73
-            assert by_source["PY4UBA-9"]["distance_km"] < 15
             assert by_source["PY5SUL-9"]["classification_source"].startswith("RF inferido")
             assert by_source["PY5SUL-9"]["rf_inferred"] is True
             assert by_source["PY5SUL-9"]["direct_rf_confirmed"] is False
-            assert by_source["PY4UBA-9"]["direct_rf_confirmed"] is True
-            assert by_source["PY4UBA-9"]["classification_source"].startswith("RF recebido")
             # Update the moving station yet again: history MUST stay identical.
             with db.connection() as conn:
                 conn.execute(
@@ -88,7 +86,7 @@ def test_mobile_pt2ap_historical_rf_edges_cannot_stretch_to_latest_gps(monkeypat
             response = client.get("/api/topology?hours=24")
             assert response.status_code == 200
             assert {e["source"]: e["target_lat"] for e in response.get_json()} == {
-                "PY5SUL-9": -25.39, "PY4UBA-9": -19.73
+                "PY5SUL-9": -25.39
             }
     finally:
         db.DB_PATH = original
@@ -162,7 +160,7 @@ def test_internet_starlink_and_rf_remain_distinct_and_ssids_not_merged():
     ]
     edges = topology_map._segments_from_events(rows)
     assert {(e["kind"], e["target"]) for e in edges} == {
-        ("rf", "PT2AP-10"), ("igate", "PT2AP-10"), ("rf", "PT2AP-15")
+        ("rf", "PT2AP-10"), ("igate", "PT2AP-10"), ("rf_temp", "PT2AP-15")
     }
     both = [e for e in edges if e["target"] == "PT2AP-10"]
     assert all(e["mixed_evidence"] for e in both)
