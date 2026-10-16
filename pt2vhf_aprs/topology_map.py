@@ -16,6 +16,49 @@ from . import database as db
 from . import diagnostics as diag
 
 
+RF_TEMPORARY_TTL = timedelta(hours=3)
+# Two RF contacts at least three hours apart establish recurring (ordinary) RF.
+# Transient contacts do not become permanent merely because time passed.
+RF_ESTABLISHED_MIN_SPAN = timedelta(hours=3)
+
+
+def _event_time(raw: Any) -> datetime | None:
+    try:
+        value = datetime.fromisoformat(str(raw or "").replace("Z", "+00:00"))
+        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+    except (ValueError, TypeError, OverflowError):
+        return None
+
+
+def _rf_pair(source: Any, target: Any) -> tuple[str, str]:
+    return tuple(sorted((str(source or "").strip().upper(), str(target or "").strip().upper())))
+
+
+def _established_rf_pairs(rows: list[Any]) -> set[tuple[str, str]]:
+    """Repeated *directly received* RF contacts separated in time are established.
+
+    Packet duplicates/bursts cannot establish a persistent RF link.
+    Inferred APRS-IS paths cannot renew or establish it.
+    """
+    bounds: dict[tuple[str, str], tuple[datetime, datetime]] = {}
+    for raw in rows:
+        row = dict(raw)
+        if (str(row.get("kind") or "").lower() != "rf"
+                or str(row.get("medium") or "").upper() != "RF"
+                or str(row.get("evidence_level") or "").lower() != "direct"):
+            continue
+        if (_validated_position(row.get("source_lat"), row.get("source_lon")) is None
+                or _validated_position(row.get("target_lat"), row.get("target_lon")) is None):
+            continue
+        when = _event_time(row.get("timestamp"))
+        pair = _rf_pair(row.get("source"), row.get("target"))
+        if when is None or not all(pair) or pair[0] == pair[1]:
+            continue
+        lo, hi = bounds.get(pair, (when, when))
+        bounds[pair] = min(lo, when), max(hi, when)
+    return {pair for pair, (lo, hi) in bounds.items() if hi - lo >= RF_ESTABLISHED_MIN_SPAN}
+
+
 MAP_EVENT_SCAN_LIMIT = 30000
 MAP_SEGMENT_LIMIT = 5000
 # ~11 km latitude per geographic bucket; each event keeps its exact coordinates.
@@ -75,7 +118,9 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
 
 
 def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT, *,
-                          mobile_callsigns: set[str] | None = None) -> list[dict[str, Any]]:
+                          mobile_callsigns: set[str] | None = None,
+                          established_rf_pairs: set[tuple[str, str]] | None = None,
+                          now: datetime | None = None) -> list[dict[str, Any]]:
     """Group near-coincident event geometries while keeping true GPS snapshots.
 
     The packet-level source/target positions MUST come from topology_events;
@@ -84,6 +129,8 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     segments: dict[tuple[Any, ...], dict[str, Any]] = {}
     media_by_pair: dict[tuple[str, str], set[str]] = defaultdict(set)
     mobile_repeaters = mobile_callsigns if mobile_callsigns is not None else moving_rf_repeaters(rows)
+    established = established_rf_pairs if established_rf_pairs is not None else _established_rf_pairs(rows)
+    instant = now or datetime.now(timezone.utc)
     for raw in rows:
         row = dict(raw)
         src = str(row.get("source") or "").strip().upper()
@@ -101,11 +148,19 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
             # Do not manufacture a VHF link to the latest GPS of a moving digi.
             continue
         time_text = str(row.get("timestamp") or "")
+        medium = str(row.get("medium") or "").upper().strip()
+        evidence = str(row.get("evidence_level") or "").lower().strip()
+        # Only TNC-confirmed, geographically sound RF contacts qualify for
+        # temporary display; APRS-IS-only reports cannot reset its 3h TTL.
+        temporary = kind == "rf" and medium == "RF" and evidence == "direct" and _rf_pair(src, dst) not in established
+        if temporary:
+            observed = _event_time(row.get("timestamp"))
+            if observed is None or observed > instant + timedelta(minutes=5) or observed + RF_TEMPORARY_TTL <= instant:
+                continue
+            kind = "rf_temp"
         src_bin = _rounded_bin(*source_pos)
         dst_bin = _rounded_bin(*target_pos)
         key = (src, dst, kind, *src_bin, *dst_bin)
-        medium = str(row.get("medium") or "").upper().strip()
-        evidence = str(row.get("evidence_level") or "").lower().strip()
         pair = (src, dst)
         media_by_pair[pair].add(kind)
 
@@ -135,7 +190,7 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
         segment["packet_count"] += 1
         segment["first_seen"] = min(segment["first_seen"], time_text)
         segment["last_seen"] = max(segment["last_seen"], time_text)
-        if kind == "rf":
+        if kind in {"rf", "rf_temp"}:
             if medium == "RF" and evidence != "inferred":
                 segment["rf_transport_count"] += 1
                 if evidence == "direct":
@@ -159,14 +214,19 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
         edge["internet_packet_count"] = totals[(edge["source"], edge["target"], "igate")]
         edge["classification_source"] = (
             "APRS-IS confirmado" if edge["kind"] == "igate" else
+            "RF temporário (válido por 3h após último contato)" if edge["kind"] == "rf_temp" else
             "RF recebido pelo TNC (posição histórica)" if edge["rf_transport_count"] > 0 else
             "RF inferido do path (posição histórica)"
         )
         # APRS path evidence is not proof of a verified direct RF hop.
         edge["direct_rf_confirmed"] = bool(
-            edge["kind"] == "rf" and edge["rf_direct_count"] > 0
+            edge["kind"] in {"rf", "rf_temp"} and edge["rf_direct_count"] > 0
         )
-        edge["rf_inferred"] = edge["kind"] == "rf" and not edge["direct_rf_confirmed"]
+        edge["rf_inferred"] = edge["kind"] in {"rf", "rf_temp"} and not edge["direct_rf_confirmed"]
+        if edge["kind"] == "rf_temp":
+            expiry = _event_time(edge["last_seen"])
+            edge["expires_at"] = (expiry + RF_TEMPORARY_TTL).isoformat() if expiry else None
+            edge["ttl_hours"] = 3
         edge["distance_km"] = round(db.haversine_km(
             edge["source_lat"], edge["source_lon"],
             edge["target_lat"], edge["target_lon"],
@@ -226,10 +286,11 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
             (MAP_EVENT_SCAN_LIMIT,),
         ).fetchall()
         mobile = moving_rf_repeaters(reference, tracks)
+        established = _established_rf_pairs(reference)
         if mobile:
             diag.log_event("topology_map_mobile_status",
                            mobile_count=len(mobile), period_hours=period)
-    return _segments_from_events(rows, mobile_callsigns=mobile)
+    return _segments_from_events(rows, mobile_callsigns=mobile, established_rf_pairs=established)
 
 
 def list_mobile_rf_coverage(hours: float = 0, limit: int = 1200) -> list[dict[str, Any]]:
