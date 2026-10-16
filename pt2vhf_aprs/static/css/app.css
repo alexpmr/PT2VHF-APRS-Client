@@ -3112,28 +3112,39 @@ html[data-theme="light"] .traffic-animation-panel {
 
 
 /* v1.6.2 - replay no Mapa, atividade RX/TX e fluxo de configuração */
+/* #109: CPU above RAM in a single narrow header footprint. */
 .system-resource-meter {
   display: inline-flex;
+  flex-direction: column;
   align-items: stretch;
-  gap: 5px;
-  min-height: 34px;
+  justify-content: center;
+  gap: 2px;
+  width: 98px;
+  min-width: 98px;
+  min-height: 0;
+  box-sizing: border-box;
 }
 .resource-metric {
-  min-width: 68px;
   display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: auto 4px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: 10px 3px;
   align-items: center;
-  column-gap: 5px;
-  row-gap: 3px;
-  padding: 4px 7px;
+  justify-items: stretch;
+  column-gap: 4px;
+  row-gap: 2px;
+  width: 100%;
+  min-width: 0;
+  min-height: 20px;
+  box-sizing: border-box;
+  padding: 2px 5px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 5px;
   background: rgba(255,255,255,.025);
   color: var(--muted);
   font-size: 9px;
   line-height: 1;
 }
+.resource-metric strong { justify-self: end; }
 .resource-metric strong { color: var(--text); font-size: 10px; white-space: nowrap; }
 .resource-label { font-weight: 800; }
 .resource-track {
