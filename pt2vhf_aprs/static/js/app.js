@@ -4090,7 +4090,7 @@
         if (Math.abs(points[1][0]) < .01 && Math.abs(points[1][1]) < .01) continue;
 
         let line = state.topologyLines.get(key);
-        const inferredRouteEdge = edge.kind !== 'igate' && edge.direct_rf_confirmed !== true;
+        const inferredRouteEdge = edge.kind !== 'igate' && !(edge.direct_rf_confirmed === true);
         const legacyRouteEdge = edge.kind !== 'igate' && edge.evidence_level === 'legacy';
         const style = {
           color: edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
