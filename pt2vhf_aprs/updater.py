@@ -484,6 +484,10 @@ def _write_windows_cmd_helper(pending: dict[str, Any]) -> Path:
     lines = [
         "@echo off",
         "setlocal DisableDelayedExpansion",
+        # A replacement onefile EXE must unpack its own Python/DLL runtime.
+        'set "PYINSTALLER_RESET_ENVIRONMENT=1"',
+        'set "_MEIPASS2="',
+        *[f'set "{key}="' for key in os.environ if key.startswith("_PYI_")],
         "chcp 65001 >nul",
         f'set "oldpid={previous_pid}"',
         f'set "marker={_cmd_value(marker)}"',
@@ -819,14 +823,25 @@ def launch_pending_update(force: bool = False) -> bool:
             getattr(subprocess, "CREATE_NO_WINDOW", 0)
             | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
         )
-        process = subprocess.Popen(
-            [os.environ.get("COMSPEC", r"C:\Windows\System32\cmd.exe"), "/d", "/c", str(helper)],
-            creationflags=flags,
-            close_fds=True,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        # PyInstaller changes the process DLL directory. Native helpers must
+        # use Windows DLL lookup, then restore our runtime for the running app.
+        import ctypes
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.SetDllDirectoryW.argtypes = [ctypes.c_wchar_p]
+        kernel32.SetDllDirectoryW.restype = ctypes.c_int
+        if not kernel32.SetDllDirectoryW(None):
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            process = subprocess.Popen(
+                [os.environ.get("COMSPEC", r"C:\Windows\System32\cmd.exe"), "/d", "/c", str(helper)],
+                creationflags=flags,
+                close_fds=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        finally:
+            kernel32.SetDllDirectoryW(getattr(sys, "_MEIPASS", None))
     else:
         helper = _write_posix_helper(pending)
         process = subprocess.Popen(

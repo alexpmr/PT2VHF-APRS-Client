@@ -132,14 +132,14 @@ def test_web_page_fallback_only_confirms_version_not_assets(monkeypatch):
 
 def test_status_reports_missing_assets_without_false_install_ready(monkeypatch):
     monkeypatch.setattr(web.release_check, "fetch_latest_release", lambda: (
-        {"tag_name": "v1.14.42", "html_url": release_check.WEB_URL, "assets": [], "limited_metadata": True},
+        {"tag_name": "v99.0.0", "html_url": release_check.WEB_URL, "assets": [], "limited_metadata": True},
         "github_release_page",
     ))
     monkeypatch.setattr(web.updater, "pending_update", lambda: None)
     monkeypatch.setattr(web.updater, "select_asset", lambda *_args: None)
     result = web.get_update_status(force=True)
     assert result["status"] == "update_available"
-    assert result["latest_version"] == "1.14.42"
+    assert result["latest_version"] == "99.0.0"
     assert result["limited_metadata"] is True
     assert result["asset_ready"] is False
     assert "não puderam ser consultados" in result["error"]

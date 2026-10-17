@@ -1,3 +1,9 @@
+## VALIDAÇÃO — v1.14.42 (17/10/2026)
+
+- Atualização portátil Windows com erro de DLL: corrigido isolamento de ambiente PyInstaller e busca de DLLs do helper; teste automatizado incluído. Causa candidata, sem reprodução física do erro relatado. Manter aberto até teste em Windows.
+- A lista histórica abaixo inclui requisitos já implementados em v1.14.40/41 (RF temporário, Grid Locator, gauges e apresentação). Não interpretar todos os títulos antigos PENDENTE como situação atual.
+- Validação de rádio físico, Web LAN externo, cobertura RF histórica e demais issues abertas não são encerradas por testes sintéticos.
+
 ## PENDENTE — Gauges CPU e RAM empilhados no cabeçalho (#109, 16/10/2026)
 
 - **Interface:** na barra superior, apresentar as duas métricas em um bloco vertical estreito, **CPU acima de RAM**, em vez de dois cards lado a lado; reduzir o espaço horizontal consumido sem aumentar desnecessariamente a altura da barra.

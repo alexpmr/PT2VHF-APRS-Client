@@ -31,7 +31,10 @@ def test_v1413_long_observed_rf_edge_remains_in_graph(monkeypatch):
         }
     ]
     monkeypatch.setattr(db, "list_topology_edges", lambda hours=0: rows)
-    graph, _positions = db._rf_route_graph(0)
+    # Unit regression for the legacy aggregate builder. The active spacetime
+    # graph reads historical event coordinates directly from SQLite instead.
+    from pt2vhf_aprs import spacetime_topology
+    graph, _positions = spacetime_topology._original_route_graph(0)
     assert "PY2BBB" in graph["PT2AAA"]
 
 

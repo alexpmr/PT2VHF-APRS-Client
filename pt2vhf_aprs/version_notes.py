@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.42": {
+        "title": "Atualização portátil e regressão",
+        "items": [
+            "Isolamento do runtime PyInstaller para evitar herdar DLLs temporárias da versão anterior.",
+            "Backup, verificação de saúde e rollback portátil preservados.",
+            "Validação física Windows e demais pendências de campo continuam abertas.",
+        ],
+    },
     "1.14.41": {
         "title": "RF temporário, Grid Locator e melhorias de interface",
         "items": [

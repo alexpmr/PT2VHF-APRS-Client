@@ -1,3 +1,10 @@
+## 1.14.42 - 2026-10-17
+
+- Atualizador portátil Windows: reinicializar ambiente PyInstaller ao abrir a nova versão; limpar referências ao runtime temporário anterior e restaurar a busca nativa de DLLs no helper.
+- Preservados o backup, a confirmação de saúde HTTP e o rollback da atualização portátil.
+- Testes de regressão de RF temporário, Grid Locator, layout, mensagens e atualização; smoke HTTP e matriz de migração SQLite.
+- Limitações: confirmação física do erro de DLL, rádios e acesso LAN externo permanecem pendentes; esta versão não encerra integralmente o backlog.
+
 ## 1.14.41 - 2026-10-16
 
 - Mapa: enlace RF temporário com cor ciano e espessura 3 px por padrão, configuráveis, validade de 3 h desde o último contato direto; novo contato renova o prazo e linhas expiradas saem do mapa sem refresh.
