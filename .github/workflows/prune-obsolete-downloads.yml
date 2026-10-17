@@ -1,0 +1,30 @@
+name: Prune Obsolete Release Downloads
+
+# One-time clean-up. Runs only for the explicitly named maintenance merge
+# commit. Does not execute on ordinary pushes, PRs, or new software releases.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  delete-old-distributions:
+    if: ${{ github.event.head_commit.message == 'maintenance: prune obsolete release downloads' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check cleanup script syntax
+        run: python -m py_compile tools/prune_obsolete_release_downloads.py
+      - name: Preview deletions and confirm protected latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/prune_obsolete_release_downloads.py
+      - name: Delete only obsolete installers and manuals
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -u tools/prune_obsolete_release_downloads.py --execute
