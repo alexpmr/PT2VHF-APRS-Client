@@ -131,7 +131,10 @@ class APRSService:
         self._last_beacon = 0.0
         self._beacon_send_lock = threading.Lock()
         self._query_response_last: dict[tuple[str, str], float] = {}
-        self._auto_reply_last: dict[str, float] = {}
+        # Janela configurável serve apenas para limitar avalanches, nunca
+        # como cooldown que bloqueie mensagens privadas distintas.
+        self._auto_reply_recent: dict[str, list[float]] = {}
+        self._auto_reply_guard = threading.Lock()
 
     def status(self) -> dict[str, Any]:
         with self._status_lock:
@@ -637,10 +640,18 @@ class APRSService:
             _notify_personal_message(from_call, message_text)
 
         if is_personal_message:
-            self._maybe_auto_reply(from_call, message_text, via_rf=via_rf)
+            self._maybe_auto_reply(from_call, message_text, via_rf=via_rf, message_id=msg_id)
 
-    def _maybe_auto_reply(self, from_call: str, incoming_text: str, *, via_rf: bool = False) -> None:
-        """Envia uma resposta automática configurável com proteção contra loops."""
+    def _maybe_auto_reply(
+        self, from_call: str, incoming_text: str, *, via_rf: bool = False,
+        message_id: str = "",
+    ) -> None:
+        """Responde a cada mensagem privada nova, com guarda anti-loop.
+
+        A deduplicação em _handle_message elimina retransmissões antes
+        deste método. O limite alto por janela não equivale a um cooldown:
+        mensagens distintas e próximas recebem respostas independentes.
+        """
         cfg = db.get_config()
         if not bool(cfg.get("auto_reply_enabled", 0)):
             return
@@ -648,33 +659,34 @@ class APRSService:
         own_call = full_callsign(cfg).upper()
         if not destination or destination == own_call:
             return
-
         reply_text = " ".join(
             str(cfg.get("auto_reply_text") or "").replace("\r", " ").replace("\n", " ").split()
         )
         if not reply_text:
             return
-
-        # Queries, ACK/REJ e boletins já são filtrados antes deste ponto.
-        # O cooldown por remetente é a barreira anti-loop: se duas estações
-        # estiverem com autoresposta ligada, a resposta recebida não dispara
-        # uma nova sequência até o intervalo expirar.
-        cooldown = max(30, min(86400, int(cfg.get("auto_reply_cooldown_seconds") or 300)))
-        now = time.monotonic()
-        self._auto_reply_last = {
-            call: at for call, at in self._auto_reply_last.items()
-            if now - float(at) < cooldown
-        }
-        last = float(self._auto_reply_last.get(destination) or 0.0)
-        if last and now - last < cooldown:
+        text_upper = str(incoming_text or "").strip().upper()
+        if not text_upper or text_upper == reply_text.upper() or text_upper.startswith(
+            ("AUTO-RESPOSTA:", "AUTO-REPLY:", "[AUTO]", "AUTO:")
+        ):
+            # Nunca iniciar ping-pong com a própria resposta ou autorespostas
+            # reconhecidas; também não responder a texto vazio.
             return
-
+        window = max(30, min(86400, int(cfg.get("auto_reply_cooldown_seconds") or 300)))
+        now = time.monotonic()
         route = "rf_direct" if via_rf else "aprs_is"
-        try:
-            self.queue_message_parts(destination, reply_text, route=route, automated=True)
-            self._auto_reply_last[destination] = now
-        except Exception as exc:
-            self._set_status(last_error=f"Resposta automática para {destination}: {exc}")
+        with self._auto_reply_guard:
+            recent = [t for t in self._auto_reply_recent.get(destination, []) if now - t < window]
+            # Segurança contra loops/abuso: 12 respostas por remetente/janela.
+            # Duas ou mais mensagens distintas imediatamente sucessivas são atendidas.
+            if len(recent) >= 12:
+                diag.log_event("auto_reply_rate_guard", peer=destination, limit=12, window_seconds=window)
+                return
+            try:
+                self.queue_message_parts(destination, reply_text, route=route, automated=True)
+                recent.append(now)
+                self._auto_reply_recent[destination] = recent
+            except Exception as exc:
+                self._set_status(last_error=f"Auto-resposta para {destination}: {exc}")
 
     def _send_raw(self, line: str) -> None:
         data = (line.rstrip("\r\n") + "\r\n").encode("latin-1", errors="replace")
