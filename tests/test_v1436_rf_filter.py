@@ -68,6 +68,6 @@ def test_frontend_does_not_display_unverified_long_hops_as_normal_rf():
     assert "if (edge.kind !== 'igate' && legacyRouteEdge) style.dashArray" not in js
     assert "state.mapConfig.topology_igate_color" in js
     assert "temporaryRf ? state.mapConfig.topology_rf_temporary_color" in js
-    assert "dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : inferredRouteEdge ? '5 6' : null" in js
+    assert "dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null" in js
     assert "topologyEdgeDistanceKm(geometryEdge) > 250" in js
     assert "if (!window.isSecureContext)" in js
