@@ -1,12 +1,12 @@
-"""Maintain a top-of-README lifetime *known minimum* of release-asset downloads.
+"""Render the README download table from the latest published GitHub release only.
 
-Usage in GitHub Actions: GH_TOKEN=$GITHUB_TOKEN python tools/sync_readme_release_downloads.py
-Only counts published GitHub Release assets; removed assets observed earlier are kept.
+For each package type, display its own GitHub Release asset download_count.
+No downloads from previous versions are carried into the current version.
+Usage: GH_TOKEN=$GITHUB_TOKEN python tools/sync_readme_release_downloads.py
 """
 from __future__ import annotations
 
 import base64
-from datetime import datetime, timezone
 import json
 import os
 import re
@@ -17,10 +17,9 @@ import urllib.request
 REPO = os.getenv("GITHUB_REPOSITORY", "alexpmr/PT2VHF-APRS-Client")
 TOKEN = os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN") or ""
 BASE = f"https://api.github.com/repos/{REPO}"
-HISTORY_PATH = "data/release_download_history.json"
 HEADERS = {
     "Accept": "application/vnd.github+json",
-    "User-Agent": "PT2VHF-APRS-Client-download-history",
+    "User-Agent": "PT2VHF-APRS-Client-current-downloads",
     "X-GitHub-Api-Version": "2022-11-28",
 }
 if TOKEN:
@@ -81,111 +80,70 @@ def classify_asset(name: str) -> str | None:
     return None
 
 
-def fetch_releases() -> list[dict]:
-    all_releases = []
-    for page in range(1, 100):
-        batch = api(f"/releases?per_page=100&page={page}")
-        if not isinstance(batch, list):
-            raise RuntimeError("GitHub Releases returned an unexpected value")
-        all_releases += [r for r in batch if not r.get("draft")]
-        if len(batch) < 100:
-            return all_releases
-    raise RuntimeError("More than 9,900 releases: pagination limit reached")
+def build_section(release: dict) -> str:
+    """Return one row per package type, sourced only from this release's assets."""
+    tag = str(release.get("tag_name") or "").strip()
+    if not re.fullmatch(r"v\d+\.\d+\.\d+", tag):
+        raise ValueError("Missing or invalid latest release tag")
+    prefix = f"https://github.com/{REPO}/releases/download/{tag}/"
+    packages: dict[str, dict] = {}
+    for asset in release.get("assets") or []:
+        category = classify_asset(str(asset.get("name") or ""))
+        if category is None:
+            continue
+        url = str(asset.get("browser_download_url") or "")
+        if not url.startswith(prefix):
+            continue
+        if category in packages:
+            raise ValueError(f"Duplicate application package category in {tag}: {category}")
+        packages[category] = asset
 
-
-def collect_history(releases: list[dict], previous: dict, now: str) -> tuple[dict, bool]:
-    history = {"schema": 1, "updated_at": previous.get("updated_at"),
-               "assets": dict(previous.get("assets") or {})}
-    changed = not previous.get("schema")
-    for release in releases:
-        tag = str(release.get("tag_name") or "")
-        for asset in release.get("assets") or []:
-            category = classify_asset(str(asset.get("name") or ""))
-            if category is None or asset.get("id") is None:
-                continue
-            raw_count = asset.get("download_count")
-            if not isinstance(raw_count, int) or raw_count < 0:
-                continue
-            asset_id = str(asset["id"])
-            old = history["assets"].get(asset_id) or {}
-            new_count = max(int(old.get("count", 0)), raw_count)
-            item = {"tag": tag, "name": asset["name"], "category": category,
-                    "count": new_count}
-            if item != {k: old.get(k) for k in item}:
-                history["assets"][asset_id] = item
-                changed = True
-    if changed:
-        history["updated_at"] = now
-    return history, changed
-
-
-def current_packages(releases: list[dict]) -> dict[str, dict]:
-    results: dict[str, dict] = {}
-    releases = sorted((r for r in releases if not r.get("prerelease")), key=lambda r: r.get("published_at") or r.get("created_at") or "", reverse=True)
-    for release in releases:
-        for asset in release.get("assets") or []:
-            category = classify_asset(str(asset.get("name") or ""))
-            url = str(asset.get("browser_download_url") or "")
-            if category and category not in results and url.startswith(f"https://github.com/{REPO}/releases/download/"):
-                results[category] = {"url": url, "tag": release.get("tag_name") or ""}
-    return results
-
-
-def build_section(releases: list[dict], history: dict, latest_tag: str) -> str:
-    counts = {k: 0 for k, *_ in CATEGORIES}
-    observed = set()
-    for asset in history.get("assets", {}).values():
-        category = asset.get("category")
-        if category in counts:
-            counts[category] += max(0, int(asset.get("count", 0)))
-            observed.add(category)
-    available = current_packages(releases)
     lines = [
         "<!-- DOWNLOAD_TABLE_START -->",
-        f"## Downloads — versão {latest_tag.removeprefix('v')}",
+        f"## Downloads — versão {tag.removeprefix('v')}",
         "",
-        "| Sistema | Tipo de pacote | Arquitetura | Baixar versão disponível | Downloads acumulados |",
+        "| Sistema | Tipo de pacote | Arquitetura | Baixar versão atual | Downloads da versão |",
         "|---|---|---|---|---:|",
     ]
-    for key, system, package, arch in CATEGORIES:
-        item = available.get(key)
-        if item:
-            version = str(item["tag"])
-            label = "Baixar" if version == latest_tag else f"Baixar {version}"
-            link = f"[{label}]({item['url']})"
+    total = 0
+    valid_counters = 0
+    for key, system, package, architecture in CATEGORIES:
+        asset = packages.get(key)
+        if asset is None:
+            lines.append(f"| {system} | {package} | {architecture} | Indisponível | — |")
+            continue
+        link = f"[Baixar]({asset['browser_download_url']})"
+        raw_count = asset.get("download_count")
+        if type(raw_count) is int and raw_count >= 0:
+            total += raw_count
+            valid_counters += 1
+            display_count = f"{raw_count:,}".replace(",", ".")
         else:
-            link = "Indisponível"
-        count = f"≥ {counts[key]:,}".replace(",", ".") if key in observed else "—"
-        lines.append(f"| {system} | {package} | {arch} | {link} | {count} |")
-    total = sum(counts.values())
-    observed_tags = {str(a.get("tag")) for a in history.get("assets", {}).values() if a.get("tag")}
-    coverage = f"{len(observed_tags)} versões públicas com assets recuperáveis" if observed_tags else "nenhuma release coletada"
-    when = history.get("updated_at") or "Aguardando primeira coleta automática"
-    if "T" in when:
-        when = when.replace("T", " ").replace("+00:00", " UTC")
-    latest = next((r for r in releases if r.get("tag_name") == latest_tag), {})
-    manual = next((a.get("browser_download_url") for a in latest.get("assets", [])
-                   if "manual" in str(a.get("name", "")).lower()
-                   and str(a.get("name", "")).lower().endswith(".pdf")
-                   and str(a.get("browser_download_url", "")).startswith(f"https://github.com/{REPO}/releases/download/")), None)
-    lines += [
+            display_count = "—"
+        lines.append(f"| {system} | {package} | {architecture} | {link} | {display_count} |")
+
+    manual = next(
+        (a.get("browser_download_url") for a in release.get("assets") or []
+         if "manual" in str(a.get("name", "")).lower()
+         and str(a.get("name", "")).lower().endswith(".pdf")
+         and str(a.get("browser_download_url", "")).startswith(prefix)),
+        None,
+    )
+    lines.extend([
         "",
-        f"**Total mínimo conhecido de downloads dos pacotes: ≥ {total:,}.**".replace(",", "."),
-        f"**Cobertura histórica disponível:** {coverage}.",
+        f"**Total contabilizado dos pacotes da {tag}: {total:,}.**".replace(",", "."),
+        f"*Formatos com contagem disponível: {valid_counters}/{len(CATEGORIES)}.*",
         "",
-        "> **Contadores históricos mínimos (≥):** soma dos downloads dos arquivos de versões ainda "
-        "consultáveis e dos registros previamente preservados. Instaladores removidos antes da primeira "
-        "coleta não podem ser recuperados pela API do GitHub. Esses números **não são instalações "
-        "nem usuários únicos**; arquivos auxiliares não entram no total.",
-        "",
-        f"*Última alteração dos dados coletados: {when}.*",
+        "> A contagem corresponde apenas aos downloads dos arquivos desta versão "
+        "segundo o GitHub Releases. Cada nova versão começa com seus próprios contadores; "
+        "versões anteriores não são somadas. Não representa instalações nem usuários únicos.",
         "",
         (f"[Manual PDF]({manual}) · " if manual else "")
-        + f"[Notas da versão atual](https://github.com/{REPO}/releases/tag/{latest_tag}) · "
+        + f"[Notas da versão atual](https://github.com/{REPO}/releases/tag/{tag}) · "
         + f"[Todas as versões](https://github.com/{REPO}/releases)",
         "<!-- DOWNLOAD_TABLE_END -->",
         "",
-    ]
+    ])
     return "\n".join(lines)
 
 
@@ -236,30 +194,30 @@ def update_content(path: str, data: str, existing: str, sha: str | None, message
 
 
 def main() -> int:
-    releases = fetch_releases()
-    latest = api("/releases/latest")
-    tag = str(latest["tag_name"])
+    release = api("/releases/latest")
+    tag = str(release.get("tag_name") or "")
     expected = os.getenv("PT2VHF_RELEASE_VERSION", "").strip().removeprefix("v")
     if expected and tag != "v" + expected:
         raise RuntimeError(f"Release incomplete: expected v{expected}, latest is {tag}")
-    latest_categories = {classify_asset(str(a.get("name") or "")) for a in latest.get("assets") or []}
-    if expected and len(latest_categories - {None}) < len(CATEGORIES):
+    available = {
+        classify_asset(str(asset.get("name") or ""))
+        for asset in release.get("assets") or []
+        if str(asset.get("browser_download_url") or "").startswith(
+            f"https://github.com/{REPO}/releases/download/{tag}/"
+        )
+    }
+    if expected and len(available - {None}) < len(CATEGORIES):
         raise RuntimeError("Release incomplete: some application formats have not been published")
-    releases = [latest] + [r for r in releases if r.get("id") != latest.get("id")]
-    previous_raw, previous_sha = get_content(HISTORY_PATH)
-    previous = json.loads(previous_raw) if previous_raw else {}
-    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    history, changed = collect_history(releases, previous, now)
-    readme, readme_sha = get_content("README.md")
+    readme, sha = get_content("README.md")
     if not readme:
         raise RuntimeError("README.md not found")
-    new_readme = render_readme(readme, build_section(releases, history, tag))
-    history_text = json.dumps(history, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
-    saved = update_content(HISTORY_PATH, history_text, previous_raw, previous_sha,
-                           "docs: preserve per-asset cumulative download history")
-    updated = update_content("README.md", new_readme, readme, readme_sha,
-                             "docs: display current downloads and historical minimum by installer")
-    print(f"Release {tag}: {len(history['assets'])} assets; history changed={saved}; README changed={updated}")
+    section = build_section(release)
+    output = render_readme(readme, section)
+    updated = update_content(
+        "README.md", output, readme, sha,
+        f"docs: refresh per-package download counts for {tag}",
+    )
+    print(f"Release {tag}: {len(available - {None})} package formats; README changed={updated}")
     return 0
 
 
