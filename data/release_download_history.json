@@ -1,0 +1,426 @@
+{
+  "assets": {
+    "651518750": {
+      "category": "win7_setup_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.42.exe",
+      "tag": "v1.14.42"
+    },
+    "651518751": {
+      "category": "linux_tar_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_x86_64_v1.14.42.tar.gz",
+      "tag": "v1.14.42"
+    },
+    "651518752": {
+      "category": "win7_portable_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.42.exe",
+      "tag": "v1.14.42"
+    },
+    "651518753": {
+      "category": "linux_tar_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_arm64_v1.14.42.tar.gz",
+      "tag": "v1.14.42"
+    },
+    "651518786": {
+      "category": "linux_appimage_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_arm64_v1.14.42.AppImage",
+      "tag": "v1.14.42"
+    },
+    "651518815": {
+      "category": "mac_dmg_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_arm64_v1.14.42.dmg",
+      "tag": "v1.14.42"
+    },
+    "651518829": {
+      "category": "mac_dmg_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_x86_64_v1.14.42.dmg",
+      "tag": "v1.14.42"
+    },
+    "651518870": {
+      "category": "linux_appimage_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_x86_64_v1.14.42.AppImage",
+      "tag": "v1.14.42"
+    },
+    "651518900": {
+      "category": "win_portable_arm64",
+      "count": 1,
+      "name": "PT2VHF_APRS_Client_Portable_ARM64_v1.14.42.exe",
+      "tag": "v1.14.42"
+    },
+    "651518906": {
+      "category": "win_setup_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_ARM64_v1.14.42.exe",
+      "tag": "v1.14.42"
+    },
+    "651518909": {
+      "category": "win_portable_x64",
+      "count": 5,
+      "name": "PT2VHF_APRS_Client_Portable_x64_v1.14.42.exe",
+      "tag": "v1.14.42"
+    },
+    "651518963": {
+      "category": "win_setup_x64",
+      "count": 5,
+      "name": "PT2VHF_APRS_Client_Setup_x64_v1.14.42.exe",
+      "tag": "v1.14.42"
+    },
+    "651519019": {
+      "category": "linux_deb_x64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.42_amd64.deb",
+      "tag": "v1.14.42"
+    },
+    "651519026": {
+      "category": "linux_deb_arm64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.42_arm64.deb",
+      "tag": "v1.14.42"
+    },
+    "653795311": {
+      "category": "win7_setup_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.43.exe",
+      "tag": "v1.14.43"
+    },
+    "653795312": {
+      "category": "linux_tar_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_x86_64_v1.14.43.tar.gz",
+      "tag": "v1.14.43"
+    },
+    "653795314": {
+      "category": "linux_tar_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_arm64_v1.14.43.tar.gz",
+      "tag": "v1.14.43"
+    },
+    "653795317": {
+      "category": "win7_portable_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.43.exe",
+      "tag": "v1.14.43"
+    },
+    "653795339": {
+      "category": "linux_appimage_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_arm64_v1.14.43.AppImage",
+      "tag": "v1.14.43"
+    },
+    "653795364": {
+      "category": "mac_dmg_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_arm64_v1.14.43.dmg",
+      "tag": "v1.14.43"
+    },
+    "653795370": {
+      "category": "mac_dmg_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_x86_64_v1.14.43.dmg",
+      "tag": "v1.14.43"
+    },
+    "653795375": {
+      "category": "linux_appimage_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_x86_64_v1.14.43.AppImage",
+      "tag": "v1.14.43"
+    },
+    "653795409": {
+      "category": "win_portable_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Portable_ARM64_v1.14.43.exe",
+      "tag": "v1.14.43"
+    },
+    "653795413": {
+      "category": "win_setup_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_ARM64_v1.14.43.exe",
+      "tag": "v1.14.43"
+    },
+    "653795415": {
+      "category": "win_portable_x64",
+      "count": 2,
+      "name": "PT2VHF_APRS_Client_Portable_x64_v1.14.43.exe",
+      "tag": "v1.14.43"
+    },
+    "653795423": {
+      "category": "win_setup_x64",
+      "count": 2,
+      "name": "PT2VHF_APRS_Client_Setup_x64_v1.14.43.exe",
+      "tag": "v1.14.43"
+    },
+    "653795473": {
+      "category": "linux_deb_x64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.43_amd64.deb",
+      "tag": "v1.14.43"
+    },
+    "653795486": {
+      "category": "linux_deb_arm64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.43_arm64.deb",
+      "tag": "v1.14.43"
+    },
+    "654391220": {
+      "category": "linux_tar_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_arm64_v1.14.44.tar.gz",
+      "tag": "v1.14.44"
+    },
+    "654391222": {
+      "category": "win7_portable_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.44.exe",
+      "tag": "v1.14.44"
+    },
+    "654391223": {
+      "category": "win7_setup_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.44.exe",
+      "tag": "v1.14.44"
+    },
+    "654391224": {
+      "category": "linux_tar_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_x86_64_v1.14.44.tar.gz",
+      "tag": "v1.14.44"
+    },
+    "654391270": {
+      "category": "linux_appimage_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_arm64_v1.14.44.AppImage",
+      "tag": "v1.14.44"
+    },
+    "654391282": {
+      "category": "mac_dmg_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_arm64_v1.14.44.dmg",
+      "tag": "v1.14.44"
+    },
+    "654391295": {
+      "category": "mac_dmg_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_x86_64_v1.14.44.dmg",
+      "tag": "v1.14.44"
+    },
+    "654391298": {
+      "category": "linux_appimage_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_x86_64_v1.14.44.AppImage",
+      "tag": "v1.14.44"
+    },
+    "654391345": {
+      "category": "win_portable_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Portable_ARM64_v1.14.44.exe",
+      "tag": "v1.14.44"
+    },
+    "654391348": {
+      "category": "win_setup_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_ARM64_v1.14.44.exe",
+      "tag": "v1.14.44"
+    },
+    "654391354": {
+      "category": "win_portable_x64",
+      "count": 1,
+      "name": "PT2VHF_APRS_Client_Portable_x64_v1.14.44.exe",
+      "tag": "v1.14.44"
+    },
+    "654391357": {
+      "category": "win_setup_x64",
+      "count": 1,
+      "name": "PT2VHF_APRS_Client_Setup_x64_v1.14.44.exe",
+      "tag": "v1.14.44"
+    },
+    "654391397": {
+      "category": "linux_deb_x64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.44_amd64.deb",
+      "tag": "v1.14.44"
+    },
+    "654391405": {
+      "category": "linux_deb_arm64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.44_arm64.deb",
+      "tag": "v1.14.44"
+    },
+    "654447811": {
+      "category": "win7_setup_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.45.exe",
+      "tag": "v1.14.45"
+    },
+    "654447813": {
+      "category": "linux_tar_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_arm64_v1.14.45.tar.gz",
+      "tag": "v1.14.45"
+    },
+    "654447815": {
+      "category": "linux_tar_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_x86_64_v1.14.45.tar.gz",
+      "tag": "v1.14.45"
+    },
+    "654447816": {
+      "category": "win7_portable_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.45.exe",
+      "tag": "v1.14.45"
+    },
+    "654447840": {
+      "category": "linux_appimage_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_arm64_v1.14.45.AppImage",
+      "tag": "v1.14.45"
+    },
+    "654447860": {
+      "category": "mac_dmg_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_x86_64_v1.14.45.dmg",
+      "tag": "v1.14.45"
+    },
+    "654447862": {
+      "category": "mac_dmg_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_arm64_v1.14.45.dmg",
+      "tag": "v1.14.45"
+    },
+    "654447877": {
+      "category": "linux_appimage_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_x86_64_v1.14.45.AppImage",
+      "tag": "v1.14.45"
+    },
+    "654447936": {
+      "category": "win_portable_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Portable_ARM64_v1.14.45.exe",
+      "tag": "v1.14.45"
+    },
+    "654447944": {
+      "category": "win_setup_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_ARM64_v1.14.45.exe",
+      "tag": "v1.14.45"
+    },
+    "654447947": {
+      "category": "win_portable_x64",
+      "count": 2,
+      "name": "PT2VHF_APRS_Client_Portable_x64_v1.14.45.exe",
+      "tag": "v1.14.45"
+    },
+    "654447951": {
+      "category": "win_setup_x64",
+      "count": 2,
+      "name": "PT2VHF_APRS_Client_Setup_x64_v1.14.45.exe",
+      "tag": "v1.14.45"
+    },
+    "654448004": {
+      "category": "linux_deb_x64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.45_amd64.deb",
+      "tag": "v1.14.45"
+    },
+    "654448014": {
+      "category": "linux_deb_arm64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.45_arm64.deb",
+      "tag": "v1.14.45"
+    },
+    "654534486": {
+      "category": "linux_tar_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_x86_64_v1.14.46.tar.gz",
+      "tag": "v1.14.46"
+    },
+    "654534487": {
+      "category": "win7_setup_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.46.exe",
+      "tag": "v1.14.46"
+    },
+    "654534488": {
+      "category": "linux_tar_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Linux_arm64_v1.14.46.tar.gz",
+      "tag": "v1.14.46"
+    },
+    "654534491": {
+      "category": "win7_portable_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.46.exe",
+      "tag": "v1.14.46"
+    },
+    "654534550": {
+      "category": "linux_appimage_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_arm64_v1.14.46.AppImage",
+      "tag": "v1.14.46"
+    },
+    "654534562": {
+      "category": "mac_dmg_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_arm64_v1.14.46.dmg",
+      "tag": "v1.14.46"
+    },
+    "654534570": {
+      "category": "mac_dmg_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_macOS_x86_64_v1.14.46.dmg",
+      "tag": "v1.14.46"
+    },
+    "654534583": {
+      "category": "linux_appimage_x64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_x86_64_v1.14.46.AppImage",
+      "tag": "v1.14.46"
+    },
+    "654534641": {
+      "category": "win_portable_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Portable_ARM64_v1.14.46.exe",
+      "tag": "v1.14.46"
+    },
+    "654534642": {
+      "category": "win_setup_arm64",
+      "count": 0,
+      "name": "PT2VHF_APRS_Client_Setup_ARM64_v1.14.46.exe",
+      "tag": "v1.14.46"
+    },
+    "654534656": {
+      "category": "win_portable_x64",
+      "count": 1,
+      "name": "PT2VHF_APRS_Client_Portable_x64_v1.14.46.exe",
+      "tag": "v1.14.46"
+    },
+    "654534662": {
+      "category": "win_setup_x64",
+      "count": 4,
+      "name": "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe",
+      "tag": "v1.14.46"
+    },
+    "654534704": {
+      "category": "linux_deb_x64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.46_amd64.deb",
+      "tag": "v1.14.46"
+    },
+    "654534709": {
+      "category": "linux_deb_arm64",
+      "count": 0,
+      "name": "pt2vhf-aprs-client_1.14.46_arm64.deb",
+      "tag": "v1.14.46"
+    }
+  },
+  "schema": 1,
+  "updated_at": "2026-10-18T22:57:07+00:00"
+}
