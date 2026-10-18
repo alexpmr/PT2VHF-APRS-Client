@@ -23,6 +23,7 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 | macOS | DMG | Apple Silicon | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_arm64_v1.14.46.dmg) | ≥ 0 |
 
 **Total mínimo conhecido de downloads dos pacotes: ≥ 26.**
+**Cobertura histórica disponível:** 5 versões públicas com assets recuperáveis.
 
 > **Contadores históricos mínimos (≥):** soma dos downloads dos arquivos de versões ainda consultáveis e dos registros previamente preservados. Instaladores removidos antes da primeira coleta não podem ser recuperados pela API do GitHub. Esses números **não são instalações nem usuários únicos**; arquivos auxiliares não entram no total.
 
