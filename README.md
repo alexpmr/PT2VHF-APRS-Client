@@ -1,4 +1,6 @@
-# PT2VHF APRS Client - v1.14.45
+# PT2VHF APRS Client - v1.14.46
+
+A **v1.14.46** inaugura a aba **Automações** com **Auto-resposta**, migrada de Configuração e mantendo preferências salvas. Mensagens privadas novas podem receber respostas automáticas individuais, com proteção contra duplicatas, respostas reconhecidas e excesso de mensagens. O indicador compacto **TX ○ RX ○** mostra atividade combinada APRS-IS e TNC/RF. A ingestão APRS passa a rejeitar latitude/longitude com minutos inválidos na posição não comprimida (por exemplo, o PP5BLU-15), preservando pacotes brutos e omitindo do mapa eventos históricos malformados. **Pendências de campo e backlog não encerradas:** RX serial RT-950 Pro (#118), identificação completa de enlaces órfãos (#116) e saneamento de posições antigas de estações contaminadas.
 
 A **v1.14.45** corrige uma regressão visual da v1.14.44: os enlaces RF comuns (inclusive os inferidos pelo path) voltam a ser **contínuos e visíveis na cor configurada**. O tracejado continua reservado à Internet/iGate, sem alterar os estilos próprios dos enlaces RF móvel e temporário. A evidência inferida permanece identificada no popup, sem ser apresentada como RF direto confirmado. Preserva as melhorias de beacon multicanal da v1.14.44. **Correção de origem dos enlaces órfãos, recepção UART do Radtel e validação de coordenadas APRS malformadas seguem em backlog.**
 
