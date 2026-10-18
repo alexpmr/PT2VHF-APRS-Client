@@ -4135,19 +4135,20 @@
         const style = {
           color: mobileRf ? state.mapConfig.topology_rf_mobile_color
             : temporaryRf ? state.mapConfig.topology_rf_temporary_color
-            : edge.kind === 'igate' ? state.mapConfig.topology_igate_color
-            : inferredRouteEdge ? '#9ca3af' : state.mapConfig.topology_rf_color,
+            : edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
           weight: mobileRf ? state.mapConfig.topology_rf_mobile_width
             : temporaryRf ? state.mapConfig.topology_rf_temporary_width
             : edge.kind === 'igate' && edge.mixed_evidence
               ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
               : state.mapConfig.topology_width,
           opacity: edge.kind === 'igate' ? .72 : .84,
-          dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : inferredRouteEdge ? '5 6' : null,
+          dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null,
           interactive: true,
           bubblingMouseEvents: false,
           pane: 'pt2vhfInteractionPane'
         };
+        // Keep ordinary RF links solid and in the configured color. Inference is
+        // communicated by hover/popup and provenance, never by a faint style.
         // Suppress unverified inferred long hops on the overview map, but keep them
         // available on explicitly selected routes and in historical diagnostics.
         // This is a display threshold, not evidence of impossible RF propagation.
