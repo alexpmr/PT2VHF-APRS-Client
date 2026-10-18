@@ -478,7 +478,7 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
         raise ValueError("Baud rate serial inválido.")
 
     merged["device_profile"] = str(merged.get("device_profile") or "generic_kiss").lower().strip()
-    if merged["device_profile"] not in {"generic_kiss", "kenwood_tm_d700", "kenwood_tm_d710", "kantronics", "agwpe", "generic"}:
+    if merged["device_profile"] not in {"generic_kiss", "radtel_rt950_pro", "kenwood_tm_d700", "kenwood_tm_d710", "kantronics", "agwpe", "generic"}:
         raise ValueError("Perfil de equipamento TNC inválido.")
     merged["serial_protocol"] = str(merged.get("serial_protocol") or "kiss").lower().strip()
     if merged["serial_protocol"] not in {"kiss", "terminal", "agwpe", "auto"}:
@@ -1594,6 +1594,9 @@ class TNCService:
         if not self._tx_worker or not self._tx_worker.is_alive():
             self._tx_worker = threading.Thread(target=self._tx_loop, name="tnc-tx", daemon=True)
             self._tx_worker.start()
+        # O agendador de beacon também funciona com RF como único transporte.
+        from .aprs_service import service as aprs_service
+        aprs_service.ensure_beacon_worker()
 
     def reconnect(self) -> None:
         self.disconnect()
@@ -1813,6 +1816,37 @@ class TNCService:
         self._tx_seq += 1
         self._tx_queue.put((int(priority), self._tx_seq, bytes(frame), reason, raw_tnc2))
         return True
+
+    def queue_local_beacon(self, info: str, path: str = "") -> dict[str, Any]:
+        """Enfileira beacon local KISS/AX.25, respeitando autorização RF.
+
+        O cabeçalho TCPIP* do APRS-IS nunca é transmitido como path RF.
+        O aceite na fila não é confirmação de irradiação pelo rádio.
+        """
+        status = self.status()
+        cfg = get_tnc_config()
+        if not status.get("connected"):
+            raise ConnectionError("TNC/RF desconectado.")
+        if self._tx_paused or status.get("tx_paused"):
+            raise PermissionError("TX RF pausado.")
+        if not cfg.get("auto_tx_enabled") or not cfg.get("tx_confirmed"):
+            raise PermissionError("TX RF não está habilitado e confirmado.")
+        if cfg.get("transport") == "serial" and cfg.get("serial_protocol") == "terminal":
+            raise ValueError("Beacon RF exige transporte KISS/AGWPE, não serial terminal.")
+        source = self._own_call()
+        if not source:
+            raise ValueError("Indicativo local ausente.")
+        if not info or not str(info).startswith(("!", "=", "/", "@")):
+            raise ValueError("Payload de posição APRS inválido para beacon RF.")
+        path_items = normalize_message_rf_path(path)
+        frame = encode_ax25(source, APP_TOCALL, info, path_items)
+        header = f"{source}>{APP_TOCALL}" + (("," + ",".join(path_items)) if path_items else "")
+        raw = f"{header}:{info}"
+        if not self._enqueue(frame, "Beacon local RF", raw_tnc2=raw, priority=4):
+            raise PermissionError("Beacon RF bloqueado pelas proteções do TNC.")
+        record_decision("beacon_rf", "queued", "Beacon local para transmissão pelo TNC.",
+                        source=source, raw_tnc2=raw)
+        return {"queued": True, "raw": raw, "path": ",".join(path_items)}
 
     def queue_local_message(self, destination: str, text: str, msg_id: str, path: str = "") -> dict[str, Any]:
         """Enfileira uma mensagem APRS originada localmente para transmissão RF."""
