@@ -1,3 +1,14 @@
+## PENDENTE — Indicadores compactos TX ○ RX ○ agregando APRS-IS e TNC/RF (#124, 18/10/2026)
+
+- **Referência visual do operador:** substituir o componente de setas ↑/↓ da barra superior por **TX ○  RX ○**, texto fixo e dois LEDs circulares compactos.
+- **Requisito:** o LED **TX** acende brevemente em transmissão real para qualquer transporte ativo/autorizado (**APRS-IS e TNC KISS serial/TCP/AGWPE**). **RX** acende ao entrar tráfego APRS-IS ou bytes RX efetivamente recebidos do TNC; bytes brutos e frames válidos devem ser distinguíveis nos diagnósticos.
+- **Eventos independentes:** TX e RX podem piscar simultaneamente; cada um com temporizador próprio. Não acender por status conectado, TX liberada, pacote antigo, beacon apenas enfileirado ou atualização da página.
+- **Visual:** círculos vazados/discretos em repouso, iluminados durante atividade, com contraste em temas claro/escuro/cinza. Manter dimensões pequenas sem elevar a barra.
+- **Tooltip informativo:** separar contadores e horários de **APRS-IS RX/TX** e **TNC/RF RX/TX**, exibindo estágio de recepção TNC quando possível; não confundir entrega de bytes ao TNC com RF efetivamente irradiado.
+- **Origem técnica:** `index.html #trafficActivityIndicator` usa setas; `app.js updateTrafficActivityIndicator()` atualmente monitora somente APRS-IS, e `flashTrafficIndicator()` apaga ambos com um único timer; integrar `tnc_service.status()` com RX bytes/frames, TX frames e estados reais, sem polling oneroso.
+- **Aceite:** APRS-IS sozinho, TNC sozinho, ambos, beacon multicanal, simultaneidade TX/RX, COM10 aberta com 0 bytes, reconexão e reset de contador, interface Web LAN e variantes do Windows. Ver [issue #124](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/124).
+- **Status:** backlog especificado; **ainda não implementado, testado ou incluído na release**.
+
 ## EM TESTES — v1.14.45: restauração do contraste e traço RF normal (#122)
 
 - **Bug confirmado na v1.14.44:** arestas RF inferidas ficaram cinza `#9ca3af`, tracejadas `5 6` e de baixíssimo contraste nas capturas de Brasília.
