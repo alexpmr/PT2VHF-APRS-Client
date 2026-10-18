@@ -129,6 +129,7 @@ class APRSService:
         self._stop_event = threading.Event()
         self._msg_counter = int(time.time()) % 1000
         self._last_beacon = 0.0
+        self._beacon_send_lock = threading.Lock()
         self._query_response_last: dict[tuple[str, str], float] = {}
         self._auto_reply_last: dict[str, float] = {}
 
@@ -214,9 +215,14 @@ class APRSService:
         if not self._worker or not self._worker.is_alive():
             self._worker = threading.Thread(target=self._connection_loop, name="aprs-connection", daemon=True)
             self._worker.start()
-        if not self._beacon_worker or not self._beacon_worker.is_alive():
-            self._beacon_worker = threading.Thread(target=self._beacon_loop, name="aprs-beacon", daemon=True)
-            self._beacon_worker.start()
+        self.ensure_beacon_worker()
+
+    def ensure_beacon_worker(self) -> None:
+        """Inicia o agendador compartilhado sem exigir APRS-IS ativo."""
+        if self._beacon_worker and self._beacon_worker.is_alive():
+            return
+        self._beacon_worker = threading.Thread(target=self._beacon_loop, name="aprs-beacon", daemon=True)
+        self._beacon_worker.start()
 
     def reconnect(self) -> None:
         """Força uma nova sessão APRS-IS usando a configuração atual."""
@@ -1039,39 +1045,88 @@ class APRSService:
             )
             return False
 
-    def send_beacon(self) -> None:
-        status = self.status()
-        if not status["connected"] or not status["verified"]:
-            raise ConnectionError("Beacon exige conexão APRS-IS conectada e verificada.")
-        cfg = db.get_config()
-        if cfg.get("latitude") is None or cfg.get("longitude") is None:
-            raise ValueError("Configure latitude e longitude antes de transmitir beacon.")
-        packet = build_beacon_packet(cfg)
-        self._send_raw(packet)
-        # Processa localmente para a própria estação aparecer no banco/mapa sem aguardar eco.
-        if aprslib:
-            try:
-                parsed = aprslib.parse(packet)
-                db.record_packet(packet, full_callsign(cfg), str(parsed.get("format") or ""))
-                db.upsert_station(parsed)
-            except Exception:
-                pass
-        self._last_beacon = time.time()
+    def send_beacon(self) -> dict[str, Any]:
+        """Envia o mesmo beacon lógico por cada conexão de TX ativa e autorizada.
+
+        A transmissão por cada meio é independente: uma falha não impede o
+        outro. Nenhum cabeçalho Internet/TCPIP é colocado em frames RF.
+        """
+        with self._beacon_send_lock:
+            cfg = db.get_config()
+            if cfg.get("latitude") is None or cfg.get("longitude") is None:
+                raise ValueError("Configure latitude e longitude antes de transmitir beacon.")
+            packet = build_beacon_packet(cfg)
+            payload = packet.split(":", 1)[1]
+            results: dict[str, dict[str, str]] = {
+                "aprs_is": {"status": "unavailable"},
+                "tnc": {"status": "unavailable"},
+            }
+            sent = False
+            net_status = self.status()
+            if net_status["connected"] and net_status["verified"]:
+                try:
+                    self._send_raw(packet)
+                    results["aprs_is"] = {"status": "sent"}
+                    sent = True
+                    # Apenas o meio APRS-IS é registrado como APRS-IS local.
+                    if aprslib:
+                        try:
+                            parsed = aprslib.parse(packet)
+                            db.record_packet(packet, full_callsign(cfg), str(parsed.get("format") or ""))
+                            db.upsert_station(parsed)
+                        except Exception as exc:
+                            diag.log_event("beacon_local_parse_error", error=str(exc))
+                except Exception as exc:
+                    results["aprs_is"] = {"status": "error", "error": str(exc)}
+
+            from .tnc_service import get_tnc_config, service as tnc_service
+            rf_status = tnc_service.status()
+            rf_cfg = get_tnc_config()
+            if rf_status.get("connected") and rf_cfg.get("auto_tx_enabled") and rf_cfg.get("tx_confirmed") and not rf_status.get("tx_paused"):
+                try:
+                    tnc_service.queue_local_beacon(payload)
+                    results["tnc"] = {"status": "queued"}
+                    sent = True
+                except Exception as exc:
+                    results["tnc"] = {"status": "error", "error": str(exc)}
+
+            if sent:
+                self._last_beacon = time.time()
+            else:
+                errors = "; ".join(
+                    key + ": " + str(value.get("error"))
+                    for key, value in results.items() if value["status"] == "error"
+                )
+                raise ConnectionError(errors or "Nenhuma conexão de transmissão ativa e autorizada (APRS-IS/TNC).")
+            return {"ok": True, "transports": results}
 
     def _beacon_loop(self) -> None:
         last_retry_check = 0.0
-        while self.status()["wanted"]:
+        while True:
+            from .tnc_service import service as tnc_service
+            tnc_state = tnc_service.status()
             status = self.status()
+            if not status["wanted"] and not tnc_state.get("wanted"):
+                break
             cfg = db.get_config()
             interval = max(1, int(cfg.get("beacon_minutes") or 10)) * 60
-            if status["connected"] and status["verified"] and time.time() - self._last_beacon >= interval:
+            rf_cfg = None
+            if tnc_state.get("connected"):
+                from .tnc_service import get_tnc_config
+                rf_cfg = get_tnc_config()
+            rf_ready = bool(
+                tnc_state.get("connected") and rf_cfg and rf_cfg.get("auto_tx_enabled")
+                and rf_cfg.get("tx_confirmed") and not tnc_state.get("tx_paused")
+            )
+            is_ready = bool(status["connected"] and status["verified"])
+            if (is_ready or rf_ready) and time.time() - self._last_beacon >= interval:
                 try:
                     self.send_beacon()
                 except Exception as exc:
                     self._set_status(last_error=f"Beacon: {exc}")
                     self._last_beacon = time.time()
 
-            if status["connected"] and status["verified"] and time.time() - last_retry_check >= 10:
+            if is_ready and time.time() - last_retry_check >= 10:
                 last_retry_check = time.time()
                 retry_seconds = max(15, int(cfg.get("message_retry_seconds") or 60))
                 max_retries = max(0, int(cfg.get("message_retry_attempts") or 0))
