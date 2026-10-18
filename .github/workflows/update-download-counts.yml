@@ -1,4 +1,4 @@
-name: Atualizar downloads acumulados
+name: Atualizar downloads da versão atual
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: downloads-historicos-readme
+  group: downloads-versao-atual-readme
   cancel-in-progress: false
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
           python-version: "3.12"
       - name: Validar contadores com testes locais
         run: python -m unittest discover -s tests -p test_download_totals.py -v
-      - name: Coletar histórico de releases e atualizar README
+      - name: Consultar contadores da última release e atualizar README
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python tools/sync_readme_release_downloads.py
