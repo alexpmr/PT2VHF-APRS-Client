@@ -783,7 +783,7 @@
       if(profile==='kenwood_tm_d700'&&field('tncPacketRfBaud'))field('tncPacketRfBaud').value='1200';
       if(profile==='radtel_rt950_pro'){
         if(field('tncSerialProtocol'))field('tncSerialProtocol').value='kiss';
-        if(field('tncSerialBaud'))field('tncSerialBaud').value='115200';
+        if(field('tncSerialBaud')) field('tncSerialBaud').value = '115200';
       }
       updateSerialProfileHint();
     });
