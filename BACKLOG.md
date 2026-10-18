@@ -1,3 +1,10 @@
+## ABERTO — REGRESSÃO P1: enlaces órfãos persistem no mapa real após v1.14.43 (#116, 18/10/2026)
+
+- **Relato de campo:** continuam sendo desenhados enlaces RF órfãos no mapa do PT2VHF APRS Client mesmo após a entrega de v1.14.43/PR #117. A implementação anterior não atingiu o aceite e a [issue #116](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/116) foi reaberta.
+- **Regra vigente:** para cada digipeater móvel identificado de forma comprovada, exibir no máximo um enlace RF móvel válido e atual (último contato), usando posição contemporânea e TTL configurável; após a expiração remover visualmente. Não alterar o histórico auditável e preservar enlaces RF fixos legítimos.
+- **Diagnóstico pendente:** confrontar cada linha desenhada com exportação JSON/API de topologia, eventos, posição histórica/tracklogs, tipo de camada, filtros, replay e cache do mapa; identificar segmentos legados e casos de classificação incorreta de digis móveis.
+- **Testes necessários:** fixture do SQLite/JSON real de Brasília (com dados anonimizados quando cabível), verificar 1h/24h/Completo, refresh, filtros, posições móveis diferentes, timestamps, deduplicação e atualização visual.
+- **Status:** **não corrigido; aguardando investigação, reprodução e aceite no banco real**, independentemente dos testes sintéticos aprovados da v1.14.43.
 ## PENDENTE — Beacon multicanal em todas as conexões ativas (#119, 18/10/2026)
 
 - **Requisito confirmado:** beacons manuais (ícone/cabeçalho), automáticos/periódicos e de qualquer outro gatilho devem disparar **em todos os meios de TX ativos e autorizados ao mesmo tempo: APRS-IS e TNC/RF**, em envios independentes.
