@@ -82,11 +82,10 @@ def test_moving_target_digi_links_hidden_and_historical_rows_preserved():
     assert len(rows) == 4
 
 
-def test_moving_source_digi_must_also_hide_all_lines():
+def test_moving_source_without_relay_evidence_stays_hidden_as_tracker():
     rows = moving_source_rows()
     assert "PT2AP-9" in topology_map.moving_rf_repeaters(rows)
-    result = topology_map._segments_from_events(rows)
-    assert len(result) == 1 and result[0]['kind'] == 'rf_mobile'
+    assert topology_map._segments_from_events(rows) == []
 
 
 def test_source_and_target_direction_change_does_not_restore_mobile_line():
