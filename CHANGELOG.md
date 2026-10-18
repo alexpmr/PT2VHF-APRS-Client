@@ -1,3 +1,13 @@
+## 1.14.46 - 2026-10-18
+
+- Automações: nova aba principal com **Auto-resposta**, migrada da configuração antiga, preservando habilitação, texto e janela de proteção no SQLite.
+- Auto-resposta: mensagens privadas distintas disparadas seguidamente recebem respostas; retransmissões duplicadas são filtradas, com limite antialagamento e bloqueio de respostas automáticas reconhecidas.
+- Barra superior: indicadores compactos **TX ○ RX ○** que utilizam contadores APRS-IS e TNC, flashes independentes para TX e RX, baseline no primeiro status e tooltip por transporte.
+- APRS: rejeição preventiva de posição não comprimida cujos minutos sejam >=60, incluindo o pacote real de PP5BLU-15, em APRS-IS e TNC; preservar payload bruto e histórico auditável, evitando atualização da posição e novos eventos topológicos contaminados.
+- Topologia: omitir da camada de mapa eventos legados cujo pacote bruto original possui minutos APRS inválidos; nenhuma remoção em massa de SQLite.
+- Novos testes de regressão sobre automações, quadro APRS inválido, RX/TX agregados e dados históricos.
+- **Pendente no hardware e em campo:** COM10 Radtel RT-950 Pro (#118), validacão abrangente de enlaces órfãos (#116), saneamento assistido de posições antigas, updater portátil e demais itens não selecionados do backlog.
+
 ## 1.14.45 - 2026-10-18
 
 - Regressão visual corrigida (#122): RF comum volta a usar a cor e a espessura configuradas, com **traço contínuo** mesmo quando inferido pelo path.
