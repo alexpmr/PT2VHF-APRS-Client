@@ -1,3 +1,14 @@
+## PENDENTE — README público: coluna Downloads reais por ecossistema e pacote (#127, 18/10/2026)
+
+- **Pedido:** apresentar no início do README, na área de downloads da última release, uma **tabela com coluna `Downloads`** para cada arquivo e ecossistema, separando **Windows instalável, Windows portátil, Windows Legacy, ARM64, Linux AppImage/DEB/TAR.GZ x64/ARM64 e macOS Intel/Apple Silicon**.
+- **Métrica correta:** usar `assets[].download_count` da API **GitHub Releases** por asset/nome e URL da release realmente publicada, sem números estimados. Cada edição/formato/arquitetura precisa de linha independente, não misturar Setup e Portable.
+- **Totais:** subtotais por Windows/Linux/macOS e total dos pacotes desta versão; manual PDF, checksums, SBOMs e inventários de licenças não devem inflar o total do aplicativo. Esclarecer: são downloads de arquivos, não instalações/usuários únicos.
+- **Atualização:** sincronizar após release com todos os links verificados e periodicamente (preferencialmente diária), indicando data/hora UTC da atualização e sem commit se nada mudou. Preservar links diretos e arquitetura/versão legíveis na tabela.
+- **Limitações:** um asset removido/republicado pode perder histórico de contagem; não mostrar `0` como histórico total se não houver asset/valor disponível. Não contabilizar ZIPs de Actions Artifacts como se fossem releases.
+- **Implantação:** aproveitar `tools/sync_readme_release_downloads.py` para tabela atual e a lógica útil de `tools/update_download_stats.py`, **mas não ativar os marcadores obsoletos DOWNLOAD_STATS_START/END** sem revisar o teste `tests/test_core.py::test_readme_has_published_versioned_downloads_and_no_download_counter_table`. O script de estatística antigo agrega só por SO e não atende a distinção instalável/portátil.
+- **Aceite:** cada asset real aparece com seu link e contador individual correto, resumo por ecossistema e hora da coleta, sem link 404 em release futura; testes automatizados com contagem simulada, assets faltantes, novo release e atualização periódica.
+- **Rastreamento:** [issue #127](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/127). **Status: registrado no backlog, ainda não implementado nem publicado.**
+
 ## EM TESTES — v1.14.46: Automações, LEDs TX/RX unificados e rejeição APRS inválido (#125 #124 #121)
 
 - **Auto-resposta (#125):** aba Automações criada; card retirado de Configurações e migrado sem regravar preferências antigas. Mensagens privadas distintas seguidas são respondidas; controles anti-loop mantidos por conteúdo reconhecido, deduplicação e limite de 12 respostas/janela configurável. Exige teste real entre estações APRS.
