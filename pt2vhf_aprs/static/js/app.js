@@ -128,7 +128,10 @@
     activityAudioContext: null,
     lastRxCount: 0,
     lastTxCount: 0,
-    trafficIndicatorTimer: null,
+    lastTncRxBytes: 0,
+    lastTncTxBytes: 0,
+    trafficIndicatorBaseline: false,
+    trafficIndicatorTimers: { tx: null, rx: null },
     replayBounds: null,
     replayWindowStart: null,
     replayWindowEnd: null,
@@ -5620,33 +5623,57 @@
 
   function flashTrafficIndicator(direction) {
     const root = $('#trafficActivityIndicator');
-    if (!root) return;
+    if (!root || !['tx', 'rx'].includes(direction)) return;
     const cls = direction === 'tx' ? 'tx-active' : 'rx-active';
     root.classList.add(cls);
-    clearTimeout(state.trafficIndicatorTimer);
-    state.trafficIndicatorTimer = setTimeout(() => {
-      root.classList.remove('rx-active', 'tx-active');
-    }, 360);
+    clearTimeout(state.trafficIndicatorTimers[direction]);
+    // Cada direção dispõe de seu próprio timer, permitindo TX e RX simultâneos.
+    state.trafficIndicatorTimers[direction] = setTimeout(() => {
+      root.classList.remove(cls);
+    }, 900);
   }
 
   function updateTrafficActivityIndicator(status) {
+    const tnc = status.tnc || {};
     const rx = Number(status.packets_received || 0);
     const tx = Number(status.packets_sent || 0);
-
-    if (rx >= state.lastRxCount && rx > state.lastRxCount) flashTrafficIndicator('rx');
-    if (tx >= state.lastTxCount && tx > state.lastTxCount) flashTrafficIndicator('tx');
-
+    const rfRx = Number(tnc.transport_bytes_rx || 0);
+    const rfTx = Number(tnc.transport_bytes_tx || 0);
+    const baseline = state.trafficIndicatorBaseline;
+    if (baseline) {
+      if ((rx > state.lastRxCount && rx >= 0) || (rfRx > state.lastTncRxBytes && rfRx >= 0)) {
+        flashTrafficIndicator('rx');
+      }
+      if ((tx > state.lastTxCount && tx >= 0) || (rfTx > state.lastTncTxBytes && rfTx >= 0)) {
+        flashTrafficIndicator('tx');
+      }
+    }
+    // A primeira leitura e contadores reiniciados são somente baseline;
+    // conectar serial ou habilitar TX não significa atividade.
     state.lastRxCount = rx;
     state.lastTxCount = tx;
+    state.lastTncRxBytes = rfRx;
+    state.lastTncTxBytes = rfTx;
+    state.trafficIndicatorBaseline = true;
 
     const root = $('#trafficActivityIndicator');
     if (root) {
-      const rxText = status.last_packet_at ? fmtDate(status.last_packet_at) : '—';
-      const txText = status.last_tx_at ? fmtDate(status.last_tx_at) : '—';
+      const formatTime = value => value ? fmtDate(value) : '—';
+      const rxTime = formatTime(status.last_packet_at);
+      const txTime = formatTime(status.last_tx_at);
+      const tncRxTime = formatTime(tnc.last_transport_rx_at);
+      const tncTxTime = formatTime(tnc.last_transport_tx_at);
       root.title = ui(
-        `RX: ${rx.toLocaleString(currentLocale())} · último ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · último ${txText}`,
-        `RX: ${rx.toLocaleString(currentLocale())} · last ${rxText}\nTX: ${tx.toLocaleString(currentLocale())} · last ${txText}`
+        `APRS-IS RX: ${rx.toLocaleString(currentLocale())} · ${rxTime}
+APRS-IS TX: ${tx.toLocaleString(currentLocale())} · ${txTime}
+TNC RX: ${rfRx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_rx || 0)} quadros · ${tncRxTime}
+TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx || 0)} quadros · ${tncTxTime}`,
+        `APRS-IS RX: ${rx.toLocaleString(currentLocale())} · ${rxTime}
+APRS-IS TX: ${tx.toLocaleString(currentLocale())} · ${txTime}
+TNC RX: ${rfRx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_rx || 0)} frames · ${tncRxTime}
+TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx || 0)} frames · ${tncTxTime}`
       );
+      root.setAttribute('aria-label', root.title);
     }
   }
 
