@@ -68,6 +68,6 @@ assert "mobile_ttl_hours" in read("pt2vhf_aprs/topology_map.py")
 assert "selected_mobile_events" in read("pt2vhf_aprs/topology_map.py")
 assert "topology_rf_mobile_ttl_hours" in read("pt2vhf_aprs/database.py")
 assert "mobileLinksEnabled" in js
-assert "data-legend=\\"rf-mobile\\"" in js
+    assert 'data-legend="rf-mobile"' in js
 assert 'name="topology_rf_mobile_ttl_hours"' in read("pt2vhf_aprs/templates/index.html")
 assert "def test_one_latest_mobile_edge_after_three_displaced_contacts" in read("tests/test_mobile_latest_v11443.py")
