@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.46": {
+        "title": "Automações, TX/RX unificados e validação de coordenadas APRS",
+        "items": [
+            "Aba Automações com Auto-resposta migrada de Configurações, preservando o texto e o estado atuais.",
+            "Mensagens privadas novas recebem Auto-resposta independente, com proteção contra duplicatas e ciclos repetitivos.",
+            "Barra superior exibe TX e RX para APRS-IS e TNC/RF, com contadores detalhados por meio.",
+            "Coordenadas APRS não comprimidas com minutos inválidos são rejeitadas antes de contaminar a topologia.",
+            "Eventos históricos com coordenadas brutas malformadas deixam de ser desenhados, mas continuam auditáveis.",
+            "TNC RT-950 Pro e enlaces órfãos no banco real permanecem em validação de campo.",
+        ],
+    },
     "1.14.45": {
         "title": "Enlaces RF novamente contínuos e na cor configurada",
         "items": [
