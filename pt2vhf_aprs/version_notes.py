@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.43": {
+        "title": "Último enlace móvel, retenção configurável e filtro Ver",
+        "items": [
+            "Mapa: um único enlace RF por estação repetidora móvel, usando o último evento válido com geometria histórica.",
+            "Configurações > Mapas: tempo de vida configurável de 15 minutos a 7 dias; padrão de 3 h, independente do RF temporário fixo.",
+            "Ver > Enlaces móveis: mostrar/ocultar a categoria; cor, espessura e legenda próprias.",
+            "Histórico RF permanece no SQLite; pacotes fora de ordem não reabrem enlaces antigos.",
+            "Testes automatizados complementados; validação de campo com dados reais de Brasília continua necessária.",
+        ],
+    },
     "1.14.42": {
         "title": "Atualização portátil e regressão",
         "items": [
