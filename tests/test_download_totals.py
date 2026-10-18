@@ -1,15 +1,22 @@
-"""Regression coverage for lifetime per-package GitHub Release counters."""
+"""Regression tests for counters of the latest published release only."""
 import unittest
+
 from tools import sync_readme_release_downloads as d
 
 
 def asset(asset_id, name, count, tag="v1.14.46"):
-    return {"id": asset_id, "name": name, "download_count": count,
-            "browser_download_url": f"https://github.com/{d.REPO}/releases/download/{tag}/{name}"}
+    return {
+        "id": asset_id, "name": name, "download_count": count,
+        "browser_download_url": f"https://github.com/{d.REPO}/releases/download/{tag}/{name}",
+    }
 
 
-class DownloadTotalsTests(unittest.TestCase):
-    def test_all_current_package_types(self):
+def release(tag, *assets):
+    return {"tag_name": tag, "assets": list(assets)}
+
+
+class CurrentReleaseDownloadTests(unittest.TestCase):
+    def test_classification_covers_fourteen_packages(self):
         samples = {
             "Setup_x64_v1.14.46.exe": "win_setup_x64",
             "Portable_x64_v1.14.46.exe": "win_portable_x64",
@@ -25,41 +32,56 @@ class DownloadTotalsTests(unittest.TestCase):
             "macOS_arm64_v1.14.46.dmg": "mac_dmg_arm64",
         }
         self.assertEqual(14, len(d.CATEGORIES))
-        for filename, category in samples.items():
-            self.assertEqual(category, d.classify_asset("PT2VHF_APRS_Client_" + filename))
+        for suffix, category in samples.items():
+            with self.subTest(suffix=suffix):
+                self.assertEqual(category, d.classify_asset("PT2VHF_APRS_Client_" + suffix))
         self.assertEqual("linux_deb_x64", d.classify_asset("pt2vhf-aprs-client_1.14.46_amd64.deb"))
         self.assertEqual("linux_deb_arm64", d.classify_asset("pt2vhf-aprs-client_1.14.46_arm64.deb"))
         self.assertIsNone(d.classify_asset("PT2VHF_APRS_Client_Manual_v1.14.46.pdf"))
 
-    def test_assets_stay_recorded_and_count_never_drops(self):
-        a = asset(100, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 8)
-        b = asset(200, "PT2VHF_APRS_Client_Portable_x64_v1.14.46.exe", 6)
-        release = {"tag_name": "v1.14.46", "published_at": "2026-10-18T12:00:00Z", "assets": [a, b]}
-        history, changed = d.collect_history([release], {}, "2026-10-18T12:00:00Z")
-        self.assertTrue(changed)
-        updated, changed = d.collect_history([{"tag_name": "v1.14.46", "assets": [
-            dict(a, download_count=2)]}], history, "2026-10-19T12:00:00Z")
-        self.assertFalse(changed)
-        self.assertEqual(history, updated)
-        self.assertEqual(6, updated["assets"]["200"]["count"])
-        text = d.build_section([release], updated, "v1.14.46")
-        self.assertIn("≥ 14", text)
-        self.assertIn("≥ 8", text)
-        self.assertIn("≥ 6", text)
+    def test_counts_are_exact_for_current_release_only(self):
+        current = release("v1.14.46",
+            asset(1, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 8),
+            asset(2, "PT2VHF_APRS_Client_Portable_x64_v1.14.46.exe", 6),
+            asset(3, "PT2VHF_APRS_Client_Manual_v1.14.46.pdf", 800))
+        text = d.build_section(current)
+        self.assertIn("| Windows 10/11 | Instalador EXE | x64 |", text)
+        self.assertIn("| 8 |", text)
+        self.assertIn("| 6 |", text)
+        self.assertIn("**Total de downloads dos pacotes da v1.14.46: 14.**", text)
+        self.assertNotIn("≥", text)
+        self.assertNotIn("acumulados", text.lower())
+        self.assertNotIn("814", text)
+        self.assertEqual(1, text.count("Manual PDF"))
 
-    def test_missing_package_has_no_broken_link(self):
-        a = asset(100, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 3)
-        release = {"tag_name": "v1.14.46", "published_at": "2026-10-18T12:00:00Z", "assets": [a]}
-        history, _ = d.collect_history([release], {}, "2026-10-18T12:00:00Z")
-        text = d.build_section([release], history, "v1.14.46")
+    def test_new_release_resets_counts(self):
+        old = release("v1.14.46", asset(1, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 1000))
+        current = release("v1.14.47", asset(2, "PT2VHF_APRS_Client_Setup_x64_v1.14.47.exe", 0, "v1.14.47"))
+        text = d.build_section(current)
+        self.assertIn("| 0 |", text)
+        self.assertIn("v1.14.47", text)
+        self.assertNotIn("v1.14.46", text)
+        self.assertNotIn("1.000", text)
+        self.assertTrue(d.build_section(old).endswith("<!-- DOWNLOAD_TABLE_END -->\n"))
+
+    def test_missing_and_invalid_counter_are_not_fabricated(self):
+        missing = release("v1.14.46", asset(1, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", None))
+        text = d.build_section(missing)
+        self.assertIn("| Windows 10/11 | Instalador EXE | x64 |", text)
+        self.assertIn("| Baixar]", text)
+        self.assertIn("| — |", text)
         self.assertIn("| Windows 10/11 | Portátil EXE | x64 | Indisponível | — |", text)
 
-    def test_readme_sync_is_idempotent_and_keeps_notes(self):
-        a = asset(100, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 3)
-        manual = asset(333, "PT2VHF_APRS_Client_Manual_v1.14.46.pdf", 12)
-        release = {"tag_name": "v1.14.46", "assets": [a, manual]}
-        history, _ = d.collect_history([release], {}, "2026-10-18T12:00:00Z")
-        section = d.build_section([release], history, "v1.14.46")
+    def test_duplicate_package_type_is_rejected(self):
+        a = asset(1, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 3)
+        b = asset(2, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 4)
+        with self.assertRaisesRegex(ValueError, "Duplicate"):
+            d.build_section(release("v1.14.46", a, b))
+
+    def test_readme_sync_preserves_notes_and_is_idempotent(self):
+        item = asset(1, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", 3)
+        manual = asset(2, "PT2VHF_APRS_Client_Manual_v1.14.46.pdf", 20)
+        section = d.build_section(release("v1.14.46", item, manual))
         old = ("# PT2VHF APRS Client - v1.14.46\n\nNovidades iniciais.\n\n"
                "## Downloads — versão 1.14.46\n\nLinks antigos.\n\n"
                "## Novidades da v1.14.45\n\nHistórico antigo.\n")
