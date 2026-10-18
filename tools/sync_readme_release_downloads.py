@@ -158,6 +158,8 @@ def build_section(releases: list[dict], history: dict, latest_tag: str) -> str:
         count = f"≥ {counts[key]:,}".replace(",", ".") if key in observed else "—"
         lines.append(f"| {system} | {package} | {arch} | {link} | {count} |")
     total = sum(counts.values())
+    observed_tags = {str(a.get("tag")) for a in history.get("assets", {}).values() if a.get("tag")}
+    coverage = f"{len(observed_tags)} versões públicas com assets recuperáveis" if observed_tags else "nenhuma release coletada"
     when = history.get("updated_at") or "Aguardando primeira coleta automática"
     if "T" in when:
         when = when.replace("T", " ").replace("+00:00", " UTC")
@@ -169,6 +171,7 @@ def build_section(releases: list[dict], history: dict, latest_tag: str) -> str:
     lines += [
         "",
         f"**Total mínimo conhecido de downloads dos pacotes: ≥ {total:,}.**".replace(",", "."),
+        f"**Cobertura histórica disponível:** {coverage}.",
         "",
         "> **Contadores históricos mínimos (≥):** soma dos downloads dos arquivos de versões ainda "
         "consultáveis e dos registros previamente preservados. Instaladores removidos antes da primeira "
