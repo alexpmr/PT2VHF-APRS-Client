@@ -141,7 +141,7 @@ def test_v1415_frontend_uses_eligible_edges_and_twelve_hop_horizon():
     assert "edge.direct_rf_confirmed === true" in js
     assert "inferredRouteEdge ? '#94a3b8'" not in js
     assert "style.dashArray = '5 7'" not in js
-    assert "dashArray: edge.kind === 'igate' ? '7 5' : null" in js
+    assert "dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null" in js
     assert 'request.args.get("max_hops", 12)' in web
 
 
