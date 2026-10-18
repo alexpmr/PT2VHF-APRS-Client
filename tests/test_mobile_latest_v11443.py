@@ -122,6 +122,6 @@ def test_ver_ui_and_map_settings_are_independent():
     html = (root / "pt2vhf_aprs/templates/index.html").read_text(encoding="utf-8")
     assert "mobileLinksEnabled: 'pt2vhf_map_item_mobile_rf'" in js
     assert "edge.kind === 'rf_mobile' && !state.mobileLinksEnabled" in js
-    assert "data-legend=\"rf-mobile\"" in js
+    assert 'data-legend="rf-mobile"' in js
     assert "topology_rf_mobile_ttl_hours" in html
     assert "topologyRfMobileWidth" in html
