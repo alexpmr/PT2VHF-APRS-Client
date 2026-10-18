@@ -1,3 +1,11 @@
+## 1.14.45 - 2026-10-18
+
+- Regressão visual corrigida (#122): RF comum volta a usar a cor e a espessura configuradas, com **traço contínuo** mesmo quando inferido pelo path.
+- Internet/iGate permanece tracejado e usa cor independente; RF móvel e temporário preservam seus estilos próprios.
+- A classificação de RF inferido permanece explícita no popup/hover e nos metadados; não se promove RF não confirmado a enlace diretamente ouvido.
+- Testes automatizados adicionais protegem os estilos de RF/Internet e o contraste no mapa.
+- **Pendentes:** validação visual no banco real; coordenadas APRS malformadas (#121), TNC COM10 PP5AU (#118) e enlaces órfãos (#116) continuam abertos.
+
 ## 1.14.44 - 2026-10-18
 
 - Beacon manual (incluindo ícone de cabeçalho) e automático: despacho para todos os meios ativos e autorizados, APRS-IS e KISS/TNC/RF, com resultado independente por transporte; RF enfileirado não implica confirmação de irradiação.
