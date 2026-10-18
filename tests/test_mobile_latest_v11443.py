@@ -90,6 +90,18 @@ def test_one_link_max_per_mobile_even_with_two_mobiles_in_same_hop():
     assert edges[0]["mobile_callsigns"] == ["OTHER-MOBILE", "PT2CAR-9"]
 
 
+def test_sparse_trip_with_three_separated_events_is_mobile_but_one_outlier_is_not():
+    rows = [
+        row(2, "STATION-A", "PT2CAR-9", (-25.4, -49.2), (-25.39, -49.19)),
+        row(1, "STATION-B", "PT2CAR-9", (-19.8, -47.9), (-19.79, -47.89)),
+        row(0.1, "STATION-C", "PT2CAR-9", (-15.8, -47.9), (-15.79, -47.91)),
+    ]
+    assert "PT2CAR-9" in topology_map.moving_rf_repeaters(rows)
+    assert len(topology_map._segments_from_events(rows, now=NOW)) == 1
+    assert "PT2CAR-9" not in topology_map.moving_rf_repeaters(rows[:2])
+
+
+
 def test_config_mobile_ttl_and_style_persist_with_validation():
     with tempfile.TemporaryDirectory() as d:
         previous = db.DB_PATH
