@@ -381,12 +381,19 @@ def _process_received_packet(
 ) -> None:
     """Persiste primeiro a posição do remetente e depois congela o evento RF."""
     started = time.monotonic()
+    issue = db.raw_aprs_position_issue(raw)
+    if issue:
+        parsed = dict(parsed or {})
+        parsed.pop("latitude", None)
+        parsed.pop("longitude", None)
+        diag.log_event("aprs_raw_position_rejected", reason=issue, from_call=from_call or "")
     with db.connection() as conn:
         db._add_aprs_log_conn(conn, "RX", raw)
         db._record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
         if parsed and parsed.get("from"):
             db._upsert_station_conn(conn, parsed)
-        _record_topology_from_raw_conn(conn, raw, medium)
+        if not issue:
+            _record_topology_from_raw_conn(conn, raw, medium)
     if parsed and parsed.get("from"):
         db.invalidate_map_data_cache(drop_payload=False, coalesce=True)
     elapsed_ms = (time.monotonic() - started) * 1000.0
