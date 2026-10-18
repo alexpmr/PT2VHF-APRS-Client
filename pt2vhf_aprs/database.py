@@ -1042,6 +1042,51 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+_APRS_UNCOMPRESSED_POSITION = re.compile(
+    r"^(?P<latdeg>\\d{2})(?P<latmin>\\d{2}\\.\\d{2})(?P<ns>[NS])"
+    r"(?P<table>[/\\\\A-Za-z0-9])"
+    r"(?P<londeg>\\d{3})(?P<lonmin>\\d{2}\\.\\d{2})(?P<ew>[EW])"
+)
+
+
+def raw_aprs_position_issue(raw: str) -> str | None:
+    """Valida minutos de posição APRS não comprimida antes do parser.
+
+    aprslib pode normalizar incorretamente 26°77.84' para 27°17.84'
+    (coordenada decimal aparentemente válida). Quadros Mic-E e posições
+    comprimidas não são alterados por esta validação específica.
+    """
+    line = str(raw or "")
+    if ":" not in line:
+        return None
+    info = line.split(":", 1)[1]
+    position = ""
+    if info.startswith(("!", "=")):
+        position = info[1:]
+    elif info.startswith(("/", "@")) and re.match(r"^[\\d]{6}[hz/]", info[1:]):
+        position = info[8:]
+    elif info.startswith(";") and len(info) >= 19 and info[10] in "*_" and re.fullmatch(
+        r"[\\d]{6}[hz/]", info[11:18]
+    ):
+        position = info[18:]
+    elif info.startswith(")"):
+        item = re.match(r"^\\)[^!_]{1,9}[!_](.*)$", info)
+        if item:
+            position = item.group(1)
+    if not position:
+        return None
+    m = _APRS_UNCOMPRESSED_POSITION.match(position)
+    if not m:
+        return None
+    latdeg, londeg = int(m["latdeg"]), int(m["londeg"])
+    latmin, lonmin = float(m["latmin"]), float(m["lonmin"])
+    if latmin >= 60.0 or lonmin >= 60.0:
+        return "invalid_aprs_minutes"
+    if latdeg > 90 or londeg > 180 or (latdeg == 90 and latmin) or (londeg == 180 and lonmin):
+        return "invalid_aprs_degrees"
+    return None
+
+
 def _valid_geo_position(latitude: Any, longitude: Any) -> bool:
     try:
         lat = float(latitude)
@@ -5312,10 +5357,17 @@ def process_received_packet(
 ) -> None:
     """Persiste o pipeline RX principal em uma única conexão/transação SQLite."""
     started = time.monotonic()
+    issue = raw_aprs_position_issue(raw)
+    if issue:
+        parsed = dict(parsed or {})
+        parsed.pop("latitude", None)
+        parsed.pop("longitude", None)
+        diag.log_event("aprs_raw_position_rejected", reason=issue, from_call=from_call or "")
     with connection() as conn:
         _add_aprs_log_conn(conn, "RX", raw)
         _record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
-        _record_topology_from_raw_conn(conn, raw, medium)
+        if not issue:
+            _record_topology_from_raw_conn(conn, raw, medium)
         if parsed and parsed.get("from"):
             _upsert_station_conn(conn, parsed)
     if parsed and parsed.get("from"):
