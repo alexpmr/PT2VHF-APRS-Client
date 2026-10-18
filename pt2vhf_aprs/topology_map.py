@@ -147,6 +147,7 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
 
 def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT, *,
                           mobile_callsigns: set[str] | None = None,
+                          mobile_repeater_callsigns: set[str] | None = None,
                           established_rf_pairs: set[tuple[str, str]] | None = None,
                           now: datetime | None = None,
                           mobile_ttl_hours: float = 3.0) -> list[dict[str, Any]]:
@@ -158,6 +159,12 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     segments: dict[tuple[Any, ...], dict[str, Any]] = {}
     media_by_pair: dict[tuple[str, str], set[str]] = defaultdict(set)
     mobile_repeaters = mobile_callsigns if mobile_callsigns is not None else moving_rf_repeaters(rows)
+    # APRS source is often a moving tracker; the target of a USED RF path
+    # is the repeater. Do not reintroduce links from mobile-only transmitters.
+    repeater_targets = (mobile_repeater_callsigns if mobile_repeater_callsigns is not None else {
+        str(dict(raw).get("target") or "").strip().upper() for raw in rows
+        if str(dict(raw).get("kind") or "").strip().lower() == "rf"
+    }) & mobile_repeaters
     established = established_rf_pairs if established_rf_pairs is not None else _established_rf_pairs(rows)
     instant = now or datetime.now(timezone.utc)
     # A mobile RF repeater owns at most ONE current link, regardless of which
@@ -176,9 +183,11 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
         event = dict(candidate)
         src_call = str(event.get("source") or "").strip().upper()
         dst_call = str(event.get("target") or "").strip().upper()
-        owners = ({src_call, dst_call} & mobile_repeaters) - {""}
+        moving_endpoints = ({src_call, dst_call} & mobile_repeaters) - {""}
+        owners = moving_endpoints & repeater_targets
         when = _event_time(event.get("timestamp"))
-        if (not owners or owners & occupied_mobile or not src_call
+        if (not owners or owners != moving_endpoints
+                or owners & occupied_mobile or not src_call
                 or not dst_call or src_call == dst_call
                 or str(event.get("kind") or "").lower() != "rf"
                 or when is None or when > instant + timedelta(minutes=5)
@@ -204,9 +213,10 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
             continue
         # Repeated contact history stays in SQLite; only the newest valid
         # observation for each moving endpoint can draw a single map edge.
-        mobile_owners = sorted(({src, dst} & mobile_repeaters) - {""})
-        if mobile_owners:
-            if id(raw) not in selected_mobile_events:
+        moving_endpoints = ({src, dst} & mobile_repeaters) - {""}
+        mobile_owners = sorted(moving_endpoints & repeater_targets)
+        if moving_endpoints:
+            if not mobile_owners or id(raw) not in selected_mobile_events:
                 continue
             kind = "rf_mobile"
         source_pos = _validated_position(row.get("source_lat"), row.get("source_lon"))
@@ -363,8 +373,13 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
             diag.log_event("topology_map_mobile_status",
                            mobile_count=len(mobile), period_hours=period)
     config = db.get_config()
+    repeaters = {
+        str(dict(raw).get("target") or "").strip().upper() for raw in reference
+        if str(dict(raw).get("kind") or "").lower() == "rf"
+    }
     return _segments_from_events(
-        rows, mobile_callsigns=mobile, established_rf_pairs=established,
+        rows, mobile_callsigns=mobile, mobile_repeater_callsigns=repeaters,
+        established_rf_pairs=established,
         mobile_ttl_hours=float(config.get("topology_rf_mobile_ttl_hours") or 3),
     )
 
