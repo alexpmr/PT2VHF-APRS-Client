@@ -80,9 +80,9 @@
         </button>
       </div>
     </div>
-    <div id="trafficActivityIndicator" class="traffic-activity-indicator" title="Sem tráfego APRS nesta sessão" aria-label="Atividade de tráfego APRS">
-      <span class="traffic-arrow traffic-rx" aria-hidden="true">↓</span>
-      <span class="traffic-arrow traffic-tx" aria-hidden="true">↑</span>
+    <div id="trafficActivityIndicator" class="traffic-activity-indicator" title="Atividade de APRS-IS e TNC/RF" role="status" aria-label="Atividade de transmissão e recepção">
+      <span class="traffic-channel"><span class="traffic-label">TX</span><span class="traffic-led traffic-tx" aria-hidden="true"></span></span>
+      <span class="traffic-channel"><span class="traffic-label">RX</span><span class="traffic-led traffic-rx" aria-hidden="true"></span></span>
     </div>
     <div id="systemResourceMeter" class="system-resource-meter" title="Carregando métricas do aplicativo">
       <div id="cpuResourceMetric" class="resource-metric" data-level="normal">
