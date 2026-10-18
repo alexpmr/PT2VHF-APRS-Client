@@ -118,14 +118,27 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
         # in each region. Require THREE mutually displaced observations to
         # reject the common case of one corrupted GPS point on a fixed digi.
         unique_positions = list(bins.values())
-        sparse_trip = any(
-            db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
-            and db.haversine_km(a[0], a[1], c[0], c[1]) >= 25.0
-            and db.haversine_km(b[0], b[1], c[0], c[1]) >= 25.0
-            for i, a in enumerate(unique_positions)
-            for j, b in enumerate(unique_positions[i + 1:], i + 1)
-            for c in unique_positions[j + 1:]
-        )
+        sparse_trip = False
+        if len(unique_positions) >= 3:
+            # Bounded anchor search keeps large map refreshes O(n), not O(n^3)
+            # on thousands of historical GPS buckets.
+            anchors = [unique_positions[0], unique_positions[len(unique_positions)//2],
+                       unique_positions[-1]]
+            anchors += [
+                min(unique_positions, key=lambda p: p[0]),
+                max(unique_positions, key=lambda p: p[0]),
+                min(unique_positions, key=lambda p: p[1]),
+                max(unique_positions, key=lambda p: p[1]),
+            ]
+            for a in anchors:
+                far = [p for p in unique_positions
+                       if db.haversine_km(a[0], a[1], p[0], p[1]) >= 25.0]
+                if far:
+                    b = far[0]
+                    if any(db.haversine_km(b[0], b[1], c[0], c[1]) >= 25.0
+                           for c in far[1:]):
+                        sparse_trip = True
+                        break
         if repeated_displacement or sparse_trip:
             moving.add(call)
     return moving
