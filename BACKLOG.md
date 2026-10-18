@@ -1,3 +1,11 @@
+## PENDENTE — Beacon multicanal em todas as conexões ativas (#119, 18/10/2026)
+
+- **Requisito confirmado:** beacons manuais (ícone/cabeçalho), automáticos/periódicos e de qualquer outro gatilho devem disparar **em todos os meios de TX ativos e autorizados ao mesmo tempo: APRS-IS e TNC/RF**, em envios independentes.
+- **Manual:** transmitir imediatamente a cada clique, sem cooldown; não esperar o próximo ciclo automático. Proteger apenas contra clique duplicado enquanto uma mesma solicitação está sendo processada.
+- **Operação degradada:** se apenas um dos dois transportes estiver habilitado/utilizável, enviar somente por ele; se nenhum, informar claramente. Se um falhar, não bloquear a tentativa no outro; detalhar os resultados e erros por meio.
+- **Segurança/protocolo:** TX RF exige autorização já configurada, conexão efetiva, AX.25/KISS e path RF correto (sem TCPIP*); preservar as permissões e evitar echo/loop APRS-IS↔RF. “Aceito pelo TNC” não equivale a “irradiado”.
+- **Teste:** matriz TNC+APRS-IS, cada um sozinho, nenhum, falha parcial, dois cliques manuais seguidos, agendamento, simulação KISS COM10 e socket fake, logs/status separados.
+- **Rastreamento:** [issue #119](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/119). Apenas especificado; **não implementado ou validado**.
 ## EM VALIDAÇÃO — v1.14.43: enlaces móveis (#116, 18/10/2026)
 
 - Implementação candidata na branch fix/mobile-latest-link-v1.14.43: somente último enlace RF móvel, TTL configurável (3 h por padrão), cor/espessura próprias e Ver → Enlaces móveis.
