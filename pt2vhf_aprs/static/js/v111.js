@@ -138,17 +138,18 @@
   }
 
   function installAutoReply(){
-    const config=$('#tab-config');if(!config||$('#v148AutoReply'))return;
+    const config=$('#automationsGrid');if(!config||$('#v148AutoReply'))return;
     const card=document.createElement('div');card.id='v148AutoReply';card.className='config-card full-card config-section';
-    card.innerHTML='<h3>'+tr('Resposta automática','Automatic reply','Respuesta automática','Réponse automatique')+'</h3>'+
+    card.innerHTML='<h3>'+tr('Auto-resposta','Auto-reply','Respuesta automática','Réponse automatique')+'</h3>'+
       '<p>'+tr('Responde apenas a mensagens APRS diretas destinadas à sua estação. ACK/REJ, queries, boletins e grupos não disparam esta função.','Replies only to direct APRS messages addressed to your station. ACK/REJ, queries, bulletins and groups do not trigger it.','Responde solo a mensajes APRS directos destinados a su estación. ACK/REJ, consultas, boletines y grupos no activan esta función.','Répond uniquement aux messages APRS directs adressés à votre station. ACK/REJ, requêtes, bulletins et groupes ne la déclenchent pas.')+'</p>'+
-      '<label class="check-field"><input id="v148AutoReplyEnabled" type="checkbox"><span>'+tr('Ativar resposta automática','Enable automatic reply','Activar respuesta automática','Activer la réponse automatique')+'</span></label>'+
+      '<label class="check-field"><input id="v148AutoReplyEnabled" type="checkbox"><span>'+tr('Ativar Auto-resposta','Enable automatic reply','Activar respuesta automática','Activer la réponse automatique')+'</span></label>'+
       '<label class="field"><span>'+tr('Texto da resposta','Reply text','Texto de respuesta','Texte de réponse')+'</span><textarea id="v148AutoReplyText" rows="3" maxlength="240"></textarea></label>'+
-      '<label class="field"><span>'+tr('Intervalo mínimo para o mesmo remetente','Minimum interval for the same sender','Intervalo mínimo para el mismo remitente','Intervalle minimum pour le même expéditeur')+'</span><select id="v148AutoReplyCooldown"><option value="30">30 s</option><option value="60">1 min</option><option value="300">5 min</option><option value="900">15 min</option><option value="3600">1 h</option></select></label>'+
+      '<label class="field"><span>'+tr('Janela de proteção antialagamento por remetente','Minimum interval for the same sender','Intervalo mínimo para el mismo remitente','Intervalle minimum pour le même expéditeur')+'</span><select id="v148AutoReplyCooldown"><option value="30">30 s</option><option value="60">1 min</option><option value="300">5 min</option><option value="900">15 min</option><option value="3600">1 h</option></select></label>'+
       '<div class="v111-actions"><button id="v148AutoReplySave" class="btn secondary">'+tr('Salvar resposta automática','Save automatic reply','Guardar respuesta automática','Enregistrer la réponse automatique')+'</button></div>';
     config.appendChild(card);
     const load=async()=>{try{const cfg=await req('/api/config');$('#v148AutoReplyEnabled').checked=!!cfg.auto_reply_enabled;$('#v148AutoReplyText').value=cfg.auto_reply_text||'';const sel=$('#v148AutoReplyCooldown');const value=String(cfg.auto_reply_cooldown_seconds||300);if(!Array.from(sel.options).some(o=>o.value===value)){const o=document.createElement('option');o.value=value;o.textContent=value+' s';sel.appendChild(o);}sel.value=value;}catch(e){toast(e.message);}};
     $('#v148AutoReplySave').onclick=async()=>{
+      if ($('#v148AutoReplyEnabled').checked && !String($('#v148AutoReplyText').value||'').trim()) { toast(tr('Informe o texto da Auto-resposta antes de ativar.','Enter auto-reply text before enabling.','Introduzca el texto de la respuesta automática antes de activarla.','Saisissez le texte avant activation.')); return; }
       const payload={auto_reply_enabled:$('#v148AutoReplyEnabled').checked,auto_reply_text:$('#v148AutoReplyText').value,auto_reply_cooldown_seconds:Number($('#v148AutoReplyCooldown').value||300)};
       const saved=await req('/api/config',{method:'POST',body:JSON.stringify(payload)});
       if(saved && saved.ok===false)throw new Error(saved.error||'Erro');
