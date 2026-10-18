@@ -310,6 +310,15 @@
     const rxState = String(status.rx_state || (connected ? 'waiting' : 'disconnected'));
     const txState = String(status.tx_state || (connected ? 'waiting' : 'disconnected'));
     const bytesRx = Number(status.transport_bytes_rx || 0);
+    if (connected && status.device_profile === 'radtel_rt950_pro' &&
+        Number(status.serial_baud || 0) !== 115200 && bytesRx === 0) {
+      const warning = $('#tncSerialProfileHint');
+      if(warning) {
+        warning.textContent = 'RT-950 Pro sem RX: baud atual ' + Number(status.serial_baud || 0) +
+          ', verifique 115200 bps e TNC UART em RX/Both no rádio.';
+        warning.classList.remove('hidden');
+      }
+    }
     const bytesTx = Number(status.transport_bytes_tx || 0);
     const kissFrames = Number(status.kiss_frames_rx || 0);
     const invalidFrames = Number(status.invalid_frames_rx || 0);
@@ -553,6 +562,11 @@
       hint.textContent='Kenwood '+(profile==='kenwood_tm_d700'?'TM-D700':'TM-D710')+': o baud rate serial e o packet RF são parâmetros diferentes. Em modo terminal/PKT, KISS não é obrigatório.';
       hint.classList.remove('hidden');return;
     }
+    if(profile==='radtel_rt950_pro'){
+      const baud = Number(val('tncSerialBaud', 9600));
+      hint.textContent = 'Radtel RT-950 Pro · TNC KISS UART: verifique RX/Both no rádio e 115200 bps na porta serial (atual: '+baud+' bps). O baud da UART não é o baud packet RF.';
+      hint.classList.remove('hidden');return;
+    }
     if(profile==='kantronics'){
       hint.textContent='TNC terminal: bytes ASCII/comandos podem ser esperados. Use KISS apenas quando o equipamento estiver realmente configurado para KISS.';
       hint.classList.remove('hidden');return;
@@ -564,7 +578,7 @@
     if (/RADTEL.*950|RT-950|RT950/i.test(equipment)) {
       hint.textContent=tr('Radtel RT-950 Pro detectado: no modo TNC UART, use normalmente 115200 bps e TNC Type/KISS habilitado no rádio.');
       hint.classList.remove('hidden');
-      if (field('tncSerialBaud')) field('tncSerialBaud').value = '115200';
+      // Apenas sugere; NUNCA sobrescreve baud persistido ao enumerar a COM.
       return;
     }
     if (chipset==='CH9102') {
@@ -767,6 +781,10 @@
       const profile=val('tncDeviceProfile','generic_kiss');
       if(['kenwood_tm_d700','kenwood_tm_d710','kantronics'].includes(profile)&&field('tncSerialProtocol'))field('tncSerialProtocol').value='terminal';
       if(profile==='kenwood_tm_d700'&&field('tncPacketRfBaud'))field('tncPacketRfBaud').value='1200';
+      if(profile==='radtel_rt950_pro'){
+        if(field('tncSerialProtocol'))field('tncSerialProtocol').value='kiss';
+        if(field('tncSerialBaud'))field('tncSerialBaud').value='115200';
+      }
       updateSerialProfileHint();
     });
     field('tncSerialProtocol')?.addEventListener('change',()=>updateSerialProfileHint());
