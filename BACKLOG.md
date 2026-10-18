@@ -1,3 +1,12 @@
+## DIAGNÓSTICO DE CAMPO — data.rar PP5AU, TNC RX zerado e enlaces RF inferidos (18/10/2026)
+
+- **Origem:** archive `data.rar` enviado pelo operador de PP5AU; evidência analisada localmente sem publicar o banco, credenciais, posições ou logs brutos.
+- **TNC (#118, P0):** aplicativo portátil v1.14.42 e v1.14.43; COM10 detectada como CH340, conectada a 9600 bps; perfil persistido generic_kiss/protocolo kiss; sessões `transport_open_waiting` com zero bytes RX, zero frames RX/TX; tabelas `tnc_frames` e `tnc_heard` vazias. Banco registra 20.350 pacotes, **todos APRS-IS**. Log de quatro beacons PP5AU-7 veio de programa externo, não confirma RX na COM10.
+- **Comparação:** módulo `tnc_service.py` tem SHA idêntico nas tags v1.14.41/.42/.43. Investigar modo KISS real do dispositivo, abertura que não inicia KISS, driver/cabo, dependências portátil, e verificar bytes seriais brutos antes do parser. Não atribuir causa sem teste com hardware.
+- **Topologia (#116, P1):** 5.114 eventos RF `inferred` derivados do APRS-IS, 0 RF `direct` local; 2.157 eventos RF sem coordenadas de ambas as pontas, excluídos da renderização normal; 2.957 completos, com 504 tendo ao menos uma ponta histórica >5 km da posição atual da estação e 93 sem marcador atual para alguma ponta. Contagens por evento, não segmentos desenhados.
+- **Interpretação:** alguns enlaces podem parecer órfãos porque a linha usa localização histórica e a estação aparece na posição atual. Não tratar inferência APRS-IS como confirmação de RF ouvido no TNC. Este arquivo de PP5AU não substitui a confirmação visual dos enlaces da base de Brasília.
+- **Performance:** 743 eventos `sqlite_slow` no diagnóstico; investigar separadamente sem presumir relação causal.
+- **Pendências:** simulação do RX KISS, confirmação do modelo do TNC, e correlação dos segmentos visuais/JSON com topologia. Nenhuma correção implementada e validada nesta análise.
 ## ABERTO — REGRESSÃO P1: enlaces órfãos persistem no mapa real após v1.14.43 (#116, 18/10/2026)
 
 - **Relato de campo:** continuam sendo desenhados enlaces RF órfãos no mapa do PT2VHF APRS Client mesmo após a entrega de v1.14.43/PR #117. A implementação anterior não atingiu o aceite e a [issue #116](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/116) foi reaberta.
