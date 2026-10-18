@@ -46,7 +46,10 @@ CATEGORIES = (
 
 def api(path: str, method: str = "GET", payload: dict | None = None):
     data = None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    request = urllib.request.Request(BASE + path, headers=HEADERS, method=method, data=data)
+    headers = dict(HEADERS)
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+    request = urllib.request.Request(BASE + path, headers=headers, method=method, data=data)
     with urllib.request.urlopen(request, timeout=50) as response:
         return json.load(response)
 
