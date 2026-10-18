@@ -376,7 +376,7 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
         try:
             rows = conn.execute(
                 f"""SELECT timestamp,source,target,kind,medium,evidence_level,
-                           source_lat,source_lon,target_lat,target_lon
+                           source_lat,source_lon,target_lat,target_lon,raw
                     FROM topology_events {where}
                     ORDER BY timestamp DESC,id DESC LIMIT ?""",
                 params,
@@ -386,6 +386,9 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
                 diag.log_event("topology_map_event_geometry_unavailable", error=str(exc))
                 return []
             raise
+        # Dados históricos são preservados no SQLite, mas quadros APRS com
+        # latitude/longitude originalmente malformadas não entram no mapa.
+        rows = [row for row in rows if not db.raw_aprs_position_issue(row["raw"])]
         # Fixed/mobile classification is global to retained history, not
         # bounded by the currently selected map period.
         if period:
