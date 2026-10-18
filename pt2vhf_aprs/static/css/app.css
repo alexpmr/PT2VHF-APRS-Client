@@ -3172,39 +3172,38 @@ html[data-theme="light"] .traffic-animation-panel {
 .traffic-activity-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 1px;
-  min-width: 42px;
-  height: 34px;
+  gap: 9px;
+  min-width: 86px;
+  height: 30px;
   padding: 0 7px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255,255,255,.025);
-  color: var(--muted);
+  color: var(--text);
   user-select: none;
 }
-.traffic-arrow {
-  display: inline-grid;
-  place-items: center;
-  width: 13px;
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 1;
-  opacity: .42;
-  transition: opacity .12s ease, color .12s ease, transform .12s ease, text-shadow .12s ease;
-}
-.traffic-activity-indicator.rx-active .traffic-rx {
-  color: var(--accent);
-  opacity: 1;
-  transform: translateY(2px) scale(1.18);
-  text-shadow: 0 0 8px rgba(59,166,255,.75);
+.traffic-channel { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.traffic-label { font-size: 11px; font-weight: 800; letter-spacing: .02em; }
+.traffic-led {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  flex: 0 0 11px;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
+  background: transparent;
+  transition: background .09s ease, box-shadow .09s ease, border-color .09s ease;
 }
 .traffic-activity-indicator.tx-active .traffic-tx {
-  color: var(--ok);
-  opacity: 1;
-  transform: translateY(-2px) scale(1.18);
-  text-shadow: 0 0 8px rgba(56,199,118,.75);
+  border-color: #3cc982;
+  background: #3cc982;
+  box-shadow: 0 0 7px 2px rgba(60,201,130,.65);
 }
-
+.traffic-activity-indicator.rx-active .traffic-rx {
+  border-color: #4eb8ff;
+  background: #4eb8ff;
+  box-shadow: 0 0 7px 2px rgba(78,184,255,.65);
+}
 .map-replay-layout {
   height: 100%;
   min-height: 0;
