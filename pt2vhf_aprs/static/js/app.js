@@ -19,6 +19,7 @@
     objectsEnabled: localStorage.getItem('pt2vhf_map_item_objects') !== '0',
     tracklogEnabled: localStorage.getItem('pt2vhf_map_item_tracklogs') !== '0',
     rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
+    mobileLinksEnabled: localStorage.getItem('pt2vhf_map_item_mobile_rf') !== '0',
     rfCoverageEnabled: localStorage.getItem('pt2vhf_map_item_rf_coverage') === '1',
     rfCoverageLayer: null,
     igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
@@ -46,6 +47,9 @@
       topology_rf_color: '#ffff00',
       topology_rf_temporary_color: '#00d9ef',
       topology_rf_temporary_width: 3,
+      topology_rf_mobile_color: '#ff8c3b',
+      topology_rf_mobile_width: 3,
+      topology_rf_mobile_ttl_hours: 3,
       topology_igate_color: '#ffff00',
       topology_width: 1,
       map_brightness: 100,
@@ -76,7 +80,8 @@
     trackFollowPanelTimer: null,
     topologyLines: new Map(),
     topologyEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0'
-      || localStorage.getItem('pt2vhf_map_item_igate') !== '0',
+      || localStorage.getItem('pt2vhf_map_item_igate') !== '0'
+      || localStorage.getItem('pt2vhf_map_item_mobile_rf') !== '0',
     topologyHours: Number(localStorage.getItem('pt2vhf_topology_hours') || 0),
     topologyLoadBusy: false,
     topologyLoadQueued: false,
@@ -1702,6 +1707,9 @@
       topology_rf_color: cfg.topology_rf_color || state.mapConfig.topology_rf_color || '#ffff00',
       topology_rf_temporary_color: cfg.topology_rf_temporary_color || state.mapConfig.topology_rf_temporary_color || '#00d9ef',
       topology_rf_temporary_width: Number(cfg.topology_rf_temporary_width || state.mapConfig.topology_rf_temporary_width || 3),
+      topology_rf_mobile_color: cfg.topology_rf_mobile_color || state.mapConfig.topology_rf_mobile_color || '#ff8c3b',
+      topology_rf_mobile_width: Number(cfg.topology_rf_mobile_width || state.mapConfig.topology_rf_mobile_width || 3),
+      topology_rf_mobile_ttl_hours: Number(cfg.topology_rf_mobile_ttl_hours ?? state.mapConfig.topology_rf_mobile_ttl_hours ?? 3),
       topology_igate_color: cfg.topology_igate_color || state.mapConfig.topology_igate_color || '#ffff00',
       topology_width: Number(cfg.topology_width || state.mapConfig.topology_width || 1),
       map_brightness: Number(cfg.map_brightness || state.mapConfig.map_brightness || 100),
@@ -1736,7 +1744,7 @@
       if (radarToggle) radarToggle.checked = !!state.weatherRadarEnabled;
       const elevationToggle = $('#elevationToggle');
       if (elevationToggle) elevationToggle.checked = !!state.elevationEnabled;
-      state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
+      state.topologyEnabled = !!(state.rfLinksEnabled || state.mobileLinksEnabled || state.igateLinksEnabled);
       if (state.topologyEnabled) loadTopology();
       updateMapLegend();
     }
@@ -2243,6 +2251,7 @@
     objectsEnabled: 'pt2vhf_map_item_objects',
     tracklogEnabled: 'pt2vhf_map_item_tracklogs',
     rfLinksEnabled: 'pt2vhf_map_item_rf',
+    mobileLinksEnabled: 'pt2vhf_map_item_mobile_rf',
     rfCoverageEnabled: 'pt2vhf_map_item_rf_coverage',
     igateLinksEnabled: 'pt2vhf_map_item_igate',
     packetsEnabled: 'pt2vhf_map_item_packets',
@@ -2569,7 +2578,8 @@
         children: objectMapNodes(objects),
       },
       { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled' },
-      { id: 'root:rf', label: ui('Enlaces RF', 'RF links'), stateKey: 'rfLinksEnabled' },
+      { id: 'root:rf', label: ui('Enlaces RF fixos', 'Fixed RF links'), stateKey: 'rfLinksEnabled' },
+      { id: 'root:mobile-rf', label: ui('Enlaces móveis (último contato)', 'Mobile links (latest contact)'), stateKey: 'mobileLinksEnabled' },
       { id: 'root:rf-coverage', label: ui('Cobertura RF observada (pontos de digis móveis)', 'Observed RF coverage (moving digis)'), stateKey: 'rfCoverageEnabled' },
       { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
       { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
@@ -2649,7 +2659,7 @@
   }
 
   async function refreshMapFromViewTree() {
-    state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
+    state.topologyEnabled = !!(state.rfLinksEnabled || state.mobileLinksEnabled || state.igateLinksEnabled);
     if (!state.packetsEnabled) clearTrafficReplayLayers();
     await loadMapData();
     if (!state.topologyEnabled) clearTopologyLines();
@@ -2818,7 +2828,7 @@
     state.mapPeriodHours = topologyPeriodValue(state.mapPeriodHours);
     state.topologyHours = statisticsPeriodValue(state.topologyHours);
     const repairedVisibility = repairMapVisibilityStateV186();
-    state.topologyEnabled = !!(state.rfLinksEnabled || state.igateLinksEnabled);
+    state.topologyEnabled = !!(state.rfLinksEnabled || state.mobileLinksEnabled || state.igateLinksEnabled);
     renderMapViewTree([], []);
     if (repairedVisibility) {
       console.warn('Visibilidade do mapa recuperada automaticamente após estado totalmente desabilitado.');
@@ -3047,6 +3057,7 @@
             <div class="map-legend-item" data-legend="track"><span class="legend-line"></span><span>${ui('Tracklog', 'Tracklog')}</span></div>
             <div class="map-legend-item" data-legend="rf"><span class="legend-line"></span><span>${ui('Enlace RF', 'RF link')}</span></div>
             <div class="map-legend-item" data-legend="rf-temp"><span class="legend-line"></span><span>${ui('RF temporário (3h)', 'Temporary RF (3h)')}</span></div>
+            <div class="map-legend-item" data-legend="rf-mobile"><span class="legend-line"></span><span>${ui('RF móvel (último contato)', 'Mobile RF (latest contact)')}</span></div>
             <div class="map-legend-item" data-legend="igate"><span class="legend-line"></span><span>${ui('Via IGate/APRS-IS', 'Via IGate/APRS-IS')}</span></div>
             <div class="map-legend-item" data-legend="replay"><span class="legend-line"></span><span>${ui('Animação temporal', 'Timeline replay')}</span></div>
             <div class="map-legend-item" data-legend="packet"><span class="legend-packet"></span><span>${ui('Pacote em movimento', 'Moving packet')}</span></div>
@@ -3073,6 +3084,7 @@
     const track = root.querySelector('[data-legend="track"] .legend-line');
     const rf = root.querySelector('[data-legend="rf"] .legend-line');
     const rfTemp = root.querySelector('[data-legend="rf-temp"] .legend-line');
+    const rfMobile = root.querySelector('[data-legend="rf-mobile"] .legend-line');
     const igate = root.querySelector('[data-legend="igate"] .legend-line');
     const replay = root.querySelector('[data-legend="replay"] .legend-line');
     if (track) {
@@ -3088,6 +3100,11 @@
       rfTemp.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_rf_temporary_width)}px`;
       rfTemp.style.borderTopStyle = 'solid';
     }
+    if (rfMobile) {
+      rfMobile.style.borderTopColor = state.mapConfig.topology_rf_mobile_color;
+      rfMobile.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_rf_mobile_width)}px`;
+      rfMobile.style.borderTopStyle = 'dotted';
+    }
     if (igate) {
       igate.style.borderTopColor = state.mapConfig.topology_igate_color;
       igate.style.borderTopWidth = `${Math.max(2, state.mapConfig.topology_width)}px`;
@@ -3101,6 +3118,7 @@
     root.querySelector('[data-legend="track"]')?.classList.toggle('legend-muted', !state.tracklogEnabled);
     root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.rfLinksEnabled);
     root.querySelector('[data-legend="rf-temp"]')?.classList.toggle('legend-muted', !state.rfLinksEnabled);
+    root.querySelector('[data-legend="rf-mobile"]')?.classList.toggle('legend-muted', !state.mobileLinksEnabled);
     root.querySelector('[data-legend="igate"]')?.classList.toggle('legend-muted', !state.igateLinksEnabled);
     const packetAnimating = state.trafficPlaying || state.trafficReplayLayers.size > 0;
     root.querySelector('[data-legend="replay"]')?.classList.toggle('legend-muted', !state.timelineReplayActive);
@@ -3978,7 +3996,7 @@
     const isInternet = edge.kind === 'igate';
     const mixedEvidence = Boolean(edge.mixed_evidence);
     const rows = [
-      [ui('Tipo', 'Type'), isInternet ? 'Internet/APRS-IS' : 'RF'],
+      [ui('Tipo', 'Type'), isInternet ? 'Internet/APRS-IS' : edge.kind === 'rf_mobile' ? 'RF móvel' : 'RF'],
       [ui('Origem', 'Source'), edge.source || '—'],
       [ui('Destino', 'Destination'), edge.target || '—'],
       [ui('Sentido', 'Direction'), `${edge.source || '—'} → ${edge.target || '—'}`],
@@ -4074,22 +4092,23 @@
         (a, b) => Number(a.kind === 'igate') - Number(b.kind === 'igate')
       );
       for (const edge of orderedEdges) {
+        if (edge.kind === 'rf_mobile' && !state.mobileLinksEnabled) continue;
         if (routeAllowedPairs) {
           if (edge.kind === 'igate') continue;
           if (!routeAllowedPairs.has(rfRoutePairKey(edge.source, edge.target))) continue;
         } else {
           if (edge.kind === 'igate' && !state.igateLinksEnabled) continue;
-          if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue;
+          if (edge.kind !== 'igate' && edge.kind !== 'rf_mobile' && !state.rfLinksEnabled) continue;
         }
 
         // v1.14.22: filtros de estações/objetos controlam somente os
         // marcadores. Enlaces possuem camada própria e permanecem visíveis
         // mesmo quando uma ou ambas as entidades das extremidades estão ocultas.
-        // A moving digi can have multiple real RF links in different locations.
-        // Each historical spatial segment needs a stable, independent layer key.
+        // Mobile digi history cannot create persistent spider lines:
+        // the API supplies at most the latest valid edge per moving station.
         const key = edge.segment_id || `${edge.source}>${edge.target}:${edge.kind}`;
         // Client-side expiry is authoritative even if API data was cached.
-        if (edge.kind === 'rf_temp' && (!edge.expires_at ||
+        if (['rf_temp', 'rf_mobile'].includes(edge.kind) && (!edge.expires_at ||
             !Number.isFinite(Date.parse(edge.expires_at)) ||
             Date.parse(edge.expires_at) <= Date.now())) continue;
         active.add(key);
@@ -4107,17 +4126,20 @@
 
         let line = state.topologyLines.get(key);
         const temporaryRf = edge.kind === 'rf_temp';
+        const mobileRf = edge.kind === 'rf_mobile';
         const inferredRouteEdge = edge.kind !== 'igate' && !(edge.direct_rf_confirmed === true);
         const legacyRouteEdge = edge.kind !== 'igate' && edge.evidence_level === 'legacy';
         const style = {
-          color: temporaryRf ? state.mapConfig.topology_rf_temporary_color
+          color: mobileRf ? state.mapConfig.topology_rf_mobile_color
+            : temporaryRf ? state.mapConfig.topology_rf_temporary_color
             : edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-          weight: temporaryRf ? state.mapConfig.topology_rf_temporary_width
+          weight: mobileRf ? state.mapConfig.topology_rf_mobile_width
+            : temporaryRf ? state.mapConfig.topology_rf_temporary_width
             : edge.kind === 'igate' && edge.mixed_evidence
               ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
               : state.mapConfig.topology_width,
           opacity: edge.kind === 'igate' ? .72 : .84,
-          dashArray: edge.kind === 'igate' ? '7 5' : null,
+          dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null,
           interactive: true,
           bubblingMouseEvents: false,
           pane: 'pt2vhfInteractionPane'
@@ -4148,8 +4170,9 @@
           <div class="topology-popup">
             <h3>Topologia observada</h3>
             <div><strong>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</strong></div>
-            <div>Tipo: ${temporaryRf ? 'RF temporário (até 3h do último contato)' : edge.kind === 'igate' ? 'Internet/APRS-IS' : (inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC')}</div>
-            ${temporaryRf ? '<div>Expira em: ' + escapeHtml(fmtDate(edge.expires_at)) + '</div>' : ''}
+            <div>Tipo: ${mobileRf ? 'RF móvel (último contato)' : temporaryRf ? 'RF temporário (até 3h do último contato)' : edge.kind === 'igate' ? 'Internet/APRS-IS' : (inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC')}</div>
+            ${(temporaryRf || mobileRf) ? '<div>Expira em: ' + escapeHtml(fmtDate(edge.expires_at)) + '</div>' : ''}
+            ${mobileRf ? '<div>Estação móvel: ' + escapeHtml((edge.mobile_callsigns || []).join(', ')) + '</div>' : ''}
             ${edge.mixed_evidence
               ? (edge.kind === 'igate'
                 ? `<div>Também observado por RF: ${Number(edge.rf_packet_count || 0).toLocaleString('pt-BR')}</div>`
@@ -4186,13 +4209,13 @@
     }
   }
 
-  // Expire transient RF overlays independently from network polling or
-  // period selection: no contact for 3h => disappears without a refresh.
+  // Expire temporary and mobile edges by independent backend TTLs,
+  // even when the map is not refreshed.
   setInterval(() => {
     if (!state.map || !state.topologyLines.size) return;
     for (const [key, line] of state.topologyLines) {
       const edge = line._pt2vhfEdge;
-      if (edge?.kind !== 'rf_temp') continue;
+      if (!['rf_temp', 'rf_mobile'].includes(edge?.kind)) continue;
       const expires = Date.parse(edge.expires_at || '');
       if (!Number.isFinite(expires) || expires <= Date.now()) {
         state.map.removeLayer(line);
@@ -8446,6 +8469,10 @@
     const elevationOpacityValue = $('#elevationOpacityValue');
     const temporaryColor = form.elements.namedItem('topology_rf_temporary_color');
     const temporaryColorText = $('#topologyRfTemporaryColorText');
+    const mobileColor = form.elements.namedItem('topology_rf_mobile_color');
+    const mobileColorText = $('#topologyRfMobileColorText');
+    const mobileWidth = form.elements.namedItem('topology_rf_mobile_width');
+    const mobileWidthValue = $('#topologyRfMobileWidthValue');
     const temporaryWidth = form.elements.namedItem('topology_rf_temporary_width');
     const temporaryWidthValue = $('#topologyRfTemporaryWidthValue');
     const topologyRfColor = form.elements.namedItem('topology_rf_color');
@@ -8463,6 +8490,8 @@
     if (elevationMaxInput && elevationMaxValue) elevationMaxValue.textContent = elevationMetersText(elevationMaxInput.value || 3000);
     if (elevationOpacityInput && elevationOpacityValue) elevationOpacityValue.textContent = `${elevationOpacityInput.value || 55}%`;
     syncElevationControls();
+    if (mobileColor && mobileColorText) mobileColorText.value = mobileColor.value || '#ff8c3b';
+    if (mobileWidth && mobileWidthValue) mobileWidthValue.textContent = `${mobileWidth.value || 3} px`;
     if (temporaryColor && temporaryColorText) temporaryColorText.value = temporaryColor.value || '#00d9ef';
     if (temporaryWidth && temporaryWidthValue) temporaryWidthValue.textContent = `${temporaryWidth.value || 3} px`;
     if (topologyRfColor && topologyRfColorText) topologyRfColorText.value = topologyRfColor.value || '#ffff00';
@@ -8547,6 +8576,8 @@
   function previewTopologyStyleFromForm() {
     const form = $('#configForm');
     if (!form) return;
+    state.mapConfig.topology_rf_mobile_color = form.elements.namedItem('topology_rf_mobile_color')?.value || '#ff8c3b';
+    state.mapConfig.topology_rf_mobile_width = Number(form.elements.namedItem('topology_rf_mobile_width')?.value || 3);
     state.mapConfig.topology_rf_temporary_color = form.elements.namedItem('topology_rf_temporary_color')?.value || '#00d9ef';
     state.mapConfig.topology_rf_temporary_width = Number(form.elements.namedItem('topology_rf_temporary_width')?.value || 3);
     state.mapConfig.topology_rf_color = form.elements.namedItem('topology_rf_color')?.value || '#ffff00';
@@ -8558,9 +8589,11 @@
       for (const line of state.topologyLines.values()) {
         const kind = line._pt2vhfEdge?.kind || (line.options?.dashArray ? 'igate' : 'rf');
         line.setStyle({
-          color: kind === 'rf_temp' ? state.mapConfig.topology_rf_temporary_color :
+          color: kind === 'rf_mobile' ? state.mapConfig.topology_rf_mobile_color :
+            kind === 'rf_temp' ? state.mapConfig.topology_rf_temporary_color :
             kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
-          weight: kind === 'rf_temp' ? state.mapConfig.topology_rf_temporary_width : state.mapConfig.topology_width
+          weight: kind === 'rf_mobile' ? state.mapConfig.topology_rf_mobile_width :
+            kind === 'rf_temp' ? state.mapConfig.topology_rf_temporary_width : state.mapConfig.topology_width
         });
       }
     }
@@ -8584,6 +8617,8 @@
     });
   }
 
+  bindTopologyColor('topology_rf_mobile_color', '#topologyRfMobileColorText');
+  $('#topologyRfMobileWidth')?.addEventListener('input', previewTopologyStyleFromForm);
   bindTopologyColor('topology_rf_temporary_color', '#topologyRfTemporaryColorText');
   $('#topologyRfTemporaryWidth')?.addEventListener('input', previewTopologyStyleFromForm);
   bindTopologyColor('topology_rf_color', '#topologyRfColorText');
@@ -8593,6 +8628,8 @@
   $('#resetTopologyStyleButton')?.addEventListener('click', () => {
     const form = $('#configForm');
     if (!form) return;
+    form.elements.namedItem('topology_rf_mobile_color').value = '#ff8c3b';
+    form.elements.namedItem('topology_rf_mobile_width').value = '3';
     form.elements.namedItem('topology_rf_temporary_color').value = '#00d9ef';
     form.elements.namedItem('topology_rf_temporary_width').value = '3';
     form.elements.namedItem('topology_rf_color').value = '#ffff00';
