@@ -87,7 +87,7 @@ def fetch_releases() -> list[dict]:
         batch = api(f"/releases?per_page=100&page={page}")
         if not isinstance(batch, list):
             raise RuntimeError("GitHub Releases returned an unexpected value")
-        all_releases += [r for r in batch if not r.get("draft") and not r.get("prerelease")]
+        all_releases += [r for r in batch if not r.get("draft")]
         if len(batch) < 100:
             return all_releases
     raise RuntimeError("More than 9,900 releases: pagination limit reached")
@@ -121,7 +121,7 @@ def collect_history(releases: list[dict], previous: dict, now: str) -> tuple[dic
 
 def current_packages(releases: list[dict]) -> dict[str, dict]:
     results: dict[str, dict] = {}
-    releases = sorted(releases, key=lambda r: r.get("published_at") or r.get("created_at") or "", reverse=True)
+    releases = sorted((r for r in releases if not r.get("prerelease")), key=lambda r: r.get("published_at") or r.get("created_at") or "", reverse=True)
     for release in releases:
         for asset in release.get("assets") or []:
             category = classify_asset(str(asset.get("name") or ""))
