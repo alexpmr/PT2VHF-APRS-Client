@@ -117,7 +117,7 @@ def test_v144_igate_link_layer_is_independent_of_hidden_markers():
     else:
         assert "if (edge.kind !== 'igate') {" in body
         assert "state.mapVisibleCallsigns.has(sourceCall)" in body
-    assert "dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null" in body
+    assert "dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : inferredRouteEdge ? '5 6' : null" in body
     assert "edge.kind === 'igate' ? 'Internet/APRS-IS'" in body
 
 
