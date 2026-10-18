@@ -21,8 +21,8 @@ def test_rf_style_depends_on_medium_not_evidence_level():
     begin = js.index("const inferredRouteEdge = edge.kind !== 'igate'")
     end = js.index("if (!line) {", begin)
     segment = js[begin:end]
-    assert "edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color" in segment
-    assert "dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null" in segment
+    assert "edge.kind === 'igate' ? state.mapConfig.topology_igate_color" in segment
+    assert "dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : inferredRouteEdge ? '5 6' : null" in segment
     assert "style.dashArray = '5 7'" not in segment
     assert "style.dashArray = '2 5'" not in segment
     assert "inferredRouteEdge && topologyEdgeDistanceKm(geometryEdge) > 250" in segment

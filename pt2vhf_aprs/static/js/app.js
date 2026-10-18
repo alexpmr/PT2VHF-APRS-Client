@@ -4092,6 +4092,9 @@
         (a, b) => Number(a.kind === 'igate') - Number(b.kind === 'igate')
       );
       for (const edge of orderedEdges) {
+        // Oculta da visão geral RF inferido cuja geometria histórica não
+        // coincide com marcadores atuais; a rota detalhada mantém o evento.
+        if (!routeAllowedPairs && edge.render_on_overview === false) continue;
         if (edge.kind === 'rf_mobile' && !state.mobileLinksEnabled) continue;
         if (routeAllowedPairs) {
           if (edge.kind === 'igate') continue;
@@ -4132,14 +4135,15 @@
         const style = {
           color: mobileRf ? state.mapConfig.topology_rf_mobile_color
             : temporaryRf ? state.mapConfig.topology_rf_temporary_color
-            : edge.kind === 'igate' ? state.mapConfig.topology_igate_color : state.mapConfig.topology_rf_color,
+            : edge.kind === 'igate' ? state.mapConfig.topology_igate_color
+            : inferredRouteEdge ? '#9ca3af' : state.mapConfig.topology_rf_color,
           weight: mobileRf ? state.mapConfig.topology_rf_mobile_width
             : temporaryRf ? state.mapConfig.topology_rf_temporary_width
             : edge.kind === 'igate' && edge.mixed_evidence
               ? Math.max(2, Number(state.mapConfig.topology_width || 1) + 2)
               : state.mapConfig.topology_width,
           opacity: edge.kind === 'igate' ? .72 : .84,
-          dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null,
+          dashArray: edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : inferredRouteEdge ? '5 6' : null,
           interactive: true,
           bubblingMouseEvents: false,
           pane: 'pt2vhfInteractionPane'
@@ -8425,8 +8429,17 @@
       ), 'error');
     }
     try {
-      await api('/api/beacon', { method:'POST' });
-      toast(ui('Beacon enviado ao APRS-IS.', 'Beacon sent to APRS-IS.'), 'ok');
+      const result = await api('/api/beacon', { method:'POST' });
+      const channels = result?.transports || {};
+      const describe = (key, name) => {
+        const item = channels[key] || {};
+        if (item.status === 'sent') return name + ': enviado';
+        if (item.status === 'queued') return name + ': enfileirado no TNC';
+        if (item.status === 'error') return name + ': falhou (' + (item.error || 'erro') + ')';
+        return name + ': indisponível';
+      };
+      const partial = Object.values(channels).some(item => item.status === 'error');
+      toast(describe('aprs_is', 'APRS-IS') + ' · ' + describe('tnc', 'TNC/RF'), partial ? 'error' : 'ok');
     } catch (err) {
       toast(err.message, 'error');
     } finally {

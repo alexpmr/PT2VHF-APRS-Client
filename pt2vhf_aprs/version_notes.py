@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.44": {
+        "title": "Beacon multicanal, RT-950 Pro e redução de enlaces RF órfãos",
+        "items": [
+            "Beacon manual (ícone e Configuração), e automático: APRS-IS e TNC/RF quando ambos ativos e autorizados.",
+            "Sem cooldown no envio manual; cada transporte informa sucesso, enfileiramento ou erro independentemente.",
+            "TNC com TX autorizado gera quadros AX.25/KISS sem cabeçalho TCPIP* da Internet.",
+            "Radtel RT-950 Pro: perfil KISS UART 115200 escolhido explicitamente; sem substituir velocidade antiga sem consentimento.",
+            "Enlaces inferidos com pontas históricas incompatíveis com marcadores atuais são omitidos da visão geral, permanecendo consultáveis.",
+            "Conexão física PP5AU e avaliação visual da topologia ainda aguardam confirmação de campo.",
+        ],
+    },
     "1.14.43": {
         "title": "Último enlace móvel, retenção configurável e filtro Ver",
         "items": [

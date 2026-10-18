@@ -1,4 +1,6 @@
-# PT2VHF APRS Client - v1.14.43
+# PT2VHF APRS Client - v1.14.44
+
+A **v1.14.44** distribui beacons manuais (inclusive ícone do cabeçalho) e automáticos por todas as conexões ativas/autorizadas: APRS-IS e TNC/RF. O envio manual não tem cooldown; o status diferencia entrega APRS-IS, entrada na fila RF e falhas parciais. Adiciona perfil Radtel RT-950 Pro com sugestão explícita de KISS UART 115200, sem sobrescrever configuração anterior; reduz linhas órfãs de RF meramente inferido na visão geral. **Teste em rádio físico, cobertura RF e depuração da origem da ausência RX em COM10 continuam pendentes de confirmação.**
 
 A **v1.14.43** mantém apenas o último enlace RF válido de cada repetidor móvel, acrescenta expiração configurável e filtro independente em Ver, sem eliminar o histórico SQLite. Os binários da v1.14.42 continuam como último download confirmado até a publicação da v1.14.43.
 

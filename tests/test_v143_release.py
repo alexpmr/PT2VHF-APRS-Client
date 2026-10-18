@@ -25,7 +25,7 @@ def test_v143_header_manual_beacon_uses_existing_pipeline():
     assert 'class="btn secondary beacon-icon-button"' in html
     assert 'aria-label="Enviar Beacon"' in html
     assert "async function sendManualBeacon()" in js
-    assert "await api('/api/beacon', { method:'POST' });" in js
+    assert "const result = await api('/api/beacon', { method:'POST' });" in js
     assert "$('#sendBeaconButton')?.addEventListener('click', () => { void sendManualBeacon(); });" in js
     assert "$('#headerSendBeaconButton')?.addEventListener('click', () => { void sendManualBeacon(); });" in js
     assert "buttons.some(button => button.disabled)" in js

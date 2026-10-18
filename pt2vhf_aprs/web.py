@@ -1804,8 +1804,7 @@ def create_app() -> Flask:
     @app.post("/api/beacon")
     def api_beacon():
         try:
-            service.send_beacon()
-            return jsonify({"ok": True})
+            return jsonify(service.send_beacon())
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
