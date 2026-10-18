@@ -1,3 +1,12 @@
+## 1.14.44 - 2026-10-18
+
+- Beacon manual (incluindo ícone de cabeçalho) e automático: despacho para todos os meios ativos e autorizados, APRS-IS e KISS/TNC/RF, com resultado independente por transporte; RF enfileirado não implica confirmação de irradiação.
+- Botão manual sem cooldown; agendamento também funciona com TNC como único transporte ativo. Cabeçalho TCPIP* da Internet nunca é reutilizado no AX.25 RF.
+- Radtel RT-950 Pro: novo perfil KISS UART com sugestão 115200 bps por seleção explícita, sem alteração automática de configuração persistida; diagnóstico de porta aberta sem RX permanece disponível.
+- Enlaces órfãos: RF inferido apenas do APRS-IS que não coincide com posições atuais dos dois marcadores deixa de ser desenhado na visão geral; evidências/eventos permanecem acessíveis na API e no histórico/rotas.
+- Testes automatizados específicos de beacon multicanal, falhas parciais, KISS, configuração serial e geometria histórica.
+- **Pendências não encerradas:** teste físico RT-950 Pro de PP5AU na COM10; evidência visual de enlaces órfãos em Brasília, avaliação de mais itens do backlog e validação de instaladores no Windows real.
+
 ## 1.14.43 - 2026-10-18
 
 - Enlaces RF móveis: somente a observação válida mais recente por estação móvel, sem linhas históricas acumuladas, com geometria do evento e expiração independente.
