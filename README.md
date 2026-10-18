@@ -7,24 +7,26 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 | Sistema | Tipo de pacote | Arquitetura | Baixar versão disponível | Downloads acumulados |
 |---|---|---|---|---:|
-| Windows 10/11 | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe) | — |
-| Windows 10/11 | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_x64_v1.14.46.exe) | — |
-| Windows 10/11 | Instalador EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_ARM64_v1.14.46.exe) | — |
-| Windows 10/11 | Portátil EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_ARM64_v1.14.46.exe) | — |
-| Windows 7 Legacy | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.46.exe) | — |
-| Windows 7 Legacy | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.46.exe) | — |
-| Linux | AppImage | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_x86_64_v1.14.46.AppImage) | — |
-| Linux | DEB | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_amd64.deb) | — |
-| Linux | TAR.GZ | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_x86_64_v1.14.46.tar.gz) | — |
-| Linux | AppImage | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_arm64_v1.14.46.AppImage) | — |
-| Linux | DEB | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_arm64.deb) | — |
-| Linux | TAR.GZ | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_arm64_v1.14.46.tar.gz) | — |
-| macOS | DMG | Intel x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_x86_64_v1.14.46.dmg) | — |
-| macOS | DMG | Apple Silicon | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_arm64_v1.14.46.dmg) | — |
+| Windows 10/11 | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe) | ≥ 14 |
+| Windows 10/11 | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_x64_v1.14.46.exe) | ≥ 11 |
+| Windows 10/11 | Instalador EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_ARM64_v1.14.46.exe) | ≥ 0 |
+| Windows 10/11 | Portátil EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_ARM64_v1.14.46.exe) | ≥ 1 |
+| Windows 7 Legacy | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.46.exe) | ≥ 0 |
+| Windows 7 Legacy | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.46.exe) | ≥ 0 |
+| Linux | AppImage | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_x86_64_v1.14.46.AppImage) | ≥ 0 |
+| Linux | DEB | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_amd64.deb) | ≥ 0 |
+| Linux | TAR.GZ | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_x86_64_v1.14.46.tar.gz) | ≥ 0 |
+| Linux | AppImage | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_arm64_v1.14.46.AppImage) | ≥ 0 |
+| Linux | DEB | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_arm64.deb) | ≥ 0 |
+| Linux | TAR.GZ | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_arm64_v1.14.46.tar.gz) | ≥ 0 |
+| macOS | DMG | Intel x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_x86_64_v1.14.46.dmg) | ≥ 0 |
+| macOS | DMG | Apple Silicon | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_arm64_v1.14.46.dmg) | ≥ 0 |
 
-**Contadores:** aguardando a primeira coleta automática das GitHub Releases.
+**Total mínimo conhecido de downloads dos pacotes: ≥ 26.**
 
-> Os contadores serão exibidos como **mínimo histórico conhecido (≥)**: assets excluídos antes da coleta não têm histórico recuperável. Cada linha contará downloads do arquivo por tipo e arquitetura, não instalações ou usuários únicos.
+> **Contadores históricos mínimos (≥):** soma dos downloads dos arquivos de versões ainda consultáveis e dos registros previamente preservados. Instaladores removidos antes da primeira coleta não podem ser recuperados pela API do GitHub. Esses números **não são instalações nem usuários únicos**; arquivos auxiliares não entram no total.
+
+*Última alteração dos dados coletados: 2026-10-18 22:57:07 UTC.*
 
 [Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Manual_v1.14.46.pdf) · [Notas da versão atual](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.14.46) · [Todas as versões](https://github.com/alexpmr/PT2VHF-APRS-Client/releases)
 <!-- DOWNLOAD_TABLE_END -->
