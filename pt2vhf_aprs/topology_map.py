@@ -110,8 +110,23 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
     moving = set()
     for call, bins in positions.items():
         established = [item for item in bins.values() if item[2] >= 2]
-        if any(db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
-               for i, a in enumerate(established) for b in established[i + 1:]):
+        repeated_displacement = any(
+            db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
+            for i, a in enumerate(established) for b in established[i + 1:]
+        )
+        # Sparse mobile repeaters can cross many regions with only one packet
+        # in each region. Require THREE mutually displaced observations to
+        # reject the common case of one corrupted GPS point on a fixed digi.
+        unique_positions = list(bins.values())
+        sparse_trip = any(
+            db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
+            and db.haversine_km(a[0], a[1], c[0], c[1]) >= 25.0
+            and db.haversine_km(b[0], b[1], c[0], c[1]) >= 25.0
+            for i, a in enumerate(unique_positions)
+            for j, b in enumerate(unique_positions[i + 1:], i + 1)
+            for c in unique_positions[j + 1:]
+        )
+        if repeated_displacement or sparse_trip:
             moving.add(call)
     return moving
 
