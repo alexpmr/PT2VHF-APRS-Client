@@ -1,3 +1,9 @@
+## EM VALIDAÇÃO — v1.14.43: enlaces móveis (#116, 18/10/2026)
+
+- Implementação candidata na branch fix/mobile-latest-link-v1.14.43: somente último enlace RF móvel, TTL configurável (3 h por padrão), cor/espessura próprias e Ver → Enlaces móveis.
+- Não confundir com a regra anterior de ocultação geral do #94, agora substituída pelo novo requisito. Contatos históricos permanecem na base e no diagnóstico JSON.
+- Critério de aceite pendente: executar suíte CI e inspecionar JSON/SQLite reais da captura de Brasília; somente após validação confirmar ausência dos enlaces órfãos.
+
 ## VALIDAÇÃO — v1.14.42 (17/10/2026)
 
 - Atualização portátil Windows com erro de DLL: corrigido isolamento de ambiente PyInstaller e busca de DLLs do helper; teste automatizado incluído. Causa candidata, sem reprodução física do erro relatado. Manter aberto até teste em Windows.
