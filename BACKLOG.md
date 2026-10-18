@@ -1,3 +1,13 @@
+## PENDENTE — Aba Automações: primeiro item Auto-resposta, migrar de Configurações (#125, 18/10/2026)
+
+- **Novo menu/aba Automações:** criar aba principal dedicada e iniciar com o card **Auto-resposta** (ligar/desligar, texto personalizado e Salvar). Sem automações adicionais neste pedido; estrutura preparada para futuras funções.
+- **Reutilizar o que já existe:** `v111.js::installAutoReply()` insere atualmente um card **Resposta automática** em `#tab-config`; migrar a interface para Automações e retirar a duplicata de Configurações. Preservar chaves SQLite `auto_reply_enabled`, `auto_reply_text`, `auto_reply_cooldown_seconds`, configurações previamente salvas e rota `/api/config`.
+- **Regra pedida:** cada **mensagem privada nova** dirigida ao indicativo/SSID exato deve receber o texto configurado, inclusive mensagens seguidas do mesmo remetente. Usar o transporte de recepção sempre que operacional/autorizado (TNC/RF ou APRS-IS), registrando no histórico o envio automático.
+- **Proteção:** 1 auto-resposta por mensagem única, sem resposta a duplicata, ACK/REJ, consultas, boletins, grupos, mensagens próprias e auto-respostas de terceiros; proteção contra loops e tempestades de mensagens. O cooldown legado hoje mínimo 30s/padrão 300s impede respostas a mensagens distintas; revisar sem perder a preferência previamente salva de usuários que o personalizaram.
+- **Ergonomia:** impedir habilitação sem texto válido; clareza de status ativo, inativo e falhas do transporte; respeitar temas, traduções, versão Web LAN, Setup/Portable e atualização de interface.
+- **Aceite:** migração sem perda de preferências; duas mensagens privadas distintas geram duas respostas; repetição da mesma não; cenários RF/APRS-IS, TX bloqueado, conteúdo vazio e anti-loop em testes unitários e visuais.
+- **Rastreamento:** [issue #125](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/125). **Apenas backlog; não implementado nesta etapa**.
+
 ## PENDENTE — Indicadores compactos TX ○ RX ○ agregando APRS-IS e TNC/RF (#124, 18/10/2026)
 
 - **Referência visual do operador:** substituir o componente de setas ↑/↓ da barra superior por **TX ○  RX ○**, texto fixo e dois LEDs circulares compactos.
