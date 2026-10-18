@@ -1,4 +1,4 @@
-## PENDENTE — README: Downloads no topo, acumulados históricos por tipo de instalador (#127, 18/10/2026)
+## IMPLEMENTADO — README: Downloads no topo, acumulados históricos por tipo de instalador (#127, 18/10/2026)
 
 - **Localização:** mover **Downloads** para o início do `README.md`, logo após o título/descrição breve do projeto e antes de changelogs/versões. Montar uma **única tabela Markdown** com colunas `Sistema`, `Tipo de pacote`, `Arquitetura`, `Baixar versão atual` e, **obrigatoriamente por último**, `Downloads acumulados`.
 - **Métrica solicitada:** a última coluna deve somar downloads históricos por **tipo de instalador em todas as versões desde o início do projeto**, **não apenas os da release atual**. Distinguir Windows Setup/Portable x64/ARM64/Legacy, Linux AppImage/DEB/TAR.GZ x86_64/ARM64 e macOS DMG Intel/Apple Silicon; não somar formatos diferentes na mesma linha.
@@ -7,7 +7,7 @@
 - **Preservação daqui em diante:** snapshots por ID de asset, release, categoria, contador e hora de coleta; preservar o maior contador observado de um asset quando retirado ou republicado, sem duplicar contagens. Sincronizar após releases e diariamente, indicar data/hora UTC e evitar commits quando não houver alteração.
 - **Escopo de contagem:** somente pacotes do aplicativo. Excluir PDF, checksums, SBOM, fontes, licenças, diagnósticos, Actions Artifacts e duplicações. Contagens representam **downloads de arquivo**, não instalações ou usuários únicos. Totais opcionais por sistema exigem a mesma ressalva de cobertura histórica.
 - **Implantação/testes:** revisar `tools/sync_readme_release_downloads.py` e `tools/update_download_stats.py`, junto aos testes de README; não ativar marcadores antigos `DOWNLOAD_STATS_START/END` sem adequação. Cobrir paginação da API, contagens por formato/arquitetura, histórico parcial, assets removidos e republicados, lançamento novo, atualização diária e links reais.
-- **Rastreamento:** [issue #127](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/127). **Status: backlog registrado, não implementado nesta alteração.**
+- **Rastreamento:** [issue #127](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/127). **Status: implementado em `main` e issue #127 encerrada.** Primeira coleta automática executada: 70 assets recuperáveis (releases v1.14.42–v1.14.46), mínimo histórico comprovável ≥ 26 downloads; assets antigos já excluídos não são recuperáveis. README exibindo tabela no topo, snapshot persistente em `data/release_download_history.json`, workflow diário e sincronização após novas releases; testes locais e execução automática bem-sucedidos.
 
 ## EM TESTES — v1.14.46: Automações, LEDs TX/RX unificados e rejeição APRS inválido (#125 #124 #121)
 
