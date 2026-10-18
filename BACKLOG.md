@@ -1,3 +1,10 @@
+## P0 — PP5AU Radtel RT-950 Pro UART KISS / COM10 sem RX (#118, 18/10/2026)
+
+- **Equipamento/relato:** Radtel RT-950 Pro no modo TNC KISS UART, cabo USB-serial CH340 COM10, funcionando em versões anteriores; v1.14.42/.43 portáteis abrem a COM mas permanecem aguardando tráfego e sem bytes RX.
+- **Hipótese técnica prioritária:** SQLite registra **9600 bps**, enquanto notas de firmware do RT-950 Pro documentam **115200 bps para TNC UART** e configuração de reporte **RX/Both** (https://linuxslate.com/forum/viewtopic.php?p=190). Confirmar versão exata do firmware e configurações anteriores; não confundir baud da UART com modulação RF.
+- **Controle de regressão:** `tnc_service.py` e `tnc.js` sem alterações entre v1.14.34–v1.14.43; investigar persistência/migração da velocidade, edição portátil, modo de reporte UART, firmware, ligação RX e parâmetros seriais.
+- **Teste seguro:** operador alterar COM10 para 115200 no Client, salvar e reconectar com transmissão RF não acionada, rádio TNC Reporting RX/Both, e verificar contadores bytes/KISS/AX.25; se continuar 0, comparar monitor serial, cabo/pinagem e firmware com ferramenta que funcionava anteriormente.
+- **Status:** P0 aberto, hardware não testado nesta etapa, causa ainda não confirmada. [Issue #118](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/118).
 ## DIAGNÓSTICO DE CAMPO — data.rar PP5AU, TNC RX zerado e enlaces RF inferidos (18/10/2026)
 
 - **Origem:** archive `data.rar` enviado pelo operador de PP5AU; evidência analisada localmente sem publicar o banco, credenciais, posições ou logs brutos.
