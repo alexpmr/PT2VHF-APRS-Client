@@ -48,7 +48,7 @@ class CurrentReleaseDownloadTests(unittest.TestCase):
         self.assertIn("| Windows 10/11 | Instalador EXE | x64 |", text)
         self.assertIn("| 8 |", text)
         self.assertIn("| 6 |", text)
-        self.assertIn("**Total de downloads dos pacotes da v1.14.46: 14.**", text)
+        self.assertIn("**Total contabilizado dos pacotes da v1.14.46: 14.**", text)
         self.assertNotIn("≥", text)
         self.assertNotIn("acumulados", text.lower())
         self.assertNotIn("814", text)
@@ -68,7 +68,7 @@ class CurrentReleaseDownloadTests(unittest.TestCase):
         missing = release("v1.14.46", asset(1, "PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe", None))
         text = d.build_section(missing)
         self.assertIn("| Windows 10/11 | Instalador EXE | x64 |", text)
-        self.assertIn("| Baixar]", text)
+        self.assertIn("[Baixar](", text)
         self.assertIn("| — |", text)
         self.assertIn("| Windows 10/11 | Portátil EXE | x64 | Indisponível | — |", text)
 
