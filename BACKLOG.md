@@ -1,3 +1,11 @@
+## EM TESTES — v1.14.44: beacon multicanal, RT-950 Pro e RF inferido (#119, #118, #116)
+
+- **Implementado na PR #120, pendente de CI/release:** clique manual (ícone da barra e Configuração) e beacon automático enviam por cada transporte operacional e autorizado: APRS-IS e TNC/RF. Sem cooldown manual; sucesso/erro independentes por meio; sem cabeçalho TCPIP* no frame AX.25. O TNC coloca o pacote na fila, sem afirmar irradiação RF.
+- **Radtel RT-950 Pro (#118):** perfil configurável UART KISS 115200 bps por ação explícita, sem mudar a COM/baud salva em atualizações. A falha PP5AU (COM10 CH340 sem bytes RX) continua **P0 aberta** até validação física com firmware, TNC em RX/Both e captura KISS real.
+- **Enlaces órfãos (#116):** a visão geral deixa de representar RF apenas inferido de APRS-IS quando a geometria histórica não corresponde aos marcadores atuais dentro de 5 km. Eventos e evidências continuam na API/SQLite e podem ser examinados em rotas detalhadas. Precisa validação em mapa com base real; **P1 permanece aberto**.
+- **Demais pendências:** recursos antigos e bugs não foram automaticamente encerrados. Diferenciar implemen­tação candidata de correção validada em rádio real.
+- **Rastreamento:** https://github.com/alexpmr/PT2VHF-APRS-Client/pull/120
+
 ## P0 — PP5AU Radtel RT-950 Pro UART KISS / COM10 sem RX (#118, 18/10/2026)
 
 - **Equipamento/relato:** Radtel RT-950 Pro no modo TNC KISS UART, cabo USB-serial CH340 COM10, funcionando em versões anteriores; v1.14.42/.43 portáteis abrem a COM mas permanecem aguardando tráfego e sem bytes RX.
