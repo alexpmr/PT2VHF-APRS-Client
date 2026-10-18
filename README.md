@@ -1,4 +1,6 @@
-# PT2VHF APRS Client - v1.14.42
+# PT2VHF APRS Client - v1.14.43
+
+A **v1.14.43** mantém apenas o último enlace RF válido de cada repetidor móvel, acrescenta expiração configurável e filtro independente em Ver, sem eliminar o histórico SQLite. Os binários da v1.14.42 continuam como último download confirmado até a publicação da v1.14.43.
 
 A **v1.14.42** introduz RF temporário por 3 horas, entrada de coordenadas por Grid Locator Maidenhead e gauges CPU/RAM compactos, preservando as correções de trackers móveis e da barra do mapa. **Ainda há pendências abertas no BACKLOG.md** (incluindo correlação avançada de cobertura RF, Web LAN e validação do atualizador em máquinas afetadas). Não há declaração de backlog integralmente encerrado.
 
