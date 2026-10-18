@@ -1,5 +1,34 @@
 # PT2VHF APRS Client - v1.14.46
 
+Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
+
+<!-- DOWNLOAD_TABLE_START -->
+## Downloads — versão 1.14.46
+
+| Sistema | Tipo de pacote | Arquitetura | Baixar versão disponível | Downloads acumulados |
+|---|---|---|---|---:|
+| Windows 10/11 | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe) | — |
+| Windows 10/11 | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_x64_v1.14.46.exe) | — |
+| Windows 10/11 | Instalador EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_ARM64_v1.14.46.exe) | — |
+| Windows 10/11 | Portátil EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_ARM64_v1.14.46.exe) | — |
+| Windows 7 Legacy | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.46.exe) | — |
+| Windows 7 Legacy | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.46.exe) | — |
+| Linux | AppImage | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_x86_64_v1.14.46.AppImage) | — |
+| Linux | DEB | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_amd64.deb) | — |
+| Linux | TAR.GZ | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_x86_64_v1.14.46.tar.gz) | — |
+| Linux | AppImage | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_arm64_v1.14.46.AppImage) | — |
+| Linux | DEB | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_arm64.deb) | — |
+| Linux | TAR.GZ | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_arm64_v1.14.46.tar.gz) | — |
+| macOS | DMG | Intel x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_x86_64_v1.14.46.dmg) | — |
+| macOS | DMG | Apple Silicon | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_arm64_v1.14.46.dmg) | — |
+
+**Contadores:** aguardando a primeira coleta automática das GitHub Releases.
+
+> Os contadores serão exibidos como **mínimo histórico conhecido (≥)**: assets excluídos antes da coleta não têm histórico recuperável. Cada linha contará downloads do arquivo por tipo e arquitetura, não instalações ou usuários únicos.
+
+[Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Manual_v1.14.46.pdf) · [Notas da versão atual](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.14.46) · [Todas as versões](https://github.com/alexpmr/PT2VHF-APRS-Client/releases)
+<!-- DOWNLOAD_TABLE_END -->
+
 A **v1.14.46** inaugura a aba **Automações** com **Auto-resposta**, migrada de Configuração e mantendo preferências salvas. Mensagens privadas novas podem receber respostas automáticas individuais, com proteção contra duplicatas, respostas reconhecidas e excesso de mensagens. O indicador compacto **TX ○ RX ○** mostra atividade combinada APRS-IS e TNC/RF. A ingestão APRS passa a rejeitar latitude/longitude com minutos inválidos na posição não comprimida (por exemplo, o PP5BLU-15), preservando pacotes brutos e omitindo do mapa eventos históricos malformados. **Pendências de campo e backlog não encerradas:** RX serial RT-950 Pro (#118), identificação completa de enlaces órfãos (#116) e saneamento de posições antigas de estações contaminadas.
 
 A **v1.14.45** corrige uma regressão visual da v1.14.44: os enlaces RF comuns (inclusive os inferidos pelo path) voltam a ser **contínuos e visíveis na cor configurada**. O tracejado continua reservado à Internet/iGate, sem alterar os estilos próprios dos enlaces RF móvel e temporário. A evidência inferida permanece identificada no popup, sem ser apresentada como RF direto confirmado. Preserva as melhorias de beacon multicanal da v1.14.44. **Correção de origem dos enlaces órfãos, recepção UART do Radtel e validação de coordenadas APRS malformadas seguem em backlog.**
@@ -23,52 +52,6 @@ A **v1.14.37** introduz **Caminhos possíveis** na análise RF, independente do 
 A **v1.14.36** corrige a apresentação de enlaces RF inferidos (cinza tracejado, sem marcá-los como RF direto confirmado); no mapa geral, trechos inferidos acima de 250 km sem comprovação direta não são desenhados como uma reta física, mas seguem no histórico e na análise de rotas. A validação da posição histórica foi reforçada. Novas instalações recebem o filtro APRS-IS `r/4000` (raio de 4.000 km em torno da estação; requer latitude/longitude válidas); instalações existentes conservam os filtros salvos. O botão de geolocalização explica a necessidade de HTTPS ou localhost, sem tentar contornar as restrições do navegador. A validação com os registros RF reais permanece necessária.
 
 A **v1.14.35** corrige a geometria histórica dos enlaces RF de **digipeaters/iGates móveis**. O PT2AP pode ter repetido estações do Sul por RF de verdade: esses contatos permanecem onde ocorreram, mesmo após o carro chegar a Uberaba e Brasília. O mapa agora usa registros `topology_events` com coordenadas e instante do evento, divide contatos por localidades e preserva a classificação RF/APRS-IS. Se o histórico não contiver coordenadas confiáveis, não inventa uma linha até a posição atual da estação. O histórico SQLite e os recordes não são apagados; a exportação KML também usa geometria histórica. As correções das versões anteriores permanecem incluídas. **A aceitação definitiva depende de teste com os dados reais do PT2AP.** O ciclo completo inclui Windows 10/11 x64/ARM64, Windows 7 Legacy, Linux x64/ARM64, macOS Intel/Apple Silicon e manual em PDF.
-
-## Downloads — versão 1.14.46
-
-**Links diretos de todos os instaladores e edições portáteis publicados na release v1.14.46.**
-
-### Windows 10 / 11 — x64 (Intel / AMD)
-
-- [Instalador Windows x64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_x64_v1.14.46.exe)
-- [Portable Windows x64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_x64_v1.14.46.exe)
-
-### Windows 10 / 11 — ARM64
-
-- [Instalador Windows ARM64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_ARM64_v1.14.46.exe)
-- [Portable Windows ARM64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Portable_ARM64_v1.14.46.exe)
-
-### Windows 7 SP1 — x64 (Legacy)
-
-- [Instalador Windows 7 Legacy](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.46.exe)
-- [Portable Windows 7 Legacy](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.46.exe)
-
-> A edição Legacy usa um runtime próprio para Windows 7 SP1 x64 e não exige WebView2. A validação física da janela transitória no Windows 7 permanece pendente; consulte [instruções do Windows 7](docs/WINDOWS7.md).
-
-### Linux — x86_64 (Intel / AMD)
-
-- [AppImage Linux x86_64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_x86_64_v1.14.46.AppImage)
-- [Pacote DEB Linux x86_64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_amd64.deb)
-- [Pacote portátil TAR.GZ Linux x86_64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_x86_64_v1.14.46.tar.gz)
-
-### Linux — ARM64
-
-- [AppImage Linux ARM64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_arm64_v1.14.46.AppImage)
-- [Pacote DEB Linux ARM64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/pt2vhf-aprs-client_1.14.46_arm64.deb)
-- [Pacote portátil TAR.GZ Linux ARM64](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Linux_arm64_v1.14.46.tar.gz)
-
-### macOS
-
-- [Instalador macOS Apple Silicon (ARM64)](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_arm64_v1.14.46.dmg)
-- [Instalador macOS Intel (x86_64)](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_macOS_x86_64_v1.14.46.dmg)
-
-### Manual e histórico
-
-- [Manual ilustrado em PDF — v1.14.46](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.46/PT2VHF_APRS_Client_Manual_v1.14.46.pdf)
-- [Release completa v1.14.46 — notas, integridade e outros arquivos](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.14.46)
-- [Todas as versões](https://github.com/alexpmr/PT2VHF-APRS-Client/releases)
-
-> **Importante:** todos os links acima são conferidos contra os arquivos efetivamente publicados na release v1.14.46. Para testar versões futuras ainda não publicadas, utilize a página de [Releases](https://github.com/alexpmr/PT2VHF-APRS-Client/releases) em vez de links antecipados.
 
 ## Novidades da v1.14.35
 
