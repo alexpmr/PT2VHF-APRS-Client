@@ -532,6 +532,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="$(tr -d '\r\n ' < VERSION)"
+          tag="v$version"
           PT2VHF_RELEASE_VERSION="$version" python tools/sync_readme_release_downloads.py
 
           latest="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')"
