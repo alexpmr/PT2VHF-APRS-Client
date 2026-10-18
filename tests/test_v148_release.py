@@ -45,7 +45,7 @@ def test_v148_auto_reply_defaults_persist_and_are_disabled_by_default():
         db.DB_PATH = original
 
 
-def test_v148_auto_reply_only_direct_message_and_has_cooldown(monkeypatch):
+def test_v148_auto_reply_to_distinct_private_messages_without_cooldown(monkeypatch):
     original = db.DB_PATH
     try:
         with tempfile.TemporaryDirectory() as td:
@@ -85,7 +85,10 @@ def test_v148_auto_reply_only_direct_message_and_has_cooldown(monkeypatch):
                 "PY2ABC-9>APRS::BLN0     :Boletim",
             )
 
-            assert sent == [("PY2ABC-9", "Recebido automaticamente.", "aprs_is", True)]
+            assert sent == [
+                ("PY2ABC-9", "Recebido automaticamente.", "aprs_is", True),
+                ("PY2ABC-9", "Recebido automaticamente.", "aprs_is", True),
+            ]
     finally:
         db.DB_PATH = original
 
