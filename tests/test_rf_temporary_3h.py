@@ -86,7 +86,7 @@ def test_internet_edges_are_not_reclassified_temporary():
 
 
 def test_mobile_trackers_remain_hidden_even_when_rf_is_recent():
-    assert edges([ev(0.1, target="PT2TRACK-9")], mobile={"PT2TRACK-9"}) == []
+    assert edges([ev(0.1, target="PT2TRACK-9")], mobile={"PT2TRACK-9"})[0]['kind'] == 'rf_mobile'
     assert edges([ev(0.1, source="PT2TRACK-9")], mobile={"PT2TRACK-9"}) == []
 
 

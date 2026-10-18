@@ -1695,7 +1695,7 @@ def test_v1710_unified_map_items_objects_and_internet_handoff():
     assert "segment.internet_handoff" in js
     assert "APRS-IS" in js
     assert "edge.kind === 'igate' && !state.igateLinksEnabled" in js
-    assert "edge.kind !== 'igate' && !state.rfLinksEnabled" in js
+    assert "edge.kind !== 'igate' && edge.kind !== 'rf_mobile' && !state.rfLinksEnabled" in js
     assert "objectMarkers: new Map()" in js
     assert "tracklogEnabled:" in js
     assert "rfLinksEnabled:" in js
@@ -2273,7 +2273,7 @@ def test_v1111_frontend_keeps_rf_and_internet_distinct_for_mixed_topology():
     root = Path(__file__).resolve().parent.parent
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
     assert "const mixedEvidence = Boolean(edge.mixed_evidence)" in js
-    assert "edge.kind === 'igate' ? '7 5' : null" in js
+    assert "edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null" in js
     assert "orderedEdges" in js
     assert "line.bringToFront()" in js
     assert "Também observado via APRS-IS" in js

@@ -39,7 +39,9 @@ def test_moving_digi_not_drawn_as_rf_spider_but_preserved_for_coverage():
                 # Same historical evidence remains available after display suppression.
                 assert conn.execute("SELECT COUNT(*) FROM topology_events").fetchone()[0] == 5
             edges = topology_map.list_map_edges(24)
-            assert len(edges) == 1 and edges[0]["target"] == "PT2FIX-2"
+            assert len(edges) == 2
+            assert {edge['kind'] for edge in edges} == {'rf_mobile', 'rf_temp'}
+            assert len([edge for edge in edges if edge['target'] == 'PT2AP-9']) == 1
             samples = topology_map.list_mobile_rf_coverage(24)
             assert len(samples) >= 2
             assert {p["callsign"] for p in samples} == {"PT2AP-9"}

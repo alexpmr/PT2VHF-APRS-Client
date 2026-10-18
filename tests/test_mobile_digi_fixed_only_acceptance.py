@@ -76,11 +76,13 @@ def test_fixed_only_rf_is_still_visible_even_without_internet():
 def test_moving_target_digi_links_hidden_and_historical_rows_preserved():
     rows = moving_target_rows()
     assert "PT2AP-9" in topology_map.moving_rf_repeaters(rows)
-    assert topology_map._segments_from_events(rows) == []
+    result = topology_map._segments_from_events(rows)
+    assert len(result) == 1 and result[0]['kind'] == 'rf_mobile'
+    assert result[0]['source'] == 'PT2BSB-1'
     assert len(rows) == 4
 
 
-def test_moving_source_digi_must_also_hide_all_lines():
+def test_moving_source_without_relay_evidence_stays_hidden_as_tracker():
     rows = moving_source_rows()
     assert "PT2AP-9" in topology_map.moving_rf_repeaters(rows)
     assert topology_map._segments_from_events(rows) == []
@@ -88,7 +90,8 @@ def test_moving_source_digi_must_also_hide_all_lines():
 
 def test_source_and_target_direction_change_does_not_restore_mobile_line():
     rows = moving_target_rows() + moving_source_rows()
-    assert topology_map._segments_from_events(rows) == []
+    result = topology_map._segments_from_events(rows)
+    assert len(result) == 1 and result[0]['kind'] == 'rf_mobile'
 
 
 def test_mobile_endpoint_suppresses_internet_line_as_well():
@@ -96,7 +99,9 @@ def test_mobile_endpoint_suppresses_internet_line_as_well():
         event("PT2BSB-1", "PT2AP-9", BRASILIA, BRASILIA_DIGI,
               hours=1, kind="igate", medium="APRS-IS", level="internet"),
     ]
-    assert topology_map._segments_from_events(rows) == []
+    result = topology_map._segments_from_events(rows)
+    assert len(result) == 1 and result[0]['kind'] == 'rf_mobile'
+    assert result[0]['kind'] != 'igate'
 
 
 def test_single_invalid_spatial_outlier_does_not_label_fixed_digi_mobile():
@@ -127,7 +132,8 @@ def test_mobile_status_survives_switch_to_one_hour_display():
                     insert_event(conn, row)
                 insert_event(conn, event("PT2BSB-1", "PT2AP-9", BRASILIA,
                                          BRASILIA_DIGI, hours=0.1))
-            assert topology_map.list_map_edges(1) == []
+            result = topology_map.list_map_edges(1)
+            assert len(result) == 1 and result[0]['kind'] == 'rf_mobile'
             with db.connection() as conn:
                 assert conn.execute(
                     "SELECT COUNT(*) FROM topology_events"
@@ -155,7 +161,8 @@ def test_tracklog_displacement_overrides_single_map_event():
                     )
                 insert_event(conn, event("PT2BSB-1", "PT2AP-9", BRASILIA,
                                          BRASILIA_DIGI))
-            assert topology_map.list_map_edges(24) == []
+            result = topology_map.list_map_edges(24)
+            assert len(result) == 1 and result[0]['kind'] == 'rf_mobile'
             with db.connection() as conn:
                 assert conn.execute("SELECT COUNT(*) FROM tracks").fetchone()[0] == 4
         finally:
@@ -171,7 +178,8 @@ def test_mobile_observations_are_available_for_coverage_without_rf_lines():
             with db.connection() as conn:
                 for row in moving_target_rows():
                     insert_event(conn, row)
-            assert topology_map.list_map_edges(24) == []
+            result = topology_map.list_map_edges(24)
+            assert len(result) == 1 and result[0]['kind'] == 'rf_mobile'
             coverage = topology_map.list_mobile_rf_coverage(24)
             assert len(coverage) >= 2
             assert {v["callsign"] for v in coverage} == {"PT2AP-9"}

@@ -1220,6 +1220,26 @@
             </div>
           </label>
           <label class="field">
+            <span>Enlaces móveis — tempo de vida após último contato (horas)</span>
+            <input name="topology_rf_mobile_ttl_hours" id="topologyRfMobileTtl" type="number" min="0.25" max="168" step="0.25" value="3">
+            <small>Somente o último contato válido por estação móvel será mostrado. Padrão: 3 h; mínimo: 15 min; máximo: 7 dias. Os anteriores permanecem apenas no histórico.</small>
+          </label>
+          <label class="field">
+            <span>Cor dos enlaces móveis</span>
+            <div class="color-field-row">
+              <input name="topology_rf_mobile_color" type="color" value="#ff8c3b" aria-label="Cor dos enlaces móveis">
+              <input id="topologyRfMobileColorText" type="text" value="#ff8c3b" maxlength="7" placeholder="#ff8c3b">
+            </div>
+          </label>
+          <label class="field">
+            <span>Espessura dos enlaces móveis</span>
+            <div class="range-field-row">
+              <input name="topology_rf_mobile_width" id="topologyRfMobileWidth" type="range" min="1" max="10" step="1" value="3">
+              <output id="topologyRfMobileWidthValue" for="topologyRfMobileWidth">3 px</output>
+            </div>
+            <small>Categoria separada de RF fixo e temporário. Visibilidade: menu Ver → Enlaces móveis.</small>
+          </label>
+          <label class="field">
             <span>Cor da topologia via IGate</span>
             <div class="color-field-row">
               <input name="topology_igate_color" type="color" value="#ffff00" aria-label="Cor dos enlaces IGate">

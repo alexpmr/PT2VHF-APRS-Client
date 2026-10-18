@@ -1,3 +1,11 @@
+## 1.14.43 - 2026-10-18
+
+- Enlaces RF móveis: somente a observação válida mais recente por estação móvel, sem linhas históricas acumuladas, com geometria do evento e expiração independente.
+- Configuração > Mapas: tempo de vida de enlaces móveis (0,25 a 168 horas; padrão 3 horas), cor e espessura próprias.
+- Ver > Enlaces móveis: nova categoria opcional, com visibilidade persistida e legenda separada de RF fixo/temporário.
+- Testes de regressão: chegada fora de ordem, TTL, path inferido, ausência de coordenadas, direção invertida, configuração e camada visual.
+- Requer validação de campo com exportação da base que originou os enlaces órfãos.
+
 ## 1.14.42 - 2026-10-17
 
 - Atualizador portátil Windows: reinicializar ambiente PyInstaller ao abrir a nova versão; limpar referências ao runtime temporário anterior e restaurar a busca nativa de DLLs no helper.

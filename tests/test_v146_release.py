@@ -134,6 +134,6 @@ def test_v146_frontend_keeps_layers_independent_and_internet_visible():
     else:
         assert "const orderedEdges = [...edges].sort" in js
     assert "if (edge.kind === 'igate' && !state.igateLinksEnabled) continue" in js
-    assert "if (edge.kind !== 'igate' && !state.rfLinksEnabled) continue" in js
+    assert "if (edge.kind !== 'igate' && edge.kind !== 'rf_mobile' && !state.rfLinksEnabled) continue" in js
     assert "line.bringToFront()" in js
-    assert "edge.kind === 'igate' ? '7 5' : null" in js
+    assert "edge.kind === 'igate' ? '7 5' : mobileRf ? '2 5' : null" in js

@@ -159,6 +159,9 @@ DEFAULT_CONFIG = {
     "topology_rf_color": "#ffff00",
     "topology_rf_temporary_color": "#00d9ef",
     "topology_rf_temporary_width": 3,
+    "topology_rf_mobile_color": "#ff8c3b",
+    "topology_rf_mobile_width": 3,
+    "topology_rf_mobile_ttl_hours": 3,
     "topology_igate_color": "#ffff00",
     "topology_width": 1,
     "map_brightness": 100,
@@ -299,6 +302,9 @@ def init_db() -> None:
                 topology_rf_color TEXT NOT NULL DEFAULT '#ffff00',
                 topology_rf_temporary_color TEXT NOT NULL DEFAULT '#00d9ef',
                 topology_rf_temporary_width INTEGER NOT NULL DEFAULT 3,
+                topology_rf_mobile_color TEXT NOT NULL DEFAULT '#ff8c3b',
+                topology_rf_mobile_width INTEGER NOT NULL DEFAULT 3,
+                topology_rf_mobile_ttl_hours REAL NOT NULL DEFAULT 3,
                 topology_igate_color TEXT NOT NULL DEFAULT '#ffff00',
                 topology_width INTEGER NOT NULL DEFAULT 1,
                 map_brightness INTEGER NOT NULL DEFAULT 100,
@@ -630,6 +636,12 @@ def init_db() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN topology_rf_temporary_color TEXT NOT NULL DEFAULT '#00d9ef'")
         if "topology_rf_temporary_width" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN topology_rf_temporary_width INTEGER NOT NULL DEFAULT 3")
+        if "topology_rf_mobile_color" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_mobile_color TEXT NOT NULL DEFAULT '#ff8c3b'")
+        if "topology_rf_mobile_width" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_mobile_width INTEGER NOT NULL DEFAULT 3")
+        if "topology_rf_mobile_ttl_hours" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN topology_rf_mobile_ttl_hours REAL NOT NULL DEFAULT 3")
         if "topology_rf_color" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN topology_rf_color TEXT NOT NULL DEFAULT '#ffff00'")
         if "topology_igate_color" not in config_columns:
@@ -850,6 +862,9 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["track_width"] = int(merged["track_width"] or 2)
     merged["topology_rf_temporary_color"] = str(merged["topology_rf_temporary_color"] or "#00d9ef").lower().strip()
     merged["topology_rf_temporary_width"] = int(merged["topology_rf_temporary_width"] or 3)
+    merged["topology_rf_mobile_color"] = str(merged["topology_rf_mobile_color"] or "#ff8c3b").lower().strip()
+    merged["topology_rf_mobile_width"] = int(merged["topology_rf_mobile_width"] or 3)
+    merged["topology_rf_mobile_ttl_hours"] = float(merged["topology_rf_mobile_ttl_hours"] if merged["topology_rf_mobile_ttl_hours"] not in ("", None) else 3)
     merged["topology_rf_color"] = str(merged["topology_rf_color"] or "#ffff00").lower().strip()
     merged["topology_igate_color"] = str(merged["topology_igate_color"] or "#ffff00").lower().strip()
     merged["topology_width"] = int(merged["topology_width"] or 1)
@@ -917,6 +932,12 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Cor de RF temporário inválida.")
     if "topology_rf_temporary_width" in provided and not (1 <= merged["topology_rf_temporary_width"] <= 10):
         raise ValueError("Espessura de RF temporário deve estar entre 1 e 10.")
+    if "topology_rf_mobile_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_mobile_color"]):
+        raise ValueError("Cor dos enlaces móveis inválida.")
+    if "topology_rf_mobile_width" in provided and not (1 <= merged["topology_rf_mobile_width"] <= 10):
+        raise ValueError("Espessura dos enlaces móveis deve estar entre 1 e 10.")
+    if "topology_rf_mobile_ttl_hours" in provided and not (math.isfinite(merged["topology_rf_mobile_ttl_hours"]) and 0.25 <= merged["topology_rf_mobile_ttl_hours"] <= 168):
+        raise ValueError("Tempo de vida dos enlaces móveis deve estar entre 0,25 h e 168 h.")
     if "topology_rf_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_rf_color"]):
         raise ValueError("Cor dos enlaces RF da topologia inválida.")
     if "topology_igate_color" in provided and not re.fullmatch(r"#[0-9a-fA-F]{6}", merged["topology_igate_color"]):

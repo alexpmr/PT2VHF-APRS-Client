@@ -110,8 +110,36 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
     moving = set()
     for call, bins in positions.items():
         established = [item for item in bins.values() if item[2] >= 2]
-        if any(db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
-               for i, a in enumerate(established) for b in established[i + 1:]):
+        repeated_displacement = any(
+            db.haversine_km(a[0], a[1], b[0], b[1]) >= 25.0
+            for i, a in enumerate(established) for b in established[i + 1:]
+        )
+        # Sparse mobile repeaters can cross many regions with only one packet
+        # in each region. Require THREE mutually displaced observations to
+        # reject the common case of one corrupted GPS point on a fixed digi.
+        unique_positions = list(bins.values())
+        sparse_trip = False
+        if len(unique_positions) >= 3:
+            # Bounded anchor search keeps large map refreshes O(n), not O(n^3)
+            # on thousands of historical GPS buckets.
+            anchors = [unique_positions[0], unique_positions[len(unique_positions)//2],
+                       unique_positions[-1]]
+            anchors += [
+                min(unique_positions, key=lambda p: p[0]),
+                max(unique_positions, key=lambda p: p[0]),
+                min(unique_positions, key=lambda p: p[1]),
+                max(unique_positions, key=lambda p: p[1]),
+            ]
+            for a in anchors:
+                far = [p for p in unique_positions
+                       if db.haversine_km(a[0], a[1], p[0], p[1]) >= 25.0]
+                if far:
+                    b = far[0]
+                    if any(db.haversine_km(b[0], b[1], c[0], c[1]) >= 25.0
+                           for c in far[1:]):
+                        sparse_trip = True
+                        break
+        if repeated_displacement or sparse_trip:
             moving.add(call)
     return moving
 
@@ -119,8 +147,10 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
 
 def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT, *,
                           mobile_callsigns: set[str] | None = None,
+                          mobile_repeater_callsigns: set[str] | None = None,
                           established_rf_pairs: set[tuple[str, str]] | None = None,
-                          now: datetime | None = None) -> list[dict[str, Any]]:
+                          now: datetime | None = None,
+                          mobile_ttl_hours: float = 3.0) -> list[dict[str, Any]]:
     """Group near-coincident event geometries while keeping true GPS snapshots.
 
     The packet-level source/target positions MUST come from topology_events;
@@ -129,8 +159,51 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     segments: dict[tuple[Any, ...], dict[str, Any]] = {}
     media_by_pair: dict[tuple[str, str], set[str]] = defaultdict(set)
     mobile_repeaters = mobile_callsigns if mobile_callsigns is not None else moving_rf_repeaters(rows)
+    # APRS source is often a moving tracker; the target of a USED RF path
+    # is the repeater. Do not reintroduce links from mobile-only transmitters.
+    repeater_targets = (mobile_repeater_callsigns if mobile_repeater_callsigns is not None else {
+        str(dict(raw).get("target") or "").strip().upper() for raw in rows
+        if str(dict(raw).get("kind") or "").strip().lower() == "rf"
+    }) & mobile_repeaters
     established = established_rf_pairs if established_rf_pairs is not None else _established_rf_pairs(rows)
     instant = now or datetime.now(timezone.utc)
+    # A mobile RF repeater owns at most ONE current link, regardless of which
+    # side of an observed hop it was on. Events are selected by timestamp,
+    # never by insertion order or the repeater's latest station-table GPS.
+    ttl = timedelta(hours=max(0.25, min(168.0, float(mobile_ttl_hours))))
+    selected_mobile_events: set[int] = set()
+    occupied_mobile: set[str] = set()
+    candidates = sorted(
+        rows,
+        key=lambda raw: _event_time(dict(raw).get("timestamp"))
+                        or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
+    for candidate in candidates:
+        event = dict(candidate)
+        src_call = str(event.get("source") or "").strip().upper()
+        dst_call = str(event.get("target") or "").strip().upper()
+        moving_endpoints = ({src_call, dst_call} & mobile_repeaters) - {""}
+        owners = moving_endpoints & repeater_targets
+        when = _event_time(event.get("timestamp"))
+        if (not owners or owners != moving_endpoints
+                or owners & occupied_mobile or not src_call
+                or not dst_call or src_call == dst_call
+                or str(event.get("kind") or "").lower() != "rf"
+                or when is None or when > instant + timedelta(minutes=5)
+                or when + ttl <= instant
+                or _validated_position(event.get("source_lat"), event.get("source_lon")) is None
+                or _validated_position(event.get("target_lat"), event.get("target_lon")) is None):
+            continue
+        medium = str(event.get("medium") or "").upper().strip()
+        evidence = str(event.get("evidence_level") or "").lower().strip()
+        # RF received locally is direct; a decoded repeated APRS path can be
+        # displayed as inferred, but never masquerades as directly received RF.
+        if not ((medium == "RF" and evidence == "direct") or evidence == "inferred"):
+            continue
+        selected_mobile_events.add(id(candidate))
+        occupied_mobile.update(owners)
+
     for raw in rows:
         row = dict(raw)
         src = str(row.get("source") or "").strip().upper()
@@ -138,10 +211,14 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
         kind = str(row.get("kind") or "").strip().lower()
         if not src or not dst or src == dst or kind not in {"rf", "igate"}:
             continue
-        # Preserve real RF events for history/coverage, but never draw
-        # spider lines for a repeater observed in multiple distinct regions.
-        if src in mobile_repeaters or dst in mobile_repeaters:
-            continue
+        # Repeated contact history stays in SQLite; only the newest valid
+        # observation for each moving endpoint can draw a single map edge.
+        moving_endpoints = ({src, dst} & mobile_repeaters) - {""}
+        mobile_owners = sorted(moving_endpoints & repeater_targets)
+        if moving_endpoints:
+            if not mobile_owners or id(raw) not in selected_mobile_events:
+                continue
+            kind = "rf_mobile"
         source_pos = _validated_position(row.get("source_lat"), row.get("source_lon"))
         target_pos = _validated_position(row.get("target_lat"), row.get("target_lon"))
         if source_pos is None or target_pos is None:
@@ -160,9 +237,9 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
             kind = "rf_temp"
         src_bin = _rounded_bin(*source_pos)
         dst_bin = _rounded_bin(*target_pos)
-        key = (src, dst, kind, *src_bin, *dst_bin)
+        key = ("rf_mobile", *mobile_owners) if mobile_owners else (src, dst, kind, *src_bin, *dst_bin)
         pair = (src, dst)
-        media_by_pair[pair].add("rf" if kind == "rf_temp" else kind)
+        media_by_pair[pair].add("rf" if kind in {"rf_temp", "rf_mobile"} else kind)
 
         segment = segments.get(key)
         if segment is None:
@@ -181,16 +258,18 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
                 "historical_geometry": True,
                 "geometry_source": "topology_events",
                 "segment_id": (
+                    "mobile:" + ",".join(mobile_owners) if mobile_owners else
                     "{}>{}:{}:{}:{}:{}:{}".format(
                         src, dst, kind, src_bin[0], src_bin[1], dst_bin[0], dst_bin[1]
                     )
                 ),
+                "mobile_callsigns": mobile_owners,
             }
             segments[key] = segment
         segment["packet_count"] += 1
         segment["first_seen"] = min(segment["first_seen"], time_text)
         segment["last_seen"] = max(segment["last_seen"], time_text)
-        if kind in {"rf", "rf_temp"}:
+        if kind in {"rf", "rf_temp", "rf_mobile"}:
             if medium == "RF" and evidence != "inferred":
                 segment["rf_transport_count"] += 1
                 if evidence == "direct":
@@ -210,23 +289,26 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     for edge in ordered:
         mixed = len(media_by_pair[(edge["source"], edge["target"])]) > 1
         edge["mixed_evidence"] = mixed
-        edge["rf_packet_count"] = totals[(edge["source"], edge["target"], "rf")]
+        edge["rf_packet_count"] = (edge["packet_count"] if edge["kind"] == "rf_mobile"
+                                   else totals[(edge["source"], edge["target"], "rf")])
         edge["internet_packet_count"] = totals[(edge["source"], edge["target"], "igate")]
         edge["classification_source"] = (
             "APRS-IS confirmado" if edge["kind"] == "igate" else
+            "RF móvel (último contato; evidência " + ("direta" if edge["rf_direct_count"] else "inferida") + ")" if edge["kind"] == "rf_mobile" else
             "RF temporário (válido por 3h após último contato)" if edge["kind"] == "rf_temp" else
             "RF recebido pelo TNC (posição histórica)" if edge["rf_transport_count"] > 0 else
             "RF inferido do path (posição histórica)"
         )
         # APRS path evidence is not proof of a verified direct RF hop.
         edge["direct_rf_confirmed"] = bool(
-            edge["kind"] in {"rf", "rf_temp"} and edge["rf_direct_count"] > 0
+            edge["kind"] in {"rf", "rf_temp", "rf_mobile"} and edge["rf_direct_count"] > 0
         )
-        edge["rf_inferred"] = edge["kind"] in {"rf", "rf_temp"} and not edge["direct_rf_confirmed"]
-        if edge["kind"] == "rf_temp":
+        edge["rf_inferred"] = edge["kind"] in {"rf", "rf_temp", "rf_mobile"} and not edge["direct_rf_confirmed"]
+        if edge["kind"] in {"rf_temp", "rf_mobile"}:
             expiry = _event_time(edge["last_seen"])
-            edge["expires_at"] = (expiry + RF_TEMPORARY_TTL).isoformat() if expiry else None
-            edge["ttl_hours"] = 3
+            lifetime = ttl if edge["kind"] == "rf_mobile" else RF_TEMPORARY_TTL
+            edge["expires_at"] = (expiry + lifetime).isoformat() if expiry else None
+            edge["ttl_hours"] = round(lifetime.total_seconds() / 3600, 2)
         edge["distance_km"] = round(db.haversine_km(
             edge["source_lat"], edge["source_lon"],
             edge["target_lat"], edge["target_lon"],
@@ -290,7 +372,16 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
         if mobile:
             diag.log_event("topology_map_mobile_status",
                            mobile_count=len(mobile), period_hours=period)
-    return _segments_from_events(rows, mobile_callsigns=mobile, established_rf_pairs=established)
+    config = db.get_config()
+    repeaters = {
+        str(dict(raw).get("target") or "").strip().upper() for raw in reference
+        if str(dict(raw).get("kind") or "").lower() == "rf"
+    }
+    return _segments_from_events(
+        rows, mobile_callsigns=mobile, mobile_repeater_callsigns=repeaters,
+        established_rf_pairs=established,
+        mobile_ttl_hours=float(config.get("topology_rf_mobile_ttl_hours") or 3),
+    )
 
 
 def list_mobile_rf_coverage(hours: float = 0, limit: int = 1200) -> list[dict[str, Any]]:
