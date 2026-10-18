@@ -1043,19 +1043,14 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 _APRS_UNCOMPRESSED_POSITION = re.compile(
-    r"^(?P<latdeg>\\d{2})(?P<latmin>\\d{2}\\.\\d{2})(?P<ns>[NS])"
-    r"(?P<table>[/\\\\A-Za-z0-9])"
-    r"(?P<londeg>\\d{3})(?P<lonmin>\\d{2}\\.\\d{2})(?P<ew>[EW])"
+    r"^(?P<latdeg>\d{2})(?P<latmin>\d{2}\.\d{2})(?P<ns>[NS])"
+    r"(?P<table>[/\\A-Za-z0-9])"
+    r"(?P<londeg>\d{3})(?P<lonmin>\d{2}\.\d{2})(?P<ew>[EW])"
 )
 
 
 def raw_aprs_position_issue(raw: str) -> str | None:
-    """Valida minutos de posição APRS não comprimida antes do parser.
-
-    aprslib pode normalizar incorretamente 26°77.84' para 27°17.84'
-    (coordenada decimal aparentemente válida). Quadros Mic-E e posições
-    comprimidas não são alterados por esta validação específica.
-    """
+    """Checks APRS uncompressed degree/minute syntax before decimal parsing."""
     line = str(raw or "")
     if ":" not in line:
         return None
@@ -1063,23 +1058,23 @@ def raw_aprs_position_issue(raw: str) -> str | None:
     position = ""
     if info.startswith(("!", "=")):
         position = info[1:]
-    elif info.startswith(("/", "@")) and re.match(r"^[\\d]{6}[hz/]", info[1:]):
+    elif info.startswith(("/", "@")) and re.match(r"^\d{6}[hz/]", info[1:]):
         position = info[8:]
     elif info.startswith(";") and len(info) >= 19 and info[10] in "*_" and re.fullmatch(
-        r"[\\d]{6}[hz/]", info[11:18]
+        r"\d{6}[hz/]", info[11:18]
     ):
         position = info[18:]
     elif info.startswith(")"):
-        item = re.match(r"^\\)[^!_]{1,9}[!_](.*)$", info)
+        item = re.match(r"^\)[^!_]{1,9}[!_](.*)$", info)
         if item:
             position = item.group(1)
     if not position:
         return None
-    m = _APRS_UNCOMPRESSED_POSITION.match(position)
-    if not m:
+    match = _APRS_UNCOMPRESSED_POSITION.match(position)
+    if not match:
         return None
-    latdeg, londeg = int(m["latdeg"]), int(m["londeg"])
-    latmin, lonmin = float(m["latmin"]), float(m["lonmin"])
+    latdeg, londeg = int(match["latdeg"]), int(match["londeg"])
+    latmin, lonmin = float(match["latmin"]), float(match["lonmin"])
     if latmin >= 60.0 or lonmin >= 60.0:
         return "invalid_aprs_minutes"
     if latdeg > 90 or londeg > 180 or (latdeg == 90 and latmin) or (londeg == 180 and lonmin):
