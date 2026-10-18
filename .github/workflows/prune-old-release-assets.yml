@@ -1,0 +1,42 @@
+name: Prune Obsolete Release Binaries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/prune_old_release_assets.py
+      - .github/workflows/prune-old-release-assets.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cleanup-old-release-assets
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Verify source and Python syntax
+        run: python3 -m py_compile tools/prune_old_release_assets.py
+      - name: Inspect obsolete distributions (dry run)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: 'true'
+        run: python3 tools/prune_old_release_assets.py
+      - name: Delete obsolete distributions after dry-run and latest-version checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: 'false'
+        run: python3 tools/prune_old_release_assets.py
+      - name: Verify latest download assets still exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/releases/tags/v1.14.42 --jq '.tag_name'
+          gh api repos/${{ github.repository }}/releases/tags/v1.14.42 --jq '.assets | length' | grep -qx 25
