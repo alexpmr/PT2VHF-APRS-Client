@@ -53,16 +53,16 @@ def test_out_of_order_old_packet_and_duplicates_cannot_revive_old_link():
 
 
 def test_mobile_expiration_independent_of_rf_temporary_ttl():
-    old = row(4, "PT2CAR-9", "PT2BSB", (-15.8, -47.9), (-15.79, -47.91))
+    old = row(4, "PT2BSB", "PT2CAR-9", (-15.8, -47.9), (-15.79, -47.91))
     assert mobile([old]) == []
     assert mobile([old], ttl=6)[0]["ttl_hours"] == 6
-    assert mobile([row(0.1, "PT2CAR-9", "PT2BSB", (-15.8, -47.9), (-15.79, -47.91))])[0]["ttl_hours"] == 3
+    assert mobile([row(0.1, "PT2BSB", "PT2CAR-9", (-15.8, -47.9), (-15.79, -47.91))])[0]["ttl_hours"] == 3
 
 
 def test_invalid_newest_does_not_create_orphan_or_use_latest_station_gps():
-    valid = row(1, "PT2CAR-9", "PT2BSB", (-15.8, -47.9), (-15.79, -47.91))
+    valid = row(1, "PT2BSB", "PT2CAR-9", (-15.8, -47.9), (-15.79, -47.91))
     invalid = row(0.1, "PT2CAR-9", "PT2OTH", (-15.6, -47.7), (None, None))
-    assert mobile([valid, invalid])[0]["target"] == "PT2BSB"
+    assert mobile([valid, invalid])[0]["target"] == "PT2CAR-9"
     assert mobile([invalid]) == []
 
 
@@ -83,8 +83,9 @@ def test_aprs_is_igate_not_mobile_contact_but_path_evidence_is_labeled_inferred(
 def test_one_link_max_per_mobile_even_with_two_mobiles_in_same_hop():
     x = row(0.1, "PT2CAR-9", "OTHER-MOBILE", (-15.8, -47.9), (-15.79, -47.91))
     y = row(0.2, "FIXED", "OTHER-MOBILE", (-15.77, -47.90), (-15.79, -47.91))
+    z = row(0.9, "FIXED2", "PT2CAR-9", (-15.75, -47.90), (-15.8, -47.9))
     edges = topology_map._segments_from_events(
-        [y, x], now=NOW,
+        [z, y, x], now=NOW,
         mobile_callsigns={"PT2CAR-9", "OTHER-MOBILE"})
     assert len(edges) == 1
     assert edges[0]["mobile_callsigns"] == ["OTHER-MOBILE", "PT2CAR-9"]
@@ -99,6 +100,12 @@ def test_sparse_trip_with_three_separated_events_is_mobile_but_one_outlier_is_no
     assert "PT2CAR-9" in topology_map.moving_rf_repeaters(rows)
     assert len(topology_map._segments_from_events(rows, now=NOW)) == 1
     assert "PT2CAR-9" not in topology_map.moving_rf_repeaters(rows[:2])
+
+
+
+def test_mobile_transmitter_without_relay_role_remains_hidden():
+    tracker = row(0.1, "PT2CAR-9", "FIXED", (-15.8, -47.9), (-15.79, -47.91))
+    assert mobile([tracker]) == []
 
 
 
