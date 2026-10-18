@@ -1,3 +1,12 @@
+## NOVA CAUSA CONFIRMADA — APRS latitude malformada PP5BLU-15 contamina topologia (#121, 18/10/2026)
+
+- **Evidência PP5AU:** pacote `PP5BLU-15>APBK20,WIDE1-1,WIDE2-1,qAR,PP5APR-10:!2677.84S/04900.03W#...` contém latitude 26°77,84'S (minutos APRS fora do intervalo válido). A indicação de app externo `Location changes too fast (adaptive limit)` não prova processamento no Client.
+- **Defeito duplo:** (1) beacon transmitido pelo digipeater tem coordenada incorreta; (2) o APRS Client aceitou e converteu a latitude para -27,297333°, persistindo estações, tracklog e eventos de topologia. O banco de PP5AU contém 13 beacons PP5BLU-15 iguais e enlaces inferidos via iGate PP5APR-10 contaminados.
+- **Outro dado:** a estação PP5BLU-14 transmitiu um objeto PP5BLU-15 com posição distinta (~44 km). Não considerar o objeto automaticamente autoritativo nem tentar adivinhar a coordenada correta do beacon.
+- **Correção necessária:** validar formato original APRS DDMM.mm/DDDMM.mm **antes** de aceitar posição em APRS-IS ou RF; minutos em [0,60); preservar pacote bruto, indicativo e log para auditoria sem atualizar coordenadas/tracklogs/linhas; sinalizar anomalia e não reutilizar geometria de eventos históricos contaminados. Testar formatos convencionais válidos, objetos, timestamps e Mic-E sem regressão.
+- **Release 1.14.44:** seu filtro visual de posição histórica é insuficiente quando o próprio banco contém uma coordenada falsa e coerente com o marcador atual; corrigir no parser/persistência antes de considerar enlaces órfãos solucionados.
+- **Classificação:** `medium=APRS-IS`, `evidence_level=inferred` com `qAR` não comprova RX na COM10 de PP5AU. A issue #118 de TNC sem bytes permanece independente.
+- **Rastreamento:** [issue #121](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/121) e [issue #116](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/116). **Pendente; não testado nem publicado como correção.**
 ## EM TESTES — v1.14.44: beacon multicanal, RT-950 Pro e RF inferido (#119, #118, #116)
 
 - **Implementado na PR #120, pendente de CI/release:** clique manual (ícone da barra e Configuração) e beacon automático enviam por cada transporte operacional e autorizado: APRS-IS e TNC/RF. Sem cooldown manual; sucesso/erro independentes por meio; sem cabeçalho TCPIP* no frame AX.25. O TNC coloca o pacote na fila, sem afirmar irradiação RF.
