@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.45": {
+        "title": "Enlaces RF novamente contínuos e na cor configurada",
+        "items": [
+            "RF comum, direto ou inferido, volta a ser representado com linha contínua e cor/espessura configuradas.",
+            "Internet/iGate permanece tracejado; RF temporário e móvel conservam seus estilos específicos.",
+            "Origem e grau de confirmação continuam no popup/hover sem confundir RF inferido com confirmado.",
+            "Testes de regressão visual acrescentados; verificar contraste com dados reais em todos os temas.",
+            "TNC PP5AU, coordenadas APRS malformadas e enlaces órfãos ainda precisam de validação e correções próprias.",
+        ],
+    },
     "1.14.44": {
         "title": "Beacon multicanal, RT-950 Pro e redução de enlaces RF órfãos",
         "items": [

@@ -1,3 +1,10 @@
+## EM TESTES — v1.14.45: restauração do contraste e traço RF normal (#122)
+
+- **Bug confirmado na v1.14.44:** arestas RF inferidas ficaram cinza `#9ca3af`, tracejadas `5 6` e de baixíssimo contraste nas capturas de Brasília.
+- **Correção candidata:** RF fixo (direto e inferido) usa `topology_rf_color`, `topology_width` e traço contínuo. Internet/iGate continua tracejado com cor própria; enlaces móveis e temporários preservam as características anteriores.
+- **Sem mudança de evidência:** inferência permanece declarada no popup e no histórico. A correção visual não resolve sozinha os enlaces órfãos (#116), a coordenada inválida PP5BLU-15 (#121) nem a COM10 sem bytes do PP5AU (#118).
+- **Aceite:** testes automatizados e screenshots com temas claro/escuro/cinza e período selecionado. [Issue #122](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/122).
+
 ## NOVA CAUSA CONFIRMADA — APRS latitude malformada PP5BLU-15 contamina topologia (#121, 18/10/2026)
 
 - **Evidência PP5AU:** pacote `PP5BLU-15>APBK20,WIDE1-1,WIDE2-1,qAR,PP5APR-10:!2677.84S/04900.03W#...` contém latitude 26°77,84'S (minutos APRS fora do intervalo válido). A indicação de app externo `Location changes too fast (adaptive limit)` não prova processamento no Client.

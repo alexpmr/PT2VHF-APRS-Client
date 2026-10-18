@@ -1,4 +1,6 @@
-# PT2VHF APRS Client - v1.14.44
+# PT2VHF APRS Client - v1.14.45
+
+A **v1.14.45** corrige uma regressão visual da v1.14.44: os enlaces RF comuns (inclusive os inferidos pelo path) voltam a ser **contínuos e visíveis na cor configurada**. O tracejado continua reservado à Internet/iGate, sem alterar os estilos próprios dos enlaces RF móvel e temporário. A evidência inferida permanece identificada no popup, sem ser apresentada como RF direto confirmado. Preserva as melhorias de beacon multicanal da v1.14.44. **Correção de origem dos enlaces órfãos, recepção UART do Radtel e validação de coordenadas APRS malformadas seguem em backlog.**
 
 A **v1.14.44** distribui beacons manuais (inclusive ícone do cabeçalho) e automáticos por todas as conexões ativas/autorizadas: APRS-IS e TNC/RF. O envio manual não tem cooldown; o status diferencia entrega APRS-IS, entrada na fila RF e falhas parciais. Adiciona perfil Radtel RT-950 Pro com sugestão explícita de KISS UART 115200, sem sobrescrever configuração anterior; reduz linhas órfãs de RF meramente inferido na visão geral. **Teste em rádio físico, cobertura RF e depuração da origem da ausência RX em COM10 continuam pendentes de confirmação.**
 
