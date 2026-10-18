@@ -316,6 +316,41 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     return ordered
 
 
+def mark_overview_endpoint_coherence(
+    edges: list[dict[str, Any]], positions: dict[str, tuple[float, float]],
+    max_displacement_km: float = 5.0,
+) -> list[dict[str, Any]]:
+    """Prevent APRS-IS-only inferred history from drawing orphan-looking RF.
+
+    Coordinates in topology_events remain untouched. Inferred-only RF is
+    visible on the overview ONLY when both latest station markers would
+    coincide with the historic endpoints within a small tolerance. The full
+    event geometry remains available to route analysis/JSON and SQLite.
+    Directly received RF, mobile/latest and Internet edges are unaffected.
+    """
+    for edge in edges:
+        edge["render_on_overview"] = True
+        edge["endpoint_geometry_warning"] = ""
+        if edge.get("kind") != "rf" or bool(edge.get("direct_rf_confirmed")):
+            continue
+        mismatches = []
+        for call_field, lat_key, lon_key in (
+            ("source", "source_lat", "source_lon"),
+            ("target", "target_lat", "target_lon"),
+        ):
+            call = str(edge.get(call_field) or "").strip().upper()
+            latest = positions.get(call)
+            event_pos = _validated_position(edge.get(lat_key), edge.get(lon_key))
+            if not latest or not event_pos:
+                mismatches.append(call + ": marcador atual indisponível")
+            elif db.haversine_km(*latest, *event_pos) > max_displacement_km:
+                mismatches.append(call + ": posição histórica diferente da atual")
+        if mismatches:
+            edge["render_on_overview"] = False
+            edge["endpoint_geometry_warning"] = "; ".join(mismatches)
+    return edges
+
+
 def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
     """Map-only topology: immutable event locations, never latest station GPS.
 
@@ -369,6 +404,14 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
         ).fetchall()
         mobile = moving_rf_repeaters(reference, tracks)
         established = _established_rf_pairs(reference)
+        positions = {}
+        for station in conn.execute(
+            "SELECT callsign,latitude,longitude FROM stations "
+            "WHERE latitude IS NOT NULL AND longitude IS NOT NULL"
+        ):
+            position = _validated_position(station["latitude"], station["longitude"])
+            if position:
+                positions[str(station["callsign"] or "").strip().upper()] = position
         if mobile:
             diag.log_event("topology_map_mobile_status",
                            mobile_count=len(mobile), period_hours=period)
@@ -377,11 +420,12 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
         str(dict(raw).get("target") or "").strip().upper() for raw in reference
         if str(dict(raw).get("kind") or "").lower() == "rf"
     }
-    return _segments_from_events(
+    segments = _segments_from_events(
         rows, mobile_callsigns=mobile, mobile_repeater_callsigns=repeaters,
         established_rf_pairs=established,
         mobile_ttl_hours=float(config.get("topology_rf_mobile_ttl_hours") or 3),
     )
+    return mark_overview_endpoint_coherence(segments, positions)
 
 
 def list_mobile_rf_coverage(hours: float = 0, limit: int = 1200) -> list[dict[str, Any]]:
