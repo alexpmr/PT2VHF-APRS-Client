@@ -8425,8 +8425,17 @@
       ), 'error');
     }
     try {
-      await api('/api/beacon', { method:'POST' });
-      toast(ui('Beacon enviado ao APRS-IS.', 'Beacon sent to APRS-IS.'), 'ok');
+      const result = await api('/api/beacon', { method:'POST' });
+      const channels = result?.transports || {};
+      const describe = (key, name) => {
+        const item = channels[key] || {};
+        if (item.status === 'sent') return name + ': enviado';
+        if (item.status === 'queued') return name + ': enfileirado no TNC';
+        if (item.status === 'error') return name + ': falhou (' + (item.error || 'erro') + ')';
+        return name + ': indisponível';
+      };
+      const partial = Object.values(channels).some(item => item.status === 'error');
+      toast(describe('aprs_is', 'APRS-IS') + ' · ' + describe('tnc', 'TNC/RF'), partial ? 'error' : 'ok');
     } catch (err) {
       toast(err.message, 'error');
     } finally {
