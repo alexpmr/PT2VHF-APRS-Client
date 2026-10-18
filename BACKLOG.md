@@ -1,3 +1,11 @@
+## EM TESTES — v1.14.46: Automações, LEDs TX/RX unificados e rejeição APRS inválido (#125 #124 #121)
+
+- **Auto-resposta (#125):** aba Automações criada; card retirado de Configurações e migrado sem regravar preferências antigas. Mensagens privadas distintas seguidas são respondidas; controles anti-loop mantidos por conteúdo reconhecido, deduplicação e limite de 12 respostas/janela configurável. Exige teste real entre estações APRS.
+- **TX ○ RX ○ (#124):** barra apresenta LEDs independentes de TX/RX para APRS-IS e contadores de bytes reais do TNC. Conexão sem bytes não acende indicador. Tooltip separa meios; precisa teste visual nos temas.
+- **Latitude PP5BLU-15 (#121):** APRS DDMM.mm com 77,84 minutos ou valor >=60 é rejeitado antes de gravar nova posição/topologia; raw e pacote continuam íntegros. Na visão geral, eventos históricos com payload bruto malformado são filtrados sem apagar o SQLite. A posição de estação antiga já contaminada precisa saneamento assistido e não foi alterada automaticamente.
+- **P0 e P1 não encerrados:** COM10 RT-950 Pro sem bytes RX (#118), demais causas de enlaces órfãos (#116), problemas do portable updater e backlog histórico permanecem até repro/testes físicos.
+- **Status:** implementado na branch v1.14.46, aguardando CI e compilação antes de declarar publicado.
+
 ## PENDENTE — Aba Automações: primeiro item Auto-resposta, migrar de Configurações (#125, 18/10/2026)
 
 - **Novo menu/aba Automações:** criar aba principal dedicada e iniciar com o card **Auto-resposta** (ligar/desligar, texto personalizado e Salvar). Sem automações adicionais neste pedido; estrutura preparada para futuras funções.
