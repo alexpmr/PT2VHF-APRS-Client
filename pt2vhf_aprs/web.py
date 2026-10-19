@@ -523,6 +523,7 @@ def get_update_status(force: bool = False) -> dict:
         "asset_ready": False,
         "update_mode": updater.current_update_mode(),
         "install_supported": updater.install_supported(),
+        "last_apply": updater.last_update_result(),
         "downloaded": False,
         "status": "unknown",
         "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

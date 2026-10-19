@@ -324,6 +324,7 @@
     try {
       const data = await api(`/api/update-status${force ? '?force=1' : ''}`, { signal: controller.signal });
       state.updateInfo = data;
+      reportLastUpdateApply(data.last_apply);
       el.classList.remove('checking');
 
       const current = data.current_version ? `v${data.current_version}` : ui('versão atual', 'current version');
@@ -363,6 +364,22 @@
       clearTimeout(timeout);
       state.versionCheckInProgress = false;
     }
+  }
+
+  // #103: o helper do Setup só registra sucesso quando a instância relançada
+  // confirma a versão alvo; avisa uma única vez quando isso não acontece.
+  function reportLastUpdateApply(result) {
+    if (!result || result.status === 'ok') return;
+    const key = `pt2vhf.updateApplyReported.${result.recorded_at || result.target || ''}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (_) {}
+    const target = result.target ? `v${result.target}` : '';
+    const message = result.status === 'version_mismatch'
+      ? ui(`A instalação de ${target} terminou, mas o programa em execução continua na v${result.found || result.running_version}. Execute o instalador manualmente; detalhes em update_apply.log e installer_setup.log.`,
+           `Installing ${target} finished, but the running program is still v${result.found || result.running_version}. Run the installer manually; details in update_apply.log and installer_setup.log.`)
+      : ui(`A instalação de ${target} não pôde ser confirmada após reiniciar. Verifique a versão exibida; detalhes em update_apply.log.`,
+           `Installing ${target} could not be confirmed after restart. Check the displayed version; details in update_apply.log.`);
+    setUpdateProgress(message, 'error');
+    toast(message, 'error');
   }
 
   function setUpdateProgress(message = '', type = '') {
