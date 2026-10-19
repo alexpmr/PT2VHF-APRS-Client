@@ -1,16 +1,24 @@
-## PENDENTE — APRS 19: versão com tipografia idêntica ao título do aplicativo (#128, 19/10/2026)
+## RELEASE CANDIDATA — v1.14.47 (19/10/2026)
+
+- **Escopo deste ciclo:** tipografia da versão do cabeçalho igual ao título (#128) e remoção de prefixos visíveis no indicador Web (#99).
+- **Preparação:** VERSION, Python, Windows version_info, CHANGELOG e VERSION_NOTES atualizados; testes em `tests/test_v11447_header.py` e validador `tools/apply_release_1_14_47.py`; workflows de compilação atualizados para 1.14.47.
+- **Publicação:** commit com prefixo `release:` dispara pipeline `build-production-current.yml` para instaladores completos e portáteis Windows, Linux e macOS e manual PDF. Não confundir código enviado ao GitHub com artefatos já publicados; acompanhar CI e assets antes de marcar como disponível.
+- **Bloqueadores não resolvidos:** TNC físico COM10 RT-950 Pro (#118), enlaces órfãos reais (#116) e atualização portátil com erro de DLL (#103/#83), exigindo reprodução em hardware e Windows afetados.
+
+
+## EM COMPILAÇÃO — v1.14.47: versão com tipografia idêntica ao título (#128, 19/10/2026)
 
 - **Pedido:** exibir a versão `vX.Y.Z` à direita do nome **PT2VHF APRS Client**, com **mesma fonte, tamanho e peso do título** em vez de texto pequeno.
 - **Origem:** `index.html` contém `h1` com `span.app-version`. Em `app.css`, o título está a 20px e `.app-version` a 13px; aplicar estilo contextual restrito ao `h1` do cabeçalho, preservando as versões de outras páginas como **Sobre**.
 - **Aceite:** responsividade, zoom, legibilidade, temas claro/escuro/cinza; mesma linha sem sobreposição e sem alterar o número de versão ou lógica de atualização.
-- **Rastreamento:** [issue #128](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/128). **Status: backlog, não implementado.**
+- **Rastreamento:** [issue #128](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/128). **Status: código implementado na v1.14.47; testes automatizados e publicação multiplataforma em andamento.**
 
-## PENDENTE — APRS 19: botão Web sem prefixos, somente IP:porta (#99, 19/10/2026)
+## EM COMPILAÇÃO — v1.14.47: indicador Web somente IP:porta (#99, 19/10/2026)
 
 - **Pedido reiterado com captura:** remover o texto **“Web em uso”** do botão no cabeçalho. Remover igualmente os estados `Web LAN:`, `Web local:` e `Web:`; **mostrar apenas IP:porta**, mantendo destaque laranja quando houver sessão Web remota.
 - **Causa:** `app.js::updateWebAccessStatus()` reinjeta prefixos em `#webAccessLabel`; `index.html` traz o valor inicial `Web local:`. Alterar ambos sem permitir reaparição no refresh, mudança de idioma, estado remoto ou reconexão; guardar status textual no tooltip/acessibilidade, fora do botão.
 - **Preservar:** destino real do IP/porta, clique para abrir navegador, ativação Web LAN quando necessário com testes de listener, estados remotos e regras de segurança já previstas.
-- **Rastreamento:** [issue #99](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/99), atualizada. **Status: pendente, não implementado.**
+- **Rastreamento:** [issue #99](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/99), atualizada. **Status: remoção dos prefixos implementada na v1.14.47; ainda pendem validações do clique/ativação LAN previstas na issue #99.**
 
 ## IMPLEMENTADO — README: Downloads por arquivo da versão corrente (#127, revisão 18/10/2026)
 
