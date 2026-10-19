@@ -37,6 +37,11 @@ TNC_DEFAULTS: dict[str, Any] = {
     "serial_baud": 9600,
     "device_profile": "generic_kiss",
     "serial_protocol": "kiss",
+    # Linhas de controle da serial: "default" mantém o comportamento do
+    # pyserial (DTR/RTS ativados ao abrir). Em cabos de rádio o RTS ou DTR
+    # pode acionar PTT ou modo de programação e bloquear a recepção.
+    "serial_dtr": "default",
+    "serial_rts": "default",
     "packet_rf_baud": 1200,
     "tcp_host": "127.0.0.1",
     "tcp_port": 8001,
@@ -449,6 +454,39 @@ def _ensure_schema() -> None:
                 conn.execute("ALTER TABLE tnc_heard ADD COLUMN last_direct_heard TEXT")
         _schema_ready_db_path = db_key
 
+SERIAL_LINE_MODES = {"default", "on", "off"}
+
+
+def open_serial_port(cfg: dict[str, Any], *, timeout: float, write_timeout: float) -> Any:
+    """Abre a porta serial aplicando DTR/RTS antes da abertura.
+
+    Definir as linhas antes de open() evita o pulso que ocorreria se fossem
+    alteradas depois (o pyserial ativa DTR/RTS por padrão ao abrir).
+    """
+    handle = serial.Serial()
+    handle.port = cfg["serial_port"]
+    handle.baudrate = int(cfg["serial_baud"])
+    handle.timeout = timeout
+    handle.write_timeout = write_timeout
+    for line in ("dtr", "rts"):
+        mode = str(cfg.get(f"serial_{line}") or "default")
+        if mode != "default":
+            setattr(handle, line, mode == "on")
+    handle.open()
+    return handle
+
+
+def serial_line_summary(handle: Any) -> str:
+    """Resumo das linhas de controle para diagnóstico (ex.: DTR=1 RTS=0 CTS=1)."""
+    parts = []
+    for label, attr in (("DTR", "dtr"), ("RTS", "rts"), ("CTS", "cts"), ("DSR", "dsr"), ("CD", "cd"), ("RI", "ri")):
+        try:
+            parts.append(f"{label}={int(bool(getattr(handle, attr)))}")
+        except Exception:
+            parts.append(f"{label}=?")
+    return " ".join(parts)
+
+
 def get_tnc_config() -> dict[str, Any]:
     _ensure_schema()
     payload: dict[str, Any] = {}
@@ -483,6 +521,10 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
     merged["serial_protocol"] = str(merged.get("serial_protocol") or "kiss").lower().strip()
     if merged["serial_protocol"] not in {"kiss", "terminal", "agwpe", "auto"}:
         raise ValueError("Protocolo esperado inválido.")
+    for line in ("serial_dtr", "serial_rts"):
+        merged[line] = str(merged.get(line) or "default").lower().strip()
+        if merged[line] not in SERIAL_LINE_MODES:
+            raise ValueError(f"Valor inválido para {line[-3:].upper()}: use default, on ou off.")
     merged["packet_rf_baud"] = int(merged.get("packet_rf_baud") or 1200)
     if merged["packet_rf_baud"] not in {1200, 9600}:
         raise ValueError("Velocidade packet RF deve ser 1200 ou 9600 baud.")
@@ -605,12 +647,8 @@ def probe_transport(payload: dict[str, Any] | None = None) -> dict[str, Any]:
             if not cfg.get("serial_port"):
                 raise ValueError("Porta serial não configurada.")
             result["endpoint"] = f"{cfg['serial_port']} @ {cfg['serial_baud']}"
-            handle = serial.Serial(
-                port=cfg["serial_port"],
-                baudrate=int(cfg["serial_baud"]),
-                timeout=0.35,
-                write_timeout=1.0,
-            )
+            handle = open_serial_port(cfg, timeout=0.35, write_timeout=1.0)
+            result["serial_lines"] = serial_line_summary(handle)
             waiting = int(getattr(handle, "in_waiting", 0) or 0)
             sample = handle.read(min(max(waiting, 1), 4096)) if waiting else b""
             result["bytes_received"] = len(sample)
@@ -1377,6 +1415,7 @@ class TNCStatus:
     last_transport_sample_hex: str = ""
     last_transport_sample_ascii: str = ""
     last_rx_error: str = ""
+    serial_lines: str = ""
     duplicates_suppressed: int = 0
     tx_paused: bool = False
 
@@ -1639,12 +1678,7 @@ class TNCService:
         if serial is None:
             raise RuntimeError("pyserial não está instalado; KISS Serial indisponível.")
         try:
-            return serial.Serial(
-                port=cfg["serial_port"],
-                baudrate=int(cfg["serial_baud"]),
-                timeout=1.0,
-                write_timeout=2.0,
-            )
+            return open_serial_port(cfg, timeout=1.0, write_timeout=2.0)
         except Exception as exc:
             raise _serial_connection_error(str(cfg["serial_port"]), exc) from exc
 
@@ -1719,7 +1753,10 @@ class TNCService:
                     last_transport_sample_hex="",
                     last_transport_sample_ascii="",
                     last_rx_error="",
+                    serial_lines=serial_line_summary(transport) if cfg["transport"] == "serial" else "",
                 )
+                if cfg["transport"] == "serial":
+                    diag.log_event("tnc_serial_open", endpoint=endpoint, lines=self.status().get("serial_lines", ""))
                 retry = 2
                 while self.status()["wanted"] and not self._stop.is_set():
                     chunk = self._read_transport(transport, cfg)
