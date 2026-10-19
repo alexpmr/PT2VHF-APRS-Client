@@ -35,6 +35,8 @@ code { color: #a9d6ff; }
 .brand-mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9px; background: var(--accent); color: #06131e; font-size: 11px; font-weight: 900; letter-spacing: .08em; }
 h1 { margin: 0; font-size: 20px; }
 .app-version { color: var(--muted); font-size: 13px; font-weight: 700; margin-left: 6px; }
+/* Header version shares the title typography; About keeps its smaller label. */
+.brand h1 .app-version { font-family: inherit; font-size: inherit; font-weight: inherit; color: inherit; }
 .subtitle { margin-top: 3px; color: var(--muted); font-size: 12px; }
 .connection-box { display: flex; align-items: center; gap: 12px; }
 .status { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
