@@ -103,7 +103,9 @@ function currentHours() {
 }
 
 function mapInstance() {
-  return window.pt2vhfMainMap || window.map || null;
+  // window.map é o <div id="map"> (id global do DOM) até o Leaflet criar o mapa.
+  const map = window.pt2vhfMainMap || window.map || null;
+  return typeof map?.on === 'function' ? map : null;
 }
 
 function updateCoverageToggle() {

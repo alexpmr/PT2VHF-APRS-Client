@@ -28,6 +28,15 @@ PENDING_FILE = UPDATE_DIR / "pending_update.json"
 APPLY_LOG = UPDATE_DIR / "update_apply.log"
 UPDATE_LOCK_FILE = UPDATE_DIR / "update.lock"
 HELPER_READY_FILE = UPDATE_DIR / "helper_ready"
+UPDATE_RESULT_FILE = UPDATE_DIR / "last_update_result.txt"
+SETUP_LOG_FILE = UPDATE_DIR / "installer_setup.log"
+
+# AppId do Inno Setup (windows/installer*.iss); usado para localizar no
+# registro a pasta onde o Setup realmente instalou o programa.
+INNO_APP_IDS = {
+    "windows-installer": "{4A513928-71DA-4DD7-9C06-13D0D8E90FEA}",
+    "windows-legacy-installer": "{0CE6C737-4D5A-4B9C-BACE-71406DFA1425}",
+}
 
 _update_operation_lock = threading.Lock()
 _exit_handler_lock = threading.Lock()
@@ -146,6 +155,34 @@ def pending_update() -> dict[str, Any] | None:
         return data
     except Exception:
         return None
+
+
+def last_update_result() -> dict[str, str] | None:
+    """Resultado da última instalação via Setup gravado pelo helper (#103).
+
+    status: ok, version_mismatch (falso sucesso) ou unconfirmed.
+    """
+    try:
+        text = UPDATE_RESULT_FILE.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        return None
+    result: dict[str, str] = {}
+    for token in text.split():
+        key, sep, value = token.partition("=")
+        if sep and key in {"status", "target", "found"}:
+            result[key] = value
+    if text.count("exe="):
+        result["exe"] = text.split("exe=", 1)[1].strip()
+    if "status" not in result:
+        return None
+    result["running_version"] = __version__
+    try:
+        result["recorded_at"] = datetime.fromtimestamp(
+            UPDATE_RESULT_FILE.stat().st_mtime, timezone.utc
+        ).replace(microsecond=0).isoformat()
+    except OSError:
+        pass
+    return result
 
 
 def _version_tuple(value: str) -> tuple[int, ...]:
@@ -569,13 +606,58 @@ def _write_windows_cmd_helper(pending: dict[str, Any]) -> Path:
             'exit /b 1',
         ]
     else:
+        # #103: código de saída 0 do Setup não prova que a versão nova está em
+        # uso. Relança a partir da pasta registrada pelo Inno Setup e só
+        # declara sucesso quando a instância nova confirma a versão alvo.
+        target = "".join(ch for ch in str(pending.get("version") or "") if ch.isdigit() or ch == ".")
+        app_id = INNO_APP_IDS.get(mode, INNO_APP_IDS["windows-installer"])
+        uninstall_key = rf"Software\Microsoft\Windows\CurrentVersion\Uninstall\{app_id}_is1"
         lines += [
-            'start "" /wait "%downloaded%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS',
+            f'set "target={target}"',
+            f'set "exename={_cmd_value(current.name)}"',
+            f'set "result={_cmd_value(UPDATE_RESULT_FILE.resolve())}"',
+            f'set "setuplog={_cmd_value(SETUP_LOG_FILE.resolve())}"',
+            'if exist "%result%" del /F /Q "%result%" >nul 2>&1',
+            '>> "%logfile%" echo %date% %time% setup target=%target% running_exe="%current%"',
+            'start "" /wait "%downloaded%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /LOG="%setuplog%"',
             'if errorlevel 1 goto update_failed',
             'del /F /Q "%pending%" "%lockfile%" >nul 2>&1',
-            '>> "%logfile%" echo %date% %time% installer completed',
-            'if exist "%current%" start "" "%current%"',
+            '>> "%logfile%" echo %date% %time% installer exit code 0; setup log="%setuplog%"',
+            'set "installdir="',
+            *[
+                f'if not defined installdir for /f "tokens=2,*" %%A in (\'reg query "{hive}\\{uninstall_key}" /v InstallLocation{view} 2^>nul ^| findstr /I "InstallLocation"\') do set "installdir=%%B"'
+                for hive, view in (("HKLM", " /reg:64"), ("HKLM", ""), ("HKCU", ""))
+            ],
+            'set "relaunch=%current%"',
+            'if defined installdir if exist "%installdir%%exename%" set "relaunch=%installdir%%exename%"',
+            '>> "%logfile%" echo %date% %time% registry install dir="%installdir%" relaunch="%relaunch%"',
+            'if /I not "%relaunch%"=="%current%" >> "%logfile%" echo %date% %time% WARNING running executable differs from installed path',
+            'set "PT2VHF_UPDATE_READY_MARKER=%marker%"',
+            'start "" "%relaunch%"',
+            'set "PT2VHF_UPDATE_READY_MARKER="',
+            'set /a tries=0',
+            ':wait_setup_instance',
+            'if exist "%marker%" goto setup_ready',
+            'set /a tries+=1',
+            'if %tries% GEQ 45 goto setup_unconfirmed',
+            'ping 127.0.0.1 -n 3 >nul',
+            'goto wait_setup_instance',
+            ':setup_ready',
+            'findstr /C:"version=%target% " "%marker%" >nul 2>&1',
+            'if errorlevel 1 goto setup_version_mismatch',
+            '>> "%logfile%" echo %date% %time% installed backend confirmed version %target%',
+            '> "%result%" echo status=ok target=%target% exe=%relaunch%',
             'exit /b 0',
+            ':setup_version_mismatch',
+            'set "found="',
+            'for /f "usebackq tokens=3 delims== " %%V in ("%marker%") do if not defined found set "found=%%V"',
+            '>> "%logfile%" echo %date% %time% FALSE SUCCESS installer exit 0 but running version=%found% target=%target%',
+            '> "%result%" echo status=version_mismatch target=%target% found=%found% exe=%relaunch%',
+            'exit /b 1',
+            ':setup_unconfirmed',
+            '>> "%logfile%" echo %date% %time% installed instance did not confirm readiness',
+            '> "%result%" echo status=unconfirmed target=%target% exe=%relaunch%',
+            'exit /b 1',
         ]
 
     lines += [

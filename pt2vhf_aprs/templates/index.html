@@ -745,6 +745,9 @@
       <span id="tncTransportDiagnosticText">Desconectado.</span>
     </div>
 
+    <div id="tncSerialLines" class="tnc-diagnostic-sample hidden">
+      <strong>Linhas da porta serial:</strong> <code id="tncSerialLinesText">—</code>
+    </div>
     <div id="tncDiagnosticSample" class="tnc-diagnostic-sample hidden">
       <strong>Amostra serial de diagnóstico (limitada):</strong>
       <div><span>ASCII</span><code id="tncDiagnosticAscii">—</code></div>
@@ -796,6 +799,21 @@
               <option value="terminal">Terminal / command mode</option>
               <option value="auto">Detectar / diagnóstico</option>
             </select>
+          </label>
+          <label class="field tnc-serial-field"><span>Linha DTR</span>
+            <select id="tncSerialDtr" name="serial_dtr">
+              <option value="default" selected>Padrão (ativada)</option>
+              <option value="on">Ativada</option>
+              <option value="off">Desativada</option>
+            </select>
+          </label>
+          <label class="field tnc-serial-field"><span>Linha RTS</span>
+            <select id="tncSerialRts" name="serial_rts">
+              <option value="default" selected>Padrão (ativada)</option>
+              <option value="on">Ativada</option>
+              <option value="off">Desativada</option>
+            </select>
+            <small>Se a porta abre mas nada é recebido, teste RTS/DTR desativadas: em alguns cabos de rádio elas acionam PTT ou modo de programação.</small>
           </label>
           <label class="field tnc-serial-field"><span>Packet RF</span>
             <select id="tncPacketRfBaud" name="packet_rf_baud"><option value="1200" selected>1200 baud</option><option value="9600">9600 baud</option></select>
@@ -1863,8 +1881,8 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script id="leafletScript" async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script id="leafletScript" async src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="></script>
 <script src="{{ url_for('static', filename='js/i18n_extra.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_de.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_it.js') }}"></script>

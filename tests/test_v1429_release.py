@@ -64,7 +64,9 @@ def test_v1429_frontend_uses_display_url_or_lan_ip_even_when_scope_local():
     assert "if (lanHost && localPort)" in js
     assert "if (scope === 'lan') shareUrl = lanCandidate;" in js
     assert "if (scope !== 'lan') shareUrl = localUrl;" in js
-    assert "lanHost ? ui('Web:', 'Web:')" in js
+    # v1.14.47 (#99): o botão mostra apenas IP:porta, sem prefixo "Web:".
+    assert "lanHost ? ui('Web:', 'Web:')" not in js
+    assert "value.textContent = compact ||" in js
 
 
 def test_v1429_release_metadata_and_backlog():

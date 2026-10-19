@@ -1,4 +1,16 @@
-## RELEASE CANDIDATA — v1.14.47 (19/10/2026)
+## RELEASE — v1.14.48 (19/10/2026)
+
+- **Motivo:** o CI da v1.14.47 falhou em todas as plataformas por um teste desatualizado (`test_v1429` exigia o prefixo `Web:` removido no #99); a v1.14.47 nunca foi publicada. A v1.14.48 inclui todo o conteúdo da v1.14.47.
+- **Mapa offline:** Leaflet 1.9.4 servido localmente com SRI; `.gitattributes` evita CRLF no checkout Windows (que quebraria o SRI nos instaladores).
+- **#118 (P0):** diagnóstico de código: TNC/serial sem mudanças entre v1.14.41 e v1.14.43, portanto não é regressão de código. Hipótese: DTR/RTS ativados pelo pyserial acionando PTT/modo de programação no cabo. Implementados controle DTR/RTS e leitura das linhas da porta. **Aberto até teste no RT-950 Pro do PP5AU com RTS/DTR desativadas.**
+- **#121:** quarentena reversível das posições antigas contaminadas (stations/tracks), `packets` preservado, `restore_quarantined_positions()`. **Aberto até conferência no banco real do PP5AU.**
+- **#103:** helper do Setup verifica a versão em execução (marcador de prontidão), relança pela pasta registrada no Inno Setup e grava `last_update_result.txt`; falso sucesso é exibido ao usuário. **Aberto até teste no Windows 10 afetado.**
+- **#86:** ordenação alternável dos Recordes RF (extremidades / percurso total). Pendente apenas validação de campo da busca de caminhos.
+- **#116:** sem alteração de geometria nesta versão; a quarentena da #121 remove uma causa confirmada. Restante exige o banco real e capturas com período/extremidades.
+- **Demais issues abertas (#128, #125, #124, #109, #107, #106, #99, #98, #96, #95, #94, #93, #87, #85, #84, #83, #82, #81, #80, #79, #78, #77):** já implementadas em versões anteriores segundo este backlog e o código; aguardam validação visual/física do mantenedor para encerramento.
+- **Manutenção:** topologia espaço-temporal ligada explicitamente em `database.py` (fim do monkey-patch, ~310 linhas mortas removidas).
+
+## SUBSTITUÍDA PELA v1.14.48 — v1.14.47 (19/10/2026; build falhou, pacotes não publicados)
 
 - **Escopo deste ciclo:** tipografia da versão do cabeçalho igual ao título (#128) e remoção de prefixos visíveis no indicador Web (#99).
 - **Preparação:** VERSION, Python, Windows version_info, CHANGELOG e VERSION_NOTES atualizados; testes em `tests/test_v11447_header.py` e validador `tools/apply_release_1_14_47.py`; workflows de compilação atualizados para 1.14.47.

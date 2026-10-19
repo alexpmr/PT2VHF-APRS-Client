@@ -9,6 +9,9 @@
       'KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.':'KISS Serial/TCP, AX.25 monitor, Digipeater, iGate and adaptive communication analysis.',
       'Atualizar portas':'Refresh ports','Conectar TNC':'Connect TNC','Desconectar':'Disconnect','PARAR TX':'STOP TX','Liberar TX':'Resume TX',
       'Estado':'Status',
+      'Linha DTR':'DTR line','Linha RTS':'RTS line','Padrão (ativada)':'Default (asserted)','Ativada':'Asserted','Desativada':'Deasserted',
+      'Linhas da porta serial:':'Serial port lines:',
+      'Se a porta abre mas nada é recebido, teste RTS/DTR desativadas: em alguns cabos de rádio elas acionam PTT ou modo de programação.':'If the port opens but nothing is received, try RTS/DTR deasserted: on some radio cables they key PTT or programming mode.',
       'RX KISS/AX.25':'RX KISS/AX.25','TX entregue ao TNC':'TX delivered to TNC','Diagnóstico do transporte:':'Transport diagnostics:',
       'Serial conectada':'Serial connected','Serial operacional — RX KISS ativo':'Serial operational — KISS RX active','Serial conectada — sem KISS':'Serial connected — no KISS','Serial conectada — AX.25 inválido':'Serial connected — invalid AX.25','Serial conectada — aguardando dados':'Serial connected — waiting for data','KISS TCP operacional — RX ativo':'KISS TCP operational — RX active','KISS TCP conectado — aguardando frames':'KISS TCP connected — waiting for frames','RX KISS ativo':'KISS RX active','Serial sem KISS':'Serial no KISS','AX.25 inválido':'Invalid AX.25','Serial aguardando':'Serial waiting','KISS aguardando':'KISS waiting','KISS TCP conectado':'KISS TCP connected','RX ativo':'RX active','Aguardando dados do TNC.':'Waiting for TNC data.',
       'Transporte desconectado.':'Transport disconnected.','bytes recebidos pela serial, mas nenhum frame KISS válido foi reconhecido.':'bytes received over serial, but no valid KISS frame was recognized.',
@@ -419,6 +422,11 @@
       }
     }
 
+    const linesBox=$('#tncSerialLines'),linesText=$('#tncSerialLinesText');
+    const lines=String(status.serial_lines||'');
+    if(linesBox)linesBox.classList.toggle('hidden',!serial||!lines);
+    if(linesText)linesText.textContent=lines||'—';
+
     const sampleBox=$('#tncDiagnosticSample'),sampleAscii=$('#tncDiagnosticAscii'),sampleHex=$('#tncDiagnosticHex');
     const sampleA=String(status.last_transport_sample_ascii||''),sampleH=String(status.last_transport_sample_hex||'');
     if(sampleBox)sampleBox.classList.toggle('hidden',!connected||(!sampleA&&!sampleH));
@@ -442,6 +450,8 @@
       serial_baud: Number(val('tncSerialBaud', 9600)),
       device_profile: val('tncDeviceProfile', 'generic_kiss'),
       serial_protocol: val('tncSerialProtocol', 'kiss'),
+      serial_dtr: val('tncSerialDtr', 'default'),
+      serial_rts: val('tncSerialRts', 'default'),
       packet_rf_baud: Number(val('tncPacketRfBaud', 1200)),
       tcp_host: String(val('tncTcpHost', '127.0.0.1')).trim(),
       tcp_port: Number(val('tncTcpPort', 8001)),
@@ -474,6 +484,8 @@
       tncSerialBaud: cfg.serial_baud ?? 9600,
       tncDeviceProfile: cfg.device_profile || 'generic_kiss',
       tncSerialProtocol: cfg.serial_protocol || 'kiss',
+      tncSerialDtr: cfg.serial_dtr || 'default',
+      tncSerialRts: cfg.serial_rts || 'default',
       tncPacketRfBaud: cfg.packet_rf_baud ?? 1200,
       tncTcpHost: cfg.tcp_host || '127.0.0.1',
       tncTcpPort: cfg.tcp_port ?? 8001,

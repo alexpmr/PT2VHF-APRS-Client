@@ -99,7 +99,11 @@
     rfRouteRecordsGeneration: 0,
     rfRouteRecordsJobId: '',
     rfRouteRecordsJobHours: null,
+    rfRouteRecordsJobMetric: 'direct',
     rfRouteRecordsLastGood: new Map(),
+    rfRouteRecordsMetric: (() => {
+      try { return localStorage.getItem('pt2vhf.rfRecordsMetric') === 'path' ? 'path' : 'direct'; } catch (_) { return 'direct'; }
+    })(),
     rfRouteExclusiveNodes: null,
     rfRouteRecords: [],
     rfPossibleRoutes: null,
@@ -324,6 +328,7 @@
     try {
       const data = await api(`/api/update-status${force ? '?force=1' : ''}`, { signal: controller.signal });
       state.updateInfo = data;
+      reportLastUpdateApply(data.last_apply);
       el.classList.remove('checking');
 
       const current = data.current_version ? `v${data.current_version}` : ui('versão atual', 'current version');
@@ -363,6 +368,22 @@
       clearTimeout(timeout);
       state.versionCheckInProgress = false;
     }
+  }
+
+  // #103: o helper do Setup só registra sucesso quando a instância relançada
+  // confirma a versão alvo; avisa uma única vez quando isso não acontece.
+  function reportLastUpdateApply(result) {
+    if (!result || result.status === 'ok') return;
+    const key = `pt2vhf.updateApplyReported.${result.recorded_at || result.target || ''}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (_) {}
+    const target = result.target ? `v${result.target}` : '';
+    const message = result.status === 'version_mismatch'
+      ? ui(`A instalação de ${target} terminou, mas o programa em execução continua na v${result.found || result.running_version}. Execute o instalador manualmente; detalhes em update_apply.log e installer_setup.log.`,
+           `Installing ${target} finished, but the running program is still v${result.found || result.running_version}. Run the installer manually; details in update_apply.log and installer_setup.log.`)
+      : ui(`A instalação de ${target} não pôde ser confirmada após reiniciar. Verifique a versão exibida; detalhes em update_apply.log.`,
+           `Installing ${target} could not be confirmed after restart. Check the displayed version; details in update_apply.log.`);
+    setUpdateProgress(message, 'error');
+    toast(message, 'error');
   }
 
   function setUpdateProgress(message = '', type = '') {
@@ -10465,7 +10486,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         : ui('calculando…', 'calculating…')));
 
     return '<div class="topology-stat-group rf-route-records-group">' +
-      '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
+      '<h4>' + escapeHtml(rfRecordsTitle()) + '</h4>' +
       '<div class="rf-record-progress" role="status" aria-live="polite">' +
         '<div class="rf-record-progress-head"><strong>' + escapeHtml(rfRecordProgressLabel(progress)) + '</strong>' +
         '<span>' + Math.round(percent) + '%</span>' +
@@ -10487,7 +10508,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         '</div>' + renderRfRouteRecords(previousRecords)
       : '';
     return '<div class="topology-stat-group rf-route-records-group">' +
-      '<h4>' + escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) + '</h4>' +
+      '<h4>' + escapeHtml(rfRecordsTitle()) + '</h4>' +
       '<div class="hint">' + escapeHtml(message || ui('Não foi possível concluir o cálculo dos Recordes RF.', 'Could not complete the RF records calculation.')) + '</div>' +
       '<button type="button" class="btn secondary rf-record-retry" data-rf-record-retry="1">' +
         escapeHtml(ui('Tentar novamente', 'Try again')) +
@@ -10495,12 +10516,34 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     '</div>' + stale;
   }
 
+  // #86: o ranking declara a métrica e permite alternar entre distância
+  // direta entre extremidades e percurso total (soma dos saltos).
+  function rfRecordsCacheKey(hours) {
+    return String(hours) + ':' + (state.rfRouteRecordsMetric === 'path' ? 'path' : 'direct');
+  }
+
+  function rfRecordsTitle() {
+    return state.rfRouteRecordsMetric === 'path'
+      ? ui('Recordes RF observados — maiores percursos (soma dos saltos)', 'Observed RF records — longest paths (sum of hops)')
+      : ui('Recordes RF observados — maiores distâncias entre extremidades', 'Observed RF records — longest endpoint distances');
+  }
+
+  function rfRecordsMetricSelector() {
+    const metric = state.rfRouteRecordsMetric === 'path' ? 'path' : 'direct';
+    const option = (value, label) => '<option value="' + value + '"' + (metric === value ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+    return '<label class="rf-records-metric"><span>' + escapeHtml(ui('Ordenar por', 'Sort by')) + '</span>' +
+      '<select data-rf-records-metric="1">' +
+      option('direct', ui('Distância entre extremidades', 'Endpoint distance')) +
+      option('path', ui('Percurso total (soma dos saltos)', 'Total path (sum of hops)')) +
+      '</select></label>';
+  }
+
   function renderRfRouteRecords(records) {
     state.rfRouteRecords = Array.isArray(records) ? records.slice() : [];
     if (!state.rfRouteRecords.length) {
       return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-        escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) +
-        '</h4><span class="hint">' +
+        escapeHtml(rfRecordsTitle()) +
+        '</h4>' + rfRecordsMetricSelector() + '<span class="hint">' +
         escapeHtml(ui('Nenhuma rota RF completa com posição conhecida neste período.', 'No complete RF route with known positions in this period.')) +
         '</span></div>';
     }
@@ -10518,7 +10561,9 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       if (reconstructedCount) refinementParts.push(reconstructedCount + ' ' + ui('interm. reconstruídos', 'reconstructed interm.'));
       if (unresolvedCount) refinementParts.push(unresolvedCount + ' ' + ui('trechos inferidos sem interm.', 'inferred segments without interm.'));
       const meta = Number(route.hops || 0) + ' hops · ' +
-        ui('rota', 'route') + ': ' + formatRfDistanceKm(route.distance_km) + ' · ' +
+        (state.rfRouteRecordsMetric === 'path'
+          ? ui('extremidades', 'endpoints') + ': ' + formatRfDistanceKm(route.direct_distance_km)
+          : ui('rota', 'route') + ': ' + formatRfDistanceKm(route.distance_km)) + ' · ' +
         Number(route.observations || 0).toLocaleString(currentLocale()) + ' obs. · ' +
         (evidenceParts.length ? evidenceParts.join(' · ') + ' · ' : '') +
         (refinementParts.length ? refinementParts.join(' · ') + ' · ' : '') +
@@ -10526,13 +10571,16 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       return '<button type="button" class="rf-route-record" data-rf-route-record-index="' + index + '">' +
         '<span class="rf-route-record-rank">' + (index + 1) + 'º</span>' +
         '<span class="rf-route-record-path">' + escapeHtml(path) + '</span>' +
-        '<span class="rf-route-record-distance" title="' + escapeHtml(ui('Distância direta entre as estações extremas', 'Direct distance between endpoint stations')) + '">' +
-        escapeHtml(formatRfDistanceKm(route.direct_distance_km)) + '</span>' +
+        (state.rfRouteRecordsMetric === 'path'
+          ? '<span class="rf-route-record-distance" title="' + escapeHtml(ui('Percurso total: soma das distâncias dos saltos', 'Total path: sum of hop distances')) + '">' +
+            escapeHtml(formatRfDistanceKm(route.distance_km)) + '</span>'
+          : '<span class="rf-route-record-distance" title="' + escapeHtml(ui('Distância direta entre as estações extremas', 'Direct distance between endpoint stations')) + '">' +
+            escapeHtml(formatRfDistanceKm(route.direct_distance_km)) + '</span>') +
         '<span class="rf-route-record-meta">' + escapeHtml(meta) + '</span></button>';
     }).join('');
     return '<div class="topology-stat-group rf-route-records-group"><h4>' +
-      escapeHtml(ui('Recordes RF observados — maiores distâncias', 'Observed RF records — longest distances')) +
-      '</h4><div class="hint">' +
+      escapeHtml(rfRecordsTitle()) +
+      '</h4>' + rfRecordsMetricSelector() + '<div class="hint">' +
       escapeHtml(ui('Somente enlaces RF observados compõem as rotas; APRS-IS/Internet não completa uma rota RF. Clique em uma rota para mostrá-la isoladamente no mapa.', 'Only observed RF links compose the routes; APRS-IS/Internet never completes an RF route. Click a route to show it by itself on the map.')) +
       '</div><div class="rf-route-record-list">' + rows + '</div></div>';
   }
@@ -10671,7 +10719,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     const host = $('#rfRouteRecordsHost');
     if (host) host.innerHTML = renderRfRouteRecordsError(
       ui('Processamento cancelado pelo usuário.', 'Calculation cancelled by user.'),
-      state.rfRouteRecordsLastGood.get(String(state.topologyHours)) || []
+      state.rfRouteRecordsLastGood.get(rfRecordsCacheKey(state.topologyHours)) || []
     );
     if (jobId) {
       try {
@@ -10692,7 +10740,8 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   async function cancelRfRouteRecordsJobIfNeeded(nextHours) {
     const currentJob = String(state.rfRouteRecordsJobId || '');
-    if (!currentJob || Number(state.rfRouteRecordsJobHours) === Number(nextHours)) return;
+    if (!currentJob || (Number(state.rfRouteRecordsJobHours) === Number(nextHours) &&
+        state.rfRouteRecordsJobMetric === state.rfRouteRecordsMetric)) return;
     state.rfRouteRecordsJobId = '';
     state.rfRouteRecordsJobHours = null;
     try {
@@ -10710,7 +10759,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     state.rfRouteCancelPending = false;
     await cancelRfRouteRecordsJobIfNeeded(normalizedHours);
 
-    const previous = state.rfRouteRecordsLastGood.get(String(normalizedHours)) || [];
+    const previous = state.rfRouteRecordsLastGood.get(rfRecordsCacheKey(normalizedHours)) || [];
     const token = showProcessing(
       ui('Calculando recordes RF…', 'Calculating RF records…'),
       ui('Preparando indexação e cálculo da alcançabilidade.', 'Preparing indexing and reachability calculation.'),
@@ -10726,6 +10775,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
           hours: normalizedHours,
           limit: 10,
           max_hops: 6,
+          metric: state.rfRouteRecordsMetric === 'path' ? 'path' : 'direct',
           force: options?.force === true,
         }),
         timeoutMs: 8000,
@@ -10740,6 +10790,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       }
       state.rfRouteRecordsJobId = String(job?.job_id || '');
       state.rfRouteRecordsJobHours = normalizedHours;
+      state.rfRouteRecordsJobMetric = state.rfRouteRecordsMetric;
 
       let lastPercent = 0;
       let pollFailures = 0;
@@ -10779,7 +10830,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       if (String(job?.status || '') === 'done') {
         const records = Array.isArray(job?.records) ? job.records : [];
         state.rfRouteRecords = records;
-        state.rfRouteRecordsLastGood.set(String(normalizedHours), records.slice());
+        state.rfRouteRecordsLastGood.set(rfRecordsCacheKey(normalizedHours), records.slice());
         const host = $('#rfRouteRecordsHost');
         if (host) {
           host.innerHTML = (job?.stale
@@ -10877,7 +10928,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         // Mantém a última leitura válida: timeout não vira "0".
         renderTopologyStatsData(previous);
         const host = $('#rfRouteRecordsHost');
-        const lastGoodRecords = state.rfRouteRecordsLastGood.get(String(state.topologyHours)) || [];
+        const lastGoodRecords = state.rfRouteRecordsLastGood.get(rfRecordsCacheKey(state.topologyHours)) || [];
         if (host && lastGoodRecords.length) {
           state.rfRouteRecords = lastGoodRecords.slice();
           host.innerHTML = renderRfRouteRecords(lastGoodRecords);
@@ -10914,6 +10965,14 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     event.preventDefault();
     event.stopPropagation();
     void focusStationOnMap(link.dataset.mapCallsign || '');
+  });
+
+  document.addEventListener('change', event => {
+    const select = event.target.closest('[data-rf-records-metric]');
+    if (!select) return;
+    state.rfRouteRecordsMetric = select.value === 'path' ? 'path' : 'direct';
+    try { localStorage.setItem('pt2vhf.rfRecordsMetric', state.rfRouteRecordsMetric); } catch (_) {}
+    void refreshRfRouteRecordsDeferred(state.topologyStatsGeneration, state.topologyHours);
   });
 
   document.addEventListener('click', event => {

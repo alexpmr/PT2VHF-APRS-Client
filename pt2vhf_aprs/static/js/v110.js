@@ -148,7 +148,8 @@
 
   function enrichAisPopups(){
     const attach=()=>{
-      if(!window.map||window.__v110AisBound)return;
+      // window.map é o <div id="map"> até o Leaflet criar o mapa.
+      if(typeof window.map?.on!=='function'||window.__v110AisBound)return;
       window.__v110AisBound=true;
       window.map.on('popupopen',async ev=>{
         const el=ev.popup?.getElement?.();if(!el||!el.querySelector('.object-friendly-popup'))return;

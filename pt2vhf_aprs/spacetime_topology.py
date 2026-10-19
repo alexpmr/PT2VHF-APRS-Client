@@ -34,6 +34,29 @@ RF_RECORD_EVENT_REPRESENTATIVES = 24
 RF_RECORD_STATE_BEAM = 5
 RF_RECORD_MAX_EXPANSIONS_PER_SOURCE = 1400
 RF_RECORD_DEFAULT_DEADLINE_SECONDS = 45.0
+# #86: métrica do ranking. "direct" = distância entre as estações extremas;
+# "path" = percurso total (soma das distâncias dos saltos).
+RF_RECORD_METRICS = ("direct", "path")
+
+
+def _normalize_record_metric(metric: Any) -> str:
+    value = str(metric or "direct").strip().lower()
+    return value if value in RF_RECORD_METRICS else "direct"
+
+
+def _record_chain_distance(path, events, graph) -> float | None:
+    """Soma das distâncias dos saltos usando as posições de cada evento."""
+    total = 0.0
+    for (a, b), event in zip(zip(path, path[1:]), events):
+        edge = graph.get(a, {}).get(b)
+        if not edge:
+            return None
+        pos_a = _event_position(a, edge, event)
+        pos_b = _event_position(b, edge, event)
+        if pos_a is None or pos_b is None:
+            return None
+        total += db.haversine_km(*pos_a, *pos_b)
+    return total
 
 _graph_cache_lock = threading.RLock()
 _graph_cache: dict[tuple[float, str], tuple[float, tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]]] = {}
@@ -41,9 +64,9 @@ _graph_builds: dict[tuple[float, str], threading.Event] = {}
 _graph_build_errors: dict[tuple[float, str], BaseException] = {}
 
 _rf_records_cache_lock = threading.RLock()
-_rf_records_cache: dict[tuple[float, int, int, int, str], tuple[float, list[dict[str, Any]]]] = {}
-_rf_records_builds: dict[tuple[float, int, int, int, str], threading.Event] = {}
-_rf_records_errors: dict[tuple[float, int, int, int, str], BaseException] = {}
+_rf_records_cache: dict[tuple[float, int, int, int, str, str], tuple[float, list[dict[str, Any]]]] = {}
+_rf_records_builds: dict[tuple[float, int, int, int, str, str], threading.Event] = {}
+_rf_records_errors: dict[tuple[float, int, int, int, str, str], BaseException] = {}
 
 
 def _parse_dt(value: Any) -> datetime | None:
@@ -1167,7 +1190,9 @@ def _route_records_uncached(
     progress_callback=None,
     deadline_seconds: float | None = RF_RECORD_DEFAULT_DEADLINE_SECONDS,
     cancel_check=None,
+    metric: str = "direct",
 ):
+    metric = _normalize_record_metric(metric)
     started = time.monotonic()
     _record_progress(progress_callback, "preparing", 0, message="Preparando dados / indexando histórico")
 
@@ -1266,6 +1291,11 @@ def _route_records_uncached(
             if path[-1] in positions and source < path[-1] and source_pos is not None and target_pos is not None:
                 pair = tuple(sorted((source, path[-1])))
                 direct_distance = db.haversine_km(*source_pos, *target_pos)
+                if metric == "path":
+                    chain_distance = _record_chain_distance(path, chosen_events, graph)
+                    ranking_distance = chain_distance if chain_distance is not None else direct_distance
+                else:
+                    ranking_distance = direct_distance
                 observations = sum(
                     int(graph.get(a, {}).get(b, {}).get("packet_count") or 0)
                     for a, b in zip(path, path[1:])
@@ -1274,6 +1304,7 @@ def _route_records_uncached(
                     "path": path,
                     "events": chosen_events,
                     "direct_distance_km": direct_distance,
+                    "ranking_distance_km": ranking_distance,
                     "observations": observations,
                     "hops": hops,
                     "score": score,
@@ -1285,14 +1316,14 @@ def _route_records_uncached(
                 else:
                     previous_score = (
                         1 if int(previous["hops"]) > 1 else 0,
-                        float(previous["direct_distance_km"]),
+                        float(previous["ranking_distance_km"]),
                         int(previous["observations"]),
                         -float(previous["score"]),
                         float(previous["newest_epoch"]),
                     )
                     candidate_score = (
                         1 if hops > 1 else 0,
-                        float(direct_distance),
+                        float(ranking_distance),
                         int(observations),
                         -float(score),
                         float(newest_epoch),
@@ -1384,7 +1415,7 @@ def _route_records_uncached(
     ordered = sorted(
         best_by_pair.values(),
         key=lambda item: (
-            float(item["direct_distance_km"]),
+            float(item["ranking_distance_km"]),
             1 if int(item["hops"]) > 1 else 0,
             int(item["observations"]),
             -int(item["hops"]),
@@ -1407,6 +1438,7 @@ def _route_records_uncached(
         if not payload:
             continue
         payload["ranking_scope"] = "rf_reachability"
+        payload["ranking_metric"] = metric
         payload["multihop"] = int(payload.get("hops") or 0) > 1
         payload["rank"] = len(result) + 1
         result.append(payload)
@@ -1449,8 +1481,10 @@ def _route_records(
     deadline_seconds: float | None = RF_RECORD_DEFAULT_DEADLINE_SECONDS,
     cancel_check=None,
     force: bool = False,
+    metric: str = "direct",
 ):
     """Ranking RF com cache, single-flight e fallback para último resultado válido."""
+    metric = _normalize_record_metric(metric)
     try:
         normalized_hours = float(hours or 0)
     except (TypeError, ValueError):
@@ -1459,7 +1493,7 @@ def _route_records(
     route_limit = max(1, min(int(limit or 10), 50))
     hop_limit = max(1, min(int(max_hops or 6), 10))
     beam = max(50, min(int(beam_width or 500), 2000))
-    key = (normalized_hours, route_limit, hop_limit, beam, str(db.DB_PATH))
+    key = (normalized_hours, route_limit, hop_limit, beam, str(db.DB_PATH), metric)
     now = time.monotonic()
 
     with _rf_records_cache_lock:
@@ -1506,6 +1540,7 @@ def _route_records(
             progress_callback=progress_callback,
             deadline_seconds=deadline_seconds,
             cancel_check=cancel_check,
+            metric=metric,
         )
         with _rf_records_cache_lock:
             _rf_records_cache[key] = (time.monotonic(), [dict(item) for item in result])
@@ -1530,10 +1565,10 @@ def _route_records(
                 event.set()
 
 
-_original_init_db = db.init_db
-_original_route_graph = db._rf_route_graph
+_original_init_db = db._init_db_base
+_original_route_graph = db._rf_route_graph_legacy
 _original_list_topology_edges = db.list_topology_edges
-_original_list_rf_routes = db.list_rf_routes
+_original_list_rf_routes = db._list_rf_routes_base
 
 
 def _init_db() -> None:
@@ -1570,17 +1605,5 @@ def _list_rf_routes(*args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def install() -> None:
-    """Instala o modelo v1.14.24 de alcançabilidade RF histórica e ranking incremental."""
-    # Refinamento pode usar enlaces observados em momentos distintos; a
-    # validação espacial por coordenadas históricas é feita em _route_payload.
-    db.RF_INFERRED_REFINEMENT_WINDOW_HOURS = 24.0 * 3650.0
-    db.RF_INFERRED_REFINEMENT_MAX_HOPS = max(int(getattr(db, "RF_INFERRED_REFINEMENT_MAX_HOPS", 5)), 12)
-    db.init_db = _init_db
-    db._record_topology_from_raw_conn = _record_topology_from_raw_conn
-    db.process_received_packet = _process_received_packet
-    db._rf_route_graph = _route_graph
-    db._rf_route_edge_payload = _edge_payload
-    db._rf_route_payload = _route_payload
-    db.list_rf_route_candidates = _list_rf_route_candidates
-    db.list_rf_route_records = _route_records
-    db.list_rf_routes = _list_rf_routes
+    """Compatibilidade: a ligação com database.py agora é feita no próprio
+    database.py (final do módulo). Mantido como no-op para código antigo."""

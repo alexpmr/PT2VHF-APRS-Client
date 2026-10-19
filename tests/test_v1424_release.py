@@ -209,8 +209,8 @@ def test_v1424_web_job_progress_is_monotonic_and_finishes(monkeypatch):
 
 def test_v1424_frontend_preserves_last_valid_records_and_uses_real_progress():
     app = read("pt2vhf_aprs/static/js/app.js")
-    assert "rfRouteRecordsLastGood.set(String(normalizedHours), records.slice())" in app
-    assert "state.rfRouteRecordsLastGood.get(String(normalizedHours)) || []" in app
+    assert "rfRouteRecordsLastGood.set(rfRecordsCacheKey(normalizedHours), records.slice())" in app  # v1.14.48: chave inclui a métrica (#86)
+    assert "state.rfRouteRecordsLastGood.get(rfRecordsCacheKey(normalizedHours)) || []" in app
     assert "updateProcessing(" in app
     assert "Math.max(lastPercent, Number(job.percent || 0))" in app
     assert "await new Promise(resolve => setTimeout(resolve, 650))" in app

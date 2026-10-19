@@ -70,6 +70,7 @@ def _rf_record_job_public(job: dict) -> dict:
         "hours": int(job.get("hours") or 0),
         "limit": int(job.get("limit") or 10),
         "max_hops": int(job.get("max_hops") or 6),
+        "metric": str(job.get("metric") or "direct"),
         "phase": str(job.get("phase") or "queued"),
         "percent": round(float(job.get("percent") or 0.0), 1),
         "completed": int(job.get("completed") or 0),
@@ -118,6 +119,7 @@ def _run_rf_record_job(job_id: str) -> None:
         hours = int(job["hours"])
         limit = int(job["limit"])
         max_hops = int(job["max_hops"])
+        metric = str(job.get("metric") or "direct")
 
     def progress(payload: dict) -> None:
         with _rf_record_jobs_lock:
@@ -149,6 +151,7 @@ def _run_rf_record_job(job_id: str) -> None:
             hours=hours,
             limit=limit,
             max_hops=max_hops,
+            metric=metric,
             progress_callback=progress,
             deadline_seconds=None,  # background job: user cancellation, not wall-clock timeout
             cancel_check=cancel_event.is_set,
@@ -197,12 +200,13 @@ def _run_rf_record_job(job_id: str) -> None:
         _prune_rf_record_jobs()
 
 
-def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool = False) -> dict:
+def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool = False, metric: str = "direct") -> dict:
     _prune_rf_record_jobs()
     normalized_hours = 0 if int(hours or 0) <= 0 else max(1, min(int(hours), 24 * 30))
     normalized_limit = max(1, min(int(limit or 10), 50))
     normalized_hops = max(1, min(int(max_hops or 6), 10))
-    key = (normalized_hours, normalized_limit, normalized_hops)
+    normalized_metric = "path" if str(metric or "").lower() == "path" else "direct"
+    key = (normalized_hours, normalized_limit, normalized_hops, normalized_metric)
 
     with _rf_record_jobs_lock:
         existing_id = _rf_record_job_by_key.get(key)
@@ -217,6 +221,7 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
             "hours": normalized_hours,
             "limit": normalized_limit,
             "max_hops": normalized_hops,
+            "metric": normalized_metric,
             "status": "queued",
             "phase": "queued",
             "percent": 0.0,
@@ -523,6 +528,7 @@ def get_update_status(force: bool = False) -> dict:
         "asset_ready": False,
         "update_mode": updater.current_update_mode(),
         "install_supported": updater.install_supported(),
+        "last_apply": updater.last_update_result(),
         "downloaded": False,
         "status": "unknown",
         "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -1479,7 +1485,8 @@ def create_app() -> Flask:
             force = bool(data.get("force", False))
         except (TypeError, ValueError):
             hours, limit, max_hops, force = 0, 10, 6, False
-        payload = _start_rf_record_job(hours, limit, max_hops, force=force)
+        metric = str(data.get("metric", request.args.get("metric", "direct")) or "direct")
+        payload = _start_rf_record_job(hours, limit, max_hops, force=force, metric=metric)
         return jsonify(payload), (202 if payload.get("status") in {"queued", "running"} else 200)
 
     @app.get("/api/topology/rf-records/jobs/<job_id>")
