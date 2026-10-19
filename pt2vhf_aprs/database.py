@@ -800,6 +800,8 @@ def _init_db_base() -> None:
                 (utc_now_iso(),),
             )
 
+        _quarantine_malformed_positions_v11448(conn)
+
         # Refresh planner statistics after schema/index migrations. PRAGMA
         # optimize is incremental and avoids the blocking full VACUUM path.
         conn.execute("PRAGMA optimize")
@@ -1081,6 +1083,188 @@ def raw_aprs_position_issue(raw: str) -> str | None:
     if latdeg > 90 or londeg > 180 or (latdeg == 90 and latmin) or (londeg == 180 and lonmin):
         return "invalid_aprs_degrees"
     return None
+
+
+def _malformed_position_owner_and_coords(raw: str) -> tuple[str, float, float] | None:
+    """Para um pacote com posição DDMM inválida, devolve o dono da posição e a
+    coordenada decimal que um parser permissivo (aprslib) teria gravado,
+    por exemplo 26°77,84'S -> -27,297333. Usado só para localizar dados
+    contaminados antigos; nunca para "corrigir" uma posição."""
+    line = str(raw or "")
+    if raw_aprs_position_issue(line) is None:
+        return None
+    header, info = line.split(":", 1)
+    owner = header.split(">", 1)[0].strip().upper()
+    if info.startswith(";") and len(info) >= 11:
+        owner = info[1:10].strip().upper()
+        position = info[18:]
+    elif info.startswith(")"):
+        item = re.match(r"^\)([^!_]{1,9})[!_](.*)$", info)
+        if not item:
+            return None
+        owner, position = item.group(1).strip().upper(), item.group(2)
+    elif info.startswith(("/", "@")):
+        position = info[8:]
+    else:
+        position = info[1:]
+    match = _APRS_UNCOMPRESSED_POSITION.match(position)
+    if not match or not owner:
+        return None
+    lat = int(match["latdeg"]) + float(match["latmin"]) / 60.0
+    lon = int(match["londeg"]) + float(match["lonmin"]) / 60.0
+    if match["ns"] == "S":
+        lat = -lat
+    if match["ew"] == "W":
+        lon = -lon
+    return owner, round(lat, 6), round(lon, 6)
+
+
+# Pré-filtro SQL barato: minutos >= 60 ou graus fora da faixa no formato
+# DDMM.mm/DDDMM.mm. A confirmação é feita por raw_aprs_position_issue().
+_MALFORMED_POSITION_GLOB = (
+    "raw GLOB '*[0-9][0-9][6-9][0-9].[0-9][0-9][NS]*' OR "
+    "raw GLOB '*[0-9][0-9][0-9][6-9][0-9].[0-9][0-9][EW]*' OR "
+    "raw GLOB '*9[1-9][0-9][0-9].[0-9][0-9][NS]*' OR "
+    "raw GLOB '*1[89][0-9][0-9][0-9].[0-9][0-9][EW]*'"
+)
+
+
+def _quarantine_malformed_positions_v11448(conn: sqlite3.Connection) -> dict[str, int]:
+    """Saneamento único e reversível das posições gravadas antes da v1.14.46 a
+    partir de pacotes APRS com minutos/graus inválidos (#121, PP5BLU-15).
+
+    - packets não é alterado (evidência bruta preservada);
+    - tracks com raw malformado ou com a coordenada contaminada vão para
+      position_quarantine (linha completa em JSON) e saem do tracklog;
+    - stations com a coordenada contaminada recebem a última posição válida
+      do tracklog ou ficam sem posição; o valor antigo fica em quarentena.
+    """
+    key = "v1.14.48-quarantine-malformed-aprs-positions"
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS position_quarantine (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               quarantined_at TEXT NOT NULL,
+               source_table TEXT NOT NULL,
+               callsign TEXT NOT NULL,
+               issue TEXT NOT NULL,
+               row_json TEXT NOT NULL,
+               restored_at TEXT
+           )"""
+    )
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS schema_migrations_v112 (
+               migration_key TEXT PRIMARY KEY,
+               applied_at TEXT NOT NULL
+           )"""
+    )
+    if conn.execute("SELECT 1 FROM schema_migrations_v112 WHERE migration_key=?", (key,)).fetchone():
+        return {}
+
+    bad: dict[str, set[tuple[float, float]]] = {}
+    for table in ("packets", "tracks", "stations"):
+        try:
+            rows = conn.execute(f"SELECT raw FROM {table} WHERE {_MALFORMED_POSITION_GLOB}").fetchall()
+        except sqlite3.OperationalError:
+            continue
+        for row in rows:
+            found = _malformed_position_owner_and_coords(str(row["raw"] or ""))
+            if found:
+                owner, lat, lon = found
+                bad.setdefault(owner, set()).add((lat, lon))
+
+    def contaminated(callsign: Any, lat: Any, lon: Any) -> bool:
+        try:
+            point = (float(lat), float(lon))
+        except (TypeError, ValueError):
+            return False
+        return any(
+            abs(point[0] - b[0]) < 1e-5 and abs(point[1] - b[1]) < 1e-5
+            for b in bad.get(str(callsign or "").upper().strip(), ())
+        )
+
+    now = utc_now_iso()
+    counts = {"tracks": 0, "stations": 0}
+    if bad:
+        placeholders = ",".join("?" for _ in bad)
+        for row in conn.execute(
+            f"SELECT * FROM tracks WHERE UPPER(callsign) IN ({placeholders})", list(bad)
+        ).fetchall():
+            issue = raw_aprs_position_issue(str(row["raw"] or ""))
+            if issue is None and not contaminated(row["callsign"], row["latitude"], row["longitude"]):
+                continue
+            conn.execute(
+                """INSERT INTO position_quarantine(quarantined_at,source_table,callsign,issue,row_json)
+                   VALUES(?,?,?,?,?)""",
+                (now, "tracks", str(row["callsign"]).upper(), issue or "contaminated_coordinates",
+                 json.dumps(dict(row), ensure_ascii=False, default=str)),
+            )
+            conn.execute("DELETE FROM tracks WHERE id=?", (row["id"],))
+            counts["tracks"] += 1
+
+        for row in conn.execute(
+            f"SELECT * FROM stations WHERE UPPER(callsign) IN ({placeholders})", list(bad)
+        ).fetchall():
+            if not contaminated(row["callsign"], row["latitude"], row["longitude"]):
+                continue
+            conn.execute(
+                """INSERT INTO position_quarantine(quarantined_at,source_table,callsign,issue,row_json)
+                   VALUES(?,?,?,?,?)""",
+                (now, "stations", str(row["callsign"]).upper(), "contaminated_coordinates",
+                 json.dumps(dict(row), ensure_ascii=False, default=str)),
+            )
+            last_valid = conn.execute(
+                """SELECT latitude,longitude FROM tracks WHERE callsign=?
+                   ORDER BY timestamp DESC, id DESC LIMIT 1""",
+                (row["callsign"],),
+            ).fetchone()
+            conn.execute(
+                "UPDATE stations SET latitude=?, longitude=? WHERE callsign=?",
+                (last_valid["latitude"] if last_valid else None,
+                 last_valid["longitude"] if last_valid else None,
+                 row["callsign"]),
+            )
+            _record_station_anomaly_conn(
+                conn, row["callsign"], "malformed_position_quarantined",
+                row["latitude"], row["longitude"],
+                {"replacement": "last_valid_track" if last_valid else "none"},
+            )
+            counts["stations"] += 1
+
+    conn.execute(
+        "INSERT INTO schema_migrations_v112(migration_key,applied_at) VALUES(?,?)", (key, now)
+    )
+    if counts["tracks"] or counts["stations"]:
+        diag.log_event("malformed_positions_quarantined", **counts, callsigns=sorted(bad)[:50])
+    return counts
+
+
+def restore_quarantined_positions(callsign: str | None = None) -> int:
+    """Desfaz o saneamento de _quarantine_malformed_positions_v11448."""
+    restored = 0
+    with connection() as conn:
+        where, params = "restored_at IS NULL", []
+        if callsign:
+            where += " AND callsign=?"
+            params.append(str(callsign).upper().strip())
+        rows = conn.execute(
+            f"SELECT id,source_table,row_json FROM position_quarantine WHERE {where} ORDER BY id DESC", params
+        ).fetchall()
+        for row in rows:
+            data = json.loads(row["row_json"])
+            if row["source_table"] == "tracks":
+                cols = list(data)
+                conn.execute(
+                    f"INSERT OR IGNORE INTO tracks({','.join(cols)}) VALUES({','.join('?' for _ in cols)})",
+                    [data[c] for c in cols],
+                )
+            elif row["source_table"] == "stations":
+                conn.execute(
+                    "UPDATE stations SET latitude=?, longitude=? WHERE callsign=?",
+                    (data.get("latitude"), data.get("longitude"), data.get("callsign")),
+                )
+            conn.execute("UPDATE position_quarantine SET restored_at=? WHERE id=?", (utc_now_iso(), row["id"]))
+            restored += 1
+    return restored
 
 
 def _valid_geo_position(latitude: Any, longitude: Any) -> bool:
