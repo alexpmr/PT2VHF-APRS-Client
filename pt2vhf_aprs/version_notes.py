@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.47": {
+        "title": "Título e versão alinhados; endereço Web compacto",
+        "items": [
+            "Versão com a mesma fonte, tamanho e peso do título no cabeçalho.",
+            "Indicador Web mostra somente o IP:porta, com diagnóstico no tooltip e destaque laranja preservado.",
+            "Tabela pública apresenta os downloads dos pacotes da versão corrente.",
+            "Validação física de TNC, topologia e atualização Portable permanece pendente.",
+        ],
+    },
     "1.14.46": {
         "title": "Automações, TX/RX unificados e validação de coordenadas APRS",
         "items": [
