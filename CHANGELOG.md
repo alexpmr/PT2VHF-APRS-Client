@@ -1,3 +1,14 @@
+## 1.14.48 - 2026-10-19
+
+- Mapa offline: `leaflet.js` 1.9.4 (mesmo hash SRI do CDN) e imagens incluídos em `static/vendor/leaflet`; o mapa deixa de depender do unpkg.com. `.gitattributes` impede conversão CRLF que quebraria o SRI no Windows.
+- TNC serial (#118): novas opções Linha DTR / Linha RTS (Padrão, Ativada, Desativada), aplicadas antes de abrir a porta para não gerar pulso de PTT; estado DTR/RTS/CTS/DSR/CD/RI na aba TNC, no status e no diagnóstico. O padrão mantém o comportamento anterior.
+- Posições APRS inválidas (#121): migração única e reversível coloca em `position_quarantine` os tracklogs gravados a partir de pacotes DDMM malformados (ex.: PP5BLU-15) e substitui a posição contaminada da estação pela última posição válida, ou nenhuma; `packets` não é alterado e `restore_quarantined_positions()` desfaz.
+- Atualizador Setup (#103): instalador executado com `/LOG`; relançamento a partir da pasta registrada pelo Inno Setup; sucesso declarado somente quando a instância nova confirma a versão alvo. Falso sucesso vira `version_mismatch`, exposto em `/api/update-status` e avisado na interface.
+- Recordes RF (#86): ordenação alternável entre distância entre extremidades e percurso total (soma dos saltos); o título declara a métrica.
+- Manutenção: topologia espaço-temporal ligada explicitamente em `database.py` (sem substituição de funções em tempo de execução; ~310 linhas de código morto removidas); teste desatualizado que bloqueou o build da v1.14.47 corrigido.
+- Inclui as mudanças da v1.14.47 (#128, #99), cujos pacotes não chegaram a ser publicados porque o CI falhou.
+- **Validação física pendente:** RX do RT-950 Pro na COM10 com DTR/RTS desativadas (#118), atualização Setup no Windows 10 afetado (#103), migração no banco real do PP5AU (#121) e enlaces órfãos (#116), que depende do banco real.
+
 ## 1.14.47 - 2026-10-19
 
 - Cabeçalho (#128): versão com mesma fonte, tamanho e peso do título PT2VHF APRS Client, incluindo comportamento responsivo; versão da aba Sobre permanece inalterada.

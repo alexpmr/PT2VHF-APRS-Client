@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.48": {
+        "title": "Mapa sem Internet, TNC DTR/RTS, posições saneadas e atualizador verificado",
+        "items": [
+            "Mapa (Leaflet) incluído no aplicativo: funciona sem acesso à Internet.",
+            "TNC serial: controle das linhas DTR/RTS e exibição do estado da porta para diagnosticar ausência de RX.",
+            "Posições antigas contaminadas por coordenadas APRS inválidas vão para quarentena reversível.",
+            "Atualização via instalador só é confirmada quando a nova versão está realmente em execução.",
+            "Recordes RF ordenáveis por distância entre extremidades ou percurso total.",
+            "Inclui as melhorias da v1.14.47, cujo build não chegou a ser publicado.",
+        ],
+    },
     "1.14.47": {
         "title": "Título e versão alinhados; endereço Web compacto",
         "items": [
