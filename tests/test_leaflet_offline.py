@@ -18,3 +18,8 @@ def test_leaflet_vendor_matches_pinned_integrity_and_assets():
     assert f'integrity="sha256-{digest}"' in html
     for name in ("layers.png", "layers-2x.png", "marker-icon.png", "marker-icon-2x.png", "marker-shadow.png"):
         assert (VENDOR / "images" / name).is_file()
+
+
+def test_vendor_files_are_protected_from_eol_conversion():
+    attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
+    assert "pt2vhf_aprs/static/vendor/** -text" in attributes
