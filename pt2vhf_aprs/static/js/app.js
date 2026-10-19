@@ -5898,7 +5898,6 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     const displayed = scope === 'lan' ? shareUrl : (detectedUrl || localUrl);
     const compact = displayed.replace(/^https?:\/\//i, '');
     const header = $('#webAccessStatus');
-    const label = $('#webAccessLabel');
     const value = $('#webAccessUrl');
     const remoteActive = scope === 'lan' && Boolean(access.remote_web_active);
     if (header) {
@@ -5911,10 +5910,6 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         : ui('Endereço detectado; acesso LAN DESABILITADO. Use a URL localhost nesta máquina.',
              'Detected IP only; LAN access DISABLED. Use localhost on this computer.');
     }
-    if (label) label.textContent = remoteActive
-      ? ui('Web em uso:', 'Web in use:')
-      : scope === 'lan' ? ui('Web LAN:', 'Web LAN:')
-      : (lanHost ? ui('Web:', 'Web:') : ui('Web local:', 'Local web:'));
     if (value) value.textContent = compact || ui('indisponível', 'unavailable');
     const configStatus = $('#localInterfaceStatus');
     if (configStatus) configStatus.textContent =
