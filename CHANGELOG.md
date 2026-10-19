@@ -1,3 +1,11 @@
+## 1.14.47 - 2026-10-19
+
+- Cabeçalho (#128): versão com mesma fonte, tamanho e peso do título PT2VHF APRS Client, incluindo comportamento responsivo; versão da aba Sobre permanece inalterada.
+- Interface Web (#99): remoção dos prefixos visíveis "Web em uso", "Web LAN" e "Web local" do endereço IP:porta no cabeçalho. Indicação de sessão remota em laranja e diagnóstico no tooltip preservados.
+- Downloads: tabela inicial do README continua mostrando exclusivamente os contadores de cada arquivo da versão publicada.
+- Testes de regressão de HTML/CSS/JS e compilação multiplataforma pelo CI.
+- Permanecem abertos: comunicação serial COM10 com Radtel RT-950 Pro (#118), enlaces RF órfãos (#116) e atualizador Portable em máquinas afetadas, pendentes de testes físicos.
+
 ## 1.14.46 - 2026-10-18
 
 - Automações: nova aba principal com **Auto-resposta**, migrada da configuração antiga, preservando habilitação, texto e janela de proteção no SQLite.
