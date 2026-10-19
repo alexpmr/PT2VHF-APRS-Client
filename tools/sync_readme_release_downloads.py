@@ -168,7 +168,7 @@ def render_readme(source: str, section: str) -> str:
     if body.startswith(description + "\n\n"):
         body = body[len(description) + 2:]
     # Only the *published* release drives the public README version header.
-    version = re.search(r"(?m)^## Downloads — versão (\\d+\\.\\d+\\.\\d+)$", section)
+    version = re.search(r"(?m)^## Downloads — versão (\d+\.\d+\.\d+)$", section)
     header = f"# PT2VHF APRS Client - v{version.group(1)}" if version else lines[0]
     return header + "\n\n" + description + "\n\n" + section.rstrip() + "\n\n" + body
 
