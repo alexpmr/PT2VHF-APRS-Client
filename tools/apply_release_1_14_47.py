@@ -17,7 +17,7 @@ assert '"1.14.47": {' in read("pt2vhf_aprs/version_notes.py")
 assert ("# PT2VHF APRS Client - v1.14.46" in read("README.md") or "# PT2VHF APRS Client - v1.14.47" in read("README.md"))
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_1_14_46.py" in read(workflow)
+    assert "apply_release_1_14_47.py" in read(workflow)
     assert "apply_release_1_14_46.py" not in read(workflow)
 tnc = read("pt2vhf_aprs/tnc_service.py")
 aprs = read("pt2vhf_aprs/aprs_service.py")
