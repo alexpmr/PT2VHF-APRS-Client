@@ -5075,3 +5075,7 @@ html[lang="zh-CN"] body {
     display: block;
   }
 }
+
+/* #86: seletor da métrica dos Recordes RF */
+.rf-records-metric { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 6px; font-size: 12px; color: var(--muted); }
+.rf-records-metric select { font-size: 12px; padding: 2px 6px; }
