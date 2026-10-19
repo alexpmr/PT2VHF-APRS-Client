@@ -1530,10 +1530,10 @@ def _route_records(
                 event.set()
 
 
-_original_init_db = db.init_db
-_original_route_graph = db._rf_route_graph
+_original_init_db = db._init_db_base
+_original_route_graph = db._rf_route_graph_legacy
 _original_list_topology_edges = db.list_topology_edges
-_original_list_rf_routes = db.list_rf_routes
+_original_list_rf_routes = db._list_rf_routes_base
 
 
 def _init_db() -> None:
@@ -1570,17 +1570,5 @@ def _list_rf_routes(*args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def install() -> None:
-    """Instala o modelo v1.14.24 de alcançabilidade RF histórica e ranking incremental."""
-    # Refinamento pode usar enlaces observados em momentos distintos; a
-    # validação espacial por coordenadas históricas é feita em _route_payload.
-    db.RF_INFERRED_REFINEMENT_WINDOW_HOURS = 24.0 * 3650.0
-    db.RF_INFERRED_REFINEMENT_MAX_HOPS = max(int(getattr(db, "RF_INFERRED_REFINEMENT_MAX_HOPS", 5)), 12)
-    db.init_db = _init_db
-    db._record_topology_from_raw_conn = _record_topology_from_raw_conn
-    db.process_received_packet = _process_received_packet
-    db._rf_route_graph = _route_graph
-    db._rf_route_edge_payload = _edge_payload
-    db._rf_route_payload = _route_payload
-    db.list_rf_route_candidates = _list_rf_route_candidates
-    db.list_rf_route_records = _route_records
-    db.list_rf_routes = _list_rf_routes
+    """Compatibilidade: a ligação com database.py agora é feita no próprio
+    database.py (final do módulo). Mantido como no-op para código antigo."""

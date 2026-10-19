@@ -243,7 +243,8 @@ def connection():
             diag.log_sqlite_slow(duration_ms, error=error_text)
 
 
-def init_db() -> None:
+def _init_db_base() -> None:
+    """Schema e migrações base; init_db() (spacetime_topology) completa o backfill."""
     _configure_database_runtime()
     with connection() as conn:
         # Preflight de schema: índices do bloco principal podem referenciar
@@ -1826,54 +1827,6 @@ def _observed_topology_edges(
 
 
 
-def _record_topology_from_raw_conn(
-    conn: sqlite3.Connection,
-    raw: str,
-    medium: str = "APRS-IS",
-) -> None:
-    """Registra relações observáveis preservando a evidência real do transporte."""
-    observed_medium = str(medium or "APRS-IS").upper().strip()
-    if observed_medium not in {"RF", "APRS-IS"}:
-        observed_medium = "APRS-IS"
-    _source, edges = _observed_topology_edges(raw, observed_medium)
-    if not edges:
-        return
-    now = utc_now_iso()
-
-    for edge_source, target, kind, edge_igate in edges:
-        rf_transport = 1 if observed_medium == "RF" and kind == "rf" else 0
-        rf_path = 1 if observed_medium != "RF" and kind == "rf" else 0
-        internet_confirmed = 1 if observed_medium == "APRS-IS" and kind == "igate" else 0
-        conn.execute(
-            """
-            INSERT INTO topology_edges(
-                source,target,kind,packet_count,first_seen,last_seen,igate,
-                rf_transport_count,rf_path_count,internet_confirmed_count
-            )
-            VALUES(?,?,?,1,?,?,?,?,?,?)
-            ON CONFLICT(source,target,kind) DO UPDATE SET
-                packet_count=topology_edges.packet_count+1,
-                last_seen=excluded.last_seen,
-                igate=COALESCE(excluded.igate, topology_edges.igate),
-                rf_transport_count=topology_edges.rf_transport_count+excluded.rf_transport_count,
-                rf_path_count=topology_edges.rf_path_count+excluded.rf_path_count,
-                internet_confirmed_count=topology_edges.internet_confirmed_count+excluded.internet_confirmed_count
-            """,
-            (
-                edge_source, target, kind, now, now, edge_igate,
-                rf_transport, rf_path, internet_confirmed,
-            ),
-        )
-        conn.execute(
-            "INSERT INTO topology_events(timestamp,source,target,kind) VALUES(?,?,?,?)",
-            (now, edge_source, target, kind),
-        )
-    if _retention_due("topology_events", len(edges)):
-        deleted = _trim_history_table(conn, "topology_events", TOPOLOGY_EVENT_RETENTION)
-        if deleted:
-            diag.log_event("retention_sweep", table="topology_events", deleted=deleted)
-
-
 def record_topology_from_raw(raw: str, medium: str = "APRS-IS") -> None:
     """Registra relações observáveis preservando o meio de recepção conhecido."""
     with connection() as conn:
@@ -2149,7 +2102,7 @@ def _rf_route_callsign(value: Any) -> str:
 
 
 
-def _rf_route_graph(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]:
+def _rf_route_graph_legacy(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any]]], dict[str, tuple[float, float]]]:
     """Monta grafo não-direcional apenas com enlaces que possuem evidência RF real."""
     graph: dict[str, dict[str, dict[str, Any]]] = {}
     positions: dict[str, tuple[float, float]] = {}
@@ -2208,51 +2161,6 @@ def _rf_route_graph(hours: float = 0) -> tuple[dict[str, dict[str, dict[str, Any
     return graph, positions
 
 
-def list_rf_route_candidates(source: str, hours: float = 0, query: str = "", limit: int = 80) -> list[dict[str, Any]]:
-    """Estações alcançáveis por um caminho composto exclusivamente por enlaces RF observados."""
-    source_call = _rf_route_callsign(source)
-    if not source_call:
-        return []
-    query_norm = str(query or "").upper().strip()
-    graph, _positions = _rf_route_graph(hours)
-    if source_call not in graph:
-        return []
-
-    queue: list[tuple[str, int]] = [(source_call, 0)]
-    visited = {source_call}
-    candidates: list[dict[str, Any]] = []
-    while queue:
-        node, hops = queue.pop(0)
-        neighbors = sorted(
-            graph.get(node, {}).items(),
-            key=lambda pair: (str(pair[1].get("last_seen") or ""), int(pair[1].get("packet_count") or 0)),
-            reverse=True,
-        )
-        for nxt, edge in neighbors:
-            if nxt in visited:
-                continue
-            visited.add(nxt)
-            next_hops = hops + 1
-            queue.append((nxt, next_hops))
-            if query_norm and query_norm not in nxt:
-                continue
-            candidates.append({
-                "callsign": nxt,
-                "hops": next_hops,
-                "last_seen": str(edge.get("last_seen") or ""),
-                "packet_count": int(edge.get("packet_count") or 0),
-            })
-
-    candidates.sort(key=lambda item: (
-        0 if query_norm and str(item["callsign"]).startswith(query_norm) else 1,
-        -int(item.get("packet_count") or 0),
-        int(item.get("hops") or 0),
-        str(item.get("callsign") or ""),
-    ))
-    return candidates[: max(1, min(int(limit or 80), 200))]
-
-
-
 def list_rf_route_origins(hours: float = 0, query: str = "", limit: int = 80) -> list[dict[str, Any]]:
     """Indicativos conhecidos que participam do grafo RF observável no período."""
     graph, _positions = _rf_route_graph(hours)
@@ -2289,38 +2197,11 @@ def _rf_route_evidence(edge: dict[str, Any]) -> tuple[str, str]:
     return "legacy", "RF observado (legado)"
 
 
-def _rf_route_edge_payload(
-    source: str,
-    target: str,
-    edge: dict[str, Any],
-    positions: dict[str, tuple[float, float]],
-) -> dict[str, Any] | None:
-    if source not in positions or target not in positions:
-        return None
-    evidence_level, evidence_label = _rf_route_evidence(edge)
-    return {
-        "source": source,
-        "target": target,
-        "source_lat": positions[source][0],
-        "source_lon": positions[source][1],
-        "target_lat": positions[target][0],
-        "target_lon": positions[target][1],
-        "distance_km": round(float(edge.get("distance_km") or 0.0), 3),
-        "packet_count": int(edge.get("packet_count") or 0),
-        "first_seen": edge.get("first_seen") or "",
-        "last_seen": edge.get("last_seen") or "",
-        "classification_source": edge.get("classification_source") or evidence_label,
-        "rf_transport_count": int(edge.get("rf_transport_count") or 0),
-        "rf_path_count": int(edge.get("rf_path_count") or 0),
-        "evidence_level": evidence_level,
-        "evidence_label": evidence_label,
-    }
-
-
-
 RF_INFERRED_REFINEMENT_MIN_KM = 250.0
-RF_INFERRED_REFINEMENT_WINDOW_HOURS = 36.0
-RF_INFERRED_REFINEMENT_MAX_HOPS = 5
+# O refinamento pode usar enlaces observados em momentos distintos; a validação
+# espacial por coordenadas históricas é feita em spacetime_topology._route_payload.
+RF_INFERRED_REFINEMENT_WINDOW_HOURS = 24.0 * 3650.0
+RF_INFERRED_REFINEMENT_MAX_HOPS = 12
 RF_INFERRED_REFINEMENT_MAX_EXPANSIONS = 4000
 RF_INFERRED_REFINEMENT_MIN_INFERRED_OBS = 2
 
@@ -2547,88 +2428,6 @@ def _rf_refine_route_nodes(
     return refined, reconstructed, unresolved, reconstructed_pairs
 
 
-def _rf_route_payload(
-    nodes: list[str],
-    graph: dict[str, dict[str, dict[str, Any]]],
-    positions: dict[str, tuple[float, float]],
-    *,
-    refine_inferred: bool = True,
-) -> dict[str, Any] | None:
-    if len(nodes) < 2:
-        return None
-
-    original_nodes = list(nodes)
-    reconstructed: list[dict[str, Any]] = []
-    unresolved: list[dict[str, Any]] = []
-    reconstructed_pairs: dict[tuple[str, str], str] = {}
-    if refine_inferred:
-        nodes, reconstructed, unresolved, reconstructed_pairs = _rf_refine_route_nodes(
-            list(nodes), graph, positions
-        )
-
-    route_edges: list[dict[str, Any]] = []
-    total = 0.0
-    latest_values: list[str] = []
-    observations = 0
-    evidence_counts = {"direct": 0, "inferred": 0, "legacy": 0}
-    for index in range(len(nodes) - 1):
-        a, b = nodes[index], nodes[index + 1]
-        edge = graph.get(a, {}).get(b)
-        if not edge:
-            return None
-        payload = _rf_route_edge_payload(a, b, edge, positions)
-        if not payload:
-            return None
-        pair = tuple(sorted((a, b)))
-        if pair in reconstructed_pairs:
-            payload["reconstructed"] = True
-            payload["reconstructed_from"] = reconstructed_pairs[pair]
-        else:
-            payload["reconstructed"] = False
-        distance = float(payload.get("distance_km") or 0.0)
-        total += distance
-        observations += int(payload.get("packet_count") or 0)
-        if payload.get("last_seen"):
-            latest_values.append(str(payload["last_seen"]))
-        level = str(payload.get("evidence_level") or "legacy")
-        evidence_counts[level] = evidence_counts.get(level, 0) + 1
-        route_edges.append(payload)
-
-    direct = round(haversine_km(*positions[nodes[0]], *positions[nodes[-1]]), 3)
-    if evidence_counts["inferred"] or evidence_counts["legacy"]:
-        route_evidence_class = "mixed" if evidence_counts["direct"] else "inferred"
-    else:
-        route_evidence_class = "direct"
-
-    reconstructed_nodes: list[str] = []
-    for item in reconstructed:
-        for call in item.get("intermediate_nodes") or []:
-            call = str(call or "")
-            if call and call not in reconstructed_nodes:
-                reconstructed_nodes.append(call)
-
-    return {
-        "source": nodes[0],
-        "target": nodes[-1],
-        "nodes": nodes,
-        "original_nodes": original_nodes,
-        "hops": len(nodes) - 1,
-        "distance_km": round(total, 3),
-        "direct_distance_km": direct,
-        "route_evidence_at": min(latest_values) if latest_values else "",
-        "observations": observations,
-        "direct_edges": evidence_counts["direct"],
-        "inferred_edges": evidence_counts["inferred"],
-        "legacy_edges": evidence_counts["legacy"],
-        "route_evidence_class": route_evidence_class,
-        "refinement_applied": bool(reconstructed),
-        "reconstructed_intermediate_nodes": reconstructed_nodes,
-        "reconstructed_segments": reconstructed,
-        "unresolved_inferred_edges": unresolved,
-        "edges": route_edges,
-    }
-
-
 def _rf_hop_distances(
     graph: dict[str, dict[str, dict[str, Any]]],
     start: str,
@@ -2777,90 +2576,7 @@ def _rf_k_best_routes(
     return routes[:route_limit], truncated, expanded
 
 
-def list_rf_route_records(
-    hours: float = 0,
-    limit: int = 10,
-    max_hops: int = 6,
-    beam_width: int = 500,
-) -> list[dict[str, Any]]:
-    """Ranking de pares de estações mais distantes ligados por RF completo.
-
-    O critério do ranking é a distância geográfica direta entre as duas estações
-    extremas. A distância percorrida pela sequência de hops permanece apenas como
-    informação complementar. Cada par origem/destino aparece uma única vez.
-    """
-    graph, positions = _rf_route_graph(hours)
-    route_limit = max(1, min(int(limit or 10), 50))
-    hop_limit = max(1, min(int(max_hops or 6), 10))
-
-    candidates: list[tuple[float, int, int, str, list[str]]] = []
-
-    # Uma BFS por origem produz um caminho RF completo de menor número de hops para
-    # cada destino alcançável dentro do limite. Como o grafo é não-direcional,
-    # mantemos somente source < target para não duplicar A↔B e B↔A.
-    for source in sorted(graph):
-        if source not in positions:
-            continue
-        queue: list[list[str]] = [[source]]
-        visited = {source}
-        while queue:
-            path = queue.pop(0)
-            node = path[-1]
-            hops = len(path) - 1
-            if hops >= hop_limit:
-                continue
-
-            neighbors = sorted(
-                graph.get(node, {}).items(),
-                key=lambda pair: (
-                    str(pair[1].get("last_seen") or ""),
-                    int(pair[1].get("packet_count") or 0),
-                ),
-                reverse=True,
-            )
-            for nxt, _edge in neighbors:
-                if nxt in visited:
-                    continue
-                visited.add(nxt)
-                next_path = path + [nxt]
-                queue.append(next_path)
-
-                if nxt not in positions or source >= nxt:
-                    continue
-
-                payload = _rf_route_payload(next_path, graph, positions, refine_inferred=False)
-                if not payload:
-                    continue
-                candidates.append((
-                    float(payload.get("direct_distance_km") or 0.0),
-                    int(payload.get("observations") or 0),
-                    -int(payload.get("hops") or 0),
-                    str(payload.get("route_evidence_at") or ""),
-                    next_path,
-                ))
-
-    candidates.sort(
-        key=lambda item: (item[0], item[1], item[2], item[3]),
-        reverse=True,
-    )
-
-    result: list[dict[str, Any]] = []
-    emitted_pairs: set[tuple[str, str]] = set()
-    for _direct, _obs, _neg_hops, _evidence, path in candidates:
-        pair = tuple(sorted((path[0], path[-1])))
-        if pair in emitted_pairs:
-            continue
-        payload = _rf_route_payload(path, graph, positions)
-        if not payload:
-            continue
-        emitted_pairs.add(pair)
-        payload["rank"] = len(result) + 1
-        result.append(payload)
-        if len(result) >= route_limit:
-            break
-    return result
-
-def list_rf_routes(
+def _list_rf_routes_base(
     source: str,
     target: str,
     hours: float = 0,
@@ -5342,41 +5058,6 @@ def add_aprs_log(direction: str, raw: str) -> int:
         return _add_aprs_log_conn(conn, direction, raw)
 
 
-def process_received_packet(
-    raw: str,
-    parsed: dict[str, Any],
-    from_call: str | None = None,
-    packet_format: str | None = None,
-    *,
-    medium: str = "APRS-IS",
-) -> None:
-    """Persiste o pipeline RX principal em uma única conexão/transação SQLite."""
-    started = time.monotonic()
-    issue = raw_aprs_position_issue(raw)
-    if issue:
-        parsed = dict(parsed or {})
-        parsed.pop("latitude", None)
-        parsed.pop("longitude", None)
-        diag.log_event("aprs_raw_position_rejected", reason=issue, from_call=from_call or "")
-    with connection() as conn:
-        _add_aprs_log_conn(conn, "RX", raw)
-        _record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
-        if not issue:
-            _record_topology_from_raw_conn(conn, raw, medium)
-        if parsed and parsed.get("from"):
-            _upsert_station_conn(conn, parsed)
-    if parsed and parsed.get("from"):
-        invalidate_map_data_cache(drop_payload=False, coalesce=True)
-    elapsed_ms = (time.monotonic() - started) * 1000
-    if elapsed_ms >= 250:
-        diag.log_event(
-            "rx_transaction_slow",
-            duration_ms=round(elapsed_ms, 1),
-            from_call=from_call or "",
-            packet_format=packet_format or "",
-            medium=str(medium or "APRS-IS").upper(),
-        )
-
 def list_aprs_log(filter_text: str = "", direction: str = "ALL", limit: int = 1000) -> list[dict[str, Any]]:
     direction = str(direction or "ALL").upper().strip()
     if direction not in {"ALL", "RX", "TX"}:
@@ -5671,3 +5352,26 @@ def complete_scheduled_message(
     values.append(int(schedule_id))
     with connection() as conn:
         conn.execute(f"UPDATE scheduled_messages SET {','.join(fields)} WHERE id=?", values)
+
+
+# ---------------------------------------------------------------------------
+# Topologia RF espaço-temporal (v1.14.19+)
+#
+# A implementação ativa das funções abaixo fica em spacetime_topology.py, que
+# trata cada enlace RF como evento com posição histórica e timestamp. Antes
+# elas eram trocadas em tempo de execução por spacetime_topology.install();
+# agora a ligação é explícita aqui, e as versões de base que o modelo ainda
+# reutiliza têm nomes próprios (_init_db_base, _rf_route_graph_legacy,
+# _list_rf_routes_base).
+# ---------------------------------------------------------------------------
+from . import spacetime_topology as _spacetime_topology  # noqa: E402
+
+init_db = _spacetime_topology._init_db
+process_received_packet = _spacetime_topology._process_received_packet
+_record_topology_from_raw_conn = _spacetime_topology._record_topology_from_raw_conn
+_rf_route_graph = _spacetime_topology._route_graph
+_rf_route_edge_payload = _spacetime_topology._edge_payload
+_rf_route_payload = _spacetime_topology._route_payload
+list_rf_route_candidates = _spacetime_topology._list_rf_route_candidates
+list_rf_route_records = _spacetime_topology._route_records
+list_rf_routes = _spacetime_topology._list_rf_routes

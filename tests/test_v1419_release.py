@@ -48,7 +48,14 @@ def connect(graph, a: str, b: str, payload):
 def test_v1419_version_and_overlay_are_active():
     version = tuple(int(part) for part in read("VERSION").strip().split("."))
     assert version >= (1, 14, 19)
-    assert "spacetime_topology.install()" in read("pt2vhf_aprs/__init__.py")
+    # Desde a consolidação, database.py liga explicitamente as funções
+    # espaço-temporais (sem monkey-patch em tempo de execução).
+    from pt2vhf_aprs import database as db, spacetime_topology as st
+    assert db.init_db is st._init_db
+    assert db.process_received_packet is st._process_received_packet
+    assert db._rf_route_graph is st._route_graph
+    assert db.list_rf_routes is st._list_rf_routes
+    assert db.list_rf_route_records is st._route_records
     assert db.RF_INFERRED_REFINEMENT_WINDOW_HOURS > 0
 
 
