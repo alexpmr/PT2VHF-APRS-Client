@@ -103,9 +103,14 @@ def test_sparse_trip_with_three_separated_events_is_mobile_but_one_outlier_is_no
 
 
 
-def test_mobile_transmitter_without_relay_role_remains_hidden():
+def test_mobile_transmitter_keeps_latest_link_until_ttl():
+    # v1.14.49: trackers no longer vanish outside the traffic animation.
     tracker = row(0.1, "PT2CAR-9", "FIXED", (-15.8, -47.9), (-15.79, -47.91))
-    assert mobile([tracker]) == []
+    result = mobile([tracker])
+    assert len(result) == 1 and result[0]["kind"] == "rf_mobile"
+    assert result[0]["mobile_callsigns"] == ["PT2CAR-9"]
+    expired = row(3.5, "PT2CAR-9", "FIXED", (-15.8, -47.9), (-15.79, -47.91))
+    assert mobile([expired]) == []
 
 
 

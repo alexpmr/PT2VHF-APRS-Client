@@ -147,7 +147,6 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
 
 def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT, *,
                           mobile_callsigns: set[str] | None = None,
-                          mobile_repeater_callsigns: set[str] | None = None,
                           established_rf_pairs: set[tuple[str, str]] | None = None,
                           now: datetime | None = None,
                           mobile_ttl_hours: float = 3.0) -> list[dict[str, Any]]:
@@ -159,12 +158,11 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     segments: dict[tuple[Any, ...], dict[str, Any]] = {}
     media_by_pair: dict[tuple[str, str], set[str]] = defaultdict(set)
     mobile_repeaters = mobile_callsigns if mobile_callsigns is not None else moving_rf_repeaters(rows)
-    # APRS source is often a moving tracker; the target of a USED RF path
-    # is the repeater. Do not reintroduce links from mobile-only transmitters.
-    repeater_targets = (mobile_repeater_callsigns if mobile_repeater_callsigns is not None else {
-        str(dict(raw).get("target") or "").strip().upper() for raw in rows
-        if str(dict(raw).get("kind") or "").strip().lower() == "rf"
-    }) & mobile_repeaters
+    # v1.14.49 (#116): every moving station, relay (digi/iGate) or plain
+    # tracker, keeps at most its latest valid RF contact on the map. Trackers
+    # were previously hidden altogether and only appeared in the traffic
+    # animation. Older contacts stay in SQLite and never draw spider lines.
+    repeater_targets = set(mobile_repeaters)
     established = established_rf_pairs if established_rf_pairs is not None else _established_rf_pairs(rows)
     instant = now or datetime.now(timezone.utc)
     # A mobile RF repeater owns at most ONE current link, regardless of which
@@ -419,12 +417,8 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
             diag.log_event("topology_map_mobile_status",
                            mobile_count=len(mobile), period_hours=period)
     config = db.get_config()
-    repeaters = {
-        str(dict(raw).get("target") or "").strip().upper() for raw in reference
-        if str(dict(raw).get("kind") or "").lower() == "rf"
-    }
     segments = _segments_from_events(
-        rows, mobile_callsigns=mobile, mobile_repeater_callsigns=repeaters,
+        rows, mobile_callsigns=mobile,
         established_rf_pairs=established,
         mobile_ttl_hours=float(config.get("topology_rf_mobile_ttl_hours") or 3),
     )

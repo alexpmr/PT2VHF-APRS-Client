@@ -82,10 +82,15 @@ def test_moving_target_digi_links_hidden_and_historical_rows_preserved():
     assert len(rows) == 4
 
 
-def test_moving_source_without_relay_evidence_stays_hidden_as_tracker():
+def test_moving_tracker_shows_only_latest_contact():
+    # v1.14.49: a moving tracker keeps exactly its latest valid RF contact,
+    # drawn at that event's position; old contacts (south) never reappear.
     rows = moving_source_rows()
     assert "PT2AP-9" in topology_map.moving_rf_repeaters(rows)
-    assert topology_map._segments_from_events(rows) == []
+    result = topology_map._segments_from_events(rows)
+    assert len(result) == 1 and result[0]["kind"] == "rf_mobile"
+    assert (result[0]["source"], result[0]["target"]) == ("PT2AP-9", "PT2BSB-1")
+    assert result[0]["source_lat"] == BRASILIA_DIGI[0]
 
 
 def test_source_and_target_direction_change_does_not_restore_mobile_line():

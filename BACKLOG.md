@@ -1,3 +1,9 @@
+## RELEASE — v1.14.49 (20/10/2026)
+
+- **Trackers móveis (#116):** relato do mantenedor: "o enlace só é mostrado quando há uma animação, sumindo após isso". Reproduzido com tracker deslocado >25 km e ouvido por digi fixo: `_segments_from_events` descartava todo enlace de móvel que não fosse digi/iGate (regra da #94), embora a animação desenhasse o trecho. Decisão do mantenedor: mostrar o **último contato RF válido** de cada móvel, inclusive trackers, como `rf_mobile`, com TTL e filtro Ver → Enlaces móveis. Testes antigos da regra "tracker oculto" reescritos.
+- **Menu Ver:** contagem em Tracklogs, Enlaces RF fixos, Enlaces móveis e Enlaces iGate, com os filtros da visão geral e independente da caixa marcada.
+- **EM INVESTIGAÇÃO — computador do mantenedor sem tracklogs e enlaces fixos (RF e iGate) após atualizar para v1.14.48:** outro computador atualizado de v1.14.41 para v1.14.48 exibe tudo normalmente; código de mapa/topologia idêntico à v1.14.46, API e renderização verificadas sem regressão. Suspeitas: caixas do menu Ver desmarcadas (preferências por origem do navegador), pasta de dados diferente ou dados do banco. As novas contagens do menu Ver permitem distinguir. Coletar captura do menu Ver, aba Estatísticas e `diagnostics.log`.
+
 ## RELEASE — v1.14.48 (19/10/2026)
 
 - **Motivo:** o CI da v1.14.47 falhou em todas as plataformas por um teste desatualizado (`test_v1429` exigia o prefixo `Web:` removido no #99); a v1.14.47 nunca foi publicada. A v1.14.48 inclui todo o conteúdo da v1.14.47.
