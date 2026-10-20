@@ -1593,6 +1593,61 @@
     return visual ? `${visual} ${brightness}` : brightness;
   }
 
+  // Erros de JavaScript e resumo do mapa vão para o diagnostics.log, para
+  // comparar máquinas (ex.: WebView2 do Windows 10 x Windows 11).
+  let clientEventsSent = 0;
+  function reportClientEvent(kind, details = {}) {
+    if (clientEventsSent >= 25) return;
+    clientEventsSent += 1;
+    try {
+      fetch('/api/diagnostics/client-event', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ kind, details })
+      }).catch(() => {});
+    } catch (_) {}
+  }
+  window.addEventListener('error', event => {
+    reportClientEvent('js_error', {
+      message: String(event.message || ''), source: String(event.filename || ''),
+      line: Number(event.lineno || 0), column: Number(event.colno || 0),
+      stack: String(event.error?.stack || '').slice(0, 400),
+    });
+  });
+  window.addEventListener('unhandledrejection', event => {
+    const reason = event.reason;
+    reportClientEvent('js_error', {
+      message: 'unhandledrejection: ' + String(reason?.message || reason || ''),
+      stack: String(reason?.stack || '').slice(0, 400),
+    });
+  });
+
+  function reportMapRender() {
+    let canvas2d = false;
+    try { canvas2d = !!document.createElement('canvas').getContext('2d'); } catch (_) {}
+    const interactionCanvas = state.map?.getPane('pt2vhfInteractionPane')?.querySelector('canvas');
+    reportClientEvent('map_render', {
+      user_agent: navigator.userAgent,
+      origin: location.origin,
+      device_pixel_ratio: Number(window.devicePixelRatio || 1),
+      canvas_2d: canvas2d,
+      interaction_canvas: interactionCanvas ? `${interactionCanvas.width}x${interactionCanvas.height}` : 'none',
+      period_hours: Number(state.mapPeriodHours || 0),
+      tracklog_enabled: !!state.tracklogEnabled,
+      rf_links_enabled: !!state.rfLinksEnabled,
+      mobile_links_enabled: !!state.mobileLinksEnabled,
+      igate_links_enabled: !!state.igateLinksEnabled,
+      packets_enabled: !!state.packetsEnabled,
+      topology_edges_api: state.topologyEdges?.length ?? -1,
+      topology_lines_drawn: state.topologyLines.size,
+      track_lines_drawn: state.trackLines.size,
+      count_tracklogs: state.mapLayerCounts.tracklogs ?? -1,
+      count_rf: state.mapLayerCounts.rf ?? -1,
+      count_mobile: state.mapLayerCounts.mobile ?? -1,
+      count_igate: state.mapLayerCounts.igate ?? -1,
+    });
+  }
+
   function reportMapProviderFailure(type, detail = '') {
     try {
       fetch('/api/diagnostics/map-provider-error', {
@@ -1786,7 +1841,8 @@
 
   async function initMap() {
     if (!(await waitForLeaflet())) {
-      $('#map').innerHTML = '<div style="padding:30px">O mapa não pôde ser carregado, mas as demais abas continuam disponíveis. Verifique o acesso ao CDN do Leaflet.</div>';
+      $('#map').innerHTML = '<div style="padding:30px">O mapa não pôde ser carregado, mas as demais abas continuam disponíveis. Consulte o diagnostics.log.</div>';
+      reportClientEvent('js_error', { message: 'Leaflet não carregou', user_agent: navigator.userAgent });
       return;
     }
     let saved = { latitude: -14.2350, longitude: -51.9253, zoom: 4 };
@@ -1833,6 +1889,8 @@
 
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
+    // Resumo do que foi desenhado, após as primeiras cargas de mapa e topologia.
+    setTimeout(reportMapRender, 20000);
     addMapControls();
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));

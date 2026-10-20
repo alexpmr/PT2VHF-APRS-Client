@@ -57,4 +57,6 @@ assert "repeater_targets = set(mobile_repeaters)" in topology
 assert "mobile_repeater_callsigns" not in topology
 assert "count: state.mapLayerCounts.rf" in js
 assert "function countTopologyLayers(" in js
+assert "/api/diagnostics/client-event" in read("pt2vhf_aprs/web.py")
+assert "reportMapRender" in js
 print("v1.14.49 release validation OK")
