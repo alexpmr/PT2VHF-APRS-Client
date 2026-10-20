@@ -12,8 +12,9 @@ def test_client_event_endpoint_logs_and_validates(monkeypatch):
         "details": {"user_agent": "Edg/1" * 200, "topology_lines_drawn": 0, "canvas_2d": True},
     })
     assert ok.status_code == 200
-    name, fields = events[-1]
-    assert name == "client_map_render"
+    renders = [fields for name, fields in events if name == "client_map_render"]
+    assert len(renders) == 1
+    fields = renders[0]
     assert len(fields["user_agent"]) == 400
     assert fields["topology_lines_drawn"] == 0 and fields["canvas_2d"] is True
     bad = client.post("/api/diagnostics/client-event", json={"kind": "anything"})
