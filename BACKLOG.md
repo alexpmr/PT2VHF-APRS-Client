@@ -1,3 +1,8 @@
+## IMPLEMENTADO — Tabela de downloads: contadores atualizados de hora em hora (20/10/2026)
+
+- **Relato:** downloads feitos pelas atualizações automáticas não apareciam na tabela do README.
+- **Causa:** o atualizador baixa o mesmo `browser_download_url` público e o GitHub já contabiliza esses downloads (ex.: Setup x64 da v1.14.49 com 2 downloads na API enquanto o README mostrava 0). A tabela só era sincronizada na publicação da release (contadores ainda zerados) e uma vez por dia às 04:19 UTC.
+- **Correção:** `update-download-counts.yml` passa a rodar de hora em hora; o script já só cria commit quando algum contador muda. A regra da #127 (somente pacotes da versão atual, sem somar versões anteriores) foi mantida.
 ## RELEASE — v1.14.50 (21/10/2026): trackers sem enlaces órfãos (#116)
 
 - **Relato com captura:** tracker em Ceilândia com três linhas amarelas (RF fixo) de pontos antigos do trajeto até o digi da Asa Norte. Pedido: mostrar só o enlace mais recente.
