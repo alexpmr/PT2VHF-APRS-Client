@@ -54,7 +54,11 @@ jobs:
 
       - name: Run tests
         shell: pwsh
-        run: python -m pytest -q
+        run: python -m pytest -q --junitxml=pytest-report.xml
+      - name: Report test failures as annotations
+        if: failure()
+        shell: pwsh
+        run: python tools\pytest_failures_to_annotations.py pytest-report.xml
       - name: Smoke HTTP real on Windows
         shell: pwsh
         run: python tools\\smoke_web_http.py
@@ -147,7 +151,11 @@ jobs:
 
       - name: Run tests
         shell: pwsh
-        run: python -m pytest -q
+        run: python -m pytest -q --junitxml=pytest-report.xml
+      - name: Report test failures as annotations
+        if: failure()
+        shell: pwsh
+        run: python tools\pytest_failures_to_annotations.py pytest-report.xml
       - name: Smoke HTTP real on Windows
         shell: pwsh
         run: python tools\\smoke_web_http.py

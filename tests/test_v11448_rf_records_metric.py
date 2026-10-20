@@ -61,14 +61,21 @@ def test_records_job_api_accepts_metric(tmp_path, monkeypatch):
         seen.update(kwargs)
         return []
 
+    class InlineThread:
+        """Executa o job na própria thread do teste: sem espera por tempo,
+        que tornava o teste intermitente em runners Windows lentos."""
+        def __init__(self, target, args=(), **_kwargs):
+            self._target, self._args = target, args
+
+        def start(self):
+            self._target(*self._args)
+
     monkeypatch.setattr(db, "list_rf_route_records", fake_records)
+    import threading
+    from types import SimpleNamespace
+    monkeypatch.setattr(web, "threading", SimpleNamespace(Thread=InlineThread, Event=threading.Event))
     job = web._start_rf_record_job(0, 10, 6, metric="path", force=True)
     assert job["metric"] == "path"
-    import time
-    for _ in range(50):
-        if seen:
-            break
-        time.sleep(0.02)
     assert seen.get("metric") == "path"
 
 
