@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.49": {
+        "title": "Trackers móveis no mapa e contagens no menu Ver",
+        "items": [
+            "Estações móveis que só transmitem (trackers) mostram o enlace do último contato RF válido, como RF móvel, em vez de aparecer só na animação.",
+            "O enlace móvel expira pelo TTL configurado e segue o filtro Ver → Enlaces móveis; contatos antigos continuam apenas no histórico.",
+            "Menu Ver mostra a quantidade de Tracklogs, Enlaces RF fixos, Enlaces móveis e Enlaces iGate, mesmo com a camada desmarcada.",
+        ],
+    },
     "1.14.48": {
         "title": "Mapa sem Internet, TNC DTR/RTS, posições saneadas e atualizador verificado",
         "items": [

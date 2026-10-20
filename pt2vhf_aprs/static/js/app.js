@@ -37,6 +37,8 @@
       } catch (_) { return new Set(); }
     })(),
     mapViewTreeSignature: '',
+    // Contagens das camadas do menu Ver (undefined = ainda não carregado).
+    mapLayerCounts: {},
     mapKnownCallsigns: new Set(),
     mapVisibleCallsigns: new Set(),
     systemMetricsBusy: false,
@@ -1591,6 +1593,61 @@
     return visual ? `${visual} ${brightness}` : brightness;
   }
 
+  // Erros de JavaScript e resumo do mapa vão para o diagnostics.log, para
+  // comparar máquinas (ex.: WebView2 do Windows 10 x Windows 11).
+  let clientEventsSent = 0;
+  function reportClientEvent(kind, details = {}) {
+    if (clientEventsSent >= 25) return;
+    clientEventsSent += 1;
+    try {
+      fetch('/api/diagnostics/client-event', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ kind, details })
+      }).catch(() => {});
+    } catch (_) {}
+  }
+  window.addEventListener('error', event => {
+    reportClientEvent('js_error', {
+      message: String(event.message || ''), source: String(event.filename || ''),
+      line: Number(event.lineno || 0), column: Number(event.colno || 0),
+      stack: String(event.error?.stack || '').slice(0, 400),
+    });
+  });
+  window.addEventListener('unhandledrejection', event => {
+    const reason = event.reason;
+    reportClientEvent('js_error', {
+      message: 'unhandledrejection: ' + String(reason?.message || reason || ''),
+      stack: String(reason?.stack || '').slice(0, 400),
+    });
+  });
+
+  function reportMapRender() {
+    let canvas2d = false;
+    try { canvas2d = !!document.createElement('canvas').getContext('2d'); } catch (_) {}
+    const interactionCanvas = state.map?.getPane('pt2vhfInteractionPane')?.querySelector('canvas');
+    reportClientEvent('map_render', {
+      user_agent: navigator.userAgent,
+      origin: location.origin,
+      device_pixel_ratio: Number(window.devicePixelRatio || 1),
+      canvas_2d: canvas2d,
+      interaction_canvas: interactionCanvas ? `${interactionCanvas.width}x${interactionCanvas.height}` : 'none',
+      period_hours: Number(state.mapPeriodHours || 0),
+      tracklog_enabled: !!state.tracklogEnabled,
+      rf_links_enabled: !!state.rfLinksEnabled,
+      mobile_links_enabled: !!state.mobileLinksEnabled,
+      igate_links_enabled: !!state.igateLinksEnabled,
+      packets_enabled: !!state.packetsEnabled,
+      topology_edges_api: state.topologyEdges?.length ?? -1,
+      topology_lines_drawn: state.topologyLines.size,
+      track_lines_drawn: state.trackLines.size,
+      count_tracklogs: state.mapLayerCounts.tracklogs ?? -1,
+      count_rf: state.mapLayerCounts.rf ?? -1,
+      count_mobile: state.mapLayerCounts.mobile ?? -1,
+      count_igate: state.mapLayerCounts.igate ?? -1,
+    });
+  }
+
   function reportMapProviderFailure(type, detail = '') {
     try {
       fetch('/api/diagnostics/map-provider-error', {
@@ -1784,7 +1841,8 @@
 
   async function initMap() {
     if (!(await waitForLeaflet())) {
-      $('#map').innerHTML = '<div style="padding:30px">O mapa não pôde ser carregado, mas as demais abas continuam disponíveis. Verifique o acesso ao CDN do Leaflet.</div>';
+      $('#map').innerHTML = '<div style="padding:30px">O mapa não pôde ser carregado, mas as demais abas continuam disponíveis. Consulte o diagnostics.log.</div>';
+      reportClientEvent('js_error', { message: 'Leaflet não carregou', user_agent: navigator.userAgent });
       return;
     }
     let saved = { latitude: -14.2350, longitude: -51.9253, zoom: 4 };
@@ -1831,6 +1889,8 @@
 
     applyMapPreferences(cfg);
     addBrowserLocationControl(state.map);
+    // Resumo do que foi desenhado, após as primeiras cargas de mapa e topologia.
+    setTimeout(reportMapRender, 20000);
     addMapControls();
     addMapLegendControl(state.map);
     state.map.on('moveend', debounce(saveMapState, 400));
@@ -2506,6 +2566,49 @@
     updateSharedViewButtons();
   }
 
+  // Quantos itens de cada camada seriam desenhados na visão geral, com os
+  // mesmos filtros de loadTopology, independentemente da caixa estar marcada.
+  // Um "0" distingue camada sem dados de camada desligada no menu Ver.
+  function topologyEdgeShownOnOverview(edge) {
+    if (!edge || edge.render_on_overview === false) return false;
+    if (['rf_temp', 'rf_mobile'].includes(edge.kind) && (!edge.expires_at ||
+        !Number.isFinite(Date.parse(edge.expires_at)) ||
+        Date.parse(edge.expires_at) <= Date.now())) return false;
+    const coords = [edge.source_lat, edge.source_lon, edge.target_lat, edge.target_lon];
+    if (coords.some(v => v === null || v === undefined || v === '' || !Number.isFinite(Number(v)))) return false;
+    if (Math.abs(Number(edge.source_lat)) < .01 && Math.abs(Number(edge.source_lon)) < .01) return false;
+    if (Math.abs(Number(edge.target_lat)) < .01 && Math.abs(Number(edge.target_lon)) < .01) return false;
+    const inferred = edge.kind !== 'igate' && !(edge.direct_rf_confirmed === true);
+    return !(inferred && topologyEdgeDistanceKm(edge) > 250);
+  }
+
+  function countTopologyLayers(edges) {
+    const counts = { rf: 0, mobile: 0, igate: 0 };
+    for (const edge of edges || []) {
+      if (!topologyEdgeShownOnOverview(edge)) continue;
+      if (edge.kind === 'igate') counts.igate += 1;
+      else if (edge.kind === 'rf_mobile') counts.mobile += 1;
+      else counts.rf += 1;
+    }
+    return counts;
+  }
+
+  function updateMapViewLayerCounts() {
+    const ids = { tracklogs: 'root:tracklogs', rf: 'root:rf', mobile: 'root:mobile-rf', igate: 'root:igate-links' };
+    for (const [key, id] of Object.entries(ids)) {
+      const row = document.querySelector(`#mapViewTree [data-map-node-id="${id}"] > .map-view-row`);
+      const value = state.mapLayerCounts[key];
+      if (!row || !Number.isFinite(value)) continue;
+      let span = row.querySelector(':scope > .map-view-count');
+      if (!span) {
+        span = document.createElement('span');
+        span.className = 'map-view-count';
+        row.appendChild(span);
+      }
+      span.textContent = Number(value).toLocaleString(currentLocale());
+    }
+  }
+
   function renderMapViewTree(stations = [], objects = []) {
     const rfSource = $('#rfRouteSource');
     const rfTarget = $('#rfRouteTarget');
@@ -2601,11 +2704,11 @@
         count: objects.length,
         children: objectMapNodes(objects),
       },
-      { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled' },
-      { id: 'root:rf', label: ui('Enlaces RF fixos', 'Fixed RF links'), stateKey: 'rfLinksEnabled' },
-      { id: 'root:mobile-rf', label: ui('Enlaces móveis (último contato)', 'Mobile links (latest contact)'), stateKey: 'mobileLinksEnabled' },
+      { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled', count: state.mapLayerCounts.tracklogs },
+      { id: 'root:rf', label: ui('Enlaces RF fixos', 'Fixed RF links'), stateKey: 'rfLinksEnabled', count: state.mapLayerCounts.rf },
+      { id: 'root:mobile-rf', label: ui('Enlaces móveis (último contato)', 'Mobile links (latest contact)'), stateKey: 'mobileLinksEnabled', count: state.mapLayerCounts.mobile },
       { id: 'root:rf-coverage', label: ui('Cobertura RF observada (pontos de digis móveis)', 'Observed RF coverage (moving digis)'), stateKey: 'rfCoverageEnabled' },
-      { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled' },
+      { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled', count: state.mapLayerCounts.igate },
       { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
     ];
 
@@ -4102,6 +4205,8 @@
     try {
       const edges = await api(`/api/topology?hours=${encodeURIComponent(state.mapPeriodHours)}`);
       state.topologyEdges = Array.isArray(edges) ? edges : [];
+      Object.assign(state.mapLayerCounts, countTopologyLayers(state.topologyEdges));
+      updateMapViewLayerCounts();
       const routeAllowedPairs = (state.rfRouteAnalysis && !state.rfPossibleRoutes) ? rfRouteAllowedPairs() : null;
       const active = new Set();
 
@@ -5001,6 +5106,13 @@
       const allObjects = Array.isArray(data.objects) ? data.objects : [];
       const periodStations = allStations.filter(stationMatchesMapPeriod);
       const periodObjects = allObjects.filter(objectMatchesMapPeriod);
+      const trackPoints = new Map();
+      for (const track of (Array.isArray(data.tracks) ? data.tracks : [])) {
+        if (!trackMatchesMapPeriod(track)) continue;
+        const call = normalizedCall(track.callsign);
+        if (call) trackPoints.set(call, (trackPoints.get(call) || 0) + 1);
+      }
+      state.mapLayerCounts.tracklogs = [...trackPoints.values()].filter(points => points >= 2).length;
       renderMapViewTree(periodStations, periodObjects);
 
       const routeFocusNodes = state.rfRouteExclusiveNodes;

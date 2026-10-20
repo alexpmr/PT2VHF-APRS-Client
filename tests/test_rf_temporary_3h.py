@@ -85,9 +85,10 @@ def test_internet_edges_are_not_reclassified_temporary():
     assert len(result) == 1 and result[0]["kind"] == "igate"
 
 
-def test_mobile_trackers_remain_hidden_even_when_rf_is_recent():
+def test_mobile_trackers_use_mobile_style_not_temporary_rf():
     assert edges([ev(0.1, target="PT2TRACK-9")], mobile={"PT2TRACK-9"})[0]['kind'] == 'rf_mobile'
-    assert edges([ev(0.1, source="PT2TRACK-9")], mobile={"PT2TRACK-9"}) == []
+    # v1.14.49: a tracker as source also keeps its latest link, as rf_mobile.
+    assert edges([ev(0.1, source="PT2TRACK-9")], mobile={"PT2TRACK-9"})[0]['kind'] == 'rf_mobile'
 
 
 def test_missing_historical_geometry_does_not_make_temporary_rf():

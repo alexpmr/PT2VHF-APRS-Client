@@ -843,6 +843,22 @@ def create_app() -> Flask:
         diag.log_event("map_provider_error", provider=provider, detail=detail)
         return jsonify({"ok": True})
 
+    @app.post("/api/diagnostics/client-event")
+    def api_diagnostics_client_event():
+        """Erros de JavaScript e resumo de renderização do mapa vindos do
+        navegador/WebView, para diagnosticar diferenças entre máquinas."""
+        payload = request.get_json(silent=True) or {}
+        kind = str(payload.get("kind") or "")
+        if kind not in {"js_error", "map_render"}:
+            return jsonify({"ok": False, "error": "kind inválido"}), 400
+        details = payload.get("details") if isinstance(payload.get("details"), dict) else {}
+        clean = {
+            str(key)[:40]: (value if isinstance(value, (bool, int, float)) or value is None else str(value)[:400])
+            for key, value in list(details.items())[:30]
+        }
+        diag.log_event("client_" + kind, remote=request.remote_addr or "", **clean)
+        return jsonify({"ok": True})
+
     @app.get("/api/diagnostics/log")
     def api_diagnostics_log():
         path = diag.log_path()

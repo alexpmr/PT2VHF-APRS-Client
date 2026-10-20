@@ -1,3 +1,9 @@
+## 1.14.49 - 2026-10-20
+
+- Mapa (#116): estações móveis que só transmitem (trackers, ex.: PU2CAR-9 ouvido por um digi fixo) passam a mostrar o enlace do **último contato RF válido**, na posição daquele momento, como RF móvel, com o TTL configurável (padrão 3 h) e o filtro Ver → Enlaces móveis. Antes eram descartados por completo e só apareciam durante a animação de tráfego. Contatos antigos continuam somente no SQLite, sem linhas "aranha". Substitui a regra anterior da #94 para trackers, por decisão do mantenedor.
+- Menu Ver: contagem em Tracklogs, Enlaces RF fixos, Enlaces móveis e Enlaces iGate / APRS-IS, calculada com os mesmos filtros do mapa e exibida mesmo com a camada desmarcada; um "0" distingue camada sem dados de camada desligada.
+- Diagnóstico: erros de JavaScript do navegador/WebView e um resumo da renderização do mapa (navegador, canvas, caixas do menu Ver, enlaces e tracklogs recebidos e desenhados) passam a ser registrados no `diagnostics.log` (`client_js_error`, `client_map_render`), para investigar o computador Windows 10 em que tracklogs e enlaces fixos não aparecem.
+
 ## 1.14.48 - 2026-10-19
 
 - Mapa offline: `leaflet.js` 1.9.4 (mesmo hash SRI do CDN) e imagens incluídos em `static/vendor/leaflet`; o mapa deixa de depender do unpkg.com. `.gitattributes` impede conversão CRLF que quebraria o SRI no Windows.
