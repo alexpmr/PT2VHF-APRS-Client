@@ -342,6 +342,7 @@
         el.classList.add('update');
         textEl.textContent = ui(`Versão ${data.latest_version} disponível`, `Version ${data.latest_version} available`);
         el.title = ui(`Instalada ${current}. Clique para baixar e instalar ${latest}.`, `Installed ${current}. Click to download and install ${latest}.`);
+        maybePromptUpdate(data);
       } else if (data.status === 'latest') {
         el.classList.add('latest');
         textEl.textContent = ui('Atualizada', 'Up to date');
@@ -403,9 +404,30 @@
     if (type) progress.classList.add(type);
   }
 
-  function showUpdateModal() {
+  // v1.14.52: ao detectar versão nova, pergunta uma vez se deseja atualizar.
+  // "Depois" adia a mesma versão por 24 h; uma versão mais nova pergunta de novo.
+  const UPDATE_PROMPT_SNOOZE_MS = 24 * 60 * 60 * 1000;
+  function maybePromptUpdate(data) {
+    if (!data || data.status !== 'update_available' || state.updateDownloading) return;
+    if (state.updatePromptedVersion === data.latest_version) return;
+    const key = `pt2vhf.updatePromptSnooze.${data.latest_version}`;
+    try {
+      const snoozedAt = Number(localStorage.getItem(key) || 0);
+      if (snoozedAt && Date.now() - snoozedAt < UPDATE_PROMPT_SNOOZE_MS) return;
+    } catch (_) {}
+    // Não sobrepõe outro aviso aberto (ex.: "Aplicativo atualizado").
+    if (document.querySelector('.message-alert-overlay:not(.hidden)')) {
+      setTimeout(() => maybePromptUpdate(state.updateInfo), 5000);
+      return;
+    }
+    state.updatePromptedVersion = data.latest_version;
+    showUpdateModal({ prompt: true });
+  }
+
+  function showUpdateModal({ prompt = false } = {}) {
     const data = state.updateInfo;
     if (!data || data.status !== 'update_available') return;
+    state.updateModalPrompted = prompt;
     $('#updateModalTitle').textContent = ui(`Nova versão v${data.latest_version} disponível`, `New version v${data.latest_version} available`);
     const ready = !!data.asset_ready && !!data.install_supported;
     $('#updateModalSummary').textContent = ready
@@ -417,6 +439,10 @@
           data.error || 'A instalação automática não está disponível nesta execução. Use a página da Release.',
           data.error || 'Automatic installation is not available in this build. Use the Release page.'
         );
+    if (prompt) {
+      $('#updateModalSummary').textContent = ui('Deseja atualizar agora? ', 'Do you want to update now? ') +
+        $('#updateModalSummary').textContent;
+    }
     $('#updateReleaseNotes').textContent = String(data.release_notes || ui('Sem notas de versão.', 'No release notes.'));
     const installButton = $('#updateInstallNow');
     if (installButton) installButton.disabled = !ready || state.updateDownloading;
@@ -860,6 +886,9 @@
     if (state.updateDownloading) {
       toast(ui('A atualização está em andamento. Aguarde a conclusão.', 'The update is in progress. Please wait for it to finish.'), 'error');
       return;
+    }
+    if (state.updateModalPrompted && state.updateInfo?.latest_version) {
+      try { localStorage.setItem(`pt2vhf.updatePromptSnooze.${state.updateInfo.latest_version}`, String(Date.now())); } catch (_) {}
     }
     $('#updateModal')?.classList.add('hidden');
   });
@@ -3190,6 +3219,7 @@
             <div class="map-legend-item" data-legend="igate"><span class="legend-line"></span><span>${ui('Via IGate/APRS-IS', 'Via IGate/APRS-IS')}</span></div>
             <div class="map-legend-item" data-legend="replay"><span class="legend-line"></span><span>${ui('Animação temporal', 'Timeline replay')}</span></div>
             <div class="map-legend-item" data-legend="packet"><span class="legend-packet"></span><span>${ui('Pacote em movimento', 'Moving packet')}</span></div>
+            <div class="map-legend-item legend-heat-item" data-legend="rf-coverage"><span class="legend-heat"></span><span>${ui('Cobertura RF: baixa → muito alta', 'RF coverage: low → very high')}</span></div>
           </div>`;
         L.DomEvent.disableClickPropagation(wrapper);
         L.DomEvent.disableScrollPropagation(wrapper);
@@ -3245,6 +3275,7 @@
       replay.style.borderTopStyle = 'dashed';
     }
     root.querySelector('[data-legend="track"]')?.classList.toggle('legend-muted', !state.tracklogEnabled);
+    root.querySelector('[data-legend="rf-coverage"]')?.classList.toggle('hidden', !state.rfCoverageEnabled);
     root.querySelector('[data-legend="rf"]')?.classList.toggle('legend-muted', !state.rfLinksEnabled);
     root.querySelector('[data-legend="rf-temp"]')?.classList.toggle('legend-muted', !state.rfLinksEnabled);
     root.querySelector('[data-legend="rf-mobile"]')?.classList.toggle('legend-muted', !state.mobileLinksEnabled);

@@ -5079,3 +5079,7 @@ html[lang="zh-CN"] body {
 /* #86: seletor da métrica dos Recordes RF */
 .rf-records-metric { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 6px; font-size: 12px; color: var(--muted); }
 .rf-records-metric select { font-size: 12px; padding: 2px 6px; }
+
+/* v1.14.52: legenda do mapa de calor da Cobertura RF (mesma paleta do v142.js). */
+.legend-heat { display: inline-block; width: 34px; height: 8px; border-radius: 4px;
+  background: linear-gradient(90deg, #0000ff, #00c8ff 35%, #00ff40 55%, #ffff00 70%, #ff8000 85%, #ff0000); }

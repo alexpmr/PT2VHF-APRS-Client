@@ -1,3 +1,8 @@
+## 1.14.52 - 2026-10-21
+
+- Mapa de calor da Cobertura RF no estilo clássico: densidade acumulada colorida pela paleta azul → ciano → verde → amarelo → laranja → vermelho; raio geográfico de ~1,5 km por ponto (5 a 40 px conforme o zoom), em vez de 20–76 px fixos; removida a mistura `screen` que desbotava as cores. Legenda "Cobertura RF: baixa → muito alta".
+- Atualizações: ao detectar versão nova, além do indicador no cabeçalho, abre o aviso perguntando "Deseja atualizar agora?" com Baixar e instalar / Ver Release / Depois. "Depois" adia a mesma versão por 24 h; não sobrepõe outro aviso aberto.
+
 ## 1.14.51 - 2026-10-21
 
 - Mapa: **Cobertura RF (mapa de calor)**. Ao habilitar a opção no menu Ver, o mapa mostra um mapa de calor com todo ponto onde houve ao menos uma transmissão RF (posição de quem transmitiu um salto) ou recepção RF (posição de quem ouviu ou repetiu), usando as coordenadas do momento de cada pacote em `topology_events`, diretas ou inferidas pelo path. Pontos agregados em células de ~1 km com peso logarítmico; APRS-IS puro e coordenadas APRS inválidas (#121) não entram. Antes a opção mostrava só pontos de digipeaters móveis, como círculos.
