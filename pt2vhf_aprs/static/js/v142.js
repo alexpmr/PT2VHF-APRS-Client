@@ -316,7 +316,15 @@ function installAisEnhancement() {
 }
 
 function boot() {
-  installCoverage();
+  // v1.14.51: a cobertura RF é a opção nativa do menu Ver (app.js), que
+  // reutiliza este desenhador de mapa de calor; a opção duplicada saiu.
+  window.pt2vhfCreateHeatLayer = (() => {
+    let HeatLayer = null;
+    return () => {
+      if (!HeatLayer) HeatLayer = createHeatLayer();
+      return HeatLayer;
+    };
+  })();
   installAisEnhancement();
 }
 

@@ -20,7 +20,9 @@
     tracklogEnabled: localStorage.getItem('pt2vhf_map_item_tracklogs') !== '0',
     rfLinksEnabled: localStorage.getItem('pt2vhf_map_item_rf') !== '0',
     mobileLinksEnabled: localStorage.getItem('pt2vhf_map_item_mobile_rf') !== '0',
-    rfCoverageEnabled: localStorage.getItem('pt2vhf_map_item_rf_coverage') === '1',
+    // A antiga opção "Cobertura RF" (v142) usava outra chave; ligada lá, segue ligada.
+    rfCoverageEnabled: localStorage.getItem('pt2vhf_map_item_rf_coverage') === '1' ||
+      (localStorage.getItem('pt2vhf_map_item_rf_coverage') === null && localStorage.getItem('pt2vhf_rf_coverage_enabled') === '1'),
     rfCoverageLayer: null,
     igateLinksEnabled: localStorage.getItem('pt2vhf_map_item_igate') !== '0',
     packetsEnabled: localStorage.getItem('pt2vhf_map_item_packets') !== '0',
@@ -2594,7 +2596,7 @@
   }
 
   function updateMapViewLayerCounts() {
-    const ids = { tracklogs: 'root:tracklogs', rf: 'root:rf', mobile: 'root:mobile-rf', igate: 'root:igate-links' };
+    const ids = { tracklogs: 'root:tracklogs', rf: 'root:rf', mobile: 'root:mobile-rf', igate: 'root:igate-links', coverage: 'root:rf-coverage' };
     for (const [key, id] of Object.entries(ids)) {
       const row = document.querySelector(`#mapViewTree [data-map-node-id="${id}"] > .map-view-row`);
       const value = state.mapLayerCounts[key];
@@ -2707,7 +2709,7 @@
       { id: 'root:tracklogs', label: 'Tracklogs', stateKey: 'tracklogEnabled', count: state.mapLayerCounts.tracklogs },
       { id: 'root:rf', label: ui('Enlaces RF fixos', 'Fixed RF links'), stateKey: 'rfLinksEnabled', count: state.mapLayerCounts.rf },
       { id: 'root:mobile-rf', label: ui('Enlaces móveis (último contato)', 'Mobile links (latest contact)'), stateKey: 'mobileLinksEnabled', count: state.mapLayerCounts.mobile },
-      { id: 'root:rf-coverage', label: ui('Cobertura RF observada (pontos de digis móveis)', 'Observed RF coverage (moving digis)'), stateKey: 'rfCoverageEnabled' },
+      { id: 'root:rf-coverage', label: ui('Cobertura RF (mapa de calor)', 'RF coverage (heat map)'), stateKey: 'rfCoverageEnabled', count: state.mapLayerCounts.coverage },
       { id: 'root:igate-links', label: ui('Enlaces iGate / APRS-IS', 'iGate / APRS-IS links'), stateKey: 'igateLinksEnabled', count: state.mapLayerCounts.igate },
       { id: 'root:packets', label: ui('Pacotes em movimento', 'Packets in motion'), stateKey: 'packetsEnabled' },
     ];
@@ -4164,6 +4166,8 @@
     state.topologyLines.clear();
   }
 
+  // v1.14.51: mapa de calor com todo ponto onde houve ao menos uma
+  // transmissão ou recepção RF (posições históricas dos eventos RF).
   async function loadRfCoverage() {
     if (!state.map || !state.rfCoverageEnabled || state.activeTab !== 'map' || state.rfRouteAnalysis) {
       if (state.rfCoverageLayer) { state.map?.removeLayer(state.rfCoverageLayer); state.rfCoverageLayer = null; }
@@ -4173,24 +4177,28 @@
       const samples = await api('/api/topology/rf-coverage?hours=' + encodeURIComponent(state.mapPeriodHours),
         { timeoutMs: 30000 });
       if (!state.map || !state.rfCoverageEnabled || state.rfRouteAnalysis) return;
-      const layer = L.layerGroup();
-      for (const sample of (Array.isArray(samples) ? samples : [])) {
-        const lat = Number(sample.latitude), lon = Number(sample.longitude);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
-        const direct = sample.evidence === 'direct';
-        const color = direct ? '#22c55e' : '#f59e0b';
-        L.circleMarker([lat, lon], { radius: Math.min(9, 4 + Math.log2(1 + Number(sample.count || 1))),
-          weight: 1, color, fillColor: color, opacity: .95, fillOpacity: .65,
-          pane: 'pt2vhfInteractionPane' })
-          .bindPopup('<strong>' + escapeHtml(sample.callsign || '') + '</strong><div>' +
-            escapeHtml(ui('Cobertura RF amostrada — não é previsão de cobertura contínua.', 'Sampled RF coverage — not a prediction.')) +
-            '</div><div>' + escapeHtml(direct ? ui('RF observado', 'Observed RF') :
-            ui('Inferido pelo path APRS', 'Inferred from APRS path')) + '</div><div>' +
-            escapeHtml(ui('Observações: ', 'Observations: ') + Number(sample.count || 0)) +
-            '</div><div>' + escapeHtml(fmtDate(sample.last_seen)) + '</div>')
-          .addTo(layer);
+      const points = (Array.isArray(samples) ? samples : [])
+        .filter(sample => Number.isFinite(Number(sample.latitude)) && Number.isFinite(Number(sample.longitude)));
+      state.mapLayerCounts.coverage = points.length;
+      updateMapViewLayerCounts();
+      const HeatLayer = window.pt2vhfCreateHeatLayer?.();
+      if (state.rfCoverageLayer && HeatLayer && state.rfCoverageLayer instanceof HeatLayer) {
+        state.rfCoverageLayer.setPoints(points);
+        return;
       }
       if (state.rfCoverageLayer) state.map.removeLayer(state.rfCoverageLayer);
+      if (HeatLayer) {
+        state.rfCoverageLayer = new HeatLayer(points).addTo(state.map);
+        return;
+      }
+      // Sem o desenhador de calor (v142.js), mostra os pontos como círculos.
+      const layer = L.layerGroup();
+      for (const sample of points) {
+        L.circleMarker([Number(sample.latitude), Number(sample.longitude)], {
+          radius: Math.min(9, 4 + Math.log2(1 + Number(sample.count || 1))),
+          weight: 1, color: '#f59e0b', fillColor: '#f59e0b', opacity: .9, fillOpacity: .5,
+          pane: 'pt2vhfInteractionPane' }).addTo(layer);
+      }
       state.rfCoverageLayer = layer.addTo(state.map);
     } catch (err) { console.warn('Observed RF coverage:', err); }
   }

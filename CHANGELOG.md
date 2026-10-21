@@ -1,3 +1,8 @@
+## 1.14.51 - 2026-10-21
+
+- Mapa: **Cobertura RF (mapa de calor)**. Ao habilitar a opção no menu Ver, o mapa mostra um mapa de calor com todo ponto onde houve ao menos uma transmissão RF (posição de quem transmitiu um salto) ou recepção RF (posição de quem ouviu ou repetiu), usando as coordenadas do momento de cada pacote em `topology_events`, diretas ou inferidas pelo path. Pontos agregados em células de ~1 km com peso logarítmico; APRS-IS puro e coordenadas APRS inválidas (#121) não entram. Antes a opção mostrava só pontos de digipeaters móveis, como círculos.
+- Menu Ver: a segunda opção "Cobertura RF" (v1.42, que só usava pacotes do TNC local e ficava vazia com tráfego APRS-IS) foi removida; quem a tinha ligada continua com a cobertura ligada. Contagem de pontos exibida.
+
 ## 1.14.50 - 2026-10-21
 
 - Mapa (#116): tracker circulando dentro de uma cidade (ex.: Ceilândia → digi na Asa Norte) deixava uma linha RF fixa para cada ponto do trajeto. A detecção de móvel exigia deslocamento ≥ 25 km; agora uma estação com pelo menos 2 pontos de tracklog acima de 3 km/h também é móvel e mostra só o último contato como RF móvel, com TTL.

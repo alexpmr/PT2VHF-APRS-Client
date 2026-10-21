@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.51": {
+        "title": "Cobertura RF em mapa de calor",
+        "items": [
+            "Ver → Cobertura RF (mapa de calor) mostra todo ponto onde houve ao menos uma transmissão ou recepção RF.",
+            "Usa as posições do momento de cada pacote, de qualquer estação (não só digis móveis); APRS-IS puro não entra.",
+            "A opção duplicada de cobertura foi removida do menu Ver, que agora mostra a quantidade de pontos.",
+        ],
+    },
     "1.14.50": {
         "title": "Trackers sem enlaces órfãos",
         "items": [

@@ -1,3 +1,9 @@
+## RELEASE — v1.14.51 (21/10/2026): Cobertura RF em mapa de calor
+
+- **Pedido:** ao habilitar a visualização de cobertura RF, criar um mapa de calor com os pontos onde houve pelo menos uma vez transmissão ou recepção por RF.
+- **Antes:** havia duas opções — "Cobertura RF observada" (só digis móveis, em círculos) e "Cobertura RF" da v1.42 (só pacotes do TNC local; vazia em bancos APRS-IS).
+- **Implementado:** `topology_map.list_rf_activity_points` agrega em células de ~1 km as posições de origem (TX) e destino (RX) de todos os eventos RF, com peso logarítmico; `/api/topology/rf-coverage` passa a usá-la e o menu Ver tem uma única opção "Cobertura RF (mapa de calor)", desenhada com o heatmap da v1.42.
+
 ## RELEASE — v1.14.50 (21/10/2026): trackers sem enlaces órfãos (#116)
 
 - **Relato com captura:** tracker em Ceilândia com três linhas amarelas (RF fixo) de pontos antigos do trajeto até o digi da Asa Norte. Pedido: mostrar só o enlace mais recente.

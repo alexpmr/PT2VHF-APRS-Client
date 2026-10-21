@@ -456,6 +456,83 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
     return mark_overview_endpoint_coherence(segments, positions)
 
 
+# ~1,1 km por célula do mapa de calor de cobertura RF.
+RF_ACTIVITY_CELL_DEGREES = 0.01
+
+
+def list_rf_activity_points(hours: float = 0, limit: int = 4000) -> list[dict[str, Any]]:
+    """Pontos onde houve ao menos uma transmissão ou recepção RF (v1.14.51).
+
+    Cada evento RF tem a posição de quem transmitiu (source) e de quem ouviu
+    ou repetiu (target) no instante do pacote. As posições são agregadas em
+    células de ~1 km para o mapa de calor; é atividade observada, não
+    previsão de cobertura. APRS-IS puro (kind 'igate') não entra, e quadros
+    com coordenada APRS inválida (#121) são ignorados.
+    """
+    try:
+        period = float(hours or 0)
+    except (TypeError, ValueError):
+        period = 0.0
+    period = min(max(period, 0.25), 720.0) if math.isfinite(period) and period > 0 else 0.0
+    where = "WHERE kind='rf'"
+    params: list[Any] = []
+    if period:
+        where += " AND timestamp>=?"
+        params.append((datetime.now(timezone.utc) - timedelta(hours=period)).isoformat(timespec="seconds"))
+    params.append(MAP_EVENT_SCAN_LIMIT)
+    with db.connection() as conn:
+        rows = conn.execute(
+            f"""SELECT timestamp,source,target,medium,evidence_level,
+                       source_lat,source_lon,target_lat,target_lon,raw
+                  FROM topology_events {where}
+                 ORDER BY timestamp DESC,id DESC LIMIT ?""", params,
+        ).fetchall()
+    cells: dict[tuple[int, int], dict[str, Any]] = {}
+    for raw_row in rows:
+        row = dict(raw_row)
+        if row.get("raw") and db.raw_aprs_position_issue(str(row["raw"])):
+            continue
+        direct = (str(row.get("medium") or "").upper() == "RF"
+                  and str(row.get("evidence_level") or "").lower() == "direct")
+        timestamp = str(row.get("timestamp") or "")
+        for field, counter in (("source", "tx"), ("target", "rx")):
+            pos = _validated_position(row.get(field + "_lat"), row.get(field + "_lon"))
+            if pos is None:
+                continue
+            key = (math.floor(pos[0] / RF_ACTIVITY_CELL_DEGREES),
+                   math.floor(pos[1] / RF_ACTIVITY_CELL_DEGREES))
+            cell = cells.get(key)
+            if cell is None:
+                cell = {"lat_sum": 0.0, "lon_sum": 0.0, "tx": 0, "rx": 0,
+                        "callsigns": set(), "direct": False,
+                        "first_seen": timestamp, "last_seen": timestamp}
+                cells[key] = cell
+            cell["lat_sum"] += pos[0]
+            cell["lon_sum"] += pos[1]
+            cell[counter] += 1
+            cell["direct"] = cell["direct"] or direct
+            call = str(row.get(field) or "").strip().upper()
+            if call:
+                cell["callsigns"].add(call)
+            cell["first_seen"] = min(cell["first_seen"], timestamp)
+            cell["last_seen"] = max(cell["last_seen"], timestamp)
+    points = []
+    for cell in cells.values():
+        count = cell["tx"] + cell["rx"]
+        points.append({
+            "latitude": round(cell["lat_sum"] / count, 6),
+            "longitude": round(cell["lon_sum"] / count, 6),
+            "tx": cell["tx"], "rx": cell["rx"], "count": count,
+            # 1 observação ~0,25; cresce de forma logarítmica até 1.
+            "weight": round(min(1.0, 0.25 + math.log1p(count) / 6.0), 3),
+            "evidence": "direct" if cell["direct"] else "inferred",
+            "callsigns": sorted(cell["callsigns"])[:8],
+            "first_seen": cell["first_seen"], "last_seen": cell["last_seen"],
+        })
+    points.sort(key=lambda item: (item["count"], item["last_seen"]), reverse=True)
+    return points[:max(1, min(int(limit), 8000))]
+
+
 def list_mobile_rf_coverage(hours: float = 0, limit: int = 1200) -> list[dict[str, Any]]:
     """Observed RF repeater activity locations, not predicted continuous coverage.
 
