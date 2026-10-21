@@ -3,7 +3,10 @@ name: Atualizar downloads da versão atual
 on:
   workflow_dispatch:
   schedule:
-    - cron: "19 4 * * *"
+    # De hora em hora: downloads feitos pelas atualizações do próprio
+    # programa aparecem na tabela sem esperar um dia. O script só cria commit
+    # quando algum contador mudou.
+    - cron: "19 * * * *"
   push:
     branches: [main]
     paths:
