@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.50": {
+        "title": "Trackers sem enlaces órfãos",
+        "items": [
+            "Estações que informam velocidade no tracklog passam a ser reconhecidas como móveis, mesmo circulando dentro de uma cidade.",
+            "Cada par de estações mostra só o enlace do contato mais recente; posições antigas do trajeto não deixam mais linhas órfãs.",
+            "O histórico completo continua no banco e nas contagens de pacotes.",
+        ],
+    },
     "1.14.49": {
         "title": "Trackers móveis no mapa e contagens no menu Ver",
         "items": [

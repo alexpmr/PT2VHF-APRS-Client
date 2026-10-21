@@ -92,7 +92,9 @@ def test_mobile_pt2ap_historical_rf_edges_cannot_stretch_to_latest_gps(monkeypat
         db.DB_PATH = original
 
 
-def test_same_pair_multiple_mobile_regions_have_independent_segments():
+def test_same_pair_in_two_regions_draws_only_latest_contact():
+    # v1.14.50: o mantenedor pediu só o enlace mais recente; antes cada região
+    # visitada gerava um segmento independente, que ficava órfão no mapa.
     original = db.DB_PATH
     try:
         with tempfile.TemporaryDirectory() as td:
@@ -107,9 +109,9 @@ def test_same_pair_multiple_mobile_regions_have_independent_segments():
                        "PY2A-9", "PT2AP-10", "rf",
                        (-19.80, -47.8), (-19.79, -47.79))
             edges = topology_map.list_map_edges(24)
-            assert len(edges) == 2
-            assert len({e["segment_id"] for e in edges}) == 2
-            assert {e["target_lat"] for e in edges} == {-25.19, -19.79}
+            assert len(edges) == 1
+            assert edges[0]["target_lat"] == -19.79
+            assert edges[0]["packet_count"] == 1 and edges[0]["rf_packet_count"] == 2
     finally:
         db.DB_PATH = original
 

@@ -77,6 +77,10 @@ def _validated_position(lat: Any, lon: Any) -> tuple[float, float] | None:
     return float(lat), float(lon)
 
 
+# Acima disso (km/h, como no tracklog) o pacote indica estação em movimento.
+MOBILE_SPEED_KMH = 3.0
+
+
 def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
     """Find repeaters or stations with corroborated displaced RF/GPS positions.
 
@@ -103,11 +107,21 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
         observe(row.get("source"), row.get("source_lat"), row.get("source_lon"))
         observe(row.get("target"), row.get("target_lat"), row.get("target_lon"))
 
+    # v1.14.50: velocidade informada no tracklog é evidência direta de veículo.
+    # Um tracker que circula numa mesma cidade nunca atingia os 25 km abaixo e
+    # deixava várias linhas RF "fixas" de pontos antigos do trajeto.
+    moving_reports: dict[str, int] = defaultdict(int)
     for raw in tracks:
         row = dict(raw)
         observe(row.get("callsign"), row.get("latitude"), row.get("longitude"))
+        try:
+            speed = float(row.get("speed") or 0.0)
+        except (TypeError, ValueError):
+            speed = 0.0
+        if speed > MOBILE_SPEED_KMH:
+            moving_reports[str(row.get("callsign") or "").strip().upper()] += 1
 
-    moving = set()
+    moving = {call for call, count in moving_reports.items() if call and count >= 2}
     for call, bins in positions.items():
         established = [item for item in bins.values() if item[2] >= 2]
         repeated_displacement = any(
@@ -264,6 +278,13 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
                 "mobile_callsigns": mobile_owners,
             }
             segments[key] = segment
+        elif time_text > segment["event_timestamp"]:
+            # Geometry always follows the newest contact, whatever the row order.
+            segment.update({
+                "source_lat": source_pos[0], "source_lon": source_pos[1],
+                "target_lat": target_pos[0], "target_lon": target_pos[1],
+                "event_timestamp": time_text,
+            })
         segment["packet_count"] += 1
         segment["first_seen"] = min(segment["first_seen"], time_text)
         segment["last_seen"] = max(segment["last_seen"], time_text)
@@ -280,7 +301,17 @@ def _segments_from_events(rows: list[Any], max_segments: int = MAP_SEGMENT_LIMIT
     totals: dict[tuple[str, str, str], int] = defaultdict(int)
     for segment in segments.values():
         totals[(segment["source"], segment["target"], segment["kind"])] += segment["packet_count"]
-    ordered = sorted(segments.values(), key=lambda item: item["last_seen"], reverse=True)
+    # v1.14.50: one line per source -> target -> kind, at its most recent
+    # contact. A station that moved without being classified as mobile used to
+    # leave one orphan line per visited region; the history stays in SQLite
+    # and in the packet totals above.
+    latest_by_pair: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for segment in segments.values():
+        pair_key = (segment["source"], segment["target"], segment["kind"])
+        current = latest_by_pair.get(pair_key)
+        if current is None or segment["last_seen"] > current["last_seen"]:
+            latest_by_pair[pair_key] = segment
+    ordered = sorted(latest_by_pair.values(), key=lambda item: item["last_seen"], reverse=True)
     if len(ordered) > max_segments:
         diag.log_event("topology_map_segment_limit", total=len(ordered), shown=max_segments)
         ordered = ordered[:max_segments]
@@ -399,7 +430,7 @@ def list_map_edges(hours: float = 0) -> list[dict[str, Any]]:
         else:
             reference = rows
         tracks = conn.execute(
-            """SELECT callsign,latitude,longitude FROM tracks
+            """SELECT callsign,latitude,longitude,speed FROM tracks
                ORDER BY timestamp DESC,id DESC LIMIT ?""",
             (MAP_EVENT_SCAN_LIMIT,),
         ).fetchall()
@@ -463,7 +494,7 @@ def list_mobile_rf_coverage(hours: float = 0, limit: int = 1200) -> list[dict[st
             reference = rows
     with db.connection() as conn:
         tracks = conn.execute(
-            """SELECT callsign,latitude,longitude FROM tracks
+            """SELECT callsign,latitude,longitude,speed FROM tracks
                ORDER BY timestamp DESC,id DESC LIMIT ?""",
             (MAP_EVENT_SCAN_LIMIT,),
         ).fetchall()
