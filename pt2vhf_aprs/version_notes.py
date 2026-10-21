@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.52": {
+        "title": "Mapa de calor clássico e aviso de nova versão",
+        "items": [
+            "Cobertura RF com mapa de calor clássico: cores de azul (pouca atividade) a vermelho (muita), sem desbotar o mapa.",
+            "A espessura da mancha corresponde à área real (~1,5 km por ponto) em qualquer zoom; legenda baixa → muito alta.",
+            "Quando houver versão nova, um aviso pergunta se você deseja atualizar agora; \"Depois\" adia por 24 horas.",
+        ],
+    },
     "1.14.51": {
         "title": "Cobertura RF em mapa de calor",
         "items": [

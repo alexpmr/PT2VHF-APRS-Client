@@ -1,3 +1,8 @@
+## RELEASE — v1.14.52 (21/10/2026): mapa de calor clássico e aviso de nova versão
+
+- **Mapa de calor (pedido com captura de referência):** o anterior era claro e gordo demais. Agora densidade → paleta azul…vermelho, raio geográfico ~1,5 km, sem `mix-blend-mode: screen`, legenda.
+- **Popup de nova versão:** além do indicador no cabeçalho, o aviso de atualização abre sozinho perguntando se deseja atualizar; "Depois" adia por 24 h. **Mesmo recurso pedido para Sat Tool, Prop Tool, Mesh Analyzer e venus-8** — tratado em cada repositório.
+
 ## RELEASE — v1.14.51 (21/10/2026): Cobertura RF em mapa de calor
 
 - **Pedido:** ao habilitar a visualização de cobertura RF, criar um mapa de calor com os pontos onde houve pelo menos uma vez transmissão ou recepção por RF.

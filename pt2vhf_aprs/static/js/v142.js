@@ -34,6 +34,42 @@ async function req(url) {
   return data;
 }
 
+const HEAT_RADIUS_METERS = 1500;
+const HEAT_MIN_RADIUS_PX = 5;
+const HEAT_MAX_RADIUS_PX = 40;
+const HEAT_MAX_ALPHA = 215;
+const HEAT_GRADIENT = [[0, '#0000ff'], [.35, '#00c8ff'], [.55, '#00ff40'], [.7, '#ffff00'], [.85, '#ff8000'], [1, '#ff0000']];
+const heatStamps = new Map();
+let heatPaletteCache = null;
+
+function heatStamp(radius) {
+  if (heatStamps.has(radius)) return heatStamps.get(radius);
+  const stamp = document.createElement('canvas');
+  stamp.width = stamp.height = radius * 2;
+  const ctx = stamp.getContext('2d');
+  const gradient = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+  gradient.addColorStop(0, 'rgba(0,0,0,1)');
+  gradient.addColorStop(.45, 'rgba(0,0,0,.55)');
+  gradient.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, radius * 2, radius * 2);
+  heatStamps.set(radius, stamp);
+  return stamp;
+}
+
+function heatPalette() {
+  if (heatPaletteCache) return heatPaletteCache;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1; canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+  for (const [stop, color] of HEAT_GRADIENT) gradient.addColorStop(stop, color);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 1, 256);
+  heatPaletteCache = ctx.getImageData(0, 0, 1, 256).data;
+  return heatPaletteCache;
+}
+
 function createHeatLayer() {
   if (!window.L || !L.Layer) return null;
   return L.Layer.extend({
@@ -65,34 +101,50 @@ function createHeatLayer() {
       L.DomUtil.setPosition(this._canvas, topLeft);
       this._draw();
     },
+    // v1.14.52: mapa de calor clássico (densidade → paleta azul…vermelho).
+    // Cada ponto soma intensidade num canvas em tons de alfa; depois a
+    // intensidade acumulada vira cor. O raio é geográfico (~1,5 km), então a
+    // espessura acompanha a área real em qualquer zoom.
     _draw() {
       if (!this._map || !this._canvas) return;
       const ctx = this._canvas.getContext('2d');
       if (!ctx) return;
-      const ratio = this._canvas.width / Math.max(1, this._map.getSize().x);
-      ctx.setTransform(ratio,0,0,ratio,0,0);
-      ctx.clearRect(0,0,this._canvas.width/ratio,this._canvas.height/ratio);
-      ctx.globalCompositeOperation = 'lighter';
+      const width = this._canvas.width, height = this._canvas.height;
+      const ratio = width / Math.max(1, this._map.getSize().x);
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,width,height);
+      const points = this._points || [];
+      if (!points.length) return;
       const zoom = Number(this._map.getZoom() || 8);
-      const radius = Math.max(20, Math.min(76, 62 - (zoom - 6) * 3.2));
-      const bounds = this._map.getBounds().pad(.18);
-      for (const point of this._points || []) {
-        const lat = Number(point.latitude), lon = Number(point.longitude);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
-        const ll = L.latLng(lat,lon);
+      const lat = this._map.getCenter().lat;
+      const metersPerPixel = 40075016.686 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom + 8);
+      const radius = Math.round(Math.max(HEAT_MIN_RADIUS_PX,
+        Math.min(HEAT_MAX_RADIUS_PX, HEAT_RADIUS_METERS / Math.max(metersPerPixel, 1e-6))) * ratio);
+      const stamp = heatStamp(radius);
+      const bounds = this._map.getBounds().pad(.1);
+      for (const point of points) {
+        const plat = Number(point.latitude), plon = Number(point.longitude);
+        if (!Number.isFinite(plat) || !Number.isFinite(plon)) continue;
+        const ll = L.latLng(plat, plon);
         if (!bounds.contains(ll)) continue;
-        const p = this._map.latLngToContainerPoint(ll);
-        const w = Math.max(.12, Math.min(1, Number(point.weight || .3)));
-        const r = radius * (.72 + w * .45);
-        const gradient = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r);
-        gradient.addColorStop(0, `rgba(255,60,0,${0.16 + w * 0.30})`);
-        gradient.addColorStop(.28, `rgba(255,174,0,${0.12 + w * 0.20})`);
-        gradient.addColorStop(.62, `rgba(255,230,40,${0.06 + w * 0.10})`);
-        gradient.addColorStop(1, 'rgba(255,230,40,0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(p.x-r,p.y-r,r*2,r*2);
+        const pos = this._map.latLngToContainerPoint(ll);
+        ctx.globalAlpha = Math.max(.08, Math.min(1, Number(point.weight || .3)));
+        ctx.drawImage(stamp, pos.x * ratio - radius, pos.y * ratio - radius);
       }
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+      const image = ctx.getImageData(0, 0, width, height);
+      const pixels = image.data;
+      const palette = heatPalette();
+      for (let i = 3; i < pixels.length; i += 4) {
+        const alpha = pixels[i];
+        if (!alpha) continue;
+        const index = alpha * 4;
+        pixels[i - 3] = palette[index];
+        pixels[i - 2] = palette[index + 1];
+        pixels[i - 1] = palette[index + 2];
+        pixels[i] = Math.min(HEAT_MAX_ALPHA, 70 + alpha);
+      }
+      ctx.putImageData(image, 0, 0);
     }
   });
 }

@@ -4,8 +4,6 @@
   left:0;
   top:0;
   pointer-events:none!important;
-  mix-blend-mode:screen;
-  opacity:.92;
 }
 .v142-rf-coverage-node .map-view-label{
   display:flex;
@@ -65,7 +63,4 @@
   color:var(--muted);
   font-size:9px;
 }
-html[data-theme="light"] .v142-rf-heatmap-canvas{
-  mix-blend-mode:multiply;
-  opacity:.78;
-}
+/* v1.14.52: cores saturadas sem mistura que desbotava o mapa de calor. */
