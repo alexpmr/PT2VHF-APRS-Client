@@ -1424,7 +1424,8 @@ def create_app() -> Flask:
             hours = float(request.args.get("hours", 0))
         except (TypeError, ValueError):
             hours = 0
-        return jsonify(topology_map.list_mobile_rf_coverage(hours))
+        # v1.14.51: mapa de calor com todo ponto de transmissão/recepção RF.
+        return jsonify(topology_map.list_rf_activity_points(hours))
 
     @app.get("/api/topology/rf-origins")
     def api_topology_rf_origins():
