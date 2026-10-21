@@ -1,3 +1,9 @@
+## RELEASE — v1.14.50 (21/10/2026): trackers sem enlaces órfãos (#116)
+
+- **Relato com captura:** tracker em Ceilândia com três linhas amarelas (RF fixo) de pontos antigos do trajeto até o digi da Asa Norte. Pedido: mostrar só o enlace mais recente.
+- **Causa:** `moving_rf_repeaters` exigia deslocamento ≥ 25 km; o tracker local era tratado como fixo e cada região (bin espacial) gerava um segmento próprio.
+- **Correção:** velocidade > 3 km/h em ≥ 2 pontos do tracklog classifica a estação como móvel (RF móvel, último contato, TTL); e, em qualquer caso, um único segmento por origem → destino → tipo, no contato mais recente. Reproduzido com pacotes reais: v1.14.47 → 3 linhas `rf`; v1.14.50 → 1 linha `rf_mobile`.
+
 ## RELEASE — v1.14.49 (20/10/2026)
 
 - **Trackers móveis (#116):** relato do mantenedor: "o enlace só é mostrado quando há uma animação, sumindo após isso". Reproduzido com tracker deslocado >25 km e ouvido por digi fixo: `_segments_from_events` descartava todo enlace de móvel que não fosse digi/iGate (regra da #94), embora a animação desenhasse o trecho. Decisão do mantenedor: mostrar o **último contato RF válido** de cada móvel, inclusive trackers, como `rf_mobile`, com TTL e filtro Ver → Enlaces móveis. Testes antigos da regra "tracker oculto" reescritos.

@@ -1,3 +1,8 @@
+## 1.14.50 - 2026-10-21
+
+- Mapa (#116): tracker circulando dentro de uma cidade (ex.: Ceilândia → digi na Asa Norte) deixava uma linha RF fixa para cada ponto do trajeto. A detecção de móvel exigia deslocamento ≥ 25 km; agora uma estação com pelo menos 2 pontos de tracklog acima de 3 km/h também é móvel e mostra só o último contato como RF móvel, com TTL.
+- Mapa: rede de segurança — para cada origem → destino → tipo, apenas o segmento do contato mais recente é desenhado, com a geometria desse contato. Substitui a regra da v1.14.35 de um segmento por região visitada; o histórico continua no SQLite e nas contagens de pacotes.
+
 ## 1.14.49 - 2026-10-20
 
 - Mapa (#116): estações móveis que só transmitem (trackers, ex.: PU2CAR-9 ouvido por um digi fixo) passam a mostrar o enlace do **último contato RF válido**, na posição daquele momento, como RF móvel, com o TTL configurável (padrão 3 h) e o filtro Ver → Enlaces móveis. Antes eram descartados por completo e só apareciam durante a animação de tráfego. Contatos antigos continuam somente no SQLite, sem linhas "aranha". Substitui a regra anterior da #94 para trackers, por decisão do mantenedor.
