@@ -71,6 +71,10 @@ MESSAGE_RE = re.compile(r"^(?P<source>[^>]+)>(?P<header>[^:]+)::(?P<dest>.{9}):(
 WIDE_RE = re.compile(r"^WIDE(?P<n>[1-7])-(?P<remaining>[1-7])$", re.I)
 
 
+RX_MONITOR_SIZE = 300
+RX_MONITOR_SAMPLE = 96
+
+
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -1440,6 +1444,41 @@ class TNCService:
         self._ports_cache: list[dict[str, Any]] = []
         self._ports_cache_at = 0.0
         self._ports_signature = ""
+        # Monitor RX ao vivo: últimos blocos de bytes e frames vistos no transporte.
+        self._rx_log: deque[dict[str, Any]] = deque(maxlen=RX_MONITOR_SIZE)
+        self._rx_log_lock = threading.Lock()
+        self._rx_log_seq = 0
+
+    def _log_rx(self, kind: str, data: bytes = b"", text: str = "") -> None:
+        safe = bytes(data[:RX_MONITOR_SAMPLE])
+        with self._rx_log_lock:
+            self._rx_log_seq += 1
+            self._rx_log.append({
+                "seq": self._rx_log_seq,
+                "at": utc_now_iso(),
+                "kind": kind,
+                "size": len(data),
+                "hex": safe.hex(" "),
+                "ascii": "".join(chr(b) if 32 <= b <= 126 else "." for b in safe),
+                "text": text,
+            })
+
+    def rx_monitor(self, since: int = 0) -> dict[str, Any]:
+        with self._rx_log_lock:
+            entries = [dict(item) for item in self._rx_log if int(item["seq"]) > int(since or 0)]
+            seq = self._rx_log_seq
+        status = self.status()
+        return {
+            "seq": seq,
+            "entries": entries,
+            "connected": bool(status.get("connected")),
+            "endpoint": str(status.get("endpoint") or ""),
+            "transport_bytes_rx": int(status.get("transport_bytes_rx") or 0),
+            "kiss_frames_rx": int(status.get("kiss_frames_rx") or 0),
+            "frames_rx": int(status.get("frames_rx") or 0),
+            "invalid_frames_rx": int(status.get("invalid_frames_rx") or 0),
+            "rx_state": str(status.get("rx_state") or ""),
+        }
 
     def status(self) -> dict[str, Any]:
         with self._status_lock:
@@ -1773,6 +1812,7 @@ class TNCService:
                         last_transport_sample_ascii="".join(chr(b) if 32 <= b <= 126 else "." for b in safe_sample),
                     )
                     self._increment_status("transport_bytes_rx", len(chunk))
+                    self._log_rx("bytes", chunk)
                     if cfg["transport"] == "agwpe":
                         for agw_frame in agw_decoder.feed(chunk):
                             if agw_frame.kind != "K" or not agw_frame.data:
@@ -1984,6 +2024,7 @@ class TNCService:
         except Exception as exc:
             self._increment_status("invalid_frames_rx")
             self._set_status(last_rx_error=str(exc))
+            self._log_rx("invalid", frame, str(exc))
             record_decision("rx", "ignored", f"Frame AX.25 inválido: {exc}")
             diag.log_event("tnc_invalid_ax25_frame", error=str(exc), frame_length=len(frame))
             return
@@ -1994,6 +2035,7 @@ class TNCService:
         source = packet["source"]
         destination = packet["destination"]
         kind = packet_priority_kind(packet["info_text"])
+        self._log_rx("ax25", frame, packet["tnc2"])
         self._set_status(last_rx_at=utc_now_iso(), last_rx_error="")
         self._increment_status("frames_rx")
         record_frame(

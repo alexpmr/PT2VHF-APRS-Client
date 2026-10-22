@@ -755,6 +755,20 @@
     </div>
     <div id="tncError" class="tnc-error hidden" role="alert"></div>
 
+    <article id="tncListenCard" class="config-card tnc-listen-card">
+      <h3>Teste de recepção (não transmite)</h3>
+      <p class="hint">Escuta o TNC por alguns segundos e explica o que chegou: nada, texto, bytes ilegíveis, KISS inválido ou pacotes válidos. Com o TNC conectado, observa a sessão atual sem disputar a porta.</p>
+      <div class="tnc-listen-controls">
+        <label class="field"><span>Duração</span>
+          <select id="tncListenSeconds"><option value="10" selected>10 s</option><option value="20">20 s</option><option value="30">30 s</option></select>
+        </label>
+        <button id="tncListenTest" type="button" class="btn primary">Escutar agora</button>
+        <label class="check-field"><input id="tncRxMonitorLive" type="checkbox"><span>Monitor de bytes ao vivo</span></label>
+      </div>
+      <div id="tncListenResult" class="tnc-listen-result hidden" data-verdict=""></div>
+      <pre id="tncRxMonitor" class="tnc-rx-monitor hidden" aria-live="off"></pre>
+    </article>
+
     <form id="tncForm" class="tnc-config-grid">
       <article class="config-card">
         <h3>Conexão KISS</h3>
@@ -1461,7 +1475,10 @@
           <button id="saveRetentionPolicy" type="button" class="btn primary">Salvar política</button>
           <button id="applyRetentionNow" type="button" class="btn secondary">Aplicar retenção agora</button>
           <button id="resetRetentionPolicy" type="button" class="btn secondary">Restaurar padrões</button>
+          <button id="checkDatabaseButton" type="button" class="btn secondary">Verificar banco</button>
+          <button id="repairDatabaseButton" type="button" class="btn secondary hidden">Reparar estrutura</button>
         </div>
+        <div id="databaseCheckResult" class="db-check-result hidden" aria-live="polite"></div>
         <small id="retentionResultStatus" class="hint">Instalações antigas não têm registros apagados automaticamente até a ativação explícita.</small>
       </div>
 

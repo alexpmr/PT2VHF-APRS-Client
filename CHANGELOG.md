@@ -1,3 +1,11 @@
+## 1.14.54 - 2026-10-22
+
+- TNC (#118): novo cartão **Teste de recepção (não transmite)** na aba TNC / RF. "Escutar agora" ouve por 10, 20 ou 30 s e explica o resultado: nada recebido (cabo/porta, modo KISS, velocidade serial, RTS/DTR, frequência), texto legível (TNC em modo terminal), bytes ilegíveis (velocidade serial errada, com as alternativas comuns), KISS sem AX.25 válido ou pacotes válidos (lista os primeiros). Com o TNC conectado, observa a sessão atual sem reabrir a porta; desconectado, abre a porta só para ler. O teste antigo lia apenas os bytes já disponíveis no instante da abertura e quase sempre retornava zero.
+- TNC: **Monitor de bytes ao vivo** — mostra cada bloco recebido (ASCII + HEX), cada pacote AX.25 decodificado e cada frame inválido, atualizado a cada segundo (últimos 300 eventos em memória).
+- Configuração → Retenção e tamanho do banco: botão **Verificar banco** — integridade do arquivo (quick_check), tabelas e colunas exigidas pelo mapa, quantos eventos de enlace têm posição para serem desenhados (total e últimas 24 h), enlaces RF cuja origem não tem posição, último pacote e espaço livre. Explica por que enlaces podem não aparecer sem precisar apagar o banco. Quando falta estrutura ou geometria, **Reparar estrutura** recria tabelas/colunas/índices ausentes, refaz o preenchimento de posição dos eventos, REINDEX e ANALYZE — nenhum registro é apagado.
+- Backlog: Automações/Auto-resposta (#125), LEDs TX/RX (#124) e Grid Locator (#106) já estavam implementados desde a v1.14.40–v1.14.46; títulos de pendência atualizados.
+- CI: geração do manual em PDF fixada em Ubuntu 24.04 (a migração de `ubuntu-latest` para Ubuntu 26 quebrou o passo) e anotação do comando que falhar.
+
 ## 1.14.53 - 2026-10-22
 
 - Mapa de calor da Cobertura RF com armazenamento e retenção próprios: nova tabela `rf_coverage_cells` (células de ~1 km por dia UTC, com TX/RX), alimentada a cada evento RF e preenchida uma única vez a partir do histórico de `topology_events` (~3 s para 100 mil eventos). Novo item **Configuração → Retenção → "Mapa de calor (cobertura RF)"** (padrão Permanente), independente de tracklogs, estações, digis, enlaces e eventos de topologia; também em "Limpar tudo" e nas Estatísticas por categoria.

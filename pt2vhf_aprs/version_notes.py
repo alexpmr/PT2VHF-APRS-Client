@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.54": {
+        "title": "Teste de recepção do TNC e Verificar banco",
+        "items": [
+            "TNC / RF → Teste de recepção: escuta o TNC por 10 a 30 s, sem transmitir, e explica o que está errado quando nada chega.",
+            "Monitor de bytes ao vivo: veja cada byte e cada pacote AX.25 que o TNC entrega ao programa.",
+            "Configuração → Verificar banco: confere integridade, estrutura e posições dos enlaces, explicando por que algo não aparece no mapa.",
+            "Reparar estrutura recria o que faltar no banco sem apagar nenhum registro.",
+        ],
+    },
     "1.14.53": {
         "title": "Retenção própria do mapa de calor",
         "items": [

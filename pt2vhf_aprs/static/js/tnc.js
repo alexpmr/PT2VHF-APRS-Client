@@ -783,6 +783,99 @@
     } catch (error) { showError(error.message); }
   }
 
+  // v1.14.54 — teste de recepção (escuta sem transmitir) e monitor de bytes ao vivo.
+  const VERDICT_TITLES = {
+    ok: 'Recepção funcionando', terminal_bytes: 'Bytes em modo terminal',
+    no_bytes: 'Nada recebido', text_not_kiss: 'Texto recebido, mas não KISS',
+    garbage_not_kiss: 'Bytes ilegíveis (velocidade?)', invalid_ax25: 'KISS sem AX.25 válido',
+    error: 'Falha ao abrir o transporte'
+  };
+  let rxMonitorSeq = 0;
+  let rxMonitorTimer = null;
+  let rxMonitorLines = [];
+
+  function renderListenResult(r = {}) {
+    const box = $('#tncListenResult');
+    if (!box) return;
+    box.dataset.verdict = r.verdict || '';
+    const title = tr(VERDICT_TITLES[r.verdict] || 'Resultado');
+    const counts = `${r.bytes_rx || 0} byte(s) · ${r.kiss_frames || 0} frame(s) KISS · ${r.valid_packets || 0} ${tr('pacote(s) válido(s)')} · ${r.seconds || 0} s · ${esc(r.endpoint || r.transport || '')}`;
+    const hints = (r.hints || []).map(h => `<li>${esc(tr(h))}</li>`).join('');
+    const packets = (r.packets || []).map(p => `<li><code>${esc(p)}</code></li>`).join('');
+    const sample = r.sample_ascii ? `<div><small>ASCII</small> <code>${esc(r.sample_ascii)}</code></div><div><small>HEX</small> <code>${esc(r.sample_hex)}</code></div>` : '';
+    box.innerHTML = `<strong>${esc(title)}</strong><div><small>${counts}</small></div>${hints ? `<ul>${hints}</ul>` : ''}${packets ? `<div>${tr('Pacotes:')}</div><ul>${packets}</ul>` : ''}${sample}`;
+    box.classList.remove('hidden');
+  }
+
+  async function runListenTest() {
+    const button = $('#tncListenTest');
+    const seconds = Number(val('tncListenSeconds', '10')) || 10;
+    const box = $('#tncListenResult');
+    if (button) button.disabled = true;
+    if (box) {
+      box.dataset.verdict = 'running';
+      box.textContent = tr('Escutando…') + ` ${seconds} s`;
+      box.classList.remove('hidden');
+    }
+    try {
+      await saveConfig({quiet:true});
+      // Veredito negativo vem com ok:false e precisa ser exibido, não lançado como erro.
+      const response = await fetch('/api/tnc/listen-test', {method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body:JSON.stringify({seconds})});
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      renderListenResult(await response.json());
+    } catch (error) {
+      renderListenResult({verdict:'error', hints:[error.message], seconds});
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  function rxMonitorLine(e) {
+    const time = String(e.at || '').slice(11, 19);
+    if (e.kind === 'ax25') return `${time}  ✓ AX.25  ${e.text}`;
+    if (e.kind === 'invalid') return `${time}  ✗ ${tr('inválido')}: ${e.text}`;
+    return `${time}  ${String(e.size).padStart(4)} B  ${e.ascii}\n          ${e.hex}`;
+  }
+
+  async function pollRxMonitor() {
+    const pre = $('#tncRxMonitor');
+    if (!pre || !checked('tncRxMonitorLive')) return;
+    try {
+      const data = await requestJson('/api/tnc/rx-monitor?since=' + rxMonitorSeq);
+      if (data.seq < rxMonitorSeq) rxMonitorLines = [];
+      rxMonitorSeq = data.seq;
+      rxMonitorLines.push(...(data.entries || []).map(rxMonitorLine));
+      rxMonitorLines = rxMonitorLines.slice(-200);
+      const head = data.connected
+        ? `${tr('Conectado')} ${data.endpoint} — ${data.transport_bytes_rx} B, ${data.kiss_frames_rx} KISS, ${data.frames_rx} AX.25`
+        : tr('TNC desconectado — conecte para ver os bytes ao vivo, ou use “Escutar agora”.');
+      const stick = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 8;
+      pre.textContent = head + '\n' + (rxMonitorLines.length ? rxMonitorLines.join('\n') : tr('Aguardando bytes…'));
+      if (stick) pre.scrollTop = pre.scrollHeight;
+    } catch (error) {
+      pre.textContent = error.message;
+    }
+  }
+
+  function toggleRxMonitor() {
+    const on = checked('tncRxMonitorLive');
+    $('#tncRxMonitor')?.classList.toggle('hidden', !on);
+    if (rxMonitorTimer) { clearInterval(rxMonitorTimer); rxMonitorTimer = null; }
+    if (on) {
+      rxMonitorLines = [];
+      rxMonitorSeq = 0;
+      void pollRxMonitor();
+      rxMonitorTimer = setInterval(() => {
+        if ($('.tab.active[data-tab="tnc"]')) void pollRxMonitor();
+      }, 1000);
+    }
+  }
+
+  function bindListenTest() {
+    $('#tncListenTest')?.addEventListener('click', runListenTest);
+    field('tncRxMonitorLive')?.addEventListener('change', toggleRxMonitor);
+  }
+
   function bind() {
     if (initialized) return;
     initialized = true;
@@ -853,6 +946,7 @@
   });
   translateTncStatic();
   bind();
+  bindListenTest();
   initialLoad();
   pollTimer = setInterval(() => {
     refreshStatus();
