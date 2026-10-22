@@ -27,6 +27,7 @@ _SIMPLE = {
     "packets": ("packets", "1=1"),
     "aprs_log": ("aprs_log", "1=1"),
     "topology_events": ("topology_events", "1=1"),
+    "rf_coverage": ("rf_coverage_cells", "1=1"),
     "messages": ("messages", "LOWER(message_type)='message'"),
     "bulletins": ("messages", "LOWER(message_type)='bulletin'"),
     "groups": ("messages", "LOWER(message_type)='group'"),

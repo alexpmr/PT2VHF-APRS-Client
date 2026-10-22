@@ -57,6 +57,7 @@ def category_counts(hours: int = 0) -> dict[str, Any]:
             "internet_links": count(conn, "topology_edges", "last_seen",
                                     condition="kind='igate'"),
             "topology_events": count(conn, "topology_events", "timestamp"),
+            "rf_coverage": count(conn, "rf_coverage_cells", "last_seen"),
         }
         # Digi/iGate are sets of unique identifiers in observed topology,
         # not packet totals and not necessarily disjoint categories.

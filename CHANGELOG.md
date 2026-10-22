@@ -1,3 +1,8 @@
+## 1.14.53 - 2026-10-22
+
+- Mapa de calor da Cobertura RF com armazenamento e retenção próprios: nova tabela `rf_coverage_cells` (células de ~1 km por dia UTC, com TX/RX), alimentada a cada evento RF e preenchida uma única vez a partir do histórico de `topology_events` (~3 s para 100 mil eventos). Novo item **Configuração → Retenção → "Mapa de calor (cobertura RF)"** (padrão Permanente), independente de tracklogs, estações, digis, enlaces e eventos de topologia; também em "Limpar tudo" e nas Estatísticas por categoria.
+- Corrigido (desde a v1.14.44): a tela de retenção iterava um único elemento — não exibia os valores salvos (todas as categorias apareciam como "24 horas") e o botão **Salvar** falhava.
+
 ## 1.14.52 - 2026-10-21
 
 - Mapa de calor da Cobertura RF no estilo clássico: densidade acumulada colorida pela paleta azul → ciano → verde → amarelo → laranja → vermelho; raio geográfico de ~1,5 km por ponto (5 a 40 px conforme o zoom), em vez de 20–76 px fixos; removida a mistura `screen` que desbotava as cores. Legenda "Cobertura RF: baixa → muito alta".

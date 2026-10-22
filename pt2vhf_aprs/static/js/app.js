@@ -6112,7 +6112,8 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     ['groups', 'Mensagens de grupo', 'Group messages'],
     ['packets', 'Pacotes recebidos', 'Received packets'],
     ['aprs_log', 'Log APRS', 'APRS log'],
-    ['topology_events', 'Eventos de topologia', 'Topology events']
+    ['topology_events', 'Eventos de topologia', 'Topology events'],
+    ['rf_coverage', 'Mapa de calor (cobertura RF) — independente das demais', 'RF coverage heat map — independent of the others']
   ];
   const retentionPeriods = [
     [1, '24 horas', '24 hours'], [7, '1 semana', '1 week'],
@@ -6156,7 +6157,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     try {
       buildRetentionSelectors();
       const info = await api('/api/retention');
-      for (const select of $('#retentionPolicyGrid select[data-retention-category]')) {
+      for (const select of $$('#retentionPolicyGrid select[data-retention-category]')) {
         const days = info.policies?.[select.dataset.retentionCategory];
         select.value = String(days ?? 0);
       }
@@ -6178,7 +6179,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   function retentionFormPayload() {
     const policies = {};
-    for (const el of $('#retentionPolicyGrid select[data-retention-category]'))
+    for (const el of $$('#retentionPolicyGrid select[data-retention-category]'))
       policies[el.dataset.retentionCategory] = Number(el.value);
     return { policies, enabled: !!$('#retentionEnabled')?.checked };
   }
@@ -10751,6 +10752,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     ['bulletins','Boletins','Bulletins'],
     ['groups','Mensagens de grupo','Group messages'],
     ['topology_events','Eventos de topologia','Topology events'],
+    ['rf_coverage','Mapa de calor (células de cobertura RF)','RF coverage heat map (cells)'],
   ];
   async function refreshStatisticCategories(hours, generation) {
     const host = $('#analysisCategoryCounts');

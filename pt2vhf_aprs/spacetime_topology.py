@@ -16,6 +16,7 @@ from typing import Any
 
 from . import database as db
 from . import diagnostics as diag
+from . import rf_coverage
 
 
 EVENT_POSITION_MAX_AGE_HOURS = 12.0
@@ -386,6 +387,9 @@ def _record_topology_from_raw_conn(conn: Any, raw: str, medium: str = "APRS-IS")
                 db._packet_reception_fingerprint(raw, edge_source),
             ),
         )
+        if kind == "rf":
+            rf_coverage.record_event_conn(conn, now, edge_source, target, source_pos, target_pos,
+                                          direct=evidence_level == "direct")
 
     if db._retention_due("topology_events", len(edges)):
         deleted = db._trim_history_table(conn, "topology_events", db.TOPOLOGY_EVENT_RETENTION)
@@ -1574,6 +1578,9 @@ _original_list_rf_routes = db._list_rf_routes_base
 def _init_db() -> None:
     _original_init_db()
     _ensure_schema_and_backfill()
+    with db.connection() as conn:
+        rf_coverage.ensure_schema(conn)
+        rf_coverage.backfill_once(conn)
 
 
 def _list_rf_routes(*args: Any, **kwargs: Any) -> dict[str, Any]:

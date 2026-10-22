@@ -17,6 +17,7 @@ from flask import Flask, Response, g, jsonify, render_template, request, send_fi
 from . import __version__
 from . import database as db
 from . import topology_map
+from . import rf_coverage
 from .route_hypotheses import explore_possible_routes
 from . import diagnostics as diag
 from . import updater
@@ -1425,7 +1426,8 @@ def create_app() -> Flask:
         except (TypeError, ValueError):
             hours = 0
         # v1.14.51: mapa de calor com todo ponto de transmissão/recepção RF.
-        return jsonify(topology_map.list_rf_activity_points(hours))
+        # v1.14.53: tabela própria, com retenção independente (categoria rf_coverage).
+        return jsonify(rf_coverage.list_points(hours))
 
     @app.get("/api/topology/rf-origins")
     def api_topology_rf_origins():
