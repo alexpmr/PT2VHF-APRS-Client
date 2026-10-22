@@ -1,3 +1,9 @@
+## RELEASE — v1.14.54 (22/10/2026): teste de recepção do TNC e Verificar banco
+
+- **TNC sem bytes (#118):** "Escutar agora" (10–30 s, sem TX) com veredito e dicas (nenhum byte / texto = modo terminal / lixo = velocidade serial / KISS sem AX.25 / OK) e monitor de bytes ao vivo (`/api/tnc/rx-monitor`, `/api/tnc/listen-test`). O teste anterior (`probe_transport`) lia só os bytes disponíveis no instante da abertura. **Aguardando o mantenedor rodar na COM10 (RT-950 Pro).**
+- **Enlaces sumidos no Win10:** `db_check.run_check()` aponta colunas de geometria ausentes (com elas faltando, `list_map_edges` devolve lista vazia), eventos sem posição e corrupção; `repair()` recria estrutura e refaz o backfill sem apagar dados. **Na próxima ocorrência, rodar Verificar banco antes de apagar o banco.**
+- **Backlog revisto:** #125, #124 e #106 já implementados; títulos atualizados.
+
 ## RELEASE — v1.14.53 (22/10/2026): retenção própria do mapa de calor
 
 - **Pedido:** na aba Configurações, especificar o tempo de retenção do mapa de calor, sem depender da retenção de tracklogs, estações, digis etc.
@@ -80,7 +86,7 @@
 - **P0 e P1 não encerrados:** COM10 RT-950 Pro sem bytes RX (#118), demais causas de enlaces órfãos (#116), problemas do portable updater e backlog histórico permanecem até repro/testes físicos.
 - **Status:** implementado na branch v1.14.46, aguardando CI e compilação antes de declarar publicado.
 
-## PENDENTE — Aba Automações: primeiro item Auto-resposta, migrar de Configurações (#125, 18/10/2026)
+## IMPLEMENTADO na v1.14.46 — Aba Automações: primeiro item Auto-resposta, migrar de Configurações (#125, 18/10/2026)
 
 - **Novo menu/aba Automações:** criar aba principal dedicada e iniciar com o card **Auto-resposta** (ligar/desligar, texto personalizado e Salvar). Sem automações adicionais neste pedido; estrutura preparada para futuras funções.
 - **Reutilizar o que já existe:** `v111.js::installAutoReply()` insere atualmente um card **Resposta automática** em `#tab-config`; migrar a interface para Automações e retirar a duplicata de Configurações. Preservar chaves SQLite `auto_reply_enabled`, `auto_reply_text`, `auto_reply_cooldown_seconds`, configurações previamente salvas e rota `/api/config`.
@@ -90,7 +96,7 @@
 - **Aceite:** migração sem perda de preferências; duas mensagens privadas distintas geram duas respostas; repetição da mesma não; cenários RF/APRS-IS, TX bloqueado, conteúdo vazio e anti-loop em testes unitários e visuais.
 - **Rastreamento:** [issue #125](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/125). **Apenas backlog; não implementado nesta etapa**.
 
-## PENDENTE — Indicadores compactos TX ○ RX ○ agregando APRS-IS e TNC/RF (#124, 18/10/2026)
+## IMPLEMENTADO na v1.14.46 — Indicadores compactos TX ○ RX ○ agregando APRS-IS e TNC/RF (#124, 18/10/2026)
 
 - **Referência visual do operador:** substituir o componente de setas ↑/↓ da barra superior por **TX ○  RX ○**, texto fixo e dois LEDs circulares compactos.
 - **Requisito:** o LED **TX** acende brevemente em transmissão real para qualquer transporte ativo/autorizado (**APRS-IS e TNC KISS serial/TCP/AGWPE**). **RX** acende ao entrar tráfego APRS-IS ou bytes RX efetivamente recebidos do TNC; bytes brutos e frames válidos devem ser distinguíveis nos diagnósticos.
@@ -188,7 +194,7 @@
 - **Regra de aceite:** somente ligações entre entidades comprovadamente fixas no mapa principal, inclusive RF real; ligação com qualquer nó/digi móvel é suprimida visualmente, mas eventos/tracklogs e posições RF contemporâneas são preservados para cobertura observada. Validar Período Completo/1h/24h, rotas em foco, path, posição histórica e filtros de marcadores.
 - **Implementação candidata:** [PR #105](https://github.com/alexpmr/PT2VHF-APRS-Client/pull/105), CI [38840906830](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/38840906830) aprovado, mas **sem merge e sem validação no banco real**. A v1.14.40 instalada não contém essa correção. Regressão mantém [issue #94](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/94) aberta.
 
-## PENDENTE — Entrada de coordenadas por Grid Locator / Maidenhead (#106, 16/10/2026)
+## IMPLEMENTADO na v1.14.40/41 — Entrada de coordenadas por Grid Locator / Maidenhead (#106, 16/10/2026)
 
 - **Solicitação:** adicionar em **Configuração → Estação → Formato das coordenadas** uma terceira modalidade `Grid Locator (Maidenhead)` ao lado de Decimal e DMS. Issue: [#106](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/106).
 - **Entrada:** campo para locator de 4, 6, 8 ou 10 caracteres, normalização de maiúsculas/minúsculas, validação rigorosa conforme segmentos alfanuméricos Maidenhead e mensagem clara em caso de erro. Usar o **centro da célula** para converter o grid em latitude/longitude decimal e informar que a posição é aproximada e qual a resolução espacial do grid; não fingir precisão GPS.

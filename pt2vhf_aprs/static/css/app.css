@@ -5083,3 +5083,15 @@ html[lang="zh-CN"] body {
 /* v1.14.52: legenda do mapa de calor da Cobertura RF (mesma paleta do v142.js). */
 .legend-heat { display: inline-block; width: 34px; height: 8px; border-radius: 4px;
   background: linear-gradient(90deg, #0000ff, #00c8ff 35%, #00ff40 55%, #ffff00 70%, #ff8000 85%, #ff0000); }
+
+/* v1.14.54 — Verificar banco */
+.db-check-result{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+.db-check-result.hidden{display:none}
+.db-check-result ul{list-style:none;margin:6px 0 0;padding:0}
+.db-check-result li{margin:4px 0}
+.db-check-result li[data-status="ok"]::before{content:"✓ ";color:#2e9b5b}
+.db-check-result li[data-status="info"]::before{content:"• ";color:var(--muted,#888)}
+.db-check-result li[data-status="warning"]::before{content:"⚠ ";color:#c98a1b}
+.db-check-result li[data-status="error"]::before{content:"✗ ";color:#d64545}
+.db-check-result[data-status="error"]{border-color:#d64545}
+.db-check-result[data-status="warning"]{border-color:#c98a1b}

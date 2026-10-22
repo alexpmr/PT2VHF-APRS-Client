@@ -6277,6 +6277,47 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     } catch (err) { toast(String(err?.message || err), 'error'); }
   });
 
+  function renderDatabaseCheck(report = {}) {
+    const box = $('#databaseCheckResult');
+    if (!box) return;
+    const stats = report.stats || {};
+    const size = stats.size_bytes ? (stats.size_bytes / 1048576).toFixed(1) + ' MB' : '';
+    const items = (report.checks || []).map(item =>
+      `<li data-status="${escapeHtml(item.status)}"><strong>${escapeHtml(item.label)}:</strong> ${escapeHtml(item.detail)}</li>`).join('');
+    const title = report.error ? ui('Falha na verificação: ', 'Check failed: ') + report.error
+      : report.status === 'error' ? ui('Problemas encontrados no banco', 'Database problems found')
+      : report.status === 'warning' ? ui('Banco utilizável, com avisos', 'Database usable, with warnings')
+      : ui('Banco em ordem', 'Database OK');
+    const extra = report.repaired ? ` — ${ui('estrutura reparada; eventos preenchidos', 'structure repaired; events filled')}: ${Number(report.backfilled_events || 0)}` : '';
+    box.dataset.status = report.error ? 'error' : (report.status || 'ok');
+    box.innerHTML = `<strong>${escapeHtml(title)}</strong>${escapeHtml(extra)}<div><small>${escapeHtml([stats.path, size, stats.journal_mode].filter(Boolean).join(' · '))}</small></div><ul>${items}</ul>`;
+    box.classList.remove('hidden');
+    $('#repairDatabaseButton')?.classList.toggle('hidden', !report.can_repair);
+  }
+
+  $('#checkDatabaseButton')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try { renderDatabaseCheck(await api('/api/database/check', {timeoutMs: 180000})); }
+    catch (err) { renderDatabaseCheck({error: String(err?.message || err)}); }
+    finally { button.disabled = false; }
+  });
+
+  $('#repairDatabaseButton')?.addEventListener('click', async event => {
+    if (!window.confirm(ui(
+      'Recriar tabelas, colunas e índices ausentes e preencher a posição dos eventos de enlace? Nenhum registro é apagado.',
+      'Recreate missing tables, columns and indexes and fill link event positions? No record is deleted.'
+    ))) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      renderDatabaseCheck(await api('/api/database/repair', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({confirm:true}), timeoutMs: 600000
+      }));
+    } catch (err) { renderDatabaseCheck({error: String(err?.message || err)}); }
+    finally { button.disabled = false; }
+  });
+
   $('#resetRetentionPolicy')?.addEventListener('click', async () => {
     if (!window.confirm(ui('Restaurar os padrões de retenção? A limpeza automática ficará desligada até confirmação.',
                            'Restore retention defaults? Automatic cleanup will be disabled.'))) return;

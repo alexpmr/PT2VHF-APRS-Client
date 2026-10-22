@@ -68,3 +68,16 @@
 .tnc-transport-diagnostic[data-state="good"]{border-color:rgba(56,199,118,.45);background:rgba(56,199,118,.06)}
 .tnc-transport-diagnostic[data-state="warn"]{border-color:rgba(244,189,80,.48);background:rgba(244,189,80,.07);color:#e5d3aa}
 .tnc-transport-diagnostic[data-state="idle"]{opacity:.85}
+
+/* v1.14.54 — teste de recepção e monitor de bytes */
+.tnc-listen-card{margin:0 0 14px}
+.tnc-listen-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.tnc-listen-controls .field{min-width:110px}
+.tnc-listen-result{margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);font-size:13px}
+.tnc-listen-result.hidden,.tnc-rx-monitor.hidden{display:none}
+.tnc-listen-result[data-verdict="ok"],.tnc-listen-result[data-verdict="terminal_bytes"]{border-color:#2e9b5b;background:rgba(46,155,91,.10)}
+.tnc-listen-result[data-verdict="running"]{opacity:.85}
+.tnc-listen-result:not([data-verdict="ok"]):not([data-verdict="terminal_bytes"]):not([data-verdict="running"]){border-color:#c98a1b;background:rgba(201,138,27,.10)}
+.tnc-listen-result ul{margin:6px 0 0 18px;padding:0}
+.tnc-listen-result code{word-break:break-all}
+.tnc-rx-monitor{margin-top:10px;max-height:260px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.25);font-size:11.5px;line-height:1.45;white-space:pre-wrap;word-break:break-all}

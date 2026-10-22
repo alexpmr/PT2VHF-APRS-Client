@@ -24,6 +24,7 @@ from . import updater
 from . import release_check
 from . import retention
 from . import category_statistics, category_clear
+from . import tnc_listen, db_check
 from .aprs_service import full_callsign, service
 from .scheduled_messages import prepare_schedule_payload, service as scheduled_message_service
 from .local_server import runtime_info as local_server_runtime_info, lan_ipv4_candidates
@@ -999,6 +1000,27 @@ def create_app() -> Flask:
         except (ValueError, TypeError) as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
+    @app.get("/api/database/check")
+    def api_database_check():
+        try:
+            return jsonify(db_check.run_check())
+        except Exception as exc:
+            return jsonify({"ok": False, "status": "error", "error": str(exc), "checks": []}), 500
+
+    @app.post("/api/database/repair")
+    def api_database_repair():
+        payload = request.get_json(silent=True) or {}
+        if payload.get("confirm") is not True:
+            return jsonify({"ok": False, "error": "Confirme o reparo da estrutura do banco."}), 400
+        if not retention._lock.acquire(timeout=30.0):
+            return jsonify({"ok": False, "error": "Manutenção do banco está ocupada; tente novamente."}), 409
+        try:
+            return jsonify(db_check.repair())
+        except Exception as exc:
+            return jsonify({"ok": False, "status": "error", "error": str(exc), "checks": []}), 500
+        finally:
+            retention._lock.release()
+
     @app.post("/api/retention/apply")
     def api_retention_apply():
         payload = request.get_json(silent=True) or {}
@@ -1151,6 +1173,19 @@ def create_app() -> Flask:
     @app.get("/api/tnc/status")
     def api_tnc_status():
         return jsonify({"ok": True, "status": tnc_service.status(), "config": get_tnc_config()})
+
+    @app.get("/api/tnc/rx-monitor")
+    def api_tnc_rx_monitor():
+        try:
+            since = int(request.args.get("since") or 0)
+        except ValueError:
+            since = 0
+        return jsonify({"ok": True, **tnc_service.rx_monitor(since)})
+
+    @app.post("/api/tnc/listen-test")
+    def api_tnc_listen_test():
+        data = request.get_json(silent=True) or {}
+        return jsonify(tnc_listen.listen_test(data.get("seconds", 10)))
 
     @app.get("/api/tnc/ports")
     def api_tnc_ports():
