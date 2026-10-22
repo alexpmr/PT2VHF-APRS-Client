@@ -28,6 +28,8 @@ DEFAULT_DAYS = {
     "packets": 30,
     "aprs_log": 30,
     "topology_events": 30,
+    # Mapa de calor da Cobertura RF: retenção própria, independente das demais.
+    "rf_coverage": 0,
 }
 PERIODS = (0, 1, 7, 30, 90, 180, 365)
 CATEGORIES = tuple(DEFAULT_DAYS)
@@ -168,6 +170,7 @@ def _delete_batch(conn, category: str, days: int, limit: int) -> int:
             "packets": ("packets", "timestamp"),
             "aprs_log": ("aprs_log", "timestamp"),
             "topology_events": ("topology_events", "timestamp"),
+            "rf_coverage": ("rf_coverage_cells", "last_seen"),
         }[category]
         sql = "DELETE FROM %s WHERE rowid IN (SELECT rowid FROM %s WHERE %s < ? ORDER BY %s LIMIT ?)" % (
             table, table, col, col)

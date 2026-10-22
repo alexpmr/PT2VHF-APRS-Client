@@ -44,7 +44,7 @@ def test_map_uses_single_heatmap_coverage_option():
     app = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
     v142 = (ROOT / "pt2vhf_aprs/static/js/v142.js").read_text(encoding="utf-8")
     web = (ROOT / "pt2vhf_aprs/web.py").read_text(encoding="utf-8")
-    assert "topology_map.list_rf_activity_points(hours)" in web
+    assert "rf_coverage.list_points(hours)" in web  # v1.14.53: tabela própria
     assert "Cobertura RF (mapa de calor)" in app
     assert "window.pt2vhfCreateHeatLayer?.()" in app
     assert "count: state.mapLayerCounts.coverage" in app

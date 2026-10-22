@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.53": {
+        "title": "Retenção própria do mapa de calor",
+        "items": [
+            "Configuração → Retenção: novo item \"Mapa de calor (cobertura RF)\", independente de tracklogs, estações, digis e enlaces.",
+            "O mapa de calor tem armazenamento próprio e não perde dados quando outros históricos são limpos.",
+            "Cada ponto do mapa de calor cobre 5 km de diâmetro ao redor da estação, digi ou tracker, em qualquer zoom.",
+            "Corrigido: a tela de retenção não mostrava os valores salvos e o botão Salvar falhava.",
+        ],
+    },
     "1.14.52": {
         "title": "Mapa de calor clássico e aviso de nova versão",
         "items": [

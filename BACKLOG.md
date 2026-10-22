@@ -1,3 +1,9 @@
+## RELEASE — v1.14.53 (22/10/2026): retenção própria do mapa de calor
+
+- **Pedido:** na aba Configurações, especificar o tempo de retenção do mapa de calor, sem depender da retenção de tracklogs, estações, digis etc.
+- **Implementado:** tabela `rf_coverage_cells` (célula ~1 km × dia) alimentada na ingestão e por backfill único; categoria de retenção `rf_coverage` (padrão Permanente) com "Limpar tudo" e contagem nas Estatísticas; `/api/topology/rf-coverage` lê dessa tabela.
+- **Defeito encontrado e corrigido:** desde a v1.14.44 a tela de retenção não carregava os valores salvos e o botão Salvar falhava (`for…of` sobre `$()`).
+
 ## RELEASE — v1.14.52 (21/10/2026): mapa de calor clássico e aviso de nova versão
 
 - **Mapa de calor (pedido com captura de referência):** o anterior era claro e gordo demais. Agora densidade → paleta azul…vermelho, raio geográfico ~1,5 km, sem `mix-blend-mode: screen`, legenda.

@@ -11,7 +11,7 @@ def read(path):
 def test_heatmap_uses_density_palette_and_geographic_radius():
     js = read("pt2vhf_aprs/static/js/v142.js")
     css = read("pt2vhf_aprs/static/css/v142.css")
-    assert "const HEAT_RADIUS_METERS = 1500;" in js
+    assert "const HEAT_RADIUS_METERS = 2500;" in js  # v1.14.53: 5 km de diâmetro
     assert "40075016.686 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom + 8)" in js
     assert "['#0000ff'" in js.replace("[0, '#0000ff']", "['#0000ff'") and "[1, '#ff0000']" in js
     assert "ctx.getImageData(0, 0, width, height)" in js

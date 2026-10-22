@@ -23,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.52 production release
+      - name: Validate v1.14.53 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_52.py
+        run: python tools\apply_release_1_14_53.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -120,9 +120,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.14.52 production release
+      - name: Validate v1.14.53 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_52.py
+        run: python tools\apply_release_1_14_53.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -219,7 +219,7 @@ jobs:
 
       - name: Validate v1.14.38 release metadata
         shell: pwsh
-        run: python tools\apply_release_1_14_52.py
+        run: python tools\apply_release_1_14_53.py
 
       - name: Install Win7 Legacy dependencies
         shell: pwsh
@@ -308,9 +308,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.52 production release
+      - name: Validate v1.14.53 production release
         shell: bash
-        run: python tools/apply_release_1_14_52.py
+        run: python tools/apply_release_1_14_53.py
 
       - name: Build Linux packages
         shell: bash
@@ -343,9 +343,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.52 production release
+      - name: Validate v1.14.53 production release
         shell: bash
-        run: python tools/apply_release_1_14_52.py
+        run: python tools/apply_release_1_14_53.py
 
       - name: Build Linux ARM64 packages
         shell: bash
@@ -384,7 +384,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_14_52.py
+          python tools/apply_release_1_14_53.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -414,9 +414,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.52 production release
+      - name: Validate v1.14.53 production release
         shell: bash
-        run: python tools/apply_release_1_14_52.py
+        run: python tools/apply_release_1_14_53.py
 
       - name: Build macOS DMG
         shell: bash
@@ -442,7 +442,7 @@ jobs:
 
   manual-pdf:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -452,13 +452,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.14.52 production release
+      - name: Validate v1.14.53 production release
         shell: bash
-        run: python tools/apply_release_1_14_52.py
+        run: python tools/apply_release_1_14_53.py
 
       - name: Generate versioned PDF manual
         shell: bash
         run: |
+          trap 'echo "::error title=manual-pdf::Falhou no comando: $BASH_COMMAND"' ERR
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install "reportlab>=4.0,<5.0" "pypdf>=5.0,<7.0" "playwright>=1.55,<2.0" "cairosvg>=2.7,<3.0"
