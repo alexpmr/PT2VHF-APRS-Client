@@ -34,9 +34,10 @@ async function req(url) {
   return data;
 }
 
-const HEAT_RADIUS_METERS = 1500;
+// Cobertura de 5 km de diâmetro ao redor de cada estação, digi ou tracker (v1.14.53).
+const HEAT_RADIUS_METERS = 2500;
 const HEAT_MIN_RADIUS_PX = 5;
-const HEAT_MAX_RADIUS_PX = 40;
+const HEAT_MAX_RADIUS_PX = 320;
 const HEAT_MAX_ALPHA = 215;
 const HEAT_GRADIENT = [[0, '#0000ff'], [.35, '#00c8ff'], [.55, '#00ff40'], [.7, '#ffff00'], [.85, '#ff8000'], [1, '#ff0000']];
 const heatStamps = new Map();
@@ -49,7 +50,7 @@ function heatStamp(radius) {
   const ctx = stamp.getContext('2d');
   const gradient = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
   gradient.addColorStop(0, 'rgba(0,0,0,1)');
-  gradient.addColorStop(.45, 'rgba(0,0,0,.55)');
+  gradient.addColorStop(.6, 'rgba(0,0,0,.6)');
   gradient.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, radius * 2, radius * 2);
@@ -103,7 +104,7 @@ function createHeatLayer() {
     },
     // v1.14.52: mapa de calor clássico (densidade → paleta azul…vermelho).
     // Cada ponto soma intensidade num canvas em tons de alfa; depois a
-    // intensidade acumulada vira cor. O raio é geográfico (~1,5 km), então a
+    // intensidade acumulada vira cor. O raio é geográfico (2,5 km = 5 km de diâmetro), então a
     // espessura acompanha a área real em qualquer zoom.
     _draw() {
       if (!this._map || !this._canvas) return;

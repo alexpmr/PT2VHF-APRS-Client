@@ -68,4 +68,5 @@ assert "maybePromptUpdate(data);" in js
 assert '"rf_coverage": 0' in read("pt2vhf_aprs/retention.py")
 assert "rf_coverage.list_points(hours)" in read("pt2vhf_aprs/web.py")
 assert "of $('#retentionPolicyGrid" not in js
+assert "const HEAT_RADIUS_METERS = 2500;" in read("pt2vhf_aprs/static/js/v142.js")
 print("v1.14.53 release validation OK")
