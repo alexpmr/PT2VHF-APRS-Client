@@ -416,6 +416,39 @@ class NativeApi:
         except Exception as exc:
             return {"saved": False, "error": str(exc)}
 
+    def save_binary_file(self, filename: str, data_base64: str) -> dict:
+        """Salva um PDF gerado pela interface (planejamento) com diálogo nativo."""
+        try:
+            import base64
+            import webview
+            global _window
+            if _window is None:
+                return {"saved": False, "error": "Janela integrada indisponível."}
+            if not isinstance(data_base64, str) or len(data_base64) > 30_000_000:
+                return {"saved": False, "error": "Arquivo grande demais."}
+            data = base64.b64decode(data_base64, validate=True)
+            if not data.startswith(b"%PDF-"):
+                return {"saved": False, "error": "Somente PDF é aceito."}
+            suggested = Path(str(filename or "PT2VHF_APRS_Client.pdf")).name
+            if not suggested.lower().endswith(".pdf"):
+                suggested += ".pdf"
+            selected = _window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                save_filename=suggested,
+                file_types=("PDF (*.pdf)", "Todos os arquivos (*.*)"),
+            )
+            if not selected:
+                return {"saved": False, "cancelled": True}
+            if isinstance(selected, (list, tuple)):
+                selected = selected[0] if selected else ""
+            target = Path(str(selected))
+            if target.suffix.lower() != ".pdf":
+                target = target.with_suffix(".pdf")
+            target.write_bytes(data)
+            return {"saved": True, "path": str(target)}
+        except Exception as exc:
+            return {"saved": False, "error": str(exc)}
+
     def save_text_file(self, filename: str, content: str) -> dict:
         try:
             import webview

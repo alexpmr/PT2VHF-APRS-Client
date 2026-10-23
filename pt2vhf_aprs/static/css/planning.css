@@ -1,0 +1,52 @@
+/* Planejamento no mapa: enlace entre 2 pontos e melhor ponto. */
+.planning-section { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line, #2a3642); }
+.planning-section strong { font-size: 12px; letter-spacing: .06em; color: var(--muted, #9badbd); }
+.planning-section .btn { justify-content: flex-start; text-align: left; }
+#planningPanel { position: absolute; right: 12px; top: 12px; z-index: 1150; width: min(440px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto;
+  background: var(--panel, #151c23); color: var(--text, #e8eef4); border: 1px solid var(--line, #2a3642); border-radius: 10px; box-shadow: 0 10px 28px #0009; padding: 10px 12px; font-size: 12px; }
+#planningPanel[hidden] { display: none; }
+.planning-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.planning-head b { font-size: 14px; }
+.planning-head .btn { padding: 4px 9px; }
+.planning-hint { background: #f3cf4822; border-left: 3px solid #f3cf48; padding: 6px 8px; border-radius: 4px; margin: 4px 0 8px; }
+.planning-field { margin: 6px 0; display: flex; flex-direction: column; gap: 3px; }
+.planning-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.planning-row input { flex: 1; min-width: 120px; }
+#planningPanel input, #planningPanel select { background: var(--panel-2, #1b242d); color: var(--text, #e8eef4); border: 1px solid var(--line, #2a3642); border-radius: 6px; padding: 5px 7px; }
+.planning-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin: 6px 0; }
+.planning-grid label { display: flex; flex-direction: column; gap: 2px; font-size: 11px; }
+.planning-params { margin: 6px 0; }
+.planning-actions { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.planning-actions .btn { padding: 6px 10px; }
+.planning-small { font-size: 11px; color: var(--muted, #9badbd); }
+.planning-warn { color: #f3b33d; }
+.planning-bad { color: #ff8b8b; }
+.planning-profile { width: 100%; height: auto; background: #0f1a2466; border-radius: 6px; margin: 6px 0; }
+.planning-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.planning-table th, .planning-table td { padding: 4px 5px; border-bottom: 1px solid var(--line, #2a3642); text-align: left; vertical-align: top; }
+.planning-table th { color: var(--muted, #9badbd); font-weight: 600; }
+.planning-survey tbody tr[data-rank] { cursor: pointer; }
+.planning-survey tr.active { background: #f3cf4833; }
+.planning-scroll { overflow-x: auto; }
+.planning-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; color: #111; font-weight: 700; }
+.planning-verdict { font-size: 13px; }
+.planning-link { background: none; border: 0; color: var(--accent, #3ba6ff); cursor: pointer; padding: 0; text-decoration: underline; font: inherit; }
+.planning-saved { list-style: none; padding: 0; margin: 6px 0; }
+.planning-saved li { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 3px 0; }
+.planning-icon span { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-weight: 800; font-size: 12px; border: 2px solid #fff; box-shadow: 0 2px 6px #0008; }
+.planning-icon.end span { background: #2171b5; color: #fff; }
+.planning-icon.point span { background: #c0392b; color: #fff; }
+.planning-icon.point.edge span { background: #d9822b; }
+.planning-icon.active span { transform: scale(1.35); background: #f3cf48; color: #111; }
+.planning-vertex { background: #f3cf48; border: 2px solid #17202a; border-radius: 50%; }
+.planning-vertex.first { background: #51d887; transform: scale(1.25); }
+.planning-vertex.mid { background: #ffffffaa; border: 1px solid #17202a; }
+.planning-ref { background: #7b2cbf; border: 2px solid #fff; transform: rotate(45deg); border-radius: 3px; }
+.planning-active { cursor: crosshair; }
+#planningToast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 9999; background: #26394a; color: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 4px 14px #0008; font-size: 13px; max-width: 90vw; }
+#planningToast.bad { background: #7a2630; }
+#planningToast[hidden] { display: none; }
+@media (max-width: 750px) {
+  #planningPanel { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 58%; border-radius: 12px 12px 0 0; }
+  .planning-grid { grid-template-columns: 1fr; }
+}

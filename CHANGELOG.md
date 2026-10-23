@@ -1,3 +1,12 @@
+## 1.14.55 - 2026-10-23
+
+- Mapa → Ver → **Planejamento** (portado do PT2VHF Mesh Analyzer v0.6.41–v0.6.43, adaptado ao APRS):
+  - **Analisar enlace entre 2 pontos:** clique em dois pontos do mapa, digite coordenadas ou um indicativo (ou use a própria estação). Perfil de altimetria com curvatura da Terra (k = 4/3), linha de visada e 1ª zona de Fresnel; perda em espaço livre, perda por obstrução (difração Deygout, ITU-R P.526), sinal estimado no receptor em dBm, µV e unidades S (S9 = −93 dBm em VHF), margem sobre a sensibilidade para decodificar 1200 bps (padrão −113 dBm ≈ 0,5 µV) e veredito Viável / Marginal / Inviável com o motivo; pior obstáculo marcado no mapa; altura de antena que libera 60% da zona de Fresnel; quando as duas pontas são estações, mostra se uma já ouviu a outra por RF. Padrões: **145,570 MHz** (frequência APRS no Brasil), 25 W, antenas de 3 dBi a 10 m, 1 dB de cabo — todos editáveis. Pontos arrastáveis. PDF.
+  - **Melhor ponto para instalar estação:** desenhe a área no mapa (Ctrl+Z desfaz; feche no primeiro vértice, com duplo clique ou em Concluir; vértices editáveis). Os topos de morros diferentes aparecem numerados do mais alto para o mais baixo no mapa e na tabela (altitude, desnível, distância, direção e coordenadas), com indicação de ponto na borda da área, referência opcional (centro, minha estação, ponto do mapa ou indicativo), enlace de cada ponto, surveys salvos, CSV e PDF com mapa de relevo, tabela e perfis.
+  - Elevações dos tiles de terreno Terrarium (AWS Open Data, base SRTM, ~30–40 m), guardados em `terrain-tiles/` na pasta de dados para uso sem internet; Open-Meteo como alternativa; mensagem de erro com o motivo real.
+- Aplicativo de desktop (Windows, Linux e macOS): salvar PDF com diálogo nativo (`save_binary_file`).
+- Nova dependência: `reportlab` (PDF).
+
 ## 1.14.54 - 2026-10-22
 
 - TNC (#118): novo cartão **Teste de recepção (não transmite)** na aba TNC / RF. "Escutar agora" ouve por 10, 20 ou 30 s e explica o resultado: nada recebido (cabo/porta, modo KISS, velocidade serial, RTS/DTR, frequência), texto legível (TNC em modo terminal), bytes ilegíveis (velocidade serial errada, com as alternativas comuns), KISS sem AX.25 válido ou pacotes válidos (lista os primeiros). Com o TNC conectado, observa a sessão atual sem reabrir a porta; desconectado, abre a porta só para ler. O teste antigo lia apenas os bytes já disponíveis no instante da abertura e quase sempre retornava zero.
