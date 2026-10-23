@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.55": {
+        "title": "Planejamento: enlace entre 2 pontos e melhor ponto",
+        "items": [
+            "Mapa → Ver → Planejamento → Analisar enlace entre 2 pontos: perfil de altimetria, zona de Fresnel, sinal estimado (dBm, µV e S) e veredito Viável / Marginal / Inviável, com 145,570 MHz como padrão.",
+            "Mapa → Ver → Planejamento → Melhor ponto para instalar estação: desenhe a área no mapa e veja os topos do mais alto para o mais baixo, com tabela, CSV e PDF.",
+            "As elevações do terreno ficam guardadas no computador: áreas já analisadas funcionam sem internet.",
+        ],
+    },
     "1.14.54": {
         "title": "Teste de recepção do TNC e Verificar banco",
         "items": [
