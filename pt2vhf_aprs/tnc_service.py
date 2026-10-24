@@ -63,7 +63,7 @@ TNC_DEFAULTS: dict[str, Any] = {
     "igate_heard_window_minutes": 30,
     "igate_rf_path": "",
     "optimizer_mode": "observe",
-    "retention_days": 14,
+    "retention_days": 0,  # v1.14.58: 0 = permanente (padrão)
 }
 
 CALL_RE = re.compile(r"^(?P<call>[A-Z0-9]{1,6})(?:-(?P<ssid>\d{1,2}))?$", re.I)
@@ -583,7 +583,15 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
     merged["optimizer_mode"] = str(merged.get("optimizer_mode") or "observe").lower().strip()
     if merged["optimizer_mode"] not in {"off", "observe", "automatic"}:
         raise ValueError("Modo do otimizador deve ser off, observe ou automatic.")
-    merged["retention_days"] = max(1, min(90, int(merged.get("retention_days") or 14)))
+    try:
+        retention_days = int(merged.get("retention_days") or 0)
+    except (TypeError, ValueError):
+        retention_days = 0
+    # v1.14.58: o padrão antigo (14 dias) nunca salvo pelo usuário passa a permanente.
+    if not merged.get("retention_permanent_v11458") and retention_days == 14:
+        retention_days = 0
+    merged["retention_permanent_v11458"] = True
+    merged["retention_days"] = max(0, min(3650, retention_days))
 
     if strict and (merged["digi_enabled"] or merged["igate_tx_enabled"] or merged["auto_tx_enabled"]):
         if merged["transport"] == "serial" and merged["serial_protocol"] == "terminal":
@@ -728,6 +736,8 @@ def save_tnc_config(payload: dict[str, Any]) -> dict[str, Any]:
 
 def _trim_history(cfg: dict[str, Any] | None = None) -> None:
     cfg = cfg or get_tnc_config()
+    if int(cfg.get("retention_days") or 0) <= 0:
+        return  # permanente
     cutoff = (datetime.now(timezone.utc) - timedelta(days=int(cfg["retention_days"]))).replace(microsecond=0).isoformat()
     with db.connection() as conn:
         conn.execute("DELETE FROM tnc_frames WHERE timestamp < ?", (cutoff,))

@@ -1,3 +1,9 @@
+## 1.14.58 - 2026-10-24
+
+- Retenção: **todos os itens passam a ser permanentes por padrão** — estações, digis, iGates, enlaces RF e Internet, objetos, tracklogs, mensagens, boletins, grupos, pacotes, log APRS, eventos de topologia e mapa de calor (Configuração → Retenção e tamanho do banco). "Restaurar padrões" volta para Permanente.
+- Instalações existentes: categorias que ainda estavam no padrão antigo (30 ou 90 dias) passam a Permanente uma única vez; prazos que o usuário escolheu diferente do padrão são mantidos. Nenhum dado é apagado pela mudança.
+- Mesmo critério para o cartão antigo "Saúde e retenção do banco" (antes 90 a 365 dias) e para o histórico do TNC (antes 14 dias; agora 0 = permanente, aceita até 3.650 dias).
+
 ## 1.14.57 - 2026-10-24
 
 - **Corrigido (causa principal): enlaces de digis, iGates e estações fixas sumindo do mapa com o tempo** — desde a v1.14.44. A posição de cada ponta do enlace vinha do tracklog, aceitando só pontos de até 12 h antes/depois do pacote; mas o tracklog só ganha ponto novo quando a estação se desloca ≥ 10 m. Estação fixa tinha um único ponto (o da primeira escuta) e, passadas 12 h, nenhum enlace novo dela tinha posição — por isso um banco novo mostrava tudo e, com os dias, sobravam poucos enlaces (relato: 7 RF fixos e 4 iGate com 156 digis e 292 iGates). Agora, se a posição atual da estação continua a mesma do último ponto do tracklog (até 100 m), esse ponto vale para o enlace. Estação que mudou de lugar continua sem reaproveitar o ponto antigo.

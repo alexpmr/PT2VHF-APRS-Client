@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.58": {
+        "title": "Retenção permanente por padrão",
+        "items": [
+            "Todos os itens do banco passam a ser guardados para sempre por padrão; prazos menores só se você escolher.",
+            "Ao atualizar, categorias que estavam no padrão antigo viram Permanente; prazos que você escolheu são mantidos.",
+            "O histórico do TNC também passa a ser permanente por padrão.",
+        ],
+    },
     "1.14.57": {
         "title": "Enlaces de estações fixas de volta ao mapa",
         "items": [

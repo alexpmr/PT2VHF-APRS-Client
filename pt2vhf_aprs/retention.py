@@ -14,23 +14,31 @@ from . import database as db
 from . import diagnostics as diag
 
 # Dias: 0 = permanente. Sem expiração automática de enlaces RF por padrão.
+# v1.14.58: tudo permanente por padrão. Prazos curtos só quando o usuário escolher.
 DEFAULT_DAYS = {
-    "stations": 30,
+    "stations": 0,
     "digis": 0,
     "igates": 0,
     "rf_links": 0,
-    "internet_links": 30,
-    "objects": 30,
-    "tracks": 30,
-    "messages": 90,
-    "bulletins": 30,
-    "groups": 90,
-    "packets": 30,
-    "aprs_log": 30,
-    "topology_events": 30,
+    "internet_links": 0,
+    "objects": 0,
+    "tracks": 0,
+    "messages": 0,
+    "bulletins": 0,
+    "groups": 0,
+    "packets": 0,
+    "aprs_log": 0,
+    "topology_events": 0,
     # Mapa de calor da Cobertura RF: retenção própria, independente das demais.
     "rf_coverage": 0,
 }
+# Padrões até a v1.14.57; categorias ainda com esses valores passam a permanentes.
+LEGACY_DEFAULT_DAYS = {
+    "stations": 30, "internet_links": 30, "objects": 30, "tracks": 30,
+    "messages": 90, "bulletins": 30, "groups": 90, "packets": 30,
+    "aprs_log": 30, "topology_events": 30,
+}
+PERMANENT_DEFAULTS_MIGRATION = "v1.14.58-retention-permanent-defaults"
 PERIODS = (0, 1, 7, 30, 90, 180, 365)
 CATEGORIES = tuple(DEFAULT_DAYS)
 _lock = threading.Lock()
@@ -59,6 +67,29 @@ def ensure_schema() -> None:
                 "INSERT OR IGNORE INTO retention_policies(category,days) VALUES(?,?)",
                 (category, days),
             )
+        _migrate_to_permanent_defaults(conn)
+
+
+def _migrate_to_permanent_defaults(conn) -> None:
+    """Uma vez: categorias que mantêm o padrão antigo passam a Permanente.
+
+    Só aumenta a retenção (nunca apaga dados). Prazo diferente do padrão
+    antigo foi escolha do usuário e é preservado.
+    """
+    conn.execute("""CREATE TABLE IF NOT EXISTS schema_migrations_v112 (
+        migration_key TEXT PRIMARY KEY, applied_at TEXT NOT NULL)""")
+    if conn.execute("SELECT 1 FROM schema_migrations_v112 WHERE migration_key=?",
+                    (PERMANENT_DEFAULTS_MIGRATION,)).fetchone():
+        return
+    changed = []
+    for category, days in LEGACY_DEFAULT_DAYS.items():
+        if conn.execute("UPDATE retention_policies SET days=0, updated_at=CURRENT_TIMESTAMP "
+                        "WHERE category=? AND days=?", (category, days)).rowcount:
+            changed.append(category)
+    conn.execute("INSERT INTO schema_migrations_v112(migration_key,applied_at) VALUES(?,?)",
+                 (PERMANENT_DEFAULTS_MIGRATION, datetime.now(timezone.utc).isoformat(timespec="seconds")))
+    if changed:
+        diag.log_event("retention_permanent_defaults_migrated", categories=changed)
 
 
 def get_policy() -> dict[str, Any]:

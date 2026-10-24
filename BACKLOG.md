@@ -1,3 +1,9 @@
+## RELEASE — v1.14.58 (24/10/2026): retenção permanente por padrão
+
+- **Pedido (roadmap):** retenção permanente de todos os itens por default.
+- **Implementado:** `retention.DEFAULT_DAYS` todo 0; migração única (`v1.14.58-retention-permanent-defaults`) troca para 0 as categorias ainda no padrão antigo, preservando escolhas diferentes; cartão v1.11 e histórico TNC com o mesmo critério.
+- **Confirmado na v1.14.57:** enlaces de volta no mapa (Ver: 773 RF fixos, 26 móveis, 34 iGate).
+
 ## RELEASE — v1.14.57 (24/10/2026): causa principal dos enlaces sumidos
 
 - **Após a v1.14.56 o menu Ver seguia com 7 RF fixos / 4 iGate** (156 digis, 292 iGates): a correção do vento não era a causa principal.

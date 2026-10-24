@@ -73,15 +73,22 @@ def _ensure_schema() -> None:
         )
 
 
+# v1.14.58: tudo permanente por padrão (0 = nunca apagar).
 RETENTION_DEFAULTS = {
-    "packets_days": 180,
-    "tracks_days": 365,
-    "aprs_log_days": 90,
-    "topology_events_days": 180,
-    "tnc_frames_days": 180,
-    "tnc_decisions_days": 180,
-    "notifications_days": 90,
+    "packets_days": 0,
+    "tracks_days": 0,
+    "aprs_log_days": 0,
+    "topology_events_days": 0,
+    "tnc_frames_days": 0,
+    "tnc_decisions_days": 0,
+    "notifications_days": 0,
     "messages_days": 0,
+}
+# Padrões até a v1.14.57; valores salvos iguais a eles passam a permanentes.
+LEGACY_RETENTION_DEFAULTS = {
+    "packets_days": 180, "tracks_days": 365, "aprs_log_days": 90,
+    "topology_events_days": 180, "tnc_frames_days": 180,
+    "tnc_decisions_days": 180, "notifications_days": 90,
 }
 
 
@@ -396,7 +403,28 @@ def _normalize_retention(payload: dict[str, Any] | None) -> dict[str, int]:
     return clean
 
 
+def _migrate_retention_to_permanent() -> None:
+    """Uma vez: valores salvos iguais aos padrões antigos passam a permanentes."""
+    _ensure_schema()
+    with db.connection() as conn:
+        if conn.execute("SELECT 1 FROM settings_v111 WHERE key='retention_permanent_v11458'").fetchone():
+            return
+        row = conn.execute("SELECT payload FROM settings_v111 WHERE key='retention'").fetchone()
+        conn.execute("INSERT INTO settings_v111(key,payload,updated_at) VALUES(?,?,?)",
+                     ("retention_permanent_v11458", "{}", _utc()))
+    if not row:
+        return
+    try:
+        saved = json.loads(row["payload"])
+    except Exception:
+        return
+    if isinstance(saved, dict):
+        _save_setting("retention", {key: (0 if LEGACY_RETENTION_DEFAULTS.get(key) == value else value)
+                                    for key, value in saved.items()}, RETENTION_DEFAULTS)
+
+
 def retention_settings() -> dict[str, Any]:
+    _migrate_retention_to_permanent()
     return _normalize_retention(_setting("retention", RETENTION_DEFAULTS))
 
 
