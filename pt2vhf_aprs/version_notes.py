@@ -3,6 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.57": {
+        "title": "Enlaces de estações fixas de volta ao mapa",
+        "items": [
+            "Corrigido: enlaces de digis, iGates e estações fixas sumiam do mapa depois de 12 horas da primeira escuta.",
+            "Na primeira abertura, os enlaces já gravados sem posição são recuperados automaticamente, sem apagar nada.",
+        ],
+    },
     "1.14.56": {
         "title": "Enlaces do mapa de volta e diagnóstico",
         "items": [

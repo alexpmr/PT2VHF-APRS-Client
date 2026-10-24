@@ -8,7 +8,7 @@ histórica e timestamp. Isso impede que um digi/tracker móvel conecte, no mesmo
 caminho lógico, redes que visitou em momentos e locais diferentes.
 """
 
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from datetime import datetime, timedelta, timezone
 import threading
 import time
@@ -20,6 +20,8 @@ from . import rf_coverage
 
 
 EVENT_POSITION_MAX_AGE_HOURS = 12.0
+# Distância máxima entre o último ponto do tracklog e a posição atual para considerar a estação parada.
+FIXED_STATION_MATCH_KM = 0.1
 ROUTE_TEMPORAL_WINDOW_MINUTES = 30.0
 SHARED_NODE_COMPATIBILITY_KM = 25.0
 ROUTE_EVENT_SAMPLE_LIMIT = 160
@@ -138,8 +140,110 @@ def _position_at_event_conn(
 
     age_hours, row = min(candidates, key=lambda item: item[0])
     if age_hours > EVENT_POSITION_MAX_AGE_HOURS:
+        # v1.14.57: o tracklog só ganha ponto novo quando a estação se desloca
+        # >= 10 m. Estação fixa fica com um único ponto, do dia em que foi
+        # ouvida pela primeira vez; após 12 h nenhum enlace novo dela tinha
+        # posição e o mapa perdia digis/iGates fixos. Se a posição atual da
+        # estação continua igual ao último ponto antes do evento, ela não se
+        # moveu nesse intervalo e esse ponto vale.
+        if before is not None and _still_at(conn, call, before):
+            return float(before["latitude"]), float(before["longitude"])
         return None
     return float(row["latitude"]), float(row["longitude"])
+
+
+def _still_at(conn: Any, call: str, track_row: Any) -> bool:
+    """A posição atual da estação coincide com este ponto do tracklog?"""
+    if not db._valid_geo_position(track_row["latitude"], track_row["longitude"]):
+        return False
+    station = conn.execute(
+        "SELECT latitude,longitude FROM stations WHERE UPPER(TRIM(callsign))=? LIMIT 1",
+        (call,),
+    ).fetchone()
+    if station is None or not db._valid_geo_position(station["latitude"], station["longitude"]):
+        return False
+    return db.haversine_km(float(station["latitude"]), float(station["longitude"]),
+                           float(track_row["latitude"]), float(track_row["longitude"])) <= FIXED_STATION_MATCH_KM
+
+
+def _backfill_fixed_station_geometry(conn: Any) -> int:
+    """Uma vez: preenche a posição de estações fixas nos eventos gravados sem ela."""
+    key = "v1.14.57-fixed-station-event-geometry"
+    if conn.execute("SELECT 1 FROM schema_migrations_v1419 WHERE migration_key=?", (key,)).fetchone():
+        return 0
+    started = time.monotonic()
+    stations: dict[str, tuple[float, float]] = {}
+    for row in conn.execute("SELECT callsign,latitude,longitude FROM stations"):
+        if db._valid_geo_position(row["latitude"], row["longitude"]):
+            stations[str(row["callsign"] or "").upper().strip()] = (float(row["latitude"]), float(row["longitude"]))
+    timelines: dict[str, tuple[list[float], list[tuple[float, float]]]] = {}
+    for row in conn.execute(
+        """SELECT UPPER(TRIM(callsign)) AS callsign,timestamp,latitude,longitude FROM tracks
+           WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+           ORDER BY UPPER(TRIM(callsign)),timestamp,id"""
+    ):
+        when = _parse_dt(row["timestamp"])
+        if when is None or not db._valid_geo_position(row["latitude"], row["longitude"]):
+            continue
+        times, positions = timelines.setdefault(str(row["callsign"] or ""), ([], []))
+        times.append(when.timestamp())
+        positions.append((float(row["latitude"]), float(row["longitude"])))
+
+    def fixed_position(call: str, epoch: float) -> tuple[float, float] | None:
+        line = timelines.get(call)
+        current = stations.get(call)
+        if not line or current is None:
+            return None
+        index = bisect_right(line[0], epoch) - 1
+        if index < 0:
+            return None
+        pos = line[1][index]
+        return pos if db.haversine_km(*current, *pos) <= FIXED_STATION_MATCH_KM else None
+
+    heatmap_ready = conn.execute(
+        "SELECT 1 FROM schema_migrations_v112 WHERE migration_key=?", (rf_coverage.BACKFILL_KEY,)
+    ).fetchone() is not None
+    rows = conn.execute(
+        """SELECT id,timestamp,source,target,kind,medium,evidence_level,raw,
+                  source_lat,source_lon,target_lat,target_lon
+             FROM topology_events
+            WHERE source_lat IS NULL OR source_lon IS NULL OR target_lat IS NULL OR target_lon IS NULL"""
+    ).fetchall()
+    batch: list[tuple[Any, ...]] = []
+    for row in rows:
+        when = _parse_dt(row["timestamp"])
+        if when is None:
+            continue
+        source = str(row["source"] or "").upper().strip()
+        target = str(row["target"] or "").upper().strip()
+        new_source = fixed_position(source, when.timestamp()) if row["source_lat"] is None or row["source_lon"] is None else None
+        new_target = fixed_position(target, when.timestamp()) if row["target_lat"] is None or row["target_lon"] is None else None
+        if not new_source and not new_target:
+            continue
+        batch.append((
+            new_source[0] if new_source else None, new_source[1] if new_source else None,
+            new_target[0] if new_target else None, new_target[1] if new_target else None,
+            row["id"],
+        ))
+        # O mapa de calor já somou as pontas que tinham posição; soma só as novas.
+        if heatmap_ready and str(row["kind"] or "").lower() == "rf" and not (
+            row["raw"] and db.raw_aprs_position_issue(str(row["raw"]))
+        ):
+            direct = str(row["medium"] or "").upper() == "RF" and str(row["evidence_level"] or "").lower() == "direct"
+            rf_coverage.record_event_conn(conn, str(row["timestamp"] or ""), source, target,
+                                          new_source, new_target, direct=direct)
+    conn.executemany(
+        """UPDATE topology_events
+              SET source_lat=COALESCE(source_lat,?), source_lon=COALESCE(source_lon,?),
+                  target_lat=COALESCE(target_lat,?), target_lon=COALESCE(target_lon,?)
+            WHERE id=?""",
+        batch,
+    )
+    conn.execute("INSERT INTO schema_migrations_v1419(migration_key,applied_at) VALUES(?,?)",
+                 (key, db.utc_now_iso()))
+    diag.log_event("topology_fixed_geometry_backfill", events=len(batch), scanned=len(rows),
+                   elapsed_ms=round((time.monotonic() - started) * 1000))
+    return len(batch)
 
 
 def _legacy_position_at_event_conn(
@@ -1580,6 +1684,7 @@ def _init_db() -> None:
     _ensure_schema_and_backfill()
     with db.connection() as conn:
         rf_coverage.ensure_schema(conn)
+        _backfill_fixed_station_geometry(conn)
         rf_coverage.backfill_once(conn)
 
 

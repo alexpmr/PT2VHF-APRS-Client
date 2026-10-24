@@ -1,3 +1,9 @@
+## RELEASE — v1.14.57 (24/10/2026): causa principal dos enlaces sumidos
+
+- **Após a v1.14.56 o menu Ver seguia com 7 RF fixos / 4 iGate** (156 digis, 292 iGates): a correção do vento não era a causa principal.
+- **Causa:** `_position_at_event_conn` (v1.14.44) só aceitava ponto de tracklog a ≤ 12 h do evento, e o tracklog só grava ponto novo com deslocamento ≥ 10 m. Estação fixa ouvida há mais de 12 h ficava sem posição em todo enlace novo → fora do mapa. Explica também o Win10 que "voltou" ao apagar o banco.
+- **Correção:** aceitar o último ponto quando a posição atual da estação é a mesma (≤ 100 m); backfill único dos eventos sem posição (+ mapa de calor). Aguardando confirmação do mantenedor.
+
 ## CORRIGIDO na v1.14.56 (24/10/2026): enlaces RF fixos e móveis não aparecem na v1.14.55
 
 - **Relato:** na última versão as linhas de enlace RF fixo e móvel não aparecem, mesmo marcadas em Ver.
