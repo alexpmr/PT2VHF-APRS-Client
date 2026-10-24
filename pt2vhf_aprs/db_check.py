@@ -207,6 +207,9 @@ def repair() -> dict[str, Any]:
             conn.execute("DELETE FROM schema_migrations_v1419 WHERE migration_key='v1.14.19-topology-event-spacetime'")
     filled = spacetime_topology._ensure_schema_and_backfill()
     with db.connection() as conn:
+        # Só preenche pontas ainda sem posição; repetir não duplica nada.
+        conn.execute("DELETE FROM schema_migrations_v1419 WHERE migration_key='v1.14.57-fixed-station-event-geometry'")
+        filled += spacetime_topology._backfill_fixed_station_geometry(conn)
         conn.execute("REINDEX")
         conn.execute("ANALYZE")
     diag.log_event("db_repair", backfilled=filled, elapsed_ms=round((time.monotonic() - started) * 1000.0, 1))
