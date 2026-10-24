@@ -94,4 +94,6 @@ assert "reportlab" in read("requirements.txt") and "reportlab" in read("requirem
 for shell in ("windows_app.py", "linux_app.py", "macos_app.py"):
     assert "def save_binary_file(" in read(shell)
 assert "def _map_link_checks(" in read("pt2vhf_aprs/db_check.py")
+assert "MOBILE_MIN_TRACK_SPAN_KM" in read("pt2vhf_aprs/topology_map.py")
+assert "weather_report" in database
 print("v1.14.56 release validation OK")

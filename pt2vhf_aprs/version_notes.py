@@ -4,8 +4,9 @@ from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
     "1.14.56": {
-        "title": "Diagnóstico dos enlaces no mapa",
+        "title": "Enlaces do mapa de volta e diagnóstico",
         "items": [
+            "Corrigido: enlaces RF fixos, móveis e iGate sumiam do mapa porque iGates e digis com estação meteorológica eram tratados como móveis (o vento era lido como velocidade).",
             "Configuração → Verificar banco agora explica quantos enlaces RF o mapa tem e por que algum não aparece.",
             "Mostra enlaces ocultos por estação sem marcador, posição mudada, distância ou estação tratada como móvel.",
         ],

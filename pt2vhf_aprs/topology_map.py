@@ -79,6 +79,8 @@ def _validated_position(lat: Any, lon: Any) -> tuple[float, float] | None:
 
 # Acima disso (km/h, como no tracklog) o pacote indica estação em movimento.
 MOBILE_SPEED_KMH = 3.0
+# Deslocamento mínimo entre pontos do tracklog para a velocidade valer como móvel.
+MOBILE_MIN_TRACK_SPAN_KM = 0.5
 
 
 def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
@@ -111,17 +113,33 @@ def moving_rf_repeaters(rows: list[Any], tracks: list[Any] = ()) -> set[str]:
     # Um tracker que circula numa mesma cidade nunca atingia os 25 km abaixo e
     # deixava várias linhas RF "fixas" de pontos antigos do trajeto.
     moving_reports: dict[str, int] = defaultdict(int)
+    # v1.14.56: o campo velocidade sozinho não basta. Estação meteorológica
+    # (vento lido como velocidade) e GPS parado oscilando relatam > 3 km/h sem
+    # sair do lugar; isso transformava iGates/digis fixos em "móveis" e sumia
+    # com quase todos os enlaces do mapa. Exige também deslocamento real.
+    track_extent: dict[str, list[float]] = {}
     for raw in tracks:
         row = dict(raw)
-        observe(row.get("callsign"), row.get("latitude"), row.get("longitude"))
+        call = str(row.get("callsign") or "").strip().upper()
+        observe(call, row.get("latitude"), row.get("longitude"))
+        pos = _validated_position(row.get("latitude"), row.get("longitude"))
+        if call and pos is not None:
+            box = track_extent.setdefault(call, [pos[0], pos[0], pos[1], pos[1]])
+            box[0], box[1] = min(box[0], pos[0]), max(box[1], pos[0])
+            box[2], box[3] = min(box[2], pos[1]), max(box[3], pos[1])
         try:
             speed = float(row.get("speed") or 0.0)
         except (TypeError, ValueError):
             speed = 0.0
         if speed > MOBILE_SPEED_KMH:
-            moving_reports[str(row.get("callsign") or "").strip().upper()] += 1
+            moving_reports[call] += 1
 
-    moving = {call for call, count in moving_reports.items() if call and count >= 2}
+    def travelled(call: str) -> bool:
+        box = track_extent.get(call)
+        return bool(box) and db.haversine_km(box[0], box[2], box[1], box[3]) >= MOBILE_MIN_TRACK_SPAN_KM
+
+    moving = {call for call, count in moving_reports.items()
+              if call and count >= 2 and travelled(call)}
     for call, bins in positions.items():
         established = [item for item in bins.values() if item[2] >= 2]
         repeated_displacement = any(

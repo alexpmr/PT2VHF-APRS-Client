@@ -1,8 +1,9 @@
-## EM INVESTIGAÇÃO — v1.14.56 (24/10/2026): enlaces RF fixos e móveis não aparecem na v1.14.55
+## CORRIGIDO na v1.14.56 (24/10/2026): enlaces RF fixos e móveis não aparecem na v1.14.55
 
 - **Relato:** na última versão as linhas de enlace RF fixo e móvel não aparecem, mesmo marcadas em Ver.
 - **Reprodução:** não reproduzido — com pacotes reais (digi, iGate, tracker, estação fixa) a API entrega os enlaces e o mapa desenha as linhas na v1.14.55; Planejamento usa camada própria. `/api/topology` com 120 mil eventos: 0,7 s.
 - **Suspeitas no banco real:** pontas sem marcador (estações apagadas pela retenção — tela corrigida na v1.14.53 —, "Limpar tudo" ou posição em quarentena) ocultam RF inferido; estações classificadas como móveis (regra de velocidade da v1.14.50) mostram só o último contato por 3 h.
+- **Causa (captura do menu Ver: 5 RF fixos, 2 móveis, 4 iGate com 158 digis/290 iGates):** o aprslib entrega vento `_DDD/SSS` como course/speed; a regra de velocidade da v1.14.50 tornava iGates/digis meteorológicos "móveis". Correção: velocidade só vale com tracklog espalhado ≥ 0,5 km; vento não é gravado como velocidade.
 - **Ação:** v1.14.56 adiciona "Enlaces no mapa" ao Verificar banco; pedir o resultado ao mantenedor.
 
 ## RELEASE — v1.14.54 (22/10/2026): teste de recepção do TNC e Verificar banco
