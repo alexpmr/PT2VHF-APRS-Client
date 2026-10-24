@@ -3,6 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.56": {
+        "title": "Diagnóstico dos enlaces no mapa",
+        "items": [
+            "Configuração → Verificar banco agora explica quantos enlaces RF o mapa tem e por que algum não aparece.",
+            "Mostra enlaces ocultos por estação sem marcador, posição mudada, distância ou estação tratada como móvel.",
+        ],
+    },
     "1.14.55": {
         "title": "Planejamento: enlace entre 2 pontos e melhor ponto",
         "items": [

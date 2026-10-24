@@ -1,3 +1,7 @@
+## 1.14.56 - 2026-10-24
+
+- Configuração → **Verificar banco** ganha o item **Enlaces no mapa**: quantos enlaces RF fixos o mapa recebe e quantos ficam visíveis, RF móveis dentro do prazo de 3 h, iGate, e por que os demais ficam ocultos — ponta sem marcador no mapa (estação apagada pela retenção/limpeza ou sem posição atual), estação hoje a mais de 5 km da posição do enlace, inferido com mais de 250 km, ou estações tratadas como móveis (com exemplos). Mostra também o último evento RF com posição. Relato: enlaces RF fixos e móveis não aparecem mesmo marcados em Ver; não reproduzido com dados de teste, o diagnóstico mostra a causa no banco real.
+
 ## 1.14.55 - 2026-10-23
 
 - Mapa → Ver → **Planejamento** (portado do PT2VHF Mesh Analyzer v0.6.41–v0.6.43, adaptado ao APRS):
