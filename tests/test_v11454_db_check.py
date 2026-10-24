@@ -74,3 +74,20 @@ def test_api_routes(tmp_path, monkeypatch):
     assert client.post("/api/database/repair", json={}).status_code == 400
     assert client.post("/api/database/repair", json={"confirm": True}).get_json()["repaired"]
     assert client.get("/api/tnc/rx-monitor").get_json()["ok"]
+
+
+def test_map_links_diagnostic_explains_hidden_links(tmp_path, monkeypatch):
+    """v1.14.56: Verificar banco explica enlaces RF ocultos no mapa."""
+    monkeypatch.setattr(db, "DB_PATH", tmp_path / "links.db")
+    db.init_db()
+    for raw in PACKETS + ["PT2FIX>APRS,PT2DIG-1*,WIDE2-1,qAR,PT2IGT:!1550.00S/04800.00W-casa"]:
+        ingest(raw)
+    ok = by_key(db_check.run_check())["map_links"]
+    assert ok["status"] == "ok" and "visíveis" in ok["detail"]
+    with db.connection() as conn:
+        conn.execute("DELETE FROM stations")
+    report = db_check.run_check()
+    item = by_key(report)["map_links"]
+    assert item["status"] == "warning"
+    assert "não tem marcador" in item["detail"]
+    assert report["stats"]["map_rf_fixed_visible"] == 0 and report["stats"]["map_hidden_marker"] >= 1

@@ -118,6 +118,9 @@ def run_check() -> dict[str, Any]:
             checks.append(_item("free_space", "Espaço livre interno", "info",
                                 f"{stats['free_ratio']:.0%} do arquivo está livre após limpezas; não é erro."))
 
+    if not missing_cols and "topology_events" in tables:
+        checks.extend(_map_link_checks(stats))
+
     worst = max((c["status"] for c in checks), key=lambda s: _STATUS_RANK.get(s, 0), default="ok")
     status = {"error": "error", "warning": "warning"}.get(worst, "ok")
     result = {
@@ -131,6 +134,66 @@ def run_check() -> dict[str, Any]:
     diag.log_event("db_check", status=status, elapsed_ms=result["elapsed_ms"],
                    **{k: v for k, v in stats.items() if k != "path"})
     return result
+
+
+def _map_link_checks(stats: dict[str, Any]) -> list[dict[str, str]]:
+    """Explica quantos enlaces o mapa recebe e por que alguns ficam ocultos."""
+    from . import topology_map  # import tardio: evita ciclo na carga do módulo
+
+    try:
+        edges = topology_map.list_map_edges(0)
+    except Exception as exc:
+        return [_item("map_links", "Enlaces no mapa", "error", f"Falha ao montar os enlaces do mapa: {exc}")]
+    by_kind: dict[str, int] = {}
+    hidden: dict[str, int] = {"marker": 0, "moved": 0}
+    long_inferred = 0
+    for edge in edges:
+        kind = str(edge.get("kind") or "")
+        by_kind[kind] = by_kind.get(kind, 0) + 1
+        if edge.get("render_on_overview") is False:
+            warning = str(edge.get("endpoint_geometry_warning") or "")
+            hidden["marker" if "indisponível" in warning else "moved"] += 1
+        elif kind != "igate" and not edge.get("direct_rf_confirmed") and float(edge.get("distance_km") or 0) > 250:
+            long_inferred += 1
+    fixed = by_kind.get("rf", 0) + by_kind.get("rf_temp", 0)
+    shown_fixed = fixed - hidden["marker"] - hidden["moved"] - long_inferred
+    stats.update(map_rf_fixed=fixed, map_rf_fixed_visible=shown_fixed, map_rf_mobile=by_kind.get("rf_mobile", 0),
+                 map_igate=by_kind.get("igate", 0), map_hidden_marker=hidden["marker"],
+                 map_hidden_moved=hidden["moved"], map_hidden_long=long_inferred)
+    with db.connection() as conn:
+        last_rf = conn.execute(
+            "SELECT MAX(timestamp) FROM topology_events WHERE kind='rf' "
+            "AND source_lat IS NOT NULL AND target_lat IS NOT NULL").fetchone()[0]
+        reference = conn.execute(
+            """SELECT source,target,kind,source_lat,source_lon,target_lat,target_lon
+               FROM topology_events WHERE kind='rf' ORDER BY timestamp DESC,id DESC LIMIT ?""",
+            (topology_map.MAP_EVENT_SCAN_LIMIT,)).fetchall()
+        tracks = conn.execute(
+            "SELECT callsign,latitude,longitude,speed FROM tracks ORDER BY timestamp DESC,id DESC LIMIT ?",
+            (topology_map.MAP_EVENT_SCAN_LIMIT,)).fetchall()
+    mobile = sorted(topology_map.moving_rf_repeaters(reference, tracks))
+    stats["map_mobile_stations"] = len(mobile)
+    stats["last_rf_event_with_position"] = last_rf or ""
+    parts = [f"{shown_fixed} de {fixed} enlace(s) RF fixo(s) visíveis",
+             f"{by_kind.get('rf_mobile', 0)} RF móvel(is) dentro das últimas horas",
+             f"{by_kind.get('igate', 0)} iGate"]
+    reasons = []
+    if hidden["marker"]:
+        reasons.append(f"{hidden['marker']} oculto(s) porque uma das pontas não tem marcador no mapa "
+                       "(estação apagada pela retenção/limpeza ou sem posição atual)")
+    if hidden["moved"]:
+        reasons.append(f"{hidden['moved']} oculto(s) porque a estação está hoje a mais de 5 km da posição do enlace")
+    if long_inferred:
+        reasons.append(f"{long_inferred} oculto(s) por serem inferidos com mais de 250 km")
+    if mobile:
+        reasons.append(f"{len(mobile)} estação(ões) tratada(s) como móvel(is) — mostram só o último contato por 3 h "
+                       "(ex.: " + ", ".join(mobile[:8]) + ")")
+    detail = "; ".join(parts) + "." + (" " + "; ".join(reasons) + "." if reasons else "")
+    detail += f" Último evento RF com posição: {last_rf or 'nenhum'}."
+    status = "ok" if shown_fixed > 0 or fixed == 0 else "warning"
+    if fixed == 0 and by_kind.get("rf_mobile", 0) == 0 and last_rf:
+        status = "warning"
+    return [_item("map_links", "Enlaces no mapa", status, detail)]
 
 
 def repair() -> dict[str, Any]:

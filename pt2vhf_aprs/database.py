@@ -1749,13 +1749,16 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
             return current[key]
         return fallback if value is None else value
 
+    # v1.14.56: em estação meteorológica, "DDD/SSS" é vento (direção/velocidade),
+    # que o aprslib entrega como course/speed. Não é deslocamento da estação.
+    weather_report = bool(packet.get("weather")) or str(packet.get("symbol") or "") == "_"
     values = {
         "name": name or callsign,
         "last_heard": now,
         "latitude": choose("latitude"),
         "longitude": choose("longitude"),
-        "speed": choose("speed"),
-        "course": choose("course"),
+        "speed": None if weather_report else choose("speed"),
+        "course": None if weather_report else choose("course"),
         "altitude": choose("altitude"),
         "info": info if info else (current["info"] if current else ""),
         "symbol_table": choose("symbol_table"),
@@ -1807,7 +1810,8 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     callsign, now, float(lat), float(lon),
-                    packet.get("speed"), packet.get("course"), packet.get("altitude"),
+                    None if weather_report else packet.get("speed"),
+                    None if weather_report else packet.get("course"), packet.get("altitude"),
                     values["path"], values["raw"], packet.get("rssi"), packet.get("snr"),
                 ),
             )
