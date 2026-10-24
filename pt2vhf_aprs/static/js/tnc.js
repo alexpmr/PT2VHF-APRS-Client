@@ -473,7 +473,7 @@
       igate_heard_window_minutes: Number(val('tncIgateHeardWindow', 30)),
       igate_rf_path: String(val('tncIgateRfPath')).trim(),
       optimizer_mode: val('tncOptimizerMode', 'observe'),
-      retention_days: Number(val('tncRetentionDays', 14)),
+      retention_days: Number(val('tncRetentionDays', 0)),
     };
   }
 
@@ -501,7 +501,7 @@
       tncIgateHeardWindow: cfg.igate_heard_window_minutes ?? 30,
       tncIgateRfPath: cfg.igate_rf_path || '',
       tncOptimizerMode: cfg.optimizer_mode || 'observe',
-      tncRetentionDays: cfg.retention_days ?? 14,
+      tncRetentionDays: cfg.retention_days ?? 0,
     };
     for (const [id, value] of Object.entries(values)) if (field(id)) field(id).value = String(value);
     const booleans = {

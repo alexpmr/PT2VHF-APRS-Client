@@ -130,7 +130,7 @@ def test_v148_retention_presets_are_independent_and_prune_topology_edges():
             assert settings["tracks_days"] == 30
             assert settings["topology_events_days"] == 1
             # Existing categories not supplied keep their previous/default values.
-            assert retention_settings()["packets_days"] == 180
+            assert retention_settings()["packets_days"] == 0  # v1.14.58: padrão permanente
 
             old = (datetime.now(timezone.utc) - timedelta(days=2)).replace(microsecond=0).isoformat()
             now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()

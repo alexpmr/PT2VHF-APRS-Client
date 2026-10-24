@@ -884,7 +884,7 @@
               <option value="digi_igate">Digi + iGate</option>
             </select>
           </label>
-          <label class="field"><span>Retenção do histórico</span><input id="tncRetentionDays" name="retention_days" type="number" min="1" max="90" value="14"><small>dias</small></label>
+          <label class="field"><span>Retenção do histórico</span><input id="tncRetentionDays" name="retention_days" type="number" min="0" max="3650" value="0"><small>dias (0 = permanente)</small></label>
           <label class="check-field tnc-check"><input id="tncAutoTxEnabled" name="auto_tx_enabled" type="checkbox"><span>Habilitar transmissão automática em RF</span></label>
           <label class="check-field tnc-check tnc-confirm"><input id="tncTxConfirmed" name="tx_confirmed" type="checkbox"><span>Confirmo que revisei indicativo, rádio, frequência e regras antes de permitir TX automático</span></label>
         </div>
