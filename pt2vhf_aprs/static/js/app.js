@@ -6601,6 +6601,10 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   }
 
   function messageMatchesStationView(message) {
+    // v1.14.59: o "Ver" é compartilhado com o mapa; desmarcar estações para
+    // enxergar enlaces não pode esconder mensagens trocadas com a própria estação.
+    const own = normalizedCall(state.ownCallsign);
+    if (own && [normalizedCall(message?.from_call), normalizedCall(message?.to_call)].includes(own)) return true;
     const stations = messageRelevantStations(message);
     if (!stations.length) return true;
     return stations.some(stationMatchesViewFilter);
@@ -6798,7 +6802,11 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     const spec = state.sort.messages;
     const rows = sortedData(visibleMessages(), spec);
     if (!rows.length) {
-      $('#messagesTable tbody').innerHTML = `<tr class="message-empty"><td colspan="6">${state.unreadMessagesOnly ? escapeHtml(ui('Nenhuma mensagem não lida.', 'No unread messages.')) : escapeHtml(ui('Nenhuma mensagem para os filtros atuais.', 'No messages for the current filters.'))}</td></tr>`;
+      const hiddenByView = state.messages.filter(m => messageContentCategoryEnabled(m) && !messageMatchesStationView(m)).length;
+      const hiddenNote = hiddenByView ? ' ' + ui(
+        `${hiddenByView} mensagem(ns) oculta(s) pelo filtro Ver (compartilhado com o mapa e com Estações).`,
+        `${hiddenByView} message(s) hidden by the View filter (shared with the map and Stations).`) : '';
+      $('#messagesTable tbody').innerHTML = `<tr class="message-empty"><td colspan="6">${state.unreadMessagesOnly ? escapeHtml(ui('Nenhuma mensagem não lida.', 'No unread messages.')) : escapeHtml(ui('Nenhuma mensagem para os filtros atuais.', 'No messages for the current filters.') + hiddenNote)}</td></tr>`;
       updateSortIndicators('messagesTable', spec);
       return;
     }
