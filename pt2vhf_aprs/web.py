@@ -25,6 +25,7 @@ from . import release_check
 from . import retention
 from . import category_statistics, category_clear
 from . import tnc_listen, db_check
+from . import version_announce
 from .aprs_service import full_callsign, service
 from .scheduled_messages import prepare_schedule_payload, service as scheduled_message_service
 from .local_server import runtime_info as local_server_runtime_info, lan_ipv4_candidates
@@ -797,6 +798,7 @@ def create_app() -> Flask:
     diag.configure(db.DB_PATH.parent)
     scheduled_message_service.start()
     retention.start_worker()
+    version_announce.start_worker(service)
     diag.log_event("flask_app_created", version=__version__)
     try:
         # Chegar até aqui confirma que a versão atual iniciou e abriu o banco.
@@ -1001,6 +1003,21 @@ def create_app() -> Flask:
             return jsonify({"ok": True, **result})
         except (ValueError, TypeError) as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/automations/version-announce")
+    def api_version_announce_get():
+        return jsonify(version_announce.settings())
+
+    @app.post("/api/automations/version-announce")
+    def api_version_announce_save():
+        try:
+            return jsonify({"ok": True, **version_announce.save_settings(request.get_json(silent=True) or {})})
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/automations/version-announce/skip")
+    def api_version_announce_skip():
+        return jsonify({"ok": True, **version_announce.skip_current()})
 
     @app.get("/api/database/check")
     def api_database_check():

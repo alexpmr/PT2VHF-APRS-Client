@@ -931,12 +931,40 @@
         ? ui(`Atualização concluída: v${previous} → v${version}. Principais novidades:`, `Update complete: v${previous} → v${version}. What's new:`)
         : ui(`Atualização concluída para v${version}. Principais novidades:`, `Updated to v${version}. What's new:`);
       list.innerHTML = (info.items || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
+      void showVersionAnnounceNotice();
       $('#whatsNewModal')?.classList.remove('hidden');
       $('#whatsNewModal')?.setAttribute('data-version', version);
     } catch (err) {
       console.warn('Não foi possível carregar as novidades da versão:', err);
     }
   }
+
+  // v1.14.59: avisa o anúncio automático da versão e permite cancelá-lo.
+  async function showVersionAnnounceNotice() {
+    const box = $('#whatsNewAnnounce');
+    const skip = $('#whatsNewSkipAnnounce');
+    if (!box) return;
+    box.classList.add('hidden');
+    skip?.classList.add('hidden');
+    try {
+      const info = await api('/api/automations/version-announce');
+      if (!info.pending) return;
+      $('#whatsNewAnnounceText').textContent = ui(
+        `Em cerca de ${Math.round((info.delay_seconds || 120) / 60)} minutos, com o APRS-IS verificado, será enviado uma vez o anúncio: “${(info.lines || []).join(' ')}”.`,
+        `In about ${Math.round((info.delay_seconds || 120) / 60)} minutes, with APRS-IS verified, this announcement will be sent once: “${(info.lines || []).join(' ')}”.`);
+      box.classList.remove('hidden');
+      skip?.classList.remove('hidden');
+    } catch (_) { /* aviso opcional */ }
+  }
+
+  $('#whatsNewSkipAnnounce')?.addEventListener('click', async () => {
+    try {
+      await api('/api/automations/version-announce/skip', {method:'POST'});
+      $('#whatsNewAnnounce')?.classList.add('hidden');
+      $('#whatsNewSkipAnnounce')?.classList.add('hidden');
+      toast(ui('Esta versão não será anunciada.', 'This version will not be announced.'), 'ok');
+    } catch (err) { toast(String(err?.message || err), 'error'); }
+  });
 
   $('#whatsNewClose')?.addEventListener('click', () => {
     const modal = $('#whatsNewModal');

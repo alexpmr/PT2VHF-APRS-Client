@@ -1,3 +1,10 @@
+## 1.14.59 - 2026-10-25
+
+- **Anúncio automático da nova versão:** na primeira abertura de cada versão nova, o cliente envia uma única vez o Announcement BLNA pelo APRS-IS verificado, com o indicativo do usuário — por padrão "Estou usando PT2VHF APRS Client v1.14.59 - Download: tiny.cc/aprs" (mesmo link da divulgação manual da aba Sobre, que continua disponível). Envia 2 minutos após abrir e só com passcode verificado; nunca numa instalação nova. O aviso "Aplicativo atualizado" mostra o texto e tem **Não anunciar esta versão**; **Automações → Anunciar nova versão** liga/desliga e edita o texto (`{versao}`, `{link}`).
+- Mensagens: as mensagens trocadas com a própria estação sempre aparecem, mesmo com estações desmarcadas no "Ver" (compartilhado com o mapa e Estações). Com a lista vazia, informa quantas mensagens o filtro está ocultando.
+- "Ver" de Mensagens e Estações: Digipeaters e iGates apareciam com 0 porque a lista de estações não trazia a classificação do mapa; agora traz, com os mesmos subgrupos do mapa (permite reativar subgrupos que deixavam o indicador "Ver •" aceso).
+- Desempenho: identificação do equipamento pelo TOCALL com cache — lista de 3.000 estações de 4,1 s para 0,14 s; o carregamento do mapa ganha o mesmo.
+
 ## 1.14.58 - 2026-10-24
 
 - Retenção: **todos os itens passam a ser permanentes por padrão** — estações, digis, iGates, enlaces RF e Internet, objetos, tracklogs, mensagens, boletins, grupos, pacotes, log APRS, eventos de topologia e mapa de calor (Configuração → Retenção e tamanho do banco). "Restaurar padrões" volta para Permanente.
