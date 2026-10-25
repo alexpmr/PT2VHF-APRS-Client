@@ -11,3 +11,4 @@ build/
 dist/
 dist-installer/
 *.spec.bak
+.badges/
