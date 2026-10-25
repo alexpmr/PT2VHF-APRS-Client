@@ -1,3 +1,9 @@
+## RELEASE — v1.14.59 (25/10/2026): anúncio automático de versão e filtros de mensagens
+
+- **Pedido:** TX automática a cada atualização do cliente, com boletim "Estou usando a versão x do APRS Client. Download em …"; manter o envio manual da aba Sobre.
+- **Implementado:** `version_announce.py` — BLNA uma vez por versão, só após atualização (nunca instalação nova), APRS-IS verificado, 2 min após abrir, cancelável no aviso e desligável em Automações.
+- **Mensagens "sumidas":** era o filtro Ver compartilhado (estações desmarcadas no mapa). Mensagens da própria estação agora sempre visíveis; lista vazia informa as ocultas. `/api/stations` passa a trazer `map_role` (Ver contava 0 digis/iGates) e TOCALL com cache (30×).
+
 ## RELEASE — v1.14.58 (24/10/2026): retenção permanente por padrão
 
 - **Pedido (roadmap):** retenção permanente de todos os itens por default.
