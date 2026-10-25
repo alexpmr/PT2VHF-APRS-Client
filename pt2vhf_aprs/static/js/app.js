@@ -4389,6 +4389,42 @@
           </div>`);
       }
 
+      // v1.14.60: um salto da rota pode não estar na camada do mapa (RF móvel
+      // expirado, evento antigo sem geometria). A rota não pode ficar com
+      // buraco: liga os nós pelas posições da própria análise.
+      if (routeAllowedPairs) {
+        const drawn = new Set([...active].map(key => {
+          const line = state.topologyLines.get(key);
+          return line?._pt2vhfEdge ? rfRoutePairKey(line._pt2vhfEdge.source, line._pt2vhfEdge.target) : '';
+        }));
+        const nodes = rfRouteNodeCoordinates();
+        for (const route of state.rfRouteAnalysis?.routes || []) {
+          for (const hop of route.edges || []) {
+            const pair = rfRoutePairKey(hop.source, hop.target);
+            const a = nodes.get(normalizedCall(hop.source));
+            const b = nodes.get(normalizedCall(hop.target));
+            if (drawn.has(pair) || !a || !b) continue;
+            const key = 'route-fill:' + pair;
+            active.add(key);
+            drawn.add(pair);
+            let line = state.topologyLines.get(key);
+            if (!line) {
+              line = L.polyline([a, b], {
+                color: state.mapConfig.topology_rf_color, weight: state.mapConfig.topology_width,
+                opacity: .84, interactive: true, bubblingMouseEvents: false, pane: 'pt2vhfInteractionPane'
+              }).addTo(state.map);
+              state.topologyLines.set(key, line);
+            } else {
+              line.setLatLngs([a, b]);
+            }
+            line._pt2vhfEdge = {...hop, kind: 'rf', source_lat: a[0], source_lon: a[1], target_lat: b[0], target_lon: b[1]};
+            line.bindPopup('<strong>' + escapeHtml(hop.source) + ' → ' + escapeHtml(hop.target) + '</strong><div>' +
+              escapeHtml(ui('Salto da rota sem enlace atual na camada do mapa; ligado pelas posições da análise.',
+                'Route hop without a current map link; drawn from the analysis positions.')) + '</div>');
+          }
+        }
+      }
+
       for (const [key, line] of state.topologyLines) {
         if (!active.has(key)) {
           state.map.removeLayer(line);
