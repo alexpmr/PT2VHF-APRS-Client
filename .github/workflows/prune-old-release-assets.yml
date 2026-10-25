@@ -29,6 +29,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           DRY_RUN: 'true'
         run: python3 tools/prune_old_release_assets.py
+      - name: Save accumulated download counts before deleting assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash .github/download-stats/run.sh
       - name: Delete obsolete distributions after dry-run and latest-version checks
         env:
           GH_TOKEN: ${{ github.token }}

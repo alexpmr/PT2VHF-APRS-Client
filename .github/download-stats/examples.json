@@ -1,0 +1,16 @@
+{
+ "PT2VHF_APRS_Client_Setup_x64_v1.14.58.exe": "win_setup_x64",
+ "PT2VHF_APRS_Client_Portable_ARM64_v1.14.58.exe": "win_portable_arm64",
+ "PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.58.exe": "win7_portable_x64",
+ "PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.58.exe": "win7_setup_x64",
+ "PT2VHF_APRS_Client_x86_64_v1.14.58.AppImage": "linux_appimage_x64",
+ "PT2VHF_APRS_Client_arm64_v1.14.58.AppImage": "linux_appimage_arm64",
+ "pt2vhf-aprs-client_1.14.58_amd64.deb": "linux_deb_x64",
+ "pt2vhf-aprs-client_1.14.58_arm64.deb": "linux_deb_arm64",
+ "PT2VHF_APRS_Client_Linux_arm64_v1.14.58.tar.gz": "linux_tar_arm64",
+ "PT2VHF_APRS_Client_macOS_x86_64_v1.14.58.dmg": "mac_dmg_x64",
+ "PT2VHF_APRS_Client_macOS_arm64_v1.14.58.dmg": "mac_dmg_arm64",
+ "PT2VHF_APRS_Client_Manual_v1.14.58.pdf": null,
+ "SBOM.cdx.json": null,
+ "THIRD_PARTY_LICENSES.txt": null
+}

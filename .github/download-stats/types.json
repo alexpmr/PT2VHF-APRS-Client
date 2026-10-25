@@ -1,0 +1,83 @@
+{
+ "types": [
+  [
+   "win_setup_x64",
+   "^PT2VHF_APRS_Client_Setup_x64_.*\\.(exe|msi)$"
+  ],
+  [
+   "win_portable_x64",
+   "^PT2VHF_APRS_Client_Portable_x64_.*\\.(exe|zip)$"
+  ],
+  [
+   "win_setup_arm64",
+   "^PT2VHF_APRS_Client_Setup_ARM64_.*\\.(exe|msi)$"
+  ],
+  [
+   "win_portable_arm64",
+   "^PT2VHF_APRS_Client_Portable_ARM64_.*\\.(exe|zip)$"
+  ],
+  [
+   "win7_setup_x64",
+   "^PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_.*\\.exe$"
+  ],
+  [
+   "win7_portable_x64",
+   "^PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_.*\\.exe$"
+  ],
+  [
+   "linux_appimage_x64",
+   "^PT2VHF_APRS_Client_x86_64_.*\\.AppImage$"
+  ],
+  [
+   "linux_deb_x64",
+   "^pt2vhf-aprs-client_.*_amd64\\.deb$"
+  ],
+  [
+   "linux_tar_x64",
+   "^PT2VHF_APRS_Client_Linux_x86_64_.*\\.tar\\.gz$"
+  ],
+  [
+   "linux_appimage_arm64",
+   "^PT2VHF_APRS_Client_(arm64|aarch64)_.*\\.AppImage$"
+  ],
+  [
+   "linux_deb_arm64",
+   "^pt2vhf-aprs-client_.*_arm64\\.deb$"
+  ],
+  [
+   "linux_tar_arm64",
+   "^PT2VHF_APRS_Client_Linux_(arm64|aarch64)_.*\\.tar\\.gz$"
+  ],
+  [
+   "mac_dmg_x64",
+   "^PT2VHF_APRS_Client_macOS_x86_64_.*\\.dmg$"
+  ],
+  [
+   "mac_dmg_arm64",
+   "^PT2VHF_APRS_Client_macOS_arm64_.*\\.dmg$"
+  ]
+ ],
+ "groups": {
+  "windows": [
+   "win_setup_x64",
+   "win_portable_x64",
+   "win_setup_arm64",
+   "win_portable_arm64",
+   "win7_setup_x64",
+   "win7_portable_x64"
+  ],
+  "linux": [
+   "linux_appimage_x64",
+   "linux_deb_x64",
+   "linux_tar_x64",
+   "linux_appimage_arm64",
+   "linux_deb_arm64",
+   "linux_tar_arm64"
+  ],
+  "macos": [
+   "mac_dmg_x64",
+   "mac_dmg_arm64"
+  ]
+ },
+ "total": []
+}

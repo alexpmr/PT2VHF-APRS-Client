@@ -1,7 +1,8 @@
-"""Render the README download table from the latest published GitHub release only.
+"""Render the README download table from the latest published GitHub release.
 
-For each package type, display its own GitHub Release asset download_count.
-No downloads from previous versions are carried into the current version.
+For each package type, display its own GitHub Release asset download_count and,
+beside it, a badge with the accumulated downloads of every version (kept on the
+`badges` branch by .github/download-stats, so deleted releases still count).
 Usage: GH_TOKEN=$GITHUB_TOKEN python tools/sync_readme_release_downloads.py
 """
 from __future__ import annotations
@@ -80,6 +81,12 @@ def classify_asset(name: str) -> str | None:
     return None
 
 
+def total_badge(key: str) -> str:
+    owner, name = REPO.split("/", 1)
+    url = f"https://raw.githubusercontent.com/{owner}/{name}/badges/downloads/{key}.json"
+    return f"![downloads](https://img.shields.io/endpoint?url={urllib.parse.quote(url, safe='')})"
+
+
 def build_section(release: dict) -> str:
     """Return one row per package type, sourced only from this release's assets."""
     tag = str(release.get("tag_name") or "").strip()
@@ -102,15 +109,15 @@ def build_section(release: dict) -> str:
         "<!-- DOWNLOAD_TABLE_START -->",
         f"## Downloads — versão {tag.removeprefix('v')}",
         "",
-        "| Sistema | Tipo de pacote | Arquitetura | Baixar versão atual | Downloads da versão |",
-        "|---|---|---|---|---:|",
+        "| Sistema | Tipo de pacote | Arquitetura | Baixar versão atual | Downloads da versão | Todas as versões |",
+        "|---|---|---|---|---:|---:|",
     ]
     total = 0
     valid_counters = 0
     for key, system, package, architecture in CATEGORIES:
         asset = packages.get(key)
         if asset is None:
-            lines.append(f"| {system} | {package} | {architecture} | Indisponível | — |")
+            lines.append(f"| {system} | {package} | {architecture} | Indisponível | — | {total_badge(key)} |")
             continue
         link = f"[Baixar]({asset['browser_download_url']})"
         raw_count = asset.get("download_count")
@@ -120,7 +127,7 @@ def build_section(release: dict) -> str:
             display_count = f"{raw_count:,}".replace(",", ".")
         else:
             display_count = "—"
-        lines.append(f"| {system} | {package} | {architecture} | {link} | {display_count} |")
+        lines.append(f"| {system} | {package} | {architecture} | {link} | {display_count} | {total_badge(key)} |")
 
     manual = next(
         (a.get("browser_download_url") for a in release.get("assets") or []
@@ -131,12 +138,17 @@ def build_section(release: dict) -> str:
     )
     lines.extend([
         "",
+        "**Todas as versões:** " + " ".join(
+            f"{label} {total_badge(key)}" for label, key in
+            (("Total", "total"), ("Windows", "windows"), ("Linux", "linux"), ("macOS", "macos"))),
+        "",
         f"**Total contabilizado dos pacotes da {tag}: {total:,}.**".replace(",", "."),
         f"*Formatos com contagem disponível: {valid_counters}/{len(CATEGORIES)}.*",
         "",
         "> A contagem corresponde apenas aos downloads dos arquivos desta versão "
-        "segundo o GitHub Releases. Cada nova versão começa com seus próprios contadores; "
-        "versões anteriores não são somadas. Não representa instalações nem usuários únicos.",
+        "segundo o GitHub Releases; cada nova versão começa com seus próprios contadores. "
+        "A coluna \"Todas as versões\" soma os downloads de todas as versões já publicadas "
+        "(atualizada a cada hora). Não representa instalações nem usuários únicos.",
         "",
         (f"[Manual PDF]({manual}) · " if manual else "")
         + f"[Notas da versão atual](https://github.com/{REPO}/releases/tag/{tag}) · "
