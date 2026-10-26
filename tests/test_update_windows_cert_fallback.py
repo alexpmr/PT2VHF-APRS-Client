@@ -29,7 +29,7 @@ def test_windows_native_download_keeps_certificate_validation(monkeypatch, tmp_p
     monkeypatch.setattr(updater.subprocess, "run", fake_run)
 
     updater._windows_native_download(
-        "https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.41/test.exe",
+        "https://www.pt2vhf.com/downloads/aprs-client/test.exe",
         downloaded,
     )
     assert downloaded.read_bytes() == payload
@@ -43,7 +43,7 @@ def test_windows_native_download_keeps_certificate_validation(monkeypatch, tmp_p
 def test_windows_tls_failure_retries_with_native_trust_and_checks_sha256(monkeypatch, tmp_path):
     payload = b"installer-content"
     name = "PT2VHF_APRS_Client_Setup_x64_v1.14.41.exe"
-    url = f"https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.41/{name}"
+    url = f"https://www.pt2vhf.com/downloads/aprs-client/{name}"
     called = []
 
     def failing_urlopen(*_args, **_kwargs):
@@ -54,7 +54,7 @@ def test_windows_tls_failure_retries_with_native_trust_and_checks_sha256(monkeyp
         destination.write_bytes(payload)
 
     monkeypatch.setattr(updater.sys, "platform", "win32")
-    monkeypatch.setattr(updater.urllib.request, "urlopen", failing_urlopen)
+    monkeypatch.setattr(updater.urllib.request, "build_opener", lambda *_a: SimpleNamespace(open=failing_urlopen))
     monkeypatch.setattr(updater, "_windows_native_download", native)
     monkeypatch.setattr(updater, "current_update_mode", lambda: "windows-installer")
     monkeypatch.setattr(updater, "_current_executable_path", lambda: tmp_path / "installed.exe")
@@ -77,13 +77,13 @@ def test_windows_tls_failure_retries_with_native_trust_and_checks_sha256(monkeyp
 def test_native_fallback_hash_mismatch_is_rejected(monkeypatch, tmp_path):
     payload = b"incorrect-download"
     name = "PT2VHF_APRS_Client_Setup_x64_v1.14.41.exe"
-    url = f"https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.41/{name}"
+    url = f"https://www.pt2vhf.com/downloads/aprs-client/{name}"
     monkeypatch.setattr(updater.sys, "platform", "win32")
     monkeypatch.setattr(
-        updater.urllib.request, "urlopen",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+        updater.urllib.request, "build_opener",
+        lambda *_args: SimpleNamespace(open=lambda *_a, **_k: (_ for _ in ()).throw(
             urllib.error.URLError(ssl.SSLCertVerificationError("certificate error"))
-        ),
+        )),
     )
     monkeypatch.setattr(updater, "_windows_native_download", lambda _url, path: path.write_bytes(payload))
     monkeypatch.setattr(updater, "UPDATE_DIR", tmp_path)
@@ -108,6 +108,6 @@ def test_untrusted_windows_tls_fallback_is_not_bypassed(monkeypatch, tmp_path):
     monkeypatch.setattr(updater.diag, "log_event", lambda *_args, **_kwargs: None)
     with pytest.raises(RuntimeError, match="certificado HTTPS/TLS"):
         updater._windows_native_download(
-            "https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.41/test.exe",
+            "https://www.pt2vhf.com/downloads/aprs-client/test.exe",
             tmp_path / "test.exe.download",
         )

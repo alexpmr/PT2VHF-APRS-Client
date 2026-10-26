@@ -48,7 +48,7 @@ from .v142_features import register_v142_routes
 from .planning_routes import register_planning_routes
 
 
-GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
+PT2VHF_UPDATE_API = "https://www.pt2vhf.com/update.php?product=aprs"
 ELEVATION_TILE_BASE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"
 UPDATE_CACHE_SECONDS = 5 * 60
 _update_cache: dict[str, object] = {"timestamp": 0.0, "payload": None}
@@ -575,12 +575,13 @@ def get_update_status(force: bool = False) -> dict:
         )
 
         if latest_v > current_v:
-            payload["status"] = "update_available"
+            payload["status"] = "update_available" if asset else "unavailable_platform"
             if not asset:
+                payload["update_available"] = False
                 payload["error"] = (
-                    "Versão confirmada pela página GitHub, mas pacotes não puderam ser consultados automaticamente; use a página da Release."
+                    "Versão anunciada no site, mas pacotes desta plataforma não estão disponíveis."
                     if payload["limited_metadata"] else
-                    "A nova Release existe, mas o pacote desta plataforma ainda não foi publicado."
+                    "Há versão nova no site, mas ainda não há instalador compatível com esta plataforma."
                 )
         elif latest_v == current_v:
             payload["status"] = "latest"
@@ -596,7 +597,7 @@ def get_update_status(force: bool = False) -> dict:
         return payload
     except Exception as exc:
         issue = release_check.classify_error(exc)
-        payload["status"] = "error"
+        payload["status"] = "unpublished" if issue.code == "unpublished" else "error"
         payload["error_code"] = issue.code
         payload["error"] = str(issue)
         with _update_cache_lock:
@@ -1121,7 +1122,7 @@ def create_app() -> Flask:
             if not status.get("install_supported"):
                 return jsonify({
                     "ok": False,
-                    "error": "Esta execução não permite instalação automática. Use a página oficial da Release.",
+                    "error": "Esta execução não permite instalação automática. Use a página https://www.pt2vhf.com/aprs.",
                     "release_url": status.get("release_url"),
                 }), 409
 

@@ -1,9 +1,4 @@
-"""Consulta segura e diagnosticável da última Release GitHub.
-
-O HTTPS padrão do Python é preferencial. No Windows há fallback pela pilha
-TLS/certificados do próprio sistema (PowerShell/.NET), sem desativar validação.
-Como último recurso a página oficial confirma apenas o tag, nunca os assets.
-"""
+"""Atualizador PT2VHF: manifesto e downloads exclusivamente de www.pt2vhf.com."""
 from __future__ import annotations
 
 import base64
@@ -15,16 +10,15 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Any
 
-API_URL = "https://api.github.com/repos/alexpmr/PT2VHF-APRS-Client/releases/latest"
-WEB_URL = "https://github.com/alexpmr/PT2VHF-APRS-Client/releases/latest"
-HEADERS = {
-    "Accept": "application/vnd.github+json",
-    "User-Agent": "PT2VHF-APRS-Client-Updater",
-    "X-GitHub-Api-Version": "2022-11-28",
-}
+API_URL = "https://www.pt2vhf.com/update.php?product=aprs"
+WEB_URL = "https://www.pt2vhf.com/aprs"
+ORIGIN = "https://www.pt2vhf.com"
+HEADERS = {"Accept": "application/json", "User-Agent": "PT2VHF-APRS-Client-Updater"}
+HASH_RE = re.compile(r"[0-9a-f]{64}")
 
 
 class ReleaseLookupError(RuntimeError):
@@ -33,96 +27,116 @@ class ReleaseLookupError(RuntimeError):
         super().__init__(detail)
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ReleaseLookupError("redirect", "Redirecionamento bloqueado na atualização.")
+
+
 def classify_error(exc: BaseException) -> ReleaseLookupError:
     if isinstance(exc, ReleaseLookupError):
         return exc
     if isinstance(exc, urllib.error.HTTPError):
-        status = int(exc.code)
-        if status in (403, 429):
-            return ReleaseLookupError("rate_limit", "GitHub respondeu HTTP %d (limite de acesso ou bloqueio)." % status)
-        return ReleaseLookupError("http_%d" % status, "GitHub respondeu HTTP %d." % status)
+        return ReleaseLookupError("http_%d" % exc.code, "Site PT2VHF respondeu HTTP %d." % exc.code)
     reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
     if isinstance(reason, (ssl.SSLError, ssl.CertificateError)):
-        return ReleaseLookupError("tls", "Falha de validação do certificado HTTPS/TLS: %s" % type(reason).__name__)
+        return ReleaseLookupError("tls", "Falha no certificado HTTPS/TLS: %s" % type(reason).__name__)
     if isinstance(reason, (socket.timeout, TimeoutError)):
-        return ReleaseLookupError("timeout", "Tempo esgotado ao consultar o GitHub.")
+        return ReleaseLookupError("timeout", "Tempo esgotado ao consultar o site PT2VHF.")
     if isinstance(reason, socket.gaierror):
-        return ReleaseLookupError("dns", "Não foi possível resolver o endereço do GitHub (DNS).")
+        return ReleaseLookupError("dns", "Falha ao resolver www.pt2vhf.com (DNS).")
     if isinstance(reason, (ConnectionError, OSError)):
-        return ReleaseLookupError("network", "Falha de conexão com o GitHub: %s" % type(reason).__name__)
-    if isinstance(exc, (ValueError, json.JSONDecodeError)):
-        return ReleaseLookupError("invalid_response", "Resposta inválida do serviço de Releases.")
-    return ReleaseLookupError("unknown", "Falha ao consultar GitHub: %s" % type(exc).__name__)
+        return ReleaseLookupError("network", "Falha na rede para PT2VHF: %s" % type(reason).__name__)
+    if isinstance(exc, (ValueError, UnicodeError)):
+        return ReleaseLookupError("invalid_response", "Resposta inválida do site PT2VHF.")
+    return ReleaseLookupError("unknown", "Falha no site PT2VHF: %s" % type(exc).__name__)
+
+
+def is_official_asset(url: str, name: str) -> bool:
+    try:
+        info = urllib.parse.urlsplit(url)
+        return (
+            info.scheme == "https" and info.netloc == "www.pt2vhf.com"
+            and info.path.startswith("/downloads/aprs-client/")
+            and info.path.rsplit("/", 1)[-1] == name
+            and not info.query and not info.fragment and "%" not in info.path
+            and bool(re.fullmatch(r"[A-Za-z0-9_.-]+", name))
+            and name.endswith((".exe", ".AppImage", ".deb", ".tar.gz", ".dmg", ".zip"))
+        )
+    except (TypeError, ValueError, AttributeError):
+        return False
 
 
 def validate_release(data: Any) -> dict[str, Any]:
-    if not isinstance(data, dict):
-        raise ReleaseLookupError("invalid_response", "Resposta de release não é um objeto JSON.")
-    tag = str(data.get("tag_name") or "").strip()
-    if not re.fullmatch(r"v?\d+\.\d+\.\d+(?:[.-][0-9A-Za-z.-]+)?", tag):
-        raise ReleaseLookupError("invalid_tag", "Release retornou uma tag de versão inválida.")
-    assets = data.get("assets", [])
-    if not isinstance(assets, list):
-        raise ReleaseLookupError("invalid_response", "Lista de pacotes da Release é inválida.")
-    return data
+    if not isinstance(data, dict) or data.get("schema") != 1:
+        raise ReleaseLookupError("invalid_response", "Manifesto não é JSON válido de esquema 1.")
+    if data.get("product") != "aprs" or data.get("source") != ORIGIN:
+        raise ReleaseLookupError("invalid_source", "O manifesto não pertence ao APRS Client.")
+    if data.get("status") == "unpublished":
+        raise ReleaseLookupError("unpublished", "Ainda não há instalador APRS público validado no site.")
+    version = data.get("version")
+    if data.get("status") != "available" or not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        raise ReleaseLookupError("invalid_version", "Versão publicada inválida.")
+    files = data.get("files")
+    if not isinstance(files, list) or not files:
+        raise ReleaseLookupError("invalid_assets", "Nenhum arquivo publicado.")
+    assets = []
+    for entry in files:
+        if not isinstance(entry, dict):
+            raise ReleaseLookupError("invalid_assets", "Arquivo de manifesto inválido.")
+        name, url = entry.get("name"), entry.get("url")
+        size, sha = entry.get("size"), entry.get("sha256")
+        if not isinstance(name, str) or not isinstance(url, str) or not is_official_asset(url, name):
+            raise ReleaseLookupError("invalid_assets", "URL externa ou arquivo inválido.")
+        if type(size) is not int or size <= 0 or not isinstance(sha, str) or not HASH_RE.fullmatch(sha):
+            raise ReleaseLookupError("invalid_assets", "Tamanho ou SHA-256 inválidos.")
+        assets.append({"name": name, "browser_download_url": url, "size": size, "digest": "sha256:" + sha})
+    return {"tag_name": "v" + version, "html_url": WEB_URL, "body": str(data.get("notes") or ""), "assets": assets}
 
 
 def _python_api(timeout: float = 7.0) -> dict[str, Any]:
-    request = urllib.request.Request(API_URL, headers=HEADERS)
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        content = response.read(2_000_000)
-    return validate_release(json.loads(content.decode("utf-8")))
+    req = urllib.request.Request(API_URL, headers=HEADERS)
+    with urllib.request.build_opener(NoRedirect()).open(req, timeout=timeout) as res:
+        if res.geturl() != API_URL:
+            raise ReleaseLookupError("redirect", "Endereço inesperado de atualização.")
+        raw = res.read(2_000_001)
+    if len(raw) > 2_000_000:
+        raise ReleaseLookupError("invalid_response", "Manifesto excede limite de tamanho.")
+    return validate_release(json.loads(raw.decode("utf-8")))
 
 
 def _windows_native_api(timeout: int = 12) -> dict[str, Any]:
-    """Usa o repositório de certificados e proxy do Windows quando o Python falha."""
     if sys.platform != "win32":
-        raise ReleaseLookupError("fallback_unavailable", "Fallback TLS nativo disponível apenas no Windows.")
+        raise ReleaseLookupError("fallback_unavailable", "Fallback de TLS disponível só no Windows.")
     script = (
         "$ErrorActionPreference='Stop';"
         "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
         "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;"
-        "$r=Invoke-RestMethod -Uri '" + API_URL + "' -Method Get "
+        "$r=Invoke-RestMethod -Uri '" + API_URL + "' -Method Get -MaximumRedirection 0 "
         "-TimeoutSec " + str(int(timeout)) + " -Headers @{'User-Agent'='PT2VHF-APRS-Client-Updater'};"
         "$r | ConvertTo-Json -Depth 12 -Compress"
     )
     encoded = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
     try:
-        result = subprocess.run(
+        response = subprocess.run(
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded],
             capture_output=True, timeout=int(timeout) + 5, check=False,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise ReleaseLookupError("windows_tls_fallback", "Consulta HTTPS nativa do Windows não respondeu (%s)." % type(exc).__name__) from exc
-    if result.returncode:
-        raise ReleaseLookupError("windows_tls_fallback", "Consulta HTTPS nativa do Windows retornou erro (PowerShell).")
+        raise ReleaseLookupError("windows_tls_fallback", "Consulta HTTPS nativa não respondeu.") from exc
+    if response.returncode:
+        raise ReleaseLookupError("windows_tls_fallback", "Consulta HTTPS nativa falhou.")
     try:
-        return validate_release(json.loads(result.stdout.decode("utf-8-sig")))
+        return validate_release(json.loads(response.stdout.decode("utf-8-sig")))
     except (UnicodeError, ValueError, ReleaseLookupError) as exc:
-        raise ReleaseLookupError("windows_tls_fallback", "Resposta da consulta HTTPS nativa não pôde ser validada.") from exc
-
-
-def _github_web_tag(timeout: float = 6.0) -> dict[str, Any]:
-    """Fallback limitado: o redirect do site oficial comprova a tag, não assets."""
-    request = urllib.request.Request(WEB_URL, headers={"User-Agent": HEADERS["User-Agent"]})
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        resolved = response.geturl()
-    match = re.search(r"/releases/tag/(v?\d+\.\d+\.\d+(?:[.-][0-9A-Za-z.-]+)?)", resolved)
-    if not match:
-        raise ReleaseLookupError("invalid_tag", "Página oficial não indicou tag de release.")
-    tag = match.group(1)
-    return validate_release({
-        "tag_name": tag, "html_url": resolved, "body": "", "assets": [],
-        "limited_metadata": True,
-    })
+        raise ReleaseLookupError("windows_tls_fallback", "Resposta HTTPS nativa inválida.") from exc
 
 
 def fetch_latest_release() -> tuple[dict[str, Any], str]:
     failures: list[ReleaseLookupError] = []
     for attempt in range(2):
         try:
-            return _python_api(), "github_api"
+            return _python_api(), "pt2vhf_site"
         except Exception as exc:
             issue = classify_error(exc)
             failures.append(issue)
@@ -130,20 +144,9 @@ def fetch_latest_release() -> tuple[dict[str, Any], str]:
                 break
             if attempt == 0:
                 time.sleep(0.5)
-
-    if sys.platform == "win32":
+    if sys.platform == "win32" and failures and failures[0].code == "tls":
         try:
             return _windows_native_api(), "windows_system_tls"
         except Exception as exc:
             failures.append(classify_error(exc))
-
-    try:
-        return _github_web_tag(), "github_release_page"
-    except Exception as exc:
-        failures.append(classify_error(exc))
-
-    original = failures[0] if failures else ReleaseLookupError("unknown", "Falha desconhecida.")
-    raise ReleaseLookupError(
-        original.code,
-        "%s Tentativas alternativas não obtiveram confirmação da versão." % str(original),
-    )
+    raise failures[0] if failures else ReleaseLookupError("unknown", "Falha desconhecida.")

@@ -347,6 +347,14 @@
         el.classList.add('latest');
         textEl.textContent = ui('Atualizada', 'Up to date');
         el.title = ui(`${current} é a versão mais recente publicada.`, `${current} is the latest published version.`);
+      } else if (data.status === 'unavailable_platform') {
+        el.classList.add('ahead');
+        textEl.textContent = ui('Instalador indisponível', 'Installer unavailable');
+        el.title = data.error || ui('Não existe pacote compatível publicado no site.', 'No compatible package has been published on the site.');
+      } else if (data.status === 'unpublished') {
+        el.classList.add('ahead');
+        textEl.textContent = ui('Publicação pendente', 'Release pending');
+        el.title = ui('Ainda não há instalador publicado no site PT2VHF.', 'No installer published on the PT2VHF website.');
       } else if (data.status === 'ahead') {
         el.classList.add('ahead');
         textEl.textContent = ui(`Versão ${current}`, `Build ${current}`);

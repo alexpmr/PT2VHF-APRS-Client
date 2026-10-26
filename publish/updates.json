@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "updated": "2026-10-26",
+  "products": {
+    "prog": {
+      "name": "PT2VHF Prog Tool",
+      "version": "1.2.0",
+      "date": "2026-10-25",
+      "page": "https://www.pt2vhf.com/prog",
+      "notes": "O programa passa a se chamar PT2VHF Prog Tool (antes \"Programador de Rádios\"). O instalador do Windows remove automaticamente a versão 1.1.0 e o pacote .deb substitui o pacote programador-radios. Os arquivos .ts2k e .icf continuam compatíveis.",
+      "files": [
+        {
+          "category": "windows-installer",
+          "label": "Windows — Instalador",
+          "name": "PT2VHFProgTool-1.2.0-instalador.exe",
+          "url": "https://www.pt2vhf.com/downloads/prog-tool/PT2VHFProgTool-1.2.0-instalador.exe",
+          "size": 8887706,
+          "sha256": "8cd72249be49808296bbf48e5f6c5fa5f10c2baab85bc67d5a1288055bface6b",
+          "detail": "Windows 10/11 64 bits (recomendado)"
+        },
+        {
+          "category": "windows-portable",
+          "label": "Windows — Portátil",
+          "name": "PT2VHFProgTool-1.2.0-windows-portatil.zip",
+          "url": "https://www.pt2vhf.com/downloads/prog-tool/PT2VHFProgTool-1.2.0-windows-portatil.zip",
+          "size": 13103825,
+          "sha256": "119c42c3b3bd86e15c1e1239d9a2dde3388660e21ed6fff7fca708119cdbfa9d",
+          "detail": "Windows 10/11 64 bits, sem instalar"
+        },
+        {
+          "category": "linux-deb",
+          "label": "Linux — .deb (Debian/Ubuntu)",
+          "name": "pt2vhf-prog-tool_1.2.0_all.deb",
+          "url": "https://www.pt2vhf.com/downloads/prog-tool/pt2vhf-prog-tool_1.2.0_all.deb",
+          "size": 59184,
+          "sha256": "4891c944297cf3124e47540b94362057cff152d15f857def1c9e434696d2bf13",
+          "detail": "Ubuntu 22.04+, Debian 12+, Mint 21+"
+        },
+        {
+          "category": "linux-targz",
+          "label": "Linux — .tar.gz",
+          "name": "pt2vhf-prog-tool-1.2.0-linux.tar.gz",
+          "url": "https://www.pt2vhf.com/downloads/prog-tool/pt2vhf-prog-tool-1.2.0-linux.tar.gz",
+          "size": 88283,
+          "sha256": "bf35e80a3f58f7f5607e8e2aa127cf4ab200a042f33e472c71efd7831fef27e1",
+          "detail": "Outras distribuições e macOS (Python 3.10+ com Tkinter)"
+        },
+        {
+          "category": "source",
+          "label": "Código-fonte",
+          "name": "pt2vhf-prog-tool-1.2.0-codigo-fonte.zip",
+          "url": "https://www.pt2vhf.com/downloads/prog-tool/pt2vhf-prog-tool-1.2.0-codigo-fonte.zip",
+          "size": 726562,
+          "sha256": "eadfccf1f6385f5951456754adb55200820028990c5f99f82d33188ea9ead4e1",
+          "detail": "GPLv3"
+        },
+        {
+          "category": "checksums",
+          "label": "Somas de verificação",
+          "name": "SHA256SUMS.txt",
+          "url": "https://www.pt2vhf.com/downloads/prog-tool/SHA256SUMS.txt",
+          "size": 515,
+          "sha256": "7d86920c4b77fb6316064f5be5499ce8d4092b4e600fc33ac126459e4dee5eaf",
+          "detail": "SHA-256 de todos os arquivos da versão"
+        }
+      ],
+      "developmentVersion": "1.2.0",
+      "releaseStatus": "Instaladores oficiais disponíveis para Windows e Linux. Confira o SHA-256 antes da instalação."
+    },
+    "prop": {
+      "name": "PT2VHF Prop Tool",
+      "version": null,
+      "page": "https://www.pt2vhf.com/prop",
+      "files": [],
+      "developmentVersion": "0.2.21",
+      "releaseStatus": "O empacotamento Windows gerou arquivos, mas a validação automatizada falhou. Não há instalador público homologado nesta página.",
+      "ciUrl": "https://gitlab.com/pt2vhf-group/pt2vhf-prop-tool/-/jobs/17455945352",
+      "ciLabel": "Detalhes do build em validação (requer acesso ao GitLab)"
+    },
+    "mesh": {
+      "name": "PT2VHF Mesh Analyzer",
+      "version": null,
+      "page": "https://www.pt2vhf.com/mesh",
+      "files": [],
+      "developmentVersion": null,
+      "releaseStatus": "Nenhum instalador público ou repositório do Mesh Analyzer foi confirmado neste GitLab. A publicação está pendente.",
+      "updateEndpoint": "https://www.pt2vhf.com/update.php?product=mesh"
+    },
+    "aprs": {
+      "name": "PT2VHF APRS Client",
+      "version": null,
+      "page": "https://www.pt2vhf.com/aprs",
+      "files": [],
+      "developmentVersion": "1.14.59",
+      "releaseStatus": "Código v1.14.59 migrado para atualização via site. Os instaladores e pacotes portáteis ainda estão em validação e serão liberados quando estiverem hospedados no próprio site.",
+      "updateEndpoint": "https://www.pt2vhf.com/update.php?product=aprs",
+      "plannedFiles": [
+        {
+          "category": "windows-installer",
+          "counterKey": "win-setup-x64",
+          "architecture": "x64",
+          "name": "PT2VHF_APRS_Client_Setup_x64_v1.14.59.exe"
+        },
+        {
+          "category": "windows-portable",
+          "counterKey": "win-portable-x64",
+          "architecture": "x64",
+          "name": "PT2VHF_APRS_Client_Portable_x64_v1.14.59.exe"
+        },
+        {
+          "category": "windows-installer",
+          "counterKey": "win-setup-arm64",
+          "architecture": "ARM64",
+          "name": "PT2VHF_APRS_Client_Setup_ARM64_v1.14.59.exe"
+        },
+        {
+          "category": "windows-portable",
+          "counterKey": "win-portable-arm64",
+          "architecture": "ARM64",
+          "name": "PT2VHF_APRS_Client_Portable_ARM64_v1.14.59.exe"
+        },
+        {
+          "category": "linux-appimage",
+          "counterKey": "linux-appimage-x64",
+          "architecture": "x64",
+          "name": "PT2VHF_APRS_Client_x86_64_v1.14.59.AppImage"
+        },
+        {
+          "category": "linux-appimage",
+          "counterKey": "linux-appimage-arm64",
+          "architecture": "ARM64",
+          "name": "PT2VHF_APRS_Client_arm64_v1.14.59.AppImage"
+        },
+        {
+          "category": "linux-deb",
+          "counterKey": "linux-deb-x64",
+          "architecture": "x64",
+          "name": "pt2vhf-aprs-client_1.14.59_amd64.deb"
+        },
+        {
+          "category": "linux-deb",
+          "counterKey": "linux-deb-arm64",
+          "architecture": "ARM64",
+          "name": "pt2vhf-aprs-client_1.14.59_arm64.deb"
+        },
+        {
+          "category": "linux-targz",
+          "counterKey": "linux-tar-x64",
+          "architecture": "x64",
+          "name": "PT2VHF_APRS_Client_Linux_x86_64_v1.14.59.tar.gz"
+        },
+        {
+          "category": "linux-targz",
+          "counterKey": "linux-tar-arm64",
+          "architecture": "ARM64",
+          "name": "PT2VHF_APRS_Client_Linux_arm64_v1.14.59.tar.gz"
+        },
+        {
+          "category": "macos",
+          "counterKey": "mac-dmg-x64",
+          "architecture": "Intel",
+          "name": "PT2VHF_APRS_Client_macOS_x86_64_v1.14.59.dmg"
+        },
+        {
+          "category": "macos",
+          "counterKey": "mac-dmg-arm64",
+          "architecture": "Apple Silicon",
+          "name": "PT2VHF_APRS_Client_macOS_arm64_v1.14.59.dmg"
+        }
+      ]
+    },
+    "sat": {
+      "name": "PT2VHF Sat Tool",
+      "version": null,
+      "developmentVersion": "1.3.13",
+      "page": "https://www.pt2vhf.com/sat",
+      "files": [],
+      "releaseStatus": "A compilação Windows está bloqueada por uma dependência do Qt WebEngine no ambiente de build. Aguardando instalador validado.",
+      "ciUrl": "https://gitlab.com/pt2vhf-group/pt2vhf-sat-tool/-/jobs/17455927148",
+      "ciLabel": "Detalhes da compilação (requer acesso ao GitLab)"
+    }
+  }
+}

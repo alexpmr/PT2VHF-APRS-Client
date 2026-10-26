@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.59": {
+        "title": "Atualização via site PT2VHF",
+        "items": [
+            "O atualizador consulta exclusivamente https://www.pt2vhf.com.",
+            "Tamanho e SHA-256 do arquivo são verificados antes da instalação.",
+            "Links externos e redirecionamentos são bloqueados.",
+        ],
+    },
     "1.14.58": {
         "title": "Retenção permanente por padrão",
         "items": [

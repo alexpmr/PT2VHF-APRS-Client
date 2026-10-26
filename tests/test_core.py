@@ -833,7 +833,7 @@ def test_auto_update_flow_is_enabled_and_platform_launchers_register_exit():
     assert "UPDATE_LOCK_FILE" in updater_source
     assert "Stop-Process -Id $pidToWait -Force" in updater_source
     assert "kill -KILL" in updater_source
-    assert "GITHUB_LATEST_RELEASE_API" in web_source
+    assert "PT2VHF_UPDATE_API" in web_source
 
 
 def test_update_check_cache_is_five_minutes():
@@ -2122,28 +2122,19 @@ def test_v1720_first_run_opens_configuration_and_focuses_callsign():
     assert "focusInitialConfigurationIfNeeded();" in boot_block
 
 
-def test_readme_has_published_versioned_downloads_and_no_download_counter_table():
-    """A pending version must not advertise 404 downloads ahead of publication."""
-    import re
-
+def test_readme_points_only_to_official_distribution_site():
+    """Não anunciar downloads do GitHub nem instaladores não publicados."""
+    from pathlib import Path
     root = Path(__file__).resolve().parent.parent
     readme = (root / "README.md").read_text(encoding="utf-8")
     version = (root / "VERSION").read_text(encoding="utf-8").strip()
-    heading = re.search(r"## Downloads — versão (\d+\.\d+\.\d+)", readme)
-    assert heading, "Keep full direct download section visible at top of README"
-    download_version = heading.group(1)
-    assert tuple(map(int, download_version.split("."))) <= tuple(map(int, version.split(".")))
-    prefix = f"releases/download/v{download_version}/PT2VHF_APRS_Client_"
-    assert f"{prefix}Setup_x64_v{download_version}.exe" in readme
-    assert f"{prefix}Portable_x64_v{download_version}.exe" in readme
-    assert f"{prefix}Manual_v{download_version}.pdf" in readme
-    section = readme[heading.start():readme.index("## Novidades da v", heading.start())]
-    assert len(re.findall(r"releases/download/v" + re.escape(download_version), section)) >= 15
-    assert "releases/latest/download/" not in readme
-    assert "## Downloads por Release" not in readme
-    assert "DOWNLOAD_STATS_START" not in readme
-    assert "DOWNLOAD_STATS_END" not in readme
-
+    section = readme.split("<!-- DOWNLOAD_TABLE_START -->", 1)[1].split("<!-- DOWNLOAD_TABLE_END -->", 1)[0]
+    assert f"Downloads — versão {version}" in section
+    assert "https://www.pt2vhf.com/aprs" in section
+    assert "publicação pendente" in section
+    assert "github.com/alexpmr/" not in section
+    assert "gitlab.com/" not in section
+    assert not any(link in section for link in ["-codigo-fonte.zip", "SHA256SUMS.txt"])
 
 
 def test_v1721_track_hover_metadata_and_update_cleanup(monkeypatch, tmp_path):

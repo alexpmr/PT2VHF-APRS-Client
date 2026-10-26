@@ -15,6 +15,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -22,6 +23,7 @@ from typing import Any, Callable
 from . import __version__
 from . import database as db
 from . import diagnostics as diag
+from . import release_check
 
 UPDATE_DIR = db.DB_PATH.parent / "updates"
 PENDING_FILE = UPDATE_DIR / "pending_update.json"
@@ -330,12 +332,47 @@ def _is_tls_certificate_error(exc: BaseException) -> bool:
     return isinstance(reason, (ssl.SSLError, ssl.CertificateError))
 
 
+def _record_site_download_count() -> None:
+    """Conta uma atualização baixada e validada, sem bloquear a instalação."""
+    if not _is_frozen():
+        return
+    names = {
+        "windows-installer": "win-setup",
+        "windows-portable": "win-portable",
+        "linux-appimage": "linux-appimage",
+        "linux-deb": "linux-deb",
+        "linux-tar": "linux-tar",
+        "macos-dmg": "mac-dmg",
+    }
+    prefix = names.get(current_update_mode())
+    if not prefix:
+        return
+    category = prefix + ("-arm64" if _machine() == "arm64" else "-x64")
+    url = "https://www.pt2vhf.com/download.php"
+    body = urllib.parse.urlencode({
+        "action": "count", "product": "aprs", "category": category,
+    }).encode("ascii")
+    request = urllib.request.Request(
+        url, data=body, method="POST",
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "PT2VHF-APRS-Client-Updater",
+        },
+    )
+    try:
+        with urllib.request.build_opener(release_check.NoRedirect()).open(request, timeout=3) as response:
+            if response.geturl() != url or response.status != 204:
+                raise RuntimeError("Contador do site não confirmou o registro.")
+    except Exception as exc:
+        diag.log_event("update_download_counter_unavailable", error=type(exc).__name__)
+
+
 def _windows_native_download(url: str, target: Path, timeout: int = 150) -> None:
     """Download with the Windows trusted certificate store, keeping TLS validation enabled.
 
-    PowerShell follows GitHub's HTTPS redirects using Windows/.NET trust. It does
+    PowerShell follows PT2VHF's HTTPS transfers without redirects using Windows/.NET trust. It does
     not disable verification or accept untrusted certificates. Caller verifies
-    release metadata, byte length and GitHub SHA-256 after download.
+    release metadata, byte length and site SHA-256 after download.
     """
     if sys.platform != "win32":
         raise RuntimeError("O download TLS nativo está disponível somente no Windows.")
@@ -345,7 +382,7 @@ def _windows_native_download(url: str, target: Path, timeout: int = 150) -> None
         "$ErrorActionPreference='Stop';"
         "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;"
         "Invoke-WebRequest -UseBasicParsing -Uri '" + quoted_url + "' "
-        "-OutFile '" + quoted_path + "' -MaximumRedirection 8 "
+        "-OutFile '" + quoted_path + "' -MaximumRedirection 0 "
         "-TimeoutSec " + str(int(timeout)) + " "
         "-Headers @{'User-Agent'='PT2VHF-APRS-Client-Updater'};"
     )
@@ -374,15 +411,15 @@ def _windows_native_download(url: str, target: Path, timeout: int = 150) -> None
             "Falha de certificado HTTPS/TLS também ao usar os certificados do Windows. "
             "Não foi ignorada a validação de segurança. "
             "Verifique data/hora, certificados raiz, proxy ou inspeção HTTPS; "
-            "como alternativa, acesse a Release oficial pelo navegador."
+            "como alternativa, acesse www.pt2vhf.com/aprs pelo navegador."
         )
 
 
 def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     url = str(asset.get("url") or "").strip()
     name = str(asset.get("name") or "").strip()
-    if not url.startswith("https://github.com/") or "/alexpmr/PT2VHF-APRS-Client/" not in url:
-        raise ValueError("A atualização não pertence à Release oficial do PT2VHF APRS Client.")
+    if not release_check.is_official_asset(url, name):
+        raise ValueError("Pacote de atualização fora do domínio www.pt2vhf.com.")
     if not name:
         raise ValueError("A Release não informou um arquivo compatível com esta plataforma.")
 
@@ -394,6 +431,9 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
     temp.unlink(missing_ok=True)
     digest = hashlib.sha256()
     expected_size = int(asset.get("size") or 0)
+    expected = str(asset.get("digest") or "").strip().lower()
+    if expected_size <= 0 or not expected.startswith("sha256:") or not release_check.HASH_RE.fullmatch(expected[7:]):
+        raise ValueError("Atualização sem tamanho e SHA-256 obrigatórios.")
 
     diag.log_event(
         "update_download_started",
@@ -412,7 +452,9 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
             headers={"User-Agent": f"PT2VHF-APRS-Client/{__version__}"},
         )
         try:
-            with urllib.request.urlopen(req, timeout=45) as response, temp.open("wb") as out:
+            with urllib.request.build_opener(release_check.NoRedirect()).open(req, timeout=45) as response, temp.open("wb") as out:
+                if response.geturl() != url:
+                    raise ValueError("Redirecionamento do download não permitido.")
                 while True:
                     chunk = response.read(1024 * 1024)
                     if not chunk:
@@ -443,14 +485,14 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
             )
 
         sha256 = digest.hexdigest()
-        expected = str(asset.get("digest") or "").strip().lower()
-        if expected.startswith("sha256:") and sha256.lower() != expected.split(":", 1)[1]:
-            raise ValueError("O SHA-256 da atualização baixada não corresponde ao publicado no GitHub.")
+        if sha256.lower() != expected[7:]:
+            raise ValueError("O SHA-256 da atualização baixada não corresponde ao publicado no site PT2VHF.")
 
         # No Windows, remover explicitamente o pacote antigo torna a semântica
         # de sobrescrita inequívoca antes do replace atômico do novo download.
         target.unlink(missing_ok=True)
         temp.replace(target)
+        _record_site_download_count()
         if target.suffix.lower() == ".appimage":
             target.chmod(target.stat().st_mode | 0o111)
 
