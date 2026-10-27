@@ -485,7 +485,8 @@
 "Przywróć z pliku",
 "Przywróć konfigurację domyślną",
 "Zapisz konfigurację",
-"Niezapisane zmiany zostaną wskazane przy opuszczaniu tej karty."
+"Niezapisane zmiany zostaną wskazane przy opuszczaniu tej karty.",
+"Kliknij Przelicz."
   ];
   if (values.length !== keys.length) {
     console.error('Polish language pack size mismatch', values.length, keys.length);

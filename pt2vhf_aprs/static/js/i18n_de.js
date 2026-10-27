@@ -485,7 +485,8 @@
 "Aus Datei wiederherstellen",
 "Standardkonfiguration wiederherstellen",
 "Konfiguration speichern",
-"Noch nicht gespeicherte Änderungen werden beim Verlassen dieses Tabs angezeigt."
+"Noch nicht gespeicherte Änderungen werden beim Verlassen dieses Tabs angezeigt.",
+"Klicken Sie auf Neu berechnen."
   ];
   if (values.length !== keys.length) {
     console.error('German language pack size mismatch', values.length, keys.length);

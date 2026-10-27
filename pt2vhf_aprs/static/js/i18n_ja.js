@@ -485,7 +485,8 @@
 "ファイルから復元",
 "既定の設定に戻す",
 "設定を保存",
-"このタブを離れると未保存の変更が表示されます。"
+"このタブを離れると未保存の変更が表示されます。",
+"「再計算」をクリックしてください。"
   ];
   if (values.length !== keys.length) {
     console.error('Japanese language pack size mismatch', values.length, keys.length);

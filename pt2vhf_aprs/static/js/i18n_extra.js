@@ -487,6 +487,7 @@ window.PT2VHF_I18N = {
     "Restaurar configuração padrão": "Restaurar configuración predeterminada",
     "Salvar configuração": "Guardar configuración",
     "Alterações ainda não salvas serão indicadas ao sair desta aba.": "Los cambios no guardados se indicarán al salir de esta pestaña.",
+    "Clique em Recalcular.": "Haga clic en Recalcular.",
     "Replay da Rede": "Replay de la red"
   },
   fr: {
@@ -976,7 +977,8 @@ window.PT2VHF_I18N = {
     "Recuperar de arquivo": "Restaurer depuis un fichier",
     "Restaurar configuração padrão": "Restaurer la configuration par défaut",
     "Salvar configuração": "Enregistrer la configuration",
-    "Alterações ainda não salvas serão indicadas ao sair desta aba.": "Les modifications non enregistrées seront signalées en quittant cet onglet."
+    "Alterações ainda não salvas serão indicadas ao sair desta aba.": "Les modifications non enregistrées seront signalées en quittant cet onglet.",
+    "Clique em Recalcular.": "Cliquez sur Recalculer."
   }
 };
 

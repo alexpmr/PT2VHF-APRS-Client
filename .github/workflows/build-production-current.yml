@@ -23,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.60 production release
+      - name: Validate v1.14.61 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_60.py
+        run: python tools\apply_release_1_14_61.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -120,9 +120,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v1.14.60 production release
+      - name: Validate v1.14.61 production release
         shell: pwsh
-        run: python tools\apply_release_1_14_60.py
+        run: python tools\apply_release_1_14_61.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -219,7 +219,7 @@ jobs:
 
       - name: Validate v1.14.38 release metadata
         shell: pwsh
-        run: python tools\apply_release_1_14_60.py
+        run: python tools\apply_release_1_14_61.py
 
       - name: Install Win7 Legacy dependencies
         shell: pwsh
@@ -308,9 +308,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.60 production release
+      - name: Validate v1.14.61 production release
         shell: bash
-        run: python tools/apply_release_1_14_60.py
+        run: python tools/apply_release_1_14_61.py
 
       - name: Build Linux packages
         shell: bash
@@ -343,9 +343,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.60 production release
+      - name: Validate v1.14.61 production release
         shell: bash
-        run: python tools/apply_release_1_14_60.py
+        run: python tools/apply_release_1_14_61.py
 
       - name: Build Linux ARM64 packages
         shell: bash
@@ -384,7 +384,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_1_14_60.py
+          python tools/apply_release_1_14_61.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -414,9 +414,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v1.14.60 production release
+      - name: Validate v1.14.61 production release
         shell: bash
-        run: python tools/apply_release_1_14_60.py
+        run: python tools/apply_release_1_14_61.py
 
       - name: Build macOS DMG
         shell: bash
@@ -452,9 +452,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v1.14.60 production release
+      - name: Validate v1.14.61 production release
         shell: bash
-        run: python tools/apply_release_1_14_60.py
+        run: python tools/apply_release_1_14_61.py
 
       - name: Generate versioned PDF manual
         shell: bash
@@ -534,7 +534,7 @@ jobs:
           printf 'Uploading %s production assets\n' "${#files[@]}"
           gh release upload "$tag" "${files[@]}" --clobber
 
-      - name: Update README direct downloads after verifying published assets
+      - name: Verify published release
         shell: bash
         continue-on-error: true
         env:
@@ -542,7 +542,7 @@ jobs:
         run: |
           version="$(tr -d '\r\n ' < VERSION)"
           tag="v$version"
-          PT2VHF_RELEASE_VERSION="$version" python tools/sync_readme_release_downloads.py
+          # v1.14.61: downloads oficiais só em pt2vhf.com; o README não recebe links do GitHub.
 
           latest="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')"
           echo "GitHub latest release: $latest"

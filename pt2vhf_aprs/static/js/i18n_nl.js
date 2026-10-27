@@ -485,7 +485,8 @@
 "Herstellen uit bestand",
 "Standaardconfiguratie herstellen",
 "Configuratie opslaan",
-"Nog niet opgeslagen wijzigingen worden aangegeven bij het verlaten van dit tabblad."
+"Nog niet opgeslagen wijzigingen worden aangegeven bij het verlaten van dit tabblad.",
+"Klik op Herberekenen."
   ];
   if (values.length !== keys.length) {
     console.error('Dutch language pack size mismatch', values.length, keys.length);

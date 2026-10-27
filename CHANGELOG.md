@@ -1,3 +1,9 @@
+## 1.14.61 - 2026-10-27
+
+- **Estatísticas sem recalcular do zero:** o último cálculo das estatísticas do histórico e dos Recordes RF de cada período/critério fica guardado no banco. Ao entrar na aba Estatísticas, mostra o que já foi calculado ("Calculado em …, último cálculo guardado"); só recalcula ao clicar em **Recalcular** (antes "Atualizar estatísticas"), que também atualiza o que fica guardado.
+- Contadores do site: atualizações OTA do Windows 7 Legacy também são registradas (`win7-setup-x64`/`win7-portable-x64`); as demais plataformas já contavam cada atualização baixada pelo aplicativo.
+- README: o build de produção não reescreve mais a seção de downloads com links do GitHub; downloads oficiais somente em www.pt2vhf.com.
+
 ## 1.14.60 - 2026-10-27
 
 - **Anúncio automático da nova versão:** na primeira abertura de cada versão nova, o cliente envia uma única vez o Announcement BLNA pelo APRS-IS verificado, com o indicativo do usuário — por padrão "Estou usando PT2VHF APRS Client v1.14.60 - Download: pt2vhf.com" (a divulgação manual da aba Sobre continua disponível). Envia 2 minutos após abrir e só com passcode verificado; nunca numa instalação nova. O aviso "Aplicativo atualizado" mostra o texto e tem **Não anunciar esta versão**; **Automações → Anunciar nova versão** liga/desliga e edita o texto (`{versao}`, `{link}`).
