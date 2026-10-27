@@ -2036,7 +2036,7 @@ def test_v1719_statistics_ui_uses_one_sortable_station_table():
     assert "Recebidas" in js
     assert "Contatos" in js
     assert "Tipo / aplicação" in js
-    assert "Estações mais ativas" not in js[js.index("async function refreshTopologyAnalysis()"):js.index("document.addEventListener('click', event => {", js.index("async function refreshTopologyAnalysis()"))]
+    assert "Estações mais ativas" not in js[js.index("async function refreshTopologyAnalysis("):js.index("document.addEventListener('click', event => {", js.index("async function refreshTopologyAnalysis("))]
     assert ".station-ranking-group" in css
     assert ".station-ranking-table-wrap" in css
 
@@ -2059,7 +2059,7 @@ def test_v1720_statistics_period_is_independent_from_map_period():
     assert "topologyHours: Number(localStorage.getItem('pt2vhf_topology_hours') || 0)" in js
     assert "function statisticsPeriodValue(value)" in js
 
-    refresh_start = js.index("async function refreshTopologyAnalysis()")
+    refresh_start = js.index("async function refreshTopologyAnalysis(")
     refresh_end = js.index("document.addEventListener('click', event => {", refresh_start)
     refresh_block = js[refresh_start:refresh_end]
     assert "statisticsPeriodValue(state.topologyHours)" in refresh_block

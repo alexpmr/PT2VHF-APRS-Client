@@ -9486,6 +9486,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     'Máximo de retries por parte':'Maximum retries per part',
     'Estatísticas da topologia observada':'Observed topology statistics',
     'Ranking de estações ativas, digipeaters/IGates e enlaces que deixaram de aparecer no período.':'Active-station and digipeater/IGate rankings plus links no longer seen in the period.',
+    'Recalcular':'Recalculate','Clique em Recalcular.':'Click Recalculate.',
     'Atualizar estatísticas':'Refresh statistics',
     'Clique em Atualizar estatísticas.':'Click Refresh statistics.',
     'Usar período das Estatísticas':'Use Statistics period',
@@ -11157,7 +11158,9 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   }
 
 
-  async function refreshTopologyAnalysis() {
+  async function refreshTopologyAnalysis(options = {}) {
+    // v1.14.61: sem force, o servidor devolve o último cálculo guardado.
+    const force = options?.force === true;
     const box = $('#topologyStatsContent');
     if (!box) return;
     const periodSelect = $('#analysisPeriod');
@@ -11189,13 +11192,17 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
     try {
       const data = await api(
-        `/api/topology/stats?hours=${encodeURIComponent(state.topologyHours)}`,
+        `/api/topology/stats?hours=${encodeURIComponent(state.topologyHours)}${force ? '&refresh=1' : ''}`,
         { timeoutMs: 30000 }
       );
       if (generation !== state.topologyStatsGeneration) return;
       state.topologyStatsLastGood = data;
       renderTopologyStatsData(data);
-      void refreshRfRouteRecordsDeferred(generation, state.topologyHours);
+      const savedNote = $('#topologyStatsSavedAt');
+      if (savedNote) savedNote.textContent = data.saved_at
+        ? ui('Calculado em ', 'Calculated on ') + fmtDate(data.saved_at) + (data.from_saved ? ui(' (último cálculo guardado)', ' (last saved calculation)') : '')
+        : '';
+      void refreshRfRouteRecordsDeferred(generation, state.topologyHours, { force });
     } catch (err) {
       if (generation !== state.topologyStatsGeneration) return;
       if (previous) {
@@ -11284,7 +11291,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   bindClientStatsFilters();
   document.addEventListener('pt2vhf-language-changed', () => renderClientVersionStats(state.clientVersionStats));
-  $('#refreshTopologyStatsButton')?.addEventListener('click', refreshTopologyAnalysis);
+  $('#refreshTopologyStatsButton')?.addEventListener('click', () => refreshTopologyAnalysis({ force: true }));
   $('#analysisPeriod')?.addEventListener('change', async event => {
     state.topologyHours = statisticsPeriodValue(event.target.value);
     localStorage.setItem('pt2vhf_topology_hours', String(state.topologyHours));

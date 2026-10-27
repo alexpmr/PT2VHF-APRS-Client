@@ -108,6 +108,9 @@ def test_v1421_topology_stats_cache_reuses_full_history_result(monkeypatch):
     monkeypatch.setattr(web.db, "topology_stats", fake_core)
     monkeypatch.setattr(web.db, "topology_period_comparison", fake_comparison)
     monkeypatch.setattr(web, "tnc_reception_stats", fake_reception)
+    # v1.14.61: isola do último cálculo guardado no banco.
+    monkeypatch.setattr(web.saved_results, "load", lambda *a, **k: None)
+    monkeypatch.setattr(web.saved_results, "save", lambda *a, **k: "")
 
     with web._topology_stats_cache_lock:
         web._topology_stats_cache.clear()

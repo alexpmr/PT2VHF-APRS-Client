@@ -343,6 +343,9 @@ def _record_site_download_count() -> None:
         "linux-deb": "linux-deb",
         "linux-tar": "linux-tar",
         "macos-dmg": "mac-dmg",
+        # v1.14.61: atualizações OTA do Windows 7 Legacy também contam.
+        "windows-legacy-installer": "win7-setup",
+        "windows-legacy-portable": "win7-portable",
     }
     prefix = names.get(current_update_mode())
     if not prefix:
