@@ -1,8 +1,9 @@
-## BACKLOG — Mapa de calor: APRSdroid via internet contado como cobertura RF (28/10/2026)
+## BACKLOG — Mapa de calor: estação via rede DMR (DMR*) contada como cobertura RF (28/10/2026)
 
-- **Relato com captura:** estação com APRSdroid no celular, deslocando-se de Belo Horizonte até Aracaju pela BR-116, aparece como trilha no mapa de calor da Cobertura RF, embora não tenha usado RF (envio pela internet/APRS-IS).
+- **Relato com captura:** estação PP5PM-9 (APRSdroid no celular), deslocando-se de Belo Horizonte até Aracaju pela BR-116, aparece como trilha no mapa de calor da Cobertura RF, embora não tenha usado RF (envio pela internet/APRS-IS).
 - **Esperado:** somente transmissões/recepções RF reais alimentam `rf_coverage_cells`; pacotes que entraram só pela internet (TCPIP*, qAC/qAS, APRSdroid em modo APRS-IS) não contam.
-- **A investigar:** como os eventos dessa estação viraram `kind='rf'` em `topology_events` (path do APRSdroid, alias de digi no path sem `*`, qAR de iGate que na verdade só repassou, classificação inferida) e se `rf_coverage.record_event_conn`/`backfill_once` deveriam exigir evidência RF além de `kind`. Pedir ao mantenedor o indicativo para conferir os pacotes brutos.
+- **Causa provável (captura do popup):** PP5PM-9, path `PP5PM,DMR*,qAR,PP5PM`. `DMR*` é a marca do gateway APRS da rede DMR (ex.: BrandMeister), não um digipeater; o cliente trata todo elemento com `*` como digi e registra "enlace RF" PP5PM-9 → DMR, alimentando `rf_coverage_cells`. O 1º elemento `PP5PM` (o próprio indicativo/gateway) e o `qAR,PP5PM` também não comprovam RF.
+- **Correção proposta:** tratar como não-RF (igual a TCPIP/NOGATE) os pseudo-saltos de redes digitais e gateways: `DMR`, `DSTAR`/`D-STAR`, `YSF`, `C4FM`, `NXDN`, `P25`, `M17`, `TETRA`, `ECHOLINK`, `LORA*`/gateways equivalentes; pacote com esses marcadores não gera evento `rf` nem célula do mapa de calor. Limpar eventos/células já gravados com esses pseudo-saltos (migração única, sem apagar pacotes). Regra também em `_is_topology_callsign`/`rf_coverage.record_event_conn`.
 
 ## RESOLVIDO (v1.14.60) — Recordes RF: rota sem todos os enlaces desenhados (27/10/2026)
 
