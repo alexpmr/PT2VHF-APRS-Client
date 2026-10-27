@@ -485,7 +485,8 @@
 "Ripristina da file",
 "Ripristina configurazione predefinita",
 "Salva configurazione",
-"Le modifiche non ancora salvate verranno indicate quando si lascia questa scheda."
+"Le modifiche non ancora salvate verranno indicate quando si lascia questa scheda.",
+"Fare clic su Ricalcola."
   ];
   if (values.length !== keys.length) {
     console.error('Italian language pack size mismatch', values.length, keys.length);

@@ -45,7 +45,7 @@ def test_v1423_version_and_language_catalogs():
         assert f"js/{filename}" in html
         assert locale in app
         assert locale in database
-        assert _pack_value_count(filename) == 483
+        assert _pack_value_count(filename) == 484
 
     assert "統計" in read("pt2vhf_aprs/static/js/i18n_ja.js")
     assert "简体中文" in html

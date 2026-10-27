@@ -485,7 +485,8 @@
 "从文件恢复",
 "恢复默认设置",
 "保存设置",
-"离开此标签页时将提示尚未保存的更改。"
+"离开此标签页时将提示尚未保存的更改。",
+"请点击“重新计算”。"
   ];
   if (values.length !== keys.length) {
     console.error('Simplified Chinese language pack size mismatch', values.length, keys.length);
