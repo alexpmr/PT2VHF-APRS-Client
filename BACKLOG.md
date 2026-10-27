@@ -1,3 +1,9 @@
+## BACKLOG — Mapa de calor: APRSdroid via internet contado como cobertura RF (28/10/2026)
+
+- **Relato com captura:** estação com APRSdroid no celular, deslocando-se de Belo Horizonte até Aracaju pela BR-116, aparece como trilha no mapa de calor da Cobertura RF, embora não tenha usado RF (envio pela internet/APRS-IS).
+- **Esperado:** somente transmissões/recepções RF reais alimentam `rf_coverage_cells`; pacotes que entraram só pela internet (TCPIP*, qAC/qAS, APRSdroid em modo APRS-IS) não contam.
+- **A investigar:** como os eventos dessa estação viraram `kind='rf'` em `topology_events` (path do APRSdroid, alias de digi no path sem `*`, qAR de iGate que na verdade só repassou, classificação inferida) e se `rf_coverage.record_event_conn`/`backfill_once` deveriam exigir evidência RF além de `kind`. Pedir ao mantenedor o indicativo para conferir os pacotes brutos.
+
 ## RESOLVIDO (v1.14.60) — Recordes RF: rota sem todos os enlaces desenhados (27/10/2026)
 
 - **Relato com captura:** recorde CERD ↔ PY2OAL-1 (8 hops) mostra a linha só até PY2NV-15; PY2NV-15 → PY2PJA (214,8 km, 21/10) e PY2PJA → PY2OAL-1 (137,4 km, 21/10) sem linha, embora listados no painel.
