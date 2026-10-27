@@ -113,8 +113,14 @@ def capture(output_dir: Path) -> None:
                 # Em release nova, o popup legítimo "Novidades" cobre as abas.
                 # Confirmá-lo antes dos testes reais de clique (em vez de usar
                 # clicks forçados que ignorariam a interação do usuário).
-                if page.locator("#whatsNewModal").is_visible():
-                    page.locator("#whatsNewClose").click()
+                # v1.14.62: "Novidades" e "Downloads no site oficial" abrem um
+                # de cada vez ao iniciar; confirmar os dois como o usuário faria.
+                for _ in range(12):
+                    if page.locator("#whatsNewModal").is_visible():
+                        page.locator("#whatsNewClose").click()
+                    elif page.locator("#officialSiteNotice").is_visible():
+                        page.locator("#officialSiteNoticeClose").click()
+                    page.wait_for_timeout(500)
                 page.screenshot(path=str(output_dir / "map.png"))
                 for tab, filename in [("messages","messages.png"),("stations","stations.png"),("log","log.png")]:
                     page.evaluate("""(name) => document.querySelector('.tab[data-tab="' + name + '"]').click()""", tab)
