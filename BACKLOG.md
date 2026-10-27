@@ -1,3 +1,8 @@
+## BACKLOG — Recordes RF: rota sem todos os enlaces desenhados (27/10/2026)
+
+- **Relato com captura:** recorde CERD ↔ PY2OAL-1 (8 hops) mostra a linha só até PY2NV-15; PY2NV-15 → PY2PJA (214,8 km, 21/10) e PY2PJA → PY2OAL-1 (137,4 km, 21/10) sem linha, embora listados no painel.
+- **Provável causa:** saltos antigos fora da camada de enlaces do mapa (RF móvel expirado/sem geometria). A v1.14.60 já liga esses saltos pelas posições da análise (`route-fill`, commit e56574f) — confirmar se a captura é anterior à v1.14.60 instalada (publicação no pt2vhf.com pendente) e, se persistir, verificar também o caminho de "Recordes RF" (`focusRfRecordRoute`).
+
 ## BACKLOG — Estatísticas: reaproveitar o último histórico RF/Recordes (27/10/2026)
 
 - **Pedido (roadmap):** ao entrar em Estatísticas, se já houve cálculo antes, mostrar o último histórico/Recordes RF guardado; recalcular só ao clicar em **Recalcular**.
