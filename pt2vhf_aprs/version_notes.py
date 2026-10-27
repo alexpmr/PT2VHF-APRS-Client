@@ -3,12 +3,21 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
-    "1.14.59": {
+    "1.14.60": {
         "title": "Anúncio da nova versão e filtros de mensagens",
         "items": [
             "Ao abrir uma versão nova pela primeira vez, o cliente anuncia uma vez na rede APRS a versão que você está usando, com o link de download (pode ser desligado em Automações).",
             "Mensagens trocadas com a sua estação aparecem sempre, mesmo com estações desmarcadas no Ver.",
             "O Ver de Mensagens e Estações volta a contar Digipeaters e iGates; listas e mapa carregam mais rápido.",
+            "Rotas RF: saltos sem enlace atual no mapa passam a aparecer ligados.",
+        ],
+    },
+    "1.14.59": {
+        "title": "Atualização via site PT2VHF",
+        "items": [
+            "O atualizador consulta exclusivamente https://www.pt2vhf.com.",
+            "Tamanho e SHA-256 do arquivo são verificados antes da instalação.",
+            "Links externos e redirecionamentos são bloqueados.",
         ],
     },
     "1.14.58": {

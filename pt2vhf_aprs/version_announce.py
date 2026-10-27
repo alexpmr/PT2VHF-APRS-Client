@@ -3,7 +3,7 @@
 Na primeira abertura de cada versão nova (nunca numa instalação nova), envia
 uma única vez o Announcement BLNA pelo APRS-IS verificado, no mesmo formato da
 divulgação manual da aba Sobre, por exemplo
-"Estou usando PT2VHF APRS Client v1.14.59 - Download: tiny.cc/aprs".
+"Estou usando PT2VHF APRS Client v1.14.60 - Download: pt2vhf.com".
 Espera ANNOUNCE_DELAY_SECONDS após abrir o aplicativo para o operador poder
 cancelar no aviso de novidades; desligável em Automações.
 """
@@ -17,7 +17,7 @@ from . import __version__
 from . import database as db
 from . import diagnostics as diag
 
-DOWNLOAD_LINK = "tiny.cc/aprs"  # mesmo link curto da divulgação manual (aba Sobre)
+DOWNLOAD_LINK = "pt2vhf.com"  # site oficial de downloads
 DEFAULT_TEXT = "Estou usando PT2VHF APRS Client v{versao} - Download: {link}"
 BULLETIN_IDS = ("A",)              # BLNA, como a divulgação manual; uma linha
 LINE_LIMIT = 67                    # texto máximo de um boletim APRS

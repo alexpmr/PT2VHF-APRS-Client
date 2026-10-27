@@ -1,4 +1,4 @@
-"""Valida invariantes mínimas antes de empacotar a release v1.14.59."""
+"""Valida invariantes mínimas antes de empacotar a release v1.14.60."""
 import base64
 import hashlib
 from pathlib import Path
@@ -10,16 +10,16 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-assert read("VERSION").strip() == "1.14.59"
-assert '__version__ = "1.14.59"' in read("pt2vhf_aprs/__init__.py")
-assert "filevers=(1, 14, 59, 0)" in read("windows/version_info.txt")
-assert "prodvers=(1, 14, 59, 0)" in read("windows/version_info.txt")
-assert "## 1.14.59 - 2026-10-25" in read("CHANGELOG.md")
-assert '"1.14.59": {' in read("pt2vhf_aprs/version_notes.py")
+assert read("VERSION").strip() == "1.14.60"
+assert '__version__ = "1.14.60"' in read("pt2vhf_aprs/__init__.py")
+assert "filevers=(1, 14, 60, 0)" in read("windows/version_info.txt")
+assert "prodvers=(1, 14, 60, 0)" in read("windows/version_info.txt")
+assert "## 1.14.60 - 2026-10-27" in read("CHANGELOG.md")
+assert '"1.14.60": {' in read("pt2vhf_aprs/version_notes.py")
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_1_14_59.py" in read(workflow)
-    assert "apply_release_1_14_58.py" not in read(workflow)
+    assert "apply_release_1_14_60.py" in read(workflow)
+    assert "apply_release_1_14_59.py" not in read(workflow)
 
 html = read("pt2vhf_aprs/templates/index.html")
 database = read("pt2vhf_aprs/database.py")
@@ -83,7 +83,7 @@ for workflow in (".github/workflows/build-production-current.yml",
     text = read(workflow)
     manual = text[text.index("  manual-pdf:"):]
     assert manual[:400].count("runs-on: ubuntu-24.04") == 1
-# v1.14.59: planejamento no mapa (enlace entre 2 pontos e melhor ponto).
+# v1.14.60: planejamento no mapa (enlace entre 2 pontos e melhor ponto).
 planning = read("pt2vhf_aprs/planning.py")
 assert "APRS_FREQ_MHZ = 145.570" in planning
 assert "def link_analysis(" in planning and "def best_points(" in planning and "class TerrainTiles" in planning
@@ -106,4 +106,4 @@ assert "def maybe_announce(" in read("pt2vhf_aprs/version_announce.py")
 assert "version_announce.start_worker(service)" in read("pt2vhf_aprs/web.py")
 assert 'id="whatsNewSkipAnnounce"' in html and "installVersionAnnounce();" in read("pt2vhf_aprs/static/js/v111.js")
 assert "_compiled_tocall_pattern" in database
-print("v1.14.59 release validation OK")
+print("v1.14.60 release validation OK")
