@@ -3,6 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.61": {
+        "title": "Estatísticas guardadas",
+        "items": [
+            "A aba Estatísticas abre com o último cálculo guardado das estatísticas e dos Recordes RF, sem esperar recalcular.",
+            "Use o botão Recalcular para refazer o cálculo quando quiser dados atualizados.",
+        ],
+    },
     "1.14.60": {
         "title": "Anúncio da nova versão e filtros de mensagens",
         "items": [

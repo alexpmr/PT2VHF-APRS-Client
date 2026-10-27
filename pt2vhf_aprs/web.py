@@ -26,6 +26,7 @@ from . import retention
 from . import category_statistics, category_clear
 from . import tnc_listen, db_check
 from . import version_announce
+from . import saved_results
 from .aprs_service import full_callsign, service
 from .scheduled_messages import prepare_schedule_payload, service as scheduled_message_service
 from .local_server import runtime_info as local_server_runtime_info, lan_ipv4_candidates
@@ -87,6 +88,8 @@ def _rf_record_job_public(job: dict) -> dict:
         "candidates": int(job.get("candidates") or 0),
         "cache_hit": bool(job.get("cache_hit")),
         "stale": bool(job.get("stale")),
+        "saved_at": str(job.get("saved_at") or ""),
+        "from_saved": bool(job.get("from_saved")),
         "records": list(job.get("records") or []) if job.get("status") == "done" else [],
         "error": str(job.get("error") or ""),
     }
@@ -174,6 +177,7 @@ def _run_rf_record_job(job_id: str) -> None:
                 current["percent"] = 100.0
                 current["message"] = "Recordes RF prontos"
                 current["records"] = list(records or [])
+                current["saved_at"] = saved_results.save("rf_records", list(current["key"]), current["records"])
             current["elapsed_ms"] = (time.monotonic() - float(current.get("started_monotonic") or time.monotonic())) * 1000.0
             current["updated_monotonic"] = time.monotonic()
     except Exception as exc:
@@ -217,6 +221,7 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
         existing = _rf_record_jobs.get(existing_id or "")
         if existing and (existing.get("status") in {"queued", "running"} or (not force and existing.get("status") == "done")):
             return _rf_record_job_public(existing)
+        saved = None if force else saved_results.load("rf_records", list(key))
 
         job_id = uuid.uuid4().hex
         job = {
@@ -247,6 +252,11 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
         }
         _rf_record_jobs[job_id] = job
         _rf_record_job_by_key[key] = job_id
+        if saved is not None:
+            # v1.14.61: último cálculo guardado; recalcula só com "Recalcular".
+            job.update(status="done", phase="done", percent=100.0, records=list(saved[0] or []),
+                       message="Últimos Recordes RF calculados", saved_at=saved[1], from_saved=True)
+            return _rf_record_job_public(job)
 
     thread = threading.Thread(
         target=_run_rf_record_job,
@@ -258,7 +268,7 @@ def _start_rf_record_job(hours: int, limit: int, max_hops: int, *, force: bool =
     return _rf_record_job_public(job)
 
 
-def _topology_stats_payload(hours: int) -> dict:
+def _topology_stats_payload(hours: int, *, force: bool = False) -> dict:
     """Calcula indicadores leves uma vez e compartilha o resultado entre workers."""
     try:
         key = int(hours or 0)
@@ -267,9 +277,21 @@ def _topology_stats_payload(hours: int) -> dict:
     key = 0 if key <= 0 else max(1, min(key, 24 * 30))
     now = time.monotonic()
 
+    if not force:
+        with _topology_stats_cache_lock:
+            in_memory = key in _topology_stats_cache
+        saved = None if in_memory else saved_results.load("topology_stats", key)
+        if saved is not None:
+            # v1.14.61: última leitura guardada; recalcula só com "Recalcular".
+            payload = dict(saved[0])
+            payload.update(cache_hit=True, from_saved=True, saved_at=saved[1])
+            with _topology_stats_cache_lock:
+                _topology_stats_cache[key] = (now, dict(payload))
+            return payload
+
     with _topology_stats_cache_lock:
         cached = _topology_stats_cache.get(key)
-        if cached and now - cached[0] <= TOPOLOGY_STATS_CACHE_SECONDS:
+        if cached and (not force) and now - cached[0] <= TOPOLOGY_STATS_CACHE_SECONDS:
             payload = dict(cached[1])
             payload["cache_hit"] = True
             return payload
@@ -322,6 +344,7 @@ def _topology_stats_payload(hours: int) -> dict:
         payload["cache_hit"] = False
         payload["rf_route_records_deferred"] = True
         payload["stats_duration_ms"] = round((time.monotonic() - started) * 1000.0, 1)
+        payload["saved_at"] = saved_results.save("topology_stats", key, payload)
         with _topology_stats_cache_lock:
             _topology_stats_cache[key] = (time.monotonic(), dict(payload))
         return payload
@@ -1543,7 +1566,8 @@ def create_app() -> Flask:
     def api_topology_stats():
         try:
             hours = int(request.args.get("hours", 0))
-            payload = _topology_stats_payload(hours)
+            force = str(request.args.get("refresh", "")).lower() in {"1", "true", "yes"}
+            payload = _topology_stats_payload(hours, force=force)
             return jsonify(payload)
         except Exception as exc:
             diag.log_event("topology_stats_failed", error=str(exc))

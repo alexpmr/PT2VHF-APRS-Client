@@ -688,7 +688,8 @@
             <option value="168">7 dias</option>
           </select>
         </label>
-        <button id="refreshTopologyStatsButton" type="button" class="btn secondary">Atualizar estatísticas</button>
+        <button id="refreshTopologyStatsButton" type="button" class="btn secondary" title="Refaz o cálculo das estatísticas e dos Recordes RF do período">Recalcular</button>
+        <small id="topologyStatsSavedAt" class="hint"></small>
       </div>
     </div>
     <div class="analysis-content">
@@ -699,7 +700,7 @@
         <div class="analysis-metric"><span>Eventos do período</span><strong id="analysisMetricEvents">0</strong></div>
       </div>
       <div id="analysisCategoryCounts" class="analysis-category-counts" aria-live="polite"><span class="hint">Contagens por categoria aguardando atualização…</span></div>
-      <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Atualizar estatísticas.</div>
+      <div id="topologyStatsContent" class="topology-stats-content analysis-stats">Clique em Recalcular.</div>
       <div class="analysis-client-version-panel">
         <div class="analysis-client-version-heading">
           <div>
@@ -712,7 +713,7 @@
             <label class="check-field compact"><input id="clientStatsShowUnknown" type="checkbox" checked><span>Mostrar não identificados</span></label>
           </div>
         </div>
-        <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Atualizar estatísticas.</span></div>
+        <div id="clientVersionStatsContent" class="client-version-stats-content"><span class="hint">Clique em Recalcular.</span></div>
       </div>
 
     </div>
