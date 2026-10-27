@@ -2,21 +2,37 @@
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
-**v1.14.59:** o atualizador passa a consultar apenas `https://www.pt2vhf.com/update.php?product=aprs`; pacotes devem estar hospedados no domínio com SHA-256 e tamanho reais. A versão permanece sem anúncio público até que esses pacotes sejam homologados e publicados.
-
-
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 1.14.60 (publicação pendente)
+## Downloads — versão 1.14.60
 
-A nova v1.14.60 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
+| Sistema | Tipo de pacote | Arquitetura | Baixar versão atual | Downloads da versão | Todas as versões |
+|---|---|---|---|---:|---:|
+| Windows 10/11 | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Setup_x64_v1.14.60.exe) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fwin_setup_x64.json) |
+| Windows 10/11 | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Portable_x64_v1.14.60.exe) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fwin_portable_x64.json) |
+| Windows 10/11 | Instalador EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Setup_ARM64_v1.14.60.exe) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fwin_setup_arm64.json) |
+| Windows 10/11 | Portátil EXE | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Portable_ARM64_v1.14.60.exe) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fwin_portable_arm64.json) |
+| Windows 7 Legacy | Instalador EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v1.14.60.exe) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fwin7_setup_x64.json) |
+| Windows 7 Legacy | Portátil EXE | x64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v1.14.60.exe) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fwin7_portable_x64.json) |
+| Linux | AppImage | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_x86_64_v1.14.60.AppImage) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Flinux_appimage_x64.json) |
+| Linux | DEB | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/pt2vhf-aprs-client_1.14.60_amd64.deb) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Flinux_deb_x64.json) |
+| Linux | TAR.GZ | x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Linux_x86_64_v1.14.60.tar.gz) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Flinux_tar_x64.json) |
+| Linux | AppImage | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_arm64_v1.14.60.AppImage) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Flinux_appimage_arm64.json) |
+| Linux | DEB | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/pt2vhf-aprs-client_1.14.60_arm64.deb) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Flinux_deb_arm64.json) |
+| Linux | TAR.GZ | ARM64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Linux_arm64_v1.14.60.tar.gz) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Flinux_tar_arm64.json) |
+| macOS | DMG | Intel x86_64 | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_macOS_x86_64_v1.14.60.dmg) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fmac_dmg_x64.json) |
+| macOS | DMG | Apple Silicon | [Baixar](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_macOS_arm64_v1.14.60.dmg) | 0 | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fmac_dmg_arm64.json) |
 
-**Pacotes Windows/Linux**: instalador, portátil, AppImage, .deb e .tar.gz, conforme builds validados. ARM64 e macOS só serão liberados quando houver pacotes próprios.
+**Todas as versões:** Total ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Ftotal.json) Windows ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fwindows.json) Linux ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Flinux.json) macOS ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-APRS-Client%2Fbadges%2Fdownloads%2Fmacos.json)
 
-**Página oficial de downloads e contadores acumulados por tipo:** https://www.pt2vhf.com/aprs
+**Total contabilizado dos pacotes da v1.14.60: 0.**
+*Formatos com contagem disponível: 14/14.*
 
-Não há links para executáveis inexistentes. Arquivos de código-fonte e checksums não são oferecidos na tabela pública; os hashes SHA-256 permanecem na API do atualizador para verificação de integridade.
+> A contagem corresponde apenas aos downloads dos arquivos desta versão segundo o GitHub Releases; cada nova versão começa com seus próprios contadores. A coluna "Todas as versões" soma os downloads de todas as versões já publicadas (atualizada a cada hora). Não representa instalações nem usuários únicos.
 
+[Manual PDF](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/download/v1.14.60/PT2VHF_APRS_Client_Manual_v1.14.60.pdf) · [Notas da versão atual](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.14.60) · [Todas as versões](https://github.com/alexpmr/PT2VHF-APRS-Client/releases)
 <!-- DOWNLOAD_TABLE_END -->
+
+**v1.14.59:** o atualizador passa a consultar apenas `https://www.pt2vhf.com/update.php?product=aprs`; pacotes devem estar hospedados no domínio com SHA-256 e tamanho reais. A versão permanece sem anúncio público até que esses pacotes sejam homologados e publicados.
 
 A **v1.14.46** inaugura a aba **Automações** com **Auto-resposta**, migrada de Configuração e mantendo preferências salvas. Mensagens privadas novas podem receber respostas automáticas individuais, com proteção contra duplicatas, respostas reconhecidas e excesso de mensagens. O indicador compacto **TX ○ RX ○** mostra atividade combinada APRS-IS e TNC/RF. A ingestão APRS passa a rejeitar latitude/longitude com minutos inválidos na posição não comprimida (por exemplo, o PP5BLU-15), preservando pacotes brutos e omitindo do mapa eventos históricos malformados. **Pendências de campo e backlog não encerradas:** RX serial RT-950 Pro (#118), identificação completa de enlaces órfãos (#116) e saneamento de posições antigas de estações contaminadas.
 
