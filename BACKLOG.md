@@ -1,3 +1,9 @@
+## BACKLOG — Aviso "Downloads no site oficial" em todas as aplicações do site (27/10/2026)
+
+- **Pedido (roadmap, não implementar agora):** usar a mesma interface do PT2VHF Mesh Analyzer em todas as aplicações distribuídas por www.PT2VHF.com (APRS Client, Sat Tool, Prop Tool, Mesh Analyzer, venus-8 e demais).
+- **Referência visual:** modal escuro, título "Downloads no site oficial", texto "A partir de agora, as novas versões e os instaladores do PT2VHF <aplicação> serão distribuídos pelo site oficial.", link sublinhado **www.PT2VHF.com** e botão **Entendi** com borda amarela; exibir uma vez por instalação.
+- **Contexto:** GitLab aposentado; downloads e atualizador oficiais em pt2vhf.com (commit 56215b7). Pendente decidir o canal de atualização da v1.14.60 (anúncio automático de versão, mensagens/Ver, rota RF, UPX desligado — branch `claude/v1.14.59-messages`, PR #143).
+
 ## RELEASE — v1.14.58 (24/10/2026): retenção permanente por padrão
 
 - **Pedido (roadmap):** retenção permanente de todos os itens por default.
