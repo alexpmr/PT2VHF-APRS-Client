@@ -5,6 +5,7 @@ import heapq
 import json
 import math
 import os
+import functools
 import re
 import sqlite3
 import sys
@@ -1928,6 +1929,11 @@ def list_stations(filter_text: str = "") -> list[dict[str, Any]]:
             bool(item.get("message_capable")) or call in interaction_calls
         ) else 0
         item["infrastructure_evidence"] = 1 if call in infrastructure_calls else 0
+        # v1.14.59: mesma classificação do mapa; sem ela os filtros "Ver" de
+        # Estações/Mensagens contavam 0 digis e 0 iGates.
+        item.update(aprs_map_device_metadata(
+            str(item.get("raw") or ""), str(item.get("info") or ""), str(item.get("symbol") or ""),
+        ))
         issue = issues.get(call)
         valid = _valid_geo_position(item.get("latitude"), item.get("longitude")) and issue is None
         item["position_valid"] = bool(valid)
@@ -2908,7 +2914,30 @@ def _tocall_pattern_regex(pattern: str) -> str:
     return "^" + "".join(out) + "$"
 
 
+@functools.lru_cache(maxsize=2048)
+def _compiled_tocall_pattern(raw_pattern: str) -> "re.Pattern[str] | None":
+    try:
+        return re.compile(_tocall_pattern_regex(raw_pattern))
+    except re.error:
+        return None
+
+
+_aprs_device_id_cache: dict[str, dict[str, Any]] = {}
+
+
 def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
+    """Versão com cache: o mapa e a lista de estações resolvem milhares de
+    estações por atualização, mas há poucos TOCALLs distintos (v1.14.59)."""
+    code = str(tocall or "").upper().strip()
+    cached = _aprs_device_id_cache.get(code)
+    if cached is None:
+        cached = _resolve_aprs_device_id_uncached(code)
+        if len(_aprs_device_id_cache) < 4096:
+            _aprs_device_id_cache[code] = cached
+    return {**cached, "features": list(cached.get("features") or [])}
+
+
+def _resolve_aprs_device_id_uncached(tocall: str) -> dict[str, Any]:
     """Resolve TOCALL pelo snapshot oficial aprs-deviceid, preferindo padrões específicos."""
     code = str(tocall or "").upper().strip()
     if not code:
@@ -2921,10 +2950,8 @@ def resolve_aprs_device_id(tocall: str) -> dict[str, Any]:
         pattern = raw_pattern.upper()
         if not raw_pattern:
             continue
-        try:
-            if not re.fullmatch(_tocall_pattern_regex(raw_pattern), code):
-                continue
-        except re.error:
+        compiled = _compiled_tocall_pattern(raw_pattern)
+        if compiled is None or not compiled.fullmatch(code):
             continue
         wildcard_count = raw_pattern.count("?") + raw_pattern.count("*") + raw_pattern.count("n")
         literal_count = len(raw_pattern) - wildcard_count

@@ -159,6 +159,23 @@
     load();
   }
 
+  // v1.14.59: anúncio automático da versão (BLNA) na primeira abertura após atualizar.
+  function installVersionAnnounce(){
+    const grid=$('#automationsGrid');if(!grid||$('#v1459VersionAnnounce'))return;
+    const card=document.createElement('div');card.id='v1459VersionAnnounce';card.className='config-card full-card config-section';
+    card.innerHTML='<h3>'+tr('Anunciar nova versão','Announce new version','Anunciar nueva versión','Annoncer la nouvelle version')+'</h3>'+
+      '<p>'+tr('Na primeira abertura de cada versão nova, envia uma vez um Announcement (BLNA) pelo APRS-IS com o seu indicativo, 2 minutos após abrir. Não envia em instalação nova nem sem passcode verificado. O envio manual continua na aba Sobre.','On the first launch of each new version, sends one Announcement (BLNA) over APRS-IS with your callsign, 2 minutes after opening. Never on a fresh install or without a verified passcode. Manual sending stays in the About tab.','En la primera apertura de cada versión nueva, envía una vez un Announcement (BLNA) por APRS-IS con su indicativo, 2 minutos después de abrir. No envía en instalación nueva ni sin passcode verificado.','À la première ouverture de chaque nouvelle version, envoie une fois un Announcement (BLNA) via APRS-IS avec votre indicatif, 2 minutes après l\'ouverture.')+'</p>'+
+      '<label class="check-field"><input id="v1459AnnounceEnabled" type="checkbox"><span>'+tr('Anunciar automaticamente ao atualizar','Announce automatically after updating','Anunciar automáticamente al actualizar','Annoncer automatiquement après mise à jour')+'</span></label>'+
+      '<label class="field"><span>'+tr('Texto ({versao} e {link} são substituídos)','Text ({versao} and {link} are replaced)','Texto ({versao} y {link} se sustituyen)','Texte ({versao} et {link} remplacés)')+'</span><input id="v1459AnnounceText" maxlength="120"></label>'+
+      '<small id="v1459AnnouncePreview" class="hint"></small>'+
+      '<div class="v111-actions"><button id="v1459AnnounceSave" class="btn secondary">'+tr('Salvar','Save','Guardar','Enregistrer')+'</button></div>';
+    grid.appendChild(card);
+    const preview=s=>{$('#v1459AnnouncePreview').textContent=tr('Será enviado: ','Will send: ','Se enviará: ','Envoi : ')+(s.lines||[]).join(' ')+(s.announced_version?' · '+tr('Último anúncio: v','Last announcement: v','Último anuncio: v','Dernière annonce : v')+s.announced_version:'');};
+    const load=async()=>{try{const s=await req('/api/automations/version-announce');$('#v1459AnnounceEnabled').checked=!!s.enabled;$('#v1459AnnounceText').value=s.text||s.default_text||'';preview(s);}catch(e){toast(e.message);}};
+    $('#v1459AnnounceSave').onclick=async()=>{try{const s=await req('/api/automations/version-announce',{method:'POST',body:JSON.stringify({enabled:$('#v1459AnnounceEnabled').checked,text:$('#v1459AnnounceText').value})});if(s&&s.ok===false)throw new Error(s.error||'Erro');preview(s);toast(tr('Anúncio de versão salvo.','Version announcement saved.','Anuncio de versión guardado.','Annonce de version enregistrée.'));}catch(e){toast(e.message);}};
+    load();
+  }
+
   async function enrichStationOperational(){
     const panel=$('#v1818StationPanel');if(!panel||panel.classList.contains('hidden'))return;
     const call=String($('#v1818StationTitle',panel)?.textContent||'').trim().toUpperCase();if(!call)return;
@@ -176,6 +193,6 @@
   }
   function watchStation(){const o=new MutationObserver(()=>enrichStationOperational());o.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});}
 
-  function boot(){installNotificationCenter();installTncOperations();installDatabaseHealth();installAutoReply();watchStation();}
+  function boot(){installNotificationCenter();installTncOperations();installDatabaseHealth();installAutoReply();installVersionAnnounce();watchStation();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();

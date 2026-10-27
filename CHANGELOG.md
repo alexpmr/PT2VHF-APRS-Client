@@ -1,3 +1,17 @@
+## 1.14.60 - 2026-10-27
+
+- **Anúncio automático da nova versão:** na primeira abertura de cada versão nova, o cliente envia uma única vez o Announcement BLNA pelo APRS-IS verificado, com o indicativo do usuário — por padrão "Estou usando PT2VHF APRS Client v1.14.60 - Download: pt2vhf.com" (a divulgação manual da aba Sobre continua disponível). Envia 2 minutos após abrir e só com passcode verificado; nunca numa instalação nova. O aviso "Aplicativo atualizado" mostra o texto e tem **Não anunciar esta versão**; **Automações → Anunciar nova versão** liga/desliga e edita o texto (`{versao}`, `{link}`).
+- Mensagens: as mensagens trocadas com a própria estação sempre aparecem, mesmo com estações desmarcadas no "Ver" (compartilhado com o mapa e Estações). Com a lista vazia, informa quantas mensagens o filtro está ocultando.
+- "Ver" de Mensagens e Estações: Digipeaters e iGates apareciam com 0 porque a lista de estações não trazia a classificação do mapa; agora traz, com os mesmos subgrupos do mapa (permite reativar subgrupos que deixavam o indicador "Ver •" aceso).
+- Desempenho: identificação do equipamento pelo TOCALL com cache — lista de 3.000 estações de 4,1 s para 0,14 s; o carregamento do mapa ganha o mesmo.
+- Rotas RF: um salto da rota sem enlace atual na camada do mapa (RF móvel expirado, evento antigo sem posição) deixava a rota com buraco; agora é ligado pelas posições dos nós da análise.
+- Windows: executáveis sem compressão UPX, que disparava falso positivo de antivírus (Norton IDP.HELU.PSE95).
+- Anúncio e downloads apontam para o site oficial; o atualizador continua consultando somente www.pt2vhf.com (v1.14.59).
+
+## 1.14.59 - 2026-10-26
+
+- Atualizador consulta exclusivamente https://www.pt2vhf.com; tamanho e SHA-256 verificados antes da instalação; links externos e redirecionamentos bloqueados.
+
 ## 1.14.58 - 2026-10-24
 
 - Retenção: **todos os itens passam a ser permanentes por padrão** — estações, digis, iGates, enlaces RF e Internet, objetos, tracklogs, mensagens, boletins, grupos, pacotes, log APRS, eventos de topologia e mapa de calor (Configuração → Retenção e tamanho do banco). "Restaurar padrões" volta para Permanente.
