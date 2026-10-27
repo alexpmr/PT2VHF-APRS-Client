@@ -1,4 +1,4 @@
-"""Valida invariantes mínimas antes de empacotar a release v1.14.61."""
+"""Valida invariantes mínimas antes de empacotar a release v1.14.62."""
 import base64
 import hashlib
 from pathlib import Path
@@ -10,16 +10,16 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-assert read("VERSION").strip() == "1.14.61"
-assert '__version__ = "1.14.61"' in read("pt2vhf_aprs/__init__.py")
-assert "filevers=(1, 14, 61, 0)" in read("windows/version_info.txt")
-assert "prodvers=(1, 14, 61, 0)" in read("windows/version_info.txt")
-assert "## 1.14.61 - 2026-10-27" in read("CHANGELOG.md")
-assert '"1.14.61": {' in read("pt2vhf_aprs/version_notes.py")
+assert read("VERSION").strip() == "1.14.62"
+assert '__version__ = "1.14.62"' in read("pt2vhf_aprs/__init__.py")
+assert "filevers=(1, 14, 62, 0)" in read("windows/version_info.txt")
+assert "prodvers=(1, 14, 62, 0)" in read("windows/version_info.txt")
+assert "## 1.14.62 - 2026-10-28" in read("CHANGELOG.md")
+assert '"1.14.62": {' in read("pt2vhf_aprs/version_notes.py")
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_1_14_61.py" in read(workflow)
-    assert "apply_release_1_14_60.py" not in read(workflow)
+    assert "apply_release_1_14_62.py" in read(workflow)
+    assert "apply_release_1_14_61.py" not in read(workflow)
 
 html = read("pt2vhf_aprs/templates/index.html")
 database = read("pt2vhf_aprs/database.py")
@@ -83,7 +83,7 @@ for workflow in (".github/workflows/build-production-current.yml",
     text = read(workflow)
     manual = text[text.index("  manual-pdf:"):]
     assert manual[:400].count("runs-on: ubuntu-24.04") == 1
-# v1.14.61: planejamento no mapa (enlace entre 2 pontos e melhor ponto).
+# v1.14.62: planejamento no mapa (enlace entre 2 pontos e melhor ponto).
 planning = read("pt2vhf_aprs/planning.py")
 assert "APRS_FREQ_MHZ = 145.570" in planning
 assert "def link_analysis(" in planning and "def best_points(" in planning and "class TerrainTiles" in planning
@@ -109,4 +109,5 @@ assert "_compiled_tocall_pattern" in database
 assert "saved_results.load(\"topology_stats\"" in read("pt2vhf_aprs/web.py")
 assert "refreshTopologyAnalysis({ force: true })" in js
 assert "sync_readme_release_downloads.py" not in read(".github/workflows/build-production-current.yml")
-print("v1.14.61 release validation OK")
+assert 'id="officialSiteNotice"' in html and "function showOfficialSiteNotice()" in js
+print("v1.14.62 release validation OK")

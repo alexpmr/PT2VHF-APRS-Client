@@ -1,3 +1,21 @@
+## RESOLVIDO (v1.14.60) — Recordes RF: rota sem todos os enlaces desenhados (27/10/2026)
+
+- **Relato com captura:** recorde CERD ↔ PY2OAL-1 (8 hops) mostra a linha só até PY2NV-15; PY2NV-15 → PY2PJA (214,8 km, 21/10) e PY2PJA → PY2OAL-1 (137,4 km, 21/10) sem linha, embora listados no painel.
+- **Provável causa:** saltos antigos fora da camada de enlaces do mapa (RF móvel expirado/sem geometria). A v1.14.60 já liga esses saltos pelas posições da análise (`route-fill`, commit e56574f) — confirmar se a captura é anterior à v1.14.60 instalada (publicação no pt2vhf.com pendente) e, se persistir, verificar também o caminho de "Recordes RF" (`focusRfRecordRoute`).
+
+## RESOLVIDO (v1.14.61) — Estatísticas: reaproveitar o último histórico RF/Recordes (27/10/2026)
+
+- **Pedido (roadmap):** ao entrar em Estatísticas, se já houve cálculo antes, mostrar o último histórico/Recordes RF guardado; recalcular só ao clicar em **Recalcular**.
+- **Rascunho, não publicado:** branch `claude/v1.14.61-rf-records-cache` (tabela `saved_results`, `?refresh=1`, job de Recordes reaproveita o salvo; falta ajustar `test_v1421_topology_stats_cache_reuses_full_history_result`).
+
+## RESOLVIDO (v1.14.61) — README regravado com links do GitHub pelo build de produção (27/10/2026)
+
+- O passo "Update README direct downloads" de `build-production-current.yml` roda `tools/sync_readme_release_downloads.py` e regravou o README da v1.14.60 com links do GitHub (commit f9a3439), contrariando downloads só em pt2vhf.com; quebra `test_readme_points_only_to_official_distribution_site`. Correção no mesmo branch acima.
+
+## RESOLVIDO (v1.14.62, APRS) — Aviso "Downloads no site oficial" em todas as aplicações do site (27/10/2026)
+
+- **Pedido (roadmap):** usar em todas as aplicações distribuídas por www.PT2VHF.com (APRS Client, Sat Tool, Prop Tool, Mesh Analyzer, venus-8 e demais) a mesma interface do PT2VHF Mesh Analyzer: modal escuro "Downloads no site oficial", texto "A partir de agora, as novas versões e os instaladores do PT2VHF <aplicação> serão distribuídos pelo site oficial.", link **www.PT2VHF.com** e botão **Entendi**; uma vez por instalação.
+
 ## RELEASE — v1.14.59 (25/10/2026): anúncio automático de versão e filtros de mensagens
 
 - **Pedido:** TX automática a cada atualização do cliente, com boletim "Estou usando a versão x do APRS Client. Download em …"; manter o envio manual da aba Sobre.
