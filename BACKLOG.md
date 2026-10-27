@@ -1,3 +1,16 @@
+## BACKLOG — Estatísticas: reaproveitar o último histórico RF/Recordes (27/10/2026)
+
+- **Pedido (roadmap):** ao entrar em Estatísticas, se já houve cálculo antes, mostrar o último histórico/Recordes RF guardado; recalcular só ao clicar em **Recalcular**.
+- **Rascunho, não publicado:** branch `claude/v1.14.61-rf-records-cache` (tabela `saved_results`, `?refresh=1`, job de Recordes reaproveita o salvo; falta ajustar `test_v1421_topology_stats_cache_reuses_full_history_result`).
+
+## BACKLOG — README regravado com links do GitHub pelo build de produção (27/10/2026)
+
+- O passo "Update README direct downloads" de `build-production-current.yml` roda `tools/sync_readme_release_downloads.py` e regravou o README da v1.14.60 com links do GitHub (commit f9a3439), contrariando downloads só em pt2vhf.com; quebra `test_readme_points_only_to_official_distribution_site`. Correção no mesmo branch acima.
+
+## BACKLOG — Aviso "Downloads no site oficial" em todas as aplicações do site (27/10/2026)
+
+- **Pedido (roadmap):** usar em todas as aplicações distribuídas por www.PT2VHF.com (APRS Client, Sat Tool, Prop Tool, Mesh Analyzer, venus-8 e demais) a mesma interface do PT2VHF Mesh Analyzer: modal escuro "Downloads no site oficial", texto "A partir de agora, as novas versões e os instaladores do PT2VHF <aplicação> serão distribuídos pelo site oficial.", link **www.PT2VHF.com** e botão **Entendi**; uma vez por instalação.
+
 ## RELEASE — v1.14.59 (25/10/2026): anúncio automático de versão e filtros de mensagens
 
 - **Pedido:** TX automática a cada atualização do cliente, com boletim "Estou usando a versão x do APRS Client. Download em …"; manter o envio manual da aba Sobre.
