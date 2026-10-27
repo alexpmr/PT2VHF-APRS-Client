@@ -5100,3 +5100,13 @@ html[lang="zh-CN"] body {
 .whats-new-announce{margin:10px 0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px}
 .whats-new-announce.hidden{display:none}
 .whats-new-announce p{margin:0 0 4px}
+
+/* v1.14.62 — aviso "Downloads no site oficial" (mesmo visual do Mesh Analyzer) */
+.official-site-notice{position:fixed;inset:0;z-index:9915;display:flex;align-items:center;justify-content:center;padding:16px;background:#040a11d6}
+.official-site-notice.hidden{display:none}
+.official-site-notice-box{width:min(540px,96vw);background:#2a2c33;color:#eff6f9;border:1px solid #708a99;border-radius:13px;box-shadow:0 20px 60px #000b;padding:24px}
+.official-site-notice h2{font-size:20px;margin:0 0 12px}
+.official-site-notice p{line-height:1.65;margin:0 0 15px}
+.official-site-notice a{color:#72d2ff;font-weight:bold;text-decoration:underline;overflow-wrap:anywhere}
+.official-site-notice-actions{display:flex;justify-content:flex-end}
+.official-site-notice-actions .btn{border:2px solid #f5c400}

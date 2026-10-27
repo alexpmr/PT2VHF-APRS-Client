@@ -1,3 +1,7 @@
+## 1.14.62 - 2026-10-28
+
+- Aviso **"Downloads no site oficial"** ao iniciar, com o mesmo visual do PT2VHF Mesh Analyzer: "A partir de agora, as novas versões e os instaladores do PT2VHF APRS Client serão distribuídos pelo site oficial.", link www.PT2VHF.com e botão Entendi; uma vez por abertura, nunca sobreposto aos avisos de novidades ou de atualização (pt/en/es/fr).
+
 ## 1.14.61 - 2026-10-27
 
 - **Estatísticas sem recalcular do zero:** o último cálculo das estatísticas do histórico e dos Recordes RF de cada período/critério fica guardado no banco. Ao entrar na aba Estatísticas, mostra o que já foi calculado ("Calculado em …, último cálculo guardado"); só recalcula ao clicar em **Recalcular** (antes "Atualizar estatísticas"), que também atualiza o que fica guardado.

@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.14.62": {
+        "title": "Downloads no site oficial",
+        "items": [
+            "Ao iniciar, um aviso informa que novas versões e instaladores são distribuídos pelo site oficial www.PT2VHF.com.",
+        ],
+    },
     "1.14.61": {
         "title": "Estatísticas guardadas",
         "items": [

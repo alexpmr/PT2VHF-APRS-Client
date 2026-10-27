@@ -424,7 +424,7 @@
       if (snoozedAt && Date.now() - snoozedAt < UPDATE_PROMPT_SNOOZE_MS) return;
     } catch (_) {}
     // Não sobrepõe outro aviso aberto (ex.: "Aplicativo atualizado").
-    if (document.querySelector('.message-alert-overlay:not(.hidden)')) {
+    if (document.querySelector('.message-alert-overlay:not(.hidden), .official-site-notice:not(.hidden)')) {
       setTimeout(() => maybePromptUpdate(state.updateInfo), 5000);
       return;
     }
@@ -940,6 +940,10 @@
         : ui(`Atualização concluída para v${version}. Principais novidades:`, `Updated to v${version}. What's new:`);
       list.innerHTML = (info.items || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
       void showVersionAnnounceNotice();
+      // Um aviso por vez: espera o "Downloads no site oficial" ser fechado.
+      while ($('#officialSiteNotice') && !$('#officialSiteNotice').classList.contains('hidden')) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
       $('#whatsNewModal')?.classList.remove('hidden');
       $('#whatsNewModal')?.setAttribute('data-version', version);
     } catch (err) {
@@ -964,6 +968,33 @@
       skip?.classList.remove('hidden');
     } catch (_) { /* aviso opcional */ }
   }
+
+  // v1.14.62: mesmo aviso do PT2VHF Mesh Analyzer, uma vez por abertura do aplicativo.
+  const OFFICIAL_SITE_NOTICE = {
+    pt: ['Downloads no site oficial', 'A partir de agora, as novas versões e os instaladores do PT2VHF APRS Client serão distribuídos pelo site oficial.', 'Entendi'],
+    en: ['Downloads on the official website', 'From now on, new versions and installers of PT2VHF APRS Client will be distributed through the official website.', 'Got it'],
+    es: ['Descargas en el sitio web oficial', 'A partir de ahora, las nuevas versiones y los instaladores de PT2VHF APRS Client se distribuirán a través del sitio web oficial.', 'Entendido'],
+    fr: ['Téléchargements sur le site officiel', 'Désormais, les nouvelles versions et les installateurs de PT2VHF APRS Client seront distribués via le site officiel.', 'Compris'],
+  };
+  let officialSiteNoticeShown = false;
+  function showOfficialSiteNotice() {
+    const box = $('#officialSiteNotice');
+    if (!box || officialSiteNoticeShown) return;
+    if (document.querySelector('.message-alert-overlay:not(.hidden)')) { setTimeout(showOfficialSiteNotice, 2000); return; }
+    officialSiteNoticeShown = true;
+    const lang = String(document.documentElement.lang || 'pt').slice(0, 2).toLowerCase();
+    const [title, body, close] = OFFICIAL_SITE_NOTICE[lang] || OFFICIAL_SITE_NOTICE.en;
+    $('#officialSiteNoticeTitle').textContent = title;
+    $('#officialSiteNoticeText').textContent = body;
+    $('#officialSiteNoticeClose').textContent = close;
+    box.classList.remove('hidden');
+    $('#officialSiteNoticeClose').focus();
+  }
+  $('#officialSiteNoticeClose')?.addEventListener('click', () => $('#officialSiteNotice')?.classList.add('hidden'));
+  $('#officialSiteNotice')?.addEventListener('keydown', event => {
+    if (event.key === 'Escape') $('#officialSiteNotice')?.classList.add('hidden');
+  });
+  setTimeout(showOfficialSiteNotice, 1500);
 
   $('#whatsNewSkipAnnounce')?.addEventListener('click', async () => {
     try {
