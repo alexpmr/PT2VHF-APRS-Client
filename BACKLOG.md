@@ -1,4 +1,4 @@
-## PENDENTE (29/10/2026) — Falso positivo de RF: tracklog vindo de DMR (gateway para APRS-IS) aparece como cobertura RF
+## PENDENTE (29/10/2026) — Falso positivo de RF: posições de DMR, D-STAR, C4FM etc. (gateways para APRS-IS) aparecem como cobertura RF
 
 - **Relato (backlog, 29/10/2026, com captura):** o falso positivo de tracklog "feito por RF" continua. Uma
   estação móvel viajou de Recife a Salvador e seguiu para o sul; o trajeto inteiro aparece no **mapa de
@@ -15,6 +15,16 @@
   não pode gerar salto RF nem célula de cobertura. Um `qAR` cujo gate é um gateway DMR conhecido também não
   é evidência de RF APRS. Levantar no banco real (Log/pacotes brutos dessa estação) o path exato do gateway
   DMR para montar a regra; manter lista de gateways/TOCALLs DMR e marcar a estação como "via DMR" no popup.
+- **Ampliação (29/10/2026): o mesmo para todos os modos digitais com gateway para o APRS-IS**, não só DMR:
+  - **D-STAR** (D-PRS do rádio, gateways ircDDBGateway/DStarGateway/G4KLX, TOCALL `APDPRS`/`APDG*`/`APDS*`);
+  - **C4FM / System Fusion (YSF)** (WIRES-X, YSFGateway, pYSF, TOCALL `APY*`/`APYSF*`);
+  - **DMR** (BrandMeister, TGIF, DMRGateway/MMDVMHost, TOCALL `APBM*`/`APDMR*`/`APMI*`);
+  - **NXDN, P25, M17** e afins (MMDVM/Pi-Star/WPSD, ex.: `APMM*`, `APPS*`, `APNX*`), Echolink/AllStar/
+    Zello e apps de Internet (APRSdroid via TCPIP etc.).
+  Regra geral: posição que entrou no APRS-IS por um desses gateways **nunca** gera salto RF APRS, célula
+  no mapa de calor, enlace RF de tracklog nem "Já observado por RF"; a estação aparece com a origem
+  ("via DMR", "via D-STAR", "via C4FM"…). Confirmar os TOCALLs/paths reais na tabela `tocalls` já usada
+  pelo cliente e nos pacotes brutos do banco antes de fechar a lista; ela deve ser fácil de ampliar.
 - **Esperado:** só entram no mapa de calor (e nos enlaces RF do tracklog) saltos com evidência real de RF —
   recebido pelo TNC, ou gate `qAR`/`qAO` com digi/iGate que comprovadamente ouviu por RF. Estação que só
   chega pela Internet fica com tracklog normal, sem RF.
