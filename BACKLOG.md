@@ -28,6 +28,15 @@
     tiles Terrarium (ex.: 3.418 m no Lago Paranoá) distorcem enlace, melhor ponto e cobertura.
   - **PDF da cobertura** (`survey_pdf.coverage_pdf()` do Mesh) e cabeçalho padronizado com a versão
     nos três PDFs.
+- **Sugestões aprovadas (29/10/2026):**
+  - Cobertura prevista × real: sobrepor as recepções reais do mapa de calor de Cobertura RF
+    (`rf_coverage`, células de ~1 km) à previsão e resumir acertos/erros.
+  - Melhor ponto avaliado pela cobertura: comparar os candidatos pela área coberta e pelas estações
+    conhecidas alcançadas (útil para escolher onde instalar um digipeater).
+  - Mesmo código de planejamento do Mesh (o `planning.py` do APRS é cópia antiga do `survey.py`): trazer
+    as correções, começando pelo filtro de altitudes impossíveis.
+  - Mapa base (ruas) nos PDFs de cobertura, enlace e melhor ponto (o APRS já instala o Pillow).
+  - PDF da cobertura reaproveitando o último cálculo, sem recalcular.
 - **TNC / RF dentro de Configuração** (pedido de 29/10/2026): tirar a aba "TNC / RF" do menu superior e
   levar as opções para a aba Configuração, num bloco próprio "TNC / RF", **recolhido por padrão**, para
   aproveitar melhor o espaço. Manter o botão "Salvar TNC / RF", o indicador "TNC" do topo (que passa a abrir
