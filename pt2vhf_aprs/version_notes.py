@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.0": {
+        "title": "Menu Ferramentas e análise de cobertura",
+        "items": [
+            "Novo menu Ferramentas no topo: análise de cobertura, enlace entre 2 pontos, melhor ponto para instalar estação, relevo com corte, relatório em PDF e diagnóstico para suporte.",
+            "Análise de cobertura com potência em W (padrão 50 W), raio de 50 km até 100 km, estações com e sem cobertura e comparação com as recepções reais por RF.",
+            "PDFs com mapa de ruas por baixo; o relevo com corte ganhou coluna compacta e cor ajustável.",
+            "TNC / RF agora fica em Configuração, num bloco recolhido; o indicador TNC do topo abre o bloco.",
+        ],
+    },
     "1.14.62": {
         "title": "Downloads no site oficial",
         "items": [

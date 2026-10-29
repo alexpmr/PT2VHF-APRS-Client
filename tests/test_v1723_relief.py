@@ -28,7 +28,7 @@ def test_v1723_relief_cutoff_and_map_layers():
     assert "if (altitude < threshold) continue;" in js
     assert "function elevationGridFromTerrarium(canvas)" in js
     assert "function elevationHillshadeFactor(grid, x, y)" in js
-    assert "const shade = elevationHillshadeFactor(grid, x, y);" in js
+    assert "const shade = elevationHillshadeFactor(grid, x, y)" in js  # v1.15.0: com fator de corte e cor
     assert "function setElevationThreshold" in js
     assert "function setElevationSliderMax" in js
     assert "function redrawElevationTiles" in js
@@ -47,7 +47,7 @@ def test_v1723_relief_cutoff_and_map_layers():
     assert "Raios" not in html
     assert ".elevation-threshold-control" in css
     assert "height: 390px" in css
-    assert "height: 255px" in css
+    assert ".elevation-threshold-control .elevation-vertical-range { flex: 1 1 auto;" in css  # v1.15.0: slider de cima a baixo
 
     # Persistence and migration.
     assert '"elevation_threshold": 1000' in db

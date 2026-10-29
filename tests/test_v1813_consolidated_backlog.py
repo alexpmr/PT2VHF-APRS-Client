@@ -88,7 +88,7 @@ def test_v1813_dem_elevation_backlog_is_present_and_persistent():
     assert ".elevation-vertical-range" in css
     assert "height: 390px;" in css
     assert "@media (max-height: 700px)" in css
-    assert ".elevation-vertical-range { height: 255px; }" in css
+    assert ".elevation-threshold-control .elevation-vertical-range { flex: 1 1 auto;" in css  # v1.15.0: slider ocupa a coluna
 
 
 def test_v1813_about_backlog_is_present_and_localized():

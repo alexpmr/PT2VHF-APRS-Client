@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v1.14.62
+# PT2VHF APRS Client - v1.15.0
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,9 +6,9 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 1.14.62 (publicação pendente)
+## Downloads — versão 1.15.0 (publicação pendente)
 
-A nova v1.14.62 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
+A nova v1.15.0 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
 
 **Pacotes Windows/Linux**: instalador, portátil, AppImage, .deb e .tar.gz, conforme builds validados. ARM64 e macOS só serão liberados quando houver pacotes próprios.
 
@@ -17,6 +17,8 @@ A nova v1.14.62 foi preparada para obter atualizações **somente pelo site PT2V
 Não há links para executáveis inexistentes. Arquivos de código-fonte e checksums não são oferecidos na tabela pública; os hashes SHA-256 permanecem na API do atualizador para verificação de integridade.
 
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v1.15.0** traz o menu **Ferramentas** com os mesmos recursos do PT2VHF Mesh Analyzer: **Análise de cobertura** (potência em W, padrão 50 W, 145,570 MHz, raio de 50 km até 100 km, estações com e sem cobertura, previsto × real), **Analisar enlace entre 2 pontos**, **Melhor ponto para instalar estação** (também avaliado pela cobertura), **Relevo com corte** com cor ajustável, **Relatório (PDF)** com mapa de ruas e **Diagnóstico para suporte**. TNC / RF passa a ficar em Configuração, num bloco recolhido.
 
 A **v1.14.46** inaugura a aba **Automações** com **Auto-resposta**, migrada de Configuração e mantendo preferências salvas. Mensagens privadas novas podem receber respostas automáticas individuais, com proteção contra duplicatas, respostas reconhecidas e excesso de mensagens. O indicador compacto **TX ○ RX ○** mostra atividade combinada APRS-IS e TNC/RF. A ingestão APRS passa a rejeitar latitude/longitude com minutos inválidos na posição não comprimida (por exemplo, o PP5BLU-15), preservando pacotes brutos e omitindo do mapa eventos históricos malformados. **Pendências de campo e backlog não encerradas:** RX serial RT-950 Pro (#118), identificação completa de enlaces órfãos (#116) e saneamento de posições antigas de estações contaminadas.
 

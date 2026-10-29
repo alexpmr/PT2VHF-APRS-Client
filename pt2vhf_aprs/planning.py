@@ -229,6 +229,35 @@ def _png_rgb(data):
     return width, bpp, rows
 
 
+# v1.15.0: filtro de defeitos dos tiles de relevo, igual ao do PT2VHF Mesh Analyzer v0.6.62.
+SPIKE_M = 250.0               # pixel mais de 250 m fora da mediana 5x5 = defeito do tile
+SPIKE_HINT_M = 150.0          # pré-filtro barato antes de calcular a mediana
+
+
+def despike(grid, size=256, limit=SPIKE_M):
+    """Remove defeitos dos tiles Terrarium: pixels ou pequenos aglomerados com altitude impossível,
+    comuns nos zooms baixos perto de água (ex.: 3.418 m na margem do Lago Paranoá, cercado de
+    ~1.000 m). Pixel suspeito (fora de ±150 m dos vizinhos a 2 px nos eixos) é comparado com a
+    mediana da janela 5x5; se ficar mais de `limit` acima ou abaixo dela, recebe a mediana.
+    `grid` é uma sequência plana (linha a linha) e é corrigida no lugar."""
+    fixed = 0
+    for y in range(size):
+        row = y * size
+        for x in range(size):
+            v = grid[row + x]
+            ring = [grid[row + xx] for xx in (x - 2, x + 2) if 0 <= xx < size] + \
+                   [grid[yy * size + x] for yy in (y - 2, y + 2) if 0 <= yy < size]
+            if not ring or (min(ring) - SPIKE_HINT_M <= v <= max(ring) + SPIKE_HINT_M):
+                continue
+            window = sorted(grid[yy * size + xx] for yy in range(max(0, y - 2), min(size, y + 3))
+                            for xx in range(max(0, x - 2), min(size, x + 3)))
+            median = window[len(window) // 2]
+            if abs(v - median) > limit:
+                grid[row + x] = median
+                fixed += 1
+    return fixed
+
+
 class TerrainTiles:
     """Elevação a partir dos tiles Terrarium (AWS Open Data: SRTM, GMTED, ETOPO e outros), sem chave e
     sem limite diário. Os tiles ficam guardados em disco para uso sem internet."""
@@ -261,7 +290,9 @@ class TerrainTiles:
                 except OSError:
                     pass
         width, bpp, rows = _png_rgb(data)
-        grid = [[(r[i] * 256 + r[i + 1] + r[i + 2] / 256) - 32768 for i in range(0, width * bpp, bpp)] for r in rows]
+        flat = [(r[i] * 256 + r[i + 1] + r[i + 2] / 256) - 32768 for r in rows for i in range(0, width * bpp, bpp)]
+        despike(flat, width)
+        grid = [flat[y * width:(y + 1) * width] for y in range(len(rows))]
         if len(self.decoded) > 120:
             self.decoded.clear()
         self.decoded[key] = grid

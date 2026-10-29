@@ -48,7 +48,7 @@ def test_v1814_elevation_uses_dem_derived_hillshade():
     assert "const dzdx = (right - left) * 0.5;" in js
     assert "const dzdy = (down - up) * 0.5;" in js
     assert "const illumination = nx * lx + ny * ly + nz * lz;" in js
-    assert "const shade = elevationHillshadeFactor(grid, x, y);" in js
+    assert "const shade = elevationHillshadeFactor(grid, x, y)" in js  # v1.15.0: com fator de corte e cor
     assert "if (altitude < threshold) continue;" in js
     assert "Math.min(9000, Math.max(100" in js
     assert "|| 3000" in js
@@ -72,7 +72,7 @@ def test_v1814_all_requested_backlogs_remain_covered():
     assert "${interactionDisabled}>Ping/ACK</button>" in js
     assert "${interactionDisabled}>Trace</button>" in js
     assert "${interactionDisabled}>Enviar mensagem</button>" in js
-    assert ".elevation-vertical-range { height: 255px; }" in css
+    assert ".elevation-threshold-control .elevation-vertical-range { flex: 1 1 auto;" in css  # v1.15.0: slider ocupa a coluna
     assert "## Concluído na v1.8.14" in backlog
     assert "hillshade derivado do próprio DEM" in backlog
     assert "explicação explícita de APRS" in backlog

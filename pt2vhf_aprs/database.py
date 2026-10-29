@@ -171,6 +171,7 @@ DEFAULT_CONFIG = {
     "elevation_threshold": 1000,
     "elevation_slider_max": 3000,
     "elevation_opacity": 55,
+    "elevation_color": "#e0ac3e",
     "sound_on_personal_message": 1,
     "sound_on_station_activity": 1,
     "highlight_station_activity": 1,
@@ -315,6 +316,7 @@ def _init_db_base() -> None:
                 elevation_threshold INTEGER NOT NULL DEFAULT 1000,
                 elevation_slider_max INTEGER NOT NULL DEFAULT 3000,
                 elevation_opacity INTEGER NOT NULL DEFAULT 55,
+                elevation_color TEXT NOT NULL DEFAULT '#e0ac3e',
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
                 sound_on_station_activity INTEGER NOT NULL DEFAULT 1,
                 highlight_station_activity INTEGER NOT NULL DEFAULT 1,
@@ -662,6 +664,8 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN elevation_slider_max INTEGER NOT NULL DEFAULT 3000")
         if "elevation_opacity" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN elevation_opacity INTEGER NOT NULL DEFAULT 55")
+        if "elevation_color" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN elevation_color TEXT NOT NULL DEFAULT '#e0ac3e'")
         if "sound_on_personal_message" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
         if "sound_on_station_activity" not in config_columns:
@@ -878,6 +882,9 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["elevation_threshold"] = int(merged["elevation_threshold"] if merged["elevation_threshold"] not in ("", None) else 1000)
     merged["elevation_slider_max"] = int(merged["elevation_slider_max"] if merged["elevation_slider_max"] not in ("", None) else 3000)
     merged["elevation_opacity"] = int(merged["elevation_opacity"] if merged["elevation_opacity"] not in ("", None) else 55)
+    # v1.15.0: cor do sombreamento do Relevo com corte.
+    color = str(merged.get("elevation_color") or "#e0ac3e").lower().strip()
+    merged["elevation_color"] = color if re.fullmatch(r"#[0-9a-f]{6}", color) else "#e0ac3e"
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
     merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
     merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0

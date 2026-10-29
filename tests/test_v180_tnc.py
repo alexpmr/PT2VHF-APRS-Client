@@ -133,7 +133,9 @@ def test_v180_tnc_interface_and_api_are_present():
     web = (root / "pt2vhf_aprs/web.py").read_text(encoding="utf-8")
     service = (root / "pt2vhf_aprs/tnc_service.py").read_text(encoding="utf-8")
 
-    assert 'data-tab="tnc"' in html
+    # v1.15.0: TNC / RF virou um bloco recolhido dentro de Configuração.
+    assert 'data-tab="tnc"' not in html
+    assert '<details id="tncConfigBlock"' in html and 'id="tab-tnc"' in html
     assert 'id="tncTransport"' in html
     assert 'id="tncEmergencyStop"' in html
     assert 'id="tncOptimizerMode"' in html
