@@ -757,7 +757,7 @@
     </div>
 
     <form id="configForm" class="config-grid">
-      <div class="config-card config-section config-section-aprs">
+      <div class="config-card config-section config-section-aprs" data-config-tab="station">
         <h3>Estação</h3>
         <div class="required-fields-note">Campos marcados como <strong>Obrigatório</strong> precisam ser preenchidos antes de conectar ao APRS-IS.</div>
         <div class="form-grid two-cols">
@@ -837,7 +837,7 @@
         </div>
       </div>
 
-      <div class="config-card config-section config-section-aprs">
+      <div class="config-card config-section config-section-aprs" data-config-tab="aprsis">
         <h3>APRS-IS</h3>
         <div class="form-grid two-cols">
           <label class="field full"><span>Servidor</span>
@@ -930,7 +930,7 @@
         </div>
       </div>
 
-      <div class="config-card full-card config-section config-section-app">
+      <div class="config-card full-card config-section config-section-app" data-config-tab="map">
         <h3>Mapa</h3>
         <div class="form-grid map-config-grid">
           <label class="field">
@@ -1091,7 +1091,7 @@
         </div>
       </div>
 
-      <div class="config-card full-card config-section config-section-app">
+      <div class="config-card full-card config-section config-section-app" data-config-tab="app">
         <h3>Aparência e aplicativo</h3>
         <div class="theme-selector-row app-general-grid">
           <label class="field theme-field">
@@ -1242,7 +1242,7 @@
         <div class="hint">Tema, idioma e preferências de fonte de Mensagens, Estações, Logs e Estatísticas são aplicados imediatamente e persistidos no banco local.</div>
       </div>
 
-      <div class="config-card full-card config-section config-section-app" id="retentionSettingsCard">
+      <div class="config-card full-card config-section config-section-app" id="retentionSettingsCard" data-config-tab="database">
         <h3>Retenção e tamanho do banco</h3>
         <p class="hint">A retenção remove dados expirados do SQLite, independentemente do período exibido no mapa.
           Enlaces históricos permanecem mesmo após a exclusão de uma estação. Permanente significa nunca apagar.</p>
@@ -1261,7 +1261,7 @@
         <small id="retentionResultStatus" class="hint">Instalações antigas não têm registros apagados automaticamente até a ativação explícita.</small>
       </div>
 
-      <div class="config-card full-card config-section config-section-app">
+      <div class="config-card full-card config-section config-section-app" data-config-tab="app">
         <h3>Atualizações</h3>
         <div class="form-grid two-cols">
           <label class="check-field"><input name="check_updates_on_start" type="checkbox" checked><span>Verificar atualizações automaticamente</span></label>
@@ -1282,7 +1282,7 @@
         <div class="hint">Quando houver nova versão, o cliente seleciona o pacote compatível com a plataforma, valida o download e usa um updater auxiliar para encerrar a versão atual, instalar e abrir a nova versão.</div>
       </div>
 
-      <div class="config-card full-card config-section config-section-app">
+      <div class="config-card full-card config-section config-section-app" data-config-tab="backup">
         <h3>Backup da configuração</h3>
         <div class="backup-row">
           <a class="btn secondary" href="/api/config/export" download>Salvar em arquivo</a>
@@ -1940,6 +1940,7 @@
         </div>
         <span id="globalProcessingProgressText">0%</span>
       </div>
+      <small id="globalProcessingElapsed" class="processing-elapsed hidden" aria-live="polite"></small>
     </div>
     <button id="globalProcessingCancel" type="button" class="global-processing-cancel hidden" title="Cancelar processamento e fechar" aria-label="Cancelar processamento e fechar">×</button>
   </div>
@@ -1967,5 +1968,6 @@
 <script src="{{ url_for('static', filename='js/v111.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v142.js') }}"></script>
 <script src="{{ url_for('static', filename='js/planning.js') }}"></script>
+<script src="{{ url_for('static', filename='js/config_tabs.js') }}"></script>
 </body>
 </html>

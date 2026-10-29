@@ -157,3 +157,78 @@ def list_points(hours: float = 0, limit: int = 4000) -> list[dict[str, Any]]:
         })
     points.sort(key=lambda item: (item["count"], item["last_seen"]), reverse=True)
     return points[:max(1, min(int(limit), 8000))]
+
+
+DIGITAL_VOICE_PURGE_KEY = "v1.15.1-digital-voice-not-rf"
+_DIGITAL_LIKE = ("%DMR%", "%DSTAR%", "%D-STAR%", "%DPRS%", "%WIRES%", "%YSF%", "%C4FM%", "%FUSION%",
+                 "%NXDN%", "%P25%", "%M17%", "%ECHOLINK%", "%ALLSTAR%", "%ZELLO%", "%TGIF%",
+                 "%>API%", "%>APBM%", "%>APDG%", "%>APD5T%", "%>APJID%", "%>APW2W%", "%>APVE%", "%>APSTAR%")
+
+
+def _subtract(conn, timestamp: str, pos: tuple[float, float], role: str) -> None:
+    day = str(timestamp or "")[:10]
+    if len(day) != 10:
+        return
+    cell = (math.floor(pos[0] / CELL_DEGREES), math.floor(pos[1] / CELL_DEGREES))
+    tx, rx = (1, 0) if role == "tx" else (0, 1)
+    conn.execute(
+        """UPDATE rf_coverage_cells SET lat_sum=lat_sum-?, lon_sum=lon_sum-?, tx=MAX(0,tx-?), rx=MAX(0,rx-?)
+            WHERE day=? AND cell_lat=? AND cell_lon=?""",
+        (pos[0], pos[1], tx, rx, day, *cell),
+    )
+
+
+def purge_digital_voice_once(conn) -> int:
+    """v1.15.1: eventos "RF" antigos de pacotes injetados por gateways DMR/D-STAR/C4FM… viram Internet.
+
+    Tira a contribuição deles do mapa de calor, reclassifica o evento e o enlace agregado. Não apaga
+    tracklog, estações nem os pacotes; roda uma única vez.
+    """
+    if conn.execute("SELECT 1 FROM schema_migrations_v112 WHERE migration_key=?",
+                    (DIGITAL_VOICE_PURGE_KEY,)).fetchone():
+        return 0
+    where = " OR ".join("raw LIKE ?" for _ in _DIGITAL_LIKE)
+    rows = conn.execute(
+        f"""SELECT id,timestamp,source,target,source_lat,source_lon,target_lat,target_lon,raw
+              FROM topology_events
+             WHERE kind='rf' AND UPPER(COALESCE(medium,''))<>'RF' AND raw IS NOT NULL AND ({where})""",
+        _DIGITAL_LIKE,
+    ).fetchall()
+    pairs: dict[tuple[str, str], int] = {}
+    count = 0
+    for row in rows:
+        if not db.digital_voice_origin(row["raw"]):
+            continue
+        for pos, role in (((row["source_lat"], row["source_lon"]), "tx"), ((row["target_lat"], row["target_lon"]), "rx")):
+            valid = _valid(*pos)
+            if valid:
+                _subtract(conn, str(row["timestamp"] or ""), valid, role)
+        conn.execute("UPDATE topology_events SET kind='igate', evidence_level='internet' WHERE id=?", (row["id"],))
+        key = (str(row["source"]), str(row["target"]))
+        pairs[key] = pairs.get(key, 0) + 1
+        count += 1
+    conn.execute("DELETE FROM rf_coverage_cells WHERE tx<=0 AND rx<=0")
+    for (source, target), n in pairs.items():
+        edge = conn.execute("SELECT * FROM topology_edges WHERE source=? AND target=? AND kind='rf'",
+                            (source, target)).fetchone()
+        if not edge:
+            continue
+        keys = edge.keys()
+        rf_transport = int(edge["rf_transport_count"] or 0) if "rf_transport_count" in keys else 0
+        left = int(edge["packet_count"] or 0) - n
+        if left <= 0 and rf_transport <= 0:
+            conn.execute("DELETE FROM topology_edges WHERE source=? AND target=? AND kind='rf'", (source, target))
+        else:
+            conn.execute("UPDATE topology_edges SET packet_count=? WHERE source=? AND target=? AND kind='rf'",
+                         (max(1, left), source, target))
+        conn.execute(
+            """INSERT INTO topology_edges(source,target,kind,packet_count,first_seen,last_seen,igate)
+               VALUES(?,?,'igate',?,?,?,?)
+               ON CONFLICT(source,target,kind) DO UPDATE SET packet_count=topology_edges.packet_count+excluded.packet_count""",
+            (source, target, n, edge["first_seen"], edge["last_seen"], target),
+        )
+    conn.execute("INSERT INTO schema_migrations_v112(migration_key,applied_at) VALUES(?,?)",
+                 (DIGITAL_VOICE_PURGE_KEY, db.utc_now_iso()))
+    if count:
+        diag.log_event("digital_voice_rf_purge", events=count, pairs=len(pairs))
+    return count

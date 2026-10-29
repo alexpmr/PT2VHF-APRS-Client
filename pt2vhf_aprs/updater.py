@@ -333,7 +333,11 @@ def _is_tls_certificate_error(exc: BaseException) -> bool:
 
 
 def _record_site_download_count() -> None:
-    """Conta uma atualização baixada e validada, sem bloquear a instalação."""
+    """Aviso legado de contagem, sem bloquear a instalação.
+
+    Desde 29/10/2026 o site conta o OTA no próprio download do arquivo (uma vez) e responde 204 a
+    este POST sem somar; ele continua só para compatibilidade e diagnóstico.
+    """
     if not _is_frozen():
         return
     names = {

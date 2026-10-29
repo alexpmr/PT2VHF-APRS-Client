@@ -1,3 +1,10 @@
+## 1.15.1 - 2026-10-29
+
+- **Configuração em sub-abas**, no formato do PT2VHF Mesh Analyzer: Estação, APRS-IS, **TNC / RF**, Mapa, Aplicativo, Integrações, Banco de dados e Backup — uma seção por vez, em vez de tudo numa página longa. A última sub-aba usada é lembrada; o **Salvar configuração** continua valendo para todas e, se faltar um campo obrigatório noutra sub-aba, ela abre sozinha. **TNC / RF** tem sub-aba própria (na v1.15.0 ficava no fim da página) e o indicador **TNC** do topo abre direto nela.
+- **Corrigido: posições de DMR, D-STAR, C4FM e afins apareciam como RF.** Gateways das redes de voz digital (BrandMeister/DMR, D-STAR/D-PRS, WIRES-X/YSF, NXDN, P25, M17, EchoLink, AllStar…) injetam a posição do rádio no APRS-IS, muitas vezes com `qAR` — e o trajeto aparecia no mapa de calor de Cobertura RF e nos enlaces RF como se tivesse sido ouvido por RF APRS (relato: viagem de Recife a Salvador por DMR). Agora esses pacotes nunca geram salto RF, célula de Cobertura RF nem "ouvido por RF"; o tracklog continua normal e o popup mostra a origem ("via DMR", "via D-STAR"…). Recebido pelo próprio TNC continua sendo RF. Na primeira abertura, os eventos já gravados são reclassificados uma única vez como Internet e saem do mapa de calor (sem apagar tracklogs nem pacotes).
+- **Cancelar processamento:** todo aviso de processamento ganha o botão **×** para cancelar e liberar o programa, com tempo decorrido e aviso quando demora mais que o normal (registrado no diagnóstico). Corrigido o caso do "Consultando topologia RF…" parado por horas: o limite de tempo das consultas não valia quando a operação podia ser cancelada.
+- Contadores do site: o download feito pelo atualizador passa a ser contado pelo próprio site (uma vez por download), em todos os projetos.
+
 ## 1.15.0 - 2026-10-29
 
 - **Menu Ferramentas** no menu superior, entre Automações e Configuração, com os mesmos recursos e grupos do PT2VHF Mesh Analyzer; abre de qualquer aba:

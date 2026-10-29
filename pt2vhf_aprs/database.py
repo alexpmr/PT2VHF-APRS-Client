@@ -1306,6 +1306,8 @@ def _path_tokens(value: Any) -> list[str]:
 
 def _rf_igate_from_path(value: Any) -> str:
     path = _path_tokens(value)
+    if any(DIGITAL_VOICE_PATH_TOKENS.get(str(t).rstrip("*").upper()) for t in path):
+        return ""                                 # gateway de voz digital: não houve RF APRS
     for index, token in enumerate(path[:-1]):
         # qAR/qAO preserve case and explicitly identify the station that
         # gated the packet from RF. Do not downgrade this evidence merely
@@ -1970,6 +1972,56 @@ def _is_topology_callsign(value: str) -> bool:
     return not value.startswith(blocked)
 
 
+# v1.15.1: modos digitais (DMR, D-STAR, C4FM…) entram no APRS-IS por gateways da rede de voz
+# digital. O rádio não transmitiu APRS por RF: o "iGate" do q-construct (até qAR) é o gateway, então
+# esses pacotes nunca viram salto RF, célula de Cobertura RF nem enlace RF de tracklog.
+DIGITAL_VOICE_PATH_TOKENS = {
+    "DMR": "DMR", "BM": "DMR", "TGIF": "DMR",
+    "DSTAR": "D-STAR", "D-STAR": "D-STAR", "DSTR": "D-STAR", "DPRS": "D-STAR",
+    "WIRES": "C4FM", "WIRESX": "C4FM", "WIRES-X": "C4FM", "YSF": "C4FM", "C4FM": "C4FM", "FUSION": "C4FM",
+    "NXDN": "NXDN", "P25": "P25", "M17": "M17",
+    "ECHOLINK": "EchoLink", "ALLSTAR": "AllStar", "ZELLO": "Zello",
+}
+DIGITAL_VOICE_TOCALLS = (
+    (re.compile(r"^APBM"), "DMR"),            # BrandMeister
+    (re.compile(r"^APDPRS$"), "D-STAR"),
+    (re.compile(r"^APDG"), "D-STAR"),         # ircDDB Gateway (G4KLX)
+    (re.compile(r"^APD5T"), "D-STAR"),        # DStarGateway
+    (re.compile(r"^APJID"), "D-STAR"),
+    (re.compile(r"^APDP25$"), "P25"),
+    (re.compile(r"^APW2W"), "C4FM"),          # WiresX2Web
+    (re.compile(r"^APVE"), "EchoLink"),
+    (re.compile(r"^APSTAR$"), "AllStar"),
+)
+DIGITAL_VOICE_GATE = re.compile(r"^(?:BM[_-]?\d+|DMR[A-Z0-9_-]*|DSTAR[A-Z0-9_-]*|YSF[A-Z0-9_-]*|WIRES[A-Z0-9_-]*)$")
+
+
+def digital_voice_origin(raw: Any) -> str:
+    """Modo digital que injetou o pacote no APRS-IS ("DMR", "D-STAR", "C4FM"…) ou "" se for APRS comum."""
+    line = str(raw or "").strip()
+    if ">" not in line or ":" not in line:
+        return ""
+    header = line.split(":", 1)[0]
+    route = header.split(">", 1)[1].split(",")
+    tocall = route[0].upper().strip()
+    for pattern, mode in DIGITAL_VOICE_TOCALLS:
+        if pattern.match(tocall):
+            return mode
+    if tocall.startswith("AP") and str(resolve_aprs_device_id(tocall).get("class") or "").lower() == "dstar":
+        return "D-STAR"                           # rádios D-STAR (Icom etc.) e gateways D-PRS
+    path = [part.strip() for part in route[1:] if part.strip()]
+    for i, token in enumerate(path):
+        if re.fullmatch(r"qA[A-Za-z]", token):
+            gate = path[i + 1].rstrip("*").upper() if i + 1 < len(path) else ""
+            if gate and DIGITAL_VOICE_GATE.match(gate):
+                return DIGITAL_VOICE_PATH_TOKENS.get(re.split(r"[_\-\d]", gate, maxsplit=1)[0], "DMR")
+            break
+        mode = DIGITAL_VOICE_PATH_TOKENS.get(token.rstrip("*").upper())
+        if mode:
+            return mode
+    return ""
+
+
 def _observed_topology_edges(
     raw: str,
     medium: str | None = None,
@@ -1997,8 +2049,12 @@ def _observed_topology_edges(
     path = [part.strip() for part in route[1:] if part.strip()]
     edges: list[tuple[str, str, str, str | None]] = []
     previous = source
+    # Recebido pelo nosso TNC é RF de fato; vindo do APRS-IS por gateway de voz digital, não.
+    digital = str(medium or "").upper().strip() != "RF" and bool(digital_voice_origin(line))
 
     for token in path:
+        if digital:
+            break
         if re.fullmatch(r"qA[A-Za-z]", token):
             break
         if not token.endswith("*"):
@@ -2019,7 +2075,7 @@ def _observed_topology_edges(
         # direct RF gate evidence; qAr and the remaining qA* variants are
         # Internet/APRS-IS routing evidence. TCPIP/TCPXX elsewhere in the
         # header must not erase an RF hop already proven by qAR/qAO.
-        direct_rf_gate = token in {"qAR", "qAO"}
+        direct_rf_gate = token in {"qAR", "qAO"} and not digital
         observed_medium = str(medium or "").upper().strip()
         kind = "rf" if observed_medium == "RF" or direct_rf_gate else "igate"
         edges.append((previous, candidate, kind, candidate))
@@ -3120,6 +3176,7 @@ def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict
     family_key, family_label = _aprs_map_family(resolved, descriptor, role)
 
     return {
+        "digital_origin": digital_voice_origin(raw),
         "device_tocall": tocall,
         "device_identified": bool(resolved.get("identified")),
         "device_class": device_class or "unknown",

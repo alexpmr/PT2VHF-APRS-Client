@@ -5116,3 +5116,9 @@ html[lang="zh-CN"] body {
 .official-site-notice a{color:#72d2ff;font-weight:bold;text-decoration:underline;overflow-wrap:anywhere}
 .official-site-notice-actions{display:flex;justify-content:flex-end}
 .official-site-notice-actions .btn{border:2px solid #f5c400}
+/* v1.15.1: tempo decorrido e aviso de demora no processamento. */
+.processing-elapsed { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
+.processing-elapsed.slow { color: var(--warn); font-weight: 700; }
+.processing-elapsed.hidden { display: none; }
+/* v1.15.1: no aviso que não bloqueia a tela, o botão × continua clicável. */
+.global-processing-overlay.nonblocking .global-processing-cancel { pointer-events: auto; position: relative; z-index: 1; }

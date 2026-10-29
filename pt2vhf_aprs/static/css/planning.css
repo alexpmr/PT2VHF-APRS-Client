@@ -94,3 +94,18 @@
 #tncHeaderStatus { cursor: pointer; }
 .tnc-monitors-block { margin-top: 14px; border: 1px solid var(--line); border-radius: var(--radius, 10px); padding: 10px 12px; }
 .tnc-monitors-block[open] > summary { margin-bottom: 10px; }
+
+/* v1.15.1: Configuração em sub-abas, como no PT2VHF Mesh Analyzer. */
+.config-subtabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0 18px 10px; border-bottom: 1px solid var(--line); }
+#configForm > [data-config-tab] { grid-column: 1 / -1; }
+.config-subtab { border: 1px solid var(--line); background: var(--panel-2, #1b242d); color: var(--text); border-radius: 8px;
+  padding: 7px 13px; font: inherit; font-weight: 700; cursor: pointer; }
+.config-subtab:hover { border-color: var(--muted); }
+.config-subtab.active { background: #f5c400; color: #15191c; border-color: #ffe34d; }
+.config-subtab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.config-subtab-hidden { display: none !important; }
+#tab-config #configForm.config-grid { margin-top: 0; }
+.tnc-config-block.as-subtab > summary { display: none; }
+.tnc-config-block.as-subtab { margin-top: 0; }
+html[data-theme="light"] .config-subtab { background: #fff; color: #1c2c37; }
+html[data-theme="light"] .config-subtab.active { background: #f5c400; color: #15191c; }

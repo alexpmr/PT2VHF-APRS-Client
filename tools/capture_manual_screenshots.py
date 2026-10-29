@@ -132,17 +132,21 @@ def capture(output_dir: Path) -> None:
                 page.evaluate("""() => document.querySelector('.tab[data-tab="config"]').click()""")
                 page.wait_for_timeout(700)
                 # A v1.6 usa uma única página de Configuração, compartimentalizada por seções.
+                page.evaluate("() => window.pt2vhfConfigTabs?.show('station')")  # v1.15.1: Configuração em sub-abas
                 page.screenshot(path=str(output_dir / "config-aprs.png"))
+                page.evaluate("() => window.pt2vhfConfigTabs?.show('aprsis')")  # v1.15.1: Configuração em sub-abas
                 page.locator("#toggleFilterBuilderButton").scroll_into_view_if_needed()
                 page.evaluate("() => document.querySelector('#toggleFilterBuilderButton').click()")
                 page.wait_for_timeout(350)
                 page.screenshot(path=str(output_dir / "filter-editor.png"))
+                page.evaluate("() => window.pt2vhfConfigTabs?.show('app')")  # v1.15.1: Configuração em sub-abas
                 page.locator("#appTheme").scroll_into_view_if_needed()
                 page.wait_for_timeout(350)
                 page.screenshot(path=str(output_dir / "config-app.png"))
 
                 # Regressão do PU2MUS: salvar alertas deve funcionar sem
                 # querySelector(...).forEach em um único elemento.
+                page.evaluate("() => window.pt2vhfConfigTabs?.show('backup')")  # v1.15.1: Configuração em sub-abas
                 page.locator("#v190AlertsSave").scroll_into_view_if_needed()
                 page.locator("#v190AlertsSave").click()
                 page.wait_for_function(
@@ -152,6 +156,7 @@ def capture(output_dir: Path) -> None:
 
                 # v1.14.5 — regressão real do fluxo da Configuração.
                 # 1) O botão inferior precisa detectar e persistir alteração real.
+                page.evaluate("() => window.pt2vhfConfigTabs?.show('station')")  # v1.15.1: Configuração em sub-abas
                 page.locator('input[name="comment"]').fill("V145_FOOTER_SAVE")
                 page.locator("#saveConfigFooterButton").click()
                 page.wait_for_function(
@@ -181,6 +186,7 @@ def capture(output_dir: Path) -> None:
                     };
                 }""")
                 page.locator('.tab[data-tab="config"]').click()
+                page.evaluate("() => window.pt2vhfConfigTabs?.show('station')")
                 page.locator('input[name="comment"]').fill("V145_SLOW_CONFIG_TEST")
                 page.wait_for_timeout(1550)
                 assert page.locator('input[name="comment"]').input_value() == "V145_SLOW_CONFIG_TEST"
