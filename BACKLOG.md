@@ -1,3 +1,24 @@
+## PENDENTE (29/10/2026) — Falso positivo de RF: tracklog via APRSdroid pela Internet aparece como cobertura RF
+
+- **Relato (backlog, 29/10/2026, com captura):** o falso positivo de tracklog "feito por RF" continua. Uma
+  estação móvel usando **APRSdroid conectado pelo celular (APRS-IS/TCPIP, não RF)** viajou de Recife a
+  Salvador e seguiu para o sul; o trajeto inteiro aparece no **mapa de calor de Cobertura RF** como se
+  tivesse sido ouvido por RF.
+- **Onde olhar:** `rf_coverage.record_event_conn()` é chamado em `spacetime_topology._record_topology_from_raw_conn()`
+  para toda aresta `kind == "rf"`, inclusive as **inferidas** de pacotes vindos do APRS-IS
+  (`evidence_level = "inferred"`); `rf_coverage.list_points()` soma células diretas e inferidas sem
+  distinguir. Verificar também `db._observed_topology_edges()`: pacote com `TCPIP*`/`TCPXX`, `qAC`/`qAS`/`qAU`
+  (entrada direta no APRS-IS) ou TOCALL do APRSdroid (`APDR*`) enviado pela Internet não pode gerar salto RF
+  nem célula de cobertura, mesmo que o path traga `WIDE1-1`/`WIDE2-1` configurado no app.
+- **Esperado:** só entram no mapa de calor (e nos enlaces RF do tracklog) saltos com evidência real de RF —
+  recebido pelo TNC, ou gate `qAR`/`qAO` com digi/iGate que comprovadamente ouviu por RF. Estação que só
+  chega pela Internet fica com tracklog normal, sem RF.
+- **Corrigir também o histórico:** limpar/reclassificar uma vez as células e eventos RF já gravados que vieram
+  de pacotes só-Internet (sem apagar o tracklog), e revisar a comparação "previsto × real" da Análise de
+  cobertura da v1.15.0, que usa essas células.
+- **Teste de regressão:** pacote real de APRSdroid via APRS-IS (ex.: `PT2XXX-9>APDR16,TCPIP*,qAC,T2BRAZIL:...`)
+  e variante com `WIDE1-1` no path → nenhuma célula RF e nenhum enlace RF.
+
 ## PENDENTE (29/10/2026) — Configuração em sub-abas, como no PT2VHF Mesh Analyzer
 
 - **Pedido (backlog):** organizar a aba Configuração em **sub-abas**, no mesmo formato do Mesh Analyzer
