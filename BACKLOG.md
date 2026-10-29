@@ -1,3 +1,19 @@
+## PENDENTE (29/10/2026) — Opção para abortar processamento travado ("Consultando topologia RF…" há 1 h)
+
+- **Relato (backlog, com captura):** o aviso "Consultando topologia RF… — Carregando os indicativos
+  disponíveis para análise de rota." ficou parado em 0% por **1 hora**, sem como cancelar.
+- **Pedido:** incluir uma opção para **abortar o processamento** — botão **Cancelar/Abortar** no aviso de
+  processamento (vale para todos os avisos `showProcessing`, não só este), que interrompe a requisição
+  (`AbortController`) e, quando houver, o cálculo no servidor, fecha o aviso e deixa o app utilizável.
+- **Onde olhar:** `app.js` ~4024–4063 (`rf-origins` da análise de rota): usa `showProcessing(..., {blocking:
+  false})` e `api(url, {signal, timeoutMs: 60000})`, com `hideProcessing` no `finally`; mesmo assim ficou 1 h,
+  então o timeout de 60 s não está valendo (ou a chamada ficou presa na fila/single-flight do grafo
+  `/api/topology/rf-origins` no backend, ou o aviso de outra operação não foi fechado). `showProcessing` já
+  tem a opção `cancelable`, ainda não usada aqui.
+- **Esperado também:** tempo decorrido no aviso; após o limite, mensagem "A consulta demorou demais" com
+  Tentar novamente / Cancelar; registrar no diagnostics.log a operação, o tempo e onde parou, para achar a
+  causa da lentidão (banco grande, período Completo).
+
 ## PENDENTE (29/10/2026) — Falso positivo de RF: posições de DMR, D-STAR, C4FM etc. (gateways para APRS-IS) aparecem como cobertura RF
 
 - **Relato (backlog, 29/10/2026, com captura):** o falso positivo de tracklog "feito por RF" continua. Uma
