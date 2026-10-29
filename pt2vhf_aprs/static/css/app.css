@@ -340,15 +340,17 @@ html[data-theme="light"] .map-layers-menu {
 .leaflet-pane.pt2vhf-weather-pane,
 .leaflet-pane.pt2vhf-elevation-pane { pointer-events: none !important; }
 
+/* v1.15.0: coluna fina na lateral, com o slider de corte ocupando a altura. */
 .elevation-threshold-control {
   display: none;
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 8px;
+  top: 64px;
+  bottom: 30px;
   z-index: 1150;
-  min-width: 78px;
-  padding: 8px 7px;
+  width: 70px;
+  box-sizing: border-box;
+  padding: 7px 4px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: rgba(23,33,43,.95);
@@ -356,7 +358,11 @@ html[data-theme="light"] .map-layers-menu {
   box-shadow: 0 8px 22px rgba(0,0,0,.35);
   text-align: center;
 }
-.elevation-threshold-control.active { display: block; }
+.elevation-threshold-control.active { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.elevation-threshold-control .elevation-vertical-range { flex: 1 1 auto; height: auto !important; min-height: 90px; }
+.elevation-mini { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 9px; color: var(--muted); }
+.elevation-mini input[type=range] { width: 58px; margin: 0; }
+.elevation-mini input[type=color] { width: 44px; height: 22px; padding: 0 2px; cursor: pointer; }
 .elevation-threshold-title {
   margin-bottom: 3px;
   color: #e9d46d;
@@ -406,7 +412,7 @@ html[data-theme="light"] .elevation-threshold-control {
   color: #1c2c37;
 }
 @media (max-height: 700px) {
-  .elevation-vertical-range { height: 255px; }
+  .elevation-threshold-control { top: 56px; }
 }
 .leaflet-popup-content-wrapper {
   max-height: calc(100dvh - 190px);

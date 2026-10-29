@@ -61,7 +61,8 @@
       weather_radar_opacity: 55,
       elevation_threshold: 1000,
       elevation_slider_max: 3000,
-      elevation_opacity: 55
+      elevation_opacity: 55,
+      elevation_color: '#e0ac3e'
     },
     weatherRadarEnabled: localStorage.getItem('pt2vhf_weather_radar_enabled') === '1',
     weatherRadarLayer: null,
@@ -1483,7 +1484,7 @@
     if ($('#aboutPromoteTitle')) $('#aboutPromoteTitle').textContent = copy.promoteTitle;
     if ($('#aboutPromoteText')) $('#aboutPromoteText').textContent = copy.promote;
     if ($('#aboutPromoteButton')) $('#aboutPromoteButton').textContent = copy.promoteButton;
-    if (!$('#promotionModal')?.classList.contains('hidden')) {
+    if ($('#promotionModal') && !$('#promotionModal').classList.contains('hidden')) {
       $('#promotionEyebrow').textContent = copy.eyebrow;
       $('#promotionModalTitle').textContent = copy.modalTitle;
       $('#promotionModalDescription').textContent = copy.modalDescription;
@@ -1584,7 +1585,7 @@
   function activateTab(tab) {
     state.activeTab = tab;
     document.body.classList.toggle('analysis-page-active', tab === 'analysis');
-    $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    $$('.tab[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
     syncMapContextBar();
     if (tab === 'map') {
@@ -1612,7 +1613,8 @@
   });
 
   function tabSetup() {
-    $$('.tab').forEach(btn => btn.addEventListener('click', () => {
+    // v1.15.0: o botão Ferramentas fica no menu, mas abre um painel em vez de trocar de aba.
+    $$('.tab[data-tab]').forEach(btn => btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
       if (tab === state.activeTab) return;
       if (state.activeTab === 'config' && tab !== 'config') markConfigDirty();
@@ -1896,7 +1898,9 @@
       weather_radar_opacity: Math.min(100, Math.max(10, Number(cfg.weather_radar_opacity || state.mapConfig.weather_radar_opacity || 55))),
       elevation_threshold: Math.max(0, Math.round(Number(cfg.elevation_threshold ?? state.mapConfig.elevation_threshold ?? 1000))),
       elevation_slider_max: Math.min(9000, Math.max(100, Math.round(Number(cfg.elevation_slider_max ?? state.mapConfig.elevation_slider_max ?? 3000)))),
-      elevation_opacity: Math.min(100, Math.max(10, Math.round(Number(cfg.elevation_opacity ?? state.mapConfig.elevation_opacity ?? 55))))
+      elevation_opacity: Math.min(100, Math.max(10, Math.round(Number(cfg.elevation_opacity ?? state.mapConfig.elevation_opacity ?? 55)))),
+      elevation_color: /^#[0-9a-f]{6}$/i.test(String(cfg.elevation_color || '')) ? String(cfg.elevation_color).toLowerCase()
+        : (state.mapConfig.elevation_color || '#e0ac3e')
     };
     state.mapConfig.elevation_threshold = Math.min(state.mapConfig.elevation_threshold, state.mapConfig.elevation_slider_max);
     applyMapZoomPreferences(state.mapConfig.map_zoom_step);
@@ -2203,6 +2207,8 @@
     const dst = out.data;
     const threshold = Number(state.mapConfig.elevation_threshold) || 0;
     const alpha = Math.max(0, Math.min(255, Math.round((Number(state.mapConfig.elevation_opacity) || 55) / 100 * 255)));
+    const hex = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(state.mapConfig.elevation_color || '#e0ac3e') || [0, 'e0', 'ac', '3e'];
+    const rgb = [parseInt(hex[1], 16), parseInt(hex[2], 16), parseInt(hex[3], 16)];
 
     for (let y = 0; y < 256; y += 1) {
       for (let x = 0; x < 256; x += 1) {
@@ -2210,12 +2216,13 @@
         const altitude = grid[pixel];
         if (altitude < threshold) continue;
 
+        // v1.15.0: cor escolhida pelo usuário, mais escura nas partes mais altas.
         const rise = Math.max(0, Math.min(1, (altitude - threshold) / 2500));
-        const shade = elevationHillshadeFactor(grid, x, y);
+        const shade = elevationHillshadeFactor(grid, x, y) * (1 - 0.3 * rise);
         const offset = pixel * 4;
-        dst[offset] = Math.round((224 + 22 * rise) * shade);
-        dst[offset + 1] = Math.round((172 - 55 * rise) * shade);
-        dst[offset + 2] = Math.round((62 - 25 * rise) * shade);
+        dst[offset] = Math.min(255, Math.round(rgb[0] * shade));
+        dst[offset + 1] = Math.min(255, Math.round(rgb[1] * shade));
+        dst[offset + 2] = Math.min(255, Math.round(rgb[2] * shade));
         dst[offset + 3] = alpha;
       }
     }
@@ -2261,6 +2268,20 @@
     if (maxSettingValue) maxSettingValue.textContent = elevationMetersText(state.mapConfig.elevation_slider_max);
     if (opacity) opacity.value = String(state.mapConfig.elevation_opacity);
     if (opacityValue) opacityValue.textContent = `${state.mapConfig.elevation_opacity}%`;
+    for (const id of ['#elevationColor', '#elevationColorMap']) {
+      const el = $(id);
+      if (el) el.value = state.mapConfig.elevation_color || '#e0ac3e';
+    }
+    const mapOpacity = $('#elevationOpacityMap');
+    if (mapOpacity) mapOpacity.value = String(state.mapConfig.elevation_opacity);
+  }
+
+  function setElevationColor(value, options = {}) {
+    if (!/^#[0-9a-f]{6}$/i.test(String(value || ''))) return;
+    state.mapConfig.elevation_color = String(value).toLowerCase();
+    syncElevationControls();
+    redrawElevationTiles();
+    if (options.markDirty) markConfigDirty();
   }
 
   function setElevationThreshold(value, options = {}) {
@@ -2363,12 +2384,15 @@
     if (state.elevationControl || !state.map) return;
     const box = L.DomUtil.create('div', 'elevation-threshold-control', state.map.getContainer());
     box.id = 'elevationThresholdControl';
+    // v1.15.0: coluna fina, slider de corte de cima a baixo, opacidade e cor do sombreamento.
     box.innerHTML = `
-      <div class="elevation-threshold-title">${ui('Corte do relevo', 'Relief cutoff')}</div>
+      <div class="elevation-threshold-title">${ui('Corte', 'Cutoff')}</div>
       <div id="elevationThresholdValue" class="elevation-threshold-value">1.000 m</div>
       <div id="elevationScaleMax" class="elevation-scale-label">3.000 m</div>
       <input id="elevationThresholdSlider" class="elevation-vertical-range" type="range" min="0" max="3000" step="50" value="1000" aria-label="${ui('Altitude mínima exibida', 'Minimum displayed altitude')}">
       <div class="elevation-scale-label">0 m</div>
+      <label class="elevation-mini" title="${ui('Opacidade do relevo', 'Relief opacity')}">${ui('Opac.', 'Opac.')}<input id="elevationOpacityMap" type="range" min="10" max="100" step="5" value="55"></label>
+      <label class="elevation-mini" title="${ui('Cor do sombreamento', 'Shading color')}">${ui('Cor', 'Color')}<input id="elevationColorMap" type="color" value="#e0ac3e"></label>
       <div class="elevation-control-row">
         <input id="elevationThresholdNumber" class="elevation-threshold-number" type="number" min="100" max="9000" step="100" value="3000" aria-label="${ui('Limite máximo do slider em metros', 'Slider maximum in meters')}">
       </div>
@@ -2376,6 +2400,8 @@
     `;
     L.DomEvent.disableClickPropagation(box);
     L.DomEvent.disableScrollPropagation(box);
+    box.querySelector('#elevationOpacityMap').addEventListener('input', e => setElevationOpacity(e.target.value, { markDirty: true }));
+    box.querySelector('#elevationColorMap').addEventListener('input', e => setElevationColor(e.target.value, { markDirty: true }));
     const slider = box.querySelector('#elevationThresholdSlider');
     const number = box.querySelector('#elevationThresholdNumber');
     slider.addEventListener('input', () => setElevationThreshold(slider.value, { markDirty: true }));
@@ -8932,6 +8958,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   });
   $('#elevationSliderMax')?.addEventListener('change', e => setElevationSliderMax(e.target.value, { markDirty: true }));
   $('#elevationOpacity')?.addEventListener('input', e => setElevationOpacity(e.target.value, { markDirty: true }));
+  $('#elevationColor')?.addEventListener('input', e => setElevationColor(e.target.value, { markDirty: true }));
   $('#elevationOpacity')?.addEventListener('change', e => setElevationOpacity(e.target.value, { markDirty: true }));
 
   function previewTopologyStyleFromForm() {

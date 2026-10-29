@@ -1,4 +1,11 @@
-## PENDENTE (29/10/2026) — Ferramentas de planejamento iguais às do PT2VHF Mesh Analyzer v0.6.62
+## RESOLVIDO (v1.15.0) — Ferramentas de planejamento iguais às do PT2VHF Mesh Analyzer v0.6.62 (29/10/2026)
+
+- **Entregue na v1.15.0:** menu Ferramentas no topo (mesmos grupos do Mesh), análise de cobertura (`coverage.py`,
+  potência em W com padrão 50 W, 145,570 MHz, raio 50/100 km, µV e unidades S, estações com/sem cobertura,
+  "Voltar à cobertura"), previsto × real (estações que ouviram por RF e células do mapa de calor de Cobertura RF),
+  melhor ponto avaliado pela cobertura, filtro de picos do relevo, PDFs com mapa de ruas e versão no cabeçalho,
+  PDF da cobertura sem recalcular, relevo com corte compacto com cor, TNC / RF em Configuração (bloco e
+  monitores recolhidos; indicador TNC abre o bloco).
 
 - **Pedido (backlog):** implementar no APRS Client os recursos do Mesh Analyzer: análise de cobertura,
   analisar enlace entre 2 pontos, melhor ponto para instalar, relevo com corte e relatório em PDF.

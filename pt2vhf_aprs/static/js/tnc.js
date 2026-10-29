@@ -41,7 +41,7 @@
       'Otimização “quem fala com quem”':'“Who talks to whom” optimization','Modo':'Mode','Desligado':'Off','Observação / recomendação':'Observation / recommendation','Automático conservador':'Conservative automatic',
       'O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.':'The graph uses messages, ACK/REJ and RF presence to prioritize useful traffic and avoid unnecessary repetition. It does not arbitrarily rewrite third-party paths or invent RF links.',
       'Aguardando dados.':'Waiting for data.','Aplicar configuração':'Apply settings','Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.':'Transport changes reconnect the TNC if it is already in use. Enabling TX functions requires the explicit confirmation above.',
-      'Salvar TNC / RF':'Save TNC / RF','Monitor TNC':'TNC monitor','Frames AX.25/APRS recebidos e transmitidos.':'Received and transmitted AX.25/APRS frames.','Atualizar':'Refresh',
+      'Monitores':'Monitors','Monitor TNC, decisões Digi/iGate, estações ouvidas por RF e quem fala com quem':'TNC monitor, Digi/iGate decisions, stations heard over RF and who talks to whom','KISS Serial/TCP, monitor AX.25, Digipeater, iGate e quem fala com quem — clique para abrir':'KISS Serial/TCP, AX.25 monitor, Digipeater, iGate and who talks to whom — click to open','Salvar TNC / RF':'Save TNC / RF','Monitor TNC':'TNC monitor','Frames AX.25/APRS recebidos e transmitidos.':'Received and transmitted AX.25/APRS frames.','Atualizar':'Refresh',
       'Hora':'Time','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'TNC2 packet','Sem frames.':'No frames.',
       'Decisões Digi / iGate':'Digi / iGate decisions','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit of what was sent, suppressed or blocked.','Ação':'Action','Decisão':'Decision','Motivo':'Reason','Sem decisões.':'No decisions.',
       'Estações ouvidas por RF':'Stations heard over RF','Presença local usada pelo iGate inteligente.':'Local presence used by the smart iGate.','Estação':'Station','Última RF':'Last RF','Direta':'Direct','Contagem':'Count','Recepções':'Receptions','Pacotes RF':'RF packets','Distância':'Distance','Último tipo':'Last type','Nenhuma estação ouvida pelo TNC.':'No stations heard by the TNC.',
@@ -88,7 +88,7 @@
       'Separados por vírgula; usados no perfil Personalizado.':'Separados por comas; usados en el perfil Personalizado.','Máximo de hops repetidos':'Máximo de hops repetidos','Janela de duplicatas':'Ventana de duplicados','segundos':'segundos',
       'Rate limit por origem':'Límite por origen','pacotes/min':'paquetes/min','iGate inteligente':'iGate inteligente','APRS-IS → RF restritivo':'APRS-IS → RF restrictivo','Janela “ouvido por RF”':'Ventana “oído por RF”','minutos':'minutos','Path RF do iGate':'Path RF del iGate','vazio = direto':'vacío = directo',
       'Otimização “quem fala com quem”':'Optimización “quién habla con quién”','Modo':'Modo','Desligado':'Desactivado','Observação / recomendação':'Observación / recomendación','Automático conservador':'Automático conservador',
-      'Aguardando dados.':'Esperando datos.','Aplicar configuração':'Aplicar configuración','Salvar TNC / RF':'Guardar TNC / RF','Monitor TNC':'Monitor TNC','Frames AX.25/APRS recebidos e transmitidos.':'Tramas AX.25/APRS recibidas y transmitidas.','Atualizar':'Actualizar',
+      'Aguardando dados.':'Esperando datos.','Aplicar configuração':'Aplicar configuración','Monitores':'Monitores','Monitor TNC, decisões Digi/iGate, estações ouvidas por RF e quem fala com quem':'Monitor TNC, decisiones Digi/iGate, estaciones oídas por RF y quién habla con quién','KISS Serial/TCP, monitor AX.25, Digipeater, iGate e quem fala com quem — clique para abrir':'KISS Serial/TCP, monitor AX.25, Digipeater, iGate y quién habla con quién — clic para abrir','Salvar TNC / RF':'Guardar TNC / RF','Monitor TNC':'Monitor TNC','Frames AX.25/APRS recebidos e transmitidos.':'Tramas AX.25/APRS recibidas y transmitidas.','Atualizar':'Actualizar',
       'Hora':'Hora','Dir.':'Dir.','Origem':'Origen','Destino':'Destino','Tipo':'Tipo','Pacote TNC2':'Paquete TNC2','Sem frames.':'Sin tramas.',
       'Decisões Digi / iGate':'Decisiones Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Auditoría de lo enviado, suprimido o bloqueado.','Ação':'Acción','Decisão':'Decisión','Motivo':'Motivo','Sem decisões.':'Sin decisiones.',
       'Estações ouvidas por RF':'Estaciones oídas por RF','Presença local usada pelo iGate inteligente.':'Presencia local usada por el iGate inteligente.','Estação':'Estación','Última RF':'Última RF','Direta':'Directa','Contagem':'Conteo','Recepções':'Recepciones','Pacotes RF':'Paquetes RF','Distância':'Distancia','Último tipo':'Último tipo','Nenhuma estação ouvida pelo TNC.':'Ninguna estación oída por el TNC.',
@@ -141,7 +141,7 @@
       'Separados por vírgula; usados no perfil Personalizado.':'Séparés par des virgules ; utilisés avec le profil Personnalisé.','Máximo de hops repetidos':'Nombre maximal de hops répétés','Janela de duplicatas':'Fenêtre des doublons','segundos':'secondes',
       'Rate limit por origem':'Limite par source','pacotes/min':'paquets/min','iGate inteligente':'iGate intelligent','APRS-IS → RF restritivo':'APRS-IS → RF restrictif','Janela “ouvido por RF”':'Fenêtre « entendu en RF »','minutos':'minutes','Path RF do iGate':'Path RF de l’iGate','vazio = direto':'vide = direct',
       'Otimização “quem fala com quem”':'Optimisation « qui parle à qui »','Modo':'Mode','Desligado':'Désactivé','Observação / recomendação':'Observation / recommandation','Automático conservador':'Automatique conservateur',
-      'Aguardando dados.':'En attente de données.','Aplicar configuração':'Appliquer la configuration','Salvar TNC / RF':'Enregistrer TNC / RF','Monitor TNC':'Moniteur TNC','Frames AX.25/APRS recebidos e transmitidos.':'Trames AX.25/APRS reçues et transmises.','Atualizar':'Actualiser',
+      'Aguardando dados.':'En attente de données.','Aplicar configuração':'Appliquer la configuration','Monitores':'Moniteurs','Monitor TNC, decisões Digi/iGate, estações ouvidas por RF e quem fala com quem':'Moniteur TNC, décisions Digi/iGate, stations entendues en RF et qui parle à qui','KISS Serial/TCP, monitor AX.25, Digipeater, iGate e quem fala com quem — clique para abrir':'KISS Serial/TCP, moniteur AX.25, Digipeater, iGate et qui parle à qui — cliquer pour ouvrir','Salvar TNC / RF':'Enregistrer TNC / RF','Monitor TNC':'Moniteur TNC','Frames AX.25/APRS recebidos e transmitidos.':'Trames AX.25/APRS reçues et transmises.','Atualizar':'Actualiser',
       'Hora':'Heure','Dir.':'Dir.','Origem':'Source','Destino':'Destination','Tipo':'Type','Pacote TNC2':'Paquet TNC2','Sem frames.':'Aucune trame.',
       'Decisões Digi / iGate':'Décisions Digi / iGate','Auditoria do que foi enviado, suprimido ou bloqueado.':'Audit de ce qui a été envoyé, supprimé ou bloqué.','Ação':'Action','Decisão':'Décision','Motivo':'Motif','Sem decisões.':'Aucune décision.',
       'Estações ouvidas por RF':'Stations entendues en RF','Presença local usada pelo iGate inteligente.':'Présence locale utilisée par l’iGate intelligent.','Estação':'Station','Última RF':'Dernière RF','Direta':'Directe','Contagem':'Nombre','Recepções':'Réceptions','Pacotes RF':'Paquets RF','Distância':'Distance','Último tipo':'Dernier type','Nenhuma estação ouvida pelo TNC.':'Aucune station entendue par le TNC.',
@@ -193,7 +193,7 @@
   }
 
   function translateTncStatic() {
-    for (const root of [$('#tab-tnc'), $('#tncHeaderStatus')].filter(Boolean)) {
+    for (const root of [$('#tncConfigBlock') || $('#tab-tnc'), $('#tncHeaderStatus')].filter(Boolean)) {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       const nodes = [];
       while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -857,6 +857,19 @@
     }
   }
 
+  function tncVisible() {
+    return !!($('.tab.active[data-tab="config"]') && $('#tncConfigBlock')?.open);
+  }
+
+  function openTncBlock() {
+    $('.tab[data-tab="config"]')?.click();
+    const block = $('#tncConfigBlock');
+    if (!block) return;
+    block.open = true;
+    setTimeout(() => block.scrollIntoView({block: 'start', behavior: 'smooth'}), 60);
+  }
+  window.pt2vhfOpenTnc = openTncBlock;
+
   function toggleRxMonitor() {
     const on = checked('tncRxMonitorLive');
     $('#tncRxMonitor')?.classList.toggle('hidden', !on);
@@ -866,7 +879,7 @@
       rxMonitorSeq = 0;
       void pollRxMonitor();
       rxMonitorTimer = setInterval(() => {
-        if ($('.tab.active[data-tab="tnc"]')) void pollRxMonitor();
+        if (tncVisible()) void pollRxMonitor();
       }, 1000);
     }
   }
@@ -933,16 +946,26 @@
         setStatus(data.status || {}); await refreshData();
       } catch (error) { showError(error.message); }
     });
+    // v1.15.0: TNC / RF fica em Configuração, num bloco recolhido; abrir o bloco atualiza os dados.
+    $('#tncConfigBlock')?.addEventListener('toggle', () => { if (tncVisible()) setTimeout(refreshData, 80); });
     document.addEventListener('click', event => {
-      const tab = event.target.closest?.('.tab[data-tab="tnc"]');
-      if (tab) setTimeout(refreshData, 80);
+      if (event.target.closest?.('.tab[data-tab="config"]') && $('#tncConfigBlock')?.open) setTimeout(refreshData, 80);
     });
+    const header = $('#tncHeaderStatus');
+    if (header) {
+      header.style.cursor = 'pointer';
+      header.setAttribute('role', 'button');
+      header.setAttribute('tabindex', '0');
+      const open = () => openTncBlock();
+      header.addEventListener('click', open);
+      header.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    }
   }
 
   document.addEventListener('pt2vhf-language-changed', () => {
     translateTncStatic();
     refreshStatus();
-    if ($('.tab.active[data-tab="tnc"]')) refreshData();
+    if (tncVisible()) refreshData();
   });
   translateTncStatic();
   bind();
@@ -950,7 +973,7 @@
   initialLoad();
   pollTimer = setInterval(() => {
     refreshStatus();
-    if ($('.tab.active[data-tab="tnc"]')) {
+    if (tncVisible()) {
       refreshData();
       serialPollTick += 1;
       if (serialPollTick % 10 === 0 && val('tncTransport', 'tcp') === 'serial') {

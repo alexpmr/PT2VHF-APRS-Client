@@ -1,4 +1,4 @@
-__version__ = "1.14.62"
+__version__ = "1.15.0"
 APP_TOCALL = "APZVHF"
 
 # A topologia RF espaço-temporal (spacetime_topology.py) é ligada

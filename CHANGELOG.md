@@ -1,3 +1,23 @@
+## 1.15.0 - 2026-10-29
+
+- **Menu Ferramentas** no menu superior, entre Automações e Configuração, com os mesmos recursos e grupos do PT2VHF Mesh Analyzer; abre de qualquer aba:
+  - **Planejamento de RF:** 📡 Análise de cobertura, 📏 Analisar enlace entre 2 pontos e ⛰ Melhor ponto para instalar estação (saíram do menu Itens do mapa);
+  - **Relevo:** Relevo com corte (saiu de Camadas);
+  - **Relatórios e suporte:** 📄 Relatório (PDF) da ferramenta aberta e 🩺 Diagnóstico para suporte (baixa o diagnostics.log).
+- **Análise de cobertura** a partir de um ponto marcado no mapa, das coordenadas ou de uma estação conhecida, com o mesmo modelo do Mesh Analyzer (relevo, difração em dois gumes nos horizontes do transmissor e do receptor, fator k pela refratividade, margem estatística por % de locais e do tempo):
+  - só a **potência em W** (padrão 50 W), sem lista de rádios; 145,570 MHz por padrão; antenas, cabo, obstáculos e clima ajustáveis;
+  - sensibilidade para APRS 1200 bps (−113 dBm por padrão), mostrada também em **µV e unidades S**;
+  - **raio de 50 km por padrão, até 100 km** (40 km com relevo em alta resolução); **Ir para o ponto mais alto** num raio de até 50 km;
+  - mapa de calor ou contornos, quatro escalas de cores, mínimo/máximo e transparência, com legenda no mapa;
+  - estações conhecidas **com cobertura**, **sem cobertura** (contorno vermelho no mapa) e fora do raio; clicar numa estação abre a análise de enlace, com **Voltar à cobertura**;
+  - **previsto × real:** com uma estação conhecida como transmissor, as estações que comprovadamente a ouviram por RF aparecem no mapa e o resultado informa quantas estão dentro da cobertura prevista;
+  - a atividade RF real registrada na área (células de ~1 km do mapa de calor de Cobertura RF, recepção direta) também é comparada com a previsão e pode ser mostrada no mapa;
+  - **Baixar PDF** reaproveita o último cálculo, sem recalcular.
+- **Melhor ponto avaliado pela cobertura:** além do mais alto, calcula a cobertura dos 5 primeiros pontos e indica o que alcança mais estações conhecidas e maior área.
+- PDFs de cobertura, enlace e melhor ponto com **mapa de ruas (OpenStreetMap)** por baixo, guardado no computador; sem internet usa o desenho esquemático. O cabeçalho traz a versão do cliente.
+- **Relevo com corte:** controle numa coluna fina na lateral do mapa, com o slider de corte de cima a baixo, opacidade e **cor do sombreamento** ajustáveis (também em Configuração). Filtro de picos falsos do modelo de terreno (ex.: 3.418 m no Lago Paranoá), também nas análises de enlace, cobertura e melhor ponto.
+- **TNC / RF em Configuração**, num bloco próprio recolhido por padrão (o botão Salvar TNC / RF continua no bloco); os monitores (frames, decisões Digi/iGate, estações ouvidas por RF e quem fala com quem) ficam num sub-bloco recolhido. O indicador **TNC** do cabeçalho abre direto o bloco.
+
 ## 1.14.62 - 2026-10-28
 
 - Aviso **"Downloads no site oficial"** ao iniciar, com o mesmo visual do PT2VHF Mesh Analyzer: "A partir de agora, as novas versões e os instaladores do PT2VHF APRS Client serão distribuídos pelo site oficial.", link www.PT2VHF.com e botão Entendi; uma vez por abertura, nunca sobreposto aos avisos de novidades ou de atualização (pt/en/es/fr).
