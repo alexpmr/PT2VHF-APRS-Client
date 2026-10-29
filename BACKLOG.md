@@ -5,9 +5,14 @@
 - **Já existe no APRS** (portado de versão anterior do Mesh): `planning.py` / `static/js/planning.js`
   (enlace entre 2 pontos e melhor ponto), `planning_pdf.py` (PDF do enlace e do melhor ponto) e a camada
   Relevo com corte. Trazer o que o Mesh ganhou nas v0.6.61–0.6.62:
-  - **Menu Ferramentas** no menu superior (pedido de 29/10/2026), com: Análise de enlace entre 2
-    pontos, Melhor ponto para instalar estação, Relevo com corte (análise de relevo de corte) — movidos
-    de onde estão hoje — e a nova Análise de cobertura e os relatórios em PDF; abre de qualquer aba.
+  - **Menu Ferramentas** no menu superior, **com os mesmos recursos do menu Ferramentas do Mesh
+    Analyzer** (confirmado em 29/10/2026), nos mesmos grupos:
+    - *Planejamento de RF:* 📡 Análise de cobertura (nova), 📏 Analisar enlace entre 2 pontos,
+      ⛰ Melhor ponto para instalar estação;
+    - *Relevo:* Relevo com corte;
+    - *Relatórios e suporte:* 📄 Relatório (PDF) e 🩺 Diagnóstico para suporte.
+    Enlace, melhor ponto e relevo com corte saem de onde estão hoje. O menu abre de qualquer aba e
+    leva ao mapa quando a ferramenta precisa dele.
   - **Análise de cobertura** (novo; `coverage.py` do Mesh): transmissor em ponto do mapa (pino
     arrastável) ou estação/digi/iGate conhecida; seções Transmissor, Receptor, Ambiente, Simulação e
     Exibição; raio da cobertura em destaque (padrão 50 km, até 100 km); mapa de calor ou contornos com
