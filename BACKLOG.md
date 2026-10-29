@@ -5,24 +5,29 @@
 - **Já existe no APRS** (portado de versão anterior do Mesh): `planning.py` / `static/js/planning.js`
   (enlace entre 2 pontos e melhor ponto), `planning_pdf.py` (PDF do enlace e do melhor ponto) e a camada
   Relevo com corte. Trazer o que o Mesh ganhou nas v0.6.61–0.6.62:
-  - **Menu Ferramentas** no menu superior reunindo as ferramentas (cobertura, enlace, melhor ponto,
-    relevo com corte, relatório PDF, diagnóstico), abrindo de qualquer aba.
+  - **Menu Ferramentas** no menu superior (pedido de 29/10/2026), com: Análise de enlace entre 2
+    pontos, Melhor ponto para instalar estação, Relevo com corte (análise de relevo de corte) — movidos
+    de onde estão hoje — e a nova Análise de cobertura e os relatórios em PDF; abre de qualquer aba.
   - **Análise de cobertura** (novo; `coverage.py` do Mesh): transmissor em ponto do mapa (pino
     arrastável) ou estação/digi/iGate conhecida; seções Transmissor, Receptor, Ambiente, Simulação e
     Exibição; raio da cobertura em destaque (padrão 50 km, até 100 km); mapa de calor ou contornos com
     escala/transparência na hora; legenda no mapa; "Ir para o ponto mais alto" (busca até 50 km).
-    Parâmetros em unidades de VHF/APRS: potência em W, sensibilidade para APRS 1200 bps (como o enlace
-    já usa), resultado também em µV e unidades S.
+    Parâmetros em unidades de VHF/APRS: **potência em W, padrão 50 W** (campo livre, sem lista de
+    rádios — pedido de 29/10/2026), sensibilidade para APRS 1200 bps (como o enlace já usa),
+    resultado também em µV e unidades S.
   - **Estações com e sem cobertura**: listas com sinal estimado/quanto falta, contorno vermelho no mapa,
     clique abre o enlace até a estação ("Voltar à cobertura"); estações fora do raio à parte.
-  - **Rádios por marca e modelo** (potência e ganho típicos) na cobertura e no enlace — para APRS:
-    Kenwood (TM-D710, TM-D700, TH-D74/D75), Yaesu (FTM-400, FTM-300, FT-5D), Icom (ID-5100, ID-52),
-    Baofeng/Radioddity/AnyTone com TNC, rádios de digipeater fixo; manter "Personalizado / manual".
+  - ~~Rádios por marca e modelo~~: **não** fazer no APRS (pedido de 29/10/2026); basta informar a potência.
   - **Relevo com corte** compacto (coluna fina, slider de cima a baixo) com **cor do sombreamento**.
   - **Filtro de defeitos do relevo** (`survey.despike()` do Mesh): pixels com altitude impossível nos
     tiles Terrarium (ex.: 3.418 m no Lago Paranoá) distorcem enlace, melhor ponto e cobertura.
   - **PDF da cobertura** (`survey_pdf.coverage_pdf()` do Mesh) e cabeçalho padronizado com a versão
     nos três PDFs.
+- **TNC / RF dentro de Configuração** (pedido de 29/10/2026): tirar a aba "TNC / RF" do menu superior e
+  levar as opções para a aba Configuração, num bloco próprio "TNC / RF", **recolhido por padrão**, para
+  aproveitar melhor o espaço. Manter o botão "Salvar TNC / RF", o indicador "TNC" do topo (que passa a abrir
+  esse bloco) e os monitores da aba atual (tráfego RF, decisões do iGate/digi, estações ouvidas por RF,
+  interações) num sub-bloco recolhido dentro do mesmo bloco.
 - **Frequência padrão 145,570 MHz** (ajustável) no enlace e na cobertura (pedido de 29/10/2026). O
   enlace já usa `APRS_FREQ_MHZ = 145.570`; garantir o mesmo padrão na nova Análise de cobertura.
 
