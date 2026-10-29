@@ -861,12 +861,13 @@
     return !!($('.tab.active[data-tab="config"]') && $('#tncConfigBlock')?.open);
   }
 
+  // v1.15.1: TNC / RF é uma sub-aba da Configuração; o indicador TNC do topo abre direto nela.
   function openTncBlock() {
     $('.tab[data-tab="config"]')?.click();
     const block = $('#tncConfigBlock');
     if (!block) return;
-    block.open = true;
-    setTimeout(() => block.scrollIntoView({block: 'start', behavior: 'smooth'}), 60);
+    if (window.pt2vhfConfigTabs) window.pt2vhfConfigTabs.show('tnc'); else block.open = true;
+    setTimeout(() => $('#tab-config')?.scrollIntoView({block: 'start', behavior: 'smooth'}), 60);
   }
   window.pt2vhfOpenTnc = openTncBlock;
 

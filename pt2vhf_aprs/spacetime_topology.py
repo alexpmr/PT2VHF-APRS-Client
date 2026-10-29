@@ -1686,6 +1686,7 @@ def _init_db() -> None:
         rf_coverage.ensure_schema(conn)
         _backfill_fixed_station_geometry(conn)
         rf_coverage.backfill_once(conn)
+        rf_coverage.purge_digital_voice_once(conn)
 
 
 def _list_rf_routes(*args: Any, **kwargs: Any) -> dict[str, Any]:

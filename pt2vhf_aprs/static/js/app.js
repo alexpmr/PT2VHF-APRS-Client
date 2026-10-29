@@ -283,11 +283,18 @@
     const timeoutMs = Number(requestOptions.timeoutMs ?? 10000);
     delete requestOptions.timeoutMs;
     let timeoutId = null;
-    let controller = null;
-    if (!requestOptions.signal && Number.isFinite(timeoutMs) && timeoutMs > 0) {
-      controller = new AbortController();
+    let timedOut = false;
+    // v1.15.1: o limite de tempo vale também quando quem chama passa o próprio signal (antes era
+    // ignorado e a consulta de topologia RF podia ficar "Consultando…" por horas).
+    const external = requestOptions.signal || null;
+    if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+      const controller = new AbortController();
+      if (external) {
+        if (external.aborted) controller.abort();
+        else external.addEventListener('abort', () => controller.abort(), { once: true });
+      }
       requestOptions.signal = controller.signal;
-      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      timeoutId = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
     }
     try {
       const response = await fetch(url, requestOptions);
@@ -297,6 +304,7 @@
       if (!response.ok) throw new Error(data?.error || `Erro HTTP ${response.status}`);
       return data;
     } catch (err) {
+      if (err?.name === 'AbortError' && external?.aborted && !timedOut) throw err;
       if (err?.name === 'AbortError') {
         const seconds = Math.max(1, Math.round(timeoutMs / 1000));
         throw new Error(ui(
@@ -1052,6 +1060,7 @@
     );
     const cancelControl = $('#globalProcessingCancel');
     if (cancelControl) cancelControl.classList.toggle('hidden', !current.cancelable);
+    renderProcessingElapsed(current);
     const progressWrap = $('#globalProcessingProgress');
     const progressBar = $('#globalProcessingProgressBar');
     const progressText = $('#globalProcessingProgressText');
@@ -1066,6 +1075,50 @@
     }
   }
 
+  const PROCESSING_SLOW_MS = 90000;
+  let processingElapsedTimer = null;
+  function currentProcessingEntry() {
+    const entries = [...processingOperations.entries()].filter(([, entry]) => entry.visible);
+    return entries.length ? entries[entries.length - 1] : null;
+  }
+  function renderProcessingElapsed(current) {
+    const el = $('#globalProcessingElapsed');
+    if (!el) return;
+    const elapsed = current ? Date.now() - Number(current.started || Date.now()) : 0;
+    if (!current || elapsed < 5000) { el.textContent = ''; el.classList.add('hidden'); }
+    else {
+      const total = Math.round(elapsed / 1000), min = Math.floor(total / 60), sec = total % 60;
+      const clock = min ? `${min} min ${String(sec).padStart(2, '0')} s` : `${sec} s`;
+      el.textContent = elapsed >= PROCESSING_SLOW_MS
+        ? ui(`${clock} — está demorando mais que o normal. Use × para cancelar.`, `${clock} — taking longer than usual. Use × to cancel.`)
+        : ui(`${clock} decorridos`, `${clock} elapsed`);
+      el.classList.toggle('slow', elapsed >= PROCESSING_SLOW_MS);
+      el.classList.remove('hidden');
+      if (elapsed >= PROCESSING_SLOW_MS && !current.slowReported) {
+        current.slowReported = true;
+        reportClientEvent('processing_slow', { title: current.title, seconds: total });
+      }
+    }
+    if (current && !processingElapsedTimer) {
+      processingElapsedTimer = setInterval(() => {
+        const entry = currentProcessingEntry();
+        if (!entry) { clearInterval(processingElapsedTimer); processingElapsedTimer = null; renderProcessingElapsed(null); return; }
+        renderProcessingElapsed(entry[1]);
+      }, 1000);
+    }
+  }
+  function cancelCurrentProcessing() {
+    const found = currentProcessingEntry();
+    if (!found) return;
+    const [token, entry] = found;
+    reportClientEvent('processing_cancelled', { title: entry.title, seconds: Math.round((Date.now() - entry.started) / 1000) });
+    if (entry.onCancel) {
+      try { entry.onCancel(); } catch (err) { console.warn('cancel:', err); }
+    }
+    hideProcessing(token);
+    toast(ui('Processamento cancelado.', 'Processing cancelled.'));
+  }
+
   function showProcessing(title = '', message = '', options = {}) {
     processingSequence += 1;
     const token = 'processing-' + processingSequence;
@@ -1074,7 +1127,10 @@
       message: message || ui('Aguarde enquanto a operação é concluída.', 'Please wait while the operation completes.'),
       blocking: options?.blocking !== false,
       progress: Number.isFinite(Number(options?.progress)) ? Number(options.progress) : null,
-      cancelable: options?.cancelable === true,
+      // v1.15.1: todo aviso de processamento pode ser cancelado (botão ×); onCancel interrompe a operação.
+      cancelable: options?.cancelable !== false,
+      onCancel: typeof options?.onCancel === 'function' ? options.onCancel : null,
+      started: Date.now(),
       visible: false,
       timer: null,
     };
@@ -4031,7 +4087,7 @@
     const processingToken = showProcessing(
       ui('Consultando topologia RF…', 'Querying RF topology…'),
       ui('Carregando os indicativos disponíveis para análise de rota.', 'Loading callsigns available for route analysis.'),
-      { blocking: false }
+      { blocking: false, onCancel: () => controller.abort() }
     );
 
     try {
@@ -4742,6 +4798,7 @@
         <strong>Altitude</strong><span>${fmtNum(s.altitude, 1, ' m')}</span>
         <strong>Informação</strong><span>${escapeHtml(s.info || '')}</span>
         <strong>Via</strong><span>${escapeHtml(path)}</span>
+        ${s.digital_origin ? `<strong>${ui('Origem', 'Source')}</strong><span class="station-digital-origin">${escapeHtml(ui('via ' + s.digital_origin + ' (gateway para o APRS-IS, sem RF APRS)', 'via ' + s.digital_origin + ' (gateway to APRS-IS, no APRS RF)'))}</span>` : ''}
       </div>
       <div class="station-rf-heard-section">
         <div class="station-query-title">${ui('Estações recebidas por RF', 'Stations received by RF')}</div>
@@ -8062,6 +8119,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     const ssidMatch = call.match(/-(\d{1,2})$/);
     const ssid = ssidMatch ? Number(ssidMatch[1]) : null;
     const descriptor = [
+      station?.digital_origin,
       station?.map_family_key,
       station?.map_family_label,
       station?.device_model,
@@ -9932,9 +9990,11 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   });
   languageObserver.observe(document.body, { childList: true, subtree: true });
 
-  function showConfigSection(_section) {
+  function showConfigSection(section) {
     state.configSection = 'all';
     $$('.config-section').forEach(el => el.classList.remove('hidden'));
+    // v1.15.1: a Configuração tem sub-abas; 'aprs' = dados da estação.
+    if (section && section !== 'all') window.pt2vhfConfigTabs?.show(section === 'aprs' ? 'station' : section);
   }
   showConfigSection('all');
 
@@ -11062,7 +11122,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     }
   }
 
-  $('#globalProcessingCancel')?.addEventListener('click', () => { void cancelRfRecordsAndClose(); });
+  $('#globalProcessingCancel')?.addEventListener('click', () => cancelCurrentProcessing());
 
   document.addEventListener('click', event => {
     if (event.target.closest('[data-rf-record-cancel]')) {
@@ -11096,7 +11156,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     const token = showProcessing(
       ui('Calculando recordes RF…', 'Calculating RF records…'),
       ui('Preparando indexação e cálculo da alcançabilidade.', 'Preparing indexing and reachability calculation.'),
-      { blocking: false, delayMs: 320, progress: 0, cancelable: true }
+      { blocking: false, delayMs: 320, progress: 0, cancelable: true, onCancel: () => { void cancelRfRecordsAndClose(); } }
     );
     state.rfRouteRecordsToken = token;
 

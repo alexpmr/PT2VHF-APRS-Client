@@ -1,4 +1,7 @@
-## PENDENTE (29/10/2026) — Opção para abortar processamento travado ("Consultando topologia RF…" há 1 h)
+## RESOLVIDO (v1.15.1) — Opção para abortar processamento travado ("Consultando topologia RF…" há 1 h)
+
+- **Entregue:** botão × em todo aviso de processamento (cancela e libera o app), tempo decorrido e aviso de demora
+  registrado no diagnóstico; causa do travamento: `api()` ignorava `timeoutMs` quando recebia `signal`.
 
 - **Relato (backlog, com captura):** o aviso "Consultando topologia RF… — Carregando os indicativos
   disponíveis para análise de rota." ficou parado em 0% por **1 hora**, sem como cancelar.
@@ -14,7 +17,11 @@
   Tentar novamente / Cancelar; registrar no diagnostics.log a operação, o tempo e onde parou, para achar a
   causa da lentidão (banco grande, período Completo).
 
-## PENDENTE (29/10/2026) — Falso positivo de RF: posições de DMR, D-STAR, C4FM etc. (gateways para APRS-IS) aparecem como cobertura RF
+## RESOLVIDO (v1.15.1) — Falso positivo de RF: posições de DMR, D-STAR, C4FM etc. (gateways para APRS-IS) aparecem como cobertura RF
+
+- **Entregue:** `database.digital_voice_origin()` (TOCALLs do aprs-deviceid, tokens do path e gates BM_/DMR…);
+  sem salto RF, célula de Cobertura RF nem relay RF; popup "via DMR…"; migração única
+  `rf_coverage.purge_digital_voice_once()` reclassifica o histórico. Recebido pelo TNC continua RF.
 
 - **Relato (backlog, 29/10/2026, com captura):** o falso positivo de tracklog "feito por RF" continua. Uma
   estação móvel viajou de Recife a Salvador e seguiu para o sul; o trajeto inteiro aparece no **mapa de
@@ -51,7 +58,10 @@
   variante com `qAR` do gateway, e APRSdroid via APRS-IS (`PT2XXX-9>APDR16,TCPIP*,qAC,T2BRAZIL:...`) →
   nenhuma célula RF e nenhum enlace RF; tracklog continua sendo desenhado.
 
-## PENDENTE (29/10/2026) — Configuração em sub-abas, como no PT2VHF Mesh Analyzer
+## RESOLVIDO (v1.15.1) — Configuração em sub-abas, como no PT2VHF Mesh Analyzer
+
+- **Entregue:** `static/js/config_tabs.js` — Estação, APRS-IS, TNC / RF, Mapa, Aplicativo, Integrações, Banco
+  de dados e Backup; sub-aba lembrada; campo obrigatório abre a sub-aba dele; indicador TNC abre TNC / RF.
 
 - **Pedido (backlog):** organizar a aba Configuração em **sub-abas**, no mesmo formato do Mesh Analyzer
   v0.6.62 (Configurações → Conexões, Dispositivo, Retenções, Mapa, Sistema, Alertas, Geral, Diagnóstico:
@@ -322,7 +332,7 @@
 - **Diagnóstico pendente:** confrontar cada linha desenhada com exportação JSON/API de topologia, eventos, posição histórica/tracklogs, tipo de camada, filtros, replay e cache do mapa; identificar segmentos legados e casos de classificação incorreta de digis móveis.
 - **Testes necessários:** fixture do SQLite/JSON real de Brasília (com dados anonimizados quando cabível), verificar 1h/24h/Completo, refresh, filtros, posições móveis diferentes, timestamps, deduplicação e atualização visual.
 - **Status:** **não corrigido; aguardando investigação, reprodução e aceite no banco real**, independentemente dos testes sintéticos aprovados da v1.14.43.
-## PENDENTE — Beacon multicanal em todas as conexões ativas (#119, 18/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Beacon multicanal em todas as conexões ativas (#119, 18/10/2026)
 
 - **Requisito confirmado:** beacons manuais (ícone/cabeçalho), automáticos/periódicos e de qualquer outro gatilho devem disparar **em todos os meios de TX ativos e autorizados ao mesmo tempo: APRS-IS e TNC/RF**, em envios independentes.
 - **Manual:** transmitir imediatamente a cada clique, sem cooldown; não esperar o próximo ciclo automático. Proteger apenas contra clique duplicado enquanto uma mesma solicitação está sendo processada.
@@ -342,7 +352,7 @@
 - A lista histórica abaixo inclui requisitos já implementados em v1.14.40/41 (RF temporário, Grid Locator, gauges e apresentação). Não interpretar todos os títulos antigos PENDENTE como situação atual.
 - Validação de rádio físico, Web LAN externo, cobertura RF histórica e demais issues abertas não são encerradas por testes sintéticos.
 
-## PENDENTE — Gauges CPU e RAM empilhados no cabeçalho (#109, 16/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Gauges CPU e RAM empilhados no cabeçalho (#109, 16/10/2026)
 
 - **Interface:** na barra superior, apresentar as duas métricas em um bloco vertical estreito, **CPU acima de RAM**, em vez de dois cards lado a lado; reduzir o espaço horizontal consumido sem aumentar desnecessariamente a altura da barra.
 - **Manter:** leitura atual CPU (%) e RAM (MB), barras de progresso com escala e cores existentes, alertas de aviso/crítico, tooltip diagnóstico, IDs `headerCpuUsage`/`headerMemoryUsage`, atualização periódica e responsividade. Garantir largura para os valores em ambientes com RAM elevada.
@@ -371,7 +381,7 @@
 - **Compatibilidade e testes:** persistir preferência `pt2vhf_coordinate_mode`, respeitar geolocalização automática e os campos obrigatórios; verificar limites geográficos, hemisférios, 4/6/8/10 caracteres, ida/volta, formatos inválidos, valores de centro/precisão, preservação ao reiniciar, i18n e Windows 7/10/11/Web LAN. Nenhum campo independente de localização deve divergir da latitude/longitude canônica.
 - **Status:** registrado em backlog e issue #106. **Não implementado nem validado na v1.14.40.**
 
-## PENDENTE — Tracklogs como evidência georreferenciada de cobertura RF observada (15/10/2026, #94)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Tracklogs como evidência georreferenciada de cobertura RF observada (15/10/2026, #94)
 
 - **Proposta:** aproveitar os pontos de tracklog APRS, inclusive de estações/digipeaters móveis, como candidatos a amostras na camada separada **Ver → Cobertura RF observada**. **Tracklog por si só comprova localização/trajetória, não recepção RF**: um ponto só entra como cobertura quando sua estação+SSID, timestamp e coordenada contemporânea podem ser associados a um pacote efetivamente ouvido/repetido por RF, com proveniência auditável.
 - **Motor de correlação:** cruzar `tracks` (indicativo/SSID, latitude, longitude, instante, path/raw, velocidade/curso e eventual qualidade do sinal), `packets` (timestamp, raw, medium) e `topology_events`/caminhos APRS reais (RF direto via TNC, digipeater usado, iGate e classificações). Usar janela temporal curta e explícita/tolerância configurável, identificador ou fingerprint do pacote quando disponível, validação de posições e consistência espacial; **não ligar o ponto ao digi mais próximo ou a um evento sem correspondência**. Nunca substituir GPS histórico pelo último conhecido.
@@ -389,7 +399,7 @@
 - **Teste de aceitação para próxima correção:** reproduzir a cena de Brasília com banco real, listar cada linha suprimida e motivo por indicativo/SSID; zerar segmentos ligados a estações móveis ou caminhos com digi móvel, sem apagar pacotes nem esconder RF entre fixas. Verificar a situação com e sem rota selecionada, filtros 1 h/24 h/Completo, após refresh, e com GPS histórico falso/ausente; registrar as amostras de RF móvel disponíveis para cobertura.
 - **Estado:** reprodução relatada na **v1.14.40**; issue [#94](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/94) permanece aberta. **Nenhuma correção de código/instalador foi implementada para esta reprodução.**
 
-## PENDENTE — Regra definitiva: somente entidades fixas geram linhas no mapa; RF móvel vira cobertura observada (#94, 15/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Regra definitiva: somente entidades fixas geram linhas no mapa; RF móvel vira cobertura observada (#94, 15/10/2026)
 
 - **Novo requisito e captura (15/10):** ainda aparecem linhas RF originadas por digipeaters móveis ou realizadas por intermédio deles. **No mapa principal, desenhar enlaces apenas entre entidades comprovadamente fixas, inclusive os exclusivamente RF.** Contato RF verdadeiro envolvendo um digi móvel não autoriza reta no mapa; convertê-lo em evidência georreferenciada da camada Cobertura RF observada, sem apagar os pacotes.
 - **Regra de visibilidade:** ambas as extremidades devem ser fixas e também os repetidores/intermediários conhecidos que fundamentam o enlace. Se qualquer integrante do caminho observado for móvel, suprimir a linha — mesmo se os dois endpoints aparentarem ser fixos. Status fixo/móvel/indeterminado; se fixidez não for comprovada, não representar enlace como seguramente fixo. Permitir cadastro fixo explícito e auditável, sem presumir fixidez porque o GPS não mudou.
@@ -399,7 +409,7 @@
 - **Aceite:** na amostra ilustrada e no histórico PT2AP/PT2AP-9 Sul → Uberaba → Brasília, zero linhas associadas a digis móveis, zero pontas órfãs e zero trajetos entre posições atuais e antigas; manter linhas sólidas e na cor configurada para RF de entidades fixas mesmo sem Internet. Exercitar Completo/24h/1h, source/target invertidos, path multissalto, posição GPS inválida e classificação temporal. Não apagar os registros nem inflar a análise por rotas não simultâneas.
 - **Estado:** regressão prioritária vinculada à issue #94; **registrado, não implementado/validado na v1.14.40**.
 
-## PENDENTE — Menu Histórico contextual, Apresentação alternável e organização da barra (#98, 15/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Menu Histórico contextual, Apresentação alternável e organização da barra (#98, 15/10/2026)
 
 - **Novo relato com captura na v1.14.39:** a barra/menu continua desformatada. **OPÇÃO** deve sair da barra principal e aparecer somente dentro do menu/painel **Histórico** enquanto estiver aberto; ocultar ao fechar e não perder estado dos comandos de replay. Não há controle com texto literal OPÇÃO no HTML estático; identificar o grupo equivalente na execução antes de alterá-lo.
 - **Mover Velocidade (0,5×/1×/2×/5×)** exclusivamente da barra para **Configuração → Mapa**; preservar preferência `pt2vhf_traffic_speed`, animação e sincronismo com o painel de Histórico. **Tipo de mapa** também deve sair da barra e continuar no campo existente `map_type` da configuração, sem duplicação ou perda de seleção/fallback OSM.
@@ -407,7 +417,7 @@
 - **UI:** ordem/layout compacto e responsivo (Histórico, Período, busca RF, Ver, Camadas, Exportações, Apresentação), menus sem cortes, labels alinhados e sem sobreposição em janela reduzida, zoom 125–150%, Windows 7/10/11, claro/escuro e idiomas.
 - **Rastreamento:** [issue #98](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/98). **Requisito complementado; não implementado nem validado na v1.14.39.**
 
-## PENDENTE — Cabeçalho Web: IP:porta como botão e ativação LAN antes de abrir navegador (#99, 15/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Cabeçalho Web: IP:porta como botão e ativação LAN antes de abrir navegador (#99, 15/10/2026)
 
 - **Captura de cabeçalho:** atualmente mostra `Web em uso: 192.168.10.61:8080` como etiqueta. Exibir **somente um botão `IP:porta`** (sem “Web em uso”/“Web LAN”/“Web local”, sem protocolo), mantendo sinais de estado e acessibilidade por tooltip/título.
 - **Ação:** ao clicar no IP, abrir navegador padrão externo com a URL completa e atual do listener. **Se Web LAN estiver desativado, ativar e esperar servidor no IP LAN responder antes de abrir**. Evitar abrir URL inativa; porta/IP devem vir do runtime, inclusive após fallback ou mudança de interface. Não navegar para um destino arbitrário fornecido pelo frontend.
@@ -415,7 +425,7 @@
 - **Segurança:** ativação LAN somente por pedido explícito, tratamento de redes públicas/firewall, proteção de endpoints administrativos, feedback 'ativando/abrindo/erro' e evitar múltiplas ativações por duplo clique. Preservar `open_browser_on_start=0`; o clique manual não deve mudar essa preferência.
 - **Rastreamento:** [issue #99](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/99), relacionada a #78/#79/#80. **Registrada; não implementada nem validada na v1.14.39.**
 
-## PENDENTE — Formatação do menu do mapa e transferência de Velocidade/Tipo de mapa para Configuração (issue #98, 15/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Formatação do menu do mapa e transferência de Velocidade/Tipo de mapa para Configuração (issue #98, 15/10/2026)
 
 - **Relato na v1.14.39:** o menu/barra de controles do mapa continua com **formatação incorreta**; usuário solicita remover **Velocidade** e **Tipo de mapa** da barra principal e colocá-los em **Configuração → Mapa**.
 - **Diagnóstico:** `templates/index.html` possui `#topologySpeed` e `#mapTypeQuick` em `#mapContextBar`. **Tipo de mapa já está presente na seção Configuração → Mapa**, como `select[name="map_type"]`: reutilizar, não duplicar. O novo campo **Velocidade da animação APRS** deve oferecer 0,5×, 1×, 2× e 5× (padrão 1×).
@@ -424,7 +434,7 @@
 - **Aceite:** Velocidade e Tipo de mapa **não aparecem mais** na barra, estão em Configuração → Mapa e funcionam após salvar/reiniciar; menu responsivo sem perda de comandos; i18n e testes DOM/JS/visuais. Relacionado ao histórico de correções da barra responsiva v1.14.10.
 - **Rastreamento:** [issue #98](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/98). **Registrado, não implementado na v1.14.39.**
 
-## PENDENTE — Regressão v1.14.39: enlaces RF órfãos de digipeaters móveis ainda aparecem (#94, 15/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Regressão v1.14.39: enlaces RF órfãos de digipeaters móveis ainda aparecem (#94, 15/10/2026)
 
 - **Evidência visual enviada pelo mantenedor:** no mapa do noroeste do Paraná, entre Maringá, Mandaguaçu e Faxinal, diversas **linhas amarelas convergem para repetidores e terminam em posições sem estação correspondente visível**. A nova versão v1.14.39 **não suprimiu todos os enlaces gerados por digis móveis**. Importante: ausência de ícone na extremidade, isoladamente, pode decorrer dos filtros de marcadores; identificar se a geometria histórica é válida antes de atribuir causa.
 - **Análise do código:** `topology_map.moving_rf_repeaters()` só detecta deslocamento com **dois agrupamentos geográficos de pelo menos duas observações cada**, afastados 25 km; recortes de 30.000 `topology_events`, repetidores no campo `source`, trilhas independentes (`tracks`) e coordenadas pontuais fora dos buckets ficam sem proteção. `app.js::loadTopology()` também injeta rotas da análise RF e pode contornar filtros exclusivos da topologia geral.
@@ -440,7 +450,7 @@
 - **#96 Retenção:** categoria Pacotes já existia; adicionados botões Limpar tudo com prévia e confirmação textual, limpeza em lotes e bloqueio de TX pendente. **Executar testes de integridade SQLite/backups e LAN antes de declarar concluído.**
 - **Release:** código pronto para testes; publicação oficial e aceites físicos ainda pendentes.
 
-## PENDENTE — Estatísticas: quantitativos de mensagens, estações, objetos e demais categorias (issue #95, 14/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Estatísticas: quantitativos de mensagens, estações, objetos e demais categorias (issue #95, 14/10/2026)
 
 - **Pedido do mantenedor:** adicionar à aba **Estatísticas** um resumo numérico dos dados armazenados/observados: **quantidade de mensagens, estações, objetos APRS etc.** A página hoje exibe período, enlaces, pacotes e eventos, mas falta uma visão clara de contagens por categoria.
 - **Bloco proposto “Quantidades por categoria”:** cartões para **estações únicas por indicativo/SSID; mensagens APRS individuais (RX/TX), boletins e grupos; objetos APRS (AIS/radiossondas quando possível distinguir com segurança); pacotes; pontos de tracklog; digipeaters/iGates únicos; enlaces RF e Internet/iGate; eventos de topologia**. Explicitar unidade, contagem distinta e fontes para evitar duplicidades ou misturar eventos com entidades.
@@ -449,7 +459,7 @@
 - **Aceite:** números conferidos com registros SQLite, sem contar vários pacotes da mesma estação como várias estações; sem dupla contagem de RX/TX, boletins e grupos; coerência com a exclusão seletiva por categoria (#96); UI responsiva com temas e idiomas suportados.
 - **Rastreamento:** [issue #95](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/95). **Registrado; não implementado na v1.14.38.**
 
-## PENDENTE — Configuração: Pacotes e Limpar tudo por categoria do banco (issue #96, 14/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Configuração: Pacotes e Limpar tudo por categoria do banco (issue #96, 14/10/2026)
 
 - **Solicitação do mantenedor:** em **Configurações → Retenção e tamanho do banco**, deixar **Pacotes** explícito para configurar a retenção e adicionar **“Limpar tudo” ao lado de cada categoria** (Estações, Tracklogs, Mensagens etc.) para excluir toda a categoria do SQLite.
 - **Diagnóstico:** **Pacotes já existe** no backend como `retention.DEFAULT_DAYS["packets"] = 30` e em `app.js::retentionCategories` como “Pacotes recebidos”. Corrigir visibilidade/descrição, **não duplicar tabela/política**. `/api/retention/apply` remove apenas **dados expirados** e não implementa a nova função “Limpar tudo”.
@@ -459,7 +469,7 @@
 - **Testes de aceite:** limpeza por categoria com dados mistos, contagens corretas antes/depois (#95), preservação de outros dados e de preferências, concorrência com ingestão/APRS e rotas RF, confirmação negativa sem exclusão, progressão em banco grande, traduções e Windows 7/10/11.
 - **Rastreamento:** [issue #96](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/96). **Registrado; não implementado na v1.14.38.**
 
-## PENDENTE — Digipeaters móveis: remover linhas RF espúrias e criar camada Cobertura RF observada (issue #94, 14/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Digipeaters móveis: remover linhas RF espúrias e criar camada Cobertura RF observada (issue #94, 14/10/2026)
 
 - **Relato real na v1.14.38:** enlaces de estações móveis/repetidoras ficaram ruins; aparecem **várias linhas ligando um digi a lugar nenhum**. Em novo teste, o mantenedor pediu explicitamente: **“Nos casos das estações que repetem e se deslocaram, não deixe enlace na tela mas aproveite esta informação para ser usado em um mapa de cobertura, para mostrar onde essas estações estiveram ao alcance de uma rede RF.”**
 - **Nova decisão de produto — prevalece sobre a renderização histórica solicitada anteriormente na #85:** quando **digipeater, iGate ou estação repetidora comprovadamente móvel** mudou de posição, **não renderizar no mapa geral os enlaces RF históricos associados à repetição móvel**, nem linhas para geometrias ausentes. Preservar todas as evidências RF locais verdadeiras, timestamps, paths, SSIDs e posições históricas no banco; ocultação apenas de representação cartográfica, **não exclusão do dado**.
@@ -471,7 +481,7 @@
 - **Prioridade:** alta, ligada à [#85](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/85) (nova orientação de aceite), à [#86](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/86) (rotas plausíveis) e à [#93](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/93) (custo computacional no período Completo).
 - **Rastreamento:** [issue #94](https://github.com/alexpmr/PT2VHF-APRS-Client/issues/94). **Backlog registrado, não implementado e não validado nesta versão.**
 
-## PENDENTE — Recordes RF observados: cálculo excede orçamento interno de 45 s (issue #93, 14/10/2026)
+## ENTREGUE (v1.14.39–v1.14.62; conferido no código em 29/10/2026) — Recordes RF observados: cálculo excede orçamento interno de 45 s (issue #93, 14/10/2026)
 
 - **Relato de campo na v1.14.38:** em **Estatísticas → Recordes RF observados**, o aplicativo informa **“Cálculo de Recordes RF excedeu o orçamento interno de tempo.”** Não equivale a ausência de enlaces nem a um ranking RF legitimamente vazio. **Período confirmado pelo operador em 14/10/2026: Completo (`hours=0`)**. Não há confirmação de reprodução em 24 h ou 7 dias; manter esses períodos como testes comparativos.
 - **Causa imediata verificada:** `pt2vhf_aprs/spacetime_topology.py` define `RF_RECORD_DEFAULT_DEADLINE_SECONDS = 45.0` e lança `TimeoutError` ao atingir o prazo durante a busca por origens. `web.py` também define `deadline_seconds=45.0` para os jobs e endpoint síncrono. O custo inclui montagem do grafo, indexação de eventos e expansão por origem, antes de consolidar top 10. O teste do deadline ocorre **entre origens**; grandes origens podem atrasar progresso e cancelamento.

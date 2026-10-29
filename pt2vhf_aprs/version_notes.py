@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.1": {
+        "title": "Configuração em sub-abas",
+        "items": [
+            "A Configuração agora é dividida em sub-abas: Estação, APRS-IS, TNC / RF, Mapa, Aplicativo, Integrações, Banco de dados e Backup.",
+            "O indicador TNC do topo abre direto a sub-aba TNC / RF.",
+            "Posições de DMR, D-STAR, C4FM e outros modos digitais não aparecem mais como RF no mapa de calor e nos enlaces.",
+            "Processamentos demorados podem ser cancelados pelo botão × e mostram o tempo decorrido.",
+        ],
+    },
     "1.15.0": {
         "title": "Menu Ferramentas e análise de cobertura",
         "items": [
