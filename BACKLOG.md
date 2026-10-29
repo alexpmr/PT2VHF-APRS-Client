@@ -1,3 +1,31 @@
+## PENDENTE (29/10/2026) — Ferramentas de planejamento iguais às do PT2VHF Mesh Analyzer v0.6.62
+
+- **Pedido (backlog):** implementar no APRS Client os recursos do Mesh Analyzer: análise de cobertura,
+  analisar enlace entre 2 pontos, melhor ponto para instalar, relevo com corte e relatório em PDF.
+- **Já existe no APRS** (portado de versão anterior do Mesh): `planning.py` / `static/js/planning.js`
+  (enlace entre 2 pontos e melhor ponto), `planning_pdf.py` (PDF do enlace e do melhor ponto) e a camada
+  Relevo com corte. Trazer o que o Mesh ganhou nas v0.6.61–0.6.62:
+  - **Menu Ferramentas** no menu superior reunindo as ferramentas (cobertura, enlace, melhor ponto,
+    relevo com corte, relatório PDF, diagnóstico), abrindo de qualquer aba.
+  - **Análise de cobertura** (novo; `coverage.py` do Mesh): transmissor em ponto do mapa (pino
+    arrastável) ou estação/digi/iGate conhecida; seções Transmissor, Receptor, Ambiente, Simulação e
+    Exibição; raio da cobertura em destaque (padrão 50 km, até 100 km); mapa de calor ou contornos com
+    escala/transparência na hora; legenda no mapa; "Ir para o ponto mais alto" (busca até 50 km).
+    Parâmetros em unidades de VHF/APRS: potência em W, sensibilidade para APRS 1200 bps (como o enlace
+    já usa), resultado também em µV e unidades S.
+  - **Estações com e sem cobertura**: listas com sinal estimado/quanto falta, contorno vermelho no mapa,
+    clique abre o enlace até a estação ("Voltar à cobertura"); estações fora do raio à parte.
+  - **Rádios por marca e modelo** (potência e ganho típicos) na cobertura e no enlace — para APRS:
+    Kenwood (TM-D710, TM-D700, TH-D74/D75), Yaesu (FTM-400, FTM-300, FT-5D), Icom (ID-5100, ID-52),
+    Baofeng/Radioddity/AnyTone com TNC, rádios de digipeater fixo; manter "Personalizado / manual".
+  - **Relevo com corte** compacto (coluna fina, slider de cima a baixo) com **cor do sombreamento**.
+  - **Filtro de defeitos do relevo** (`survey.despike()` do Mesh): pixels com altitude impossível nos
+    tiles Terrarium (ex.: 3.418 m no Lago Paranoá) distorcem enlace, melhor ponto e cobertura.
+  - **PDF da cobertura** (`survey_pdf.coverage_pdf()` do Mesh) e cabeçalho padronizado com a versão
+    nos três PDFs.
+- **Frequência padrão 145,570 MHz** (ajustável) no enlace e na cobertura (pedido de 29/10/2026). O
+  enlace já usa `APRS_FREQ_MHZ = 145.570`; garantir o mesmo padrão na nova Análise de cobertura.
+
 ## RESOLVIDO (v1.14.60) — Recordes RF: rota sem todos os enlaces desenhados (27/10/2026)
 
 - **Relato com captura:** recorde CERD ↔ PY2OAL-1 (8 hops) mostra a linha só até PY2NV-15; PY2NV-15 → PY2PJA (214,8 km, 21/10) e PY2PJA → PY2OAL-1 (137,4 km, 21/10) sem linha, embora listados no painel.
