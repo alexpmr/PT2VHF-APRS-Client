@@ -1,3 +1,20 @@
+## PENDENTE (29/10/2026) — Configuração em sub-abas, como no PT2VHF Mesh Analyzer
+
+- **Pedido (backlog):** organizar a aba Configuração em **sub-abas**, no mesmo formato do Mesh Analyzer
+  v0.6.62 (Configurações → Conexões, Dispositivo, Retenções, Mapa, Sistema, Alertas, Geral, Diagnóstico:
+  botões em linha no topo da aba, a ativa destacada em amarelo, uma seção por vez), em vez de tudo junto
+  numa página longa como hoje.
+- Distribuir o conteúdo atual em sub-abas, por exemplo: **Estação** (indicativo, SSID, posição, comentário),
+  **APRS-IS** (servidor, filtro, beacon), **TNC / RF** (o bloco que hoje está recolhido), **Mapa**
+  (camadas, relevo com corte, cores), **Retenção e banco** (retenção, Verificar banco), **Integrações**
+  (QRZ.com, AIS), **Sistema** (idioma, atualização, acesso LAN) e **Diagnóstico**.
+- **Motivo/relato (29/10/2026):** na v1.15.0 o bloco TNC / RF ficou no **fim** da página Configuração, depois
+  de todo o formulário, e o usuário não o encontrou. Com as sub-abas, TNC / RF passa a ter a sua própria
+  sub-aba, visível de imediato; o indicador "TNC" do topo deve abrir direto essa sub-aba.
+- Manter: o "Salvar configuração" com aviso de alterações não salvas (valendo para todas as sub-abas), o
+  "Salvar TNC / RF" próprio, os monitores do TNC recolhidos, a última sub-aba usada lembrada, e os atalhos
+  da Ajuda que levam a um campo de Configuração (abrir a sub-aba certa).
+
 ## RESOLVIDO (v1.15.0) — Ferramentas de planejamento iguais às do PT2VHF Mesh Analyzer v0.6.62 (29/10/2026)
 
 - **Entregue na v1.15.0:** menu Ferramentas no topo (mesmos grupos do Mesh), análise de cobertura (`coverage.py`,
