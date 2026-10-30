@@ -6,7 +6,7 @@
 - **Depois:** mapa offline por região; "Navegar até" pelo app de mapas; alerta de estação/amigo por perto; modo carro (botões grandes, tela ligada); análise de rotas/recordes RF e Planejamento (enlace entre 2 pontos) do desktop.
 - **Diferencial frente ao APRSdroid:** topologia RF (quem ouviu quem), mapa de calor de cobertura e rotas RF.
 - **Definido (30/10/2026):** repositório `alexpmr/PT2VHF-APRS-Android` (criado pelo mantenedor); nome do produto no site e no `updates.json`: **PT2VHF APRS Client for Android** (entrada própria, separada do desktop, para o atualizador de um nunca oferecer o arquivo do outro); Android mínimo: **8.0 (API 26)**.
-- **Pendente do mantenedor:** criar a chave de assinatura do APK e guardá-la nos segredos do GitHub Actions do repositório Android (keystore em base64 + senhas + alias).
+- **Assinatura pronta (30/10/2026):** chave criada pelo mantenedor; segredos do repositório `PT2VHF-APRS-Android`: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`pt2vhf`), `ANDROID_KEY_PASSWORD`. O build de release do Actions usa esses nomes.
 
 ## BACKLOG — Cabeçalho: botão "Enviar beacon" no lugar do ícone (30/10/2026)
 
