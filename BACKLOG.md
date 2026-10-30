@@ -5,7 +5,7 @@
 - **Primeira versão:** tracker em segundo plano com SmartBeaconing e GPS; TNC KISS por Bluetooth (Mobilinkd, BTECH UV-Pro, RT-950 Pro) e USB-OTG; APRS-IS com passcode; mensagens com notificação e resposta pela notificação; mapa com estações, enlaces RF e mapa de calor; atualização e contagem pelo pt2vhf.com (`update.php?product=…`, aviso de versão nova e "Downloads no site oficial").
 - **Depois:** mapa offline por região; "Navegar até" pelo app de mapas; alerta de estação/amigo por perto; modo carro (botões grandes, tela ligada); análise de rotas/recordes RF e Planejamento (enlace entre 2 pontos) do desktop.
 - **Diferencial frente ao APRSdroid:** topologia RF (quem ouviu quem), mapa de calor de cobertura e rotas RF.
-- **Definido (30/10/2026):** repositório `alexpmr/PT2VHF-APRS-Android` (criado pelo mantenedor); nome do produto no site e no `updates.json`: **PT2VHF APRS Client** (mesmo nome do desktop); Android mínimo: **8.0 (API 26)**.
+- **Definido (30/10/2026):** repositório `alexpmr/PT2VHF-APRS-Android` (criado pelo mantenedor); nome do produto no site e no `updates.json`: **PT2VHF APRS Client for Android** (entrada própria, separada do desktop, para o atualizador de um nunca oferecer o arquivo do outro); Android mínimo: **8.0 (API 26)**.
 - **Pendente do mantenedor:** criar a chave de assinatura do APK e guardá-la nos segredos do GitHub Actions do repositório Android (keystore em base64 + senhas + alias).
 
 ## BACKLOG — Cabeçalho: botão "Enviar beacon" no lugar do ícone (30/10/2026)
