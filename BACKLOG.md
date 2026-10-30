@@ -1,3 +1,8 @@
+## BACKLOG — Cabeçalho: botão "Enviar beacon" no lugar do ícone (30/10/2026)
+
+- **Pedido:** no menu superior, trocar o ícone 📡 que envia um beacon (`#headerSendBeaconButton`, classe `beacon-icon-button` em `templates/index.html`) por um botão com o texto **"Enviar beacon"**.
+- **Manter:** mesmo comportamento atual (envio imediato por todos os meios ativos, APRS-IS e TNC/RF), tooltip, estados de envio/erro e traduções do texto do botão nos idiomas do cliente; conferir o encaixe no cabeçalho em telas estreitas.
+
 ## BACKLOG — Mapa de calor: estação via rede DMR (DMR*) contada como cobertura RF (28/10/2026)
 
 - **Relato com captura:** estação PP5PM-9 (APRSdroid no celular), deslocando-se de Belo Horizonte até Aracaju pela BR-116, aparece como trilha no mapa de calor da Cobertura RF, embora não tenha usado RF (envio pela internet/APRS-IS).
