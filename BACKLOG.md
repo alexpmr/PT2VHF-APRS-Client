@@ -1,3 +1,12 @@
+## BACKLOG — PT2VHF APRS Client para Android (30/10/2026)
+
+- **Decisão do mantenedor:** app **nativo em Kotlin** (Bluetooth e execução em segundo plano são o núcleo; a interface web empacotada foi descartada).
+- **Mockups:** https://claude.ai/artifact/9NFcGxuWKThfVJVx33sWFD — Mapa (botão "Enviar beacon", APRS-IS/TNC/GPS, enlaces, cobertura), Mensagens (meio e ACK por mensagem, respostas rápidas), Estação (distância/direção, grid, PHG, ouvido por RF, Navegar até, Rota RF), Rádio/TNC (KISS Bluetooth, USB-OTG, TCP; monitor e "Escutar 30 s"), Modo tracker (SmartBeaconing em segundo plano, notificação fixa).
+- **Primeira versão:** tracker em segundo plano com SmartBeaconing e GPS; TNC KISS por Bluetooth (Mobilinkd, BTECH UV-Pro, RT-950 Pro) e USB-OTG; APRS-IS com passcode; mensagens com notificação e resposta pela notificação; mapa com estações, enlaces RF e mapa de calor; atualização e contagem pelo pt2vhf.com (`update.php?product=…`, aviso de versão nova e "Downloads no site oficial").
+- **Depois:** mapa offline por região; "Navegar até" pelo app de mapas; alerta de estação/amigo por perto; modo carro (botões grandes, tela ligada); análise de rotas/recordes RF e Planejamento (enlace entre 2 pontos) do desktop.
+- **Diferencial frente ao APRSdroid:** topologia RF (quem ouviu quem), mapa de calor de cobertura e rotas RF.
+- **A definir:** repositório próprio (ex.: `PT2VHF-APRS-Android`), nome do produto no site e no `updates.json`, assinatura do APK, versão mínima do Android.
+
 ## BACKLOG — Cabeçalho: botão "Enviar beacon" no lugar do ícone (30/10/2026)
 
 - **Pedido:** no menu superior, trocar o ícone 📡 que envia um beacon (`#headerSendBeaconButton`, classe `beacon-icon-button` em `templates/index.html`) por um botão com o texto **"Enviar beacon"**.
