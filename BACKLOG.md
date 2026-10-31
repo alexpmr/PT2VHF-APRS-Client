@@ -1,3 +1,63 @@
+## RESOLVIDO (v1.15.2) — Trocar tiny.cc/aprs por www.PT2VHF.com em todos os projetos (31/10/2026)
+
+- **Relato:** o cliente Windows enviava boletins (divulgação manual da aba Sobre) com o link `tiny.cc/aprs`.
+- **Entregue:** textos de divulgação da aba Sobre em todos os idiomas e o link da aba Sobre agora usam `www.PT2VHF.com` (link para https://www.pt2vhf.com/aprs). Conferido nos demais projetos (Sat Tool, Prop Tool, Prog Tool, Mesh Analyzer, venus-8, site, Android): nenhum usa `tiny.cc`.
+
+## RESOLVIDO (v1.15.2) — Anúncio de versão no idioma do usuário, com www.PT2VHF.com (31/10/2026)
+
+- **Entregue:** `version_announce.LANGUAGE_TEXTS` com os textos abaixo, escolhidos pelo idioma da Configuração; texto personalizado mantém prioridade; o padrão antigo nunca editado passa ao texto do idioma; Automações mostra o padrão do idioma.
+
+- **Aprovado pelo mantenedor (31/10/2026), com os textos abaixo.**
+- **Pedido:** cliente desktop (Windows, Linux, macOS): ao abrir pela primeira vez após atualizar, enviar o boletim no **idioma configurado do usuário**, no formato "APRS Client versão x, download em www.PT2VHF.com".
+- **Hoje (v1.14.60–v1.15.1):** `version_announce.py` envia BLNA fixo em português, "Estou usando PT2VHF APRS Client v{versao} - Download: pt2vhf.com".
+- **Textos propostos (≤ 67 caracteres, sem acentos para não corromper em clientes APRS; japonês e chinês usam o inglês, pois o APRS não transporta esses caracteres):**
+  - pt: `PT2VHF APRS Client v{versao} - download em www.PT2VHF.com`
+  - en: `PT2VHF APRS Client v{versao} - download at www.PT2VHF.com`
+  - es: `PT2VHF APRS Client v{versao} - descarga en www.PT2VHF.com`
+  - fr: `PT2VHF APRS Client v{versao} - telechargement: www.PT2VHF.com`
+  - de: `PT2VHF APRS Client v{versao} - Download: www.PT2VHF.com`
+  - it: `PT2VHF APRS Client v{versao} - download su www.PT2VHF.com`
+  - nl: `PT2VHF APRS Client v{versao} - download via www.PT2VHF.com`
+  - pl: `PT2VHF APRS Client v{versao} - pobierz z www.PT2VHF.com`
+  - ja, zh: texto em inglês
+- **Mantém as regras atuais:** só depois de atualizar (nunca em instalação nova), uma vez por versão, só com APRS-IS verificado, cancelável no aviso e desligável em Automações. Texto personalizado salvo pelo usuário continua tendo prioridade; o padrão antigo em português (nunca editado) passa ao novo texto do idioma.
+- **Teste:** um texto por idioma, ≤ 67 caracteres com versão longa (ex.: v1.15.10), link `www.PT2VHF.com` presente.
+
+## RESOLVIDO (v1.15.2) — Limpar estações não pode sumir com os enlaces (31/10/2026)
+
+- **Entregue:** duas causas. `db.clear_stations()` apagava também `topology_edges` (contagens de enlaces em Ver/estatísticas) — agora apaga só estações e trilhas. E o mapa escondia o enlace RF inferido sem marcador atual — agora usa a posição gravada no evento quando a estação não está na tabela; continua escondendo só se a estação existe e está a mais de 5 km. Teste `tests/test_v1152_backlog.py`.
+
+- **Relato:** ao apagar as estações (Configuração → Limpar tudo/retenção de "Estações"), todos os enlaces sumiram do mapa. Esperado: apagar só as estações e manter enlaces, mapa de calor, objetos, tracklogs etc. (o mapa de calor e os objetos de fato ficaram).
+- **Causa provável (não confirmada no banco do mantenedor):** os enlaces não são apagados — `topology_events`/`topology_edges` ficam intactos — mas o mapa os **esconde**: `topology_map.mark_overview_endpoint_coherence` marca `render_on_overview=False` em todo enlace RF inferido cuja ponta não tem marcador atual na tabela `stations` ("marcador atual indisponível"). Sem estações, nenhum enlace inferido aparece. Também `spacetime_topology._still_at` depende da posição atual em `stations` para dar geometria a enlaces novos de estações fixas.
+- **Correção aprovada pelo mantenedor (31/10/2026):** usar a geometria gravada no próprio evento quando a estação não existe mais na tabela (estação apagada ≠ estação que mudou de lugar); manter a regra de ocultar só quando a posição atual existe e está a mais de 5 km. Desenhar um marcador "fantasma" da ponta a partir do evento, ou recriar a estação mínima a partir dos eventos. Teste: limpar estações e conferir que o número de enlaces em Ver e no mapa não muda.
+
+## MOVIDO — PT2VHF APRS Client para Android (30/10/2026): acompanhado em projeto separado (`PT2VHF-APRS-Android`); não tratar mais neste projeto
+
+- **Decisão do mantenedor:** app **nativo em Kotlin** (Bluetooth e execução em segundo plano são o núcleo; a interface web empacotada foi descartada).
+- **Mockups:** https://claude.ai/artifact/9NFcGxuWKThfVJVx33sWFD — Mapa (botão "Enviar beacon", APRS-IS/TNC/GPS, enlaces, cobertura), Mensagens (meio e ACK por mensagem, respostas rápidas), Estação (distância/direção, grid, PHG, ouvido por RF, Navegar até, Rota RF), Rádio/TNC (KISS Bluetooth, USB-OTG, TCP; monitor e "Escutar 30 s"), Modo tracker (SmartBeaconing em segundo plano, notificação fixa).
+- **Primeira versão:** tracker em segundo plano com SmartBeaconing e GPS; TNC KISS por Bluetooth (Mobilinkd, BTECH UV-Pro, RT-950 Pro) e USB-OTG; APRS-IS com passcode; mensagens com notificação e resposta pela notificação; mapa com estações, enlaces RF e mapa de calor; atualização e contagem pelo pt2vhf.com (`update.php?product=…`, aviso de versão nova e "Downloads no site oficial").
+- **Servidor APRS-IS configurável:** lista de escolha com `soam.aprs2.net` (**padrão**, América do Sul), `rotate.aprs2.net` (mundial), `noam.aprs2.net` (América do Norte), `euro.aprs2.net` (Europa/África), `asia.aprs2.net` (Ásia) e `aunz.aprs2.net` (Oceania), mais a opção **"Outro…"** para digitar servidor e porta manualmente (validação de host e porta 1–65535; padrão 14580). **Passcode calculado automaticamente** a partir do indicativo (algoritmo público do APRS-IS, sobre o indicativo sem SSID, como no desktop), sem pedir ao usuário; recalculado ao trocar o indicativo e mostrado só para conferência, **filtro APRS-IS editável pelo usuário** (campo livre; padrão `r/4000`, igual ao desktop: expandido no login para `r/<lat>/<lon>/4000` com a posição da estação/GPS; aceita qualquer filtro do APRS-IS, ex.: `m/200`, `b/PT2*`, combinações; aviso antes de salvar filtro vazio) e reconexão automática ao trocar de rede (Wi-Fi ↔ dados móveis).
+- **Depois:** mapa offline por região; "Navegar até" pelo app de mapas; alerta de estação/amigo por perto; modo carro (botões grandes, tela ligada); análise de rotas/recordes RF e Planejamento (enlace entre 2 pontos) do desktop.
+- **Diferencial frente ao APRSdroid:** topologia RF (quem ouviu quem), mapa de calor de cobertura e rotas RF.
+- **Definido (30/10/2026):** repositório `alexpmr/PT2VHF-APRS-Android` (criado pelo mantenedor); nome do produto no site e no `updates.json`: **PT2VHF APRS Client for Android** (entrada própria, separada do desktop, para o atualizador de um nunca oferecer o arquivo do outro); Android mínimo: **8.0 (API 26)**.
+- **Assinatura pronta (30/10/2026):** chave criada pelo mantenedor; segredos do repositório `PT2VHF-APRS-Android`: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`pt2vhf`), `ANDROID_KEY_PASSWORD`. O build de release do Actions usa esses nomes.
+
+## RESOLVIDO (v1.15.2) — Cabeçalho: botão "Enviar beacon" no lugar do ícone (30/10/2026)
+
+- **Entregue:** `#headerSendBeaconButton` com o texto "Enviar Beacon" traduzido em todos os idiomas, mesmo envio; classe `header-beacon-button` sem quebra de linha e compacta abaixo de 560 px.
+
+- **Pedido:** no menu superior, trocar o ícone 📡 que envia um beacon (`#headerSendBeaconButton`, classe `beacon-icon-button` em `templates/index.html`) por um botão com o texto **"Enviar beacon"**.
+- **Manter:** mesmo comportamento atual (envio imediato por todos os meios ativos, APRS-IS e TNC/RF), tooltip, estados de envio/erro e traduções do texto do botão nos idiomas do cliente; conferir o encaixe no cabeçalho em telas estreitas.
+
+## RESOLVIDO (v1.15.1) — Mapa de calor: estação via rede DMR (DMR*) contada como cobertura RF (28/10/2026)
+
+- **Entregue na v1.15.1** (`database.digital_voice_origin()`, ver item de DMR/D-STAR/C4FM abaixo).
+
+- **Relato com captura:** estação PP5PM-9 (APRSdroid no celular), deslocando-se de Belo Horizonte até Aracaju pela BR-116, aparece como trilha no mapa de calor da Cobertura RF, embora não tenha usado RF (envio pela internet/APRS-IS).
+- **Esperado:** somente transmissões/recepções RF reais alimentam `rf_coverage_cells`; pacotes que entraram só pela internet (TCPIP*, qAC/qAS, APRSdroid em modo APRS-IS) não contam.
+- **Causa provável (captura do popup):** PP5PM-9, path `PP5PM,DMR*,qAR,PP5PM`. `DMR*` é a marca do gateway APRS da rede DMR (ex.: BrandMeister), não um digipeater; o cliente trata todo elemento com `*` como digi e registra "enlace RF" PP5PM-9 → DMR, alimentando `rf_coverage_cells`. O 1º elemento `PP5PM` (o próprio indicativo/gateway) e o `qAR,PP5PM` também não comprovam RF.
+- **Correção proposta:** tratar como não-RF (igual a TCPIP/NOGATE) os pseudo-saltos de redes digitais e gateways: `DMR`, `DSTAR`/`D-STAR`, `YSF`, `C4FM`, `NXDN`, `P25`, `M17`, `TETRA`, `ECHOLINK`, `LORA*`/gateways equivalentes; pacote com esses marcadores não gera evento `rf` nem célula do mapa de calor. Limpar eventos/células já gravados com esses pseudo-saltos (migração única, sem apagar pacotes). Regra também em `_is_topology_callsign`/`rf_coverage.record_event_conn`.
+
 ## RESOLVIDO (v1.15.1) — Opção para abortar processamento travado ("Consultando topologia RF…" há 1 h)
 
 - **Entregue:** botão × em todo aviso de processamento (cancela e libera o app), tempo decorrido e aviso de demora

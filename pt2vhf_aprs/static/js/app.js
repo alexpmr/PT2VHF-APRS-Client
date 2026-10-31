@@ -1290,7 +1290,7 @@
         cancel: 'Cancelar',
         confirm: 'Enviar este Announcement APRS agora? O remetente será o seu indicativo corrente.',
         sent: 'Announcement do PT2VHF APRS Client enviado.',
-        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Download: www.PT2VHF.com`,
       },
       en: {
         title: 'About',
@@ -1314,7 +1314,7 @@
         cancel: 'Cancel',
         confirm: 'Send this APRS Announcement now? Your current callsign will be used as sender.',
         sent: 'PT2VHF APRS Client Announcement sent.',
-        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Download: www.PT2VHF.com`,
       },
       es: {
         title: 'Acerca de',
@@ -1338,7 +1338,7 @@
         cancel: 'Cancelar',
         confirm: '¿Enviar este Announcement APRS ahora? Se usará su indicativo actual como remitente.',
         sent: 'Announcement de PT2VHF APRS Client enviado.',
-        download: `PT2VHF APRS Client v${version} - Descarga: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Descarga: www.PT2VHF.com`,
       },
       fr: {
         title: 'À propos',
@@ -1362,7 +1362,7 @@
         cancel: 'Annuler',
         confirm: 'Envoyer cette annonce APRS maintenant ? Votre indicatif actuel sera utilisé comme expéditeur.',
         sent: 'Annonce PT2VHF APRS Client envoyée.',
-        download: `PT2VHF APRS Client v${version} - Téléchargement: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Téléchargement: www.PT2VHF.com`,
       },
       'de-DE': {
         title: 'Über',
@@ -1386,7 +1386,7 @@
         cancel: 'Abbrechen',
         confirm: 'Diese APRS-Ankündigung jetzt senden? Ihr aktuelles Rufzeichen wird als Absender verwendet.',
         sent: 'PT2VHF APRS Client-Ankündigung gesendet.',
-        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Download: www.PT2VHF.com`,
       },
       'it-IT': {
         title: 'Informazioni',
@@ -1410,7 +1410,7 @@
         cancel: 'Annulla',
         confirm: 'Inviare ora questo Announcement APRS? Verrà usato il tuo nominativo attuale come mittente.',
         sent: 'Announcement di PT2VHF APRS Client inviato.',
-        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Download: www.PT2VHF.com`,
       },
       'ja-JP': {
         title: 'このアプリについて',
@@ -1434,7 +1434,7 @@
         cancel: 'キャンセル',
         confirm: 'この APRS Announcement を今すぐ送信しますか？現在のコールサインが送信元として使用されます。',
         sent: 'PT2VHF APRS Client の Announcement を送信しました。',
-        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Download: www.PT2VHF.com`,
       },
       'pl-PL': {
         title: 'O programie',
@@ -1458,7 +1458,7 @@
         cancel: 'Anuluj',
         confirm: 'Wysłać teraz to ogłoszenie APRS? Bieżący znak wywoławczy zostanie użyty jako nadawca.',
         sent: 'Ogłoszenie PT2VHF APRS Client zostało wysłane.',
-        download: `PT2VHF APRS Client v${version} - Pobierz: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Pobierz: www.PT2VHF.com`,
       },
       'nl-NL': {
         title: 'Over',
@@ -1482,7 +1482,7 @@
         cancel: 'Annuleren',
         confirm: 'Deze APRS Announcement nu verzenden? Uw huidige roepnaam wordt als afzender gebruikt.',
         sent: 'PT2VHF APRS Client Announcement verzonden.',
-        download: `PT2VHF APRS Client v${version} - Download: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - Download: www.PT2VHF.com`,
       },
       'zh-CN': {
         title: '关于',
@@ -1506,7 +1506,7 @@
         cancel: '取消',
         confirm: '现在发送此 APRS Announcement 吗？将使用您当前的呼号作为发送方。',
         sent: 'PT2VHF APRS Client Announcement 已发送。',
-        download: `PT2VHF APRS Client v${version} - 下载: tiny.cc/aprs`,
+        download: `PT2VHF APRS Client v${version} - 下载: www.PT2VHF.com`,
       },
     };
     return copies[state.language] || copies['pt-BR'];

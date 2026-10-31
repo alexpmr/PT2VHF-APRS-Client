@@ -370,8 +370,9 @@ def mark_overview_endpoint_coherence(
     """Prevent APRS-IS-only inferred history from drawing orphan-looking RF.
 
     Coordinates in topology_events remain untouched. Inferred-only RF is
-    visible on the overview ONLY when both latest station markers would
-    coincide with the historic endpoints within a small tolerance. The full
+    hidden on the overview only when a station still in the table is now
+    more than ``max_displacement_km`` from the historic endpoint; a station
+    absent from the table keeps the event geometry (v1.15.2). The full
     event geometry remains available to route analysis/JSON and SQLite.
     Directly received RF, mobile/latest and Internet edges are unaffected.
     """
@@ -388,8 +389,12 @@ def mark_overview_endpoint_coherence(
             call = str(edge.get(call_field) or "").strip().upper()
             latest = positions.get(call)
             event_pos = _validated_position(edge.get(lat_key), edge.get(lon_key))
-            if not latest or not event_pos:
-                mismatches.append(call + ": marcador atual indisponível")
+            if not event_pos:
+                mismatches.append(call + ": posição do enlace indisponível")
+            elif not latest:
+                # v1.15.2: estação limpa ou expirada da tabela; vale a posição
+                # gravada no próprio enlace (antes o enlace sumia do mapa).
+                continue
             elif db.haversine_km(*latest, *event_pos) > max_displacement_km:
                 mismatches.append(call + ": posição histórica diferente da atual")
         if mismatches:

@@ -22,8 +22,8 @@ def test_v143_header_manual_beacon_uses_existing_pipeline():
     html = read("pt2vhf_aprs/templates/index.html")
     js = read("pt2vhf_aprs/static/js/app.js")
     assert 'id="headerSendBeaconButton"' in html
-    assert 'class="btn secondary beacon-icon-button"' in html
-    assert 'aria-label="Enviar Beacon"' in html
+    assert 'class="btn secondary header-beacon-button"' in html  # v1.15.2: botão com texto
+    assert '>Enviar Beacon</button>' in html
     assert "async function sendManualBeacon()" in js
     assert "const result = await api('/api/beacon', { method:'POST' });" in js
     assert "$('#sendBeaconButton')?.addEventListener('click', () => { void sendManualBeacon(); });" in js

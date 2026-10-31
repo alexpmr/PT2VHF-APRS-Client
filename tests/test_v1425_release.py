@@ -18,8 +18,8 @@ def test_v1425_header_is_compact_and_theme_lives_in_settings():
     html = read("pt2vhf_aprs/templates/index.html")
     js = read("pt2vhf_aprs/static/js/app.js")
     assert 'id="headerSendBeaconButton"' in html
-    assert 'class="btn secondary beacon-icon-button"' in html
-    assert 'aria-label="Enviar Beacon"' in html
+    assert 'class="btn secondary header-beacon-button"' in html  # v1.15.2: botão com texto
+    assert '>Enviar Beacon</button>' in html
     assert 'id="themeQuickToggle"' not in html
     assert 'name="app_theme"' in html
     assert "function applyAppearancePreferences" in js

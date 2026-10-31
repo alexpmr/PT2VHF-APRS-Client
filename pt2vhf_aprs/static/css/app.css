@@ -2443,12 +2443,20 @@ html[data-theme="light"] .altitude-fallback-zero #altitudeSourceStatus {
 }
 
 /* v1.14.25 - compact header controls and LAN URL */
-.beacon-icon-button {
-  width: 34px;
-  min-width: 34px;
+/* v1.15.2: botão de texto no lugar do ícone; encolhe sem quebrar linha em telas estreitas. */
+.header-beacon-button {
   height: 32px;
-  padding: 0;
-  font-size: 16px;
+  padding: 0 12px;
+  font-size: 13px;
+  white-space: nowrap;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 560px) {
+  .header-beacon-button { padding: 0 8px; font-size: 12px; }
 }
 .web-access-status {
   display: inline-flex;

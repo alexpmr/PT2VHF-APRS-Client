@@ -96,7 +96,7 @@ def test_v1813_about_backlog_is_present_and_localized():
     js = read("pt2vhf_aprs/static/js/app.js")
 
     assert "static', filename='img/app_logo.png'" in html
-    assert "tiny.cc/aprs" in html
+    assert "www.PT2VHF.com" in html  # v1.15.2: tiny.cc/aprs aposentado
     assert "wa.me/5561984023634" in html
     assert "mailto:alexpmr@gmail.com" in html
     assert 'id="aboutPromoteButton"' in html

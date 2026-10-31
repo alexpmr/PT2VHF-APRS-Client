@@ -84,10 +84,15 @@ def test_map_links_diagnostic_explains_hidden_links(tmp_path, monkeypatch):
         ingest(raw)
     ok = by_key(db_check.run_check())["map_links"]
     assert ok["status"] == "ok" and "visíveis" in ok["detail"]
-    with db.connection() as conn:
-        conn.execute("DELETE FROM stations")
+    with db.connection() as conn:   # estação existe e hoje está longe da posição do enlace
+        conn.execute("UPDATE stations SET latitude=-23.0, longitude=-43.0 WHERE callsign='PT2DIG-1'")
     report = db_check.run_check()
     item = by_key(report)["map_links"]
-    assert item["status"] == "warning"
-    assert "não tem marcador" in item["detail"]
-    assert report["stats"]["map_rf_fixed_visible"] == 0 and report["stats"]["map_hidden_marker"] >= 1
+    assert item["status"] == "warning" and "mais de 5 km" in item["detail"]
+    assert report["stats"]["map_hidden_moved"] >= 1
+    with db.connection() as conn:
+        conn.execute("DELETE FROM stations")
+    # v1.15.2: estação apagada não esconde mais o enlace (vale a posição gravada nele).
+    report = db_check.run_check()
+    assert by_key(report)["map_links"]["status"] == "ok"
+    assert report["stats"]["map_hidden_marker"] == 0 and report["stats"]["map_hidden_moved"] == 0

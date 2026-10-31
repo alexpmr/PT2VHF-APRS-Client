@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.2": {
+        "title": "Anúncio no seu idioma e enlaces preservados",
+        "items": [
+            "O boletim de versão nova sai no idioma configurado, com download em www.PT2VHF.com.",
+            "A divulgação da aba Sobre também usa www.PT2VHF.com no lugar de tiny.cc/aprs.",
+            "Limpar as estações não apaga nem esconde mais os enlaces do mapa.",
+            "O cabeçalho ganhou o botão Enviar Beacon no lugar do ícone.",
+        ],
+    },
     "1.15.1": {
         "title": "Configuração em sub-abas",
         "items": [
