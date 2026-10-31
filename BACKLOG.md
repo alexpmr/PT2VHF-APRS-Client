@@ -1,35 +1,40 @@
-## BACKLOG — Beacon APRS: anunciar URL oficial do projeto no campo Informação (31/10/2026)
+## BACKLOG — Beacon APRS: incluir sempre www.PT2VHF.com no campo Informação (31/10/2026)
 
-- **Evidência do usuário:** nos detalhes da estação PT2VHF-3, o campo **Informação** mostra
-  `PT2VHF APRS Client`, enquanto uma estação com APRSdroid apresenta
-  `https://aprsdroid.org/`. A origem é o **comentário transmitido no pacote APRS**;
-  não adianta trocar somente a aparência do popup do mapa.
-- **Diagnóstico:** `pt2vhf_aprs/database.py` ainda usa
-  `DEFAULT_CONFIG["comment"] = "PT2VHF APRS Client"`. O serviço
-  `pt2vhf_aprs/aprs_service.py` utiliza esse comentário para o status APRS
-  e o beacon de posição lê a configuração. Perfis já existentes podem manter
-  o texto antigo gravado no banco.
-- **Esperado:** definir como comentário padrão do beacon de posição
-  `https://www.pt2vhf.com/aprs` (**URL completa com HTTPS**, para
-  identificação e reconhecimento como link), inclusive em beacons enviados
-  manualmente, por programação, por tracker e pelos transportes APRS-IS e
-  TNC/RF autorizados. Garantir que a informação não seja substituída por
-  texto genérico nas rotas alternativas de transmissão.
-- **Migração cuidadosa:** em instalações existentes, trocar automaticamente
-  apenas os valores de fábrica legados **exatamente equivalentes** a
-  `PT2VHF APRS Client` (e suas versões padrão conhecidas, quando
-  comprovadas). **Jamais sobrescrever comentário configurado pelo usuário.**
-  Manter o campo editável, sem anexar propaganda indiscriminadamente e sem
-  transmitir novos beacons durante migração/abertura.
-- **Exibição:** o detalhe da estação deve mostrar exatamente o comentário
-  recebido; tornar URL HTTPS clicável quando aplicável, sem inventar ou
-  reescrever URL de terceiros. Tratamento seguro de links externos.
-- **Teste:** em conta limpa e instalação atualizada com valor antigo,
-  inspecionar o **payload bruto** e o campo Informação de uma estação
-  receptora independente: `https://www.pt2vhf.com/aprs`. Repetir por
-  APRS-IS e RF/TNC, verificar limite do campo, comentário personalizado,
-  atualização não destrutiva de configurações e ausência de TX extra.
-- **Status:** backlog registrado, **não implementado nesta solicitação**.
+- **Pedido definitivo:** nos beacons de posição do **PT2VHF APRS Client desktop**
+  (e, de forma idêntica, no Android), anunciar **sempre**
+  **`www.PT2VHF.com`**, com a grafia exata e sem caminho do
+  produto (`/aprs`, `/aprs-android`) ou prefixo `https://`.
+  O campo Informação da estação receptora é o comentário contido no
+  **pacote transmitido**, não uma etiqueta inserida localmente no popup.
+- **Diagnóstico atual:** `pt2vhf_aprs/database.py` configura
+  `DEFAULT_CONFIG["comment"] = "PT2VHF APRS Client"`; há instalações
+  com o comentário padrão antigo e outras com texto personalizado.
+  Não basta mudar apenas o padrão: a URL precisa ser composta no caminho
+  **comum a todas as saídas de beacon**, inclusive manual, periódico,
+  tracker, APRS-IS e RF/TNC autorizado.
+- **Formatação obrigatória:** `<texto personalizado> www.PT2VHF.com`;
+  se não houver texto, somente `www.PT2VHF.com`. Evitar
+  duplicidade quando o usuário já tiver escrito o domínio, mesmo com
+  diferença de caixa; normalizar o sufixo para a grafia determinada.
+  Usar o **limite efetivo do comentário transmitido** adotado pelo
+  construtor de beacon do desktop; reservar espaço para o domínio
+  antes de truncar a descrição. Se a descrição não couber, reduzir
+  somente a **cópia de transmissão** e informar o resultado na
+  pré-visualização, sem alterar o valor personalizado persistido.
+- **Não forçar TX indevido:** alterar a composição dos próximos beacons
+  normais sem emitir anúncios de posição extras na abertura ou na
+  migração; manter todas as regras de permissão de transmissão.
+- **Exibição:** mostrar nos detalhes de todas as estações o **comentário
+  realmente recebido**, inclusive o endereço APRSdroid ou mensagens
+  de outros rádios, sem reescrever conteúdo de terceiros. Não
+  confundir URL do site na interface com dado realmente enviado
+  ao APRS.
+- **Homologação:** capturar pacotes brutos enviados pelo desktop
+  e Android com comentário vazio, padrão, curto, longo e já contendo
+  o domínio; confirmar `www.PT2VHF.com` integral e exatamente
+  uma vez em APRS-IS e em RF/TNC; garantir o teto de caracteres
+  e a preservação dos textos personalizados na configuração.
+- **Situação:** registrado no backlog, ainda não implementado.
 
 ## BACKLOG — Aba Mensagens: filtro também pelo conteúdo da mensagem (31/10/2026)
 
