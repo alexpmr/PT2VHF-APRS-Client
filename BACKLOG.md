@@ -1,3 +1,14 @@
+## BACKLOG — Aviso "Aplicativo atualizado": só o botão Fechar (31/10/2026)
+
+- **Pedido:** na primeira abertura após atualizar, o aviso de novidades (`#whatsNewModal`) deve ter **apenas a
+  opção "Fechar"**. Retirar os botões de escolha do anúncio (hoje `#whatsNewSkipAnnounce` "Não anunciar esta
+  versão" ao lado de `#whatsNewClose` "Entendi"; o mantenedor os descreveu como "não" / "anunciar agora").
+- **Ao fechar:** o boletim de versão nova é enviado na rede como já programado (`version_announce`: uma vez por
+  versão, após o atraso de 120 s, só com APRS-IS verificado, texto no idioma do usuário). Desligar continua
+  possível só em Automações → Anunciar nova versão; manter o texto explicativo no aviso.
+- **Ajustar junto:** traduções de "Fechar", testes que procuram `whatsNewSkipAnnounce`
+  (`tools/apply_release_*`, `tests/`) e o roteiro de capturas do manual (`whatsNewClose`).
+
 ## RESOLVIDO (v1.15.2) — Trocar tiny.cc/aprs por www.PT2VHF.com em todos os projetos (31/10/2026)
 
 - **Relato:** o cliente Windows enviava boletins (divulgação manual da aba Sobre) com o link `tiny.cc/aprs`.
