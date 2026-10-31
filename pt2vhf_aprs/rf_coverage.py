@@ -20,6 +20,7 @@ from . import diagnostics as diag
 CELL_DEGREES = 0.01
 MAX_CALLSIGNS_PER_CELL = 8
 BACKFILL_KEY = "v1.14.53-rf-coverage-cells-backfill"
+DIRECT_BACKFILL_KEY = "v1.15.5-direct-rf-beacon-positions"
 
 
 def ensure_schema(conn) -> None:
@@ -83,6 +84,73 @@ def record_event_conn(conn, timestamp: str, source: str, target: str,
         valid = _valid(*pos) if pos else None
         if valid:
             _add(conn, timestamp, call, valid, role, direct)
+
+
+def record_direct_position_conn(
+    conn, timestamp: str, callsign: str, position: Any,
+) -> bool:
+    """Record a valid position actually heard by local RF/TNC, without an RF edge.
+
+    This represents a single observed transmission at the sender's location,
+    not proof of continuous RF coverage in the surrounding area.
+    """
+    valid = _valid(*position) if position else None
+    if not valid:
+        return False
+    _add(conn, timestamp, callsign, valid, "tx", True)
+    return True
+
+
+def backfill_direct_packets_once(conn) -> int:
+    """Restore legacy pathless RF beacons only when backed by a matching track.
+
+    The historical packet must be RF and contain a valid position. For safety,
+    its archived track must match callsign, raw frame and reception timestamp.
+    Other RF events are already represented by topology_events and must not
+    be counted twice. This one-time migration never invents a historical
+    position from the station's *current* location.
+    """
+    if conn.execute(
+        "SELECT 1 FROM schema_migrations_v112 WHERE migration_key=?",
+        (DIRECT_BACKFILL_KEY,),
+    ).fetchone():
+        return 0
+    restored = 0
+    for pkt in conn.execute(
+        """SELECT timestamp,from_call,raw FROM packets
+           WHERE UPPER(medium)='RF' ORDER BY id"""
+    ).fetchall():
+        raw = str(pkt["raw"] or "")
+        call = str(pkt["from_call"] or "").strip().upper()
+        if not call or db.raw_aprs_position_issue(raw):
+            continue
+        if db._observed_topology_edges(raw, "RF")[1]:
+            continue  # Already accounted for by existing RF topology history.
+        try:
+            at = datetime.fromisoformat(str(pkt["timestamp"]).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            continue
+        start = (at - timedelta(seconds=5)).isoformat(timespec="seconds")
+        end = (at + timedelta(seconds=5)).isoformat(timespec="seconds")
+        track = conn.execute(
+            """SELECT latitude,longitude FROM tracks
+                WHERE UPPER(callsign)=? AND timestamp BETWEEN ? AND ?
+                  AND raw=?
+                ORDER BY ABS(strftime('%s',timestamp) - strftime('%s',?)),id
+                LIMIT 1""",
+            (call, start, end, raw, pkt["timestamp"]),
+        ).fetchone()
+        if track and record_direct_position_conn(
+            conn, str(pkt["timestamp"]), call, (track["latitude"], track["longitude"]),
+        ):
+            restored += 1
+    conn.execute(
+        "INSERT INTO schema_migrations_v112(migration_key,applied_at) VALUES(?,?)",
+        (DIRECT_BACKFILL_KEY, db.utc_now_iso()),
+    )
+    if restored:
+        diag.log_event("rf_coverage_direct_backfill", packets=restored)
+    return restored
 
 
 def backfill_once(conn) -> int:

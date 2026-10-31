@@ -1,0 +1,26 @@
+name: Validate APRS v1.15.5 RF Coverage
+on:
+  push:
+    branches: [release/v1.15.5-rf-coverage]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  direct-rf-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+      - name: Release invariants
+        run: python tools/apply_release_1_15_5.py
+      - name: RF direct and historical coverage regressions
+        run: python -m pytest -q tests/test_v1155_direct_rf_coverage.py tests/test_v11453_heatmap_retention.py tests/test_v11451_rf_coverage_heatmap.py
+      - name: Verify JavaScript
+        run: node --check pt2vhf_aprs/static/js/app.js

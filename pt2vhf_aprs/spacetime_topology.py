@@ -439,14 +439,15 @@ def _ensure_schema_and_backfill() -> int:
     return updated
 
 
-def _record_topology_from_raw_conn(conn: Any, raw: str, medium: str = "APRS-IS") -> None:
+def _record_topology_from_raw_conn(conn: Any, raw: str, medium: str = "APRS-IS") -> bool:
     observed_medium = str(medium or "APRS-IS").upper().strip()
     if observed_medium not in {"RF", "APRS-IS"}:
         observed_medium = "APRS-IS"
     _source, edges = db._observed_topology_edges(raw, observed_medium)
     if not edges:
-        return
+        return False
     now = db.utc_now_iso()
+    source_covered = False
 
     for edge_source, target, kind, edge_igate in edges:
         rf_transport = 1 if observed_medium == "RF" and kind == "rf" else 0
@@ -494,12 +495,15 @@ def _record_topology_from_raw_conn(conn: Any, raw: str, medium: str = "APRS-IS")
         if kind == "rf":
             rf_coverage.record_event_conn(conn, now, edge_source, target, source_pos, target_pos,
                                           direct=evidence_level == "direct")
+            if edge_source == _source and source_pos is not None:
+                source_covered = True
 
     if db._retention_due("topology_events", len(edges)):
         deleted = db._trim_history_table(conn, "topology_events", db.TOPOLOGY_EVENT_RETENTION)
         if deleted:
             diag.log_event("retention_sweep", table="topology_events", deleted=deleted)
     _invalidate_graph_cache()
+    return source_covered
 
 
 def _process_received_packet(
@@ -521,10 +525,17 @@ def _process_received_packet(
     with db.connection() as conn:
         db._add_aprs_log_conn(conn, "RX", raw)
         db._record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
+        accepted_position = None
         if parsed and parsed.get("from"):
-            db._upsert_station_conn(conn, parsed)
+            accepted_position = db._upsert_station_conn(conn, parsed)
         if not issue:
-            _record_topology_from_raw_conn(conn, raw, medium)
+            source_covered = _record_topology_from_raw_conn(conn, raw, medium)
+            # A direct RF beacon has geographical evidence even without a
+            # digipeater/path and therefore without a topology edge.
+            if str(medium or "").upper() == "RF" and accepted_position and not source_covered:
+                rf_coverage.record_direct_position_conn(
+                    conn, db.utc_now_iso(), str(parsed["from"]), accepted_position,
+                )
     if parsed and parsed.get("from"):
         db.invalidate_map_data_cache(drop_payload=False, coalesce=True)
     elapsed_ms = (time.monotonic() - started) * 1000.0
@@ -1687,6 +1698,7 @@ def _init_db() -> None:
         _backfill_fixed_station_geometry(conn)
         rf_coverage.backfill_once(conn)
         rf_coverage.purge_digital_voice_once(conn)
+        rf_coverage.backfill_direct_packets_once(conn)
 
 
 def _list_rf_routes(*args: Any, **kwargs: Any) -> dict[str, Any]:

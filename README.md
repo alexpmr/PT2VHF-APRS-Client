@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v1.15.3
+# PT2VHF APRS Client - v1.15.5
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,9 +6,9 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 1.15.4 (publicação pendente)
+## Downloads — versão 1.15.5 (publicação pendente)
 
-A nova v1.15.4 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
+A nova v1.15.5 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
 
 **Pacotes Windows/Linux**: instalador, portátil, AppImage, .deb e .tar.gz, conforme builds validados. ARM64 e macOS só serão liberados quando houver pacotes próprios.
 

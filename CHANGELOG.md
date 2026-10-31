@@ -1,3 +1,11 @@
+## 1.15.5 - 2026-10-31
+
+- **Cobertura RF (#155):** beacons de posição válidos recebidos pelo TNC/KISS passam a compor o mapa de calor mesmo sem digipeater nem enlace topológico.
+- **Movimento:** amostras nos pontos onde houve recepção RF, sem extrapolar cobertura entre beacons.
+- **Integridade:** rejeição de posição inválida ou implausível; APRS-IS puro não cria cobertura RF.
+- **Histórico:** migração idempotente recupera beacons RF antigos sem path quando existe correspondência de raw, indicativo e horário no tracklog.
+- **Compatibilidade:** preservadas as células de cobertura, a retenção e a distribuição/OTA no site www.PT2VHF.com.
+
 ## 1.15.4 - 2026-10-31
 
 - **Beacon APRS:** todos os beacons de posição enviados por APRS-IS e TNC/RF incluem `www.PT2VHF.com` no comentário do próprio pacote, preservando o texto do operador sem repetir o endereço; respeita o teto de 40 caracteres e as regras de autorização de TX.
