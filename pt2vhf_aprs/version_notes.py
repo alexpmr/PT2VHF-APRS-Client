@@ -3,6 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.3": {
+        "title": "Aviso de novidades simplificado",
+        "items": [
+            "O aviso de versão nova tem apenas o botão Fechar.",
+            "O boletim da versão nova é enviado como programado; para desligar, use Automações → Anunciar nova versão.",
+        ],
+    },
     "1.15.2": {
         "title": "Anúncio no seu idioma e enlaces preservados",
         "items": [

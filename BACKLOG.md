@@ -1,4 +1,6 @@
-## BACKLOG — Aviso "Aplicativo atualizado": só o botão Fechar (31/10/2026)
+## RESOLVIDO (v1.15.3) — Aviso "Aplicativo atualizado": só o botão Fechar (31/10/2026)
+
+- **Entregue:** removido `#whatsNewSkipAnnounce`; `#whatsNewClose` com o texto "Fechar" traduzido nos 10 idiomas; o anúncio continua programado pelo `version_announce` e desligável em Automações.
 
 - **Pedido:** na primeira abertura após atualizar, o aviso de novidades (`#whatsNewModal`) deve ter **apenas a
   opção "Fechar"**. Retirar os botões de escolha do anúncio (hoje `#whatsNewSkipAnnounce` "Não anunciar esta
