@@ -1,3 +1,13 @@
+## BACKLOG — Aba Mensagens: filtro também pelo conteúdo da mensagem (31/10/2026)
+
+- **Pedido:** o filtro da aba Mensagens deve filtrar não só pela origem, mas também pelo **texto da mensagem**.
+- **Hoje (v1.15.3):** campo `#messageFilter` ("Filtro por origem", `templates/index.html`) chama
+  `/api/messages?from=…` e `db.list_messages()` só compara `UPPER(from_call) LIKE '%…%'`.
+- **Esperado:** um único campo de busca que encontra o termo na origem, no destino e no conteúdo (sem diferenciar
+  maiúsculas/minúsculas nem acentos); rótulo "Filtrar (origem, destino ou texto)" traduzido; destaque do termo
+  encontrado é opcional. Manter o filtro "Minhas", "Não lidas" e o desempenho com bancos grandes (LIMIT atual).
+- **Teste:** mensagem de PY2ABC com o texto "teste de enlace": aparece ao filtrar "PY2", "enlace" e "ENLACE".
+
 ## BACKLOG — Anúncio de versão nova: enviar assim que houver conexão, APRS-IS primeiro e RF como alternativa (31/10/2026)
 
 - **Pedido:** ao abrir com uma versão nova, enviar o boletim de anúncio/propaganda assim que o cliente detectar
