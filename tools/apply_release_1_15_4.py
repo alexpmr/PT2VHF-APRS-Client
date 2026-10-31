@@ -12,8 +12,8 @@ def read(path: str) -> str:
 
 assert read("VERSION").strip() == "1.15.4"
 assert '__version__ = "1.15.4"' in read("pt2vhf_aprs/__init__.py")
-assert "filevers=(1, 15, 3, 0)" in read("windows/version_info.txt")
-assert "prodvers=(1, 15, 3, 0)" in read("windows/version_info.txt")
+assert "filevers=(1, 15, 4, 0)" in read("windows/version_info.txt")
+assert "prodvers=(1, 15, 4, 0)" in read("windows/version_info.txt")
 assert "## 1.15.4 - 2026-10-31" in read("CHANGELOG.md")
 assert '"1.15.4": {' in read("pt2vhf_aprs/version_notes.py")
 for workflow in (".github/workflows/build-production-current.yml",
