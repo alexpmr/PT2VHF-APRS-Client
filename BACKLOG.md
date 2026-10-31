@@ -1,3 +1,19 @@
+## BACKLOG — Anúncio de versão nova: enviar assim que houver conexão, APRS-IS primeiro e RF como alternativa (31/10/2026)
+
+- **Pedido:** ao abrir com uma versão nova, enviar o boletim de anúncio/propaganda assim que o cliente detectar
+  **qualquer** conexão: de preferência pelo **APRS-IS** (o mantenedor escreveu "aprs-fi"; entendido como a rede
+  APRS-IS, que alimenta o aprs.fi) e, se não houver APRS-IS verificado, pelo **TNC/RF**.
+- **Hoje (v1.15.3):** `version_announce.maybe_announce` espera 120 s após abrir e só envia com APRS-IS conectado e
+  **verificado** (`service.send_bulletin`); sem APRS-IS fica pendente para sempre, mesmo com TNC/RF ativo.
+- **Esperado:**
+  - enviar logo que houver conexão; revisar o atraso fixo de 120 s (o aviso de novidades já não tem opção de
+    cancelar desde a v1.15.3);
+  - APRS-IS verificado → envia por ele; sem APRS-IS, com TNC conectado e transmissão permitida → envia o mesmo BLNA
+    por RF (path configurado do TNC); nunca pelos dois na mesma versão;
+  - continua uma vez por versão, só após atualização (nunca em instalação nova), no idioma do usuário com
+    www.PT2VHF.com, e desligável em Automações; registrar no diagnóstico por qual meio saiu.
+- **Teste:** só APRS-IS → sai por APRS-IS; só TNC → sai por RF; os dois → só APRS-IS; nenhum → pendente até conectar.
+
 ## RESOLVIDO (v1.15.3) — Aviso "Aplicativo atualizado": só o botão Fechar (31/10/2026)
 
 - **Entregue:** removido `#whatsNewSkipAnnounce`; `#whatsNewClose` com o texto "Fechar" traduzido nos 10 idiomas; o anúncio continua programado pelo `version_announce` e desligável em Automações.
