@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.4": {
+        "title": "Beacon com site oficial, mensagens e anúncio RF",
+        "items": [
+            "Todo beacon inclui www.PT2VHF.com na Informação, tanto em APRS-IS como em RF/TNC.",
+            "O filtro de Mensagens encontra indicativos e conteúdo, sem diferenciar acentos ou caixa.",
+            "O anúncio de versão prefere APRS-IS e usa RF/TNC autorizado se não houver conexão verificada.",
+        ],
+    },
     "1.15.3": {
         "title": "Aviso de novidades simplificado",
         "items": [

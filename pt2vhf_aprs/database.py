@@ -6,6 +6,7 @@ import json
 import math
 import os
 import functools
+import unicodedata
 import re
 import sqlite3
 import sys
@@ -127,7 +128,7 @@ def _trim_history_table(conn: sqlite3.Connection, table: str, keep: int) -> int:
 DEFAULT_CONFIG = {
     "callsign": "",
     "ssid": 0,
-    "comment": "PT2VHF APRS Client www.PT2VHF.com",
+    "comment": "PT2VHF APRS Client",
     "latitude": None,
     "longitude": None,
     "altitude": None,
@@ -5233,26 +5234,37 @@ def mark_message_status(msg_id: str, status: str, peer: str | None = None) -> in
         return max(0, int(cur.rowcount or 0))
 
 
+def _fold_message_search(value: Any) -> str:
+    """Pesquisa independente de caixa/acentos sem reescrever mensagens originais."""
+    folded = unicodedata.normalize("NFKD", str(value or "")).casefold()
+    return "".join(ch for ch in folded if not unicodedata.combining(ch))
+
+
 def list_messages(from_filter: str = "", station_filter: str = "", limit: int = 5000) -> list[dict[str, Any]]:
     station = str(station_filter or "").upper().strip()
-    q = "%" + str(from_filter or "").upper().strip() + "%"
+    term = _fold_message_search(str(from_filter or "").strip())
+    # Evita que % e _ digitados pelo usuário atuem como curingas SQL.
+    escaped = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    pattern = "%" + escaped + "%"
     with connection() as conn:
+        if term:
+            conn.create_function("PT2VHF_FOLD", 1, _fold_message_search)
+        where = []
+        params: list[Any] = []
         if station:
-            rows = conn.execute(
-                """
-                SELECT * FROM messages
-                WHERE message_type='message'
-                  AND (UPPER(from_call)=? OR UPPER(to_call)=?)
-                ORDER BY timestamp DESC LIMIT ?
-                """,
-                (station, station, int(limit)),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                """SELECT * FROM messages WHERE UPPER(from_call) LIKE ? ORDER BY timestamp DESC LIMIT ?""",
-                (q, int(limit)),
-            ).fetchall()
-    return [dict(r) for r in rows]
+            where.append("message_type='message'")
+            where.append("(UPPER(from_call)=? OR UPPER(to_call)=?)")
+            params.extend((station, station))
+        if term:
+            where.append("(PT2VHF_FOLD(from_call) LIKE ? ESCAPE '\\' OR "
+                         "PT2VHF_FOLD(to_call) LIKE ? ESCAPE '\\' OR "
+                         "PT2VHF_FOLD(message) LIKE ? ESCAPE '\\')")
+            params.extend((pattern, pattern, pattern))
+        sql = "SELECT * FROM messages" + (" WHERE " + " AND ".join(where) if where else "")
+        sql += " ORDER BY timestamp DESC LIMIT ?"
+        params.append(max(1, min(5000, int(limit))))
+        rows = conn.execute(sql, params).fetchall()
+    return [dict(row) for row in rows]
 
 
 def mark_message_read(row_id: int) -> int:

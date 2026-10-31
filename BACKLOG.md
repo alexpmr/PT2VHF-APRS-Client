@@ -1,4 +1,4 @@
-## BACKLOG — Beacon APRS: incluir sempre www.PT2VHF.com no campo Informação (31/10/2026)
+## RESOLVIDO (código v1.15.4; homologação RF física pendente) — Beacon APRS: www.PT2VHF.com no campo Informação (31/10/2026)
 
 - **Pedido definitivo:** nos beacons de posição do **PT2VHF APRS Client desktop**
   (e, de forma idêntica, no Android), anunciar **sempre**
@@ -34,19 +34,19 @@
   o domínio; confirmar `www.PT2VHF.com` integral e exatamente
   uma vez em APRS-IS e em RF/TNC; garantir o teto de caracteres
   e a preservação dos textos personalizados na configuração.
-- **Situação:** registrado no backlog, ainda não implementado.
+- **Situação:** implementado no código v1.15.4; verificar pacote bruto e transmissão RF em rádio físico antes da homologação final.
 
-## BACKLOG — Aba Mensagens: filtro também pelo conteúdo da mensagem (31/10/2026)
+## RESOLVIDO (código v1.15.4) — Aba Mensagens: filtro por indicativo ou texto (31/10/2026)
 
 - **Pedido:** o filtro da aba Mensagens deve filtrar não só pela origem, mas também pelo **texto da mensagem**.
-- **Hoje (v1.15.3):** campo `#messageFilter` ("Filtro por origem", `templates/index.html`) chama
+- **Anteriormente (v1.15.3):** campo `#messageFilter` ("Filtro por origem", `templates/index.html`) chamava
   `/api/messages?from=…` e `db.list_messages()` só compara `UPPER(from_call) LIKE '%…%'`.
 - **Esperado:** um único campo de busca que encontra o termo na origem, no destino e no conteúdo (sem diferenciar
   maiúsculas/minúsculas nem acentos); rótulo "Filtrar (origem, destino ou texto)" traduzido; destaque do termo
   encontrado é opcional. Manter o filtro "Minhas", "Não lidas" e o desempenho com bancos grandes (LIMIT atual).
 - **Teste:** mensagem de PY2ABC com o texto "teste de enlace": aparece ao filtrar "PY2", "enlace" e "ENLACE".
 
-## BACKLOG — Anúncio de versão nova: enviar assim que houver conexão, APRS-IS primeiro e RF como alternativa (31/10/2026)
+## RESOLVIDO (código v1.15.4; homologação RF física pendente) — Anúncio de versão via APRS-IS ou RF (31/10/2026)
 
 - **Pedido:** ao abrir com uma versão nova, enviar o boletim de anúncio/propaganda assim que o cliente detectar
   **qualquer** conexão: de preferência pelo **APRS-IS** (o mantenedor escreveu "aprs-fi"; entendido como a rede

@@ -36,8 +36,8 @@ def test_update_announces_once(tmp_path, monkeypatch):
     db.init_db()
     existing_install()                     # banco já usado: veio de versão anterior
     svc = FakeService()
-    assert va.maybe_announce(svc, now=va._started_at) == "waiting_delay"
-    assert va.maybe_announce(svc, now=LATER) == "sent"
+    assert va.maybe_announce(svc, now=va._started_at) == "sent"
+    assert va.maybe_announce(svc, now=LATER) == "not_pending"
     assert svc.sent == [("A", va.render_lines(va.DEFAULT_TEXT)[0])]
     assert va.maybe_announce(svc, now=LATER) == "not_pending"
     assert len(svc.sent) == 1
@@ -55,7 +55,7 @@ def test_waits_for_verified_aprs_is_and_respects_skip_and_disable(tmp_path, monk
     monkeypatch.setattr(db, "DB_PATH", tmp_path / "skip.db")
     db.init_db()
     existing_install()
-    assert va.maybe_announce(FakeService(verified=False), now=LATER) == "waiting_aprs_is"
+    assert va.maybe_announce(FakeService(verified=False), now=LATER) == "waiting_connection"
     va.save_settings({"enabled": False, "text": va.DEFAULT_TEXT})
     assert va.maybe_announce(FakeService(), now=LATER) == "not_pending"
     va.save_settings({"enabled": True, "text": "Novo {versao} {link}"})

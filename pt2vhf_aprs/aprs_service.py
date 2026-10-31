@@ -980,6 +980,18 @@ class APRSService:
                 "skipped": False,
             }
 
+    def send_bulletin_rf(self, text: str, bulletin_id: str = "A", group: str = "") -> int:
+        """Enfileira anúncio APRS pela RF somente com permissão ativa de TX."""
+        from .tnc_service import service as tnc_service
+        packet = tnc_service.queue_local_bulletin(text, bulletin_id=bulletin_id, group=group)
+        source = str(packet["source"])
+        return db.add_message(
+            "out", source, str(packet["addressee"]), str(packet["text"]),
+            status="Anúncio RF na fila", raw=str(packet["raw"]),
+            message_type=str(packet["type"]), tx_medium="RF",
+            tx_path=str(packet.get("path") or ""), automated=True,
+        )
+
     def send_bulletin(self, text: str, bulletin_id: str = "0", group: str = "") -> int:
         status = self.status()
         if not status["connected"]:
