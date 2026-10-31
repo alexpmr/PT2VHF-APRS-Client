@@ -1,0 +1,88 @@
+name: Windows beacon site QA installer and portable
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows-beacon-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64-beacon-qa:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Windows build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-windows.txt
+
+      - name: Validate source and run beacon plus regression tests
+        shell: pwsh
+        run: |
+          python tools/apply_release_1_15_3.py
+          python -m compileall -q pt2vhf_aprs windows_app.py tools tests
+          python -m pytest -q --junitxml=beacon-qa-report.xml
+
+      - name: Generate app icon and package executable
+        shell: pwsh
+        run: |
+          python windows/make_icon.py
+          pyinstaller --noconfirm --clean windows/PT2VHF_APRS_Client.spec
+          pyinstaller --noconfirm windows/PT2VHF_APRS_Client_Portable.spec
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build QA installer and rename both deliverables
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $short = "$env:GITHUB_SHA".Substring(0, 8)
+          $suffix = "v$version-beacon-qa-$short"
+          $script = Get-Content windows/installer.iss -Raw
+          $script = $script -replace '#define MyAppVersion "[^"]+"', "#define MyAppVersion `"$version`""
+          Set-Content windows/installer.iss -Value $script -Encoding UTF8
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows/installer.iss
+          $setup = Get-ChildItem dist-installer/PT2VHF_APRS_Client_Setup_x64_v*.exe | Select-Object -First 1
+          if (-not $setup) { throw "Windows installer missing" }
+          Copy-Item $setup.FullName "dist-installer/PT2VHF_APRS_Client_Setup_x64_$suffix.exe" -Force
+          $portable = "dist/PT2VHF_APRS_Client_Portable_x64.exe"
+          if (-not (Test-Path $portable)) { throw "Portable EXE missing" }
+          Copy-Item $portable "dist-installer/PT2VHF_APRS_Client_Portable_x64_$suffix.exe" -Force
+          $files = Get-ChildItem "dist-installer/*$suffix.exe"
+          if ($files.Count -ne 2) { throw "Expected exactly two QA deliverables" }
+          $files | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } |
+            Set-Content dist-installer/SHA256SUMS.txt
+          Write-Host "QA_FILENAME_SUFFIX=$suffix"
+
+      - name: Upload signed-off-by-tests Windows QA deliverables
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Windows-x64-Beacon-QA
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            dist-installer/*beacon-qa-*.exe
+            dist-installer/SHA256SUMS.txt
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Beacon-QA-Failure-Report
+          if-no-files-found: ignore
+          path: beacon-qa-report.xml
