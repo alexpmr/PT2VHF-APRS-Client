@@ -1,3 +1,7 @@
+## 1.15.3 - 2026-10-31
+
+- **Aviso "Aplicativo atualizado" só com Fechar:** saiu o botão "Não anunciar esta versão"; o aviso mostra as novidades e o texto do boletim, e o botão **Fechar** (traduzido) o encerra. O boletim da versão nova segue como programado — uma vez por versão, cerca de 2 minutos após abrir, só com APRS-IS verificado, no idioma do usuário. Para não anunciar, desligue em Automações → Anunciar nova versão.
+
 ## 1.15.2 - 2026-10-31
 
 - **Anúncio de versão no idioma do usuário:** ao abrir pela primeira vez depois de atualizar, o boletim BLNA sai no idioma da Configuração — por exemplo "PT2VHF APRS Client v1.15.2 - download em www.PT2VHF.com" (pt), "... - download at www.PT2VHF.com" (en), "... - descarga en ..." (es), e assim em fr, de, it, nl e pl; japonês e chinês usam o inglês. Sem acentos, até 67 caracteres. Texto personalizado em Automações continua valendo; o texto padrão antigo, se nunca foi editado, passa ao novo.
