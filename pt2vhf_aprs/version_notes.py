@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.5": {
+        "title": "Cobertura RF direta e histórica",
+        "items": [
+            "Beacons válidos recebidos pelo TNC/RF agora alimentam o mapa de calor mesmo sem digipeater.",
+            "Estações móveis aparecem nos pontos reais de RF, sem corredores fictícios.",
+            "Histórico RF sem path recuperado quando há prova contemporânea no tracklog.",
+        ],
+    },
     "1.15.4": {
         "title": "Beacon com site oficial, mensagens e anúncio RF",
         "items": [

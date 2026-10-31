@@ -1580,7 +1580,7 @@ def record_packet(
         _record_packet_conn(conn, raw, from_call, packet_format, medium=medium)
 
 
-def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> None:
+def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> tuple[float, float] | None:
     callsign = str(packet.get("from") or "").upper().strip()
     if not callsign:
         return
@@ -1826,6 +1826,10 @@ def _upsert_station_conn(conn: sqlite3.Connection, packet: dict[str, Any]) -> No
                     values["path"], values["raw"], packet.get("rssi"), packet.get("snr"),
                 ),
             )
+        # Return only the *accepted position from this packet*, never the
+        # previous station coordinates used as fallback for rejected outliers.
+        return float(lat), float(lon)
+    return None
 
 
 def upsert_station(packet: dict[str, Any]) -> None:
