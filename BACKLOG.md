@@ -2,7 +2,7 @@
 
 - **Relato:** ao apagar as estações (Configuração → Limpar tudo/retenção de "Estações"), todos os enlaces sumiram do mapa. Esperado: apagar só as estações e manter enlaces, mapa de calor, objetos, tracklogs etc. (o mapa de calor e os objetos de fato ficaram).
 - **Causa provável (não confirmada no banco do mantenedor):** os enlaces não são apagados — `topology_events`/`topology_edges` ficam intactos — mas o mapa os **esconde**: `topology_map.mark_overview_endpoint_coherence` marca `render_on_overview=False` em todo enlace RF inferido cuja ponta não tem marcador atual na tabela `stations` ("marcador atual indisponível"). Sem estações, nenhum enlace inferido aparece. Também `spacetime_topology._still_at` depende da posição atual em `stations` para dar geometria a enlaces novos de estações fixas.
-- **Correção proposta:** usar a geometria gravada no próprio evento quando a estação não existe mais na tabela (estação apagada ≠ estação que mudou de lugar); manter a regra de ocultar só quando a posição atual existe e está a mais de 5 km. Desenhar um marcador "fantasma" da ponta a partir do evento, ou recriar a estação mínima a partir dos eventos. Teste: limpar estações e conferir que o número de enlaces em Ver e no mapa não muda.
+- **Correção aprovada pelo mantenedor (31/10/2026):** usar a geometria gravada no próprio evento quando a estação não existe mais na tabela (estação apagada ≠ estação que mudou de lugar); manter a regra de ocultar só quando a posição atual existe e está a mais de 5 km. Desenhar um marcador "fantasma" da ponta a partir do evento, ou recriar a estação mínima a partir dos eventos. Teste: limpar estações e conferir que o número de enlaces em Ver e no mapa não muda.
 
 ## BACKLOG — PT2VHF APRS Client para Android (30/10/2026)
 
