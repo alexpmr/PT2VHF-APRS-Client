@@ -4,7 +4,7 @@
 - **Causa provável (não confirmada no banco do mantenedor):** os enlaces não são apagados — `topology_events`/`topology_edges` ficam intactos — mas o mapa os **esconde**: `topology_map.mark_overview_endpoint_coherence` marca `render_on_overview=False` em todo enlace RF inferido cuja ponta não tem marcador atual na tabela `stations` ("marcador atual indisponível"). Sem estações, nenhum enlace inferido aparece. Também `spacetime_topology._still_at` depende da posição atual em `stations` para dar geometria a enlaces novos de estações fixas.
 - **Correção aprovada pelo mantenedor (31/10/2026):** usar a geometria gravada no próprio evento quando a estação não existe mais na tabela (estação apagada ≠ estação que mudou de lugar); manter a regra de ocultar só quando a posição atual existe e está a mais de 5 km. Desenhar um marcador "fantasma" da ponta a partir do evento, ou recriar a estação mínima a partir dos eventos. Teste: limpar estações e conferir que o número de enlaces em Ver e no mapa não muda.
 
-## BACKLOG — PT2VHF APRS Client para Android (30/10/2026)
+## MOVIDO — PT2VHF APRS Client para Android (30/10/2026): acompanhado em projeto separado (`PT2VHF-APRS-Android`); não tratar mais neste projeto
 
 - **Decisão do mantenedor:** app **nativo em Kotlin** (Bluetooth e execução em segundo plano são o núcleo; a interface web empacotada foi descartada).
 - **Mockups:** https://claude.ai/artifact/9NFcGxuWKThfVJVx33sWFD — Mapa (botão "Enviar beacon", APRS-IS/TNC/GPS, enlaces, cobertura), Mensagens (meio e ACK por mensagem, respostas rápidas), Estação (distância/direção, grid, PHG, ouvido por RF, Navegar até, Rota RF), Rádio/TNC (KISS Bluetooth, USB-OTG, TCP; monitor e "Escutar 30 s"), Modo tracker (SmartBeaconing em segundo plano, notificação fixa).
