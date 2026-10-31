@@ -49,7 +49,7 @@ def test_position_beacon_contains_site_and_does_not_modify_saved_comment():
     assert "www.PT2VHF.com /A=" in packet
     assert packet.count("www.PT2VHF.com") == 1
     assert cfg == before
-    information = packet.split(">", 1)[1].split(":", 1)[1].split(" /A=", 1)[0]
+    information = packet.split(":", 1)[1][20:].split(" /A=", 1)[0]
     assert information.endswith(PT2VHF_BEACON_SITE)
     assert len(information) <= 40
 
