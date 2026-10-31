@@ -1116,7 +1116,7 @@ def test_v171_about_tab_and_manual_aprs_promotion():
 
     assert 'data-tab="about"' in html
     assert 'id="tab-about"' in html
-    assert "tiny.cc/aprs" in html
+    assert "www.PT2VHF.com" in html  # v1.15.2: tiny.cc/aprs aposentado
     assert "+55 61 98402-3634" in html
     assert "alexpmr@gmail.com" in html
     assert "aboutPromoteButton" in html

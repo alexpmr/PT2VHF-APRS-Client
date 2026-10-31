@@ -179,8 +179,7 @@ def _map_link_checks(stats: dict[str, Any]) -> list[dict[str, str]]:
              f"{by_kind.get('igate', 0)} iGate"]
     reasons = []
     if hidden["marker"]:
-        reasons.append(f"{hidden['marker']} oculto(s) porque uma das pontas não tem marcador no mapa "
-                       "(estação apagada pela retenção/limpeza ou sem posição atual)")
+        reasons.append(f"{hidden['marker']} oculto(s) porque uma das pontas não tem posição gravada no enlace")
     if hidden["moved"]:
         reasons.append(f"{hidden['moved']} oculto(s) porque a estação está hoje a mais de 5 km da posição do enlace")
     if long_inferred:

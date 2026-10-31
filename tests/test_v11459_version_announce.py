@@ -27,7 +27,7 @@ def existing_install():
 
 def test_default_text_fits_one_bulletin():
     lines = va.render_lines(va.DEFAULT_TEXT)
-    assert lines == [f"Estou usando PT2VHF APRS Client v{__version__} - Download: pt2vhf.com"]
+    assert lines == [f"PT2VHF APRS Client v{__version__} - download em www.PT2VHF.com"]
     assert len(lines[0]) <= 67
 
 
@@ -59,7 +59,7 @@ def test_waits_for_verified_aprs_is_and_respects_skip_and_disable(tmp_path, monk
     va.save_settings({"enabled": False, "text": va.DEFAULT_TEXT})
     assert va.maybe_announce(FakeService(), now=LATER) == "not_pending"
     va.save_settings({"enabled": True, "text": "Novo {versao} {link}"})
-    assert va.settings()["lines"] == [f"Novo {__version__} pt2vhf.com"]
+    assert va.settings()["lines"] == [f"Novo {__version__} www.PT2VHF.com"]
     va.skip_current()
     svc = FakeService()
     assert va.maybe_announce(svc, now=LATER) == "not_pending" and svc.sent == []

@@ -1,3 +1,10 @@
+## 1.15.2 - 2026-10-31
+
+- **Anúncio de versão no idioma do usuário:** ao abrir pela primeira vez depois de atualizar, o boletim BLNA sai no idioma da Configuração — por exemplo "PT2VHF APRS Client v1.15.2 - download em www.PT2VHF.com" (pt), "... - download at www.PT2VHF.com" (en), "... - descarga en ..." (es), e assim em fr, de, it, nl e pl; japonês e chinês usam o inglês. Sem acentos, até 67 caracteres. Texto personalizado em Automações continua valendo; o texto padrão antigo, se nunca foi editado, passa ao novo.
+- **tiny.cc/aprs aposentado:** a divulgação manual da aba Sobre (todos os idiomas) e o link da aba Sobre agora usam **www.PT2VHF.com**.
+- **Corrigido: limpar as estações sumia com os enlaces.** "Limpar estações" apagava junto o resumo de enlaces (contagens em Ver e estatísticas), e o mapa escondia todo enlace RF inferido cuja estação não estava mais na lista. Agora só estações e trilhas são apagadas; enlaces, mapa de calor, recordes e objetos ficam, e o enlace usa a posição gravada nele. O enlace só é escondido quando a estação existe e hoje está a mais de 5 km da posição do enlace.
+- **Cabeçalho:** o ícone 📡 virou o botão **Enviar Beacon**, traduzido, com o mesmo envio por APRS-IS e TNC/RF; não quebra linha em telas estreitas.
+
 ## 1.15.1 - 2026-10-29
 
 - **Configuração em sub-abas**, no formato do PT2VHF Mesh Analyzer: Estação, APRS-IS, **TNC / RF**, Mapa, Aplicativo, Integrações, Banco de dados e Backup — uma seção por vez, em vez de tudo numa página longa. A última sub-aba usada é lembrada; o **Salvar configuração** continua valendo para todas e, se faltar um campo obrigatório noutra sub-aba, ela abre sozinha. **TNC / RF** tem sub-aba própria (na v1.15.0 ficava no fim da página) e o indicador **TNC** do topo abre direto nela.

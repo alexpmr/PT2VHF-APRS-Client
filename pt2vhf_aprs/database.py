@@ -4581,14 +4581,16 @@ def clear_tracklogs() -> int:
 
 
 def clear_stations() -> dict[str, int]:
+    # v1.15.2: limpa só as estações e suas trilhas. Enlaces (topology_edges e
+    # topology_events), mapa de calor, recordes e objetos são mantidos; o mapa
+    # desenha os enlaces com a posição gravada no próprio evento.
     with connection() as conn:
         tracks_cur = conn.execute("DELETE FROM tracks")
-        topology_cur = conn.execute("DELETE FROM topology_edges")
         stations_cur = conn.execute("DELETE FROM stations")
         result = {
             "stations": max(0, int(stations_cur.rowcount or 0)),
             "tracks": max(0, int(tracks_cur.rowcount or 0)),
-            "topology": max(0, int(topology_cur.rowcount or 0)),
+            "topology": 0,
         }
     invalidate_map_data_cache(drop_payload=True)
     return result

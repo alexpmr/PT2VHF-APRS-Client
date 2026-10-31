@@ -3,7 +3,7 @@
 Na primeira abertura de cada versão nova (nunca numa instalação nova), envia
 uma única vez o Announcement BLNA pelo APRS-IS verificado, no mesmo formato da
 divulgação manual da aba Sobre, por exemplo
-"Estou usando PT2VHF APRS Client v1.14.60 - Download: pt2vhf.com".
+"PT2VHF APRS Client v1.15.2 - download em www.PT2VHF.com" (no idioma do cliente).
 Espera ANNOUNCE_DELAY_SECONDS após abrir o aplicativo para o operador poder
 cancelar no aviso de novidades; desligável em Automações.
 """
@@ -17,8 +17,28 @@ from . import __version__
 from . import database as db
 from . import diagnostics as diag
 
-DOWNLOAD_LINK = "pt2vhf.com"  # site oficial de downloads
-DEFAULT_TEXT = "Estou usando PT2VHF APRS Client v{versao} - Download: {link}"
+DOWNLOAD_LINK = "www.PT2VHF.com"  # site oficial de downloads
+# v1.15.2: texto padrão no idioma configurado do cliente, sem acentos (muitos
+# clientes APRS corrompem latin-1); japonês e chinês usam o inglês, pois o APRS
+# não transporta esses caracteres. Todos cabem em 67 caracteres até v99.99.99.
+LANGUAGE_TEXTS = {
+    "pt": "PT2VHF APRS Client v{versao} - download em {link}",
+    "en": "PT2VHF APRS Client v{versao} - download at {link}",
+    "es": "PT2VHF APRS Client v{versao} - descarga en {link}",
+    "fr": "PT2VHF APRS Client v{versao} - telechargement: {link}",
+    "de": "PT2VHF APRS Client v{versao} - Download: {link}",
+    "it": "PT2VHF APRS Client v{versao} - download su {link}",
+    "nl": "PT2VHF APRS Client v{versao} - download via {link}",
+    "pl": "PT2VHF APRS Client v{versao} - pobierz z {link}",
+}
+# Padrão até a v1.15.1 (português, link pt2vhf.com): quem nunca o editou passa ao texto do idioma.
+LEGACY_DEFAULT_TEXT = "Estou usando PT2VHF APRS Client v{versao} - Download: {link}"
+DEFAULT_TEXT = LANGUAGE_TEXTS["pt"]
+
+
+def default_text(language: str | None = None) -> str:
+    code = str(language if language is not None else db.get_config().get("language") or "pt-BR")
+    return LANGUAGE_TEXTS.get(code.split("-")[0].lower(), LANGUAGE_TEXTS["en"])
 BULLETIN_IDS = ("A",)              # BLNA, como a divulgação manual; uma linha
 LINE_LIMIT = 67                    # texto máximo de um boletim APRS
 ANNOUNCE_DELAY_SECONDS = 120
@@ -81,13 +101,15 @@ def settings() -> dict[str, Any]:
             # Primeira execução com este recurso: banco já usado = atualização.
             _put(conn, "seen_version", "anterior" if _existing_install(conn) else __version__)
         enabled = _get(conn, "enabled", "1") == "1"
-        template = _get(conn, "text", DEFAULT_TEXT)
+        stored = _get(conn, "text", "")
+        language_default = default_text()
+        template = language_default if stored in ("", LEGACY_DEFAULT_TEXT) else stored
         announced = _get(conn, "announced_version")
         skipped = _get(conn, "skipped_version")
         seen = _get(conn, "seen_version")
     pending = bool(enabled and seen != __version__ and announced != __version__ and skipped != __version__)
     return {
-        "enabled": enabled, "text": template, "default_text": DEFAULT_TEXT,
+        "enabled": enabled, "text": template, "default_text": language_default,
         "lines": render_lines(template), "version": __version__, "link": DOWNLOAD_LINK,
         "announced_version": announced, "skipped_version": skipped,
         "pending": pending, "delay_seconds": ANNOUNCE_DELAY_SECONDS,
@@ -95,8 +117,10 @@ def settings() -> dict[str, Any]:
 
 
 def save_settings(payload: dict[str, Any]) -> dict[str, Any]:
-    text = " ".join(str(payload.get("text") or DEFAULT_TEXT).split())
-    if not render_lines(text):
+    text = " ".join(str(payload.get("text") or "").split())
+    if text == default_text():
+        text = ""  # padrão do idioma: acompanha uma troca futura de idioma
+    if text and not render_lines(text):
         raise ValueError("Texto do anúncio vazio.")
     with db.connection() as conn:
         _ensure_schema(conn)

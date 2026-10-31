@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v1.15.1
+# PT2VHF APRS Client - v1.15.2
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,9 +6,9 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 1.15.1 (publicação pendente)
+## Downloads — versão 1.15.2 (publicação pendente)
 
-A nova v1.15.1 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
+A nova v1.15.2 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
 
 **Pacotes Windows/Linux**: instalador, portátil, AppImage, .deb e .tar.gz, conforme builds validados. ARM64 e macOS só serão liberados quando houver pacotes próprios.
 
@@ -17,6 +17,8 @@ A nova v1.15.1 foi preparada para obter atualizações **somente pelo site PT2VH
 Não há links para executáveis inexistentes. Arquivos de código-fonte e checksums não são oferecidos na tabela pública; os hashes SHA-256 permanecem na API do atualizador para verificação de integridade.
 
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v1.15.2** envia o anúncio de versão **no idioma do usuário** com o link **www.PT2VHF.com** (o link tiny.cc/aprs foi aposentado), mantém os **enlaces** ao limpar as estações e troca o ícone do cabeçalho pelo botão **Enviar Beacon**.
 
 A **v1.15.1** organiza a **Configuração em sub-abas** (Estação, APRS-IS, TNC / RF, Mapa, Aplicativo, Integrações, Banco de dados e Backup), deixa de tratar como RF as posições injetadas no APRS-IS por gateways **DMR, D-STAR, C4FM, NXDN, P25, M17** e afins (mapa de calor, enlaces e tracklog), e permite **cancelar** qualquer processamento demorado, com tempo decorrido.
 
