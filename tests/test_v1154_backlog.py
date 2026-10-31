@@ -27,7 +27,7 @@ def test_site_in_each_transmitted_beacon(comment):
     assert suffix.count("www.PT2VHF.com") == 1
     assert len(suffix) <= 40
     assert cfg == original
-    assert aprs.compose_beacon_comment(comment) == suffix
+    assert aprs.beacon_comment_with_site(comment) == suffix
 
 
 def test_search_messages_matches_sender_recipient_and_accent(tmp_path, monkeypatch):
