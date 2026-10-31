@@ -21,7 +21,7 @@ def test_site_in_each_transmitted_beacon(comment):
     original = dict(cfg)
     packet = aprs.build_beacon_packet(cfg)
     info = packet.split(":", 1)[1]
-    text = info.split("/A=", 1)[0]
+    text = info.split(" /A=", 1)[0]
     suffix = text[1 + 8 + 1 + 9 + 1:]  # após posição descomprimida e símbolo
     assert suffix.endswith("www.PT2VHF.com")
     assert suffix.count("www.PT2VHF.com") == 1
