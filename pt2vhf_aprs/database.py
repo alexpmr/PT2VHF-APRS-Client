@@ -128,7 +128,7 @@ def _trim_history_table(conn: sqlite3.Connection, table: str, keep: int) -> int:
 DEFAULT_CONFIG = {
     "callsign": "",
     "ssid": 0,
-    "comment": "PT2VHF APRS Client",
+    "comment": "PT2VHF APRS Client www.PT2VHF.com",
     "latitude": None,
     "longitude": None,
     "altitude": None,
