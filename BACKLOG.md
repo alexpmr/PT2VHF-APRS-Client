@@ -1,3 +1,20 @@
+## BACKLOG — Anúncio de versão no idioma do usuário, com www.PT2VHF.com (31/10/2026)
+
+- **Pedido:** cliente desktop (Windows, Linux, macOS): ao abrir pela primeira vez após atualizar, enviar o boletim no **idioma configurado do usuário**, no formato "APRS Client versão x, download em www.PT2VHF.com".
+- **Hoje (v1.14.60–v1.15.1):** `version_announce.py` envia BLNA fixo em português, "Estou usando PT2VHF APRS Client v{versao} - Download: pt2vhf.com".
+- **Textos propostos (≤ 67 caracteres, sem acentos para não corromper em clientes APRS; japonês e chinês usam o inglês, pois o APRS não transporta esses caracteres):**
+  - pt: `PT2VHF APRS Client v{versao} - download em www.PT2VHF.com`
+  - en: `PT2VHF APRS Client v{versao} - download at www.PT2VHF.com`
+  - es: `PT2VHF APRS Client v{versao} - descarga en www.PT2VHF.com`
+  - fr: `PT2VHF APRS Client v{versao} - telechargement: www.PT2VHF.com`
+  - de: `PT2VHF APRS Client v{versao} - Download: www.PT2VHF.com`
+  - it: `PT2VHF APRS Client v{versao} - download su www.PT2VHF.com`
+  - nl: `PT2VHF APRS Client v{versao} - download via www.PT2VHF.com`
+  - pl: `PT2VHF APRS Client v{versao} - pobierz z www.PT2VHF.com`
+  - ja, zh: texto em inglês
+- **Mantém as regras atuais:** só depois de atualizar (nunca em instalação nova), uma vez por versão, só com APRS-IS verificado, cancelável no aviso e desligável em Automações. Texto personalizado salvo pelo usuário continua tendo prioridade; o padrão antigo em português (nunca editado) passa ao novo texto do idioma.
+- **Teste:** um texto por idioma, ≤ 67 caracteres com versão longa (ex.: v1.15.10), link `www.PT2VHF.com` presente.
+
 ## BACKLOG — Limpar estações não pode sumir com os enlaces (31/10/2026)
 
 - **Relato:** ao apagar as estações (Configuração → Limpar tudo/retenção de "Estações"), todos os enlaces sumiram do mapa. Esperado: apagar só as estações e manter enlaces, mapa de calor, objetos, tracklogs etc. (o mapa de calor e os objetos de fato ficaram).
