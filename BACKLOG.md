@@ -1,5 +1,6 @@
 ## BACKLOG — Anúncio de versão no idioma do usuário, com www.PT2VHF.com (31/10/2026)
 
+- **Aprovado pelo mantenedor (31/10/2026), com os textos abaixo.**
 - **Pedido:** cliente desktop (Windows, Linux, macOS): ao abrir pela primeira vez após atualizar, enviar o boletim no **idioma configurado do usuário**, no formato "APRS Client versão x, download em www.PT2VHF.com".
 - **Hoje (v1.14.60–v1.15.1):** `version_announce.py` envia BLNA fixo em português, "Estou usando PT2VHF APRS Client v{versao} - Download: pt2vhf.com".
 - **Textos propostos (≤ 67 caracteres, sem acentos para não corromper em clientes APRS; japonês e chinês usam o inglês, pois o APRS não transporta esses caracteres):**
