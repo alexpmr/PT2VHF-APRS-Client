@@ -23,6 +23,6 @@ jobs:
       - name: Release invariants
         run: python tools/apply_release_1_15_4.py
       - name: Core regression tests
-        run: pytest -q tests/test_v1154_backlog.py tests/test_v11459_version_announce.py
+        run: python -m pytest -q tests/test_v1154_backlog.py tests/test_v11459_version_announce.py
       - name: Validate JavaScript
         run: node --check pt2vhf_aprs/static/js/app.js
