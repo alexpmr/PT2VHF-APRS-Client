@@ -1935,6 +1935,33 @@ class TNCService:
                         source=source, raw_tnc2=raw)
         return {"queued": True, "raw": raw, "path": ",".join(path_items)}
 
+    def queue_local_bulletin(self, text: str, bulletin_id: str = "A", group: str = "", path: str = "") -> dict[str, Any]:
+        """Boletim BLN pela rede RF, sem TCPIP* e sem contornar bloqueios TNC."""
+        from .aprs_service import build_bulletin_packet
+
+        status = self.status()
+        cfg = get_tnc_config()
+        if not status.get("connected") or status.get("tx_paused") or self._tx_paused:
+            raise ConnectionError("TNC/RF desconectado ou com transmissão pausada.")
+        if not cfg.get("auto_tx_enabled") or not cfg.get("tx_confirmed"):
+            raise PermissionError("Transmissão RF não autorizada.")
+        if cfg.get("transport") == "serial" and cfg.get("serial_protocol") == "terminal":
+            raise ValueError("Boletim RF exige KISS/AGWPE.")
+        source = self._own_call()
+        if not source:
+            raise ValueError("Indicativo local ausente.")
+        _, addressee, message_type, clean = build_bulletin_packet(source, text, bulletin_id, group)
+        info = f":{addressee:<9}:{clean}"
+        path_items = normalize_message_rf_path(path)
+        frame = encode_ax25(source, APP_TOCALL, info, path_items)
+        raw = f"{source}>{APP_TOCALL}" + ("," + ",".join(path_items) if path_items else "") + ":" + info
+        if not self._enqueue(frame, "Anúncio de versão via RF", raw_tnc2=raw, priority=3):
+            raise PermissionError("Anúncio bloqueado pelo TNC.")
+        record_decision("version_announce_rf", "queued", "BLN enfileirado por RF (não confirma TX).",
+                        source=source, raw_tnc2=raw)
+        return {"source": source, "addressee": addressee, "text": clean,
+                "type": message_type, "raw": raw, "path": ",".join(path_items)}
+
     def queue_local_message(self, destination: str, text: str, msg_id: str, path: str = "") -> dict[str, Any]:
         """Enfileira uma mensagem APRS originada localmente para transmissão RF."""
         status = self.status()

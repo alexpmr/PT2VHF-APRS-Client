@@ -1,3 +1,10 @@
+## 1.15.4 - 2026-10-31
+
+- **Beacon APRS:** todos os beacons de posição enviados por APRS-IS e TNC/RF incluem `www.PT2VHF.com` no comentário do próprio pacote, preservando o texto do operador sem repetir o endereço; respeita o teto de 40 caracteres e as regras de autorização de TX.
+- **Mensagens:** filtro por origem, destino ou texto da mensagem, sem diferenciar letras maiúsculas, minúsculas e acentos. Mantidos os filtros pessoais e o limite de resultados.
+- **Anúncio de versão:** boletim BLNA após atualização, assim que uma rota autorizada estiver disponível: APRS-IS verificado tem prioridade; sem ele, TNC/RF com TX habilitado. Apenas um anúncio por versão e sem transmissões extras de beacons de posição.
+- **Distribuição:** instaladores e atualizações continuam exclusivamente em www.PT2VHF.com.
+
 ## 1.15.3 - 2026-10-31
 
 - **Aviso "Aplicativo atualizado" só com Fechar:** saiu o botão "Não anunciar esta versão"; o aviso mostra as novidades e o texto do boletim, e o botão **Fechar** (traduzido) o encerra. O boletim da versão nova segue como programado — uma vez por versão, cerca de 2 minutos após abrir, só com APRS-IS verificado, no idioma do usuário. Para não anunciar, desligue em Automações → Anunciar nova versão.

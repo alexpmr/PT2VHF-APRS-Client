@@ -1734,7 +1734,7 @@ def create_app() -> Flask:
         mine = str(request.args.get("mine", "")).lower() in {"1", "true", "yes"}
         station = full_callsign(db.get_config()) if mine else ""
         return jsonify(db.list_messages(
-            request.args.get("from", ""),
+            request.args.get("q", request.args.get("from", "")),
             station_filter=station,
         ))
 

@@ -6666,7 +6666,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
       const filter = $('#messageFilter').value.trim();
       const mine = state.myMessagesOnly ? '&mine=1' : '';
-      state.messages = await api(`/api/messages?from=${encodeURIComponent(filter)}${mine}`);
+      state.messages = await api(`/api/messages?q=${encodeURIComponent(filter)}${mine}`);
       renderMessages();
       updateUnread();
 
@@ -9310,6 +9310,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     'Remetente':'Sender',
     'Data':'Date',
     'Filtro por origem':'Source filter',
+    'Filtrar (origem, destino ou texto)':'Filter (sender, recipient or text)',
     'De':'From',
     'Para':'To',
     'Tipo':'Type',

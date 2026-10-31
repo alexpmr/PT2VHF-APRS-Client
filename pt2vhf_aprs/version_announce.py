@@ -1,11 +1,8 @@
-"""Anúncio da versão por boletim APRS após atualizar o cliente (v1.14.59).
+"""Anúncio BLNA da nova versão, somente após atualização existente.
 
-Na primeira abertura de cada versão nova (nunca numa instalação nova), envia
-uma única vez o Announcement BLNA pelo APRS-IS verificado, no mesmo formato da
-divulgação manual da aba Sobre, por exemplo
-"PT2VHF APRS Client v1.15.2 - download em www.PT2VHF.com" (no idioma do cliente).
-Espera ANNOUNCE_DELAY_SECONDS após abrir o aplicativo para o operador poder
-cancelar no aviso de novidades; desligável em Automações.
+Prefere APRS-IS verificado; sem ele usa RF/TNC com TX autorizado.
+Envia uma vez por versão no idioma configurado, sem atraso fixo e
+sem duplicar o boletim entre transportes. Pode ser desligado em Automações.
 """
 from __future__ import annotations
 
@@ -41,8 +38,8 @@ def default_text(language: str | None = None) -> str:
     return LANGUAGE_TEXTS.get(code.split("-")[0].lower(), LANGUAGE_TEXTS["en"])
 BULLETIN_IDS = ("A",)              # BLNA, como a divulgação manual; uma linha
 LINE_LIMIT = 67                    # texto máximo de um boletim APRS
-ANNOUNCE_DELAY_SECONDS = 120
-CHECK_SECONDS = 60
+ANNOUNCE_DELAY_SECONDS = 0  # Sem espera fixa: enviar quando houver rota autorizada.
+CHECK_SECONDS = 2
 
 _lock = threading.Lock()
 _thread: threading.Thread | None = None
@@ -144,17 +141,29 @@ def maybe_announce(service: Any, *, now: float | None = None) -> str:
         state = settings()
         if not state["pending"]:
             return "not_pending"
-        if (now if now is not None else time.monotonic()) - _started_at < ANNOUNCE_DELAY_SECONDS:
-            return "waiting_delay"
         status = service.status()
-        if not status.get("connected") or not status.get("verified"):
-            return "waiting_aprs_is"
+        aprs_ready = bool(status.get("connected") and status.get("verified"))
+        medium = "APRS-IS"
+        if not aprs_ready:
+            from .tnc_service import get_tnc_config, service as tnc_service
+            rf_status = tnc_service.status()
+            rf_config = get_tnc_config()
+            rf_ready = bool(
+                rf_status.get("connected") and not rf_status.get("tx_paused")
+                and rf_config.get("auto_tx_enabled") and rf_config.get("tx_confirmed")
+            )
+            if not rf_ready:
+                return "waiting_connection"
+            medium = "RF"
         for bulletin_id, line in zip(BULLETIN_IDS, state["lines"]):
-            service.send_bulletin(line, bulletin_id=bulletin_id)
+            if medium == "APRS-IS":
+                service.send_bulletin(line, bulletin_id=bulletin_id)
+            else:
+                service.send_bulletin_rf(line, bulletin_id=bulletin_id)
         with db.connection() as conn:
             _put(conn, "announced_version", __version__)
             _put(conn, "seen_version", __version__)
-        diag.log_event("version_announce_sent", version=__version__, lines=state["lines"])
+        diag.log_event("version_announce_sent", version=__version__, lines=state["lines"], medium=medium)
         return "sent"
 
 
