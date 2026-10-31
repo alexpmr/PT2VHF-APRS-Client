@@ -1,3 +1,14 @@
+## BACKLOG P1 — Cobertura RF ausente para estação móvel recebida por RF (31/10/2026, #155)
+
+- **Relato:** estação móvel recebida por RF tem posições/tracklog, mas não produz mapa de calor ao redor dos pontos recebidos nem ao longo de seus deslocamentos registrados.
+- **Causa estrutural identificada no código v1.15.4:** `spacetime_topology._record_topology_from_raw_conn()` faz `if not edges: return`. Um beacon de posição **ouvido diretamente pelo TNC/RF, sem digipeater/path**, pode salvar posição e pacote, mas não gera `topology_events` nem `rf_coverage_cells`. O backfill atual parte somente de `topology_events`, então não recupera essas amostras perdidas.
+- **Correção exigida:** desacoplar o registro de amostras RF de posição da existência de arestas de topologia; gravar o local de cada pacote RF válido no instante da recepção, preservando indicativo+SSID, timestamp e prova de meio. Recuperar histórico com migração idempotente e sem dupla contagem.
+- **Classificação:** RF recebido pelo próprio TNC = observado; APRS-IS via qAR/qAO válido = RF inferido; APRS-IS puro ou gateways DMR/D-STAR/C4FM = **não RF**. Evitar extrapolar raio/corredor contínuo onde não houve recepção: heatmap só nas células realmente observadas.
+- **UI/diagnóstico:** conferir mapa → Ver → Cobertura RF, período escolhido, retenção e filtro; permitir ver por indicativo quantos pacotes foram aceitos ou descartados e por qual motivo.
+- **Homologação:** posições sucessivas de tracker RF direto sem path devem produzir células na localização de cada beacon; RF por iGate devidamente classificado; nenhum falso positivo de internet; reprocessamento histórico não aumenta contadores de forma indevida. Testar TNC simulado e pacote bruto real.
+- **Detalhes pendentes do relato:** indicativo/SSID e horário da estação em questão para correlacionar logs/tracklog/packets.
+- **Status:** registrado e diagnosticado; **não implementado**. Issue: https://github.com/alexpmr/PT2VHF-APRS-Client/issues/155
+
 ## RESOLVIDO (código v1.15.4; homologação RF física pendente) — Beacon APRS: www.PT2VHF.com no campo Informação (31/10/2026)
 
 - **Pedido definitivo:** nos beacons de posição do **PT2VHF APRS Client desktop**
