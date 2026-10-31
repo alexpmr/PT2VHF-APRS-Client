@@ -1,3 +1,36 @@
+## BACKLOG — Beacon APRS: anunciar URL oficial do projeto no campo Informação (31/10/2026)
+
+- **Evidência do usuário:** nos detalhes da estação PT2VHF-3, o campo **Informação** mostra
+  `PT2VHF APRS Client`, enquanto uma estação com APRSdroid apresenta
+  `https://aprsdroid.org/`. A origem é o **comentário transmitido no pacote APRS**;
+  não adianta trocar somente a aparência do popup do mapa.
+- **Diagnóstico:** `pt2vhf_aprs/database.py` ainda usa
+  `DEFAULT_CONFIG["comment"] = "PT2VHF APRS Client"`. O serviço
+  `pt2vhf_aprs/aprs_service.py` utiliza esse comentário para o status APRS
+  e o beacon de posição lê a configuração. Perfis já existentes podem manter
+  o texto antigo gravado no banco.
+- **Esperado:** definir como comentário padrão do beacon de posição
+  `https://www.pt2vhf.com/aprs` (**URL completa com HTTPS**, para
+  identificação e reconhecimento como link), inclusive em beacons enviados
+  manualmente, por programação, por tracker e pelos transportes APRS-IS e
+  TNC/RF autorizados. Garantir que a informação não seja substituída por
+  texto genérico nas rotas alternativas de transmissão.
+- **Migração cuidadosa:** em instalações existentes, trocar automaticamente
+  apenas os valores de fábrica legados **exatamente equivalentes** a
+  `PT2VHF APRS Client` (e suas versões padrão conhecidas, quando
+  comprovadas). **Jamais sobrescrever comentário configurado pelo usuário.**
+  Manter o campo editável, sem anexar propaganda indiscriminadamente e sem
+  transmitir novos beacons durante migração/abertura.
+- **Exibição:** o detalhe da estação deve mostrar exatamente o comentário
+  recebido; tornar URL HTTPS clicável quando aplicável, sem inventar ou
+  reescrever URL de terceiros. Tratamento seguro de links externos.
+- **Teste:** em conta limpa e instalação atualizada com valor antigo,
+  inspecionar o **payload bruto** e o campo Informação de uma estação
+  receptora independente: `https://www.pt2vhf.com/aprs`. Repetir por
+  APRS-IS e RF/TNC, verificar limite do campo, comentário personalizado,
+  atualização não destrutiva de configurações e ausência de TX extra.
+- **Status:** backlog registrado, **não implementado nesta solicitação**.
+
 ## BACKLOG — Aba Mensagens: filtro também pelo conteúdo da mensagem (31/10/2026)
 
 - **Pedido:** o filtro da aba Mensagens deve filtrar não só pela origem, mas também pelo **texto da mensagem**.
