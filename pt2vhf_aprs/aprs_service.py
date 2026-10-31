@@ -493,7 +493,7 @@ class APRSService:
                 return
             packet = build_beacon_packet(cfg)
         elif query_type == "APRSS":
-            status_text = " ".join(str(cfg.get("comment") or "PT2VHF APRS Client").split())[:62]
+            status_text = beacon_comment_with_site(cfg.get("comment"), max_chars=62)
             packet = f"{source}>{APP_TOCALL},TCPIP*:>{status_text}"
         else:
             received_header = raw.split(":", 1)[0].strip()
@@ -1355,13 +1355,35 @@ def _lon_aprs(value: float) -> str:
     return f"{deg:03d}{minutes:05.2f}{hemi}"
 
 
+PT2VHF_BEACON_SITE = "www.PT2VHF.com"
+# Remove variants already typed in the configurable comment; preserve other text.
+_PT2VHF_BEACON_SITE_RE = re.compile(
+    r"(?i)(?<![a-z0-9])(?:https?://)?(?:www\.)?pt2vhf\.com(?:/[a-z0-9_./-]*)?"
+)
+
+
+def beacon_comment_with_site(comment: object, max_chars: int = 40) -> str:
+    """Reserve room for the canonical site before shortening a beacon comment.
+
+    The stored user preference is never changed. APRS-IS and RF both use this
+    formatter through build_beacon_packet, so their transmitted text agrees.
+    """
+    if max_chars < len(PT2VHF_BEACON_SITE):
+        raise ValueError("APRS comment limit is too short for the PT2VHF URL")
+    original = " ".join(str(comment or "").replace("\r", " ").replace("\n", " ").split())
+    description = " ".join(_PT2VHF_BEACON_SITE_RE.sub(" ", original).split())
+    remaining = max_chars - len(PT2VHF_BEACON_SITE) - 1
+    description = description[:max(0, remaining)].rstrip()
+    return f"{description} {PT2VHF_BEACON_SITE}" if description else PT2VHF_BEACON_SITE
+
+
 def build_beacon_packet(cfg: dict[str, Any]) -> str:
     source = full_callsign(cfg)
     table = str(cfg.get("symbol_table") or "/")[:1]
     symbol = str(cfg.get("symbol") or ">")[:1]
     if table not in {"/", "\\"}:
         table = "/"
-    comment = " ".join(str(cfg.get("comment") or "").replace("\r", " ").replace("\n", " ").split())[:40]
+    comment = beacon_comment_with_site(cfg.get("comment"), max_chars=40)
     altitude = ""
     if cfg.get("altitude") is not None:
         feet = max(0, min(999999, int(round(float(cfg["altitude"]) * 3.28084))))
