@@ -158,7 +158,7 @@ assert "whatsNewSkipAnnounce" not in js and "closeLabels" in js
 print("v1.15.4 release validation OK")
 
 # Validação de presença das três correções do backlog v1.15.4.
-assert "def compose_beacon_comment(" in read("pt2vhf_aprs/aprs_service.py")
+assert "def beacon_comment_with_site(" in read("pt2vhf_aprs/aprs_service.py")
 assert "def queue_local_bulletin(" in read("pt2vhf_aprs/tnc_service.py")
 assert "def send_bulletin_rf(" in read("pt2vhf_aprs/aprs_service.py")
 assert "waiting_connection" in read("pt2vhf_aprs/version_announce.py")
