@@ -1951,7 +1951,7 @@ class TNCService:
         if not source:
             raise ValueError("Indicativo local ausente.")
         _, addressee, message_type, clean = build_bulletin_packet(source, text, bulletin_id, group)
-        info = f"::{addressee:<9}:{clean}"
+        info = f":{addressee:<9}:{clean}"
         path_items = normalize_message_rf_path(path)
         frame = encode_ax25(source, APP_TOCALL, info, path_items)
         raw = f"{source}>{APP_TOCALL}" + ("," + ",".join(path_items) if path_items else "") + ":" + info
