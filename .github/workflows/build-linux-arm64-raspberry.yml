@@ -57,7 +57,7 @@ jobs:
           grep -Fq "PT2VHF_APRS_Client_Linux_arm64_v${version}" "$RUNNER_TEMP/arm64-tar-contents.txt"
           readelf -h "$image" | grep -Eq 'Machine:[[:space:]]*AArch64'
           test "$(APPIMAGE_EXTRACT_AND_RUN=1 "./$image" --version)" = "$version"
-          python -m pytest -q tests/test_linux_arm64_distribution.py
+          .venv-build-linux/bin/python -m pytest -q tests/test_linux_arm64_distribution.py
           sha256sum "$tar" "$deb" "$image"
       - name: Upload Linux ARM64 artifacts
         uses: actions/upload-artifact@v4
