@@ -6,7 +6,7 @@
 - Caminho único de consulta para os módulos de configuração, planejamento, TNC, mensagens e recursos adicionais. O planejamento deixa de usar inglês como alternativa ao francês.
 - Correspondência de mensagens parametrizadas, incluindo erros do servidor. Os parâmetros são preservados, inclusive indicativos e identificadores; nenhum serviço de tradução é chamado durante o uso.
 - Observação de novos textos e atributos, preservação de espaços e reversão ao idioma anterior. O tradutor independente do TNC foi removido para evitar caches concorrentes.
-- Correção de vocabulário: porta de comunicação, cliente de software, pacotes/frames, camadas de mapa, avisos de transmissão e confirmações de exclusão. Foram acrescentadas centenas de entradas de revisão manual, com cinco traduções cada.
+- Correção de vocabulário: porta de comunicação, cliente de software, pacotes/frames, camadas de mapa, avisos de transmissão e confirmações de exclusão. Foram acrescentadas centenas de correções editoriais nos cinco idiomas de destino. A revisão incluiu a leitura de 1.360 rótulos curtos, o vocabulário de rádio e os avisos operacionais.
 - Proteção adicional de mensagens recebidas, prévias de conversa, indicativos, nomes de listas, nomes de objetos, códigos de símbolos e arquivos escolhidos. O seletor de arquivo da restauração usa um rótulo traduzido; nenhuma restauração faz parte dos testes.
 - Rótulos condicionais de tabela de símbolos e tipos de enlace passam por tradução explícita, em vez de esconder palavras da interface dentro de parâmetros.
 
@@ -35,7 +35,7 @@ O teste de navegador usa banco temporário e servidor local. Bloqueia conexões 
 
 ## Limite de aceite
 
-Validação local em 01/11/2026: **707 testes e 12 subtestes aprovados**; sintaxe de todos os módulos JavaScript válida; teste de DOM e teste da aplicação real aprovados, com seis idiomas, nove abas, bandeiras exatas, dez opções preservadas e idioma salvo após recarregar. O teste estrito passou para **2.546 chaves de origem**, incluindo parâmetros. A auditoria visível passou em **174 estados (29 por idioma)**, sem resíduos pelos critérios do teste. Inclui configurações, modais de símbolos, filtros de mensagens, quatro tipos de agendamento, listas de destinatários, prévia de divulgação e três ferramentas de planejamento. Nenhuma transmissão, conexão, restauração ou gravação de agendamentos ocorreu.
+Validação local em 01/11/2026: **707 testes e 12 subtestes aprovados**; sintaxe de todos os módulos JavaScript válida; teste de DOM e teste da aplicação real aprovados, com seis idiomas, nove abas, bandeiras exatas, dez opções preservadas e idioma salvo após recarregar. O teste estrito passou para **2.579 chaves de origem**, incluindo parâmetros. A auditoria visível passou em **174 estados (29 por idioma)**, sem resíduos pelos critérios do teste. Inclui configurações, modais de símbolos, filtros de mensagens, quatro tipos de agendamento, listas de destinatários, prévia de divulgação e três ferramentas de planejamento. Nenhuma transmissão, conexão, restauração ou gravação de agendamentos ocorreu.
 
 Cobertura do extrator e ausência de resíduos nos estados testados são evidências verificáveis, não uma garantia matemática sobre todos os dados e estados possíveis. A issue #157 não deve ser encerrada apenas por contagem de chaves ou testes de navegação. Traduções iniciais foram auxiliadas por modelo local M2M100; avisos, parâmetros e achados linguísticos foram revisados e corrigidos. O aplicativo distribuído não inclui esse modelo.
 

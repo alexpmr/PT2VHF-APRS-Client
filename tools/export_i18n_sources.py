@@ -82,13 +82,18 @@ for path in sorted((ROOT / "pt2vhf_aprs").glob("*.py")):
     for node in ast.walk(tree):
         values = []
         if isinstance(node, ast.Dict):
-            values = [value for key, value in zip(node.keys, node.values) if isinstance(key, ast.Constant) and key.value in {"error", "message", "warning", "reason", "detail", "title", "classification_source", "description", "hint", "status_text"}]
+            values = [value for key, value in zip(node.keys, node.values) if isinstance(key, ast.Constant) and key.value in {"error", "message", "warning", "reason", "detail", "title", "classification_source", "description", "hint", "status_text", "friendly_name", "label"}]
         elif isinstance(node, ast.Raise) and isinstance(node.exc, ast.Call) and node.exc.args:
             values = node.exc.args[:1]
         elif isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id in {'message','reason','detail','description','hint','title','summary','warning','error','recommendation','status_text','label'} for target in node.targets):
             values = [node.value]
         elif isinstance(node, ast.Assign) and any(isinstance(target, ast.Subscript) and isinstance(target.slice, ast.Constant) and target.slice.value in {'classification_source', 'message', 'error', 'reason', 'description', 'hint', 'status_text'} for target in node.targets):
             values = [node.value]
+        elif isinstance(node, ast.Return):
+            candidates = node.value.elts if isinstance(node.value, ast.Tuple) else [node.value]
+            values = [value for value in candidates if (text := python_text(value)) and (' ' in text or re.search('[ãõçáéíóú]', text)) and not text.startswith(('@echo ', '?APRS'))]
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {'_error', 'ReleaseLookupError'}:
+            values = node.args[1:] if node.func.id == 'ReleaseLookupError' else node.args
         for value in values:
             text = python_text(value)
             if text and len(text) < 2000 and re.search(r"[A-Za-zÀ-ÿ]{2}", re.sub(r"\{v\d+\}", "", text)):

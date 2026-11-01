@@ -5284,6 +5284,321 @@
       "Page de configuration unique",
       "Einzelne Konfigurationsseite",
       "Pagina di configurazione unica"
+    ],
+    "iGate RX-only": [
+      "Receive-only iGate",
+      "iGate de solo recepción",
+      "iGate en réception seule",
+      "iGate nur für Empfang",
+      "iGate in sola ricezione"
+    ],
+    "Cor de RF temporário inválida.": [
+      "Invalid temporary RF color.",
+      "Color de RF temporal no válido.",
+      "Couleur RF temporaire invalide.",
+      "Ungültige Farbe für temporären Funk.",
+      "Colore RF temporanea non valido."
+    ],
+    "Cor dos enlaces IGate da topologia inválida.": [
+      "Invalid topology iGate link color.",
+      "Color de enlaces iGate de la topología no válido.",
+      "Couleur des liaisons iGate de la topologie invalide.",
+      "Ungültige Farbe der iGate-Verbindungen in der Topologie.",
+      "Colore dei collegamenti iGate della topologia non valido."
+    ],
+    "Cor dos enlaces RF da topologia inválida.": [
+      "Invalid topology RF link color.",
+      "Color de enlaces RF de la topología no válido.",
+      "Couleur des liaisons RF de la topologie invalide.",
+      "Ungültige Farbe der Funkverbindungen in der Topologie.",
+      "Colore dei collegamenti RF della topologia non valido."
+    ],
+    "Não foi possível atualizar agora; mantendo os últimos valores válidos.": [
+      "Could not refresh now; keeping the last valid values.",
+      "No se pudo actualizar ahora; se conservan los últimos valores válidos.",
+      "Impossible d’actualiser maintenant ; les dernières valeurs valides sont conservées.",
+      "Aktualisierung derzeit nicht möglich; die letzten gültigen Werte bleiben erhalten.",
+      "Impossibile aggiornare ora; vengono mantenuti gli ultimi valori validi."
+    ],
+    "Falha ao gerar backup completo: {v0}": [
+      "Failed to create full backup: {v0}",
+      "Error al crear la copia de seguridad completa: {v0}",
+      "Échec de la création de la sauvegarde complète : {v0}",
+      "Erstellen der vollständigen Sicherung fehlgeschlagen: {v0}",
+      "Creazione della copia di sicurezza completa non riuscita: {v0}"
+    ],
+    "Falha ao calcular Recordes RF: {v0}": [
+      "Failed to calculate RF records: {v0}",
+      "Error al calcular los récords RF: {v0}",
+      "Échec du calcul des records RF : {v0}",
+      "Berechnung der Funkrekorde fehlgeschlagen: {v0}",
+      "Calcolo dei record RF non riuscito: {v0}"
+    ],
+    "Job de Recordes RF não encontrado.": [
+      "RF records job not found.",
+      "Tarea de récords RF no encontrada.",
+      "Tâche de records RF introuvable.",
+      "Auftrag für Funkrekorde nicht gefunden.",
+      "Attività dei record RF non trovata."
+    ],
+    "Tempo esgotado aguardando cálculo compartilhado de Recordes RF.": [
+      "Timed out waiting for shared RF records calculation.",
+      "Tiempo de espera agotado para el cálculo compartido de récords RF.",
+      "Délai dépassé en attendant le calcul partagé des records RF.",
+      "Zeitüberschreitung beim Warten auf die gemeinsame Berechnung der Funkrekorde.",
+      "Tempo scaduto in attesa del calcolo condiviso dei record RF."
+    ],
+    "Configuração, enlaces Internet e envio rápido por clique direito": [
+      "Configuration, Internet links and quick sending by right-click",
+      "Configuración, enlaces de Internet y envío rápido con clic derecho",
+      "Configuration, liaisons Internet et envoi rapide par clic droit",
+      "Konfiguration, Internetverbindungen und Schnellversand per Rechtsklick",
+      "Configurazione, collegamenti Internet e invio rapido con clic destro"
+    ],
+    "Evita envio rápido para DMR, D-Star e SSIDs normalmente usados por infraestrutura": [
+      "Avoids quick sending to DMR, D-Star and SSIDs normally used by infrastructure",
+      "Evita el envío rápido a DMR, D-Star y SSID usados normalmente por infraestructura",
+      "Évite l’envoi rapide vers DMR, D-Star et les SSID habituellement utilisés par l’infrastructure",
+      "Verhindert Schnellversand an DMR, D-Star und normalerweise für Infrastruktur genutzte SSIDs",
+      "Evita l’invio rapido a DMR, D-Star e agli SSID normalmente usati dall’infrastruttura"
+    ],
+    "Path RF do iGate contém elemento inválido.": [
+      "The iGate RF path contains an invalid element.",
+      "La ruta RF del iGate contiene un elemento no válido.",
+      "Le chemin RF de l’iGate contient un élément invalide.",
+      "Der Funkpfad des iGate enthält ein ungültiges Element.",
+      "Il percorso RF dell’iGate contiene un elemento non valido."
+    ],
+    "Ainda não há instalador APRS público validado no site.": [
+      "There is no validated public APRS installer on the site yet.",
+      "Aún no hay un instalador APRS público validado en el sitio.",
+      "Aucun installateur APRS public validé n’est encore disponible sur le site.",
+      "Auf der Website gibt es noch kein validiertes öffentliches APRS-Installationsprogramm.",
+      "Sul sito non è ancora disponibile un programma di installazione APRS pubblico verificato."
+    ],
+    "Alias {v0} repetido como {v1}.": [
+      "Alias {v0} repeated as {v1}.",
+      "Alias {v0} repetido como {v1}.",
+      "Alias {v0} répété comme {v1}.",
+      "Alias {v0} als {v1} wiederholt.",
+      "Alias {v0} ripetuto come {v1}."
+    ],
+    "Arquivo de manifesto inválido.": [
+      "Invalid manifest file.",
+      "Archivo de manifiesto no válido.",
+      "Fichier manifeste invalide.",
+      "Ungültige Manifestdatei.",
+      "File manifesto non valido."
+    ],
+    "Consulta HTTPS nativa falhou.": [
+      "Native HTTPS request failed.",
+      "Error en la consulta HTTPS nativa.",
+      "Échec de la requête HTTPS native.",
+      "Native HTTPS-Abfrage fehlgeschlagen.",
+      "Richiesta HTTPS nativa non riuscita."
+    ],
+    "Consulta HTTPS nativa não respondeu.": [
+      "Native HTTPS request did not respond.",
+      "La consulta HTTPS nativa no respondió.",
+      "La requête HTTPS native n’a pas répondu.",
+      "Native HTTPS-Abfrage hat nicht geantwortet.",
+      "La richiesta HTTPS nativa non ha risposto."
+    ],
+    "Endereço inesperado de atualização.": [
+      "Unexpected update address.",
+      "Dirección de actualización inesperada.",
+      "Adresse de mise à jour inattendue.",
+      "Unerwartete Aktualisierungsadresse.",
+      "Indirizzo di aggiornamento inatteso."
+    ],
+    "Exportação em PDF indisponível nesta instalação (biblioteca reportlab ausente).": [
+      "PDF export unavailable in this installation (reportlab library missing).",
+      "Exportación PDF no disponible en esta instalación (falta la biblioteca reportlab).",
+      "Export PDF indisponible dans cette installation (bibliothèque reportlab absente).",
+      "PDF-Export in dieser Installation nicht verfügbar (reportlab-Bibliothek fehlt).",
+      "Esportazione PDF non disponibile in questa installazione (libreria reportlab assente)."
+    ],
+    "Falha ao resolver www.pt2vhf.com (DNS).": [
+      "Failed to resolve www.pt2vhf.com (DNS).",
+      "Error al resolver www.pt2vhf.com (DNS).",
+      "Échec de résolution de www.pt2vhf.com (DNS).",
+      "www.pt2vhf.com konnte nicht aufgelöst werden (DNS).",
+      "Risoluzione di www.pt2vhf.com non riuscita (DNS)."
+    ],
+    "Falha desconhecida.": [
+      "Unknown failure.",
+      "Fallo desconocido.",
+      "Échec inconnu.",
+      "Unbekannter Fehler.",
+      "Errore sconosciuto."
+    ],
+    "Fallback de TLS disponível só no Windows.": [
+      "TLS fallback available only on Windows.",
+      "La alternativa TLS solo está disponible en Windows.",
+      "Solution de repli TLS disponible uniquement sous Windows.",
+      "TLS-Ausweichmöglichkeit nur unter Windows verfügbar.",
+      "Alternativa TLS disponibile solo su Windows."
+    ],
+    "Limite de hops repetidos atingido.": [
+      "Repeated hop limit reached.",
+      "Límite de saltos repetidos alcanzado.",
+      "Limite de sauts répétés atteinte.",
+      "Grenze für wiederholte Sprünge erreicht.",
+      "Limite dei salti ripetuti raggiunto."
+    ],
+    "Loop: indicativo local já aparece no path.": [
+      "Loop: local callsign is already in the path.",
+      "Bucle: el indicativo local ya aparece en la ruta.",
+      "Boucle : l’indicatif local figure déjà dans le chemin.",
+      "Schleife: Lokales Rufzeichen ist bereits im Pfad enthalten.",
+      "Ciclo: il nominativo locale è già presente nel percorso."
+    ],
+    "Manifesto excede limite de tamanho.": [
+      "Manifest exceeds the size limit.",
+      "El manifiesto supera el límite de tamaño.",
+      "Le manifeste dépasse la taille limite.",
+      "Manifest überschreitet die Größenbegrenzung.",
+      "Il manifesto supera il limite di dimensione."
+    ],
+    "Manifesto não é JSON válido de esquema 1.": [
+      "Manifest is not valid schema 1 JSON.",
+      "El manifiesto no es JSON válido del esquema 1.",
+      "Le manifeste n’est pas un JSON valide de schéma 1.",
+      "Manifest ist kein gültiges JSON nach Schema 1.",
+      "Il manifesto non è un JSON valido di schema 1."
+    ],
+    "Nenhum alias elegível para este perfil de digi.": [
+      "No eligible alias for this digipeater profile.",
+      "Ningún alias válido para este perfil de digipeater.",
+      "Aucun alias admissible pour ce profil de digipeater.",
+      "Kein geeigneter Alias für dieses Digipeaterprofil.",
+      "Nessun alias idoneo per questo profilo digipeater."
+    ],
+    "Nenhum arquivo publicado.": [
+      "No published files.",
+      "Ningún archivo publicado.",
+      "Aucun fichier publié.",
+      "Keine veröffentlichten Dateien.",
+      "Nessun file pubblicato."
+    ],
+    "O manifesto não pertence ao APRS Client.": [
+      "The manifest does not belong to APRS Client.",
+      "El manifiesto no pertenece a APRS Client.",
+      "Le manifeste n’appartient pas à APRS Client.",
+      "Das Manifest gehört nicht zum APRS Client.",
+      "Il manifesto non appartiene ad APRS Client."
+    ],
+    "Path resultante excederia o limite operacional.": [
+      "The resulting path would exceed the operational limit.",
+      "La ruta resultante superaría el límite operativo.",
+      "Le chemin résultant dépasserait la limite opérationnelle.",
+      "Der resultierende Pfad würde die Betriebsgrenze überschreiten.",
+      "Il percorso risultante supererebbe il limite operativo."
+    ],
+    "RF direto observado": [
+      "Observed direct RF",
+      "RF directa observada",
+      "RF directe observée",
+      "Beobachteter direkter Funk",
+      "RF diretta osservata"
+    ],
+    "Radtel — interface serial": [
+      "Radtel — serial interface",
+      "Radtel — interfaz serie",
+      "Radtel — interface série",
+      "Radtel — serielle Schnittstelle",
+      "Radtel — interfaccia seriale"
+    ],
+    "Redirecionamento bloqueado na atualização.": [
+      "Redirect blocked during update.",
+      "Redirección bloqueada durante la actualización.",
+      "Redirection bloquée pendant la mise à jour.",
+      "Weiterleitung bei der Aktualisierung blockiert.",
+      "Reindirizzamento bloccato durante l’aggiornamento."
+    ],
+    "Resposta HTTPS nativa inválida.": [
+      "Invalid native HTTPS response.",
+      "Respuesta HTTPS nativa no válida.",
+      "Réponse HTTPS native invalide.",
+      "Ungültige native HTTPS-Antwort.",
+      "Risposta HTTPS nativa non valida."
+    ],
+    "Resposta inválida do site PT2VHF.": [
+      "Invalid response from the PT2VHF site.",
+      "Respuesta no válida del sitio PT2VHF.",
+      "Réponse invalide du site PT2VHF.",
+      "Ungültige Antwort der PT2VHF-Website.",
+      "Risposta non valida dal sito PT2VHF."
+    ],
+    "Sem path para digipeating.": [
+      "No path for digipeating.",
+      "Sin ruta para digipeating.",
+      "Aucun chemin pour le digipeating.",
+      "Kein Pfad für Digipeating.",
+      "Nessun percorso per il digipeating."
+    ],
+    "Tamanho ou SHA-256 inválidos.": [
+      "Invalid size or SHA-256.",
+      "Tamaño o SHA-256 no válidos.",
+      "Taille ou SHA-256 invalide.",
+      "Ungültige Größe oder SHA-256.",
+      "Dimensione o SHA-256 non validi."
+    ],
+    "Tempo esgotado ao consultar o site PT2VHF.": [
+      "Timed out querying the PT2VHF site.",
+      "Tiempo de espera agotado al consultar el sitio PT2VHF.",
+      "Délai dépassé lors de la consultation du site PT2VHF.",
+      "Zeitüberschreitung beim Abfragen der PT2VHF-Website.",
+      "Tempo scaduto durante la consultazione del sito PT2VHF."
+    ],
+    "URL externa ou arquivo inválido.": [
+      "External URL or invalid file.",
+      "URL externa o archivo no válido.",
+      "URL externe ou fichier invalide.",
+      "Externe URL oder ungültige Datei.",
+      "URL esterno o file non valido."
+    ],
+    "Versão publicada inválida.": [
+      "Invalid published version.",
+      "Versión publicada no válida.",
+      "Version publiée invalide.",
+      "Ungültige veröffentlichte Version.",
+      "Versione pubblicata non valida."
+    ],
+    "tempo esgotado": [
+      "timed out",
+      "tiempo agotado",
+      "délai dépassé",
+      "Zeitüberschreitung",
+      "tempo scaduto"
+    ],
+    "Bravo Tracker": [
+      "Bravo Tracker",
+      "Bravo Tracker",
+      "Bravo Tracker",
+      "Bravo Tracker",
+      "Bravo Tracker"
+    ],
+    "HBLink D-APRS Gateway": [
+      "HBLink D-APRS Gateway",
+      "HBLink D-APRS Gateway",
+      "HBLink D-APRS Gateway",
+      "HBLink D-APRS Gateway",
+      "HBLink D-APRS Gateway"
+    ],
+    "Radtel RT-950 Pro / TNC UART": [
+      "Radtel RT-950 Pro / TNC UART",
+      "Radtel RT-950 Pro / TNC UART",
+      "Radtel RT-950 Pro / TNC UART",
+      "Radtel RT-950 Pro / TNC UART",
+      "Radtel RT-950 Pro / TNC UART"
+    ],
+    "USB Serial — {v0}": [
+      "USB Serial — {v0}",
+      "USB Serial — {v0}",
+      "USB Serial — {v0}",
+      "USB Serial — {v0}",
+      "USB Serial — {v0}"
     ]
   },
   "pt-BR": {

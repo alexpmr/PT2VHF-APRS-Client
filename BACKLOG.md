@@ -1,6 +1,6 @@
 ## P1 — Pente fino obrigatório após v1.15.6 (01/11/2026, #157)
 
-- Correção candidata na branch `fix/i18n-complete-audit`: catálogo por chave, consulta compartilhada dos módulos, mensagens parametrizadas, proteção de dados recebidos e revisão de vocabulário técnico/avisos. Validação local: 707 testes + 12 subtestes, 2.546 chaves com parâmetros íntegros e 174 estados visíveis sem resíduos pelos critérios da auditoria. Evidências, reprodução e limites: `docs/i18n-complete-audit.md`. A v1.15.6 distribuída continua sendo o pacote anterior; não anunciar esta correção como já instalada no site.
+- Correção candidata na branch `fix/i18n-complete-audit`: catálogo por chave, consulta compartilhada dos módulos, mensagens parametrizadas, proteção de dados recebidos e revisão de vocabulário técnico/avisos. Validação local: 707 testes + 12 subtestes, 2.579 chaves com parâmetros íntegros e 174 estados visíveis sem resíduos pelos critérios da auditoria. Evidências, reprodução e limites: `docs/i18n-complete-audit.md`. A v1.15.6 distribuída continua sendo o pacote anterior; não anunciar esta correção como já instalada no site.
 
 - Relato do mantenedor: a v1.15.6 ainda exibe palavras em português em outros idiomas. As correções parciais não encerram o requisito.
 - Pedido: auditar e corrigir toda a interface nos seis idiomas PT-BR/EN/ES/FR/DE/IT, incluindo conteúdo dinâmico, modais, mensagens de erro, títulos, placeholders e acessibilidade. Preservar os quatro idiomas adicionais e as bandeiras da referência.
