@@ -5,6 +5,8 @@
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lang = () => (document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
   const tr = (pt,en,es,fr) => {
+  const consolidated = window.pt2vhfI18n.lookup(pt);
+  if (consolidated !== undefined) return consolidated;
     const l = lang();
     const locale = l.startsWith('de') ? 'de-DE'
       : l.startsWith('it') ? 'it-IT'
@@ -366,7 +368,7 @@
       try{
         const rows=await json('/api/v190/search?q='+encodeURIComponent(q)+'&limit=30');
         if(n!==seq)return;
-        results.innerHTML=rows.map(r=>'<button type="button" data-kind="'+esc(r.entity_type)+'" data-key="'+esc(r.key)+'" data-lat="'+esc(r.latitude)+'" data-lon="'+esc(r.longitude)+'"><span><strong>'+esc(r.key)+'</strong><small>'+esc(r.friendly_name||r.name||r.info||r.comment||'')+'</small></span><em>'+esc(r.entity_type)+'</em></button>').join('');
+        results.innerHTML=rows.map(r=>'<button type="button" data-kind="'+esc(r.entity_type)+'" data-key="'+esc(r.key)+'" data-lat="'+esc(r.latitude)+'" data-lon="'+esc(r.longitude)+'"><span><strong translate="no">'+esc(r.key)+'</strong><small translate="no">'+esc(r.friendly_name||r.name||r.info||r.comment||'')+'</small></span><em>'+esc(r.entity_type)+'</em></button>').join('');
         results.classList.toggle('hidden',!rows.length);
       }catch(e){results.innerHTML='<div class="v190-search-error">'+esc(e.message)+'</div>';results.classList.remove('hidden');}
     });
@@ -384,7 +386,7 @@
     let modal=$('#v190StationOrganizer');
     if(!modal){
       modal=document.createElement('div'); modal.id='v190StationOrganizer'; modal.className='message-alert-overlay hidden';
-      modal.innerHTML='<div class="message-alert-card v190-organizer"><div class="message-alert-content"><div class="message-alert-eyebrow">'+tr('Organização da estação','Station organization','Organización de estación','Organisation de station')+'</div><h3 id="v190OrgTitle"></h3><label class="field"><span>'+tr('Nome amigável','Friendly name','Nombre amigable','Nom convivial')+'</span><input id="v190Friendly"></label><label class="field"><span>'+tr('Grupo','Group','Grupo','Groupe')+'</span><select id="v190Group"></select></label><label class="field"><span>'+tr('Cor','Color','Color','Couleur')+'</span><input id="v190Color" type="color" value="#ffaa00"></label><label class="check-field"><input id="v190Favorite" type="checkbox"><span>'+tr('Favorita','Favorite','Favorita','Favorite')+'</span></label><label class="field"><span>'+tr('Nota','Note','Nota','Note')+'</span><textarea id="v190Note" rows="3"></textarea></label><div class="message-alert-actions"><button id="v190OrgSave" class="btn primary">'+tr('Salvar','Save','Guardar','Enregistrer')+'</button><button id="v190OrgClose" class="btn secondary">'+tr('Fechar','Close','Cerrar','Fermer')+'</button></div></div></div>';
+      modal.innerHTML='<div class="message-alert-card v190-organizer"><div class="message-alert-content"><div class="message-alert-eyebrow">'+tr('Organização da estação','Station organization','Organización de estación','Organisation de station')+'</div><h3 id="v190OrgTitle" translate="no"></h3><label class="field"><span>'+tr('Nome amigável','Friendly name','Nombre amigable','Nom convivial')+'</span><input id="v190Friendly"></label><label class="field"><span>'+tr('Grupo','Group','Grupo','Groupe')+'</span><select id="v190Group"></select></label><label class="field"><span>'+tr('Cor','Color','Color','Couleur')+'</span><input id="v190Color" type="color" value="#ffaa00"></label><label class="check-field"><input id="v190Favorite" type="checkbox"><span>'+tr('Favorita','Favorite','Favorita','Favorite')+'</span></label><label class="field"><span>'+tr('Nota','Note','Nota','Note')+'</span><textarea id="v190Note" rows="3"></textarea></label><div class="message-alert-actions"><button id="v190OrgSave" class="btn primary">'+tr('Salvar','Save','Guardar','Enregistrer')+'</button><button id="v190OrgClose" class="btn secondary">'+tr('Fechar','Close','Cerrar','Fermer')+'</button></div></div></div>';
       document.body.appendChild(modal);
       $('#v190OrgClose',modal).onclick=()=>modal.classList.add('hidden');
     }
@@ -394,7 +396,7 @@
     $('#v190Note',modal).value=meta.note||'';
     $('#v190Favorite',modal).checked=!!meta.favorite;
     $('#v190Color',modal).value=/^#[0-9a-f]{6}$/i.test(meta.color||'')?meta.color:'#ffaa00';
-    $('#v190Group',modal).innerHTML='<option value="">—</option>'+groups.map(g=>'<option value="'+g.id+'">'+esc(g.name)+'</option>').join('');
+    $('#v190Group',modal).innerHTML='<option value="">—</option>'+groups.map(g=>'<option translate="no" value="'+g.id+'">'+esc(g.name)+'</option>').join('');
     $('#v190Group',modal).value=meta.group_id||'';
     $('#v190OrgSave',modal).onclick=async()=>{
       await json('/api/v190/stations/'+encodeURIComponent(callsign)+'/meta',{method:'POST',body:JSON.stringify({friendly_name:$('#v190Friendly',modal).value,group_id:$('#v190Group',modal).value,color:$('#v190Color',modal).value,note:$('#v190Note',modal).value})});
@@ -409,7 +411,7 @@
     if(!config || $('#v190ConfigCard')) return;
     const card=document.createElement('div'); card.id='v190ConfigCard'; card.className='config-card full-card config-section config-section-app';
     card.innerHTML='<h3>'+tr('Backup completo, grupos e alertas','Full backup, groups and alerts','Backup completo, grupos y alertas','Sauvegarde complète, groupes et alertes')+'</h3>'+
-      '<div class="v190-config-grid"><div><h4>'+tr('Backup completo','Full backup','Backup completo','Sauvegarde complète')+'</h4><p>'+tr('Inclui banco, mensagens, estações, favoritos, tracklogs, agendamentos, grupos e preferências.','Includes database, messages, stations, favorites, tracklogs, schedules, groups and preferences.','Incluye base, mensajes, estaciones, favoritos, tracklogs, programaciones, grupos y preferencias.','Inclut base, messages, stations, favoris, traces, planifications, groupes et préférences.')+'</p><button id="v190BackupFull" type="button" class="btn secondary">'+tr('Criar backup completo','Create full backup','Crear backup completo','Créer sauvegarde complète')+'</button><input id="v190RestoreFile" type="file" accept=".zip"><button id="v190Restore" type="button" class="btn danger">'+tr('Restaurar backup','Restore backup','Restaurar backup','Restaurer sauvegarde')+'</button></div>'+
+      '<div class="v190-config-grid"><div><h4>'+tr('Backup completo','Full backup','Backup completo','Sauvegarde complète')+'</h4><p>'+tr('Inclui banco, mensagens, estações, favoritos, tracklogs, agendamentos, grupos e preferências.','Includes database, messages, stations, favorites, tracklogs, schedules, groups and preferences.','Incluye base, mensajes, estaciones, favoritos, tracklogs, programaciones, grupos y preferencias.','Inclut base, messages, stations, favoris, traces, planifications, groupes et préférences.')+'</p><button id="v190BackupFull" type="button" class="btn secondary">'+tr('Criar backup completo','Create full backup','Crear backup completo','Créer sauvegarde complète')+'</button><label class="btn secondary file-button" role="button" tabindex="0" id="v190RestoreFileLabel"><span>'+tr('Selecionar arquivo','Choose file','Elegir archivo','Choisir un fichier')+'</span><input id="v190RestoreFile" type="file" accept=".zip"></label><span id="v190RestoreFileName" translate="no">—</span><button id="v190Restore" type="button" class="btn danger">'+tr('Restaurar backup','Restore backup','Restaurar backup','Restaurer sauvegarde')+'</button></div>'+
       '<div><h4>'+tr('Grupos de estações','Station groups','Grupos de estaciones','Groupes de stations')+'</h4><div id="v190Groups"></div><div class="v190-group-add"><input id="v190GroupName" placeholder="'+tr('Nome do grupo','Group name','Nombre del grupo','Nom du groupe')+'"><button type="button" id="v190GroupAdd" class="btn secondary">'+tr('Adicionar','Add','Agregar','Ajouter')+'</button></div></div>'+
       '<div><h4>'+tr('Alertas e notificações de estações','Station alerts and notifications','Alertas y notificaciones de estaciones','Alertes et notifications des stations')+'</h4><p class="hint">'+tr('Desmarque Estação apareceu para silenciar os avisos de novas estações.','Uncheck Station appeared to mute new station alerts.','Desmarque Estación apareció para silenciar los avisos de estaciones nuevas.','Décochez Station apparue pour désactiver les alertes de nouvelles stations.')+'</p><div id="v190Alerts" class="v190-alert-list"></div><button type="button" id="v190AlertsSave" class="btn secondary">'+tr('Salvar alertas','Save alerts','Guardar alertas','Enregistrer alertes')+'</button></div></div>';
     // Always keep alert switches inside the visible Configuração grid,
@@ -419,11 +421,13 @@
     if(settingsForm && retentionCard) settingsForm.insertBefore(card,retentionCard);
     else if(settingsForm) settingsForm.appendChild(card);
     else config.appendChild(card);
-    const renderGroups=async()=>{const groups=await json('/api/v190/groups');$('#v190Groups',card).innerHTML=groups.length?groups.map(g=>'<span class="v190-group-chip"><span>'+esc(g.name)+' <small>'+g.members+'</small></span><button type="button" class="v190-group-sync" data-group-id="'+g.id+'" title="'+tr('Usar em mensagens agendadas','Use in scheduled messages','Usar en mensajes programados','Utiliser dans les messages planifiés')+'">→ MSG</button></span>').join(''):'—';};
+    const renderGroups=async()=>{const groups=await json('/api/v190/groups');$('#v190Groups',card).innerHTML=groups.length?groups.map(g=>'<span class="v190-group-chip"><span translate="no">'+esc(g.name)+' <small>'+g.members+'</small></span><button type="button" class="v190-group-sync" data-group-id="'+g.id+'" title="'+tr('Usar em mensagens agendadas','Use in scheduled messages','Usar en mensajes programados','Utiliser dans les messages planifiés')+'">→ MSG</button></span>').join(''):'—';};
     renderGroups();
     $('#v190Groups',card).addEventListener('click',async ev=>{const b=ev.target.closest('.v190-group-sync');if(!b)return;try{await json('/api/v190/groups/'+b.dataset.groupId+'/sync-recipient-group',{method:'POST',body:'{}'});notify(tr('Grupo sincronizado com as listas de destinatários das mensagens agendadas.','Group synced to scheduled-message recipient lists.','Grupo sincronizado con las listas de destinatarios programados.','Groupe synchronisé avec les listes de destinataires planifiées.'));}catch(e){notify(e.message);}});
     $('#v190GroupAdd',card).onclick=async()=>{const name=$('#v190GroupName',card).value.trim();if(!name)return;await json('/api/v190/groups',{method:'POST',body:JSON.stringify({name})});$('#v190GroupName',card).value='';renderGroups();};
     $('#v190BackupFull',card).onclick=()=>void createFullBackup();
+    $('#v190RestoreFile',card).onchange=()=>{ $('#v190RestoreFileName',card).textContent=$('#v190RestoreFile',card).files?.[0]?.name || '—'; };
+    $('#v190RestoreFileLabel',card).onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();$('#v190RestoreFile',card).click();}};
     $('#v190Restore',card).onclick=async()=>{
       const file=$('#v190RestoreFile',card).files?.[0];
       if(!file){

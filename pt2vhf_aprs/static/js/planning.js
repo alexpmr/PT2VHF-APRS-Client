@@ -7,6 +7,8 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
 const tr = (pt, en, es) => {
+  const consolidated = window.pt2vhfI18n.lookup(pt);
+  if (consolidated !== undefined) return consolidated;
   const l = lang();
   const locale = l.startsWith('de') ? 'de-DE' : l.startsWith('it') ? 'it-IT' : l.startsWith('ja') ? 'ja-JP'
     : l.startsWith('pl') ? 'pl-PL' : l.startsWith('nl') ? 'nl-NL' : l.startsWith('zh') ? 'zh-CN' : '';

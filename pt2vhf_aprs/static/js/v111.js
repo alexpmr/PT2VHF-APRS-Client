@@ -5,6 +5,8 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lang=()=>String(document.documentElement.lang||localStorage.getItem('pt2vhf_language')||'pt-BR').toLowerCase();
   const tr = (pt,en,es,fr) => {
+  const consolidated = window.pt2vhfI18n.lookup(pt);
+  if (consolidated !== undefined) return consolidated;
     const l = lang();
     const locale = l.startsWith('de') ? 'de-DE'
       : l.startsWith('it') ? 'it-IT'

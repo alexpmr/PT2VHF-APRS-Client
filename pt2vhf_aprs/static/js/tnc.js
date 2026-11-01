@@ -188,37 +188,15 @@
 
   function tr(pt) {
     const lang = tncLanguage();
+    const consolidated = window.pt2vhfI18n.lookup(pt, lang);
+    if (consolidated !== undefined) return consolidated;
     if (lang === 'pt-BR') return pt;
     return TNC_I18N[lang]?.[pt] || window.PT2VHF_I18N?.[lang]?.[pt] || pt;
   }
 
   function translateTncStatic() {
     for (const root of [$('#tncConfigBlock') || $('#tab-tnc'), $('#tncHeaderStatus')].filter(Boolean)) {
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-      const nodes = [];
-      while (walker.nextNode()) nodes.push(walker.currentNode);
-      for (const node of nodes) {
-        const parent = node.parentElement;
-        if (!parent || ['SCRIPT','STYLE','CODE'].includes(parent.tagName)) continue;
-        if (node._pt2vhfTncOriginal === undefined) {
-          node._pt2vhfTncOriginal = node._pt2vhfOriginalText !== undefined ? node._pt2vhfOriginalText : node.nodeValue;
-        }
-        const original = node._pt2vhfOriginalText !== undefined ? node._pt2vhfOriginalText : node._pt2vhfTncOriginal;
-        const trimmed = original.trim();
-        if (!trimmed) continue;
-        const lead = original.match(/^\s*/)?.[0] || '';
-        const trail = original.match(/\s*$/)?.[0] || '';
-        node.nodeValue = lead + tr(trimmed) + trail;
-      }
-      for (const el of root.querySelectorAll?.('[placeholder],[title],[aria-label]') || []) {
-        for (const attr of ['placeholder','title','aria-label']) {
-          if (!el.hasAttribute(attr)) continue;
-          const key = 'tncOriginal' + attr.replace(/[^a-z0-9]/gi,'_');
-          const appKey = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
-          if (!(key in el.dataset)) el.dataset[key] = el.dataset[appKey] || el.getAttribute(attr) || '';
-          el.setAttribute(attr, tr(el.dataset[appKey] || el.dataset[key]));
-        }
-      }
+      window.pt2vhfTranslateDom(root);
     }
   }
 
@@ -251,7 +229,7 @@
       }
     };
     const lang = tncLanguage();
-    return lang === 'pt-BR' ? text : (maps[lang]?.[text] || text);
+    return window.pt2vhfI18n.lookup(text, lang) ?? (lang === 'pt-BR' ? text : (maps[lang]?.[text] || text));
   }
 
   let lastConfig = null;

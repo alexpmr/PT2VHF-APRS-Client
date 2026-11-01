@@ -1,6 +1,8 @@
 (() => {
   'use strict';
   const t = (pt, en, es, fr) => {
+  const consolidated = window.pt2vhfI18n.lookup(pt);
+  if (consolidated !== undefined) return consolidated;
     const lang = (document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
     const locale = lang.startsWith('de') ? 'de-DE'
       : lang.startsWith('it') ? 'it-IT'
@@ -96,7 +98,7 @@
       try {
         const rows = await fetchJson('/api/v1818/stations/search?q='+encodeURIComponent(q)+'&limit=12');
         if (current !== seq) return;
-        results.innerHTML = rows.map(row => '<button type="button" data-call="'+esc(row.callsign)+'"><strong>'+esc(row.callsign)+'</strong><span>'+esc(row.name || row.info || '')+'</span></button>').join('');
+        results.innerHTML = rows.map(row => '<button type="button" data-call="'+esc(row.callsign)+'"><strong translate="no">'+esc(row.callsign)+'</strong><span translate="no">'+esc(row.name || row.info || '')+'</span></button>').join('');
         results.classList.toggle('hidden', !rows.length);
       } catch (_) { results.classList.add('hidden'); }
     });

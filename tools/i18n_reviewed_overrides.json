@@ -1,0 +1,1876 @@
+{
+  "locales": [
+    "en",
+    "es",
+    "fr",
+    "de-DE",
+    "it-IT"
+  ],
+  "entries": {
+    "RX": [
+      "RX",
+      "RX",
+      "RX",
+      "RX",
+      "RX"
+    ],
+    "TX": [
+      "TX",
+      "TX",
+      "TX",
+      "TX",
+      "TX"
+    ],
+    "HEX": [
+      "HEX",
+      "HEX",
+      "HEX",
+      "HEX",
+      "HEX"
+    ],
+    "PKT": [
+      "PKT",
+      "PKT",
+      "PKT",
+      "PKT",
+      "PKT"
+    ],
+    "RAM": [
+      "RAM",
+      "RAM",
+      "RAM",
+      "RAM",
+      "RAM"
+    ],
+    "CPU": [
+      "CPU",
+      "CPU",
+      "CPU",
+      "CPU",
+      "CPU"
+    ],
+    "Min": [
+      "Min",
+      "Min",
+      "Min",
+      "Min",
+      "Min"
+    ],
+    "Max": [
+      "Max",
+      "Máx",
+      "Max",
+      "Max",
+      "Max"
+    ],
+    "WIDE1-1,WIDE2-1": [
+      "WIDE1-1,WIDE2-1",
+      "WIDE1-1,WIDE2-1",
+      "WIDE1-1,WIDE2-1",
+      "WIDE1-1,WIDE2-1",
+      "WIDE1-1,WIDE2-1"
+    ],
+    "Host": [
+      "Host",
+      "Servidor",
+      "Hôte",
+      "Host",
+      "Host"
+    ],
+    "Peso": [
+      "Weight",
+      "Peso",
+      "Poids",
+      "Gewicht",
+      "Peso"
+    ],
+    "Cor": [
+      "Color",
+      "Color",
+      "Couleur",
+      "Farbe",
+      "Colore"
+    ],
+    "De:": [
+      "From:",
+      "De:",
+      "De :",
+      "Von:",
+      "Da:"
+    ],
+    "Fim": [
+      "End",
+      "Fin",
+      "Fin",
+      "Ende",
+      "Fine"
+    ],
+    "Log": [
+      "Log",
+      "Registro",
+      "Journal",
+      "Protokoll",
+      "Registro"
+    ],
+    "Ouvidos": [
+      "Heard",
+      "Escuchados",
+      "Entendus",
+      "Gehört",
+      "Ascoltati"
+    ],
+    "Nome": [
+      "Name",
+      "Nombre",
+      "Nom",
+      "Name",
+      "Nome"
+    ],
+    "Ativo": [
+      "Active",
+      "Activo",
+      "Actif",
+      "Aktiv",
+      "Attivo"
+    ],
+    "Inativo": [
+      "Inactive",
+      "Inactivo",
+      "Inactif",
+      "Inaktiv",
+      "Inattivo"
+    ],
+    "Sim": [
+      "Yes",
+      "Sí",
+      "Oui",
+      "Ja",
+      "Sì"
+    ],
+    "Não": [
+      "No",
+      "No",
+      "Non",
+      "Nein",
+      "No"
+    ],
+    "Limpar": [
+      "Clear",
+      "Limpiar",
+      "Effacer",
+      "Leeren",
+      "Cancella"
+    ],
+    "Apagar": [
+      "Delete",
+      "Eliminar",
+      "Supprimer",
+      "Löschen",
+      "Elimina"
+    ],
+    "Excluir": [
+      "Delete",
+      "Eliminar",
+      "Supprimer",
+      "Löschen",
+      "Elimina"
+    ],
+    "Cancelar": [
+      "Cancel",
+      "Cancelar",
+      "Annuler",
+      "Abbrechen",
+      "Annulla"
+    ],
+    "Iniciar": [
+      "Start",
+      "Iniciar",
+      "Démarrer",
+      "Starten",
+      "Avvia"
+    ],
+    "Parar": [
+      "Stop",
+      "Detener",
+      "Arrêter",
+      "Stoppen",
+      "Interrompi"
+    ],
+    "Próximo": [
+      "Next",
+      "Siguiente",
+      "Suivant",
+      "Weiter",
+      "Successivo"
+    ],
+    "Anterior": [
+      "Previous",
+      "Anterior",
+      "Précédent",
+      "Zurück",
+      "Precedente"
+    ],
+    "Mínimo": [
+      "Minimum",
+      "Mínimo",
+      "Minimum",
+      "Minimum",
+      "Minimo"
+    ],
+    "Máximo": [
+      "Maximum",
+      "Máximo",
+      "Maximum",
+      "Maximum",
+      "Massimo"
+    ],
+    "Atualizado": [
+      "Updated",
+      "Actualizado",
+      "Mis à jour",
+      "Aktualisiert",
+      "Aggiornato"
+    ],
+    "Atualizada": [
+      "Updated",
+      "Actualizada",
+      "Mise à jour",
+      "Aktualisiert",
+      "Aggiornata"
+    ],
+    "Desatualizado": [
+      "Out of date",
+      "Desactualizado",
+      "Obsolète",
+      "Veraltet",
+      "Non aggiornato"
+    ],
+    "APRS-IS desconectado.": [
+      "APRS-IS disconnected.",
+      "APRS-IS desconectado.",
+      "APRS-IS déconnecté.",
+      "APRS-IS getrennt.",
+      "APRS-IS disconnesso."
+    ],
+    "RX KISS/AX.25": [
+      "RX KISS/AX.25",
+      "RX KISS/AX.25",
+      "RX KISS/AX.25",
+      "RX KISS/AX.25",
+      "RX KISS/AX.25"
+    ],
+    "Texto ({versao} e {link} são substituídos)": [
+      "Text ({versao} and {link} are replaced)",
+      "Texto ({versao} y {link} se sustituyen)",
+      "Texte ({versao} et {link} sont remplacés)",
+      "Text ({versao} und {link} werden ersetzt)",
+      "Testo ({versao} e {link} vengono sostituiti)"
+    ],
+    "Status": [
+      "Status",
+      "Estado",
+      "État",
+      "Status",
+      "Stato"
+    ],
+    "Porta": [
+      "Port",
+      "Puerto",
+      "Port",
+      "Port",
+      "Porta"
+    ],
+    "Última": [
+      "Last",
+      "Última",
+      "Dernière",
+      "Letzte",
+      "Ultima"
+    ],
+    "Escolher": [
+      "Choose",
+      "Elegir",
+      "Choisir",
+      "Auswählen",
+      "Scegli"
+    ],
+    "Fechar": [
+      "Close",
+      "Cerrar",
+      "Fermer",
+      "Schließen",
+      "Chiudi"
+    ],
+    "Selecionar arquivo": [
+      "Choose file",
+      "Elegir archivo",
+      "Choisir un fichier",
+      "Datei auswählen",
+      "Scegli file"
+    ],
+    "Zoom in": [
+      "Zoom in",
+      "Acercar",
+      "Zoom avant",
+      "Vergrößern",
+      "Ingrandisci"
+    ],
+    "Zoom out": [
+      "Zoom out",
+      "Alejar",
+      "Zoom arrière",
+      "Verkleinern",
+      "Riduci"
+    ],
+    "Layers": [
+      "Layers",
+      "Capas",
+      "Couches",
+      "Ebenen",
+      "Livelli"
+    ],
+    "Marker": [
+      "Marker",
+      "Marcador",
+      "Marqueur",
+      "Markierung",
+      "Indicatore"
+    ],
+    "Close popup": [
+      "Close popup",
+      "Cerrar ventana emergente",
+      "Fermer la fenêtre contextuelle",
+      "Popup schließen",
+      "Chiudi finestra"
+    ],
+    "Close tooltip": [
+      "Close tooltip",
+      "Cerrar información",
+      "Fermer l’infobulle",
+      "Hinweis schließen",
+      "Chiudi suggerimento"
+    ],
+    "Close": [
+      "Close",
+      "Cerrar",
+      "Fermer",
+      "Schließen",
+      "Chiudi"
+    ],
+    "Play": [
+      "Play",
+      "Reproducir",
+      "Lire",
+      "Abspielen",
+      "Riproduci"
+    ],
+    "▶ Play": [
+      "▶ Play",
+      "▶ Reproducir",
+      "▶ Lire",
+      "▶ Abspielen",
+      "▶ Riproduci"
+    ],
+    "Stop": [
+      "Stop",
+      "Detener",
+      "Arrêter",
+      "Stoppen",
+      "Interrompi"
+    ],
+    "Reset": [
+      "Reset",
+      "Restablecer",
+      "Réinitialiser",
+      "Zurücksetzen",
+      "Ripristina"
+    ],
+    "Baud rate": [
+      "Baud rate",
+      "Velocidad en baudios",
+      "Débit en bauds",
+      "Baudrate",
+      "Velocità in baud"
+    ],
+    "🏴 English": [
+      "🇬🇧 English",
+      "🇬🇧 English",
+      "🇬🇧 English",
+      "🇬🇧 English",
+      "🇬🇧 English"
+    ],
+    "🇧🇷 Português - padrão": [
+      "🇧🇷 Português (Brasil)",
+      "🇧🇷 Português (Brasil)",
+      "🇧🇷 Português (Brasil)",
+      "🇧🇷 Português (Brasil)",
+      "🇧🇷 Português (Brasil)"
+    ],
+    "Estações únicas": [
+      "Unique stations",
+      "Estaciones únicas",
+      "Stations uniques",
+      "Eindeutige Stationen",
+      "Stazioni uniche"
+    ],
+    "Mensagens RX": [
+      "RX messages",
+      "Mensajes RX",
+      "Messages RX",
+      "RX-Nachrichten",
+      "Messaggi RX"
+    ],
+    "Mensagens TX": [
+      "TX messages",
+      "Mensajes TX",
+      "Messages TX",
+      "TX-Nachrichten",
+      "Messaggi TX"
+    ],
+    "Sem estações no período selecionado.": [
+      "No stations in the selected period.",
+      "No hay estaciones en el período seleccionado.",
+      "Aucune station pour la période sélectionnée.",
+      "Keine Stationen im gewählten Zeitraum.",
+      "Nessuna stazione nel periodo selezionato."
+    ],
+    "Configuração LAN alterada. Reinicie o aplicativo para aplicar o bind.": [
+      "LAN settings changed. Restart the application to apply the network binding.",
+      "La configuración LAN ha cambiado. Reinicie la aplicación para aplicar el enlace de red.",
+      "La configuration LAN a changé. Redémarrez l’application pour appliquer l’adresse d’écoute.",
+      "Die LAN-Einstellungen wurden geändert. Starten Sie die Anwendung neu, um die Netzwerkbindung anzuwenden.",
+      "La configurazione LAN è cambiata. Riavvia l’applicazione per applicare l’indirizzo di ascolto."
+    ],
+    "Confira a opção de som em Configuração → Aparência e o volume do Windows.": [
+      "Check the sound option under Settings → Appearance and the Windows volume.",
+      "Compruebe la opción de sonido en Configuración → Apariencia y el volumen de Windows.",
+      "Vérifiez l’option sonore dans Configuration → Apparence et le volume de Windows.",
+      "Prüfen Sie die Tonoption unter Einstellungen → Darstellung und die Windows-Lautstärke.",
+      "Controlla l’opzione audio in Impostazioni → Aspetto e il volume di Windows."
+    ],
+    "O analisador está aprendendo quem fala com quem. Nenhum ajuste automático é necessário no momento.": [
+      "The analyzer is learning which stations communicate. No automatic adjustment is currently needed.",
+      "El analizador está aprendiendo qué estaciones se comunican. No se necesita ningún ajuste automático por ahora.",
+      "L’analyseur apprend quelles stations communiquent. Aucun réglage automatique n’est nécessaire pour le moment.",
+      "Der Analysator lernt, welche Stationen miteinander kommunizieren. Derzeit sind keine automatischen Anpassungen erforderlich.",
+      "L’analizzatore sta apprendendo quali stazioni comunicano. Al momento non è necessaria alcuna regolazione automatica."
+    ],
+    "Nenhum tráfego APRS-IS registrado para este filtro.": [
+      "No APRS-IS traffic recorded for this filter.",
+      "No hay tráfico APRS-IS registrado para este filtro.",
+      "Aucun trafic APRS-IS enregistré pour ce filtre.",
+      "Für diesen Filter ist kein APRS-IS-Verkehr gespeichert.",
+      "Nessun traffico APRS-IS registrato per questo filtro."
+    ],
+    "Cliente APRS-IS desconectado.": [
+      "APRS-IS client disconnected.",
+      "Cliente APRS-IS desconectado.",
+      "Client APRS-IS déconnecté.",
+      "APRS-IS-Client getrennt.",
+      "Client APRS-IS disconnesso."
+    ],
+    "Endereçamento AX.25 incompleto.": [
+      "Incomplete AX.25 addressing.",
+      "Direccionamiento AX.25 incompleto.",
+      "Adressage AX.25 incomplet.",
+      "Unvollständige AX.25-Adressierung.",
+      "Indirizzamento AX.25 incompleto."
+    ],
+    "Log APRS-IS limpo.": [
+      "APRS-IS log cleared.",
+      "Registro APRS-IS borrado.",
+      "Journal APRS-IS effacé.",
+      "APRS-IS-Protokoll geleert.",
+      "Registro APRS-IS cancellato."
+    ],
+    "TX RF está pausado. Libere a transmissão no painel TNC / RF.": [
+      "RF TX is paused. Enable transmission in the TNC / RF panel.",
+      "TX RF está pausado. Habilite la transmisión en el panel TNC / RF.",
+      "Le TX RF est en pause. Activez la transmission dans le panneau TNC / RF.",
+      "RF-TX ist pausiert. Aktivieren Sie die Übertragung im Bereich TNC / RF.",
+      "Il TX RF è in pausa. Abilita la trasmissione nel pannello TNC / RF."
+    ],
+    "Tile DEM inválido ({v0}).": [
+      "Invalid DEM tile ({v0}).",
+      "Tesela DEM no válida ({v0}).",
+      "Tuile DEM non valide ({v0}).",
+      "Ungültige DEM-Kachel ({v0}).",
+      "Riquadro DEM non valido ({v0})."
+    ],
+    "API key {v0}": [
+      "API key {v0}",
+      "Clave API {v0}",
+      "Clé API {v0}",
+      "API-Schlüssel {v0}",
+      "Chiave API {v0}"
+    ],
+    "Instalada v{v0}. O pacote {v1} será baixado, validado e instalado automaticamente.": [
+      "Installed v{v0}. Package {v1} will be downloaded, verified and installed automatically.",
+      "Instalada v{v0}. El paquete {v1} se descargará, verificará e instalará automáticamente.",
+      "Version installée : v{v0}. Le paquet {v1} sera téléchargé, vérifié et installé automatiquement.",
+      "Installiert: v{v0}. Das Paket {v1} wird automatisch heruntergeladen, geprüft und installiert.",
+      "Versione installata: v{v0}. Il pacchetto {v1} verrà scaricato, verificato e installato automaticamente."
+    ],
+    "Mensagem para {v0} colocada na fila.": [
+      "Message for {v0} queued.",
+      "Mensaje para {v0} puesto en cola.",
+      "Message pour {v0} mis en attente.",
+      "Nachricht an {v0} in die Warteschlange gestellt.",
+      "Messaggio per {v0} messo in coda."
+    ],
+    "Lista ({v0})": [
+      "List ({v0})",
+      "Lista ({v0})",
+      "Liste ({v0})",
+      "Liste ({v0})",
+      "Lista ({v0})"
+    ],
+    "Nova versão v{v0} disponível": [
+      "New version v{v0} available",
+      "Nueva versión v{v0} disponible",
+      "Nouvelle version v{v0} disponible",
+      "Neue Version v{v0} verfügbar",
+      "Nuova versione v{v0} disponibile"
+    ],
+    "Precisão aproximada: {v0} m.": [
+      "Approximate accuracy: {v0} m.",
+      "Precisión aproximada: {v0} m.",
+      "Précision approximative : {v0} m.",
+      "Ungefähre Genauigkeit: {v0} m.",
+      "Precisione approssimativa: {v0} m."
+    ],
+    "Nenhuma porta local disponível entre {v0} e {v1}{v2}": [
+      "No local port available between {v0} and {v1}{v2}",
+      "No hay ningún puerto local disponible entre {v0} y {v1}{v2}",
+      "Aucun port local disponible entre {v0} et {v1}{v2}",
+      "Kein lokaler Port zwischen {v0} und {v1}{v2} verfügbar",
+      "Nessuna porta locale disponibile tra {v0} e {v1}{v2}"
+    ],
+    "Passcode APRS-IS:": [
+      "APRS-IS passcode:",
+      "Código de acceso APRS-IS:",
+      "Code d’accès APRS-IS :",
+      "APRS-IS-Passcode:",
+      "Codice di accesso APRS-IS:"
+    ],
+    "Escolher ícone APRS": [
+      "Choose APRS icon",
+      "Elegir icono APRS",
+      "Choisir une icône APRS",
+      "APRS-Symbol auswählen",
+      "Scegli icona APRS"
+    ],
+    "2. APRS-IS": [
+      "2. APRS-IS",
+      "2. APRS-IS",
+      "2. APRS-IS",
+      "2. APRS-IS",
+      "2. APRS-IS"
+    ],
+    "AX.25 inválido": [
+      "Invalid AX.25",
+      "AX.25 no válido",
+      "AX.25 non valide",
+      "Ungültiges AX.25",
+      "AX.25 non valido"
+    ],
+    "AX.25 inválidos": [
+      "Invalid AX.25 frames",
+      "Tramas AX.25 no válidas",
+      "Trames AX.25 non valides",
+      "Ungültige AX.25-Frames",
+      "Frame AX.25 non validi"
+    ],
+    "Agendamento não encontrado.": [
+      "Schedule not found.",
+      "Programación no encontrada.",
+      "Programmation introuvable.",
+      "Zeitplan nicht gefunden.",
+      "Pianificazione non trovata."
+    ],
+    "Alterações não salvas": [
+      "Unsaved changes",
+      "Cambios sin guardar",
+      "Modifications non enregistrées",
+      "Ungespeicherte Änderungen",
+      "Modifiche non salvate"
+    ],
+    "Descartar alterações não salvas?": [
+      "Discard unsaved changes?",
+      "¿Descartar los cambios sin guardar?",
+      "Abandonner les modifications non enregistrées ?",
+      "Ungespeicherte Änderungen verwerfen?",
+      "Scartare le modifiche non salvate?"
+    ],
+    "Equipamento serial não identificado": [
+      "Unidentified serial device",
+      "Dispositivo serie no identificado",
+      "Périphérique série non identifié",
+      "Nicht identifiziertes serielles Gerät",
+      "Dispositivo seriale non identificato"
+    ],
+    "Porta serial não configurada.": [
+      "Serial port not configured.",
+      "Puerto serie no configurado.",
+      "Port série non configuré.",
+      "Serielle Schnittstelle nicht konfiguriert.",
+      "Porta seriale non configurata."
+    ],
+    "Indicativo local não configurado.": [
+      "Local callsign not configured.",
+      "Indicativo local no configurado.",
+      "Indicatif local non configuré.",
+      "Lokales Rufzeichen nicht konfiguriert.",
+      "Nominativo locale non configurato."
+    ],
+    "Transmissão RF não autorizada.": [
+      "RF transmission is not authorized.",
+      "Transmisión RF no autorizada.",
+      "Transmission RF non autorisée.",
+      "RF-Übertragung nicht autorisiert.",
+      "Trasmissione RF non autorizzata."
+    ],
+    "Transporte não suportado: {v0}": [
+      "Unsupported transport: {v0}",
+      "Transporte no admitido: {v0}",
+      "Transport non pris en charge : {v0}",
+      "Nicht unterstützter Transport: {v0}",
+      "Trasporto non supportato: {v0}"
+    ],
+    "formato de tile de elevação não suportado": [
+      "unsupported elevation tile format",
+      "formato de tesela de elevación no admitido",
+      "format de tuile d’altitude non pris en charge",
+      "nicht unterstütztes Höhenkachelformat",
+      "formato del riquadro altimetrico non supportato"
+    ],
+    "Sem geometria histórica do enlace": [
+      "No historical link geometry",
+      "Sin geometría histórica del enlace",
+      "Sans géométrie historique de la liaison",
+      "Keine historische Verbindungsgeometrie",
+      "Nessuna geometria storica del collegamento"
+    ],
+    "Sem posição histórica no nó intermediário": [
+      "No historical position for the intermediate node",
+      "Sin posición histórica del nodo intermedio",
+      "Sans position historique du nœud intermédiaire",
+      "Keine historische Position für den Zwischenknoten",
+      "Nessuna posizione storica del nodo intermedio"
+    ],
+    "Sem resposta momentânea do progresso; tentando reconectar…": [
+      "Progress temporarily unavailable; reconnecting…",
+      "Progreso no disponible temporalmente; intentando reconectar…",
+      "Progression temporairement indisponible ; reconnexion…",
+      "Fortschritt vorübergehend nicht verfügbar; erneuter Verbindungsversuch…",
+      "Avanzamento temporaneamente non disponibile; tentativo di riconnessione…"
+    ],
+    "Dependência aprslib não instalada. Execute pip install -r requirements.txt": [
+      "The aprslib dependency is not installed. Run pip install -r requirements.txt",
+      "La dependencia aprslib no está instalada. Ejecute pip install -r requirements.txt",
+      "La dépendance aprslib n’est pas installée. Exécutez pip install -r requirements.txt",
+      "Die Abhängigkeit aprslib ist nicht installiert. Führen Sie pip install -r requirements.txt aus",
+      "La dipendenza aprslib non è installata. Esegui pip install -r requirements.txt"
+    ],
+    "Apagar TODAS as mensagens e boletins armazenados neste computador? Somente o histórico local de mensagens será removido. Esta ação não pode ser desfeita.": [
+      "Delete ALL messages and bulletins stored on this computer? Only local message history will be removed. This action cannot be undone.",
+      "¿Eliminar TODOS los mensajes y boletines almacenados en este equipo? Solo se eliminará el historial local de mensajes. Esta acción no se puede deshacer.",
+      "Supprimer TOUS les messages et bulletins enregistrés sur cet ordinateur ? Seul l’historique local des messages sera supprimé. Cette action ne peut pas être annulée.",
+      "ALLE auf diesem Computer gespeicherten Nachrichten und Bulletins löschen? Nur der lokale Nachrichtenverlauf wird entfernt. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "Eliminare TUTTI i messaggi e i bollettini memorizzati su questo computer? Verrà rimosso solo lo storico locale dei messaggi. Questa azione non può essere annullata."
+    ],
+    "Recriar tabelas, colunas e índices ausentes e preencher a posição dos eventos de enlace? Nenhum registro é apagado.": [
+      "Recreate missing tables, columns and indexes, and fill in link-event positions? No records are deleted.",
+      "¿Recrear las tablas, columnas e índices que faltan y completar las posiciones de los eventos de enlace? No se elimina ningún registro.",
+      "Recréer les tables, colonnes et index manquants et compléter les positions des événements de liaison ? Aucun enregistrement n’est supprimé.",
+      "Fehlende Tabellen, Spalten und Indizes neu erstellen und die Positionen der Verbindungsereignisse ergänzen? Es werden keine Datensätze gelöscht.",
+      "Ricreare le tabelle, le colonne e gli indici mancanti e completare le posizioni degli eventi di collegamento? Nessun record viene eliminato."
+    ],
+    "Internet→RF só considera mensagens cujo destino tenha sido ouvido diretamente por RF dentro da janela configurada. Tráfego Internet genérico não é despejado no canal.": [
+      "Internet→RF only considers messages whose recipient was heard directly over RF within the configured time window. Generic Internet traffic is not sent to the channel.",
+      "Internet→RF solo considera los mensajes cuyo destinatario se haya escuchado directamente por RF dentro del intervalo configurado. El tráfico genérico de Internet no se envía al canal.",
+      "Internet→RF ne prend en compte que les messages dont le destinataire a été entendu directement en RF pendant la période configurée. Le trafic Internet générique n’est pas envoyé sur le canal.",
+      "Internet→RF berücksichtigt nur Nachrichten, deren Empfänger im konfigurierten Zeitfenster direkt über RF gehört wurde. Allgemeiner Internetverkehr wird nicht auf den Kanal übertragen.",
+      "Internet→RF considera solo i messaggi il cui destinatario è stato ascoltato direttamente via RF nell’intervallo configurato. Il traffico Internet generico non viene inviato sul canale."
+    ],
+    "O filtro APRS-IS está vazio. Dependendo do servidor e da porta utilizados, o cliente poderá receber um volume muito maior de tráfego, inclusive todo o fluxo disponibilizado nessa conexão.\n\nDeseja continuar sem filtro?": [
+      "The APRS-IS filter is empty. Depending on the server and port, the client may receive much more traffic, including the entire stream available on this connection.\n\nContinue without a filter?",
+      "El filtro APRS-IS está vacío. Según el servidor y el puerto utilizados, el cliente puede recibir mucho más tráfico, incluido todo el flujo disponible en esta conexión.\n\n¿Desea continuar sin filtro?",
+      "Le filtre APRS-IS est vide. Selon le serveur et le port utilisés, le client peut recevoir beaucoup plus de trafic, y compris l’ensemble du flux disponible sur cette connexion.\n\nContinuer sans filtre ?",
+      "Der APRS-IS-Filter ist leer. Je nach Server und Port kann der Client wesentlich mehr Verkehr empfangen, einschließlich des gesamten auf dieser Verbindung verfügbaren Datenstroms.\n\nOhne Filter fortfahren?",
+      "Il filtro APRS-IS è vuoto. A seconda del server e della porta utilizzati, il client può ricevere molto più traffico, compreso l’intero flusso disponibile su questa connessione.\n\nContinuare senza filtro?"
+    ],
+    "O grafo usa mensagens, ACK/REJ e presença RF para priorizar tráfego útil e evitar repetição desnecessária. Ele não reescreve arbitrariamente paths de terceiros nem inventa enlaces RF.": [
+      "The graph uses messages, ACK/REJ and RF presence to prioritize useful traffic and avoid unnecessary repetition. It does not arbitrarily rewrite third-party paths or invent RF links.",
+      "El grafo utiliza mensajes, ACK/REJ y presencia RF para priorizar el tráfico útil y evitar repeticiones innecesarias. No reescribe arbitrariamente rutas de terceros ni inventa enlaces RF.",
+      "Le graphe utilise les messages, ACK/REJ et la présence RF pour privilégier le trafic utile et éviter les répétitions inutiles. Il ne réécrit pas arbitrairement les chemins de tiers et n’invente pas de liaisons RF.",
+      "Der Graph verwendet Nachrichten, ACK/REJ und RF-Präsenz, um nützlichen Verkehr zu priorisieren und unnötige Wiederholungen zu vermeiden. Er schreibt fremde Pfade nicht willkürlich um und erfindet keine RF-Verbindungen.",
+      "Il grafo utilizza messaggi, ACK/REJ e presenza RF per dare priorità al traffico utile ed evitare ripetizioni inutili. Non riscrive arbitrariamente i percorsi di terzi e non inventa collegamenti RF."
+    ],
+    "Registros ainda presentes no banco, no período selecionado. Estações, digis e iGates são identidades distintas; eventos e pacotes não são a mesma unidade.": [
+      "Records still present in the database for the selected period. Stations, digipeaters and iGates are distinct identities; events and packets are not the same unit.",
+      "Registros que siguen presentes en la base de datos para el período seleccionado. Las estaciones, los digipeaters y los iGates son identidades distintas; los eventos y los paquetes no son la misma unidad.",
+      "Enregistrements encore présents dans la base pour la période sélectionnée. Les stations, digipeaters et iGates sont des identités distinctes ; les événements et les paquets ne constituent pas la même unité.",
+      "Im gewählten Zeitraum noch in der Datenbank vorhandene Datensätze. Stationen, Digipeater und iGates sind unterschiedliche Identitäten; Ereignisse und Pakete sind nicht dieselbe Einheit.",
+      "Record ancora presenti nel database per il periodo selezionato. Stazioni, digipeater e iGates sono identità distinte; eventi e pacchetti non sono la stessa unità."
+    ],
+    "Relevo com corte": [
+      "Cutaway terrain",
+      "Relieve con corte",
+      "Relief en coupe",
+      "Geländeschnitt",
+      "Rilievo in sezione"
+    ],
+    "Relevo": [
+      "Terrain",
+      "Relieve",
+      "Relief",
+      "Gelände",
+      "Rilievo"
+    ],
+    "Enlace": [
+      "Link",
+      "Enlace",
+      "Liaison",
+      "Verbindung",
+      "Collegamento"
+    ],
+    "Enlaces": [
+      "Links",
+      "Enlaces",
+      "Liaisons",
+      "Verbindungen",
+      "Collegamenti"
+    ],
+    "Indicativo": [
+      "Callsign",
+      "Indicativo",
+      "Indicatif",
+      "Rufzeichen",
+      "Nominativo"
+    ],
+    "Indicativos": [
+      "Callsigns",
+      "Indicativos",
+      "Indicatifs",
+      "Rufzeichen",
+      "Nominativi"
+    ],
+    "Indicativo de destino inválido.": [
+      "Invalid destination callsign.",
+      "Indicativo de destino no válido.",
+      "Indicatif de destination non valide.",
+      "Ungültiges Zielrufzeichen.",
+      "Nominativo di destinazione non valido."
+    ],
+    "Indicativo inválido para Favoritos.": [
+      "Invalid callsign for Favorites.",
+      "Indicativo no válido para Favoritos.",
+      "Indicatif non valide pour les favoris.",
+      "Ungültiges Rufzeichen für Favoriten.",
+      "Nominativo non valido per i preferiti."
+    ],
+    "Indicativo inválido para cálculo do passcode APRS-IS.": [
+      "Invalid callsign for APRS-IS passcode calculation.",
+      "Indicativo no válido para calcular el código de acceso APRS-IS.",
+      "Indicatif non valide pour calculer le code d’accès APRS-IS.",
+      "Ungültiges Rufzeichen zur Berechnung des APRS-IS-Passcodes.",
+      "Nominativo non valido per calcolare il codice di accesso APRS-IS."
+    ],
+    "Indicativo inválido.": [
+      "Invalid callsign.",
+      "Indicativo no válido.",
+      "Indicatif non valide.",
+      "Ungültiges Rufzeichen.",
+      "Nominativo non valido."
+    ],
+    "Indicativo local ausente.": [
+      "Local callsign is missing.",
+      "Falta el indicativo local.",
+      "L’indicatif local est manquant.",
+      "Lokales Rufzeichen fehlt.",
+      "Nominativo locale mancante."
+    ],
+    "Indicativo, nome ou informação": [
+      "Callsign, name or information",
+      "Indicativo, nombre o información",
+      "Indicatif, nom ou information",
+      "Rufzeichen, Name oder Information",
+      "Nominativo, nome o informazioni"
+    ],
+    "Indicativo/SSID AX.25 inválido: {v0}": [
+      "Invalid AX.25 callsign/SSID: {v0}",
+      "Indicativo/SSID AX.25 no válido: {v0}",
+      "Indicatif/SSID AX.25 non valide : {v0}",
+      "Ungültiges AX.25-Rufzeichen/SSID: {v0}",
+      "Nominativo/SSID AX.25 non valido: {v0}"
+    ],
+    "Indicativo/SSID inválido: {v0}": [
+      "Invalid callsign/SSID: {v0}",
+      "Indicativo/SSID no válido: {v0}",
+      "Indicatif/SSID non valide : {v0}",
+      "Ungültiges Rufzeichen/SSID: {v0}",
+      "Nominativo/SSID non valido: {v0}"
+    ],
+    "Informe o indicativo de destino.": [
+      "Enter the destination callsign.",
+      "Introduzca el indicativo de destino.",
+      "Saisissez l’indicatif de destination.",
+      "Geben Sie das Zielrufzeichen ein.",
+      "Inserisci il nominativo di destinazione."
+    ],
+    "Informe pelo menos um indicativo válido.": [
+      "Enter at least one valid callsign.",
+      "Introduzca al menos un indicativo válido.",
+      "Saisissez au moins un indicatif valide.",
+      "Geben Sie mindestens ein gültiges Rufzeichen ein.",
+      "Inserisci almeno un nominativo valido."
+    ],
+    "Informe um indicativo válido para a query APRSH.": [
+      "Enter a valid callsign for the APRSH query.",
+      "Introduzca un indicativo válido para la consulta APRSH.",
+      "Saisissez un indicatif valide pour la requête APRSH.",
+      "Geben Sie ein gültiges Rufzeichen für die APRSH-Abfrage ein.",
+      "Inserisci un nominativo valido per la richiesta APRSH."
+    ],
+    "Não foi possível determinar outro indicativo para responder.": [
+      "Could not determine another callsign to reply to.",
+      "No se pudo determinar otro indicativo al que responder.",
+      "Impossible de déterminer un autre indicatif auquel répondre.",
+      "Es konnte kein anderes Rufzeichen für die Antwort ermittelt werden.",
+      "Non è stato possibile individuare un altro nominativo a cui rispondere."
+    ],
+    "Pesquisar rotas completas por indicativo de destino": [
+      "Search complete routes by destination callsign",
+      "Buscar rutas completas por indicativo de destino",
+      "Rechercher des routes complètes par indicatif de destination",
+      "Vollständige Routen nach Zielrufzeichen suchen",
+      "Cerca percorsi completi per nominativo di destinazione"
+    ],
+    "Primeiro indicativo": [
+      "First callsign",
+      "Primer indicativo",
+      "Premier indicatif",
+      "Erstes Rufzeichen",
+      "Primo nominativo"
+    ],
+    "Segundo indicativo": [
+      "Second callsign",
+      "Segundo indicativo",
+      "Deuxième indicatif",
+      "Zweites Rufzeichen",
+      "Secondo nominativo"
+    ],
+    "Configure o indicativo/SSID local antes de transmitir ACK por RF.": [
+      "Configure the local callsign/SSID before transmitting ACK over RF.",
+      "Configure el indicativo/SSID local antes de transmitir ACK por RF.",
+      "Configurez l’indicatif/SSID local avant de transmettre un ACK en RF.",
+      "Konfigurieren Sie das lokale Rufzeichen/SSID, bevor Sie ACK über RF senden.",
+      "Configura il nominativo/SSID locale prima di trasmettere ACK via RF."
+    ],
+    "Configure o indicativo/SSID local antes de transmitir por RF.": [
+      "Configure the local callsign/SSID before transmitting over RF.",
+      "Configure el indicativo/SSID local antes de transmitir por RF.",
+      "Configurez l’indicatif/SSID local avant de transmettre en RF.",
+      "Konfigurieren Sie das lokale Rufzeichen/SSID, bevor Sie über RF senden.",
+      "Configura il nominativo/SSID locale prima di trasmettere via RF."
+    ],
+    "AGWPE conectado; aguardando frame AX.25 bruto (raw mode).": [
+      "AGWPE connected; waiting for a raw AX.25 frame (raw mode).",
+      "AGWPE conectado; esperando una trama AX.25 sin procesar (raw mode).",
+      "AGWPE connecté ; en attente d’une trame AX.25 brute (raw mode).",
+      "AGWPE verbunden; Warten auf einen rohen AX.25-Frame (raw mode).",
+      "AGWPE connesso; in attesa di un frame AX.25 grezzo (raw mode)."
+    ],
+    "APRS de {v0}": [
+      "APRS from {v0}",
+      "APRS de {v0}",
+      "APRS de {v0}",
+      "APRS von {v0}",
+      "APRS da {v0}"
+    ],
+    "AX.25 RX operacional; nenhum TX confirmado nesta sessão.": [
+      "AX.25 RX operational; no TX confirmed in this session.",
+      "RX AX.25 operativo; ningún TX confirmado en esta sesión.",
+      "RX AX.25 opérationnel ; aucun TX confirmé pendant cette session.",
+      "AX.25-RX betriebsbereit; kein TX in dieser Sitzung bestätigt.",
+      "RX AX.25 operativo; nessun TX confermato in questa sessione."
+    ],
+    "Acesso por outro dispositivo confirmado pelo servidor.": [
+      "Access from another device confirmed by the server.",
+      "Acceso desde otro dispositivo confirmado por el servidor.",
+      "Accès depuis un autre appareil confirmé par le serveur.",
+      "Zugriff von einem anderen Gerät vom Server bestätigt.",
+      "Accesso da un altro dispositivo confermato dal server."
+    ],
+    "Bind LAN funcionando; regra de firewall não confirmada.": [
+      "LAN binding working; firewall rule not confirmed.",
+      "El enlace de red LAN funciona; la regla del firewall no está confirmada.",
+      "L’adresse d’écoute LAN fonctionne ; la règle du pare-feu n’est pas confirmée.",
+      "LAN-Bindung funktioniert; Firewall-Regel nicht bestätigt.",
+      "L’indirizzo di ascolto LAN funziona; regola del firewall non confermata."
+    ],
+    "Bytes recebidos pelo TNC em protocolo terminal; KISS não é o protocolo esperado.": [
+      "Bytes received from the TNC using a terminal protocol; KISS is not the expected protocol.",
+      "Bytes recibidos del TNC mediante un protocolo de terminal; KISS no es el protocolo esperado.",
+      "Octets reçus du TNC avec un protocole terminal ; KISS n’est pas le protocole attendu.",
+      "Bytes vom TNC im Terminalprotokoll empfangen; KISS ist nicht das erwartete Protokoll.",
+      "Byte ricevuti dal TNC con un protocollo terminale; KISS non è il protocollo previsto."
+    ],
+    "Bytes recebidos, mas nenhum frame KISS reconhecido.": [
+      "Bytes received, but no KISS frame recognized.",
+      "Bytes recibidos, pero no se ha reconocido ninguna trama KISS.",
+      "Octets reçus, mais aucune trame KISS reconnue.",
+      "Bytes empfangen, aber kein KISS-Frame erkannt.",
+      "Byte ricevuti, ma nessun frame KISS riconosciuto."
+    ],
+    "Frames KISS chegam, mas há AX.25 inválido.": [
+      "KISS frames are arriving, but invalid AX.25 data is present.",
+      "Llegan tramas KISS, pero hay datos AX.25 no válidos.",
+      "Des trames KISS arrivent, mais des données AX.25 ne sont pas valides.",
+      "KISS-Frames treffen ein, aber es liegen ungültige AX.25-Daten vor.",
+      "Arrivano frame KISS, ma sono presenti dati AX.25 non validi."
+    ],
+    "KISS detectado; aguardando AX.25 válido.": [
+      "KISS detected; waiting for valid AX.25.",
+      "KISS detectado; esperando AX.25 válido.",
+      "KISS détecté ; en attente de données AX.25 valides.",
+      "KISS erkannt; Warten auf gültige AX.25-Daten.",
+      "KISS rilevato; in attesa di dati AX.25 validi."
+    ],
+    "Kenwood TM-D700 em modo terminal/PKT: porta aberta e bytes chegando. Isto é compatível com o perfil selecionado; não existe exigência de menu KISS neste modo. Serial e packet RF possuem velocidades independentes.": [
+      "Kenwood TM-D700 in terminal/PKT mode: port open and bytes arriving. This is compatible with the selected profile; no KISS menu is required in this mode. Serial and RF packet speeds are independent.",
+      "Kenwood TM-D700 en modo terminal/PKT: puerto abierto y recepción de bytes. Es compatible con el perfil seleccionado; no se requiere un menú KISS en este modo. Las velocidades serie y de paquetes RF son independientes.",
+      "Kenwood TM-D700 en mode terminal/PKT : port ouvert et réception d’octets. Cela correspond au profil sélectionné ; aucun menu KISS n’est requis dans ce mode. Les vitesses série et des paquets RF sont indépendantes.",
+      "Kenwood TM-D700 im Terminal-/PKT-Modus: Schnittstelle offen und Bytes werden empfangen. Dies ist mit dem gewählten Profil kompatibel; in diesem Modus ist kein KISS-Menü erforderlich. Die Geschwindigkeiten der seriellen Schnittstelle und der RF-Pakete sind unabhängig.",
+      "Kenwood TM-D700 in modalità terminale/PKT: porta aperta e byte in arrivo. È compatibile con il profilo selezionato; in questa modalità non è richiesto un menu KISS. Le velocità seriale e dei pacchetti RF sono indipendenti."
+    ],
+    "Localização obtida (precisão aproximada: {v0} m).": [
+      "Location obtained (approximate accuracy: {v0} m).",
+      "Ubicación obtenida (precisión aproximada: {v0} m).",
+      "Position obtenue (précision approximative : {v0} m).",
+      "Position ermittelt (ungefähre Genauigkeit: {v0} m).",
+      "Posizione ottenuta (precisione approssimativa: {v0} m)."
+    ],
+    "Localização obtida.": [
+      "Location obtained.",
+      "Ubicación obtenida.",
+      "Position obtenue.",
+      "Position ermittelt.",
+      "Posizione ottenuta."
+    ],
+    "Na fila": [
+      "Queued",
+      "En cola",
+      "En attente",
+      "In der Warteschlange",
+      "In coda"
+    ],
+    "Na fila RF": [
+      "Queued for RF",
+      "En cola RF",
+      "En attente RF",
+      "In der RF-Warteschlange",
+      "In coda RF"
+    ],
+    "Nenhum destinatário válido configurado.": [
+      "No valid recipient configured.",
+      "No hay ningún destinatario válido configurado.",
+      "Aucun destinataire valide configuré.",
+      "Kein gültiger Empfänger konfiguriert.",
+      "Nessun destinatario valido configurato."
+    ],
+    "Não foi possível detectar o IPv4 LAN.": [
+      "Could not detect the LAN IPv4 address.",
+      "No se pudo detectar la dirección IPv4 de la LAN.",
+      "Impossible de détecter l’adresse IPv4 du LAN.",
+      "Die LAN-IPv4-Adresse konnte nicht ermittelt werden.",
+      "Non è stato possibile rilevare l’indirizzo IPv4 della LAN."
+    ],
+    "Porta serial ativa em protocolo terminal/TNC. Bytes estão chegando; KISS não é o protocolo esperado para este perfil.": [
+      "Serial port active using a terminal/TNC protocol. Bytes are arriving; KISS is not the expected protocol for this profile.",
+      "Puerto serie activo con un protocolo terminal/TNC. Se reciben bytes; KISS no es el protocolo esperado para este perfil.",
+      "Port série actif avec un protocole terminal/TNC. Des octets arrivent ; KISS n’est pas le protocole attendu pour ce profil.",
+      "Serielle Schnittstelle mit Terminal-/TNC-Protokoll aktiv. Bytes treffen ein; KISS ist für dieses Profil nicht das erwartete Protokoll.",
+      "Porta seriale attiva con un protocollo terminale/TNC. Arrivano byte; KISS non è il protocollo previsto per questo profilo."
+    ],
+    "RX e TX observados nesta sessão.": [
+      "RX and TX observed in this session.",
+      "RX y TX observados en esta sesión.",
+      "RX et TX observés pendant cette session.",
+      "RX und TX in dieser Sitzung beobachtet.",
+      "RX e TX osservati in questa sessione."
+    ],
+    "Reenviada": [
+      "Resent",
+      "Reenviada",
+      "Renvoyé",
+      "Erneut gesendet",
+      "Reinviato"
+    ],
+    "Sem visada direta: o enlace depende de difração no terreno; vegetação e prédios podem impedi-lo.": [
+      "No direct line of sight: the link depends on terrain diffraction; vegetation and buildings may block it.",
+      "Sin línea de visión directa: el enlace depende de la difracción en el terreno; la vegetación y los edificios pueden bloquearlo.",
+      "Sans visibilité directe : la liaison dépend de la diffraction du terrain ; la végétation et les bâtiments peuvent la bloquer.",
+      "Keine direkte Sichtverbindung: Die Verbindung hängt von der Beugung am Gelände ab; Vegetation und Gebäude können sie blockieren.",
+      "Nessuna visibilità diretta: il collegamento dipende dalla diffrazione del terreno; vegetazione ed edifici possono impedirlo."
+    ],
+    "Serial ativa em modo terminal/PKT; bytes recebidos. KISS não é exigido por este perfil.": [
+      "Serial active in terminal/PKT mode; bytes received. KISS is not required by this profile.",
+      "Puerto serie activo en modo terminal/PKT; bytes recibidos. Este perfil no requiere KISS.",
+      "Port série actif en mode terminal/PKT ; octets reçus. Ce profil ne nécessite pas KISS.",
+      "Serielle Schnittstelle im Terminal-/PKT-Modus aktiv; Bytes empfangen. Dieses Profil erfordert kein KISS.",
+      "Porta seriale attiva in modalità terminale/PKT; byte ricevuti. Questo profilo non richiede KISS."
+    ],
+    "Servidor não responde no IPv4 LAN. Verifique bind e porta.": [
+      "The server is not responding on the LAN IPv4 address. Check the network binding and port.",
+      "El servidor no responde en la dirección IPv4 de la LAN. Compruebe la dirección de escucha y el puerto.",
+      "Le serveur ne répond pas à l’adresse IPv4 du LAN. Vérifiez l’adresse d’écoute et le port.",
+      "Der Server antwortet nicht unter der LAN-IPv4-Adresse. Prüfen Sie die Netzwerkbindung und den Port.",
+      "Il server non risponde all’indirizzo IPv4 della LAN. Controlla l’indirizzo di ascolto e la porta."
+    ],
+    "Servidor responde no IP LAN deste host; teste em outra máquina para validar firewall/rede.": [
+      "The server responds on this host’s LAN IP; test from another computer to check the firewall and network.",
+      "El servidor responde en la IP LAN de este equipo; pruebe desde otro equipo para verificar el firewall y la red.",
+      "Le serveur répond à l’adresse IP LAN de cet hôte ; testez depuis un autre ordinateur pour vérifier le pare-feu et le réseau.",
+      "Der Server antwortet unter der LAN-IP dieses Hosts; testen Sie von einem anderen Computer aus, um Firewall und Netzwerk zu prüfen.",
+      "Il server risponde all’IP LAN di questo host; prova da un altro computer per verificare firewall e rete."
+    ],
+    "Servidor restrito a localhost. Habilite LAN nas Configurações e reinicie.": [
+      "The server is restricted to localhost. Enable LAN in Settings and restart.",
+      "El servidor está restringido a localhost. Habilite la LAN en Configuración y reinicie.",
+      "Le serveur est limité à localhost. Activez le LAN dans Configuration et redémarrez.",
+      "Der Server ist auf localhost beschränkt. Aktivieren Sie LAN in den Einstellungen und starten Sie neu.",
+      "Il server è limitato a localhost. Abilita la LAN in Impostazioni e riavvia."
+    ],
+    "Timestamp: {v0}": [
+      "Timestamp: {v0}",
+      "Marca de tiempo: {v0}",
+      "Horodatage : {v0}",
+      "Zeitstempel: {v0}",
+      "Data e ora: {v0}"
+    ],
+    "Transporte aberto, aguardando dados.": [
+      "Transport open, waiting for data.",
+      "Transporte abierto, esperando datos.",
+      "Transport ouvert, en attente de données.",
+      "Transport geöffnet, Warten auf Daten.",
+      "Trasporto aperto, in attesa di dati."
+    ],
+    "{v0} sucesso(s), {v1} falha(s)": [
+      "{v0} succeeded, {v1} failed",
+      "{v0} correctos, {v1} fallidos",
+      "{v0} réussites, {v1} échecs",
+      "{v0} erfolgreich, {v1} fehlgeschlagen",
+      "{v0} riusciti, {v1} non riusciti"
+    ],
+    "⏸ Pause": [
+      "⏸ Pause",
+      "⏸ Pausa",
+      "⏸ Pause",
+      "⏸ Pause",
+      "⏸ Pausa"
+    ],
+    "Enlaces Internet": [
+      "Internet links",
+      "Enlaces de Internet",
+      "Liaisons Internet",
+      "Internetverbindungen",
+      "Collegamenti Internet"
+    ],
+    "Mapa de calor (cobertura RF) — independente das demais": [
+      "Heat map (RF coverage) — independent of the other layers",
+      "Mapa de calor (cobertura RF) — independiente de las demás capas",
+      "Carte de chaleur (couverture RF) — indépendante des autres couches",
+      "Heatmap (RF-Abdeckung) — unabhängig von den anderen Ebenen",
+      "Mappa di calore (copertura RF) — indipendente dagli altri livelli"
+    ],
+    "Mapa de calor (células de cobertura RF)": [
+      "Heat map (RF coverage cells)",
+      "Mapa de calor (celdas de cobertura RF)",
+      "Carte de chaleur (cellules de couverture RF)",
+      "Heatmap (RF-Abdeckungszellen)",
+      "Mappa di calore (celle di copertura RF)"
+    ],
+    "Pacotes armazenados": [
+      "Stored packets",
+      "Paquetes almacenados",
+      "Paquets enregistrés",
+      "Gespeicherte Pakete",
+      "Pacchetti memorizzati"
+    ],
+    "Pontos de tracklog": [
+      "Tracklog points",
+      "Puntos del registro de trayecto",
+      "Points du journal de trajet",
+      "Tracklog-Punkte",
+      "Punti del registro di traccia"
+    ],
+    "Versão > {v0}": [
+      "Version > {v0}",
+      "Versión > {v0}",
+      "Version > {v0}",
+      "Version > {v0}",
+      "Versione > {v0}"
+    ],
+    "Versão {v0}": [
+      "Version {v0}",
+      "Versión {v0}",
+      "Version {v0}",
+      "Version {v0}",
+      "Versione {v0}"
+    ],
+    "Versão {v0} disponível": [
+      "Version {v0} available",
+      "Versión {v0} disponible",
+      "Version {v0} disponible",
+      "Version {v0} verfügbar",
+      "Versione {v0} disponibile"
+    ],
+    "{v0} decorridos": [
+      "{v0} elapsed",
+      "{v0} transcurridos",
+      "{v0} écoulés",
+      "{v0} vergangen",
+      "{v0} trascorsi"
+    ],
+    "Query {v0} enviada para {v1}.": [
+      "Query {v0} sent to {v1}.",
+      "Consulta {v0} enviada a {v1}.",
+      "Requête {v0} envoyée à {v1}.",
+      "Abfrage {v0} an {v1} gesendet.",
+      "Richiesta {v0} inviata a {v1}."
+    ],
+    "Ícone APRS:": [
+      "APRS icon:",
+      "Icono APRS:",
+      "Icône APRS :",
+      "APRS-Symbol:",
+      "Icona APRS:"
+    ],
+    " diretamente por RF para comparar com a previsão.": [
+      " directly over RF to compare with the prediction.",
+      " directamente por RF para comparar con la predicción.",
+      " directement en RF pour comparer avec la prévision.",
+      " direkt über RF, um sie mit der Vorhersage zu vergleichen.",
+      " direttamente via RF per confrontarli con la previsione."
+    ],
+    "6. Log APRS-IS": [
+      "6. APRS-IS log",
+      "6. Registro APRS-IS",
+      "6. Journal APRS-IS",
+      "6. APRS-IS-Protokoll",
+      "6. Registro APRS-IS"
+    ],
+    "Análise de rota RF": [
+      "RF route analysis",
+      "Análisis de ruta RF",
+      "Analyse de route RF",
+      "RF-Routenanalyse",
+      "Analisi del percorso RF"
+    ],
+    "Bytes chegando, sem KISS": [
+      "Bytes arriving, no KISS",
+      "Llegan bytes, sin KISS",
+      "Octets en cours de réception, sans KISS",
+      "Bytes treffen ein, kein KISS",
+      "Byte in arrivo, senza KISS"
+    ],
+    "Instalada {v0}. Clique para baixar e instalar {v1}.": [
+      "Installed: {v0}. Click to download and install {v1}.",
+      "Instalada: {v0}. Haga clic para descargar e instalar {v1}.",
+      "Version installée : {v0}. Cliquez pour télécharger et installer {v1}.",
+      "Installiert: {v0}. Zum Herunterladen und Installieren von {v1} klicken.",
+      "Versione installata: {v0}. Fai clic per scaricare e installare {v1}."
+    ],
+    "KISS aguardando": [
+      "KISS waiting",
+      "KISS en espera",
+      "KISS en attente",
+      "KISS wartet",
+      "KISS in attesa"
+    ],
+    "KISS detectado": [
+      "KISS detected",
+      "KISS detectado",
+      "KISS détecté",
+      "KISS erkannt",
+      "KISS rilevato"
+    ],
+    "Serial conectada — sem KISS": [
+      "Serial connected — no KISS",
+      "Puerto serie conectado — sin KISS",
+      "Port série connecté — sans KISS",
+      "Serielle Schnittstelle verbunden — kein KISS",
+      "Porta seriale connessa — senza KISS"
+    ],
+    "Serial sem KISS": [
+      "Serial without KISS",
+      "Puerto serie sin KISS",
+      "Port série sans KISS",
+      "Serielle Schnittstelle ohne KISS",
+      "Porta seriale senza KISS"
+    ],
+    "Tabela {v2}": [
+      "Table {v2}",
+      "Tabla {v2}",
+      "Table {v2}",
+      "Tabelle {v2}",
+      "Tabella {v2}"
+    ],
+    "{v0} caracteres{v1}": [
+      "{v0} characters{v1}",
+      "{v0} caracteres{v1}",
+      "{v0} caractères{v1}",
+      "{v0} Zeichen{v1}",
+      "{v0} caratteri{v1}"
+    ],
+    "{v0} duplicatas foram evitadas nas últimas 24 h.": [
+      "{v0} duplicates were avoided in the last 24 h.",
+      "Se evitaron {v0} duplicados en las últimas 24 h.",
+      "{v0} doublons ont été évités au cours des dernières 24 h.",
+      "In den letzten 24 h wurden {v0} Duplikate vermieden.",
+      "Nelle ultime 24 h sono stati evitati {v0} duplicati."
+    ],
+    "{v0}/{v1} hops com posição conhecida.": [
+      "{v0}/{v1} hops with a known position.",
+      "{v0}/{v1} saltos con posición conocida.",
+      "{v0}/{v1} sauts avec une position connue.",
+      "{v0}/{v1} Hops mit bekannter Position.",
+      "{v0}/{v1} salti con posizione nota."
+    ],
+    "Último: {v12}": [
+      "Last: {v12}",
+      "Último: {v12}",
+      "Dernier : {v12}",
+      "Zuletzt: {v12}",
+      "Ultimo: {v12}"
+    ],
+    "A porta está aberta e há bytes chegando, mas KISS é o protocolo esperado e nenhum frame KISS foi reconhecido. Verifique protocolo/configuração e baud rate da interface.": [
+      "The port is open and bytes are arriving, but KISS is the expected protocol and no KISS frame was recognized. Check the interface protocol, configuration and baud rate.",
+      "El puerto está abierto y llegan bytes, pero el protocolo esperado es KISS y no se ha reconocido ninguna trama KISS. Compruebe el protocolo, la configuración y la velocidad en baudios de la interfaz.",
+      "Le port est ouvert et des octets arrivent, mais le protocole attendu est KISS et aucune trame KISS n’a été reconnue. Vérifiez le protocole, la configuration et le débit en bauds de l’interface.",
+      "Die Schnittstelle ist offen und Bytes treffen ein, aber das erwartete Protokoll ist KISS und es wurde kein KISS-Frame erkannt. Prüfen Sie Protokoll, Konfiguration und Baudrate der Schnittstelle.",
+      "La porta è aperta e arrivano byte, ma il protocollo previsto è KISS e non è stato riconosciuto alcun frame KISS. Controlla protocollo, configurazione e velocità in baud dell’interfaccia."
+    ],
+    "A porta está aberta e há bytes chegando, mas não em KISS reconhecível. Verifique modo PKT/KISS, protocolo e baud rate; não mude o rádio para TNC interno apenas para fazer o indicador ficar ativo.": [
+      "The port is open and bytes are arriving, but not as recognizable KISS. Check PKT/KISS mode, protocol and baud rate; do not switch the radio to its internal TNC just to activate the indicator.",
+      "El puerto está abierto y llegan bytes, pero no como KISS reconocible. Compruebe el modo PKT/KISS, el protocolo y la velocidad en baudios; no cambie la radio a su TNC interno solo para activar el indicador.",
+      "Le port est ouvert et des octets arrivent, mais pas sous forme KISS reconnaissable. Vérifiez le mode PKT/KISS, le protocole et le débit en bauds ; ne passez pas la radio sur son TNC interne uniquement pour activer l’indicateur.",
+      "Die Schnittstelle ist offen und Bytes treffen ein, aber nicht als erkennbares KISS. Prüfen Sie PKT/KISS-Modus, Protokoll und Baudrate; schalten Sie das Funkgerät nicht allein zur Aktivierung der Anzeige auf seinen internen TNC um.",
+      "La porta è aperta e arrivano byte, ma non come KISS riconoscibile. Controlla modalità PKT/KISS, protocollo e velocità in baud; non impostare la radio sul TNC interno solo per attivare l’indicatore."
+    ],
+    "Radtel RT-950 Pro · TNC KISS UART: verifique RX/Both no rádio e 115200 bps na porta serial (atual: {v0} bps). O baud da UART não é o baud packet RF.": [
+      "Radtel RT-950 Pro · TNC KISS UART: check RX/Both on the radio and 115200 bps on the serial port (current: {v0} bps). The UART baud rate is not the RF packet baud rate.",
+      "Radtel RT-950 Pro · TNC KISS UART: compruebe RX/Both en la radio y 115200 bps en el puerto serie (actual: {v0} bps). La velocidad en baudios de la UART no es la de los paquetes RF.",
+      "Radtel RT-950 Pro · TNC KISS UART : vérifiez RX/Both sur la radio et 115200 bps sur le port série (actuellement : {v0} bps). Le débit en bauds de l’UART n’est pas celui des paquets RF.",
+      "Radtel RT-950 Pro · TNC KISS UART: Prüfen Sie RX/Both am Funkgerät und 115200 bps an der seriellen Schnittstelle (aktuell: {v0} bps). Die UART-Baudrate ist nicht die Baudrate der RF-Pakete.",
+      "Radtel RT-950 Pro · TNC KISS UART: verifica RX/Both sulla radio e 115200 bps sulla porta seriale (attuale: {v0} bps). La velocità in baud della UART non è quella dei pacchetti RF."
+    ],
+    "Velocidade packet RF deve ser 1200 ou 9600 baud.": [
+      "The RF packet speed must be 1200 or 9600 baud.",
+      "La velocidad de los paquetes RF debe ser de 1200 o 9600 baudios.",
+      "Le débit des paquets RF doit être de 1200 ou 9600 bauds.",
+      "Die Baudrate der RF-Pakete muss 1200 oder 9600 Baud betragen.",
+      "La velocità dei pacchetti RF deve essere di 1200 o 9600 baud."
+    ],
+    "Velocidade no ar; não é o baud rate da porta serial.": [
+      "Over-the-air speed; this is not the serial port baud rate.",
+      "Velocidad de transmisión por radio; no es la velocidad en baudios del puerto serie.",
+      "Débit radio ; il ne s’agit pas du débit en bauds du port série.",
+      "Geschwindigkeit über Funk; dies ist nicht die Baudrate der seriellen Schnittstelle.",
+      "Velocità via radio; non è la velocità in baud della porta seriale."
+    ],
+    "Um updater auxiliar encerra a versão em execução, força o encerramento após timeout se necessário, instala/substitui a aplicação e abre automaticamente a nova versão. O Windows Portable mantém backup para rollback.": [
+      "A helper updater closes the running version, forces it to close after a timeout if necessary, installs or replaces the application, and automatically opens the new version. Windows Portable keeps a backup for rollback.",
+      "Un actualizador auxiliar cierra la versión en ejecución, fuerza el cierre tras el tiempo de espera si es necesario, instala o sustituye la aplicación y abre automáticamente la nueva versión. Windows Portable conserva una copia de seguridad para volver a la versión anterior.",
+      "Un programme auxiliaire ferme la version en cours, force sa fermeture après le délai prévu si nécessaire, installe ou remplace l’application et ouvre automatiquement la nouvelle version. Windows Portable conserve une sauvegarde pour revenir à la version précédente.",
+      "Ein Hilfsprogramm beendet die laufende Version, erzwingt bei Bedarf nach einer Zeitüberschreitung das Beenden, installiert oder ersetzt die Anwendung und öffnet die neue Version automatisch. Windows Portable behält eine Sicherung für die Rückkehr zur vorherigen Version.",
+      "Un programma ausiliario chiude la versione in esecuzione, ne forza la chiusura dopo il timeout se necessario, installa o sostituisce l’applicazione e apre automaticamente la nuova versione. Windows Portable conserva una copia di sicurezza per tornare alla versione precedente."
+    ],
+    "As opções estão organizadas por seções. Role a página para acessar Estação APRS, APRS-IS, Mapa e Topologia, Mensagens/Aparência, Aplicativo, Atualizações e Backup/Dados.": [
+      "Options are organized into sections. Scroll to access APRS Station, APRS-IS, Map and Topology, Messages/Appearance, Application, Updates and Backup/Data.",
+      "Las opciones están organizadas por secciones. Desplácese por la página para acceder a Estación APRS, APRS-IS, Mapa y Topología, Mensajes/Apariencia, Aplicación, Actualizaciones y Copias de seguridad/Datos.",
+      "Les options sont organisées par sections. Faites défiler la page pour accéder à Station APRS, APRS-IS, Carte et Topologie, Messages/Apparence, Application, Mises à jour et Sauvegarde/Données.",
+      "Die Optionen sind in Abschnitte gegliedert. Scrollen Sie zu APRS-Station, APRS-IS, Karte und Topologie, Nachrichten/Darstellung, Anwendung, Aktualisierungen und Sicherung/Daten.",
+      "Le opzioni sono organizzate in sezioni. Scorri la pagina per accedere a Stazione APRS, APRS-IS, Mappa e Topologia, Messaggi/Aspetto, Applicazione, Aggiornamenti e Backup/Dati."
+    ],
+    "Produção: interações APRS inteligentes e Release latest": [
+      "Production: intelligent APRS interactions and the latest release",
+      "Producción: interacciones APRS inteligentes y la última versión",
+      "Production : interactions APRS intelligentes et dernière version",
+      "Produktivversion: intelligente APRS-Interaktionen und neueste Veröffentlichung",
+      "Versione di produzione: interazioni APRS intelligenti e ultima versione"
+    ],
+    "Produção: relevo com corte, hillshade e novos mapas-base": [
+      "Production: cutaway terrain, hillshade and new base maps",
+      "Producción: relieve con corte, sombreado del terreno y nuevos mapas base",
+      "Production : relief en coupe, ombrage du terrain et nouveaux fonds de carte",
+      "Produktivversion: Geländeschnitt, Geländeschummerung und neue Basiskarten",
+      "Versione di produzione: rilievo in sezione, ombreggiatura del terreno e nuove mappe di base"
+    ],
+    "Mapa sem Internet, TNC DTR/RTS, posições saneadas e atualizador verificado": [
+      "Offline map, TNC DTR/RTS, cleaned position data and verified updater",
+      "Mapa sin Internet, TNC DTR/RTS, datos de posición depurados y actualizador verificado",
+      "Carte hors ligne, TNC DTR/RTS, données de position corrigées et programme de mise à jour vérifié",
+      "Karte ohne Internet, TNC DTR/RTS, bereinigte Positionsdaten und überprüftes Aktualisierungsprogramm",
+      "Mappa senza Internet, TNC DTR/RTS, dati di posizione corretti e programma di aggiornamento verificato"
+    ],
+    "Mapas sem chave, remoção do hillshade e tradução completa do TNC/RF": [
+      "Maps without API keys, removal of hillshade and complete TNC/RF translation",
+      "Mapas sin claves API, eliminación del sombreado del terreno y traducción completa de TNC/RF",
+      "Cartes sans clé API, suppression de l’ombrage du terrain et traduction complète de TNC/RF",
+      "Karten ohne API-Schlüssel, Entfernung der Geländeschummerung und vollständige TNC/RF-Übersetzung",
+      "Mappe senza chiavi API, rimozione dell’ombreggiatura del terreno e traduzione completa di TNC/RF"
+    ],
+    "Ligado por padrão nas novas instalações. Ao alterar, salve e encerre completamente o aplicativo pela bandeja, depois inicie novamente. Para acesso remoto no Windows, autorize a porta no Firewall e confirme no outro computador. A interface pode controlar a estação: use somente em uma rede de confiança, nunca em Wi-Fi público.": [
+      "Enabled by default in new installations. After changing it, save and fully exit the application from the system tray, then start it again. For remote access on Windows, allow the port through the firewall and test from the other computer. The interface can control the station: use it only on a trusted network, never on public Wi-Fi.",
+      "Activado de forma predeterminada en las instalaciones nuevas. Tras cambiarlo, guarde y cierre completamente la aplicación desde la bandeja del sistema; después, vuelva a iniciarla. Para el acceso remoto en Windows, autorice el puerto en el firewall y compruebe el acceso desde el otro equipo. La interfaz puede controlar la estación: úsela solo en una red de confianza, nunca en una red Wi-Fi pública.",
+      "Activé par défaut pour les nouvelles installations. Après une modification, enregistrez et quittez complètement l’application depuis la zone de notification, puis relancez-la. Pour l’accès distant sous Windows, autorisez le port dans le pare-feu et testez depuis l’autre ordinateur. L’interface peut contrôler la station : utilisez-la uniquement sur un réseau de confiance, jamais sur un Wi-Fi public.",
+      "Bei Neuinstallationen standardmäßig aktiviert. Speichern Sie Änderungen, beenden Sie die Anwendung vollständig über den Infobereich und starten Sie sie erneut. Erlauben Sie für den Fernzugriff unter Windows den Port in der Firewall und prüfen Sie den Zugriff vom anderen Computer. Die Oberfläche kann die Station steuern: Verwenden Sie sie nur in einem vertrauenswürdigen Netzwerk, niemals in einem öffentlichen WLAN.",
+      "Attivo per impostazione predefinita nelle nuove installazioni. Dopo una modifica, salva e chiudi completamente l’applicazione dall’area di notifica, poi riavviala. Per l’accesso remoto su Windows, autorizza la porta nel firewall e verifica l’accesso dall’altro computer. L’interfaccia può controllare la stazione: usala solo su una rete affidabile, mai su una rete Wi-Fi pubblica."
+    ],
+    "apropriado à interface. O Client não força o modo TNC/digipeater interno. “Serial conectada” não significa, por si só, que frames KISS/AX.25 estejam chegando ou que a emissão RF tenha sido confirmada.": [
+      "appropriate for the interface. The Client does not force the internal TNC/digipeater mode. “Serial connected” alone does not mean that KISS/AX.25 frames are arriving or that RF transmission has been confirmed.",
+      "adecuado para la interfaz. El Client no fuerza el modo TNC/digipeater interno. “Puerto serie conectado” no significa por sí solo que estén llegando tramas KISS/AX.25 ni que se haya confirmado la transmisión RF.",
+      "adapté à l’interface. Le Client ne force pas le mode TNC/digipeater interne. « Port série connecté » ne signifie pas à lui seul que des trames KISS/AX.25 arrivent ni que l’émission RF a été confirmée.",
+      "entsprechend der Schnittstelle. Der Client erzwingt nicht den internen TNC-/Digipeater-Modus. „Serielle Schnittstelle verbunden“ bedeutet für sich genommen weder, dass KISS-/AX.25-Frames ankommen, noch, dass die RF-Aussendung bestätigt ist.",
+      "adatta all’interfaccia. Il Client non impone la modalità TNC/digipeater interna. “Porta seriale connessa” non significa da solo che stiano arrivando frame KISS/AX.25 o che la trasmissione RF sia stata confermata."
+    ],
+    ", informe seu indicativo, SSID, posição e parâmetros APRS-IS. O passcode é calculado automaticamente a partir do indicativo-base.": [
+      ", enter your callsign, SSID, position and APRS-IS settings. The passcode is calculated automatically from the base callsign.",
+      ", introduzca su indicativo, SSID, posición y parámetros APRS-IS. El código de acceso se calcula automáticamente a partir del indicativo base.",
+      ", saisissez votre indicatif, SSID, position et paramètres APRS-IS. Le code d’accès est calculé automatiquement à partir de l’indicatif de base.",
+      ", geben Sie Ihr Rufzeichen, die SSID, die Position und die APRS-IS-Einstellungen ein. Der Passcode wird automatisch aus dem Basisrufzeichen berechnet.",
+      ", inserisci nominativo, SSID, posizione e parametri APRS-IS. Il codice di accesso viene calcolato automaticamente dal nominativo di base."
+    ],
+    "Filtre pelo indicativo de origem. O filtro aceita trechos, como": [
+      "Filter by the sender’s callsign. The filter accepts parts of a callsign, such as",
+      "Filtre por el indicativo de origen. El filtro admite partes de un indicativo, como",
+      "Filtrez par indicatif d’origine. Le filtre accepte des fragments d’indicatif, par exemple",
+      "Filtern Sie nach dem Absenderrufzeichen. Der Filter akzeptiert Teile eines Rufzeichens, zum Beispiel",
+      "Filtra per nominativo del mittente. Il filtro accetta parti di un nominativo, ad esempio"
+    ],
+    "novas instalações usam por padrão os prefixos brasileiros. O editor gráfico pode combinar filtro Brasil, raio, área geográfica, prefixos, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.": [
+      "new installations use Brazilian prefixes by default. The graphical editor can combine the Brazil filter, radius, geographic area, prefixes, exact callsigns and packet types, while keeping the manual field available.",
+      "las instalaciones nuevas utilizan prefijos brasileños de forma predeterminada. El editor gráfico permite combinar el filtro de Brasil, radio, área geográfica, prefijos, indicativos exactos y tipos de paquete, manteniendo disponible el campo manual.",
+      "les nouvelles installations utilisent par défaut les préfixes brésiliens. L’éditeur graphique peut combiner le filtre Brésil, le rayon, la zone géographique, les préfixes, les indicatifs exacts et les types de paquets, tout en laissant le champ manuel disponible.",
+      "neue Installationen verwenden standardmäßig brasilianische Präfixe. Der grafische Editor kann den Brasilien-Filter, Radius, das geografische Gebiet, Präfixe, genaue Rufzeichen und Pakettypen kombinieren; das manuelle Feld bleibt verfügbar.",
+      "le nuove installazioni utilizzano i prefissi brasiliani per impostazione predefinita. L’editor grafico può combinare filtro Brasile, raggio, area geografica, prefissi, nominativi esatti e tipi di pacchetto, mantenendo disponibile il campo manuale."
+    ],
+    "OpenStreetMap, Claro, Escuro, CyclOSM, Humanitário / HOT, OSM.DE e ÖPNVKarte usam dados OpenStreetMap; Topográfico usa OpenTopoMap e Satélite usa Esri World Imagery. Claro e Escuro não exigem API key. A camada Clima usa RainViewer e Relevo com corte usa dados DEM Terrarium.": [
+      "OpenStreetMap, Light, Dark, CyclOSM, Humanitarian / HOT, OSM.DE and ÖPNVKarte use OpenStreetMap data; Topographic uses OpenTopoMap and Satellite uses Esri World Imagery. Light and Dark do not require an API key. Weather uses RainViewer, and cutaway terrain uses DEM Terrarium data.",
+      "OpenStreetMap, Claro, Oscuro, CyclOSM, Humanitario / HOT, OSM.DE y ÖPNVKarte utilizan datos de OpenStreetMap; Topográfico utiliza OpenTopoMap y Satélite utiliza Esri World Imagery. Claro y Oscuro no requieren una clave API. Clima utiliza RainViewer y el relieve con corte utiliza datos DEM Terrarium.",
+      "OpenStreetMap, Clair, Sombre, CyclOSM, Humanitaire / HOT, OSM.DE et ÖPNVKarte utilisent les données OpenStreetMap ; Topographique utilise OpenTopoMap et Satellite utilise Esri World Imagery. Clair et Sombre ne nécessitent pas de clé API. Météo utilise RainViewer et le relief en coupe utilise les données DEM Terrarium.",
+      "OpenStreetMap, Hell, Dunkel, CyclOSM, Humanitär / HOT, OSM.DE und ÖPNVKarte verwenden OpenStreetMap-Daten; Topografisch verwendet OpenTopoMap und Satellit verwendet Esri World Imagery. Hell und Dunkel benötigen keinen API-Schlüssel. Wetter verwendet RainViewer und der Geländeschnitt verwendet DEM-Terrarium-Daten.",
+      "OpenStreetMap, Chiaro, Scuro, CyclOSM, Umanitario / HOT, OSM.DE e ÖPNVKarte utilizzano dati OpenStreetMap; Topografico utilizza OpenTopoMap e Satellite utilizza Esri World Imagery. Chiaro e Scuro non richiedono una chiave API. Meteo utilizza RainViewer e il rilievo in sezione utilizza dati DEM Terrarium."
+    ],
+    "iGates": [
+      "iGates",
+      "iGates",
+      "iGates",
+      "iGates",
+      "iGates"
+    ],
+    ", revise o campo de filtro APRS-IS. Um texto livre como": [
+      ", review the APRS-IS filter field. Free text such as",
+      ", revise el campo de filtro APRS-IS. Un texto libre como",
+      ", vérifiez le champ du filtre APRS-IS. Un texte libre comme",
+      ", prüfen Sie das APRS-IS-Filterfeld. Freitext wie",
+      ", controlla il campo del filtro APRS-IS. Un testo libero come"
+    ],
+    "Novo destinatário: {v0}. Ainda não há conversa registrada com este indicativo.": [
+      "New recipient: {v0}. No conversation has been recorded with this callsign yet.",
+      "Nuevo destinatario: {v0}. Todavía no hay ninguna conversación registrada con este indicativo.",
+      "Nouveau destinataire : {v0}. Aucune conversation n’a encore été enregistrée avec cet indicatif.",
+      "Neuer Empfänger: {v0}. Für dieses Rufzeichen ist noch kein Gespräch gespeichert.",
+      "Nuovo destinatario: {v0}. Non è ancora stata registrata alcuna conversazione con questo nominativo."
+    ],
+    "v{v0} validada. O instalador foi iniciado e a aplicação será reiniciada.": [
+      "v{v0} verified. The installer has started and the application will restart.",
+      "v{v0} verificada. El instalador se ha iniciado y la aplicación se reiniciará.",
+      "v{v0} vérifiée. Le programme d’installation a démarré et l’application va redémarrer.",
+      "v{v0} geprüft. Das Installationsprogramm wurde gestartet und die Anwendung wird neu gestartet.",
+      "v{v0} verificata. Il programma di installazione è stato avviato e l’applicazione verrà riavviata."
+    ],
+    "Eliminar TODOS os {v0} registros da categoria {v1}? Esta operação não pode ser desfeita. Recomenda-se backup do SQLite. As demais categorias e políticas de retenção serão preservadas.": [
+      "Delete ALL {v0} records in category {v1}? This operation cannot be undone. A SQLite backup is recommended. Other categories and retention policies will be preserved.",
+      "¿Eliminar TODOS los {v0} registros de la categoría {v1}? Esta operación no se puede deshacer. Se recomienda una copia de seguridad de SQLite. Se conservarán las demás categorías y las políticas de retención.",
+      "Supprimer TOUS les {v0} enregistrements de la catégorie {v1} ? Cette opération ne peut pas être annulée. Une sauvegarde SQLite est recommandée. Les autres catégories et politiques de conservation seront préservées.",
+      "ALLE {v0} Datensätze der Kategorie {v1} löschen? Dieser Vorgang kann nicht rückgängig gemacht werden. Eine SQLite-Sicherung wird empfohlen. Andere Kategorien und Aufbewahrungsrichtlinien bleiben erhalten.",
+      "Eliminare TUTTI i {v0} record della categoria {v1}? Questa operazione non può essere annullata. È consigliata una copia di sicurezza di SQLite. Verranno preservate le altre categorie e le politiche di conservazione."
+    ],
+    "Concluído": [
+      "Completed",
+      "Completado",
+      "Terminé",
+      "Abgeschlossen",
+      "Completato"
+    ],
+    "Falhou": [
+      "Failed",
+      "Falló",
+      "Échec",
+      "Fehlgeschlagen",
+      "Non riuscito"
+    ],
+    "Interrompido": [
+      "Interrupted",
+      "Interrumpido",
+      "Interrompu",
+      "Unterbrochen",
+      "Interrotto"
+    ],
+    "Executando": [
+      "Running",
+      "En ejecución",
+      "En cours",
+      "Wird ausgeführt",
+      "In esecuzione"
+    ],
+    "Pendente": [
+      "Pending",
+      "Pendiente",
+      "En attente",
+      "Ausstehend",
+      "In attesa"
+    ],
+    "Parcial": [
+      "Partial",
+      "Parcial",
+      "Partiel",
+      "Teilweise",
+      "Parziale"
+    ],
+    "Cancelado": [
+      "Canceled",
+      "Cancelado",
+      "Annulé",
+      "Abgebrochen",
+      "Annullato"
+    ],
+    "Hops": [
+      "Hops",
+      "Saltos",
+      "Sauts",
+      "Hops",
+      "Salti"
+    ],
+    "Tabela primária": [
+      "Primary table",
+      "Tabla primaria",
+      "Table primaire",
+      "Primäre Tabelle",
+      "Tabella primaria"
+    ],
+    "Tabela secundária": [
+      "Alternate table",
+      "Tabla secundaria",
+      "Table secondaire",
+      "Alternative Tabelle",
+      "Tabella secondaria"
+    ],
+    "Conexão APRS-IS não verificada; informe um passcode válido para transmitir.": [
+      "Unverified APRS-IS connection; enter a valid passcode to transmit.",
+      "Conexión APRS-IS no verificada; introduzca un código de acceso válido para transmitir.",
+      "Connexion APRS-IS non vérifiée ; saisissez un code d’accès valide pour transmettre.",
+      "APRS-IS-Verbindung nicht verifiziert; geben Sie einen gültigen Passcode ein, um senden zu können.",
+      "Connessione APRS-IS non verificata; inserisci un codice di accesso valido per trasmettere."
+    ],
+    "intermediários não identificados": [
+      "unidentified intermediate nodes",
+      "nodos intermedios no identificados",
+      "nœuds intermédiaires non identifiés",
+      "nicht identifizierte Zwischenknoten",
+      "nodi intermedi non identificati"
+    ],
+    "RF móvel (último contato)": [
+      "Mobile RF (last contact)",
+      "RF móvil (último contacto)",
+      "RF mobile (dernier contact)",
+      "Mobiler Funk (letzter Kontakt)",
+      "RF mobile (ultimo contatto)"
+    ],
+    "RF temporário (até 3h do último contato)": [
+      "Temporary RF (up to 3h after last contact)",
+      "RF temporal (hasta 3h desde el último contacto)",
+      "RF temporaire (jusqu’à 3h après le dernier contact)",
+      "Temporärer Funk (bis 3h nach dem letzten Kontakt)",
+      "RF temporanea (fino a 3h dall’ultimo contatto)"
+    ],
+    "RF inferido (não confirmado diretamente)": [
+      "Inferred RF (not directly confirmed)",
+      "RF inferida (sin confirmación directa)",
+      "RF déduite (sans confirmation directe)",
+      "Abgeleiteter Funk (nicht direkt bestätigt)",
+      "RF dedotta (senza conferma diretta)"
+    ],
+    "RF recebido pelo TNC": [
+      "RF received by TNC",
+      "RF recibida por el TNC",
+      "RF reçue par le TNC",
+      "Vom TNC empfangener Funk",
+      "RF ricevuta dal TNC"
+    ],
+    "APRS-IS confirmado": [
+      "Confirmed APRS-IS",
+      "APRS-IS confirmado",
+      "APRS-IS confirmé",
+      "Bestätigtes APRS-IS",
+      "APRS-IS confermato"
+    ],
+    "RF inferido do path": [
+      "RF inferred from path",
+      "RF inferida de la ruta",
+      "RF déduite du chemin",
+      "Aus dem Pfad abgeleiteter Funk",
+      "RF dedotta dal percorso"
+    ],
+    "{v1}{v2} dBm ({v3} µV · {v4}):": [
+      "{v1}{v2} dBm ({v3} µV · {v4}):",
+      "{v1}{v2} dBm ({v3} µV · {v4}):",
+      "{v1}{v2} dBm ({v3} µV · {v4}):",
+      "{v1}{v2} dBm ({v3} µV · {v4}):",
+      "{v1}{v2} dBm ({v3} µV · {v4}):"
+    ],
+    ", porta": [
+      ", port",
+      ", puerto",
+      ", port",
+      ", Port",
+      ", porta"
+    ],
+    "Análise de clientes, respostas de queries e idioma no topo": [
+      "Client analysis, query responses and language selector at the top",
+      "Análisis de clientes, respuestas a consultas e idioma en la parte superior",
+      "Analyse des clients, réponses aux requêtes et langue en haut",
+      "Clientanalyse, Abfrageantworten und Sprachauswahl oben",
+      "Analisi dei client, risposte alle query e lingua in alto"
+    ],
+    "Atualizador Portable, ícone APRS na bandeja e agendamentos em popup": [
+      "Portable updater, APRS tray icon and schedules in a popup",
+      "Actualizador de la versión portátil, icono APRS en la bandeja y programaciones en una ventana emergente",
+      "Mise à jour de la version portable, icône APRS dans la zone de notification et programmations dans une fenêtre",
+      "Aktualisierung der portablen Version, APRS-Symbol im Infobereich und Zeitpläne im Popup",
+      "Aggiornamento della versione portatile, icona APRS nell’area di notifica e programmazioni in una finestra"
+    ],
+    "Atualizador reparado e ranking de clientes consolidado por família": [
+      "Updater fixed and client ranking grouped by family",
+      "Actualizador corregido y clasificación de clientes agrupada por familia",
+      "Mise à jour corrigée et classement des clients regroupé par famille",
+      "Aktualisierung repariert und Clientrangliste nach Familie zusammengefasst",
+      "Aggiornamento corretto e classifica dei client raggruppata per famiglia"
+    ],
+    "Cliente terrestre mais leve e enlaces iGate restaurados": [
+      "Lighter terrestrial client and restored iGate links",
+      "Cliente terrestre más ligero y enlaces iGate restaurados",
+      "Client terrestre allégé et liaisons iGate rétablies",
+      "Schlankerer terrestrischer Client und wiederhergestellte iGate-Verbindungen",
+      "Client terrestre più leggero e collegamenti iGate ripristinati"
+    ],
+    "Beacon RF exige transporte KISS/AGWPE, não serial terminal.": [
+      "RF beacon requires KISS/AGWPE transport, not terminal serial mode.",
+      "La baliza RF requiere transporte KISS/AGWPE, no el modo de terminal serie.",
+      "La balise RF nécessite un transport KISS/AGWPE, pas le mode terminal série.",
+      "Die Funkbake erfordert KISS/AGWPE-Transport, keinen seriellen Terminalmodus.",
+      "Il beacon RF richiede il trasporto KISS/AGWPE, non la modalità terminale seriale."
+    ],
+    "Carregando métricas do aplicativo": [
+      "Loading application metrics",
+      "Cargando métricas de la aplicación",
+      "Chargement des mesures de l’application",
+      "Anwendungsmetriken werden geladen",
+      "Caricamento delle metriche dell’applicazione"
+    ],
+    "Download do PDF solicitado.": [
+      "PDF download requested.",
+      "Descarga del PDF solicitada.",
+      "Téléchargement du PDF demandé.",
+      "PDF-Download angefordert.",
+      "Download del PDF richiesto."
+    ],
+    "Escuta o TNC por alguns segundos e explica o que chegou: nada, texto, bytes ilegíveis, KISS inválido ou pacotes válidos. Com o TNC conectado, observa a sessão atual sem disputar a porta.": [
+      "Listens to the TNC for a few seconds and explains what arrived: nothing, text, unreadable bytes, invalid KISS or valid packets. When the TNC is connected, it observes the current session without competing for the port.",
+      "Escucha el TNC durante unos segundos e indica qué llegó: nada, texto, bytes ilegibles, KISS inválido o paquetes válidos. Con el TNC conectado, observa la sesión actual sin competir por el puerto.",
+      "Écoute le TNC pendant quelques secondes et indique ce qui est arrivé : rien, du texte, des octets illisibles, du KISS invalide ou des paquets valides. Si le TNC est connecté, observe la session en cours sans entrer en concurrence pour le port.",
+      "Hört dem TNC einige Sekunden zu und erklärt den Empfang: nichts, Text, unlesbare Bytes, ungültiges KISS oder gültige Pakete. Bei verbundenem TNC wird die aktuelle Sitzung beobachtet, ohne um den Port zu konkurrieren.",
+      "Ascolta il TNC per alcuni secondi e indica cosa è arrivato: nulla, testo, byte illeggibili, KISS non valido o pacchetti validi. Con il TNC connesso, osserva la sessione corrente senza contendere la porta."
+    ],
+    "Filtro APRS-IS gerado. Revise a string antes de salvar.": [
+      "APRS-IS filter generated. Review the string before saving.",
+      "Filtro APRS-IS generado. Revisa la cadena antes de guardar.",
+      "Filtre APRS-IS généré. Vérifiez la chaîne avant d’enregistrer.",
+      "APRS-IS-Filter erzeugt. Prüfen Sie die Zeichenfolge vor dem Speichern.",
+      "Filtro APRS-IS generato. Controlla la stringa prima di salvare."
+    ],
+    "Frame AX.25 excede o número de endereços suportado.": [
+      "AX.25 frame exceeds the supported number of addresses.",
+      "La trama AX.25 supera el número de direcciones admitido.",
+      "La trame AX.25 dépasse le nombre d’adresses pris en charge.",
+      "Der AX.25-Frame überschreitet die unterstützte Anzahl von Adressen.",
+      "Il frame AX.25 supera il numero di indirizzi supportato."
+    ],
+    "Há frames KISS chegando, mas o conteúdo AX.25 não está sendo validado. Consulte o erro exibido e revise o modo/protocolo do equipamento.": [
+      "KISS frames are arriving, but their AX.25 content is not passing validation. Check the displayed error and review the device mode/protocol.",
+      "Llegan tramas KISS, pero su contenido AX.25 no supera la validación. Consulta el error mostrado y revisa el modo/protocolo del equipo.",
+      "Des trames KISS arrivent, mais leur contenu AX.25 ne passe pas la validation. Consultez l’erreur affichée et vérifiez le mode/protocole de l’équipement.",
+      "KISS-Frames treffen ein, aber ihr AX.25-Inhalt besteht die Prüfung nicht. Beachten Sie den angezeigten Fehler und prüfen Sie Modus/Protokoll des Geräts.",
+      "Arrivano frame KISS, ma il contenuto AX.25 non supera la verifica. Consulta l’errore visualizzato e controlla modalità/protocollo dell’apparecchio."
+    ],
+    "Nomes amigáveis APRS, ranking do cliente, idioma compacto e RF correto": [
+      "Friendly APRS names, client ranking, compact language selector and correct RF",
+      "Nombres descriptivos APRS, clasificación de clientes, selector de idioma compacto y RF correcta",
+      "Noms APRS lisibles, classement des clients, sélecteur de langue compact et RF correcte",
+      "Lesbare APRS-Namen, Clientrangliste, kompakte Sprachauswahl und korrekter Funk",
+      "Nomi APRS leggibili, classifica dei client, selettore lingua compatto e RF corretta"
+    ],
+    "Não existe backup portátil disponível para restauração.": [
+      "No portable backup is available for restoration.",
+      "No hay ninguna copia de seguridad portátil disponible para restaurar.",
+      "Aucune sauvegarde portable n’est disponible pour la restauration.",
+      "Es ist keine portable Sicherung zur Wiederherstellung verfügbar.",
+      "Non è disponibile alcuna copia di sicurezza portatile da ripristinare."
+    ],
+    "Pacote APRS inválido para gating.": [
+      "Invalid APRS packet for gating.",
+      "Paquete APRS no válido para retransmisión entre redes.",
+      "Paquet APRS invalide pour le transfert entre réseaux.",
+      "Ungültiges APRS-Paket für die Weiterleitung zwischen Netzen.",
+      "Pacchetto APRS non valido per l’inoltro tra reti."
+    ],
+    "Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.": [
+      "If the filter is empty, the program asks for confirmation before saving and explains the potential impact on traffic volume.",
+      "Si el filtro está vacío, el programa pide confirmación antes de guardar y explica el posible impacto en el volumen de tráfico.",
+      "Si le filtre est vide, le programme demande confirmation avant d’enregistrer et explique l’impact potentiel sur le volume de trafic.",
+      "Bei leerem Filter fragt das Programm vor dem Speichern nach einer Bestätigung und erklärt die möglichen Auswirkungen auf das Verkehrsvolumen.",
+      "Se il filtro è vuoto, il programma chiede conferma prima di salvare e spiega il possibile impatto sul volume del traffico."
+    ],
+    "Se o filtro for deixado vazio, o programa pedirá confirmação antes de salvar. Dependendo do servidor/porta, isso pode resultar em um fluxo de tráfego muito amplo.": [
+      "If the filter is left empty, the program asks for confirmation before saving. Depending on the server/port, this may result in a very broad traffic stream.",
+      "Si el filtro se deja vacío, el programa pide confirmación antes de guardar. Según el servidor/puerto, esto puede generar un flujo de tráfico muy amplio.",
+      "Si le filtre reste vide, le programme demande confirmation avant d’enregistrer. Selon le serveur/port, cela peut produire un flux de trafic très large.",
+      "Bleibt der Filter leer, fragt das Programm vor dem Speichern nach einer Bestätigung. Je nach Server/Port kann dies zu einem sehr großen Datenstrom führen.",
+      "Se il filtro viene lasciato vuoto, il programma chiede conferma prima di salvare. A seconda del server/porta, ciò può produrre un flusso di traffico molto ampio."
+    ],
+    "Selecione pelo menos uma camada para exportar.": [
+      "Select at least one layer to export.",
+      "Selecciona al menos una capa para exportar.",
+      "Sélectionnez au moins une couche à exporter.",
+      "Wählen Sie mindestens eine Ebene zum Exportieren aus.",
+      "Seleziona almeno un livello da esportare."
+    ],
+    "Teste de estabilidade do Portable": [
+      "Portable version stability test",
+      "Prueba de estabilidad de la versión portátil",
+      "Test de stabilité de la version portable",
+      "Stabilitätstest der portablen Version",
+      "Test di stabilità della versione portatile"
+    ],
+    "Transporte TNC deve ser KISS TCP, KISS Serial ou AGWPE.": [
+      "TNC transport must be KISS TCP, KISS Serial or AGWPE.",
+      "El transporte TNC debe ser KISS TCP, KISS Serial o AGWPE.",
+      "Le transport TNC doit être KISS TCP, KISS Serial ou AGWPE.",
+      "Der TNC-Transport muss KISS TCP, KISS Serial oder AGWPE sein.",
+      "Il trasporto TNC deve essere KISS TCP, KISS Serial o AGWPE."
+    ],
+    "Transporte operacional: frames KISS/AX.25 válidos estão chegando ao Client.": [
+      "Transport operational: valid KISS/AX.25 frames are reaching the Client.",
+      "Transporte operativo: llegan tramas KISS/AX.25 válidas al cliente.",
+      "Transport opérationnel : des trames KISS/AX.25 valides arrivent au client.",
+      "Transport betriebsbereit: Gültige KISS/AX.25-Frames erreichen den Client.",
+      "Trasporto operativo: al client arrivano frame KISS/AX.25 validi."
+    ],
+    "continua obrigatória para a configuração da estação. Se o sistema não fornecer altitude, o cliente usa": [
+      "is still required for station configuration. If the system provides no altitude, the client uses",
+      "sigue siendo obligatoria para configurar la estación. Si el sistema no proporciona altitud, el cliente usa",
+      "reste obligatoire pour configurer la station. Si le système ne fournit pas d’altitude, le client utilise",
+      "bleibt für die Stationskonfiguration erforderlich. Liefert das System keine Höhe, verwendet der Client",
+      "resta obbligatoria per configurare la stazione. Se il sistema non fornisce l’altitudine, il client usa"
+    ],
+    "equipamentos/portas detectados": [
+      "devices/ports detected",
+      "equipos/puertos detectados",
+      "équipements/ports détectés",
+      "Geräte/Ports erkannt",
+      "dispositivi/porte rilevati"
+    ],
+    "prioriza APRS-IS para preservar o comportamento tradicional do cliente e usa RF direto somente quando o APRS-IS estiver indisponível e o TNC estiver pronto para TX.": [
+      "prioritizes APRS-IS to preserve traditional client behavior and uses direct RF only when APRS-IS is unavailable and the TNC is ready for TX.",
+      "prioriza APRS-IS para mantener el comportamiento habitual del cliente y usa RF directa solo cuando APRS-IS no está disponible y el TNC está listo para TX.",
+      "privilégie APRS-IS pour préserver le comportement habituel du client et utilise la RF directe uniquement si APRS-IS est indisponible et le TNC prêt pour TX.",
+      "bevorzugt APRS-IS, um das gewohnte Clientverhalten zu erhalten, und nutzt direkten Funk nur, wenn APRS-IS nicht verfügbar und der TNC für TX bereit ist.",
+      "dà priorità ad APRS-IS per mantenere il comportamento abituale del client e usa RF diretta solo quando APRS-IS non è disponibile e il TNC è pronto per TX."
+    ],
+    "Paulo Galvão": [
+      "Paulo Galvão",
+      "Paulo Galvão",
+      "Paulo Galvão",
+      "Paulo Galvão",
+      "Paulo Galvão"
+    ],
+    "ÖPNVKarte": [
+      "ÖPNVKarte",
+      "ÖPNVKarte",
+      "ÖPNVKarte",
+      "ÖPNVKarte",
+      "ÖPNVKarte"
+    ],
+    "Digipeaters observados": [
+      "Observed digipeaters",
+      "Digipeaters observados",
+      "Digipeaters observés",
+      "Beobachtete Digipeater",
+      "Digipeater osservati"
+    ],
+    "Perfil de digipeater inválido.": [
+      "Invalid digipeater profile.",
+      "Perfil de digipeater no válido.",
+      "Profil de digipeater invalide.",
+      "Ungültiges Digipeaterprofil.",
+      "Profilo digipeater non valido."
+    ],
+    "Rotas RF completas em malhas densas": [
+      "Complete RF routes in dense networks",
+      "Rutas RF completas en redes densas",
+      "Routes RF complètes dans les réseaux denses",
+      "Vollständige Funkrouten in dichten Netzen",
+      "Percorsi RF completi in reti dense"
+    ],
+    "{v0} · verificação indisponível": [
+      "{v0} · verification unavailable",
+      "{v0} · verificación no disponible",
+      "{v0} · vérification indisponible",
+      "{v0} · Überprüfung nicht verfügbar",
+      "{v0} · verifica non disponibile"
+    ],
+    "fallback_unavailable": [
+      "Fallback unavailable",
+      "Alternativa no disponible",
+      "Solution de repli indisponible",
+      "Ausweichmöglichkeit nicht verfügbar",
+      "Alternativa non disponibile"
+    ],
+    "Soak test": [
+      "Soak test",
+      "Prueba de estabilidad prolongada",
+      "Test de stabilité prolongé",
+      "Langzeitstabilitätstest",
+      "Test di stabilità prolungato"
+    ],
+    "Query": [
+      "Query",
+      "Consulta",
+      "Requête",
+      "Abfrage",
+      "Interrogazione"
+    ],
+    "Retry": [
+      "Retry",
+      "Reintentar",
+      "Réessayer",
+      "Erneut versuchen",
+      "Riprova"
+    ],
+    "Trace": [
+      "Trace",
+      "Rastrear",
+      "Tracer",
+      "Verfolgen",
+      "Traccia"
+    ],
+    "Equatorial": [
+      "Equatorial",
+      "Ecuatorial",
+      "Équatorial",
+      "Äquatorial",
+      "Equatoriale"
+    ],
+    "Latitude/Longitude:": [
+      "Latitude/Longitude:",
+      "Latitud/Longitud:",
+      "Latitude/Longitude :",
+      "Breitengrad/Längengrad:",
+      "Latitudine/Longitudine:"
+    ],
+    "Preparando dados / indexando histórico": [
+      "Preparing data / indexing history",
+      "Preparando datos / indexando el historial",
+      "Préparation des données / indexation de l’historique",
+      "Daten vorbereiten / Verlauf indizieren",
+      "Preparazione dei dati / indicizzazione della cronologia"
+    ],
+    "RF direto do transporte": [
+      "Direct RF from transport",
+      "RF directa del transporte",
+      "RF directe du transport",
+      "Direkter Funk vom Transport",
+      "RF diretta dal trasporto"
+    ],
+    "RF observado (legado reconstruído)": [
+      "Observed RF (reconstructed legacy data)",
+      "RF observada (datos anteriores reconstruidos)",
+      "RF observée (anciennes données reconstituées)",
+      "Beobachteter Funk (rekonstruierte Altdaten)",
+      "RF osservata (dati precedenti ricostruiti)"
+    ],
+    "RF observado (legado)": [
+      "Observed RF (legacy data)",
+      "RF observada (datos anteriores)",
+      "RF observée (anciennes données)",
+      "Beobachteter Funk (Altdaten)",
+      "RF osservata (dati precedenti)"
+    ],
+    "Digipeaters": [
+      "Digipeaters",
+      "Digipeaters",
+      "Digipeaters",
+      "Digipeater",
+      "Digipeater"
+    ],
+    "Não foi possível salvar o arquivo KML.": [
+      "Could not save the KML file.",
+      "No se pudo guardar el archivo KML.",
+      "Impossible d’enregistrer le fichier KML.",
+      "Die KML-Datei konnte nicht gespeichert werden.",
+      "Impossibile salvare il file KML."
+    ],
+    "Não foi possível salvar o diagnóstico JSON.": [
+      "Could not save the JSON diagnostic.",
+      "No se pudo guardar el diagnóstico JSON.",
+      "Impossible d’enregistrer le diagnostic JSON.",
+      "Die JSON-Diagnose konnte nicht gespeichert werden.",
+      "Impossibile salvare la diagnosi JSON."
+    ],
+    "Não foi possível salvar.": [
+      "Could not save.",
+      "No se pudo guardar.",
+      "Impossible d’enregistrer.",
+      "Speichern fehlgeschlagen.",
+      "Impossibile salvare."
+    ]
+  },
+  "pt-BR": {
+    "Zoom in": "Aproximar",
+    "Zoom out": "Afastar",
+    "Layers": "Camadas",
+    "Marker": "Marcador",
+    "Close popup": "Fechar popup",
+    "Close tooltip": "Fechar dica",
+    "Close": "Fechar",
+    "Play": "Reproduzir",
+    "▶ Play": "▶ Reproduzir",
+    "Stop": "Parar",
+    "Reset": "Redefinir",
+    "Baud rate": "Taxa de transmissão",
+    "🏴 English": "🇬🇧 English",
+    "🇧🇷 Português - padrão": "🇧🇷 Português (Brasil)",
+    "API key {v0}": "Chave API {v0}",
+    "⏸ Pause": "⏸ Pausa",
+    "Configuração LAN alterada. Reinicie o aplicativo para aplicar o bind.": "Configuração da rede local alterada. Reinicie o aplicativo para aplicar o endereço de acesso.",
+    "Hops": "Saltos",
+    "Soak test": "Teste de estabilidade prolongado",
+    "Query": "Consulta",
+    "Retry": "Tentar novamente",
+    "Trace": "Rastrear"
+  }
+}

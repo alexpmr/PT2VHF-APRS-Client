@@ -2131,7 +2131,7 @@ def test_readme_points_only_to_official_distribution_site():
     section = readme.split("<!-- DOWNLOAD_TABLE_START -->", 1)[1].split("<!-- DOWNLOAD_TABLE_END -->", 1)[0]
     assert f"Downloads — versão {version}" in section
     assert "https://www.pt2vhf.com/aprs" in section
-    assert "publicação pendente" in section
+    assert "publicação pendente" in section or f"A v{version} está publicada" in section
     assert "github.com/alexpmr/" not in section
     assert "gitlab.com/" not in section
     assert not any(link in section for link in ["-codigo-fonte.zip", "SHA256SUMS.txt"])
@@ -2269,4 +2269,5 @@ def test_v1111_frontend_keeps_rf_and_internet_distinct_for_mixed_topology():
     assert "line.bringToFront()" in js
     assert "Também observado via APRS-IS" in js
     assert "Também observado por RF" in js
-    assert "inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC'" in js
+    assert "inferredRouteEdge ? ui('RF inferido (não confirmado diretamente)'" in js
+    assert ": ui('RF recebido pelo TNC', 'RF received by TNC')" in js

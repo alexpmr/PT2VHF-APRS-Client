@@ -8,12 +8,12 @@ const root = path.resolve(__dirname, '..');
   try {
     const page = await browser.newPage();
     await page.setContent('<main><span id="status">Nome</span><input id="entry" placeholder="Nome" title="Nome" aria-label="Nome"><section id="dynamic"></section><span translate="no" id="received">Nome</span><span class="notranslate">Nome</span></main>');
-    for (const file of ['i18n_extra.js', 'i18n_de.js', 'i18n_it.js', 'i18n_ja.js', 'i18n_pl.js', 'i18n_nl.js', 'i18n_zh.js', 'i18n_v1425.js', 'i18n_v1426.js', 'i18n_v1430.js', 'i18n_live.js', 'i18n_dom.js']) {
+    for (const file of ['i18n_extra.js', 'i18n_de.js', 'i18n_it.js', 'i18n_ja.js', 'i18n_pl.js', 'i18n_nl.js', 'i18n_zh.js', 'i18n_v1425.js', 'i18n_v1426.js', 'i18n_v1430.js', 'i18n_live.js', 'i18n_catalog.js', 'i18n_runtime.js', 'i18n_dom.js']) {
       await page.addScriptTag({ path: path.join(root, 'pt2vhf_aprs/static/js', file) });
     }
     await page.evaluate(() => {
       window.testLanguage = 'pt-BR';
-      window.testTranslator = pt2vhfCreateDomTranslator(key => testLanguage === 'pt-BR' ? key : testLanguage === 'en' ? ({ Nome: 'Name', Ativo: 'Active' })[key] : PT2VHF_I18N[testLanguage]?.[key]);
+      window.testTranslator = pt2vhfCreateDomTranslator(key => pt2vhfI18n.lookup(key, testLanguage), { canonicalize: text => pt2vhfI18n.canonicalize(text, testLanguage) });
       testTranslator.observe(document.body);
       document.querySelector('#entry').value = 'PT2VHF-15';
     });
@@ -43,7 +43,15 @@ const root = path.resolve(__dirname, '..');
     await page.evaluate(() => { document.querySelector('#status').firstChild.nodeValue = 'PT2VHF-15>APRS:Nome'; });
     await page.waitForTimeout(50);
     assert.equal(await page.locator('#status').textContent(), 'PT2VHF-15>APRS:Nome');
-    assert.equal(await page.evaluate(() => Object.keys(PT2VHF_I18N).length), 9);
-    console.log('PASS: six locales, switching back, live text/attributes, added text, preserved input/received data, eight extra catalogs');
+    // Backend errors keep the inserted identifier and switch with the UI.
+    await page.evaluate(() => {
+      window.testLanguage = 'en';
+      document.querySelector('#dynamic').textContent = 'Transporte não suportado: PT2VHF-15';
+    });
+    await page.waitForFunction(() => document.querySelector('#dynamic').textContent === 'Unsupported transport: PT2VHF-15');
+    await page.evaluate(() => { window.testLanguage = 'pt-BR'; testTranslator.translate(document.body); });
+    assert.equal(await page.locator('#dynamic').textContent(), 'Transporte não suportado: PT2VHF-15');
+    assert.equal(await page.evaluate(() => Object.keys(PT2VHF_I18N).length), 10);
+    console.log('PASS: six locales, switching back, live text/attributes, added text, preserved input/received data, four extra languages preserved');
   } finally { await browser.close(); }
 })().catch(err => { console.error(err); process.exitCode = 1; });

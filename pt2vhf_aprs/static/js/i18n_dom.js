@@ -1,16 +1,16 @@
 /* Exact catalog matches only. Received/user content must use translate="no". */
 (() => {
   'use strict';
-  window.pt2vhfCreateDomTranslator = (lookup) => {
+  window.pt2vhfCreateDomTranslator = (lookup, options = {}) => {
     const texts = new WeakMap();
     const attributes = new WeakMap();
-    const ignored = el => !el || !!el.closest('script,style,code,textarea,[translate="no"],.notranslate,[data-i18n-skip]');
+    const ignored = el => !el || !!el.closest('script,style,code,pre,textarea,[translate="no"],.notranslate,[data-i18n-skip]');
     function translateValue(current, previous) {
       // An external update replaces the source; never resurrect a stale status.
-      const source = previous && current === previous.output ? previous.source : current;
+      const source = previous && current === previous.output ? previous.source : (options.canonicalize?.(current) ?? current);
       const key = source.trim();
       const value = lookup(key);
-      const output = value == null ? source : source.slice(0, source.length - source.trimStart().length) + value + source.slice(source.trimEnd().length);
+      const output = value == null ? source : source.slice(0, source.length - source.trimStart().length) + String(value).trim() + source.slice(source.trimEnd().length);
       return { source, output };
     }
     function translate(root) {
@@ -51,6 +51,8 @@
     });
     return {
       translate,
+      sourceText(node) { return texts.get(node)?.source; },
+      sourceAttribute(el, attr) { return attributes.get(el)?.get(attr)?.source; },
       observe(root) { observer.observe(root, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title', 'aria-label'] }); },
       disconnect() { observer.disconnect(); }
     };

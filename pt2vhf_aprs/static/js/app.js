@@ -243,6 +243,8 @@
   }
 
   function translatedText(pt, en) {
+    const consolidated = window.pt2vhfI18n.lookup(pt, state.language);
+    if (consolidated !== undefined) return consolidated;
     if (state.language === 'en') return en || pt;
     if (state.language !== 'pt-BR') {
       // Extended locales must never silently fall back to English. A missing
@@ -3357,7 +3359,7 @@
             <div class="map-legend-item" data-legend="track"><span class="legend-line"></span><span>${ui('Tracklog', 'Tracklog')}</span></div>
             <div class="map-legend-item" data-legend="rf"><span class="legend-line"></span><span>${ui('Enlace RF', 'RF link')}</span></div>
             <div class="map-legend-item" data-legend="rf-temp"><span class="legend-line"></span><span>${ui('RF temporário (3h)', 'Temporary RF (3h)')}</span></div>
-            <div class="map-legend-item" data-legend="rf-mobile"><span class="legend-line"></span><span>${ui('RF móvel (último contato)', 'Mobile RF (latest contact)')}</span></div>
+            <div class="map-legend-item" data-legend="rf-mobile"><span class="legend-line"></span><span>${ui('RF móvel (último contato)', 'Mobile RF (last contact)')}</span></div>
             <div class="map-legend-item" data-legend="igate"><span class="legend-line"></span><span>${ui('Via IGate/APRS-IS', 'Via IGate/APRS-IS')}</span></div>
             <div class="map-legend-item" data-legend="replay"><span class="legend-line"></span><span>${ui('Animação temporal', 'Timeline replay')}</span></div>
             <div class="map-legend-item" data-legend="packet"><span class="legend-packet"></span><span>${ui('Pacote em movimento', 'Moving packet')}</span></div>
@@ -4485,7 +4487,7 @@
           <div class="topology-popup">
             <h3>Topologia observada</h3>
             <div><strong>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</strong></div>
-            <div>Tipo: ${mobileRf ? 'RF móvel (último contato)' : temporaryRf ? 'RF temporário (até 3h do último contato)' : edge.kind === 'igate' ? 'Internet/APRS-IS' : (inferredRouteEdge ? 'RF inferido (não confirmado diretamente)' : 'RF recebido pelo TNC')}</div>
+            <div>Tipo: ${mobileRf ? ui('RF móvel (último contato)', 'Mobile RF (last contact)') : temporaryRf ? ui('RF temporário (até 3h do último contato)', 'Temporary RF (up to 3h after last contact)') : edge.kind === 'igate' ? 'Internet/APRS-IS' : (inferredRouteEdge ? ui('RF inferido (não confirmado diretamente)', 'Inferred RF (not directly confirmed)') : ui('RF recebido pelo TNC', 'RF received by TNC'))}</div>
             ${(temporaryRf || mobileRf) ? '<div>Expira em: ' + escapeHtml(fmtDate(edge.expires_at)) + '</div>' : ''}
             ${mobileRf ? '<div>Estação móvel: ' + escapeHtml((edge.mobile_callsigns || []).join(', ')) + '</div>' : ''}
             ${edge.mixed_evidence
@@ -4497,7 +4499,7 @@
             ${edge.event_timestamp ? '<div>Evento: ' + escapeHtml(fmtDate(edge.event_timestamp)) + '</div>' : ''}
             <div>Comprimento: ${escapeHtml(formatRfDistanceKm(topologyEdgeDistanceKm(line._pt2vhfEdge)))}</div>
             <div>Pacotes observados: ${Number(edge.packet_count || 0).toLocaleString('pt-BR')}</div>
-            <div>Classificação: ${escapeHtml(edge.classification_source || (edge.kind === 'igate' ? 'APRS-IS confirmado' : 'RF inferido do path'))}</div>
+            <div>Classificação: ${escapeHtml(edge.classification_source || (edge.kind === 'igate' ? ui('APRS-IS confirmado', 'Confirmed APRS-IS') : ui('RF inferido do path', 'RF inferred from path')))}</div>
             <div>Primeiro: ${escapeHtml(fmtDate(edge.first_seen))}</div>
             <div>Último: ${escapeHtml(fmtDate(edge.last_seen))}</div>
           </div>`);
@@ -5068,9 +5070,10 @@
     const descriptive = String(object.comment || object.status || object.info || '').trim();
     if (descriptive) add(ui('Informação', 'Information'), descriptive);
 
+    const receivedLabels = new Set([ui('Informação', 'Information'), ui('Destino', 'Destination'), ui('Indicativo', 'Callsign'), ui('Fonte dos dados', 'Data source')]);
     const rowHtml = rows.map(row => `
       <strong class="${row.primary ? 'object-popup-primary-label' : ''}">${escapeHtml(row.label)}</strong>
-      <span class="${row.primary ? 'object-popup-primary-value' : ''}">${row.html ? row.value : escapeHtml(row.value)}</span>
+      <span ${receivedLabels.has(row.label) ? 'translate="no"' : ''} class="${row.primary ? 'object-popup-primary-value' : ''}">${row.html ? row.value : escapeHtml(row.value)}</span>
     `).join('');
 
     const path = Array.isArray(details.path) ? details.path.join(',') : '';
@@ -5084,13 +5087,13 @@
       ? `<details class="object-popup-technical">
           <summary>${escapeHtml(ui('Dados técnicos', 'Technical data'))}</summary>
           <div class="popup-grid">${technicalRows.map(([label,value]) =>
-            `<strong>${escapeHtml(label)}</strong><span class="${label === ui('Pacote bruto', 'Raw packet') ? 'object-popup-raw' : ''}">${escapeHtml(value)}</span>`
+            `<strong>${escapeHtml(label)}</strong><span translate="no" class="${label === ui('Pacote bruto', 'Raw packet') ? 'object-popup-raw' : ''}">${escapeHtml(value)}</span>`
           ).join('')}</div>
         </details>`
       : '';
 
     return `<div class="station-popup object-friendly-popup">
-      <h3>${objectSymbol} ${escapeHtml(String(object.name || '').trim())}</h3>
+      <h3 translate="no">${objectSymbol} ${escapeHtml(String(object.name || '').trim())}</h3>
       <div class="object-popup-type">${escapeHtml(objectTypeLabel(object))}</div>
       <div class="popup-grid">${rowHtml}</div>
       ${technicalHtml}
@@ -6920,7 +6923,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
           <span>${escapeHtml(fmtDate(item.last?.timestamp))}</span>
         </span>
         <span class="conversation-item-bottom">
-          <span>${escapeHtml(item.last?.message || '')}</span>
+          <span translate="no">${escapeHtml(item.last?.message || '')}</span>
           ${item.unread ? `<span class="conversation-unread">${item.unread}</span>` : ''}
         </span>
       </div>`;
@@ -6946,7 +6949,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       const status = messageStatusLabel(message.status);
       return `<div class="chat-bubble-row ${direction}">
         <div class="chat-bubble">
-          <div class="chat-bubble-text">${escapeHtml(message.message || '')}</div>
+          <div class="chat-bubble-text" translate="no">${escapeHtml(message.message || '')}</div>
           <div class="chat-bubble-meta">
             <span>${escapeHtml(fmtDate(message.timestamp))}</span>
             ${messageTransportLabel(message) ? `<span class="message-transport-badge">${escapeHtml(messageTransportLabel(message))}</span>` : ''}
@@ -8060,6 +8063,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       state.favoriteCallsigns = new Set((calls || []).map(normalizedCall).filter(Boolean));
       if (state.stations.length) renderStations();
       if (state.messages.length) renderMessages();
+    if (state.scheduledMessages.length) renderScheduledMessages();
       await loadMapData();
     } catch (err) { console.warn(err); }
   }
@@ -9127,14 +9131,15 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     const form = $('#configForm');
     const table = form.elements.symbol_table.value || '/';
     const symbol = form.elements.symbol.value || '>';
-    $('#selectedSymbolPreview').innerHTML = `${aprsSymbolHtml(table, symbol, 48)} <span><strong>${escapeHtml(table + symbol)}</strong><br><small>Tabela ${table === '/' ? 'primária' : 'secundária'}</small></span>`;
+    const tableLabel = table === '/' ? ui('Tabela primária', 'Primary table') : ui('Tabela secundária', 'Alternate table');
+    $('#selectedSymbolPreview').innerHTML = `${aprsSymbolHtml(table, symbol, 48)} <span><strong translate="no">${escapeHtml(table + symbol)}</strong><br><small>${escapeHtml(tableLabel)}</small></span>`;
   }
 
   function renderSymbolGrid(table) {
     const symbols = symbolRows.join('');
     $('#symbolGrid').innerHTML = [...symbols].map(sym => `
       <button type="button" class="symbol-choice" data-symbol="${escapeHtml(sym)}">
-        ${aprsSymbolHtml(table, sym, 24)}<span class="symbol-code">${escapeHtml(table + sym)}</span>
+        ${aprsSymbolHtml(table, sym, 24)}<span class="symbol-code" translate="no">${escapeHtml(table + sym)}</span>
       </button>`).join('');
     $$('#symbolGrid .symbol-choice').forEach(btn => btn.addEventListener('click', () => {
       const form = $('#configForm');
@@ -9848,12 +9853,17 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   }
 
   const domTranslator = window.pt2vhfCreateDomTranslator(trimmed => {
+    const consolidated = window.pt2vhfI18n.lookup(trimmed, state.language);
+    if (consolidated !== undefined) return consolidated;
     if (state.language === 'pt-BR') return trimmed;
     return state.language === 'en' ? (EXTRA_I18N.en?.[trimmed] || EN_TEXT.get(trimmed)) : EXTRA_I18N[state.language]?.[trimmed];
-  });
+  }, { canonicalize: text => window.pt2vhfI18n.canonicalize(text, state.language) });
   function translateDom(root = document.body) {
     domTranslator.translate(root);
   }
+  window.pt2vhfTranslateDom = translateDom;
+  translateDom.sourceText = node => domTranslator.sourceText(node);
+  translateDom.sourceAttribute = (element, attribute) => domTranslator.sourceAttribute(element, attribute);
 
   function syncQuickLanguageButtons() {
     const meta = LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR'];
@@ -11595,7 +11605,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   function renderRecipientGroupOptions() {
     const options = state.recipientGroups.map(group =>
-      `<option value="${Number(group.id)}">${escapeHtml(group.name)} (${(group.callsigns || []).length})</option>`
+      `<option translate="no" value="${Number(group.id)}">${escapeHtml(group.name)} (${(group.callsigns || []).length})</option>`
     ).join('');
     const scheduled = $('#scheduledRecipientGroup');
     const editor = $('#recipientGroupSelect');
@@ -11633,7 +11643,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       const statusClass = schedule.last_status === 'concluído' ? 'status-ack' : (schedule.last_status === 'falhou' || schedule.last_status === 'interrompido' ? 'status-rej' : '');
       const title = schedule.last_error || schedule.last_summary || '';
       return `<tr data-schedule-id="${Number(schedule.id)}" class="${schedule.enabled ? '' : 'scheduled-disabled'}">
-        <td><strong>${escapeHtml(schedule.name || `#${schedule.id}`)}</strong></td>
+        <td translate="no"><strong>${escapeHtml(schedule.name || `#${schedule.id}`)}</strong></td>
         <td>${escapeHtml(scheduledRecurrenceLabel(schedule))}</td>
         <td>${escapeHtml(scheduledTargetLabel(schedule))}</td>
         <td>${escapeHtml(schedule.next_run_at ? fmtDate(schedule.next_run_at) : '—')}</td>

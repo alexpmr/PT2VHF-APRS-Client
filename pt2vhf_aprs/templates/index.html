@@ -1598,13 +1598,13 @@
           <h3 id="aboutContributorsTitle">Agradecimentos / Colaboradores</h3>
           <p id="aboutContributorsText">Agradecimento aos radioamadores que contribuem com sugestões, testes, validações e ajustes que ajudam na evolução contínua do PT2VHF APRS Client.</p>
           <div class="about-contributors-list" aria-label="Radioamadores colaboradores">
-            <div class="about-contributor"><strong>PP5AU</strong><span>Adriano</span></div>
-            <div class="about-contributor"><strong>PY4EI</strong><span>Allan</span></div>
-            <div class="about-contributor"><strong>PU2MUS</strong><span>Marco</span></div>
-            <div class="about-contributor"><strong>PP5PK</strong><span>Daniel Kondlatsch</span></div>
-            <div class="about-contributor"><strong>PT2YW</strong><span>Ywstter</span></div>
-            <div class="about-contributor"><strong>PT2PAG</strong><span>Paulo Galvão</span></div>
-            <div class="about-contributor"><strong>PY2FDG</strong><span>Fábio</span><small>Mensagens agendadas e melhorias de usabilidade</small></div>
+            <div class="about-contributor" translate="no"><strong>PP5AU</strong><span>Adriano</span></div>
+            <div class="about-contributor" translate="no"><strong>PY4EI</strong><span>Allan</span></div>
+            <div class="about-contributor" translate="no"><strong>PU2MUS</strong><span>Marco</span></div>
+            <div class="about-contributor" translate="no"><strong>PP5PK</strong><span>Daniel Kondlatsch</span></div>
+            <div class="about-contributor" translate="no"><strong>PT2YW</strong><span>Ywstter</span></div>
+            <div class="about-contributor" translate="no"><strong>PT2PAG</strong><span>Paulo Galvão</span></div>
+            <div class="about-contributor" translate="no"><strong>PY2FDG</strong><span>Fábio</span><small>Mensagens agendadas e melhorias de usabilidade</small></div>
           </div>
         </article>
       </div>
@@ -1724,7 +1724,7 @@
           <div class="help-kicker">Dúvidas, dificuldades ou sugestões?</div>
           <h3>Fale comigo</h3>
           <p>Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.</p>
-          <div class="help-contact-name">Alex</div>
+          <div class="help-contact-name" translate="no">Alex</div>
         </div>
         <div class="help-contact-actions">
           <a class="btn primary" href="https://wa.me/5561984023634" target="_blank" rel="noopener">WhatsApp: 61 98402-3634</a>
@@ -1768,8 +1768,8 @@
 <div id="incomingMessageCompact" class="message-compact-alert hidden" role="status" aria-live="polite">
   <button id="incomingMessageCompactClose" class="message-compact-close" type="button" aria-label="Fechar aviso">×</button>
   <div class="message-alert-eyebrow">Nova mensagem APRS</div>
-  <div class="message-compact-meta"><strong id="incomingMessageCompactFrom"></strong><span id="incomingMessageCompactTime"></span></div>
-  <div id="incomingMessageCompactText" class="message-compact-text"></div>
+  <div class="message-compact-meta"><strong id="incomingMessageCompactFrom" translate="no"></strong><span id="incomingMessageCompactTime" translate="no"></span></div>
+  <div id="incomingMessageCompactText" translate="no" class="message-compact-text"></div>
   <button id="incomingMessageCompactReply" type="button" class="btn primary message-compact-reply">Responder</button>
 </div>
 
@@ -1780,10 +1780,10 @@
       <div class="message-alert-eyebrow">Nova mensagem APRS</div>
       <h3 id="incomingMessageTitle">Mensagem para esta estação</h3>
       <div class="message-alert-meta">
-        <span><strong>De:</strong> <span id="incomingMessageFrom"></span></span>
-        <span><strong>Hora:</strong> <span id="incomingMessageTime"></span></span>
+        <span><strong>De:</strong> <span id="incomingMessageFrom" translate="no"></span></span>
+        <span><strong>Hora:</strong> <span id="incomingMessageTime" translate="no"></span></span>
       </div>
-      <div id="incomingMessageText" class="message-alert-text"></div>
+      <div id="incomingMessageText" translate="no" class="message-alert-text"></div>
       <div class="message-alert-actions">
         <button id="incomingMessageRead" type="button" class="btn primary">Ler mensagem</button>
         <button id="incomingMessageReply" type="button" class="btn secondary">Responder</button>
@@ -1960,6 +1960,8 @@
 <script src="{{ url_for('static', filename='js/i18n_v1426.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_v1430.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_live.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_catalog.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_runtime.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_dom.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>

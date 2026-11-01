@@ -13,10 +13,10 @@ Disponíveis nove pacotes: instalador e portátil Windows x64/ARM64, Linux AppIm
 
 Em 01/11/2026, tamanho e SHA-256 de todos os nove downloads reais foram comparados com o manifesto publicado. O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece v1.15.6.
 
-[Build completo aprovado](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573176) · [Testes de UI em seis idiomas](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573154) · [Release e artefatos](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.15.6)
-
 A revisão integral das traduções (#157) continua aberta; esta versão entrega correções parciais, bandeiras e testes de regressão.
 <!-- DOWNLOAD_TABLE_END -->
+
+Evidências de compilação e testes: [Build completo aprovado](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573176) · [Testes de UI em seis idiomas](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573154) · [Release e artefatos](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.15.6)
 
 A **v1.15.3** simplifica o aviso **Aplicativo atualizado**: só o botão **Fechar**; o boletim da versão nova segue como programado (desligável em Automações).
 
