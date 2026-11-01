@@ -1,0 +1,38 @@
+name: Validate localization regression
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  localization:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate all JavaScript modules and legacy catalogs
+        run: |
+          for file in pt2vhf_aprs/static/js/*.js; do node --check "$file"; done
+          python tools/i18n_audit.py --strict > legacy-i18n-report.json
+      - name: Reject new missing literal candidates across six locales
+        run: node tools/i18n_inventory.cjs --output i18n-inventory.json
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save --package-lock=false playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Exercise live DOM translations in browser
+        run: node tests/i18n_dom.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: i18n-inventory-and-regression
+          path: |
+            legacy-i18n-report.json
+            i18n-inventory.json

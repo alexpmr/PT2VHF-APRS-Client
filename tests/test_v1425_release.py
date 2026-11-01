@@ -57,7 +57,7 @@ def test_v1425_non_english_languages_do_not_silently_fall_back_to_english():
     js = read("pt2vhf_aprs/static/js/app.js")
     assert "return EXTRA_I18N[state.language]?.[pt] || pt;" in js
     assert ": EXTRA_I18N[state.language]?.[trimmed];" in js
-    assert ": EXTRA_I18N[state.language]?.[original];" in js
+    assert "domTranslator.translate(root);" in js
     assert "EXTRA_I18N[state.language]?.[pt] || en" not in js
     assert "EXTRA_I18N[state.language]?.[trimmed] || EN_TEXT" not in js
     assert "i18n_v1425.js" in read("pt2vhf_aprs/templates/index.html")

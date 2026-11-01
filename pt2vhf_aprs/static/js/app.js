@@ -4781,16 +4781,16 @@
       ? ''
       : `<div class="station-interaction-disabled-note">${escapeHtml(interaction.reason)}</div>`;
     return `<div class="station-popup">
-      <h3>${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.name || s.callsign)}</h3>
+      <h3 translate="no">${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} ${escapeHtml(s.name || s.callsign)}</h3>
       <div class="popup-grid">
-        <strong>Indicativo</strong><span>${escapeHtml(s.callsign)}</span>
+        <strong>Indicativo</strong><span translate="no">${escapeHtml(s.callsign)}</span>
         <strong>${ui('Última recepção', 'Last heard')}</strong><span>${lastHeardMarkup}</span>
         <strong>Posição</strong><span>${fmtNum(s.latitude, 6)}, ${fmtNum(s.longitude, 6)}</span>
         <strong>Velocidade</strong><span>${fmtNum(s.speed, 1, ' km/h')}</span>
         <strong>Curso</strong><span>${fmtNum(s.course, 0, '°')}</span>
         <strong>Altitude</strong><span>${fmtNum(s.altitude, 1, ' m')}</span>
-        <strong>Informação</strong><span>${escapeHtml(s.info || '')}</span>
-        <strong>Via</strong><span>${escapeHtml(path)}</span>
+        <strong>Informação</strong><span translate="no">${escapeHtml(s.info || '')}</span>
+        <strong>Via</strong><span translate="no">${escapeHtml(path)}</span>
         ${s.digital_origin ? `<strong>${ui('Origem', 'Source')}</strong><span class="station-digital-origin">${escapeHtml(ui('via ' + s.digital_origin + ' (gateway para o APRS-IS, sem RF APRS)', 'via ' + s.digital_origin + ' (gateway to APRS-IS, no APRS RF)'))}</span>` : ''}
       </div>
       <div class="station-rf-heard-section">
@@ -6986,7 +6986,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         <td class="${m.direction === 'in' ? 'direction-in' : 'direction-out'}">${callsignButtonHtml(m.from_call, m.to_call)}</td>
         <td>${callsignButtonHtml(m.to_call, m.from_call)}</td>
         <td>${messageTypeLabel(m.message_type)}</td>
-        <td>${escapeHtml(m.message)}</td>
+        <td translate="no">${escapeHtml(m.message)}</td>
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
         <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">
           ${escapeHtml(messageStatusLabel(m.status))}
@@ -8013,7 +8013,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       return `<tr class="log-${direction.toLowerCase()}">
         <td>${escapeHtml(fmtDate(row.timestamp))}</td>
         <td class="log-direction">${direction}</td>
-        <td class="log-raw">${escapeHtml(row.raw || '')}</td>
+        <td class="log-raw" translate="no">${escapeHtml(row.raw || '')}</td>
       </tr>`;
     }).join('');
     const indicator = $('#logTimeHeader .sort-indicator');
@@ -8212,7 +8212,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         <td>${fmtNum(s.speed, 1, ' km/h')}</td>
         <td>${fmtNum(s.course, 0, '°')}</td>
         <td>${fmtNum(s.altitude, 1, ' m')}</td>
-        <td>${escapeHtml(s.info || '')}</td>
+        <td translate="no">${escapeHtml(s.info || '')}</td>
         <td class="station-list-actions"><button type="button" class="btn secondary station-list-message-button" data-callsign="${escapeHtml(s.callsign)}"${disabled}>${escapeHtml(ui('Mensagem', 'Message'))}</button></td>
       </tr>`;
     }).join('');
@@ -9847,40 +9847,12 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     return translatedText(value, map[value] || value);
   }
 
+  const domTranslator = window.pt2vhfCreateDomTranslator(trimmed => {
+    if (state.language === 'pt-BR') return trimmed;
+    return state.language === 'en' ? (EXTRA_I18N.en?.[trimmed] || EN_TEXT.get(trimmed)) : EXTRA_I18N[state.language]?.[trimmed];
+  });
   function translateDom(root = document.body) {
-    if (!root) return;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    for (const node of nodes) {
-      const parent = node.parentElement;
-      if (!parent || ['SCRIPT','STYLE','CODE'].includes(parent.tagName)) continue;
-      if (node._pt2vhfOriginalText === undefined) node._pt2vhfOriginalText = node.nodeValue;
-      const original = node._pt2vhfOriginalText;
-      const trimmed = original.trim();
-      if (!trimmed) continue;
-      const translated = state.language === 'en'
-        ? EN_TEXT.get(trimmed)
-        : EXTRA_I18N[state.language]?.[trimmed];
-      const chosen = state.language === 'pt-BR' ? trimmed : (translated || trimmed);
-      const lead = original.match(/^\s*/)?.[0] || '';
-      const trail = original.match(/\s*$/)?.[0] || '';
-      node.nodeValue = lead + chosen + trail;
-    }
-
-    const attrs = ['placeholder', 'title', 'aria-label'];
-    for (const el of root.querySelectorAll?.('*') || []) {
-      for (const attr of attrs) {
-        if (!el.hasAttribute(attr)) continue;
-        const key = 'i18n' + attr.replace(/[^a-z0-9]/gi,'_');
-        if (!(key in el.dataset)) el.dataset[key] = el.getAttribute(attr) || '';
-        const original = el.dataset[key];
-        const translated = state.language === 'en'
-          ? EN_TEXT.get(original)
-          : EXTRA_I18N[state.language]?.[original];
-        el.setAttribute(attr, state.language === 'pt-BR' ? original : (translated || original));
-      }
-    }
+    domTranslator.translate(root);
   }
 
   function syncQuickLanguageButtons() {
@@ -9974,15 +9946,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     if (e.key === 'Escape') setLanguageMenuOpen(false);
   });
 
-  const languageObserver = new MutationObserver(records => {
-    if (state.language === 'pt-BR') return;
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        if (node.nodeType === Node.ELEMENT_NODE) translateDom(node);
-      }
-    }
-  });
-  languageObserver.observe(document.body, { childList: true, subtree: true });
+  domTranslator.observe(document.body);
 
   function showConfigSection(section) {
     state.configSection = 'all';
