@@ -50,10 +50,16 @@ jobs:
         run: node tests/i18n_dom.browser.cjs
       - name: Exercise real application tabs and language persistence
         run: |
-          pip install -r requirements.txt pytest
-          PT2VHF_DATA_DIR="$RUNNER_TEMP/i18n-regression" python -m pytest -q --junitxml=.test-runtime/pytest-i18n.xml
-          python tools/smoke_i18n_ui.py
-          python tools/smoke_i18n_ui.py --audit
+          if ! (
+            pip install -r requirements.txt pytest || exit $?
+            PT2VHF_DATA_DIR="$RUNNER_TEMP/i18n-regression" python -m pytest -q --junitxml=.test-runtime/pytest-i18n.xml || exit $?
+            python tools/smoke_i18n_ui.py || exit $?
+            python tools/smoke_i18n_ui.py --audit || exit $?
+          ) > .test-runtime/ui-regression.log 2>&1; then
+            python tools/report_ci_error.py .test-runtime/ui-regression.log
+            exit 1
+          fi
+          cat .test-runtime/ui-regression.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -66,3 +72,4 @@ jobs:
             .test-runtime/i18n-visible-report.json
             .test-runtime/pytest-i18n.xml
             .test-runtime/source-validation.log
+            .test-runtime/ui-regression.log
