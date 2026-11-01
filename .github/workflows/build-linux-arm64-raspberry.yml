@@ -12,6 +12,8 @@ on:
       - linux_app.py
       - pt2vhf_aprs/updater.py
       - tests/test_linux_arm64_distribution.py
+      - tests/test_core.py
+      - tests/test_download_stats.py
       - docs/INSTALL_LINUX.md
   workflow_dispatch:
 
