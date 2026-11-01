@@ -1,141 +1,66 @@
-# PT2VHF APRS Client — instalação no Linux
+# PT2VHF APRS Client — Linux x86_64 e Raspberry Pi ARM64
 
-O projeto publica versões oficiais para **Linux x86_64 / amd64** em .deb, AppImage e tar.gz.
+A versão atual **1.15.6** tem distribuição nativa para duas arquiteturas. Para **Raspberry Pi 4 ou 5**, instale **Raspberry Pi OS 64-bit** (ou Debian/Ubuntu ARM64) e use um arquivo **arm64**. Raspberry Pi OS 32-bit (`armv7l`) e Raspberry Pi 3 com SO de 32 bits não são suportados pelos pacotes ARM64.
 
+Confirme no terminal:
 
-## Arquiteturas suportadas
+```bash
+uname -m
+dpkg --print-architecture
+```
 
-A partir da v1.8.18 existem pacotes oficiais para **x86_64/amd64** e **ARM64/aarch64**.
+O resultado esperado no Raspberry Pi de 64 bits é `aarch64` e `arm64`. O AppImage `x86_64` não funciona nativamente em ARM64; o instalador Windows ARM64 também não funciona em Linux.
 
-- x86_64: use arquivos com `x86_64` ou `amd64`.
-- ARM64: use arquivos com `arm64`.
-- Não misture arquiteturas. O updater integrado seleciona o pacote correspondente à arquitetura em execução.
+## Download para Raspberry Pi (Linux ARM64)
 
-## Arquivos da Release
+Obtenha os arquivos oficiais em https://www.pt2vhf.com/aprs:
 
-- `PT2VHF_APRS_Client_x86_64_vX.Y.AppImage` — AppImage portátil.
-- `PT2VHF_APRS_Client_Linux_x86_64_vX.Y.tar.gz` — pacote portátil genérico.
-- `pt2vhf-aprs-client_X.Y_amd64.deb` — pacote para Debian/Ubuntu e derivados.
+- `PT2VHF_APRS_Client_arm64_v1.15.6.AppImage` — portátil, sem instalação.
+- `pt2vhf-aprs-client_1.15.6_arm64.deb` — recomendado para Raspberry Pi OS 64-bit (Debian).
+- `PT2VHF_APRS_Client_Linux_arm64_v1.15.6.tar.gz` — pacote portátil.
 
-O cliente tenta abrir uma janela integrada. Se o ambiente gráfico não oferecer um backend WebView compatível, ele abre automaticamente a interface local no navegador padrão.
-
-## Debian/Ubuntu — pacote .deb
-
-Baixe o arquivo da Release e execute:
+### Opção 1: DEB
 
 ```bash
 cd ~/Downloads
-sudo apt install ./pt2vhf-aprs-client_1.6.22_amd64.deb
-pt2vhf-aprs-client
+sudo apt install ./pt2vhf-aprs-client_1.15.6_arm64.deb
+pt2vhf-aprs-client --browser
 ```
 
-Para remover o programa:
-
-```bash
-sudo apt remove pt2vhf-aprs-client
-```
-
-A remoção do pacote **não apaga** o banco local do usuário.
-
-## AppImage
+### Opção 2: AppImage ARM64
 
 ```bash
 cd ~/Downloads
-chmod +x PT2VHF_APRS_Client_x86_64_v1.6.22.AppImage
-./PT2VHF_APRS_Client_x86_64_v1.6.22.AppImage
+chmod +x PT2VHF_APRS_Client_arm64_v1.15.6.AppImage
+APPIMAGE_EXTRACT_AND_RUN=1 ./PT2VHF_APRS_Client_arm64_v1.15.6.AppImage --browser
 ```
 
-O AppImage é a opção portátil recomendada na v1.6.22. Quando o cliente indicar **Nova versão**, clicar no aviso baixa o AppImage correspondente, valida o arquivo, encerra a instância atual e substitui/reabre a nova versão automaticamente.
+O parâmetro `APPIMAGE_EXTRACT_AND_RUN=1` evita a dependência de FUSE e costuma ser útil no Raspberry Pi OS.
 
-## Pacote portátil .tar.gz
+### Opção 3: TAR.GZ ARM64
 
 ```bash
 cd ~/Downloads
 mkdir -p ~/Aplicativos/PT2VHF-APRS-Client
-tar -xzf PT2VHF_APRS_Client_Linux_x86_64_v1.6.22.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
-chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6.22
-~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6.22
+tar -xzf PT2VHF_APRS_Client_Linux_arm64_v1.15.6.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
+chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_arm64_v1.15.6
+~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_arm64_v1.15.6 --browser
 ```
 
-Quando a execução atual é identificada como pacote TAR.GZ, o atualizador integrado baixa o novo TAR.GZ, faz extração segura, preserva o banco local separado, substitui o executável e relança a nova versão. A atualização manual continua possível.
+## Linux x86_64 (Intel/AMD)
 
-## Dados do usuário
+Continue usando `PT2VHF_APRS_Client_x86_64_v1.15.6.AppImage`, `pt2vhf-aprs-client_1.15.6_amd64.deb` ou `PT2VHF_APRS_Client_Linux_x86_64_v1.15.6.tar.gz`. São arquiteturas diferentes; nunca renomeie um pacote de uma arquitetura para outra.
 
-Por padrão:
+## Janela integrada e navegador
 
-```text
-~/.local/share/PT2VHF-APRS-Client/data/pt2vhf_aprs.db
-```
+A interface tenta usar WebView (GTK/WebKit), mas pode abrir pelo navegador local se o Raspberry Pi OS não tiver as bibliotecas gráficas necessárias. `--browser` força essa alternativa. É necessário ambiente gráfico/navegador para interagir com os mapas. Caso não abra, consulte o endereço da interface local exibido no terminal.
 
-Se a variável `XDG_DATA_HOME` estiver definida, o diretório passa a ser:
+A aplicação começa tentando `127.0.0.1:8080` e usa portas seguintes quando necessário. Não exponha diretamente esse serviço à Internet. Em Configuração, a opção de acesso Web pela LAN possui controles próprios.
 
-```text
-$XDG_DATA_HOME/PT2VHF-APRS-Client/data/pt2vhf_aprs.db
-```
+## Dados, atualização e desinstalação
 
-## Janela integrada e fallback pelo navegador
+Os dados são preservados fora dos executáveis, normalmente em `~/.local/share/PT2VHF-APRS-Client/data/pt2vhf_aprs.db` (ou sob `XDG_DATA_HOME`). O atualizador seleciona um instalador da **mesma arquitetura e formato**.
 
-A execução normal tenta usar a janela integrada. Em desktops onde GTK/WebKit2GTK ou outro backend compatível não estiver disponível, o programa informa a situação no terminal e abre a interface local. A aplicação começa tentando **127.0.0.1:8080**; se a porta já estiver ocupada, tenta **8081, 8082, 8083...** até encontrar uma livre.
+Remoção do DEB: `sudo apt remove pt2vhf-aprs-client`; o banco pessoal não é apagado.
 
-Para forçar o navegador desde o início:
-
-```bash
-pt2vhf-aprs-client --browser
-```
-
-ou, na versão portátil:
-
-```bash
-~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_x86_64_v1.6.22 --browser
-```
-
-A interface continua restrita a `127.0.0.1`; não exponha a porta interna diretamente à Internet. A porta efetivamente escolhida aparece na própria aplicação e no terminal.
-
-## Abrir também no navegador
-
-Em **Configuração**, a opção **Abrir também no navegador ao iniciar** abre o navegador além da janela integrada. O padrão é desligado.
-
-## Iniciar automaticamente com a sessão
-
-Para o pacote .deb:
-
-```bash
-mkdir -p ~/.config/autostart
-cat > ~/.config/autostart/pt2vhf-aprs-client.desktop <<'EOF'
-[Desktop Entry]
-Type=Application
-Name=PT2VHF APRS Client
-Exec=/usr/local/bin/pt2vhf-aprs-client
-Terminal=false
-X-GNOME-Autostart-enabled=true
-EOF
-```
-
-Para a versão portátil, troque o caminho em `Exec=` pelo caminho completo do executável.
-
-## Diagnóstico
-
-Verifique primeiro qual porta foi informada como **Interface local** pela aplicação e teste essa URL, por exemplo:
-
-```bash
-curl -I http://127.0.0.1:8082/
-```
-
-Se a janela integrada não abrir, execute em modo navegador:
-
-```bash
-pt2vhf-aprs-client --browser
-```
-
-Para iniciar manualmente a versão Python a partir do código-fonte:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-linux.txt
-python linux_app.py
-```
-
-## Testes e notificações
-
-O workflow da v1.6 executa testes de núcleo em Ubuntu 22.04 e Ubuntu 24.04. Em desktops que fornecem `notify-send`, mensagens pessoais podem gerar notificações nativas quando o aviso de mensagem está habilitado.
+Para conferir o serviço iniciado: `curl -I http://127.0.0.1:8080/` (ajuste a porta conforme o terminal).

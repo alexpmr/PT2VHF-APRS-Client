@@ -796,9 +796,15 @@ def _prepare_linux_tar(pending: dict[str, Any]) -> Path:
     stage.mkdir(parents=True, exist_ok=True)
     with tarfile.open(source, "r:gz") as archive:
         archive.extractall(stage, filter="data")
-    candidates = sorted(stage.glob("PT2VHF_APRS_Client_Linux_x86_64_v*"))
-    if not candidates:
-        raise ValueError("O pacote Linux TAR.GZ não contém o executável esperado.")
+    architecture = "arm64" if _machine() == "arm64" else "x86_64"
+    candidates = sorted(
+        path for path in stage.glob(f"PT2VHF_APRS_Client_Linux_{architecture}_v*")
+        if path.is_file() and not path.is_symlink()
+    )
+    if len(candidates) != 1:
+        raise ValueError(
+            f"O pacote Linux TAR.GZ não contém exatamente um executável {architecture}."
+        )
     candidate = candidates[0]
     candidate.chmod(candidate.stat().st_mode | 0o111)
     return candidate

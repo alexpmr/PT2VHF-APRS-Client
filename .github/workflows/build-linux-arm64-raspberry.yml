@@ -1,0 +1,86 @@
+name: Build Raspberry Pi Linux ARM64 v1.15.6
+
+on:
+  push:
+    branches:
+      - release/v1.15.6-linux-arm64-pi
+      - main
+    paths:
+      - .github/workflows/build-linux-arm64-raspberry.yml
+      - linux/build_linux.sh
+      - linux/PT2VHF_APRS_Client_Linux.spec
+      - linux_app.py
+      - pt2vhf_aprs/updater.py
+      - tests/test_linux_arm64_distribution.py
+      - docs/INSTALL_LINUX.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  raspberry-pi-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Confirm native ARM64 runner
+        run: |
+          set -euo pipefail
+          uname -m
+          test "$(uname -m)" = "aarch64"
+          python tools/apply_release_1_15_6.py
+      - name: Run regression tests and build three native ARM64 formats
+        shell: bash
+        run: |
+          set -euo pipefail
+          PT2VHF_LINUX_ARCH=arm64 PYTHON_BIN=python3 bash linux/build_linux.sh
+      - name: Verify native binary and all three package formats
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '\r\n ' < VERSION)"
+          bin="dist/PT2VHF_APRS_Client_Linux_arm64"
+          tar="dist-linux/PT2VHF_APRS_Client_Linux_arm64_v${version}.tar.gz"
+          deb="dist-linux/pt2vhf-aprs-client_${version}_arm64.deb"
+          image="dist-linux/PT2VHF_APRS_Client_arm64_v${version}.AppImage"
+          readelf -h "$bin" | grep -Eq 'Machine:[[:space:]]*AArch64'
+          test "$("$bin" --version)" = "$version"
+          test "$(dpkg-deb -f "$deb" Architecture)" = "arm64"
+          tar -tzf "$tar" | grep -q "PT2VHF_APRS_Client_Linux_arm64_v${version}"
+          readelf -h "$image" | grep -Eq 'Machine:[[:space:]]*AArch64'
+          test "$(APPIMAGE_EXTRACT_AND_RUN=1 "./$image" --version)" = "$version"
+          python -m pytest -q tests/test_linux_arm64_distribution.py
+          sha256sum "$tar" "$deb" "$image"
+      - name: Upload Linux ARM64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-Linux-arm64-v1.15.6
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            dist-linux/PT2VHF_APRS_Client_arm64_v1.15.6.AppImage
+            dist-linux/pt2vhf-aprs-client_1.15.6_arm64.deb
+            dist-linux/PT2VHF_APRS_Client_Linux_arm64_v1.15.6.tar.gz
+            dist-linux/SBOM-Linux.cdx.json
+            dist-linux/THIRD_PARTY_LICENSES_Linux.txt
+      - name: Attach native packages to existing GitHub release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(tr -d '\r\n ' < VERSION)" = "1.15.6"
+          gh release view v1.15.6 --repo "$GITHUB_REPOSITORY"
+          gh release upload v1.15.6 \
+            dist-linux/PT2VHF_APRS_Client_arm64_v1.15.6.AppImage \
+            dist-linux/pt2vhf-aprs-client_1.15.6_arm64.deb \
+            dist-linux/PT2VHF_APRS_Client_Linux_arm64_v1.15.6.tar.gz \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          gh release view v1.15.6 --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' | grep -F 'PT2VHF_APRS_Client_arm64_v1.15.6.AppImage'

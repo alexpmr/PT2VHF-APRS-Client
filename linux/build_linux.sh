@@ -38,8 +38,19 @@ case "$machine" in
     exit 2
     ;;
 esac
-binary_src="dist/PT2VHF_APRS_Client_Linux_x86_64"
+# Nunca rotular um binário x86_64 como ARM64: PyInstaller precisa
+# executar no runner ARM64 nativo.
+native="$(uname -m)"
+if [[ "$arch" == "arm64" && "$native" != "aarch64" && "$native" != "arm64" ]]; then
+  echo "Build ARM64 exige um runner aarch64 nativo: obtido $native" >&2
+  exit 3
+fi
+binary_src="dist/PT2VHF_APRS_Client_Linux_${arch}"
 binary_name="PT2VHF_APRS_Client_Linux_${arch}_v${version}"
+if [[ "$arch" == "arm64" ]]; then
+  readelf -h "$binary_src" | grep -Eq 'Machine:[[:space:]]*AArch64'
+fi
+test "$("$binary_src" --version)" = "$version"
 mkdir -p dist-linux/package
 cp "$binary_src" "dist-linux/package/$binary_name"
 cp docs/INSTALL_LINUX.md dist-linux/package/INSTALL_LINUX.md
@@ -82,13 +93,19 @@ Categories=Network;HamRadio;
 EOF
 cp "$appdir/pt2vhf-aprs-client.desktop" "$appdir/usr/share/applications/pt2vhf-aprs-client.desktop"
 
-if command -v curl >/dev/null 2>&1; then
-  curl -fsSL -o dist-linux/appimagetool.AppImage \
-    https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${appimage_arch}.AppImage
-  chmod +x dist-linux/appimagetool.AppImage
-  ARCH="$appimage_arch" APPIMAGE_EXTRACT_AND_RUN=1 dist-linux/appimagetool.AppImage \
-    "$appdir" "dist-linux/PT2VHF_APRS_Client_${arch}_v${version}.AppImage"
+# AppImage também é obrigatório no ARM64, não opcional.
+# APPIMAGE_EXTRACT_AND_RUN dispensa FUSE no runner/raspberry.
+curl --fail --location --retry 3 --silent --show-error -o dist-linux/appimagetool.AppImage \
+  "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${appimage_arch}.AppImage"
+chmod +x dist-linux/appimagetool.AppImage
+ARCH="$appimage_arch" APPIMAGE_EXTRACT_AND_RUN=1 dist-linux/appimagetool.AppImage \
+  "$appdir" "dist-linux/PT2VHF_APRS_Client_${arch}_v${version}.AppImage"
+appimage="dist-linux/PT2VHF_APRS_Client_${arch}_v${version}.AppImage"
+test -s "$appimage"
+if [[ "$arch" == "arm64" ]]; then
+  readelf -h "$appimage" | grep -Eq 'Machine:[[:space:]]*AArch64'
 fi
+test "$(APPIMAGE_EXTRACT_AND_RUN=1 "./$appimage" --version)" = "$version"
 
 if command -v dpkg-deb >/dev/null 2>&1; then
   root="dist-linux/deb-root"
@@ -119,7 +136,9 @@ Icon=pt2vhf-aprs-client
 Terminal=false
 Categories=Network;HamRadio;
 EOF
-  dpkg-deb --build "$root" "dist-linux/pt2vhf-aprs-client_${version}_${deb_arch}.deb"
+  deb="dist-linux/pt2vhf-aprs-client_${version}_${deb_arch}.deb"
+  dpkg-deb --build "$root" "$deb"
+  test "$(dpkg-deb -f "$deb" Architecture)" = "$deb_arch"
 fi
 
 echo "Artefatos Linux:"
