@@ -1,3 +1,11 @@
+## P1 — Pente fino obrigatório após v1.15.6 (01/11/2026, #157)
+
+- Relato do mantenedor: a v1.15.6 ainda exibe palavras em português em outros idiomas. As correções parciais não encerram o requisito.
+- Pedido: auditar e corrigir toda a interface nos seis idiomas PT-BR/EN/ES/FR/DE/IT, incluindo conteúdo dinâmico, modais, mensagens de erro, títulos, placeholders e acessibilidade. Preservar os quatro idiomas adicionais e as bandeiras da referência.
+- Aceite: revisar o conteúdo realmente visível em cada tela/estado, eliminar resíduos não técnicos de português/inglês indevidos e traduções incorretas; exercitar troca imediata e persistência. Não considerar porcentagem de catálogo nem testes de navegação como comprovação de tradução completa.
+- Não alterar indicativos, identificadores técnicos, pacotes APRS, comentários ou mensagens recebidas.
+- #157 permanece aberta; a próxima entrega deve registrar lacunas reais e evidências de UI, sem anunciar localização integral antes de verificá-la.
+
 ## PARCIAL (v1.15.6) — Internacionalização completa (#157 / PR #158)
 
 - Entregues: bandeiras BR/UK/ES/FR/DE/IT, dez opções preservadas, observação de textos/atributos dinâmicos e prevenção de restauração de estados antigos; exclusões para mensagens, informações de estação e pacotes brutos.
