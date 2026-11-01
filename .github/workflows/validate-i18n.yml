@@ -30,13 +30,13 @@ jobs:
           mkdir -p .test-runtime
           if ! (
             set -e
-            npm install --no-save --package-lock=false acorn@8.15.0
-            node tools/extract_i18n_javascript.cjs
-            python tools/export_i18n_sources.py
-            node tools/assemble_i18n_catalog.cjs
-            python tools/write_i18n_catalog.py
-            git diff --exit-code -- pt2vhf_aprs/static/js/i18n_catalog.js
-            node tests/i18n_catalog.cjs
+            npm install --no-save --package-lock=false acorn@8.15.0 || exit $?
+            node tools/extract_i18n_javascript.cjs || exit $?
+            python tools/export_i18n_sources.py || exit $?
+            node tools/assemble_i18n_catalog.cjs || exit $?
+            python tools/write_i18n_catalog.py || exit $?
+            git diff --exit-code -- pt2vhf_aprs/static/js/i18n_catalog.js || exit $?
+            node tests/i18n_catalog.cjs || exit $?
           ) > .test-runtime/source-validation.log 2>&1; then
             python tools/report_ci_error.py .test-runtime/source-validation.log
             exit 1
