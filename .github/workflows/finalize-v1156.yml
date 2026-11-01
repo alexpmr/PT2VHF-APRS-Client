@@ -1,0 +1,61 @@
+name: Finalize verified v1.15.6 release and PR metadata
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/finalize-v1156.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+  pull-requests: write
+concurrency:
+  group: finalize-v1156
+  cancel-in-progress: false
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require exact successful build and localization regression
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for run in 41261573176 41261573154; do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" \
+              --jq '{status, conclusion, head_sha}' > /tmp/result.json
+            jq -e '.status == "completed" and .conclusion == "success" and .head_sha == "92e633714f43856c4929e27f25423da8b6a543e3"' /tmp/result.json
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 41261573176
+          pattern: PT2VHF-APRS-Client-*
+          merge-multiple: true
+          path: release-assets
+          github-token: ${{ github.token }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Publish complete GitHub release from validated artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python tools/release_notes.py --output release-notes.md
+          if ! gh release view v1.15.6 >/dev/null 2>&1; then
+            gh release create v1.15.6 --draft --target 92e633714f43856c4929e27f25423da8b6a543e3 --title 'PT2VHF APRS Client v1.15.6' --notes-file release-notes.md
+          fi
+          mapfile -t assets < <(find release-assets -type f -print | sort)
+          test "${#assets[@]}" -gt 0
+          gh release upload v1.15.6 "${assets[@]}" --clobber
+          gh release edit v1.15.6 --draft=false --latest --notes-file release-notes.md
+          gh release view v1.15.6 --json url,tagName,isDraft
+      - name: Align merged PR title and description with delivered scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp docs/i18n-157-review.md /tmp/pr-description.md
+          printf '\nVersion: v1.15.6. Full build: https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573176\nLocalization/UI regression: https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573154\nOfficial publication is tracked in alexpmr/PT2VHF-Site; issue #157 remains open.\n' >> /tmp/pr-description.md
+          gh pr edit 158 --title 'fix(i18n): v1.15.6 tradução dinâmica e regressão em seis idiomas' --body-file /tmp/pr-description.md
