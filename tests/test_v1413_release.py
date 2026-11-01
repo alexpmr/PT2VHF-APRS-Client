@@ -57,7 +57,9 @@ def test_v1413_aprsis_edge_does_not_complete_rf_graph(monkeypatch):
         }
     ]
     monkeypatch.setattr(db, "list_topology_edges", lambda hours=0: rows)
-    graph, _positions = db._rf_route_graph(0)
+    # Match the legacy aggregate mocked above, not the active SQLite graph.
+    from pt2vhf_aprs import spacetime_topology
+    graph, _positions = spacetime_topology._original_route_graph(0)
     assert graph == {}
 
 

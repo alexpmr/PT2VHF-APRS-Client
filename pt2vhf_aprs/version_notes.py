@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.6": {
+        "title": "Tradução dinâmica e bandeiras",
+        "items": [
+            "Textos e atributos dinâmicos acompanham o idioma selecionado.",
+            "Bandeira britânica correta no inglês e dez idiomas preservados.",
+            "Revisão integral das traduções continua em andamento (#157).",
+        ],
+    },
     "1.15.5": {
         "title": "Cobertura RF direta e histórica",
         "items": [

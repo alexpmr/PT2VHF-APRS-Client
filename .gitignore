@@ -17,3 +17,5 @@ dist-installer/
 i18n-audit.json
 pytest-report.xml
 docs/i18n-inventory.json
+
+.test-runtime/

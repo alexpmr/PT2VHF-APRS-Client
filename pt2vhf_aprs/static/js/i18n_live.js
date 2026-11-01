@@ -2,6 +2,10 @@
 (() => {
   'use strict';
   const entries = {
+    'Tradução dinâmica e bandeiras': ['Live translations and flags', 'Traducción dinámica y banderas', 'Traduction dynamique et drapeaux', 'Dynamische Übersetzungen und Flaggen', 'Traduzione dinamica e bandiere'],
+    'Textos e atributos dinâmicos acompanham o idioma selecionado.': ['Dynamic text and attributes follow the selected language.', 'Los textos y atributos dinámicos siguen el idioma seleccionado.', 'Les textes et attributs dynamiques suivent la langue sélectionnée.', 'Dynamische Texte und Attribute folgen der gewählten Sprache.', 'I testi e gli attributi dinamici seguono la lingua selezionata.'],
+    'Bandeira britânica correta no inglês e dez idiomas preservados.': ['Correct British flag for English; all ten languages retained.', 'Bandera británica correcta para inglés y diez idiomas conservados.', 'Drapeau britannique correct pour l’anglais et dix langues conservées.', 'Korrekte britische Flagge für Englisch; alle zehn Sprachen bleiben erhalten.', 'Bandiera britannica corretta per l’inglese e dieci lingue mantenute.'],
+    'Revisão integral das traduções continua em andamento (#157).': ['The full translation review is still in progress (#157).', 'La revisión completa de las traducciones sigue en curso (#157).', 'La révision complète des traductions est toujours en cours (#157).', 'Die vollständige Überprüfung der Übersetzungen läuft noch (#157).', 'La revisione completa delle traduzioni è ancora in corso (#157).'],
     'Desconectado': ['Disconnected', 'Desconectado', 'Déconnecté', 'Getrennt', 'Disconnesso'],
     'Conectando…': ['Connecting…', 'Conectando…', 'Connexion…', 'Verbindung wird hergestellt…', 'Connessione…'],
     'Reconectando…': ['Reconnecting…', 'Reconectando…', 'Reconnexion…', 'Verbindung wird wiederhergestellt…', 'Riconnessione…'],

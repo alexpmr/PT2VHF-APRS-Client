@@ -29,6 +29,10 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Exercise live DOM translations in browser
         run: node tests/i18n_dom.browser.cjs
+      - name: Exercise real application tabs and language persistence
+        run: |
+          pip install -r requirements.txt
+          python tools/smoke_i18n_ui.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

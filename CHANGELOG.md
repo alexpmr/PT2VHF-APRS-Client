@@ -1,3 +1,12 @@
+## 1.15.6 - 2026-10-31
+
+- Corrigida a tradução de textos e atributos atualizados depois da abertura da interface, sem restaurar estados antigos.
+- Bandeiras BR/UK/ES/FR/DE/IT alinhadas à referência, preservando os quatro idiomas adicionais.
+- Acrescentadas traduções de 30 mensagens de conexão, operações, busca e fechamento em EN/ES/FR/DE/IT.
+- Protegidos mensagens recebidas, informações de estação e pacotes brutos contra tradução automática.
+- Testes de navegador dos seis idiomas, nove abas, bandeiras e persistência; inventário consolidado com bloqueio de novas lacunas em CI.
+- A revisão integral da internacionalização (#157) continua aberta: esta versão entrega correções parciais, sem declarar cobertura completa.
+
 ## 1.15.5 - 2026-10-31
 
 - **Cobertura RF (#155):** beacons de posição válidos recebidos pelo TNC/KISS passam a compor o mapa de calor mesmo sem digipeater nem enlace topológico.
