@@ -12,6 +12,10 @@ drafts = json.loads(draft_path.read_text(encoding="utf-8")) if draft_path.exists
 catalogs = work["catalogs"]
 for language, entries in json.loads((ROOT / "tools/i18n_translations.json").read_text(encoding="utf-8")).items():
     catalogs.setdefault(language, {}).update(entries)
+reviewed = json.loads((ROOT / "tools/i18n_reviewed_overrides.json").read_text(encoding="utf-8"))
+for key, values in reviewed['entries'].items():
+    for language, value in zip(reviewed['locales'], values):
+        catalogs.setdefault(language, {})[key] = value
 findings = []
 slots = re.compile(r"\{(?:v\d+|versao|link)\}")
 TECH = set('APRS IS AX RF RX TX AIS TNC KISS AGWPE SSID DTR RTS PTT GPS TCP UDP USB HTTP HTTPS ACK REJ CQ BLN CPU RAM HEX PKT API DEM SNR RSSI MMSI IMO ETA CTCSS CSS HTML JSON CSV PDF GPX KML KMZ TXT SQLite OpenStreetMap RainViewer PT2VHF'.split())

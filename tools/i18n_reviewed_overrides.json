@@ -1847,6 +1847,552 @@
       "Impossible d’enregistrer.",
       "Speichern fehlgeschlagen.",
       "Impossibile salvare."
+    ],
+    "Camadas ▾": [
+      "Layers ▾",
+      "Capas ▾",
+      "Couches ▾",
+      "Ebenen ▾",
+      "Livelli ▾"
+    ],
+    "Estação com pouca redundância": [
+      "Station with little redundancy",
+      "Estación con poca redundancia",
+      "Station avec peu de redondance",
+      "Station mit geringer Redundanz",
+      "Stazione con poca ridondanza"
+    ],
+    "Indicativo/SSID": [
+      "Callsign/SSID",
+      "Indicativo/SSID",
+      "Indicatif/SSID",
+      "Rufzeichen/SSID",
+      "Nominativo/SSID"
+    ],
+    "Pacote APRS excede 512 bytes.": [
+      "APRS packet exceeds 512 bytes.",
+      "El paquete APRS supera los 512 bytes.",
+      "Le paquet APRS dépasse 512 octets.",
+      "Das APRS-Paket überschreitet 512 Bytes.",
+      "Il pacchetto APRS supera 512 byte."
+    ],
+    "Pacote TNC2 inválido.": [
+      "Invalid TNC2 packet.",
+      "Paquete TNC2 no válido.",
+      "Paquet TNC2 invalide.",
+      "Ungültiges TNC2-Paket.",
+      "Pacchetto TNC2 non valido."
+    ],
+    "Pacote excede o limite operacional após inclusão do q-construct.": [
+      "Packet exceeds the operational limit after adding the q-construct.",
+      "El paquete supera el límite operativo tras añadir el q-construct.",
+      "Le paquet dépasse la limite opérationnelle après ajout du q-construct.",
+      "Das Paket überschreitet nach Hinzufügen des q-construct die Betriebsgrenze.",
+      "Il pacchetto supera il limite operativo dopo l’aggiunta del q-construct."
+    ],
+    "Pacotes observados: {v9}": [
+      "Observed packets: {v9}",
+      "Paquetes observados: {v9}",
+      "Paquets observés : {v9}",
+      "Beobachtete Pakete: {v9}",
+      "Pacchetti osservati: {v9}"
+    ],
+    "Pacotes:": [
+      "Packets:",
+      "Paquetes:",
+      "Paquets :",
+      "Pakete:",
+      "Pacchetti:"
+    ],
+    "Porta AGWPE": [
+      "AGWPE port",
+      "Puerto AGWPE",
+      "Port AGWPE",
+      "AGWPE-Port",
+      "Porta AGWPE"
+    ],
+    "Porta inválida.": [
+      "Invalid port.",
+      "Puerto no válido.",
+      "Port invalide.",
+      "Ungültiger Port.",
+      "Porta non valida."
+    ],
+    "Porta local automática, filtro AIS e ajustes de interface": [
+      "Automatic local port, AIS filter and interface adjustments",
+      "Puerto local automático, filtro AIS y ajustes de interfaz",
+      "Port local automatique, filtre AIS et réglages de l’interface",
+      "Automatischer lokaler Port, AIS-Filter und Oberflächenanpassungen",
+      "Porta locale automatica, filtro AIS e regolazioni dell’interfaccia"
+    ],
+    "pacote(s) válido(s)": [
+      "valid packet(s)",
+      "paquete(s) válido(s)",
+      "paquet(s) valide(s)",
+      "gültige(s) Paket(e)",
+      "pacchetto/i valido/i"
+    ],
+    "{v0} pacotes no período e {v1} enlace(s) distinto(s) observado(s).": [
+      "{v0} packets in the period and {v1} distinct link(s) observed.",
+      "{v0} paquetes en el período y {v1} enlace(s) distinto(s) observado(s).",
+      "{v0} paquets sur la période et {v1} liaison(s) distincte(s) observée(s).",
+      "{v0} Pakete im Zeitraum und {v1} unterschiedliche Verbindung(en) beobachtet.",
+      "{v0} pacchetti nel periodo e {v1} collegamento/i distinto/i osservato/i."
+    ],
+    "A alteração é aplicada imediatamente e fica salva após clicar em Salvar.": [
+      "The change is applied immediately and saved after clicking Save.",
+      "El cambio se aplica de inmediato y se guarda al pulsar Guardar.",
+      "Le changement s’applique immédiatement et est conservé après un clic sur Enregistrer.",
+      "Die Änderung wird sofort angewendet und nach einem Klick auf Speichern gesichert.",
+      "La modifica viene applicata subito e conservata dopo un clic su Salva."
+    ],
+    "A lista mostra indicativo, última recepção, distância, velocidade, curso, altitude e informações conhecidas.": [
+      "The list shows callsign, last reception, distance, speed, course, altitude and known information.",
+      "La lista muestra el indicativo, la última recepción, distancia, velocidad, rumbo, altitud e información conocida.",
+      "La liste affiche l’indicatif, la dernière réception, la distance, la vitesse, le cap, l’altitude et les informations connues.",
+      "Die Liste zeigt Rufzeichen, letzten Empfang, Entfernung, Geschwindigkeit, Kurs, Höhe und bekannte Informationen.",
+      "L’elenco mostra nominativo, ultima ricezione, distanza, velocità, rotta, altitudine e informazioni note."
+    ],
+    "Atualizador Windows reforçado, KML com Salvar como e novos rankings": [
+      "Improved Windows updater, KML Save as and new rankings",
+      "Actualizador de Windows reforzado, Guardar como para KML y nuevas clasificaciones",
+      "Mise à jour Windows renforcée, Enregistrer sous pour KML et nouveaux classements",
+      "Verbesserte Windows-Aktualisierung, Speichern unter für KML und neue Ranglisten",
+      "Aggiornamento Windows migliorato, Salva con nome per KML e nuove classifiche"
+    ],
+    "Carregando os indicativos disponíveis para análise de rota.": [
+      "Loading callsigns available for route analysis.",
+      "Cargando los indicativos disponibles para analizar la ruta.",
+      "Chargement des indicatifs disponibles pour l’analyse de route.",
+      "Verfügbare Rufzeichen für die Routenanalyse werden geladen.",
+      "Caricamento dei nominativi disponibili per l’analisi del percorso."
+    ],
+    "Clique em qualquer indicativo nas colunas": [
+      "Click any callsign in the columns",
+      "Pulsa cualquier indicativo de las columnas",
+      "Cliquez sur un indicatif dans les colonnes",
+      "Klicken Sie auf ein Rufzeichen in den Spalten",
+      "Fai clic su un nominativo nelle colonne"
+    ],
+    "Confira se a conexão está como verificada e se indicativo/passcode estão corretos.": [
+      "Check that the connection is verified and the callsign/passcode are correct.",
+      "Comprueba que la conexión esté verificada y que el indicativo y el código de acceso sean correctos.",
+      "Vérifiez que la connexion est validée et que l’indicatif et le code d’accès sont corrects.",
+      "Prüfen Sie, ob die Verbindung verifiziert ist und Rufzeichen und Zugangscode korrekt sind.",
+      "Controlla che la connessione sia verificata e che nominativo e codice di accesso siano corretti."
+    ],
+    "Erro desconhecido ao salvar.": [
+      "Unknown error while saving.",
+      "Error desconocido al guardar.",
+      "Erreur inconnue lors de l’enregistrement.",
+      "Unbekannter Fehler beim Speichern.",
+      "Errore sconosciuto durante il salvataggio."
+    ],
+    "Filtro padrão para estações brasileiras restaurado.": [
+      "Default filter for Brazilian stations restored.",
+      "Filtro predeterminado para estaciones brasileñas restaurado.",
+      "Filtre par défaut pour les stations brésiliennes rétabli.",
+      "Standardfilter für brasilianische Stationen wiederhergestellt.",
+      "Filtro predefinito per le stazioni brasiliane ripristinato."
+    ],
+    "Formatação restaurada ao padrão. Clique em Salvar para persistir.": [
+      "Default formatting restored. Click Save to keep it.",
+      "Formato predeterminado restaurado. Pulsa Guardar para conservarlo.",
+      "Mise en forme par défaut rétablie. Cliquez sur Enregistrer pour la conserver.",
+      "Standardformatierung wiederhergestellt. Klicken Sie zum Beibehalten auf Speichern.",
+      "Formattazione predefinita ripristinata. Fai clic su Salva per conservarla."
+    ],
+    "Indicativo inválido. Use de 1 a 6 letras ou números, sem SSID.": [
+      "Invalid callsign. Use 1 to 6 letters or digits, without SSID.",
+      "Indicativo no válido. Usa de 1 a 6 letras o números, sin SSID.",
+      "Indicatif invalide. Utilisez 1 à 6 lettres ou chiffres, sans SSID.",
+      "Ungültiges Rufzeichen. Verwenden Sie 1 bis 6 Buchstaben oder Ziffern ohne SSID.",
+      "Nominativo non valido. Usa da 1 a 6 lettere o cifre, senza SSID."
+    ],
+    "Indicativo válido. Passcode atualizado automaticamente.": [
+      "Valid callsign. Passcode updated automatically.",
+      "Indicativo válido. Código de acceso actualizado automáticamente.",
+      "Indicatif valide. Code d’accès mis à jour automatiquement.",
+      "Gültiges Rufzeichen. Zugangscode automatisch aktualisiert.",
+      "Nominativo valido. Codice di accesso aggiornato automaticamente."
+    ],
+    "Indicativo:": [
+      "Callsign:",
+      "Indicativo:",
+      "Indicatif :",
+      "Rufzeichen:",
+      "Nominativo:"
+    ],
+    "Indicativos exatos": [
+      "Exact callsigns",
+      "Indicativos exactos",
+      "Indicatifs exacts",
+      "Exakte Rufzeichen",
+      "Nominativi esatti"
+    ],
+    "Indicativos adicionais": [
+      "Additional callsigns",
+      "Indicativos adicionales",
+      "Indicatifs supplémentaires",
+      "Zusätzliche Rufzeichen",
+      "Nominativi aggiuntivi"
+    ],
+    "Informe os dois indicativos.": [
+      "Enter both callsigns.",
+      "Introduce los dos indicativos.",
+      "Saisissez les deux indicatifs.",
+      "Geben Sie beide Rufzeichen ein.",
+      "Inserisci entrambi i nominativi."
+    ],
+    "Linhas da porta serial:": [
+      "Serial port lines:",
+      "Líneas del puerto serie:",
+      "Lignes du port série :",
+      "Leitungen des seriellen Ports:",
+      "Linee della porta seriale:"
+    ],
+    "Nenhum caminho foi encontrado entre os indicativos neste período.": [
+      "No path was found between these callsigns in this period.",
+      "No se encontró ninguna ruta entre estos indicativos en este período.",
+      "Aucun chemin n’a été trouvé entre ces indicatifs sur cette période.",
+      "In diesem Zeitraum wurde kein Pfad zwischen diesen Rufzeichen gefunden.",
+      "Non è stato trovato alcun percorso tra questi nominativi nel periodo."
+    ],
+    "Não existe alcançabilidade RF sustentada entre esses indicativos neste período.": [
+      "There is no sustained RF reachability between these callsigns in this period.",
+      "No existe alcanzabilidad RF sostenida entre estos indicativos en este período.",
+      "Il n’existe aucune accessibilité RF durable entre ces indicatifs sur cette période.",
+      "Zwischen diesen Rufzeichen besteht in diesem Zeitraum keine dauerhafte Erreichbarkeit über Funk.",
+      "Non esiste raggiungibilità RF continuativa tra questi nominativi nel periodo."
+    ],
+    "O editor gráfico pode montar filtros radiais, por prefixo, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.": [
+      "The graphical editor can build radial, prefix, exact-callsign and packet-type filters while keeping the manual field available.",
+      "El editor gráfico permite crear filtros radiales, por prefijo, por indicativos exactos y por tipos de paquete, manteniendo siempre disponible el campo manual.",
+      "L’éditeur graphique permet de créer des filtres radiaux, par préfixe, indicatifs exacts et types de paquet, en gardant le champ manuel disponible.",
+      "Der grafische Editor erstellt Radialfilter sowie Filter nach Präfix, exakten Rufzeichen und Pakettypen. Das manuelle Feld bleibt verfügbar.",
+      "L’editor grafico permette di creare filtri radiali, per prefisso, nominativi esatti e tipi di pacchetto, mantenendo sempre disponibile il campo manuale."
+    ],
+    "O padrão de novas instalações recebe indicativos brasileiros. O campo continua totalmente editável para filtros APRS-IS manuais.": [
+      "New installations receive Brazilian callsigns by default. The field remains fully editable for manual APRS-IS filters.",
+      "Las nuevas instalaciones reciben indicativos brasileños de forma predeterminada. El campo sigue siendo totalmente editable para filtros APRS-IS manuales.",
+      "Les nouvelles installations reçoivent par défaut les indicatifs brésiliens. Le champ reste entièrement modifiable pour les filtres APRS-IS manuels.",
+      "Neue Installationen empfangen standardmäßig brasilianische Rufzeichen. Das Feld bleibt für manuelle APRS-IS-Filter vollständig bearbeitbar.",
+      "Le nuove installazioni ricevono per impostazione predefinita i nominativi brasiliani. Il campo resta completamente modificabile per i filtri APRS-IS manuali."
+    ],
+    "Prefixos de indicativo": [
+      "Callsign prefixes",
+      "Prefijos de indicativo",
+      "Préfixes d’indicatif",
+      "Rufzeichenpräfixe",
+      "Prefissi dei nominativi"
+    ],
+    "Reconstruindo a alcançabilidade entre os indicativos selecionados.": [
+      "Reconstructing reachability between the selected callsigns.",
+      "Reconstruyendo la alcanzabilidad entre los indicativos seleccionados.",
+      "Reconstruction de l’accessibilité entre les indicatifs sélectionnés.",
+      "Erreichbarkeit zwischen den ausgewählten Rufzeichen wird rekonstruiert.",
+      "Ricostruzione della raggiungibilità tra i nominativi selezionati."
+    ],
+    "comunicação APRS direcionada a um indicativo, com suporte a ACK/REJ.": [
+      "APRS communication addressed to a callsign, with ACK/REJ support.",
+      "comunicación APRS dirigida a un indicativo, compatible con ACK/REJ.",
+      "communication APRS adressée à un indicatif, avec prise en charge ACK/REJ.",
+      "an ein Rufzeichen gerichtete APRS-Kommunikation mit ACK/REJ-Unterstützung.",
+      "comunicazione APRS indirizzata a un nominativo, con supporto ACK/REJ."
+    ],
+    "informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo": [
+      "enter your amateur radio callsign. The SSID identifies the station’s purpose, for example",
+      "introduce tu indicativo de radioaficionado. El SSID identifica la finalidad de la estación, por ejemplo",
+      "saisissez votre indicatif radioamateur. Le SSID indique l’usage de la station, par exemple",
+      "geben Sie Ihr Amateurfunkrufzeichen ein. Die SSID kennzeichnet den Zweck der Station, zum Beispiel",
+      "inserisci il tuo nominativo radioamatoriale. L’SSID identifica lo scopo della stazione, ad esempio"
+    ],
+    "informe seu indicativo, SSID, posição e parâmetros APRS-IS. O passcode é calculado automaticamente a partir do indicativo-base.": [
+      "enter your callsign, SSID, position and APRS-IS parameters. The passcode is calculated automatically from the base callsign.",
+      "introduce tu indicativo, SSID, posición y parámetros APRS-IS. El código de acceso se calcula automáticamente a partir del indicativo base.",
+      "saisissez votre indicatif, SSID, position et paramètres APRS-IS. Le code d’accès est calculé automatiquement à partir de l’indicatif de base.",
+      "geben Sie Rufzeichen, SSID, Position und APRS-IS-Parameter ein. Der Zugangscode wird automatisch aus dem Basisrufzeichen berechnet.",
+      "inserisci nominativo, SSID, posizione e parametri APRS-IS. Il codice di accesso viene calcolato automaticamente dal nominativo di base."
+    ],
+    "para selecioná-lo como destinatário e responder. Se clicar no próprio indicativo, o programa tenta selecionar o outro participante.": [
+      "to select it as the recipient and reply. If you click your own callsign, the program tries to select the other participant.",
+      "para seleccionarlo como destinatario y responder. Si pulsas tu propio indicativo, el programa intenta seleccionar al otro participante.",
+      "pour le sélectionner comme destinataire et répondre. Si vous cliquez sur votre propre indicatif, le programme tente de sélectionner l’autre participant.",
+      "um es als Empfänger auszuwählen und zu antworten. Bei einem Klick auf das eigene Rufzeichen versucht das Programm, den anderen Teilnehmer auszuwählen.",
+      "per selezionarlo come destinatario e rispondere. Se fai clic sul tuo nominativo, il programma prova a selezionare l’altro partecipante."
+    ],
+    "é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.": [
+      "is calculated automatically and appears next to the callsign. The SSID does not change this code.",
+      "se calcula automáticamente y aparece junto al indicativo. El SSID no cambia este código.",
+      "est calculé automatiquement et apparaît à côté de l’indicatif. Le SSID ne modifie pas ce code.",
+      "wird automatisch berechnet und neben dem Rufzeichen angezeigt. Die SSID ändert diesen Code nicht.",
+      "viene calcolato automaticamente e appare accanto al nominativo. L’SSID non modifica questo codice."
+    ],
+    "Controla a transparência do radar de chuva exibido em Mapa → Camadas → Clima.": [
+      "Controls the transparency of the rain radar in Map → Layers → Weather.",
+      "Controla la transparencia del radar de lluvia en Mapa → Capas → Clima.",
+      "Règle la transparence du radar de pluie dans Carte → Couches → Météo.",
+      "Regelt die Transparenz des Regenradars unter Karte → Ebenen → Wetter.",
+      "Regola la trasparenza del radar pioggia in Mappa → Livelli → Meteo."
+    ],
+    "A camada mostra apenas terreno com altitude igual ou superior à cota escolhida no slider.": [
+      "The layer shows only terrain at or above the elevation selected with the slider.",
+      "La capa muestra solo terreno a una altitud igual o superior a la elegida con el control deslizante.",
+      "La couche montre uniquement le terrain dont l’altitude atteint ou dépasse le seuil du curseur.",
+      "Die Ebene zeigt nur Gelände auf oder über der am Schieberegler gewählten Höhe.",
+      "Il livello mostra solo il terreno a un’altitudine pari o superiore alla quota scelta con il cursore."
+    ],
+    "Define o topo da escala do slider vertical da camada Relevo com corte. Padrão: 3.000 m.": [
+      "Sets the top of the vertical slider scale for the terrain cutoff layer. Default: 3,000 m.",
+      "Define el máximo de la escala del control vertical de la capa de relieve con corte. Valor predeterminado: 3.000 m.",
+      "Définit le maximum de l’échelle du curseur vertical de la couche de relief en coupe. Par défaut : 3 000 m.",
+      "Legt den Höchstwert des vertikalen Schiebereglers der Geländeschnittebene fest. Standard: 3.000 m.",
+      "Imposta il massimo della scala del cursore verticale del livello di rilievo con soglia. Valore predefinito: 3.000 m."
+    ],
+    "Escolha as camadas que serão incluídas. Todas vêm marcadas por padrão.": [
+      "Choose the layers to include. All are selected by default.",
+      "Elige las capas que se incluirán. Todas están seleccionadas de forma predeterminada.",
+      "Choisissez les couches à inclure. Elles sont toutes sélectionnées par défaut.",
+      "Wählen Sie die einzuschließenden Ebenen. Standardmäßig sind alle ausgewählt.",
+      "Scegli i livelli da includere. Sono tutti selezionati per impostazione predefinita."
+    ],
+    "Opacidade da camada de clima": [
+      "Weather layer opacity",
+      "Opacidad de la capa meteorológica",
+      "Opacité de la couche météo",
+      "Deckkraft der Wetterebene",
+      "Opacità del livello meteo"
+    ],
+    "Visual da topologia restaurado ao padrão. Clique em Salvar configuração para persistir.": [
+      "Default topology appearance restored. Click Save configuration to keep it.",
+      "Aspecto predeterminado de la topología restaurado. Pulsa Guardar configuración para conservarlo.",
+      "Apparence de la topologie rétablie par défaut. Cliquez sur Enregistrer la configuration pour la conserver.",
+      "Standarddarstellung der Topologie wiederhergestellt. Klicken Sie zum Beibehalten auf Konfiguration speichern.",
+      "Aspetto predefinito della topologia ripristinato. Fai clic su Salva configurazione per conservarlo."
+    ],
+    "Zoom restaurado para o padrão 0,10. Clique em Salvar configuração para persistir.": [
+      "Zoom restored to the default 0.10. Click Save configuration to keep it.",
+      "Zoom restaurado al valor predeterminado 0,10. Pulsa Guardar configuración para conservarlo.",
+      "Zoom rétabli à la valeur par défaut 0,10. Cliquez sur Enregistrer la configuration pour la conserver.",
+      "Zoom auf den Standardwert 0,10 zurückgesetzt. Klicken Sie zum Beibehalten auf Konfiguration speichern.",
+      "Zoom ripristinato al valore predefinito 0,10. Fai clic su Salva configurazione per conservarlo."
+    ],
+    "OpenStreetMap e OpenTopoMap usam cartografia colaborativa. A opção Satélite usa Esri World Imagery. Cores e espessura da topologia são aplicadas imediatamente e persistidas ao salvar.": [
+      "OpenStreetMap and OpenTopoMap use collaborative mapping. Satellite uses Esri World Imagery. Topology colors and line widths apply immediately and are retained after saving.",
+      "OpenStreetMap y OpenTopoMap usan cartografía colaborativa. Satélite usa Esri World Imagery. Los colores y grosores de la topología se aplican de inmediato y se conservan al guardar.",
+      "OpenStreetMap et OpenTopoMap utilisent une cartographie collaborative. Satellite utilise Esri World Imagery. Les couleurs et épaisseurs de la topologie s’appliquent immédiatement et sont conservées après enregistrement.",
+      "OpenStreetMap und OpenTopoMap nutzen gemeinschaftlich erstellte Karten. Satellit verwendet Esri World Imagery. Farben und Linienstärken der Topologie gelten sofort und bleiben nach dem Speichern erhalten.",
+      "OpenStreetMap e OpenTopoMap usano cartografia collaborativa. Satellite usa Esri World Imagery. Colori e spessori della topologia vengono applicati subito e conservati dopo il salvataggio."
+    ],
+    "Salto da rota sem enlace atual na camada do mapa; ligado pelas posições da análise.": [
+      "Route hop with no current link in the map layer; connected using the analysis positions.",
+      "Salto de la ruta sin enlace actual en la capa del mapa; conectado usando las posiciones del análisis.",
+      "Saut de route sans liaison actuelle dans la couche cartographique ; relié à partir des positions de l’analyse.",
+      "Routensprung ohne aktuelle Verbindung in der Kartenebene; anhand der Analysepositionen verbunden.",
+      "Salto del percorso senza collegamento corrente nel livello della mappa; collegato usando le posizioni dell’analisi."
+    ],
+    "Observe o erro mostrado após as tentativas. Ele identifica falhas de DNS, TCP/porta ou servidor; confira também firewall e porta 14580.": [
+      "Read the error shown after the attempts. It identifies DNS, TCP/port or server failures; also check the firewall and port 14580.",
+      "Lee el error mostrado tras los intentos. Identifica fallos de DNS, TCP/puerto o servidor; comprueba también el cortafuegos y el puerto 14580.",
+      "Consultez l’erreur affichée après les tentatives. Elle indique les défaillances DNS, TCP/port ou serveur ; vérifiez aussi le pare-feu et le port 14580.",
+      "Beachten Sie den Fehler nach den Versuchen. Er weist auf DNS-, TCP-/Port- oder Serverfehler hin; prüfen Sie auch Firewall und Port 14580.",
+      "Leggi l’errore mostrato dopo i tentativi. Identifica problemi di DNS, TCP/porta o server; controlla anche il firewall e la porta 14580."
+    ],
+    "Porta AGWPE inválida.": [
+      "Invalid AGWPE port.",
+      "Puerto AGWPE no válido.",
+      "Port AGWPE invalide.",
+      "Ungültiger AGWPE-Port.",
+      "Porta AGWPE non valida."
+    ],
+    "Porta TCP": [
+      "TCP port",
+      "Puerto TCP",
+      "Port TCP",
+      "TCP-Port",
+      "Porta TCP"
+    ],
+    "Porta TCP do TNC inválida.": [
+      "Invalid TNC TCP port.",
+      "Puerto TCP del TNC no válido.",
+      "Port TCP du TNC invalide.",
+      "Ungültiger TCP-Port des TNC.",
+      "Porta TCP del TNC non valida."
+    ],
+    "Porta TCP inválida.": [
+      "Invalid TCP port.",
+      "Puerto TCP no válido.",
+      "Port TCP invalide.",
+      "Ungültiger TCP-Port.",
+      "Porta TCP non valida."
+    ],
+    "Porta local": [
+      "Local port",
+      "Puerto local",
+      "Port local",
+      "Lokaler Port",
+      "Porta locale"
+    ],
+    "Porta serial": [
+      "Serial port",
+      "Puerto serie",
+      "Port série",
+      "Serieller Port",
+      "Porta seriale"
+    ],
+    "porta": [
+      "port",
+      "puerto",
+      "port",
+      "Port",
+      "porta"
+    ],
+    "Selecione a porta serial do TNC.": [
+      "Select the TNC serial port.",
+      "Selecciona el puerto serie del TNC.",
+      "Sélectionnez le port série du TNC.",
+      "Wählen Sie den seriellen Port des TNC.",
+      "Seleziona la porta seriale del TNC."
+    ],
+    "Nenhuma porta serial detectada pelo sistema.": [
+      "No serial port detected by the system.",
+      "El sistema no detectó ningún puerto serie.",
+      "Aucun port série détecté par le système.",
+      "Das System hat keinen seriellen Port erkannt.",
+      "Il sistema non ha rilevato alcuna porta seriale."
+    ],
+    "equipamento/porta detectado": [
+      "device/port detected",
+      "equipo/puerto detectado",
+      "équipement/port détecté",
+      "Gerät/Port erkannt",
+      "dispositivo/porta rilevato"
+    ],
+    "Selecione um equipamento detectado abaixo ou informe manualmente uma porta COM.": [
+      "Select a detected device below or enter a COM port manually.",
+      "Selecciona un equipo detectado abajo o introduce un puerto COM manualmente.",
+      "Sélectionnez un équipement détecté ci-dessous ou saisissez manuellement un port COM.",
+      "Wählen Sie unten ein erkanntes Gerät oder geben Sie einen COM-Port manuell ein.",
+      "Seleziona un dispositivo rilevato qui sotto o inserisci manualmente una porta COM."
+    ],
+    "ou indicativo": [
+      "or callsign",
+      "o indicativo",
+      "ou indicatif",
+      "oder Rufzeichen",
+      "o nominativo"
+    ],
+    "referência ou indicativo": [
+      "reference or callsign",
+      "referencia o indicativo",
+      "référence ou indicatif",
+      "Referenz oder Rufzeichen",
+      "riferimento o nominativo"
+    ],
+    "Calculado automaticamente pelo indicativo-base; o SSID não altera o código.": [
+      "Calculated automatically from the base callsign; SSID does not change the code.",
+      "Calculado automáticamente a partir del indicativo base; el SSID no cambia el código.",
+      "Calculé automatiquement à partir de l’indicatif de base ; le SSID ne modifie pas le code.",
+      "Automatisch aus dem Basisrufzeichen berechnet; die SSID ändert den Code nicht.",
+      "Calcolato automaticamente dal nominativo di base; l’SSID non modifica il codice."
+    ],
+    "Localizar indicativo…": [
+      "Find callsign…",
+      "Buscar indicativo…",
+      "Rechercher un indicatif…",
+      "Rufzeichen suchen…",
+      "Cerca nominativo…"
+    ],
+    "Indicativo não encontrado no QRZ.com.": [
+      "Callsign not found on QRZ.com.",
+      "Indicativo no encontrado en QRZ.com.",
+      "Indicatif introuvable sur QRZ.com.",
+      "Rufzeichen auf QRZ.com nicht gefunden.",
+      "Nominativo non trovato su QRZ.com."
+    ],
+    "Clique no mapa para marcar o ponto A (ou digite coordenadas/indicativo).": [
+      "Click the map to mark point A (or enter coordinates/callsign).",
+      "Pulsa el mapa para marcar el punto A (o introduce coordenadas/indicativo).",
+      "Cliquez sur la carte pour marquer le point A (ou saisissez des coordonnées/un indicatif).",
+      "Klicken Sie auf die Karte, um Punkt A zu markieren (oder geben Sie Koordinaten/Rufzeichen ein).",
+      "Fai clic sulla mappa per segnare il punto A (oppure inserisci coordinate/nominativo)."
+    ],
+    "Dica: arraste o pino para ajustar, ou digite coordenadas/indicativo.": [
+      "Tip: drag the pin to adjust, or enter coordinates/callsign.",
+      "Consejo: arrastra el marcador para ajustar o introduce coordenadas/indicativo.",
+      "Conseil : déplacez le repère pour ajuster ou saisissez des coordonnées/un indicatif.",
+      "Tipp: Ziehen Sie die Markierung zum Anpassen oder geben Sie Koordinaten/Rufzeichen ein.",
+      "Suggerimento: trascina il segnaposto per regolarlo oppure inserisci coordinate/nominativo."
+    ],
+    "Salvar integrações": [
+      "Save integrations",
+      "Guardar integraciones",
+      "Enregistrer les intégrations",
+      "Integrationen speichern",
+      "Salva integrazioni"
+    ],
+    "Salvar": [
+      "Save",
+      "Guardar",
+      "Enregistrer",
+      "Speichern",
+      "Salva"
+    ],
+    "Confirmo que revisei indicativo, rádio, frequência e regras antes de permitir TX automático": [
+      "I confirm that I checked the callsign, radio, frequency and rules before allowing automatic TX",
+      "Confirmo que revisé el indicativo, la radio, la frecuencia y las normas antes de permitir TX automática",
+      "Je confirme avoir vérifié l’indicatif, la radio, la fréquence et les règles avant d’autoriser TX automatique",
+      "Ich bestätige, dass ich Rufzeichen, Funkgerät, Frequenz und Regeln vor der Freigabe automatischer TX geprüft habe",
+      "Confermo di aver verificato nominativo, radio, frequenza e regole prima di consentire TX automatica"
+    ],
+    "Altitude não disponível automaticamente. Foi usado 0 m para não impedir a conexão. Recomendamos informar a altitude real da estação.": [
+      "Altitude was not available automatically. 0 m was used to allow the connection. We recommend entering the station’s actual altitude.",
+      "La altitud no se obtuvo automáticamente. Se usó 0 m para permitir la conexión. Recomendamos introducir la altitud real de la estación.",
+      "L’altitude n’était pas disponible automatiquement. La valeur 0 m a permis la connexion. Nous recommandons de saisir l’altitude réelle de la station.",
+      "Die Höhe war nicht automatisch verfügbar. Um die Verbindung zu ermöglichen, wurde 0 m verwendet. Wir empfehlen, die tatsächliche Höhe der Station einzugeben.",
+      "L’altitudine non era disponibile automaticamente. È stato usato 0 m per consentire la connessione. Si consiglia di inserire l’altitudine effettiva della stazione."
+    ],
+    "Na primeira abertura de cada versão nova, envia uma vez um Announcement (BLNA) pelo APRS-IS com o seu indicativo, 2 minutos após abrir. Não envia em instalação nova nem sem passcode verificado. O envio manual continua na aba Sobre.": [
+      "On the first launch of each new version, sends one announcement (BLNA) through APRS-IS with your callsign, 2 minutes after opening. Does not send on a new installation or without a verified passcode. Manual sending remains in the About tab.",
+      "En el primer inicio de cada nueva versión, envía un anuncio (BLNA) por APRS-IS con tu indicativo, 2 minutos después de abrir. No envía en una instalación nueva ni sin un código de acceso verificado. El envío manual sigue en la pestaña Acerca de.",
+      "Au premier lancement de chaque nouvelle version, envoie une annonce (BLNA) par APRS-IS avec votre indicatif, 2 minutes après l’ouverture. Aucun envoi lors d’une nouvelle installation ou sans code d’accès validé. L’envoi manuel reste dans l’onglet À propos.",
+      "Beim ersten Start jeder neuen Version wird nach 2 Minuten einmal eine Ankündigung (BLNA) über APRS-IS mit Ihrem Rufzeichen gesendet. Kein Versand bei Neuinstallation oder ohne verifizierten Zugangscode. Manuelles Senden bleibt im Reiter Über möglich.",
+      "Al primo avvio di ogni nuova versione, invia un annuncio (BLNA) tramite APRS-IS con il tuo nominativo, 2 minuti dopo l’apertura. Non invia in una nuova installazione né senza un codice di accesso verificato. L’invio manuale resta nella scheda Informazioni."
+    ],
+    "Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.": [
+      "CH9102 interface detected. If this port belongs to a Radtel RT-950 Pro using TNC UART, set 115200 bps and enable TNC/KISS on the radio.",
+      "Interfaz CH9102 detectada. Si este puerto pertenece a un Radtel RT-950 Pro en TNC UART, configura 115200 bps y activa TNC/KISS en la radio.",
+      "Interface CH9102 détectée. Si ce port appartient à un Radtel RT-950 Pro en TNC UART, réglez 115200 bps et activez TNC/KISS sur la radio.",
+      "CH9102-Schnittstelle erkannt. Gehört dieser Port zu einem Radtel RT-950 Pro im TNC-UART-Modus, stellen Sie 115200 bps ein und aktivieren Sie TNC/KISS am Funkgerät.",
+      "Interfaccia CH9102 rilevata. Se questa porta appartiene a un Radtel RT-950 Pro in TNC UART, imposta 115200 bps e abilita TNC/KISS sulla radio."
+    ],
+    "Porta aberta, sem dados": [
+      "Port open, no data",
+      "Puerto abierto, sin datos",
+      "Port ouvert, aucune donnée",
+      "Port geöffnet, keine Daten",
+      "Porta aperta, nessun dato"
+    ],
+    "Porta serial aberta; aguardando o primeiro byte/frame. “Conectado” confirma apenas a abertura da porta.": [
+      "Serial port open; waiting for the first byte/frame. “Connected” only confirms that the port is open.",
+      "Puerto serie abierto; esperando el primer byte/trama. “Conectado” solo confirma la apertura del puerto.",
+      "Port série ouvert ; en attente du premier octet/trame. « Connecté » confirme seulement l’ouverture du port.",
+      "Serieller Port geöffnet; warte auf das erste Byte/den ersten Frame. „Verbunden“ bestätigt nur die Öffnung des Ports.",
+      "Porta seriale aperta; in attesa del primo byte/frame. “Connesso” conferma soltanto l’apertura della porta."
+    ],
+    "Se a porta abre mas nada é recebido, teste RTS/DTR desativadas: em alguns cabos de rádio elas acionam PTT ou modo de programação.": [
+      "If the port opens but nothing is received, try disabling RTS/DTR: on some radio cables these lines activate PTT or programming mode.",
+      "Si el puerto se abre pero no recibe nada, prueba con RTS/DTR desactivadas: en algunos cables de radio activan PTT o el modo de programación.",
+      "Si le port s’ouvre sans rien recevoir, essayez de désactiver RTS/DTR : sur certains câbles radio, ces lignes activent PTT ou le mode programmation.",
+      "Wenn sich der Port öffnet, aber nichts empfangen wird, testen Sie deaktivierte RTS/DTR: Bei manchen Funkkabeln aktivieren diese Leitungen PTT oder den Programmiermodus.",
+      "Se la porta si apre ma non riceve nulla, prova a disattivare RTS/DTR: in alcuni cavi radio queste linee attivano PTT o la modalità di programmazione."
+    ],
+    "Ranking de estações ativas, digipeaters/IGates e enlaces que deixaram de aparecer no período.": [
+      "Ranking of active stations, digipeaters/iGates and links that stopped appearing during the period.",
+      "Clasificación de estaciones activas, digipeaters/iGates y enlaces que dejaron de aparecer en el período.",
+      "Classement des stations actives, digipeaters/iGates et liaisons qui ont cessé d’apparaître sur la période.",
+      "Rangliste aktiver Stationen, Digipeater/iGates und Verbindungen, die im Zeitraum nicht mehr erschienen sind.",
+      "Classifica delle stazioni attive, digipeater/iGate e collegamenti che hanno smesso di comparire nel periodo."
     ]
   },
   "pt-BR": {
