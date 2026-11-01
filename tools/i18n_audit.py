@@ -170,6 +170,19 @@ def _release_patch_locales() -> dict[str, bool]:
     return {locale: (f"'{locale}':" in text or f"{locale}:" in text) for locale in locales}
 
 
+def _main_ui_literal_keys() -> set[str]:
+    """Collect static source phrases from ui('pt', 'en') for coverage reporting.
+
+    A literal missing from the base dictionary may still be supplied by
+    versioned patch catalogs, so this is diagnostic (not a strict CI failure).
+    """
+    source = (ROOT / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    pattern = re.compile(r"""\bui\s*\(\s*(['"])((?:\\.|(?!\1)[^\\])*)\1""")
+    return {match.group(2) for match in pattern.finditer(source)}
+
+
 def audit() -> dict:
     malformed = []
     tr_count = 0
@@ -198,6 +211,9 @@ def audit() -> dict:
                 hardcoded.append({"file": str(path.relative_to(ROOT)), "text": value[:160]})
 
     es_keys, fr_keys = _dictionary_keys()
+    core_ui_keys = _main_ui_literal_keys()
+    core_ui_missing_es = sorted(core_ui_keys - es_keys)
+    core_ui_missing_fr = sorted(core_ui_keys - fr_keys)
     missing_es = sorted(fr_keys - es_keys)
     missing_fr = sorted(es_keys - fr_keys)
     dict_total = len(es_keys | fr_keys)
@@ -211,6 +227,19 @@ def audit() -> dict:
         "malformed_tr_calls": malformed,
         "technical_coverage_percent": coverage,
         "dictionary_coverage_percent": dict_coverage,
+        "main_ui_literal_count": len(core_ui_keys),
+        "base_dictionary_missing_ui_count": {
+            "es": len(core_ui_missing_es),
+            "fr": len(core_ui_missing_fr),
+        },
+        "base_dictionary_missing_ui_examples": {
+            "es": core_ui_missing_es[:50],
+            "fr": core_ui_missing_fr[:50],
+        },
+        "note_on_core_ui_coverage": (
+            "Diagnostic only: extra i18n patch catalogs may supply some missing literals; "
+            "a browser audit is required to determine visible untranslated UI."
+        ),
         "missing_es_keys": missing_es,
         "missing_fr_keys": missing_fr,
         "extended_language_pack_counts": extended_counts,

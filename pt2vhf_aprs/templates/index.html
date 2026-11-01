@@ -35,16 +35,16 @@
     <div id="languageQuickSwitch" class="language-quick-switch" aria-label="Idioma / Language">
       <button id="languageQuickCurrent" type="button" class="language-quick-current" aria-haspopup="menu" aria-expanded="false" title="Trocar idioma">
         <img id="languageQuickCurrentFlag" class="language-quick-img" src="{{ url_for('static', filename='img/flag_br.svg') }}" alt="Brasil">
-        <span id="languageQuickCurrentLabel">Português</span>
+        <span id="languageQuickCurrentLabel">Português (Brasil)</span>
         <span class="language-quick-caret" aria-hidden="true">▾</span>
       </button>
       <div id="languageQuickMenu" class="language-quick-menu hidden" role="menu">
         <button type="button" class="language-quick-option" data-language="pt-BR" role="menuitemradio" aria-checked="true">
           <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_br.svg') }}" alt="Brasil">
-          <span>Português</span>
+          <span>Português (Brasil)</span>
         </button>
         <button type="button" class="language-quick-option" data-language="en" role="menuitemradio" aria-checked="false">
-          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_england.svg') }}" alt="Inglaterra">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_uk.svg') }}" alt="Reino Unido">
           <span>English</span>
         </button>
         <button type="button" class="language-quick-option" data-language="es" role="menuitemradio" aria-checked="false">
@@ -1106,7 +1106,7 @@
             <span>Idioma / Language</span>
             <div class="language-select-wrap compact-language-select">
               <select name="language" id="appLanguage">
-                <option value="pt-BR">Português - padrão</option>
+                <option value="pt-BR">Português (Brasil)</option>
                 <option value="en">English</option>
                 <option value="es">Español</option>
                 <option value="fr">Français</option>

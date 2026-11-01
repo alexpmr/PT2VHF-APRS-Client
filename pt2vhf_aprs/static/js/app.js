@@ -9819,8 +9819,8 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   }).forEach(([key, value]) => EN_TEXT.set(key, value));
 
   const LANGUAGE_META = {
-    'pt-BR': { label: 'Português', flag: '/static/img/flag_br.svg', alt: 'Brasil', htmlLang: 'pt-BR' },
-    en: { label: 'English', flag: '/static/img/flag_england.svg', alt: 'England', htmlLang: 'en' },
+    'pt-BR': { label: 'Português (Brasil)', flag: '/static/img/flag_br.svg', alt: 'Brasil', htmlLang: 'pt-BR' },
+    en: { label: 'English', flag: '/static/img/flag_uk.svg', alt: 'United Kingdom', htmlLang: 'en' },
     es: { label: 'Español', flag: '/static/img/flag_spain.svg', alt: 'España', htmlLang: 'es' },
     fr: { label: 'Français', flag: '/static/img/flag_france.svg', alt: 'France', htmlLang: 'fr' },
     'de-DE': { label: 'Deutsch', flag: '/static/img/flag_germany.svg', alt: 'Deutschland', htmlLang: 'de' },

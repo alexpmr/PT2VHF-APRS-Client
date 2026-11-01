@@ -1,3 +1,16 @@
+## BACKLOG P1 — Revisão integral de traduções, consistência dinâmica e bandeiras (01/11/2026, #157)
+
+- **Relato:** várias telas do APRS Client permanecem em português ou inglês quando o usuário seleciona outro idioma. Revisar **todas as traduções efetivamente exibidas**, inclusive textos novos ou atualizados dinamicamente, em vez de confiar somente no tamanho dos catálogos.
+- **Referência visual para os seis idiomas principais:** 🇧🇷 Português (Brasil), 🇬🇧 English (**Union Jack; não cruz de São Jorge**), 🇪🇸 Español, 🇫🇷 Français, 🇩🇪 Deutsch, 🇮🇹 Italiano. Manter o dropdown/seleção ativa e os idiomas adicionais já existentes (japonês, polonês, neerlandês, chinês).
+- **Diagnóstico confirmado:** `flag_england.svg` continha a bandeira da Inglaterra e era mostrada para English. `translateDom()` só percorre o DOM quando `applyLanguage()` é chamado e não garante localização de nós adicionados depois, mensagens de status ou modais. `i18n_audit.py --strict` compara chaves ES/FR e comprimento de vetores DE/IT etc., sem garantir tradução real dos elementos e `ui()` dinâmico.
+- **Métrica inicial (não definitiva):** 573 chaves literais detectadas em chamadas `ui()` de `app.js`; 398 não existem no catálogo-base ES/FR (podem estar em pacotes complementares). Exigir relatório da cobertura consolidada, por idioma, e verificação no navegador.
+- **Escopo:** menus, abas, configurações, formulários, erros, notificações, estados APRS-IS e TNC, mapas, legendas, topologia, filtros, mensagens, listas, estatísticas, ferramentas, automações, diálogos, placeholders, títulos e acessibilidade. Testar troca de idioma com conteúdo já aberto e novas mensagens atualizadas pela API.
+- **Preservação de dados:** não traduzir payload APRS bruto, indicativos, descrições recebidas, termos técnicos, caminhos, coordenadas, valores ou texto livre dos usuários; não afetar comunicação nem armazenamento.
+- **Arquitetura:** auditar `i18n_extra.js`, `i18n_de.js`, `i18n_it.js`, `i18n_v1425.js`, `i18n_v1426.js`, `i18n_v1430.js`, `v111.js`, `v142.js` e outras telas. Evitar desalinhamento entre chaves ES e traduções vetoriais por índice; garantir que mudanças de idioma sejam persistidas e aplicadas imediatamente.
+- **Primeira correção em andamento:** adição de `flag_uk.svg`, troca das referências para inglês e padronização de `Português (Brasil)`; auditoria expandida para expor lacunas do dicionário base e regressão das bandeiras.
+- **Aceite:** cada tela/modal em cada um dos seis idiomas deve estar localizada, incluindo conteúdo dinâmico; o seletor deve ter exatamente as bandeiras informadas para os seis; testes automatizados por idioma e relatório de cobertura consolidada aprovado. **Não fechar a issue enquanto houver textos não técnicos no idioma errado.**
+- **Status:** P1 aberto; correção inicial das bandeiras **não equivale à revisão completa**. Issue: https://github.com/alexpmr/PT2VHF-APRS-Client/issues/157
+
 ## IMPLEMENTADO NO CÓDIGO v1.15.5 — Cobertura RF direta sem digipeater (31/10/2026, #155; teste físico pendente)
 
 - **Relato:** estação móvel recebida por RF tem posições/tracklog, mas não produz mapa de calor ao redor dos pontos recebidos nem ao longo de seus deslocamentos registrados.
