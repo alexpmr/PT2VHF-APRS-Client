@@ -240,6 +240,11 @@ def _run_integrated_window() -> int:
 
 def main() -> int:
     global _server_handle, PORT, URL
+    # Smoke test seguro para binários PyInstaller e AppImage ARM64.
+    if "--version" in sys.argv[1:]:
+        from pt2vhf_aprs import __version__
+        print(__version__)
+        return 0
     updater.register_exit_handler(_exit_for_update)
     db.init_db()
     runtime_config = db.get_config()

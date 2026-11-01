@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
+import platform
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 ROOT = Path(SPECPATH).parent
@@ -26,6 +27,7 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
+ARCH = 'arm64' if platform.machine().lower() in ('aarch64', 'arm64') else 'x86_64'
 
 exe = EXE(
     pyz,
@@ -33,7 +35,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='PT2VHF_APRS_Client_Linux_x86_64',
+    name=f'PT2VHF_APRS_Client_Linux_{ARCH}',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
