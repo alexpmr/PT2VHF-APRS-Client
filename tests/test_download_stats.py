@@ -39,7 +39,9 @@ class DownloadStats(unittest.TestCase):
         section = text.split("<!-- DOWNLOAD_TABLE_START -->", 1)[1].split("<!-- DOWNLOAD_TABLE_END -->", 1)[0]
         self.assertIn("https://www.pt2vhf.com/aprs", section)
         self.assertNotIn("badges%2Fdownloads%2F", section)
-        self.assertNotIn("github.com/alexpmr/", section)
+        # Links para builds e testes podem aparecer como evidência;
+        # URLs diretas de binários devem sempre usar pt2vhf.com.
+        self.assertNotIn("/releases/download/", section)
 
     def test_thousands_use_dot(self):
         self.assertEqual(ds.badge(12345)["message"], "12.345")
