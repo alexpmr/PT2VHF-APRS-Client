@@ -2131,8 +2131,10 @@ def test_readme_points_only_to_official_distribution_site():
     section = readme.split("<!-- DOWNLOAD_TABLE_START -->", 1)[1].split("<!-- DOWNLOAD_TABLE_END -->", 1)[0]
     assert f"Downloads — versão {version}" in section
     assert "https://www.pt2vhf.com/aprs" in section
-    assert "publicação pendente" in section
-    assert "github.com/alexpmr/" not in section
+    # A versão atual já foi publicada; a regra é nunca prometer um
+    # instalador sem link oficial nem recomendar downloads via GitHub.
+    assert "publicada" in section or "publicação pendente" in section
+    assert "/releases/download/" not in section
     assert "gitlab.com/" not in section
     assert not any(link in section for link in ["-codigo-fonte.zip", "SHA256SUMS.txt"])
 
