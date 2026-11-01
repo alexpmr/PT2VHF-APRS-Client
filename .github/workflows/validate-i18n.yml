@@ -64,6 +64,7 @@ jobs:
         if: always()
         with:
           name: i18n-inventory-and-regression
+          include-hidden-files: true
           path: |
             legacy-i18n-report.json
             i18n-inventory.json

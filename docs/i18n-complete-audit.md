@@ -41,4 +41,6 @@ Cobertura do extrator e ausência de resíduos nos estados testados são evidên
 
 Esta alteração é posterior à v1.15.6 publicada. Não substituir os binários da versão existente nem anunciar uma nova versão no site antes de concluir o build, verificar os pacotes e confirmar a publicação real.
 
+A execução [41327742124](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41327742124) aprovou a revisão ampliada no Linux do GitHub Actions: regressão, aplicação real, auditoria visível e reprodução do catálogo. A inclusão posterior de 33 textos retornados pelo servidor aumenta o inventário de 2.546 para 2.579 chaves e deve passar novamente pelo mesmo workflow. As 799 entradas editoriais são mantidas no arquivo de revisão e incorporadas ao catálogo principal; não dependem de caches locais de tradução.
+
 A criação automática do PR foi recusada pela configuração do repositório: `GitHub Actions is not permitted to create or approve pull requests`. A branch está disponível para [revisão e abertura do PR](https://github.com/alexpmr/PT2VHF-APRS-Client/compare/main...fix/i18n-complete-audit). Nenhuma credencial foi extraída e nenhuma configuração de permissão foi alterada.
