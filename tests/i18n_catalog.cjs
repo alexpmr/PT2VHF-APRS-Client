@@ -36,4 +36,18 @@ fs.writeFileSync(path.join(root, '.test-runtime/i18n-strict-report.json'), JSON.
 assert.equal(failures.length, 0, JSON.stringify(failures.slice(0, 12), null, 2));
 assert.equal(lookup('Tabela secundária', 'en'), 'Alternate table');
 assert.match(lookup('RF inferido (não confirmado diretamente)', 'de-DE'), /nicht direkt bestätigt/);
+// Regressions found by semantic review: these are UI controls, not rescue,
+// fire keys, a bank institution, or a slowed-down transmission.
+const controls = {
+  en: ['Save', 'API key', 'Check database', 'RF TX paused.'],
+  es: ['Guardar', 'Clave API', 'Verificar base de datos', 'TX RF pausada.'],
+  fr: ['Enregistrer', 'Clé API', 'Vérifier la base de données', 'TX RF en pause.'],
+  'de-DE': ['Speichern', 'API-Schlüssel', 'Datenbank prüfen', 'Funk-TX pausiert.'],
+  'it-IT': ['Salva', 'Chiave API', 'Verifica database', 'TX RF in pausa.'],
+};
+for (const [language, expected] of Object.entries(controls)) {
+  ['Salvar', 'API key', 'Verificar banco', 'TX RF pausado.'].forEach((source, i) => assert.equal(lookup(source, language), expected[i]));
+  const warning = lookup('Valor inválido para RTS: use default, on ou off.', language);
+  for (const value of ['RTS', 'default', 'on', 'off']) assert.ok(warning.includes(value), `${language}: ${value} is a literal configuration value`);
+}
 console.log(`PASS: ${work.keys.length} source keys across five target locales, placeholders and live templates`);

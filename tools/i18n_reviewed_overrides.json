@@ -2393,6 +2393,2897 @@
       "Classement des stations actives, digipeaters/iGates et liaisons qui ont cessé d’apparaître sur la période.",
       "Rangliste aktiver Stationen, Digipeater/iGates und Verbindungen, die im Zeitraum nicht mehr erschienen sind.",
       "Classifica delle stazioni attive, digipeater/iGate e collegamenti che hanno smesso di comparire nel periodo."
+    ],
+    " (último cálculo guardado)": [
+      " (last saved calculation)",
+      " (último cálculo guardado)",
+      " (dernier calcul enregistré)",
+      " (zuletzt gespeicherte Berechnung)",
+      " (ultimo calcolo salvato)"
+    ],
+    "0 caracteres": [
+      "0 characters",
+      "0 caracteres",
+      "0 caractères",
+      "0 Zeichen",
+      "0 caratteri"
+    ],
+    "10 caracteres": [
+      "10 characters",
+      "10 caracteres",
+      "10 caractères",
+      "10 Zeichen",
+      "10 caratteri"
+    ],
+    "4 caracteres": [
+      "4 characters",
+      "4 caracteres",
+      "4 caractères",
+      "4 Zeichen",
+      "4 caratteri"
+    ],
+    "6 caracteres": [
+      "6 characters",
+      "6 caracteres",
+      "6 caractères",
+      "6 Zeichen",
+      "6 caratteri"
+    ],
+    "8 caracteres": [
+      "8 characters",
+      "8 caracteres",
+      "8 caractères",
+      "8 Zeichen",
+      "8 caratteri"
+    ],
+    "1. Estação": [
+      "1. Station",
+      "1. Estación",
+      "1. Station",
+      "1. Station",
+      "1. Stazione"
+    ],
+    "3. Mapa": [
+      "3. Map",
+      "3. Mapa",
+      "3. Carte",
+      "3. Karte",
+      "3. Mappa"
+    ],
+    "4. Mensagens e boletins": [
+      "4. Messages and bulletins",
+      "4. Mensajes y boletines",
+      "4. Messages et bulletins",
+      "4. Nachrichten und Bulletins",
+      "4. Messaggi e bollettini"
+    ],
+    "5. Estações": [
+      "5. Stations",
+      "5. Estaciones",
+      "5. Stations",
+      "5. Stationen",
+      "5. Stazioni"
+    ],
+    "7. Atualizações": [
+      "7. Updates",
+      "7. Actualizaciones",
+      "7. Mises à jour",
+      "7. Aktualisierungen",
+      "7. Aggiornamenti"
+    ],
+    "8. Banco e backup": [
+      "8. Database and backup",
+      "8. Base de datos y copia de seguridad",
+      "8. Base de données et sauvegarde",
+      "8. Datenbank und Sicherung",
+      "8. Database e copia di sicurezza"
+    ],
+    "API key": [
+      "API key",
+      "Clave API",
+      "Clé API",
+      "API-Schlüssel",
+      "Chiave API"
+    ],
+    "APRS-IS caiu": [
+      "APRS-IS disconnected",
+      "APRS-IS desconectado",
+      "APRS-IS déconnecté",
+      "APRS-IS getrennt",
+      "APRS-IS disconnesso"
+    ],
+    "APRS-IS → RF restritivo": [
+      "Restricted APRS-IS → RF",
+      "APRS-IS → RF restringido",
+      "APRS-IS → RF restreint",
+      "Eingeschränktes APRS-IS → Funk",
+      "APRS-IS → RF limitato"
+    ],
+    "Abrir Configuração": [
+      "Open Settings",
+      "Abrir configuración",
+      "Ouvrir la configuration",
+      "Konfiguration öffnen",
+      "Apri configurazione"
+    ],
+    "Abrir no mapa": [
+      "Open on map",
+      "Abrir en el mapa",
+      "Ouvrir sur la carte",
+      "Auf der Karte öffnen",
+      "Apri sulla mappa"
+    ],
+    "Aguardando bytes…": [
+      "Waiting for bytes…",
+      "Esperando bytes…",
+      "En attente d’octets…",
+      "Warte auf Bytes…",
+      "In attesa di byte…"
+    ],
+    "Alertas salvos.": [
+      "Alerts saved.",
+      "Alertas guardadas.",
+      "Alertes enregistrées.",
+      "Warnungen gespeichert.",
+      "Avvisi salvati."
+    ],
+    "Aliases personalizados": [
+      "Custom aliases",
+      "Alias personalizados",
+      "Alias personnalisés",
+      "Benutzerdefinierte Aliase",
+      "Alias personalizzati"
+    ],
+    "Alternar ordem": [
+      "Toggle order",
+      "Alternar orden",
+      "Inverser l’ordre",
+      "Reihenfolge umkehren",
+      "Inverti ordine"
+    ],
+    "Alternar tema": [
+      "Toggle theme",
+      "Cambiar tema",
+      "Changer de thème",
+      "Design wechseln",
+      "Cambia tema"
+    ],
+    "Altura de obstáculos (m)": [
+      "Obstacle height (m)",
+      "Altura de obstáculos (m)",
+      "Hauteur des obstacles (m)",
+      "Hindernishöhe (m)",
+      "Altezza degli ostacoli (m)"
+    ],
+    "Antipoluição": [
+      "Pollution control",
+      "Control de contaminación",
+      "Lutte antipollution",
+      "Umweltschutz",
+      "Antinquinamento"
+    ],
+    "Anúncio de versão salvo.": [
+      "Version announcement saved.",
+      "Anuncio de versión guardado.",
+      "Annonce de version enregistrée.",
+      "Versionsankündigung gespeichert.",
+      "Annuncio di versione salvato."
+    ],
+    "Aplicar configuração": [
+      "Apply configuration",
+      "Aplicar configuración",
+      "Appliquer la configuration",
+      "Konfiguration anwenden",
+      "Applica configurazione"
+    ],
+    "Apoio portuário": [
+      "Port tender",
+      "Embarcación de apoyo portuario",
+      "Navire de soutien portuaire",
+      "Hafenversorger",
+      "Nave di supporto portuale"
+    ],
+    "Arco-íris": [
+      "Rainbow",
+      "Arcoíris",
+      "Arc-en-ciel",
+      "Regenbogen",
+      "Arcobaleno"
+    ],
+    "Arquivo salvo: ": [
+      "File saved: ",
+      "Archivo guardado: ",
+      "Fichier enregistré : ",
+      "Datei gespeichert: ",
+      "File salvato: "
+    ],
+    "Ativada": [
+      "Asserted",
+      "Activada",
+      "Activée",
+      "Aktiv",
+      "Attivata"
+    ],
+    "Ativar Auto-resposta": [
+      "Enable automatic reply",
+      "Activar respuesta automática",
+      "Activer la réponse automatique",
+      "Automatische Antwort aktivieren",
+      "Attiva risposta automatica"
+    ],
+    "Ativar Digipeater": [
+      "Enable digipeater",
+      "Activar digipeater",
+      "Activer le digipeater",
+      "Digipeater aktivieren",
+      "Attiva digipeater"
+    ],
+    "Ativar provedor externo": [
+      "Enable external provider",
+      "Activar proveedor externo",
+      "Activer le fournisseur externe",
+      "Externen Anbieter aktivieren",
+      "Attiva fornitore esterno"
+    ],
+    "Atracado": [
+      "Moored",
+      "Amarrado",
+      "Amarré",
+      "Festgemacht",
+      "Ormeggiato"
+    ],
+    "Atual: ": [
+      "Current: ",
+      "Actual: ",
+      "Actuel : ",
+      "Aktuell: ",
+      "Attuale: "
+    ],
+    "Atualizar": [
+      "Refresh",
+      "Actualizar",
+      "Actualiser",
+      "Aktualisieren",
+      "Aggiorna"
+    ],
+    "Atualizar diagnóstico": [
+      "Refresh diagnostics",
+      "Actualizar diagnóstico",
+      "Actualiser le diagnostic",
+      "Diagnose aktualisieren",
+      "Aggiorna diagnosi"
+    ],
+    "Atualizar portas": [
+      "Refresh ports",
+      "Actualizar puertos",
+      "Actualiser les ports",
+      "Ports aktualisieren",
+      "Aggiorna porte"
+    ],
+    "Atualização portátil e regressão": [
+      "Portable update and regression",
+      "Actualización portátil y regresión",
+      "Mise à jour portable et régression",
+      "Portable Aktualisierung und Regression",
+      "Aggiornamento portatile e regressione"
+    ],
+    "Automações": [
+      "Automations",
+      "Automatizaciones",
+      "Automatisations",
+      "Automatisierungen",
+      "Automazioni"
+    ],
+    "Automático:": [
+      "Automatic:",
+      "Automático:",
+      "Automatique :",
+      "Automatisch:",
+      "Automatico:"
+    ],
+    "Autorizar no Firewall do Windows": [
+      "Allow in Windows Firewall",
+      "Permitir en el Firewall de Windows",
+      "Autoriser dans le pare-feu Windows",
+      "In der Windows-Firewall zulassen",
+      "Consenti nel Firewall di Windows"
+    ],
+    "Azimute A→B / B→A": [
+      "Azimuth A→B / B→A",
+      "Acimut A→B / B→A",
+      "Azimut A→B / B→A",
+      "Azimut A→B / B→A",
+      "Azimut A→B / B→A"
+    ],
+    "BLNA (anúncio)": [
+      "BLNA (announcement)",
+      "BLNA (anuncio)",
+      "BLNA (annonce)",
+      "BLNA (Ankündigung)",
+      "BLNA (annuncio)"
+    ],
+    "Backup completo gerado: ": [
+      "Full backup created: ",
+      "Copia de seguridad completa creada: ",
+      "Sauvegarde complète créée : ",
+      "Vollständige Sicherung erstellt: ",
+      "Copia di sicurezza completa creata: "
+    ],
+    "Backup completo salvo em: ": [
+      "Full backup saved to: ",
+      "Copia de seguridad completa guardada en: ",
+      "Sauvegarde complète enregistrée dans : ",
+      "Vollständige Sicherung gespeichert unter: ",
+      "Copia di sicurezza completa salvata in: "
+    ],
+    "Beacon (minutos)": [
+      "Beacon (minutes)",
+      "Baliza (minutos)",
+      "Balise (minutes)",
+      "Bake (Minuten)",
+      "Beacon (minuti)"
+    ],
+    "Boletim": [
+      "Bulletin",
+      "Boletín",
+      "Bulletin",
+      "Bulletin",
+      "Bollettino"
+    ],
+    "Boletim de grupo:": [
+      "Group bulletin:",
+      "Boletín de grupo:",
+      "Bulletin de groupe :",
+      "Gruppenbulletin:",
+      "Bollettino di gruppo:"
+    ],
+    "Boletim vazio.": [
+      "Empty bulletin.",
+      "Boletín vacío.",
+      "Bulletin vide.",
+      "Leeres Bulletin.",
+      "Bollettino vuoto."
+    ],
+    "Cache (horas)": [
+      "Cache (hours)",
+      "Caché (horas)",
+      "Cache (heures)",
+      "Zwischenspeicher (Stunden)",
+      "Cache (ore)"
+    ],
+    "Calado": [
+      "Draught",
+      "Calado",
+      "Tirant d’eau",
+      "Tiefgang",
+      "Pescaggio"
+    ],
+    "Calculando estatísticas…": [
+      "Calculating statistics…",
+      "Calculando estadísticas…",
+      "Calcul des statistiques…",
+      "Statistiken werden berechnet…",
+      "Calcolo delle statistiche…"
+    ],
+    "Calculando recordes RF…": [
+      "Calculating RF records…",
+      "Calculando récords RF…",
+      "Calcul des records RF…",
+      "Funkrekorde werden berechnet…",
+      "Calcolo dei record RF…"
+    ],
+    "Calculando…": [
+      "Calculating…",
+      "Calculando…",
+      "Calcul…",
+      "Berechnung läuft…",
+      "Calcolo…"
+    ],
+    "Calcular cobertura": [
+      "Calculate coverage",
+      "Calcular cobertura",
+      "Calculer la couverture",
+      "Abdeckung berechnen",
+      "Calcola copertura"
+    ],
+    "Campos marcados como": [
+      "Fields marked as",
+      "Campos marcados como",
+      "Champs marqués comme",
+      "Felder mit der Kennzeichnung",
+      "Campi contrassegnati come"
+    ],
+    "Carregando resultado em cache…": [
+      "Loading cached result…",
+      "Cargando el resultado en caché…",
+      "Chargement du résultat en cache…",
+      "Zwischengespeichertes Ergebnis wird geladen…",
+      "Caricamento del risultato in cache…"
+    ],
+    "Carregando tamanho do banco…": [
+      "Loading database size…",
+      "Cargando el tamaño de la base de datos…",
+      "Chargement de la taille de la base de données…",
+      "Datenbankgröße wird geladen…",
+      "Caricamento delle dimensioni del database…"
+    ],
+    "Carregando…": [
+      "Loading…",
+      "Cargando…",
+      "Chargement…",
+      "Wird geladen…",
+      "Caricamento…"
+    ],
+    "Centralizar": [
+      "Center",
+      "Centrar",
+      "Centrer",
+      "Zentrieren",
+      "Centra"
+    ],
+    "Centralizar na minha localização": [
+      "Center on my location",
+      "Centrar en mi ubicación",
+      "Centrer sur ma position",
+      "Auf meine Position zentrieren",
+      "Centra sulla mia posizione"
+    ],
+    "Cobertura RF (mapa de calor)": [
+      "RF coverage (heat map)",
+      "Cobertura RF (mapa de calor)",
+      "Couverture RF (carte de chaleur)",
+      "Funkabdeckung (Wärmekarte)",
+      "Copertura RF (mappa di calore)"
+    ],
+    "Cobertura RF direta e histórica": [
+      "Direct and historical RF coverage",
+      "Cobertura RF directa e histórica",
+      "Couverture RF directe et historique",
+      "Direkte und historische Funkabdeckung",
+      "Copertura RF diretta e storica"
+    ],
+    "Cobertura RF em mapa de calor": [
+      "RF coverage on a heat map",
+      "Cobertura RF en mapa de calor",
+      "Couverture RF sur une carte de chaleur",
+      "Funkabdeckung als Wärmekarte",
+      "Copertura RF su mappa di calore"
+    ],
+    "Concluir": [
+      "Finish",
+      "Finalizar",
+      "Terminer",
+      "Abschließen",
+      "Concludi"
+    ],
+    "Conectado pelo Client": [
+      "Connected by the Client",
+      "Conectado por el cliente",
+      "Connecté par le client",
+      "Vom Client verbunden",
+      "Connesso dal client"
+    ],
+    "Conectar TNC": [
+      "Connect TNC",
+      "Conectar TNC",
+      "Connecter le TNC",
+      "TNC verbinden",
+      "Connetti TNC"
+    ],
+    "Conectar TNC ao iniciar": [
+      "Connect TNC at startup",
+      "Conectar TNC al iniciar",
+      "Connecter le TNC au démarrage",
+      "TNC beim Start verbinden",
+      "Connetti TNC all’avvio"
+    ],
+    "Configuração em sub-abas": [
+      "Configuration in subtabs",
+      "Configuración en subpestañas",
+      "Configuration par sous-onglets",
+      "Konfiguration in Unterreitern",
+      "Configurazione in sottoschede"
+    ],
+    "Configuração → Aparência": [
+      "Configuration → Appearance",
+      "Configuración → Apariencia",
+      "Configuration → Apparence",
+      "Konfiguration → Darstellung",
+      "Configurazione → Aspetto"
+    ],
+    "Confirmação explícita inválida.": [
+      "Invalid explicit confirmation.",
+      "Confirmación explícita no válida.",
+      "Confirmation explicite invalide.",
+      "Ungültige ausdrückliche Bestätigung.",
+      "Conferma esplicita non valida."
+    ],
+    "Considerar desaparecida após": [
+      "Consider missing after",
+      "Considerar desaparecida después de",
+      "Considérer disparue après",
+      "Als verschwunden betrachten nach",
+      "Considera scomparsa dopo"
+    ],
+    "Consolas - padrão": [
+      "Consolas - default",
+      "Consolas - predeterminada",
+      "Consolas - par défaut",
+      "Consolas - Standard",
+      "Consolas - predefinito"
+    ],
+    "Consolidando Recordes RF…": [
+      "Consolidating RF records…",
+      "Consolidando récords RF…",
+      "Consolidation des records RF…",
+      "Funkrekorde werden zusammengeführt…",
+      "Consolidamento dei record RF…"
+    ],
+    "Consulta enviada.": [
+      "Query sent.",
+      "Consulta enviada.",
+      "Requête envoyée.",
+      "Abfrage gesendet.",
+      "Interrogazione inviata."
+    ],
+    "Consultando perfil…": [
+      "Loading profile…",
+      "Consultando perfil…",
+      "Chargement du profil…",
+      "Profil wird geladen…",
+      "Caricamento del profilo…"
+    ],
+    "Consultando topologia RF…": [
+      "Querying RF topology…",
+      "Consultando topología RF…",
+      "Consultation de la topologie RF…",
+      "Funktopologie wird abgefragt…",
+      "Interrogazione della topologia RF…"
+    ],
+    "Contagem": [
+      "Count",
+      "Recuento",
+      "Nombre",
+      "Anzahl",
+      "Conteggio"
+    ],
+    "Contatos": [
+      "Contacts",
+      "Contactos",
+      "Contacts",
+      "Kontakte",
+      "Contatti"
+    ],
+    "Conteúdo 3/4 ▾": [
+      "Content 3/4 ▾",
+      "Contenido 3/4 ▾",
+      "Contenu 3/4 ▾",
+      "Inhalt 3/4 ▾",
+      "Contenuto 3/4 ▾"
+    ],
+    "Continental temperado": [
+      "Continental temperate",
+      "Continental templado",
+      "Continental tempéré",
+      "Kontinental gemäßigt",
+      "Continentale temperato"
+    ],
+    "Contornos": [
+      "Contours",
+      "Contornos",
+      "Contours",
+      "Konturen",
+      "Contorni"
+    ],
+    "Contornos (10 dB)": [
+      "Contours (10 dB)",
+      "Contornos (10 dB)",
+      "Contours (10 dB)",
+      "Konturen (10 dB)",
+      "Contorni (10 dB)"
+    ],
+    "Coordenadas": [
+      "Coordinates",
+      "Coordenadas",
+      "Coordonnées",
+      "Koordinaten",
+      "Coordinate"
+    ],
+    "Copiado: ": [
+      "Copied: ",
+      "Copiado: ",
+      "Copié : ",
+      "Kopiert: ",
+      "Copiato: "
+    ],
+    "Copiar coordenadas": [
+      "Copy coordinates",
+      "Copiar coordenadas",
+      "Copier les coordonnées",
+      "Koordinaten kopieren",
+      "Copia coordinate"
+    ],
+    "Copiar diagnóstico": [
+      "Copy diagnostics",
+      "Copiar diagnóstico",
+      "Copier le diagnostic",
+      "Diagnose kopieren",
+      "Copia diagnosi"
+    ],
+    "Cor do sombreamento": [
+      "Shading color",
+      "Color del sombreado",
+      "Couleur de l’ombrage",
+      "Schattierungsfarbe",
+      "Colore dell’ombreggiatura"
+    ],
+    "Analisar": [
+      "Analyze",
+      "Analizar",
+      "Analyser",
+      "Analysieren",
+      "Analizza"
+    ],
+    "Ambiente": [
+      "Environment",
+      "Ambiente",
+      "Environnement",
+      "Umgebung",
+      "Ambiente"
+    ],
+    "Cor dos enlaces IGate": [
+      "iGate link color",
+      "Color de los enlaces iGate",
+      "Couleur des liaisons iGate",
+      "Farbe der iGate-Verbindungen",
+      "Colore dei collegamenti iGate"
+    ],
+    "Corte": [
+      "Cutoff",
+      "Umbral",
+      "Seuil",
+      "Schwelle",
+      "Soglia"
+    ],
+    "Credencial já configurada": [
+      "Credential already configured",
+      "Credencial ya configurada",
+      "Identifiant déjà configuré",
+      "Zugangsdaten bereits konfiguriert",
+      "Credenziale già configurata"
+    ],
+    "Critério de ordenação": [
+      "Sort criterion",
+      "Criterio de ordenación",
+      "Critère de tri",
+      "Sortierkriterium",
+      "Criterio di ordinamento"
+    ],
+    "Célula aproximada: ": [
+      "Approximate cell: ",
+      "Celda aproximada: ",
+      "Cellule approximative : ",
+      "Ungefähre Zelle: ",
+      "Cella approssimativa: "
+    ],
+    "Decorrido: ": [
+      "Elapsed: ",
+      "Transcurrido: ",
+      "Écoulé : ",
+      "Verstrichen: ",
+      "Trascorso: "
+    ],
+    "Deixe vazio para manter": [
+      "Leave blank to keep",
+      "Deja vacío para mantener",
+      "Laisser vide pour conserver",
+      "Zum Beibehalten leer lassen",
+      "Lascia vuoto per mantenere"
+    ],
+    "Desativada": [
+      "Deasserted",
+      "Desactivada",
+      "Désactivée",
+      "Inaktiv",
+      "Disattivata"
+    ],
+    "Desconectado.": [
+      "Disconnected.",
+      "Desconectado.",
+      "Déconnecté.",
+      "Getrennt.",
+      "Disconnesso."
+    ],
+    "Desfazer vértice": [
+      "Undo vertex",
+      "Deshacer vértice",
+      "Annuler le sommet",
+      "Scheitelpunkt rückgängig machen",
+      "Annulla vertice"
+    ],
+    "Desligado": [
+      "Off",
+      "Apagado",
+      "Désactivé",
+      "Aus",
+      "Disattivato"
+    ],
+    "Desnível": [
+      "Elevation difference",
+      "Desnivel",
+      "Différence d’altitude",
+      "Höhenunterschied",
+      "Dislivello"
+    ],
+    "Destacar": [
+      "Detach",
+      "Desacoplar",
+      "Détacher",
+      "Abkoppeln",
+      "Sgancia"
+    ],
+    "Destacar janela": [
+      "Detach window",
+      "Desacoplar ventana",
+      "Détacher la fenêtre",
+      "Fenster abkoppeln",
+      "Sgancia finestra"
+    ],
+    "Destino TNC2 ausente.": [
+      "Missing TNC2 destination.",
+      "Falta el destino TNC2.",
+      "Destination TNC2 manquante.",
+      "TNC2-Ziel fehlt.",
+      "Destinazione TNC2 mancante."
+    ],
+    "Detectar / diagnóstico": [
+      "Detect / diagnostics",
+      "Detectar / diagnóstico",
+      "Détecter / diagnostic",
+      "Erkennen / Diagnose",
+      "Rileva / diagnosi"
+    ],
+    "Dia da semana inválido.": [
+      "Invalid day of week.",
+      "Día de la semana no válido.",
+      "Jour de la semaine invalide.",
+      "Ungültiger Wochentag.",
+      "Giorno della settimana non valido."
+    ],
+    "Diagnóstico / Queries APRS": [
+      "Diagnostics / APRS queries",
+      "Diagnóstico / Consultas APRS",
+      "Diagnostic / Requêtes APRS",
+      "Diagnose / APRS-Abfragen",
+      "Diagnosi / Interrogazioni APRS"
+    ],
+    "Diagnóstico JSON salvo.": [
+      "JSON diagnostic saved.",
+      "Diagnóstico JSON guardado.",
+      "Diagnostic JSON enregistré.",
+      "JSON-Diagnose gespeichert.",
+      "Diagnosi JSON salvata."
+    ],
+    "Diagnóstico LAN: aguardando…": [
+      "LAN diagnostics: waiting…",
+      "Diagnóstico LAN: esperando…",
+      "Diagnostic LAN : en attente…",
+      "LAN-Diagnose: wartet…",
+      "Diagnosi LAN: in attesa…"
+    ],
+    "Diagnóstico copiado.": [
+      "Diagnostic copied.",
+      "Diagnóstico copiado.",
+      "Diagnostic copié.",
+      "Diagnose kopiert.",
+      "Diagnosi copiata."
+    ],
+    "Diagnóstico salvo: ": [
+      "Diagnostic saved: ",
+      "Diagnóstico guardado: ",
+      "Diagnostic enregistré : ",
+      "Diagnose gespeichert: ",
+      "Diagnosi salvata: "
+    ],
+    "Diagnóstico: ": [
+      "Diagnostics: ",
+      "Diagnóstico: ",
+      "Diagnostic : ",
+      "Diagnose: ",
+      "Diagnosi: "
+    ],
+    "Digite o texto do boletim APRS": [
+      "Enter the APRS bulletin text",
+      "Introduce el texto del boletín APRS",
+      "Saisissez le texte du bulletin APRS",
+      "Text des APRS-Bulletins eingeben",
+      "Inserisci il testo del bollettino APRS"
+    ],
+    "Direção de query APRS inválida.": [
+      "Invalid APRS query direction.",
+      "Dirección de consulta APRS no válida.",
+      "Direction de requête APRS invalide.",
+      "Ungültige Richtung der APRS-Abfrage.",
+      "Direzione dell’interrogazione APRS non valida."
+    ],
+    "Dragagem / operação submarina": [
+      "Dredging / underwater operation",
+      "Dragado / operación submarina",
+      "Dragage / opération sous-marine",
+      "Baggerarbeiten / Unterwassereinsatz",
+      "Dragaggio / operazione subacquea"
+    ],
+    "Em movimento a motor": [
+      "Under way using engine",
+      "En navegación a motor",
+      "En route au moteur",
+      "In Fahrt unter Motor",
+      "In navigazione a motore"
+    ],
+    "Em movimento a vela": [
+      "Under way sailing",
+      "En navegación a vela",
+      "En route à la voile",
+      "In Fahrt unter Segel",
+      "In navigazione a vela"
+    ],
+    "Em pesca": [
+      "Engaged in fishing",
+      "En actividad de pesca",
+      "En pêche",
+      "Beim Fischfang",
+      "In attività di pesca"
+    ],
+    "Embarcação WIG": [
+      "WIG vessel",
+      "Embarcación WIG",
+      "Navire WIG",
+      "WIG-Fahrzeug",
+      "Imbarcazione WIG"
+    ],
+    "Embarcação de alta velocidade": [
+      "High-speed craft",
+      "Embarcación de alta velocidad",
+      "Navire à grande vitesse",
+      "Hochgeschwindigkeitsfahrzeug",
+      "Imbarcazione ad alta velocità"
+    ],
+    "Embarcação de recreio": [
+      "Pleasure craft",
+      "Embarcación de recreo",
+      "Navire de plaisance",
+      "Sportboot",
+      "Imbarcazione da diporto"
+    ],
+    "Encalhado": [
+      "Aground",
+      "Encallado",
+      "Échoué",
+      "Auf Grund gelaufen",
+      "Incagliato"
+    ],
+    "Enlaces / Topologia": [
+      "Links / Topology",
+      "Enlaces / Topología",
+      "Liaisons / Topologie",
+      "Verbindungen / Topologie",
+      "Collegamenti / Topologia"
+    ],
+    "Enlaces RF": [
+      "RF links",
+      "Enlaces RF",
+      "Liaisons RF",
+      "Funkverbindungen",
+      "Collegamenti RF"
+    ],
+    "Enviadas": [
+      "Sent",
+      "Enviadas",
+      "Envoyées",
+      "Gesendet",
+      "Inviate"
+    ],
+    "Enviando consulta…": [
+      "Sending query…",
+      "Enviando consulta…",
+      "Envoi de la requête…",
+      "Abfrage wird gesendet…",
+      "Invio dell’interrogazione…"
+    ],
+    "Equipamentos seriais detectados": [
+      "Detected serial devices",
+      "Equipos serie detectados",
+      "Équipements série détectés",
+      "Erkannte serielle Geräte",
+      "Dispositivi seriali rilevati"
+    ],
+    "Erro não identificado": [
+      "Unknown error",
+      "Error desconocido",
+      "Erreur inconnue",
+      "Unbekannter Fehler",
+      "Errore sconosciuto"
+    ],
+    "Esc": [
+      "Esc",
+      "Esc",
+      "Échap",
+      "Esc",
+      "Esc"
+    ],
+    "Escolher no mapa…": [
+      "Choose on map…",
+      "Elegir en el mapa…",
+      "Choisir sur la carte…",
+      "Auf der Karte wählen…",
+      "Scegli sulla mappa…"
+    ],
+    "Escuro": [
+      "Dark",
+      "Oscuro",
+      "Sombre",
+      "Dunkel",
+      "Scuro"
+    ],
+    "Escutando…": [
+      "Listening…",
+      "Escuchando…",
+      "Écoute…",
+      "Empfang läuft…",
+      "Ascolto…"
+    ],
+    "Espessura RF temporário": [
+      "Temporary RF line width",
+      "Grosor de RF temporal",
+      "Épaisseur RF temporaire",
+      "Linienstärke für temporären Funk",
+      "Spessore RF temporanea"
+    ],
+    "Espessura dos enlaces móveis": [
+      "Mobile link line width",
+      "Grosor de los enlaces móviles",
+      "Épaisseur des liaisons mobiles",
+      "Linienstärke mobiler Verbindungen",
+      "Spessore dei collegamenti mobili"
+    ],
+    "Estado": [
+      "Status",
+      "Estado",
+      "État",
+      "Status",
+      "Stato"
+    ],
+    "Estatísticas guardadas": [
+      "Saved statistics",
+      "Estadísticas guardadas",
+      "Statistiques enregistrées",
+      "Gespeicherte Statistiken",
+      "Statistiche salvate"
+    ],
+    "Estação desaparecida há mais de ": [
+      "Station missing for more than ",
+      "Estación desaparecida desde hace más de ",
+      "Station disparue depuis plus de ",
+      "Station seit mehr als folgender Zeit verschwunden: ",
+      "Stazione scomparsa da più di "
+    ],
+    "Ex.: APRS Thursday": [
+      "E.g.: APRS Thursday",
+      "Ej.: APRS Thursday",
+      "Ex. : APRS Thursday",
+      "Z. B.: APRS Thursday",
+      "Es.: APRS Thursday"
+    ],
+    "Ex.: COM6": [
+      "E.g.: COM6",
+      "Ej.: COM6",
+      "Ex. : COM6",
+      "Z. B.: COM6",
+      "Es.: COM6"
+    ],
+    "Ex.: PT2DGI,DF1-1": [
+      "E.g.: PT2DGI,DF1-1",
+      "Ej.: PT2DGI,DF1-1",
+      "Ex. : PT2DGI,DF1-1",
+      "Z. B.: PT2DGI,DF1-1",
+      "Es.: PT2DGI,DF1-1"
+    ],
+    "Ex.: PY2ABC": [
+      "E.g.: PY2ABC",
+      "Ej.: PY2ABC",
+      "Ex. : PY2ABC",
+      "Z. B.: PY2ABC",
+      "Es.: PY2ABC"
+    ],
+    "Ex.: WIDE1-1,WIDE2-1": [
+      "E.g.: WIDE1-1,WIDE2-1",
+      "Ej.: WIDE1-1,WIDE2-1",
+      "Ex. : WIDE1-1,WIDE2-1",
+      "Z. B.: WIDE1-1,WIDE2-1",
+      "Es.: WIDE1-1,WIDE2-1"
+    ],
+    "Executando…": [
+      "Running…",
+      "Ejecutando…",
+      "Exécution…",
+      "Wird ausgeführt…",
+      "Esecuzione…"
+    ],
+    "Executar diagnóstico TM-D700": [
+      "Run TM-D700 diagnostics",
+      "Ejecutar diagnóstico TM-D700",
+      "Exécuter le diagnostic TM-D700",
+      "TM-D700-Diagnose ausführen",
+      "Esegui diagnosi TM-D700"
+    ],
+    "Exportar JSON": [
+      "Export JSON",
+      "Exportar JSON",
+      "Exporter JSON",
+      "JSON exportieren",
+      "Esporta JSON"
+    ],
+    "Exportar PDF": [
+      "Export PDF",
+      "Exportar PDF",
+      "Exporter PDF",
+      "PDF exportieren",
+      "Esporta PDF"
+    ],
+    "Falha ao calcular Recordes RF.": [
+      "Failed to calculate RF records.",
+      "Error al calcular los récords RF.",
+      "Échec du calcul des records RF.",
+      "Berechnung der Funkrekorde fehlgeschlagen.",
+      "Calcolo dei record RF non riuscito."
+    ],
+    "Falha ao consultar resultado": [
+      "Failed to retrieve result",
+      "Error al consultar el resultado",
+      "Échec de la consultation du résultat",
+      "Ergebnisabfrage fehlgeschlagen",
+      "Consultazione del risultato non riuscita"
+    ],
+    "Falha ao consultar rotas RF.": [
+      "Failed to query RF routes.",
+      "Error al consultar las rutas RF.",
+      "Échec de la consultation des routes RF.",
+      "Abfrage der Funkrouten fehlgeschlagen.",
+      "Consultazione dei percorsi RF non riuscita."
+    ],
+    "Falha ao gerar backup completo: ": [
+      "Failed to create full backup: ",
+      "Error al crear la copia de seguridad completa: ",
+      "Échec de la création de la sauvegarde complète : ",
+      "Erstellen der vollständigen Sicherung fehlgeschlagen: ",
+      "Creazione della copia di sicurezza completa non riuscita: "
+    ],
+    "Falha ao restaurar backup: ": [
+      "Failed to restore backup: ",
+      "Error al restaurar la copia de seguridad: ",
+      "Échec de la restauration de la sauvegarde : ",
+      "Wiederherstellen der Sicherung fehlgeschlagen: ",
+      "Ripristino della copia di sicurezza non riuscito: "
+    ],
+    "Falha na conexão APRS-IS: ": [
+      "APRS-IS connection failed: ",
+      "Error de conexión APRS-IS: ",
+      "Échec de la connexion APRS-IS : ",
+      "APRS-IS-Verbindung fehlgeschlagen: ",
+      "Connessione APRS-IS non riuscita: "
+    ],
+    "Falha na verificação: ": [
+      "Check failed: ",
+      "Error de verificación: ",
+      "Échec de la vérification : ",
+      "Überprüfung fehlgeschlagen: ",
+      "Verifica non riuscita: "
+    ],
+    "Falha no cálculo de Recordes RF": [
+      "RF records calculation failed",
+      "Error al calcular los récords RF",
+      "Échec du calcul des records RF",
+      "Berechnung der Funkrekorde fehlgeschlagen",
+      "Calcolo dei record RF non riuscito"
+    ],
+    "Falha temporária na verificação": [
+      "Temporary check failure",
+      "Fallo temporal de verificación",
+      "Échec temporaire de la vérification",
+      "Vorübergehender Fehler bei der Überprüfung",
+      "Errore temporaneo di verifica"
+    ],
+    "Falha temporária na verificação.": [
+      "Temporary check failure.",
+      "Fallo temporal de verificación.",
+      "Échec temporaire de la vérification.",
+      "Vorübergehender Fehler bei der Überprüfung.",
+      "Errore temporaneo di verifica."
+    ],
+    "Fechar e encaixar": [
+      "Close and dock",
+      "Cerrar y acoplar",
+      "Fermer et ancrer",
+      "Schließen und andocken",
+      "Chiudi e aggancia"
+    ],
+    "Fechar editor": [
+      "Close editor",
+      "Cerrar editor",
+      "Fermer l’éditeur",
+      "Editor schließen",
+      "Chiudi editor"
+    ],
+    "Fechar ferramenta": [
+      "Close tool",
+      "Cerrar herramienta",
+      "Fermer l’outil",
+      "Werkzeug schließen",
+      "Chiudi strumento"
+    ],
+    "Ferramentas ▾": [
+      "Tools ▾",
+      "Herramientas ▾",
+      "Outils ▾",
+      "Werkzeuge ▾",
+      "Strumenti ▾"
+    ],
+    "Fila TX": [
+      "TX queue",
+      "Cola TX",
+      "File TX",
+      "TX-Warteschlange",
+      "Coda TX"
+    ],
+    "Fill-in — WIDE1-1": [
+      "Fill-in — WIDE1-1",
+      "Relleno — WIDE1-1",
+      "Complément local — WIDE1-1",
+      "Lückenfüller — WIDE1-1",
+      "Copertura locale — WIDE1-1"
+    ],
+    "Fonte da tela de logs inválida.": [
+      "Invalid log screen font.",
+      "Fuente de la pantalla de registros no válida.",
+      "Police de l’écran des journaux invalide.",
+      "Ungültige Schriftart für die Protokollanzeige.",
+      "Carattere della schermata dei registri non valido."
+    ],
+    "Fora do raio calculado": [
+      "Outside the calculated radius",
+      "Fuera del radio calculado",
+      "Hors du rayon calculé",
+      "Außerhalb des berechneten Radius",
+      "Fuori dal raggio calcolato"
+    ],
+    "Frame AX.25 curto demais.": [
+      "AX.25 frame too short.",
+      "Trama AX.25 demasiado corta.",
+      "Trame AX.25 trop courte.",
+      "AX.25-Frame zu kurz.",
+      "Frame AX.25 troppo corto."
+    ],
+    "Fresnel livre": [
+      "Clear Fresnel zone",
+      "Zona de Fresnel libre",
+      "Zone de Fresnel dégagée",
+      "Freie Fresnelzone",
+      "Zona di Fresnel libera"
+    ],
+    "Fundeado": [
+      "At anchor",
+      "Fondeado",
+      "Au mouillage",
+      "Vor Anker",
+      "All’ancora"
+    ],
+    "Fábio": [
+      "Fábio",
+      "Fábio",
+      "Fábio",
+      "Fábio",
+      "Fábio"
+    ],
+    "Genérico KISS": [
+      "Generic KISS",
+      "KISS genérico",
+      "KISS générique",
+      "Generisches KISS",
+      "KISS generico"
+    ],
+    "Gerando diagnóstico JSON…": [
+      "Generating JSON diagnostics…",
+      "Generando diagnóstico JSON…",
+      "Création du diagnostic JSON…",
+      "JSON-Diagnose wird erstellt…",
+      "Generazione della diagnosi JSON…"
+    ],
+    "Grupo de configurações": [
+      "Settings group",
+      "Grupo de configuración",
+      "Groupe de paramètres",
+      "Einstellungsgruppe",
+      "Gruppo di impostazioni"
+    ],
+    "Hora:": [
+      "Time:",
+      "Hora:",
+      "Heure :",
+      "Uhrzeit:",
+      "Ora:"
+    ],
+    "Horário semanal inválido.": [
+      "Invalid weekly time.",
+      "Horario semanal no válido.",
+      "Horaire hebdomadaire invalide.",
+      "Ungültige wöchentliche Uhrzeit.",
+      "Orario settimanale non valido."
+    ],
+    "Host AGWPE": [
+      "AGWPE host",
+      "Servidor AGWPE",
+      "Hôte AGWPE",
+      "AGWPE-Host",
+      "Host AGWPE"
+    ],
+    "ID APRS da mensagem RF inválido.": [
+      "Invalid APRS ID for RF message.",
+      "ID APRS del mensaje RF no válido.",
+      "Identifiant APRS du message RF invalide.",
+      "Ungültige APRS-ID der Funknachricht.",
+      "ID APRS del messaggio RF non valido."
+    ],
+    "ID APRS do ACK inválido.": [
+      "Invalid APRS ACK ID.",
+      "ID APRS del ACK no válido.",
+      "Identifiant APRS de l’ACK invalide.",
+      "Ungültige APRS-ID der ACK-Bestätigung.",
+      "ID APRS dell’ACK non valido."
+    ],
+    "Idioma da aplicação inválido.": [
+      "Invalid application language.",
+      "Idioma de la aplicación no válido.",
+      "Langue de l’application invalide.",
+      "Ungültige Anwendungssprache.",
+      "Lingua dell’applicazione non valida."
+    ],
+    "Indexando enlaces RF…": [
+      "Indexing RF links…",
+      "Indexando enlaces RF…",
+      "Indexation des liaisons RF…",
+      "Funkverbindungen werden indiziert…",
+      "Indicizzazione dei collegamenti RF…"
+    ],
+    "Indisponível": [
+      "Unavailable",
+      "No disponible",
+      "Indisponible",
+      "Nicht verfügbar",
+      "Non disponibile"
+    ],
+    "Informe o grupo do boletim.": [
+      "Enter the bulletin group.",
+      "Introduce el grupo del boletín.",
+      "Saisissez le groupe du bulletin.",
+      "Gruppe des Bulletins eingeben.",
+      "Inserisci il gruppo del bollettino."
+    ],
+    "Informe o host do AGWPE.": [
+      "Enter the AGWPE host.",
+      "Introduce el servidor AGWPE.",
+      "Saisissez l’hôte AGWPE.",
+      "AGWPE-Host eingeben.",
+      "Inserisci l’host AGWPE."
+    ],
+    "Informe o host do KISS TCP.": [
+      "Enter the KISS TCP host.",
+      "Introduce el servidor KISS TCP.",
+      "Saisissez l’hôte KISS TCP.",
+      "KISS-TCP-Host eingeben.",
+      "Inserisci l’host KISS TCP."
+    ],
+    "Informe o nome do grupo.": [
+      "Enter the group name.",
+      "Introduce el nombre del grupo.",
+      "Saisissez le nom du groupe.",
+      "Gruppennamen eingeben.",
+      "Inserisci il nome del gruppo."
+    ],
+    "Informe origem e destino.": [
+      "Enter source and destination.",
+      "Introduce origen y destino.",
+      "Saisissez la source et la destination.",
+      "Quelle und Ziel eingeben.",
+      "Inserisci origine e destinazione."
+    ],
+    "Informe um destino APRS válido.": [
+      "Enter a valid APRS destination.",
+      "Introduce un destino APRS válido.",
+      "Saisissez une destination APRS valide.",
+      "Ein gültiges APRS-Ziel eingeben.",
+      "Inserisci una destinazione APRS valida."
+    ],
+    "Instalador indisponível": [
+      "Installer unavailable",
+      "Instalador no disponible",
+      "Programme d’installation indisponible",
+      "Installationsprogramm nicht verfügbar",
+      "Programma di installazione non disponibile"
+    ],
+    "Integrações salvas.": [
+      "Integrations saved.",
+      "Integraciones guardadas.",
+      "Intégrations enregistrées.",
+      "Integrationen gespeichert.",
+      "Integrazioni salvate."
+    ],
+    "Intermediários não identificados": [
+      "Unidentified intermediate nodes",
+      "Nodos intermedios no identificados",
+      "Nœuds intermédiaires non identifiés",
+      "Nicht identifizierte Zwischenknoten",
+      "Nodi intermedi non identificati"
+    ],
+    "Invalid presence payload": [
+      "Invalid presence payload",
+      "Datos de presencia no válidos",
+      "Données de présence invalides",
+      "Ungültige Anwesenheitsdaten",
+      "Dati di presenza non validi"
+    ],
+    "Inviável": [
+      "Not viable",
+      "Inviable",
+      "Non viable",
+      "Nicht durchführbar",
+      "Non fattibile"
+    ],
+    "Janela “ouvido por RF”": [
+      "RF-heard time window",
+      "Ventana temporal de recepción RF",
+      "Fenêtre temporelle de réception RF",
+      "Zeitfenster für Funkempfang",
+      "Finestra temporale di ricezione RF"
+    ],
+    "Job inexistente.": [
+      "Job not found.",
+      "Tarea no encontrada.",
+      "Tâche introuvable.",
+      "Auftrag nicht gefunden.",
+      "Attività non trovata."
+    ],
+    "KML salvo com sucesso.": [
+      "KML saved successfully.",
+      "KML guardado correctamente.",
+      "KML enregistré avec succès.",
+      "KML erfolgreich gespeichert.",
+      "KML salvato correttamente."
+    ],
+    "Latitude inválida.": [
+      "Invalid latitude.",
+      "Latitud no válida.",
+      "Latitude invalide.",
+      "Ungültiger Breitengrad.",
+      "Latitudine non valida."
+    ],
+    "Latitude, longitude": [
+      "Latitude, longitude",
+      "Latitud, longitud",
+      "Latitude, longitude",
+      "Breitengrad, Längengrad",
+      "Latitudine, longitudine"
+    ],
+    "Liberar TX": [
+      "Resume TX",
+      "Reanudar TX",
+      "Reprendre TX",
+      "TX freigeben",
+      "Riprendi TX"
+    ],
+    "Limpar análise de rota": [
+      "Clear route analysis",
+      "Borrar análisis de ruta",
+      "Effacer l’analyse de route",
+      "Routenanalyse löschen",
+      "Cancella analisi del percorso"
+    ],
+    "Limpar tudo": [
+      "Clear all",
+      "Borrar todo",
+      "Tout effacer",
+      "Alles löschen",
+      "Cancella tutto"
+    ],
+    "Lista salva.": [
+      "List saved.",
+      "Lista guardada.",
+      "Liste enregistrée.",
+      "Liste gespeichert.",
+      "Elenco salvato."
+    ],
+    "Longitude inválida.": [
+      "Invalid longitude.",
+      "Longitud no válida.",
+      "Longitude invalide.",
+      "Ungültiger Längengrad.",
+      "Longitudine non valida."
+    ],
+    "Manobrabilidade restrita": [
+      "Restricted manoeuvrability",
+      "Maniobrabilidad restringida",
+      "Manœuvrabilité restreinte",
+      "Manövrierbehindert",
+      "Manovrabilità limitata"
+    ],
+    "Marcar todas como lidas": [
+      "Mark all as read",
+      "Marcar todas como leídas",
+      "Tout marquer comme lu",
+      "Alle als gelesen markieren",
+      "Segna tutti come letti"
+    ],
+    "Margem": [
+      "Margin",
+      "Margen",
+      "Marge",
+      "Marge",
+      "Margine"
+    ],
+    "Marque pelo menos 3 vértices": [
+      "Mark at least 3 vertices",
+      "Marca al menos 3 vértices",
+      "Marquez au moins 3 sommets",
+      "Mindestens 3 Eckpunkte markieren",
+      "Segna almeno 3 vertici"
+    ],
+    "Máximo de 100 vértices": [
+      "Maximum 100 vertices",
+      "Máximo de 100 vértices",
+      "Maximum 100 sommets",
+      "Höchstens 100 Eckpunkte",
+      "Massimo 100 vertici"
+    ],
+    "Máximo de hops repetidos": [
+      "Maximum repeated hops",
+      "Máximo de saltos repetidos",
+      "Nombre maximal de sauts répétés",
+      "Maximale Anzahl wiederholter Sprünge",
+      "Numero massimo di salti ripetuti"
+    ],
+    "Marítimo temperado (mar)": [
+      "Maritime temperate (sea)",
+      "Marítimo templado (mar)",
+      "Maritime tempéré (mer)",
+      "Maritim gemäßigt (Meer)",
+      "Marittimo temperato (mare)"
+    ],
+    "Marítimo temperado (terra)": [
+      "Maritime temperate (land)",
+      "Marítimo templado (tierra)",
+      "Maritime tempéré (terre)",
+      "Maritim gemäßigt (Land)",
+      "Marittimo temperato (terra)"
+    ],
+    "Marcar no mapa": [
+      "Mark on map",
+      "Marcar en el mapa",
+      "Marquer sur la carte",
+      "Auf der Karte markieren",
+      "Segna sulla mappa"
+    ],
+    "Monitor de bytes ao vivo": [
+      "Live byte monitor",
+      "Monitor de bytes en vivo",
+      "Moniteur d’octets en direct",
+      "Live-Byte-Monitor",
+      "Monitor di byte in tempo reale"
+    ],
+    "KISS Serial": [
+      "KISS Serial",
+      "KISS Serial",
+      "KISS Serial",
+      "KISS Serial",
+      "KISS Serial"
+    ],
+    "Kenwood TM-D700": [
+      "Kenwood TM-D700",
+      "Kenwood TM-D700",
+      "Kenwood TM-D700",
+      "Kenwood TM-D700",
+      "Kenwood TM-D700"
+    ],
+    "Kenwood TM-D700 PKT": [
+      "Kenwood TM-D700 PKT",
+      "Kenwood TM-D700 PKT",
+      "Kenwood TM-D700 PKT",
+      "Kenwood TM-D700 PKT",
+      "Kenwood TM-D700 PKT"
+    ],
+    "Kenwood TM-D700:": [
+      "Kenwood TM-D700:",
+      "Kenwood TM-D700:",
+      "Kenwood TM-D700:",
+      "Kenwood TM-D700:",
+      "Kenwood TM-D700:"
+    ],
+    "Kenwood TM-D710": [
+      "Kenwood TM-D710",
+      "Kenwood TM-D710",
+      "Kenwood TM-D710",
+      "Kenwood TM-D710",
+      "Kenwood TM-D710"
+    ],
+    "Marco": [
+      "Marco",
+      "Marco",
+      "Marco",
+      "Marco",
+      "Marco"
+    ],
+    "Navio-tanque": [
+      "Tanker",
+      "Buque cisterna",
+      "Navire-citerne",
+      "Tankschiff",
+      "Nave cisterna"
+    ],
+    "Nenhum survey salvo.": [
+      "No saved surveys.",
+      "No hay estudios guardados.",
+      "Aucune étude enregistrée.",
+      "Keine gespeicherten Untersuchungen.",
+      "Nessuno studio salvato."
+    ],
+    "Nenhuma atualização pendente.": [
+      "No pending update.",
+      "No hay actualizaciones pendientes.",
+      "Aucune mise à jour en attente.",
+      "Keine ausstehende Aktualisierung.",
+      "Nessun aggiornamento in sospeso."
+    ],
+    "O botão": [
+      "The button",
+      "El botón",
+      "Le bouton",
+      "Die Schaltfläche",
+      "Il pulsante"
+    ],
+    "O passcode é mascarado no Log.": [
+      "The passcode is masked in the log.",
+      "El código de acceso está oculto en el registro.",
+      "Le code d’accès est masqué dans le journal.",
+      "Der Zugangscode wird im Protokoll maskiert.",
+      "Il codice di accesso è mascherato nel registro."
+    ],
+    "O servidor padrão é": [
+      "The default server is",
+      "El servidor predeterminado es",
+      "Le serveur par défaut est",
+      "Der Standardserver ist",
+      "Il server predefinito è"
+    ],
+    "Obstrução (difração)": [
+      "Obstruction (diffraction)",
+      "Obstrucción (difracción)",
+      "Obstruction (diffraction)",
+      "Hindernis (Beugung)",
+      "Ostruzione (diffrazione)"
+    ],
+    "Ocultar histórico": [
+      "Hide history",
+      "Ocultar historial",
+      "Masquer l’historique",
+      "Verlauf ausblenden",
+      "Nascondi cronologia"
+    ],
+    "Opac.": [
+      "Opacity",
+      "Opacidad",
+      "Opacité",
+      "Deckkraft",
+      "Opacità"
+    ],
+    "Opacidade do relevo": [
+      "Terrain opacity",
+      "Opacidad del relieve",
+      "Opacité du relief",
+      "Deckkraft des Geländes",
+      "Opacità del rilievo"
+    ],
+    "Operações de mergulho": [
+      "Diving operations",
+      "Operaciones de buceo",
+      "Opérations de plongée",
+      "Taucheinsätze",
+      "Operazioni subacquee"
+    ],
+    "Ordenar por": [
+      "Sort by",
+      "Ordenar por",
+      "Trier par",
+      "Sortieren nach",
+      "Ordina per"
+    ],
+    "Organização salva.": [
+      "Organization saved.",
+      "Organización guardada.",
+      "Organisation enregistrée.",
+      "Organisation gespeichert.",
+      "Organizzazione salvata."
+    ],
+    "Ouvido por": [
+      "Heard by",
+      "Escuchado por",
+      "Entendu par",
+      "Gehört von",
+      "Ricevuto da"
+    ],
+    "PARAR TX": [
+      "STOP TX",
+      "DETENER TX",
+      "ARRÊTER TX",
+      "TX STOPPEN",
+      "ARRESTA TX"
+    ],
+    "PDF salvo: ": [
+      "PDF saved: ",
+      "PDF guardado: ",
+      "PDF enregistré : ",
+      "PDF gespeichert: ",
+      "PDF salvato: "
+    ],
+    "Packet RF": [
+      "RF packet",
+      "Paquete RF",
+      "Paquet RF",
+      "Funkpaket",
+      "Pacchetto RF"
+    ],
+    "Pacotes em movimento": [
+      "Moving packets",
+      "Paquetes en movimiento",
+      "Paquets en mouvement",
+      "Pakete in Bewegung",
+      "Pacchetti in movimento"
+    ],
+    "Padrão (ativada)": [
+      "Default (asserted)",
+      "Predeterminado (activada)",
+      "Par défaut (activée)",
+      "Standard (aktiv)",
+      "Predefinito (attivata)"
+    ],
+    "Papel RF/TNC inválido.": [
+      "Invalid RF/TNC role.",
+      "Función RF/TNC no válida.",
+      "Rôle RF/TNC invalide.",
+      "Ungültige Funk-/TNC-Rolle.",
+      "Ruolo RF/TNC non valido."
+    ],
+    "Path": [
+      "Path",
+      "Ruta",
+      "Chemin",
+      "Pfad",
+      "Percorso"
+    ],
+    "Percurso total (soma dos saltos)": [
+      "Total path (sum of hops)",
+      "Recorrido total (suma de saltos)",
+      "Parcours total (somme des sauts)",
+      "Gesamtstrecke (Summe der Sprünge)",
+      "Percorso totale (somma dei salti)"
+    ],
+    "Peso da fonte de logs inválido.": [
+      "Invalid log font weight.",
+      "Grosor de la fuente de registros no válido.",
+      "Graisse de la police des journaux invalide.",
+      "Ungültige Schriftstärke für Protokolle.",
+      "Spessore del carattere dei registri non valido."
+    ],
+    "Pesquisa e rota RF": [
+      "Search and RF route",
+      "Búsqueda y ruta RF",
+      "Recherche et route RF",
+      "Suche und Funkroute",
+      "Ricerca e percorso RF"
+    ],
+    "Pesquisar": [
+      "Search",
+      "Buscar",
+      "Rechercher",
+      "Suchen",
+      "Cerca"
+    ],
+    "Política de retenção salva.": [
+      "Retention policy saved.",
+      "Política de retención guardada.",
+      "Politique de conservation enregistrée.",
+      "Aufbewahrungsrichtlinie gespeichert.",
+      "Criterio di conservazione salvato."
+    ],
+    "Ponto mais distante com sinal: ": [
+      "Farthest point with signal: ",
+      "Punto más lejano con señal: ",
+      "Point le plus éloigné avec un signal : ",
+      "Entferntester Punkt mit Signal: ",
+      "Punto più lontano con segnale: "
+    ],
+    "Período do mapa": [
+      "Map period",
+      "Período del mapa",
+      "Période de la carte",
+      "Kartenzeitraum",
+      "Periodo della mappa"
+    ],
+    "Personalizado": [
+      "Custom",
+      "Personalizado",
+      "Personnalisé",
+      "Benutzerdefiniert",
+      "Personalizzato"
+    ],
+    "Nome amigável": [
+      "Friendly name",
+      "Nombre descriptivo",
+      "Nom convivial",
+      "Anzeigename",
+      "Nome descrittivo"
+    ],
+    "OSM.DE": [
+      "OSM.DE",
+      "OSM.DE",
+      "OSM.DE",
+      "OSM.DE",
+      "OSM.DE"
+    ],
+    "OpenTopoMap": [
+      "OpenTopoMap",
+      "OpenTopoMap",
+      "OpenTopoMap",
+      "OpenTopoMap",
+      "OpenTopoMap"
+    ],
+    "Potência (W)": [
+      "Power (W)",
+      "Potencia (W)",
+      "Puissance (W)",
+      "Leistung (W)",
+      "Potenza (W)"
+    ],
+    "Potência TX (W)": [
+      "TX power (W)",
+      "Potencia TX (W)",
+      "Puissance TX (W)",
+      "TX-Leistung (W)",
+      "Potenza TX (W)"
+    ],
+    "Previsto × real": [
+      "Predicted × actual",
+      "Previsto × real",
+      "Prévu × réel",
+      "Vorhergesagt × tatsächlich",
+      "Previsto × reale"
+    ],
+    "Proa": [
+      "Heading",
+      "Rumbo de proa",
+      "Cap",
+      "Steuerkurs",
+      "Prua"
+    ],
+    "Prompt de TNC detectado": [
+      "TNC prompt detected",
+      "Indicador de terminal TNC detectado",
+      "Invite de commande TNC détectée",
+      "TNC-Eingabeaufforderung erkannt",
+      "Prompt TNC rilevato"
+    ],
+    "Publicação pendente": [
+      "Publication pending",
+      "Publicación pendiente",
+      "Publication en attente",
+      "Veröffentlichung ausstehend",
+      "Pubblicazione in sospeso"
+    ],
+    "Queries": [
+      "Queries",
+      "Consultas",
+      "Requêtes",
+      "Abfragen",
+      "Interrogazioni"
+    ],
+    "Queries APRS:": [
+      "APRS queries:",
+      "Consultas APRS:",
+      "Requêtes APRS :",
+      "APRS-Abfragen:",
+      "Interrogazioni APRS:"
+    ],
+    "RF temporário (3h)": [
+      "Temporary RF (3h)",
+      "RF temporal (3h)",
+      "RF temporaire (3h)",
+      "Temporärer Funk (3h)",
+      "RF temporanea (3h)"
+    ],
+    "Radar de chuva desativado": [
+      "Rain radar disabled",
+      "Radar de lluvia desactivado",
+      "Radar de pluie désactivé",
+      "Regenradar deaktiviert",
+      "Radar pioggia disattivato"
+    ],
+    "Raio de busca inválido": [
+      "Invalid search radius",
+      "Radio de búsqueda no válido",
+      "Rayon de recherche invalide",
+      "Ungültiger Suchradius",
+      "Raggio di ricerca non valido"
+    ],
+    "Rebocador": [
+      "Tug",
+      "Remolcador",
+      "Remorqueur",
+      "Schlepper",
+      "Rimorchiatore"
+    ],
+    "Reboque": [
+      "Towing",
+      "Remolque",
+      "Remorquage",
+      "Schleppbetrieb",
+      "Rimorchio"
+    ],
+    "Reboque de grande porte": [
+      "Large towing",
+      "Remolque de gran tamaño",
+      "Remorquage de grande taille",
+      "Großer Schleppverband",
+      "Rimorchio di grandi dimensioni"
+    ],
+    "Recalculando Recordes RF…": [
+      "Recalculating RF records…",
+      "Recalculando récords RF…",
+      "Recalcul des records RF…",
+      "Funkrekorde werden neu berechnet…",
+      "Ricalcolo dei record RF…"
+    ],
+    "Recalcular": [
+      "Recalculate",
+      "Recalcular",
+      "Recalculer",
+      "Neu berechnen",
+      "Ricalcola"
+    ],
+    "Reenviar esta parte": [
+      "Resend this part",
+      "Reenviar esta parte",
+      "Renvoyer cette partie",
+      "Diesen Teil erneut senden",
+      "Invia di nuovo questa parte"
+    ],
+    "Reescanear": [
+      "Rescan",
+      "Volver a detectar",
+      "Rechercher à nouveau",
+      "Erneut suchen",
+      "Ripeti scansione"
+    ],
+    "Restante estimado: ": [
+      "Estimated time remaining: ",
+      "Tiempo restante estimado: ",
+      "Temps restant estimé : ",
+      "Geschätzte Restzeit: ",
+      "Tempo restante stimato: "
+    ],
+    "Restaurar backup": [
+      "Restore backup",
+      "Restaurar copia de seguridad",
+      "Restaurer la sauvegarde",
+      "Sicherung wiederherstellen",
+      "Ripristina copia di sicurezza"
+    ],
+    "Restaurar filtro Brasil": [
+      "Restore Brazil filter",
+      "Restaurar filtro de Brasil",
+      "Rétablir le filtre Brésil",
+      "Brasilienfilter wiederherstellen",
+      "Ripristina filtro Brasile"
+    ],
+    "Restaurar padrões": [
+      "Restore defaults",
+      "Restaurar valores predeterminados",
+      "Rétablir les valeurs par défaut",
+      "Standardwerte wiederherstellen",
+      "Ripristina valori predefiniti"
+    ],
+    "Restaurar r/2000": [
+      "Restore r/2000",
+      "Restaurar r/2000",
+      "Rétablir r/2000",
+      "r/2000 wiederherstellen",
+      "Ripristina r/2000"
+    ],
+    "Restrito pelo calado": [
+      "Constrained by draught",
+      "Restringido por el calado",
+      "Handicapé par le tirant d’eau",
+      "Durch Tiefgang eingeschränkt",
+      "Condizionato dal pescaggio"
+    ],
+    "Retenção e tamanho do banco": [
+      "Database retention and size",
+      "Retención y tamaño de la base de datos",
+      "Conservation et taille de la base de données",
+      "Aufbewahrung und Größe der Datenbank",
+      "Conservazione e dimensioni del database"
+    ],
+    "Retenção permanente por padrão": [
+      "Permanent retention by default",
+      "Retención permanente de forma predeterminada",
+      "Conservation permanente par défaut",
+      "Standardmäßig dauerhafte Aufbewahrung",
+      "Conservazione permanente per impostazione predefinita"
+    ],
+    "Rota de envio inválida.": [
+      "Invalid send route.",
+      "Ruta de envío no válida.",
+      "Route d’envoi invalide.",
+      "Ungültige Senderoute.",
+      "Percorso di invio non valido."
+    ],
+    "Rota de envio:": [
+      "Send route:",
+      "Ruta de envío:",
+      "Route d’envoi :",
+      "Senderoute:",
+      "Percorso di invio:"
+    ],
+    "Rota de mensagem inválida.": [
+      "Invalid message route.",
+      "Ruta del mensaje no válida.",
+      "Route du message invalide.",
+      "Ungültige Nachrichtenroute.",
+      "Percorso del messaggio non valido."
+    ],
+    "Rota de retry inválida.": [
+      "Invalid retry route.",
+      "Ruta de reintento no válida.",
+      "Route de nouvelle tentative invalide.",
+      "Ungültige Route für erneuten Versuch.",
+      "Percorso del nuovo tentativo non valido."
+    ],
+    "Rumo sobre o fundo": [
+      "Course over ground",
+      "Rumbo sobre el fondo",
+      "Route fond",
+      "Kurs über Grund",
+      "Rotta rispetto al fondo"
+    ],
+    "Sair": [
+      "Exit",
+      "Salir",
+      "Quitter",
+      "Beenden",
+      "Esci"
+    ],
+    "Sair da apresentação": [
+      "Exit presentation",
+      "Salir de la presentación",
+      "Quitter la présentation",
+      "Präsentation beenden",
+      "Esci dalla presentazione"
+    ],
+    "Salvando alterações…": [
+      "Saving changes…",
+      "Guardando cambios…",
+      "Enregistrement des modifications…",
+      "Änderungen werden gespeichert…",
+      "Salvataggio delle modifiche…"
+    ],
+    "Satélite — Esri World Imagery": [
+      "Satellite — Esri World Imagery",
+      "Satélite — Esri World Imagery",
+      "Satellite — Esri World Imagery",
+      "Satellit — Esri World Imagery",
+      "Satellite — Esri World Imagery"
+    ],
+    "QRZ.com": [
+      "QRZ.com",
+      "QRZ.com",
+      "QRZ.com",
+      "QRZ.com",
+      "QRZ.com"
+    ],
+    "RTT": [
+      "RTT",
+      "RTT",
+      "RTT",
+      "RTT",
+      "RTT"
+    ],
+    "Secundária \\": [
+      "Secondary \\",
+      "Secundaria \\",
+      "Secondaire \\",
+      "Sekundär \\",
+      "Secondaria \\"
+    ],
+    "Primária /": [
+      "Primary /",
+      "Primaria /",
+      "Primaire /",
+      "Primär /",
+      "Primaria /"
+    ],
+    "Seg": [
+      "Sec",
+      "Seg",
+      "s",
+      "Sek",
+      "s"
+    ],
+    "Sem frames.": [
+      "No frames.",
+      "Sin tramas.",
+      "Aucune trame.",
+      "Keine Frames.",
+      "Nessun frame."
+    ],
+    "Sem governo": [
+      "Not under command",
+      "Sin gobierno",
+      "Non maître de sa manœuvre",
+      "Manövrierunfähig",
+      "Non governa"
+    ],
+    "Serial aguardando": [
+      "Serial waiting",
+      "Puerto serie en espera",
+      "Port série en attente",
+      "Serieller Port wartet",
+      "Porta seriale in attesa"
+    ],
+    "Serial conectada": [
+      "Serial connected",
+      "Puerto serie conectado",
+      "Port série connecté",
+      "Serieller Port verbunden",
+      "Porta seriale connessa"
+    ],
+    "Seções da configuração": [
+      "Configuration sections",
+      "Secciones de configuración",
+      "Sections de configuration",
+      "Konfigurationsabschnitte",
+      "Sezioni della configurazione"
+    ],
+    "Survey salvo: ": [
+      "Survey saved: ",
+      "Estudio guardado: ",
+      "Étude enregistrée : ",
+      "Untersuchung gespeichert: ",
+      "Studio salvato: "
+    ],
+    "Surveys salvos": [
+      "Saved surveys",
+      "Estudios guardados",
+      "Études enregistrées",
+      "Gespeicherte Untersuchungen",
+      "Studi salvati"
+    ],
+    "TNC caiu": [
+      "TNC disconnected",
+      "TNC desconectado",
+      "TNC déconnecté",
+      "TNC getrennt",
+      "TNC disconnesso"
+    ],
+    "TNC desconectado.": [
+      "TNC disconnected.",
+      "TNC desconectado.",
+      "TNC déconnecté.",
+      "TNC getrennt.",
+      "TNC disconnesso."
+    ],
+    "TX RF pausado.": [
+      "RF TX paused.",
+      "TX RF pausada.",
+      "TX RF en pause.",
+      "Funk-TX pausiert.",
+      "TX RF in pausa."
+    ],
+    "Tema da aplicação inválido.": [
+      "Invalid application theme.",
+      "Tema de la aplicación no válido.",
+      "Thème de l’application invalide.",
+      "Ungültiges Anwendungsdesign.",
+      "Tema dell’applicazione non valido."
+    ],
+    "Terreno em A": [
+      "Terrain at A",
+      "Terreno en A",
+      "Terrain en A",
+      "Gelände bei A",
+      "Terreno in A"
+    ],
+    "Terreno em B": [
+      "Terrain at B",
+      "Terreno en B",
+      "Terrain en B",
+      "Gelände bei B",
+      "Terreno in B"
+    ],
+    "Testar bind LAN": [
+      "Test LAN binding",
+      "Probar dirección de escucha LAN",
+      "Tester l’adresse d’écoute LAN",
+      "LAN-Bindung testen",
+      "Verifica indirizzo di ascolto LAN"
+    ],
+    "Texto do anúncio vazio.": [
+      "Empty announcement text.",
+      "Texto del anuncio vacío.",
+      "Texte de l’annonce vide.",
+      "Leerer Ankündigungstext.",
+      "Testo dell’annuncio vuoto."
+    ],
+    "Tipo de agendamento inválido.": [
+      "Invalid schedule type.",
+      "Tipo de programación no válido.",
+      "Type de programmation invalide.",
+      "Ungültiger Zeitplantyp.",
+      "Tipo di programmazione non valido."
+    ],
+    "Tipo de mensagem inválido.": [
+      "Invalid message type.",
+      "Tipo de mensaje no válido.",
+      "Type de message invalide.",
+      "Ungültiger Nachrichtentyp.",
+      "Tipo di messaggio non valido."
+    ],
+    "Trace/PING?": [
+      "Trace/PING?",
+      "Rastreo/PING?",
+      "Traçage/PING ?",
+      "Verfolgung/PING?",
+      "Traccia/PING?"
+    ],
+    "Transmissor": [
+      "Transmitter",
+      "Transmisor",
+      "Émetteur",
+      "Sender",
+      "Trasmettitore"
+    ],
+    "Transporte desconectado.": [
+      "Transport disconnected.",
+      "Transporte desconectado.",
+      "Transport déconnecté.",
+      "Transport getrennt.",
+      "Trasporto disconnesso."
+    ],
+    "Usar": [
+      "Use",
+      "Usar",
+      "Utiliser",
+      "Verwenden",
+      "Usa"
+    ],
+    "Veleiro": [
+      "Sailing vessel",
+      "Velero",
+      "Voilier",
+      "Segelschiff",
+      "Barca a vela"
+    ],
+    "Ver ▾": [
+      "View ▾",
+      "Ver ▾",
+      "Voir ▾",
+      "Anzeigen ▾",
+      "Visualizza ▾"
+    ],
+    "Verificar banco": [
+      "Check database",
+      "Verificar base de datos",
+      "Vérifier la base de données",
+      "Datenbank prüfen",
+      "Verifica database"
+    ],
+    "Vermelho → verde": [
+      "Red → green",
+      "Rojo → verde",
+      "Rouge → vert",
+      "Rot → grün",
+      "Rosso → verde"
+    ],
+    "Versão de desenvolvimento.": [
+      "Development version.",
+      "Versión de desarrollo.",
+      "Version de développement.",
+      "Entwicklungsversion.",
+      "Versione di sviluppo."
+    ],
+    "Via": [
+      "Via",
+      "Vía",
+      "Via",
+      "Über",
+      "Tramite"
+    ],
+    "Wide / Regional — WIDEn-N": [
+      "Wide / Regional — WIDEn-N",
+      "Amplio / Regional — WIDEn-N",
+      "Étendu / Régional — WIDEn-N",
+      "Weiträumig / Regional — WIDEn-N",
+      "Ampio / Regionale — WIDEn-N"
+    ],
+    "bytes entregues ao transporte": [
+      "bytes delivered to transport",
+      "bytes entregados al transporte",
+      "octets remis au transport",
+      "an den Transport übergebene Bytes",
+      "byte consegnati al trasporto"
+    ],
+    "cadeia RF incompleta": [
+      "incomplete RF chain",
+      "cadena RF incompleta",
+      "chaîne RF incomplète",
+      "unvollständige Funkkette",
+      "catena RF incompleta"
+    ],
+    "enlaces": [
+      "links",
+      "enlaces",
+      "liaisons",
+      "Verbindungen",
+      "collegamenti"
+    ],
+    "inferidos": [
+      "inferred",
+      "inferidos",
+      "déduits",
+      "abgeleitet",
+      "dedotti"
+    ],
+    "interm. reconstruídos": [
+      "reconstructed intermediates",
+      "intermedios reconstruidos",
+      "intermédiaires reconstitués",
+      "rekonstruierte Zwischenknoten",
+      "intermedi ricostruiti"
+    ],
+    "invalid_assets": [
+      "Invalid assets",
+      "Archivos no válidos",
+      "Fichiers invalides",
+      "Ungültige Dateien",
+      "File non validi"
+    ],
+    "invalid_response": [
+      "Invalid response",
+      "Respuesta no válida",
+      "Réponse invalide",
+      "Ungültige Antwort",
+      "Risposta non valida"
+    ],
+    "invalid_source": [
+      "Invalid source",
+      "Origen no válido",
+      "Source invalide",
+      "Ungültige Quelle",
+      "Origine non valida"
+    ],
+    "invalid_version": [
+      "Invalid version",
+      "Versión no válida",
+      "Version invalide",
+      "Ungültige Version",
+      "Versione non valida"
+    ],
+    "inválido": [
+      "invalid",
+      "no válido",
+      "invalide",
+      "ungültig",
+      "non valido"
+    ],
+    "kind inválido": [
+      "Invalid kind",
+      "Tipo no válido",
+      "Type invalide",
+      "Ungültiger Typ",
+      "Tipo non valido"
+    ],
+    "lat. norte": [
+      "north lat.",
+      "lat. norte",
+      "lat. nord",
+      "nördl. Breite",
+      "lat. nord"
+    ],
+    "lat. sul": [
+      "south lat.",
+      "lat. sur",
+      "lat. sud",
+      "südl. Breite",
+      "lat. sud"
+    ],
+    "long. leste": [
+      "east lon.",
+      "long. este",
+      "long. est",
+      "östl. Länge",
+      "long. est"
+    ],
+    "long. oeste": [
+      "west lon.",
+      "long. oeste",
+      "long. ouest",
+      "westl. Länge",
+      "long. ovest"
+    ],
+    "margem": [
+      "margin",
+      "margen",
+      "marge",
+      "Marge",
+      "margine"
+    ],
+    "nunca": [
+      "never",
+      "nunca",
+      "jamais",
+      "niemals",
+      "mai"
+    ],
+    "nós": [
+      "nodes",
+      "nodos",
+      "nœuds",
+      "Knoten",
+      "nodi"
+    ],
+    "ouviu por RF": [
+      "heard over RF",
+      "escuchó por RF",
+      "entendu en RF",
+      "über Funk gehört",
+      "ricevuto via RF"
+    ],
+    "pacotes/min": [
+      "packets/min",
+      "paquetes/min",
+      "paquets/min",
+      "Pakete/min",
+      "pacchetti/min"
+    ],
+    "para favoritar a estação.": [
+      "to add the station to favorites.",
+      "para añadir la estación a favoritos.",
+      "pour ajouter la station aux favoris.",
+      "um die Station zu den Favoriten hinzuzufügen.",
+      "per aggiungere la stazione ai preferiti."
+    ],
+    "pyserial não está instalado.": [
+      "pyserial is not installed.",
+      "pyserial no está instalado.",
+      "pyserial n’est pas installé.",
+      "pyserial ist nicht installiert.",
+      "pyserial non è installato."
+    ],
+    "raio": [
+      "radius",
+      "radio",
+      "rayon",
+      "Radius",
+      "raggio"
+    ],
+    "relevo de ~": [
+      "terrain of ~",
+      "relieve de ~",
+      "relief de ~",
+      "Gelände von ~",
+      "rilievo di ~"
+    ],
+    "soma geométrica hipotética": [
+      "hypothetical geometric sum",
+      "suma geométrica hipotética",
+      "somme géométrique hypothétique",
+      "hypothetische geometrische Summe",
+      "somma geometrica ipotetica"
+    ],
+    "tile DEM inválido": [
+      "invalid DEM tile",
+      "tesela DEM no válida",
+      "tuile DEM invalide",
+      "ungültige DEM-Kachel",
+      "riquadro DEM non valido"
+    ],
+    "tile de elevação inválido": [
+      "invalid elevation tile",
+      "tesela de elevación no válida",
+      "tuile altimétrique invalide",
+      "ungültige Höhenkachel",
+      "riquadro altimetrico non valido"
+    ],
+    "trechos inferidos sem interm.": [
+      "inferred segments without intermediates",
+      "tramos inferidos sin intermedios",
+      "segments déduits sans intermédiaires",
+      "abgeleitete Abschnitte ohne Zwischenknoten",
+      "tratti dedotti senza intermedi"
+    ],
+    "vértices": [
+      "vertices",
+      "vértices",
+      "sommets",
+      "Eckpunkte",
+      "vertici"
+    ],
+    "Área coberta": [
+      "Covered area",
+      "Área cubierta",
+      "Zone couverte",
+      "Abgedecktes Gebiet",
+      "Area coperta"
+    ],
+    "Última observação há": [
+      "Last observed ago",
+      "Última observación hace",
+      "Dernière observation il y a",
+      "Letzte Beobachtung vor",
+      "Ultima osservazione da"
+    ],
+    "Última posição há": [
+      "Last position ago",
+      "Última posición hace",
+      "Dernière position il y a",
+      "Letzte Position vor",
+      "Ultima posizione da"
+    ],
+    "— Nova lista —": [
+      "— New list —",
+      "— Nueva lista —",
+      "— Nouvelle liste —",
+      "— Neue Liste —",
+      "— Nuovo elenco —"
+    ],
+    "— Sem lista salva —": [
+      "— No saved list —",
+      "— Sin lista guardada —",
+      "— Aucune liste enregistrée —",
+      "— Keine gespeicherte Liste —",
+      "— Nessun elenco salvato —"
+    ],
+    "⏮ Início": [
+      "⏮ Start",
+      "⏮ Inicio",
+      "⏮ Début",
+      "⏮ Anfang",
+      "⏮ Inizio"
+    ],
+    "● Ao vivo": [
+      "● Live",
+      "● En vivo",
+      "● En direct",
+      "● Live",
+      "● In diretta"
+    ],
+    "Shift+Enter": [
+      "Shift+Enter",
+      "Shift+Enter",
+      "Shift+Enter",
+      "Shift+Enter",
+      "Shift+Enter"
+    ],
+    "USB Serial — CH9102": [
+      "USB Serial — CH9102",
+      "USB Serial — CH9102",
+      "USB Serial — CH9102",
+      "USB Serial — CH9102",
+      "USB Serial — CH9102"
+    ],
+    "VID:PID": [
+      "VID:PID",
+      "VID:PID",
+      "VID:PID",
+      "VID:PID",
+      "VID:PID"
+    ],
+    "Ywstter": [
+      "Ywstter",
+      "Ywstter",
+      "Ywstter",
+      "Ywstter",
+      "Ywstter"
+    ],
+    "alexpmr@gmail.com": [
+      "alexpmr@gmail.com",
+      "alexpmr@gmail.com",
+      "alexpmr@gmail.com",
+      "alexpmr@gmail.com",
+      "alexpmr@gmail.com"
+    ],
+    "windows_tls_fallback": [
+      "windows_tls_fallback",
+      "windows_tls_fallback",
+      "windows_tls_fallback",
+      "windows_tls_fallback",
+      "windows_tls_fallback"
+    ],
+    "Animar tráfego entre estações por padrão": [
+      "Animate traffic between stations by default",
+      "Animar el tráfico entre estaciones de forma predeterminada",
+      "Animer par défaut le trafic entre stations",
+      "Verkehr zwischen Stationen standardmäßig animieren",
+      "Anima il traffico tra stazioni per impostazione predefinita"
+    ],
+    "Já existe uma atualização em andamento em outra instância.": [
+      "An update is already running in another instance.",
+      "Ya hay una actualización en curso en otra instancia.",
+      "Une mise à jour est déjà en cours dans une autre instance.",
+      "In einer anderen Instanz läuft bereits eine Aktualisierung.",
+      "È già in corso un aggiornamento in un’altra istanza."
+    ],
+    "Separe por vírgula, espaço ou ponto e vírgula.": [
+      "Separate with commas, spaces or semicolons.",
+      "Separa con comas, espacios o punto y coma.",
+      "Séparez par des virgules, espaces ou points-virgules.",
+      "Durch Kommas, Leerzeichen oder Semikolons trennen.",
+      "Separa con virgole, spazi o punti e virgola."
+    ],
+    "Intermediários reconstruídos/prováveis": [
+      "Reconstructed/probable intermediate nodes",
+      "Nodos intermedios reconstruidos/probables",
+      "Nœuds intermédiaires reconstitués/probables",
+      "Rekonstruierte/wahrscheinliche Zwischenknoten",
+      "Nodi intermedi ricostruiti/probabili"
+    ],
+    "O JSON exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.": [
+      "The exported JSON contains the APRS-IS passcode in readable text. Keep it in a safe place.",
+      "El JSON exportado contiene el código de acceso APRS-IS en texto legible. Guárdalo en un lugar seguro.",
+      "Le JSON exporté contient le code d’accès APRS-IS en clair. Conservez-le en lieu sûr.",
+      "Die exportierte JSON-Datei enthält den APRS-IS-Zugangscode im Klartext. Bewahren Sie sie sicher auf.",
+      "Il JSON esportato contiene il codice di accesso APRS-IS in chiaro. Conservalo in un luogo sicuro."
+    ],
+    "O arquivo exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.": [
+      "The exported file contains the APRS-IS passcode in readable text. Keep it in a safe place.",
+      "El archivo exportado contiene el código de acceso APRS-IS en texto legible. Guárdalo en un lugar seguro.",
+      "Le fichier exporté contient le code d’accès APRS-IS en clair. Conservez-le en lieu sûr.",
+      "Die exportierte Datei enthält den APRS-IS-Zugangscode im Klartext. Bewahren Sie sie sicher auf.",
+      "Il file esportato contiene il codice di accesso APRS-IS in chiaro. Conservalo in un luogo sicuro."
+    ],
+    "Salvamento cancelado; as alterações foram mantidas.": [
+      "Saving cancelled; changes were kept.",
+      "Guardado cancelado; se conservaron los cambios.",
+      "Enregistrement annulé ; les modifications ont été conservées.",
+      "Speichern abgebrochen; Änderungen wurden beibehalten.",
+      "Salvataggio annullato; le modifiche sono state mantenute."
+    ],
+    "Há alterações que ainda não foram salvas.": [
+      "There are unsaved changes.",
+      "Hay cambios sin guardar.",
+      "Des modifications ne sont pas encore enregistrées.",
+      "Es gibt noch nicht gespeicherte Änderungen.",
+      "Ci sono modifiche non ancora salvate."
+    ],
+    "Backup SQLite inválido: {v0}": [
+      "Invalid SQLite backup: {v0}",
+      "Copia de seguridad SQLite no válida: {v0}",
+      "Sauvegarde SQLite invalide : {v0}",
+      "Ungültige SQLite-Sicherung: {v0}",
+      "Copia di sicurezza SQLite non valida: {v0}"
+    ],
+    "Configuração salva. APRS-IS reconectando com os novos parâmetros.": [
+      "Configuration saved. APRS-IS is reconnecting with the new parameters.",
+      "Configuración guardada. APRS-IS se está reconectando con los nuevos parámetros.",
+      "Configuration enregistrée. APRS-IS se reconnecte avec les nouveaux paramètres.",
+      "Konfiguration gespeichert. APRS-IS wird mit den neuen Parametern erneut verbunden.",
+      "Configurazione salvata. APRS-IS si sta riconnettendo con i nuovi parametri."
+    ],
+    "Diagnóstico JSON salvo em: {v0}": [
+      "JSON diagnostic saved to: {v0}",
+      "Diagnóstico JSON guardado en: {v0}",
+      "Diagnostic JSON enregistré dans : {v0}",
+      "JSON-Diagnose gespeichert unter: {v0}",
+      "Diagnosi JSON salvata in: {v0}"
+    ],
+    "KML salvo em: {v0}": [
+      "KML saved to: {v0}",
+      "KML guardado en: {v0}",
+      "KML enregistré dans : {v0}",
+      "KML gespeichert unter: {v0}",
+      "KML salvato in: {v0}"
+    ],
+    "Fonte da tela de mensagens inválida.": [
+      "Invalid message screen font.",
+      "Fuente de la pantalla de mensajes no válida.",
+      "Police de l’écran des messages invalide.",
+      "Ungültige Schriftart der Nachrichtenanzeige.",
+      "Carattere della schermata messaggi non valido."
+    ],
+    "Fonte da tela de estações inválida.": [
+      "Invalid station screen font.",
+      "Fuente de la pantalla de estaciones no válida.",
+      "Police de l’écran des stations invalide.",
+      "Ungültige Schriftart der Stationsanzeige.",
+      "Carattere della schermata stazioni non valido."
+    ],
+    "Peso da fonte de estações inválido.": [
+      "Invalid station font weight.",
+      "Grosor de la fuente de estaciones no válido.",
+      "Graisse de la police des stations invalide.",
+      "Ungültige Schriftstärke der Stationsanzeige.",
+      "Spessore del carattere delle stazioni non valido."
+    ],
+    "Políticas de retenção salvas. Limpeza automática conforme ativação.": [
+      "Retention policies saved. Automatic cleanup follows the enabled settings.",
+      "Políticas de retención guardadas. La limpieza automática se realiza según las opciones activadas.",
+      "Politiques de conservation enregistrées. Le nettoyage automatique suit les options activées.",
+      "Aufbewahrungsrichtlinien gespeichert. Die automatische Bereinigung richtet sich nach den aktivierten Optionen.",
+      "Criteri di conservazione salvati. La pulizia automatica segue le opzioni attivate."
+    ],
+    "A área precisa de pelo menos 3 vértices": [
+      "The area needs at least 3 vertices",
+      "El área necesita al menos 3 vértices",
+      "La zone nécessite au moins 3 sommets",
+      "Das Gebiet benötigt mindestens 3 Eckpunkte",
+      "L’area richiede almeno 3 vertici"
+    ],
+    "Buscar ponto mais alto: raio de 0,05 a 50 km.": [
+      "Find highest point: radius from 0.05 to 50 km.",
+      "Buscar el punto más alto: radio de 0,05 a 50 km.",
+      "Rechercher le point le plus haut : rayon de 0,05 à 50 km.",
+      "Höchsten Punkt suchen: Radius von 0,05 bis 50 km.",
+      "Cerca il punto più alto: raggio da 0,05 a 50 km."
+    ],
+    "Polígono com vértices demais (máximo 100)": [
+      "Polygon has too many vertices (maximum 100)",
+      "Polígono con demasiados vértices (máximo 100)",
+      "Polygone avec trop de sommets (maximum 100)",
+      "Polygon mit zu vielen Eckpunkten (höchstens 100)",
+      "Poligono con troppi vertici (massimo 100)"
+    ],
+    "Raio a partir da posição da estação (km)": [
+      "Radius from station position (km)",
+      "Radio desde la posición de la estación (km)",
+      "Rayon depuis la position de la station (km)",
+      "Radius ab Stationsposition (km)",
+      "Raggio dalla posizione della stazione (km)"
+    ],
+    "Confirme o reparo da estrutura do banco.": [
+      "Confirm database structure repair.",
+      "Confirma la reparación de la estructura de la base de datos.",
+      "Confirmez la réparation de la structure de la base de données.",
+      "Reparatur der Datenbankstruktur bestätigen.",
+      "Conferma la riparazione della struttura del database."
+    ],
+    "Manutenção do banco está ocupada; tente novamente.": [
+      "Database maintenance is busy; try again.",
+      "El mantenimiento de la base de datos está ocupado; inténtalo de nuevo.",
+      "La maintenance de la base de données est occupée ; réessayez.",
+      "Die Datenbankwartung ist beschäftigt; versuchen Sie es erneut.",
+      "La manutenzione del database è occupata; riprova."
+    ],
+    "Outra limpeza do banco já está em andamento.": [
+      "Another database cleanup is already running.",
+      "Ya hay otra limpieza de la base de datos en curso.",
+      "Un autre nettoyage de la base de données est déjà en cours.",
+      "Eine weitere Datenbankbereinigung läuft bereits.",
+      "È già in corso un’altra pulizia del database."
+    ],
+    "Valor inválido para {v0}: use default, on ou off.": [
+      "Invalid value for {v0}: use default, on or off.",
+      "Valor no válido para {v0}: usa default, on u off.",
+      "Valeur invalide pour {v0} : utilisez default, on ou off.",
+      "Ungültiger Wert für {v0}: Verwenden Sie default, on oder off.",
+      "Valore non valido per {v0}: usa default, on oppure off."
+    ],
+    "KISS TCP conectado; aguardando o primeiro frame válido.": [
+      "KISS TCP connected; waiting for the first valid frame.",
+      "KISS TCP conectado; esperando la primera trama válida.",
+      "KISS TCP connecté ; en attente de la première trame valide.",
+      "KISS TCP verbunden; warte auf den ersten gültigen Frame.",
+      "KISS TCP connesso; in attesa del primo frame valido."
+    ],
+    "Nenhum frame entregue ao TNC nesta conexão.": [
+      "No frame delivered to the TNC in this connection.",
+      "Ninguna trama entregada al TNC en esta conexión.",
+      "Aucune trame remise au TNC sur cette connexion.",
+      "In dieser Verbindung wurde kein Frame an den TNC übergeben.",
+      "Nessun frame consegnato al TNC in questa connessione."
+    ],
+    "Radio port": [
+      "Radio port",
+      "Puerto de radio",
+      "Port radio",
+      "Funkport",
+      "Porta radio"
+    ],
+    "Tipo de destino inválido.": [
+      "Invalid destination type.",
+      "Tipo de destino no válido.",
+      "Type de destination invalide.",
+      "Ungültiger Zieltyp.",
+      "Tipo di destinazione non valido."
+    ],
+    "Tipo de mapa inválido.": [
+      "Invalid map type.",
+      "Tipo de mapa no válido.",
+      "Type de carte invalide.",
+      "Ungültiger Kartentyp.",
+      "Tipo di mappa non valido."
+    ],
+    "Tipo de mensagem APRS inválido.": [
+      "Invalid APRS message type.",
+      "Tipo de mensaje APRS no válido.",
+      "Type de message APRS invalide.",
+      "Ungültiger APRS-Nachrichtentyp.",
+      "Tipo di messaggio APRS non valido."
+    ],
+    "Busca independente do top 50. Os nós e enlaces já constam no histórico, mas uma sequência sugerida NÃO comprova passagem de pacote nem RF direto. Nenhuma hipótese é desenhada ou gravada como enlace.": [
+      "Search independent of the top 50. The nodes and links are already in history, but a suggested sequence does NOT prove packet passage or direct RF. No hypothesis is drawn or stored as a link.",
+      "Búsqueda independiente de los 50 primeros. Los nodos y enlaces ya constan en el historial, pero una secuencia sugerida NO demuestra el paso de paquetes ni RF directa. Ninguna hipótesis se dibuja ni se guarda como enlace.",
+      "Recherche indépendante du classement des 50 premiers. Les nœuds et liaisons figurent déjà dans l’historique, mais une séquence suggérée ne prouve PAS le passage de paquets ni une liaison RF directe. Aucune hypothèse n’est dessinée ou enregistrée comme liaison.",
+      "Suche unabhängig von den besten 50. Knoten und Verbindungen sind bereits im Verlauf enthalten, aber eine vorgeschlagene Folge beweist WEDER einen Paketdurchlauf NOCH direkten Funk. Keine Hypothese wird als Verbindung gezeichnet oder gespeichert.",
+      "Ricerca indipendente dai primi 50. I nodi e i collegamenti sono già presenti nella cronologia, ma una sequenza suggerita NON dimostra il passaggio di pacchetti né RF diretta. Nessuna ipotesi viene disegnata o memorizzata come collegamento."
+    ],
+    "Eliminar agora os registros expirados pelas políticas selecionadas? Salve as alterações antes de continuar. Enlaces RF permanentes serão preservados.": [
+      "Delete records expired under the selected policies now? Save changes before continuing. Permanent RF links will be preserved.",
+      "¿Eliminar ahora los registros caducados según las políticas seleccionadas? Guarda los cambios antes de continuar. Los enlaces RF permanentes se conservarán.",
+      "Supprimer maintenant les enregistrements expirés selon les politiques sélectionnées ? Enregistrez les modifications avant de continuer. Les liaisons RF permanentes seront conservées.",
+      "Jetzt die gemäß den ausgewählten Richtlinien abgelaufenen Datensätze löschen? Speichern Sie die Änderungen vor dem Fortfahren. Dauerhafte Funkverbindungen bleiben erhalten.",
+      "Eliminare ora i record scaduti secondo i criteri selezionati? Salva le modifiche prima di continuare. I collegamenti RF permanenti verranno conservati."
+    ],
+    "O padrão r/4000 recebe todos os objetos da área de 4.000 km ao redor das coordenadas cadastradas da estação. Requer latitude e longitude válidas, pode aumentar o tráfego e não substitui filtros personalizados já salvos.": [
+      "The default r/4000 receives all objects in the 4,000 km area around the station’s configured coordinates. Requires valid latitude and longitude, may increase traffic, and does not replace saved custom filters.",
+      "El valor predeterminado r/4000 recibe todos los objetos del área de 4.000 km alrededor de las coordenadas configuradas de la estación. Requiere latitud y longitud válidas, puede aumentar el tráfico y no sustituye los filtros personalizados ya guardados.",
+      "Le réglage par défaut r/4000 reçoit tous les objets de la zone de 4 000 km autour des coordonnées configurées de la station. Il nécessite une latitude et une longitude valides, peut augmenter le trafic et ne remplace pas les filtres personnalisés déjà enregistrés.",
+      "Der Standard r/4000 empfängt alle Objekte im Gebiet von 4.000 km um die eingestellten Stationskoordinaten. Er erfordert gültige Breiten- und Längengrade, kann den Datenverkehr erhöhen und ersetzt keine gespeicherten benutzerdefinierten Filter.",
+      "Il valore predefinito r/4000 riceve tutti gli oggetti nell’area di 4.000 km attorno alle coordinate configurate della stazione. Richiede latitudine e longitudine valide, può aumentare il traffico e non sostituisce i filtri personalizzati già salvati."
+    ],
+    "É possível verificar automaticamente, baixar automaticamente e, nas plataformas compatíveis, instalar ao fechar. O Windows Portable mantém backup para rollback.": [
+      "Updates can be checked and downloaded automatically and installed on exit on supported platforms. Windows Portable keeps a backup for rollback.",
+      "Es posible comprobar y descargar actualizaciones automáticamente e instalarlas al cerrar en las plataformas compatibles. Windows Portable conserva una copia de seguridad para volver a la versión anterior.",
+      "Les mises à jour peuvent être vérifiées et téléchargées automatiquement, puis installées à la fermeture sur les plateformes compatibles. Windows Portable conserve une sauvegarde pour revenir à la version précédente.",
+      "Aktualisierungen können automatisch geprüft und heruntergeladen und auf unterstützten Plattformen beim Beenden installiert werden. Windows Portable behält eine Sicherung zur Rückkehr zur vorherigen Version.",
+      "È possibile verificare e scaricare automaticamente gli aggiornamenti e installarli alla chiusura sulle piattaforme compatibili. Windows Portable conserva una copia di sicurezza per tornare alla versione precedente."
+    ],
+    "Tema, idioma e preferências de fonte de Mensagens, Estações, Logs e Estatísticas são aplicados imediatamente e persistidos no banco local.": [
+      "Theme, language and font preferences for Messages, Stations, Logs and Statistics apply immediately and are saved in the local database.",
+      "El tema, idioma y preferencias de fuente de Mensajes, Estaciones, Registros y Estadísticas se aplican de inmediato y se guardan en la base de datos local.",
+      "Le thème, la langue et les préférences de police des messages, stations, journaux et statistiques s’appliquent immédiatement et sont enregistrés dans la base de données locale.",
+      "Design, Sprache und Schriftarteinstellungen für Nachrichten, Stationen, Protokolle und Statistiken gelten sofort und werden in der lokalen Datenbank gespeichert.",
+      "Tema, lingua e preferenze dei caratteri per Messaggi, Stazioni, Registri e Statistiche vengono applicati subito e salvati nel database locale."
+    ],
+    "Arraste os vértices para ajustar; arraste o ponto do meio de um lado para criar um vértice; botão direito num vértice remove.": [
+      "Drag vertices to adjust; drag the midpoint of a side to add a vertex; right-click a vertex to remove it.",
+      "Arrastra los vértices para ajustar; arrastra el punto medio de un lado para crear un vértice; haz clic derecho en un vértice para eliminarlo.",
+      "Déplacez les sommets pour ajuster ; déplacez le milieu d’un côté pour créer un sommet ; un clic droit sur un sommet le supprime.",
+      "Ziehen Sie Eckpunkte zum Anpassen; ziehen Sie die Mitte einer Seite zum Erstellen eines Eckpunkts; ein Rechtsklick auf einen Eckpunkt entfernt ihn.",
+      "Trascina i vertici per regolarli; trascina il punto medio di un lato per creare un vertice; fai clic destro su un vertice per rimuoverlo."
+    ],
+    "Confira latitude e longitude da sua estação em Configuração.": [
+      "Check your station’s latitude and longitude in Settings.",
+      "Comprueba la latitud y longitud de tu estación en Configuración.",
+      "Vérifiez la latitude et la longitude de votre station dans Configuration.",
+      "Prüfen Sie Breiten- und Längengrad Ihrer Station unter Konfiguration.",
+      "Controlla latitudine e longitudine della stazione in Configurazione."
+    ],
+    "Configure as credenciais do QRZ.com em Configuração.": [
+      "Configure QRZ.com credentials in Settings.",
+      "Configura las credenciales de QRZ.com en Configuración.",
+      "Configurez les identifiants QRZ.com dans Configuration.",
+      "Richten Sie die QRZ.com-Zugangsdaten unter Konfiguration ein.",
+      "Configura le credenziali QRZ.com in Configurazione."
+    ],
+    "Arquivo de configuração inválido.": [
+      "Invalid configuration file.",
+      "Archivo de configuración no válido.",
+      "Fichier de configuration invalide.",
+      "Ungültige Konfigurationsdatei.",
+      "File di configurazione non valido."
+    ],
+    "Comprimento AGWPE inválido: {v0}": [
+      "Invalid AGWPE length: {v0}",
+      "Longitud AGWPE no válida: {v0}",
+      "Longueur AGWPE invalide : {v0}",
+      "Ungültige AGWPE-Länge: {v0}",
+      "Lunghezza AGWPE non valida: {v0}"
+    ],
+    "Filtro APRS-IS inválido: {v0}": [
+      "Invalid APRS-IS filter: {v0}",
+      "Filtro APRS-IS no válido: {v0}",
+      "Filtre APRS-IS invalide : {v0}",
+      "Ungültiger APRS-IS-Filter: {v0}",
+      "Filtro APRS-IS non valido: {v0}"
+    ],
+    "Grid inválido: use 4, 6, 8 ou 10 caracteres Maidenhead.": [
+      "Invalid grid: use 4, 6, 8 or 10 Maidenhead characters.",
+      "Cuadrícula no válida: usa 4, 6, 8 o 10 caracteres Maidenhead.",
+      "Locator invalide : utilisez 4, 6, 8 ou 10 caractères Maidenhead.",
+      "Ungültiger Locator: Verwenden Sie 4, 6, 8 oder 10 Maidenhead-Zeichen.",
+      "Locator non valido: usa 4, 6, 8 o 10 caratteri Maidenhead."
+    ],
+    "KISS ativo, AX.25 inválido": [
+      "KISS active, invalid AX.25",
+      "KISS activo, AX.25 no válido",
+      "KISS actif, AX.25 invalide",
+      "KISS aktiv, AX.25 ungültig",
+      "KISS attivo, AX.25 non valido"
+    ],
+    "Localização inválida.": [
+      "Invalid location.",
+      "Ubicación no válida.",
+      "Position invalide.",
+      "Ungültiger Standort.",
+      "Posizione non valida."
+    ],
+    "Payload de posição APRS inválido para beacon RF.": [
+      "Invalid APRS position payload for RF beacon.",
+      "Datos de posición APRS no válidos para la baliza RF.",
+      "Données de position APRS invalides pour la balise RF.",
+      "Ungültige APRS-Positionsdaten für die Funkbake.",
+      "Dati di posizione APRS non validi per il beacon RF."
+    ],
+    "Perfil de equipamento TNC inválido.": [
+      "Invalid TNC device profile.",
+      "Perfil de equipo TNC no válido.",
+      "Profil d’équipement TNC invalide.",
+      "Ungültiges TNC-Geräteprofil.",
+      "Profilo del dispositivo TNC non valido."
+    ],
+    "Política de falha inválida.": [
+      "Invalid failure policy.",
+      "Política de fallo no válida.",
+      "Politique de gestion des échecs invalide.",
+      "Ungültige Fehlerrichtlinie.",
+      "Criterio di gestione degli errori non valido."
+    ],
+    "Requisição de manutenção inválida.": [
+      "Invalid maintenance request.",
+      "Solicitud de mantenimiento no válida.",
+      "Demande de maintenance invalide.",
+      "Ungültige Wartungsanforderung.",
+      "Richiesta di manutenzione non valida."
+    ],
+    "Tabela de retenção inválida.": [
+      "Invalid retention table.",
+      "Tabla de retención no válida.",
+      "Table de conservation invalide.",
+      "Ungültige Aufbewahrungstabelle.",
+      "Tabella di conservazione non valida."
+    ],
+    "frame(s) AX.25 inválido(s)": [
+      "invalid AX.25 frame(s)",
+      "trama(s) AX.25 no válida(s)",
+      "trame(s) AX.25 invalide(s)",
+      "ungültige AX.25-Frames",
+      "frame AX.25 non validi"
+    ],
+    "Teste de recepção do TNC e Verificar banco": [
+      "TNC reception test and database check",
+      "Prueba de recepción TNC y verificación de la base de datos",
+      "Test de réception TNC et vérification de la base de données",
+      "TNC-Empfangstest und Datenbankprüfung",
+      "Test di ricezione TNC e verifica del database"
+    ],
+    "Recordes RF refinados e cabeçalho compacto": [
+      "Refined RF records and compact header",
+      "Récords RF mejorados y cabecera compacta",
+      "Records RF affinés et en-tête compact",
+      "Verbesserte Funkrekorde und kompakte Kopfzeile",
+      "Record RF migliorati e intestazione compatta"
+    ],
+    "Página única de configuração": [
+      "Single settings page",
+      "Página única de configuración",
+      "Page de configuration unique",
+      "Einzelne Konfigurationsseite",
+      "Pagina di configurazione unica"
     ]
   },
   "pt-BR": {
@@ -2417,6 +5308,9 @@
     "Soak test": "Teste de estabilidade prolongado",
     "Query": "Consulta",
     "Retry": "Tentar novamente",
-    "Trace": "Rastrear"
+    "Trace": "Rastrear",
+    "API key": "Chave API",
+    "Path": "Rota",
+    "Opac.": "Opacidade"
   }
 }

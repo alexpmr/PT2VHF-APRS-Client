@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
     await page.route('**/*', route => {
       const request = route.request();
       if (!request.url().startsWith(origin + '/')) return route.abort();
-      const localOnly = ['/api/config', '/api/local-interface/presence', '/api/map-state', '/api/diagnostics/client-event', '/api/topology/rf-records/jobs'];
+      const localOnly = ['/api/config', '/api/local-interface/presence', '/api/map-state', '/api/diagnostics/client-event', '/api/topology/rf-records/jobs', '/api/v111/notifications'];
       if (!['GET', 'HEAD'].includes(request.method()) && !localOnly.some(endpoint => request.url().endsWith(endpoint))) {
         blockedMutations.push(request.url());
         return route.abort();
