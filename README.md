@@ -2,20 +2,20 @@
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
-**v1.14.59:** o atualizador passa a consultar apenas `https://www.pt2vhf.com/update.php?product=aprs`; pacotes devem estar hospedados no domínio com SHA-256 e tamanho reais. A versão permanece sem anúncio público até que esses pacotes sejam homologados e publicados.
+**Atualizações oficiais:** o atualizador consulta `https://www.pt2vhf.com/update.php?product=aprs` e verifica tamanho e SHA-256 dos pacotes hospedados no domínio PT2VHF.
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 1.15.6 (publicação pendente)
+## Downloads — versão 1.15.6
 
-A nova v1.15.6 foi preparada para obter atualizações **somente pelo site PT2VHF**. Os instaladores ainda não estão publicados: a geração em CI não equivale a um download público homologado.
+A v1.15.6 está publicada no [site oficial PT2VHF](https://www.pt2vhf.com/aprs).
+Disponíveis nove pacotes: instalador e portátil Windows x64/ARM64, Linux AppImage/.deb/.tar.gz e macOS Intel/Apple Silicon.
 
-**Pacotes Windows/Linux**: instalador, portátil, AppImage, .deb e .tar.gz, conforme builds validados. ARM64 e macOS só serão liberados quando houver pacotes próprios.
+Em 01/11/2026, tamanho e SHA-256 de todos os nove downloads reais foram comparados com o manifesto publicado. O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece v1.15.6.
 
-**Página oficial de downloads e contadores acumulados por tipo:** https://www.pt2vhf.com/aprs
+[Build completo aprovado](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573176) · [Testes de UI em seis idiomas](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573154) · [Release e artefatos](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.15.6)
 
-Não há links para executáveis inexistentes. Arquivos de código-fonte e checksums não são oferecidos na tabela pública; os hashes SHA-256 permanecem na API do atualizador para verificação de integridade.
-
+A revisão integral das traduções (#157) continua aberta; esta versão entrega correções parciais, bandeiras e testes de regressão.
 <!-- DOWNLOAD_TABLE_END -->
 
 A **v1.15.3** simplifica o aviso **Aplicativo atualizado**: só o botão **Fechar**; o boletim da versão nova segue como programado (desligável em Automações).

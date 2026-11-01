@@ -42,7 +42,12 @@ Do not advertise complete localization from catalog counts alone.
 Release/publication must use a successful GitHub Actions build at the final
 reviewed commit, a new version, binary hashes/sizes and the matching site OTA
 manifest. Verify the actual Hostinger downloads and update endpoint afterwards.
-At the live inspection during this work, the site still advertised v1.15.5.
+The initial live inspection advertised v1.15.5. After Hostinger propagation,
+v1.15.6 was confirmed on 2026-11-01 in both the live manifest and OTA endpoint;
+all nine complete binary hashes and sizes matched the published metadata.
+Site publication commit: `d19c91a183bd2b1c9fec4e27ca77a2fab959df94`.
+Full build: https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573176
+UI regression: https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573154
 
 Local validation: 707 pytest tests and 12 subtests passed; DOM browser regression
 and real-application six-language/nine-tab persistence test passed.

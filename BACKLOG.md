@@ -2,7 +2,7 @@
 
 - Entregues: bandeiras BR/UK/ES/FR/DE/IT, dez opções preservadas, observação de textos/atributos dinâmicos e prevenção de restauração de estados antigos; exclusões para mensagens, informações de estação e pacotes brutos.
 - Adicionadas 30 traduções por idioma EN/ES/FR/DE/IT; testes reais de navegador em seis idiomas e nove abas, bandeiras, seleção ativa e persistência após recarregar; teste de regressão DOM e inventário consolidado com baseline de dívida herdada.
-- Validação local: 707 testes + 12 subtestes e testes de navegador aprovados. Build/CI e publicação v1.15.6 ainda pendentes de confirmação.
+- Validação local: 707 testes + 12 subtestes e testes de navegador aprovados. Build completo e CI de UI aprovados; v1.15.6 publicada e confirmada na Hostinger em 01/11/2026, com nove downloads e OTA verificados por tamanho e SHA-256.
 - **#157 permanece aberta**: falta revisar e traduzir o inventário completo de textos estáticos/dinâmicos e todos os modais/erros nos seis idiomas. O inventário contém candidatos técnicos e dicionários locais que exigem triagem humana; seus totais não representam porcentagem de UI traduzida.
 - Revisão e limites: `docs/i18n-157-review.md`. Relatório completo gerado por `node tools/i18n_inventory.cjs --output i18n-inventory.json` e anexado pelo CI.
 
