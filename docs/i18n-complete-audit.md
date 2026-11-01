@@ -40,3 +40,5 @@ Validação local em 01/11/2026: **707 testes e 12 subtestes aprovados**; sintax
 Cobertura do extrator e ausência de resíduos nos estados testados são evidências verificáveis, não uma garantia matemática sobre todos os dados e estados possíveis. A issue #157 não deve ser encerrada apenas por contagem de chaves ou testes de navegação. Traduções iniciais foram auxiliadas por modelo local M2M100; avisos, parâmetros e achados linguísticos foram revisados e corrigidos. O aplicativo distribuído não inclui esse modelo.
 
 Esta alteração é posterior à v1.15.6 publicada. Não substituir os binários da versão existente nem anunciar uma nova versão no site antes de concluir o build, verificar os pacotes e confirmar a publicação real.
+
+A criação automática do PR foi recusada pela configuração do repositório: `GitHub Actions is not permitted to create or approve pull requests`. A branch está disponível para [revisão e abertura do PR](https://github.com/alexpmr/PT2VHF-APRS-Client/compare/main...fix/i18n-complete-audit). Nenhuma credencial foi extraída e nenhuma configuração de permissão foi alterada.
