@@ -53,7 +53,8 @@ jobs:
           readelf -h "$bin" | grep -Eq 'Machine:[[:space:]]*AArch64'
           test "$("$bin" --version)" = "$version"
           test "$(dpkg-deb -f "$deb" Architecture)" = "arm64"
-          tar -tzf "$tar" | grep -q "PT2VHF_APRS_Client_Linux_arm64_v${version}"
+          tar -tzf "$tar" > "$RUNNER_TEMP/arm64-tar-contents.txt"
+          grep -Fq "PT2VHF_APRS_Client_Linux_arm64_v${version}" "$RUNNER_TEMP/arm64-tar-contents.txt"
           readelf -h "$image" | grep -Eq 'Machine:[[:space:]]*AArch64'
           test "$(APPIMAGE_EXTRACT_AND_RUN=1 "./$image" --version)" = "$version"
           python -m pytest -q tests/test_linux_arm64_distribution.py
