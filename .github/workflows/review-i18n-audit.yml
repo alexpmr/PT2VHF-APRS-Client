@@ -15,6 +15,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          exec 2> >(tee /tmp/i18n-pr-error.log >&2)
+          trap 'code=$?; if [ "$code" -ne 0 ]; then python tools/report_ci_error.py /tmp/i18n-pr-error.log; fi' EXIT
           existing=$(gh pr list --repo "$GITHUB_REPOSITORY" --head fix/i18n-complete-audit --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             gh pr view "$existing" --repo "$GITHUB_REPOSITORY" --json url

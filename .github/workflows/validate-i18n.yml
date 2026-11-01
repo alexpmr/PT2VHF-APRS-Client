@@ -27,13 +27,21 @@ jobs:
         run: node tools/i18n_inventory.cjs --output i18n-inventory.json
       - name: Install source parser and validate complete keyed catalog
         run: |
-          npm install --no-save --package-lock=false acorn@8.15.0
-          node tools/extract_i18n_javascript.cjs
-          python tools/export_i18n_sources.py
-          node tools/assemble_i18n_catalog.cjs
-          python tools/write_i18n_catalog.py
-          git diff --exit-code -- pt2vhf_aprs/static/js/i18n_catalog.js
-          node tests/i18n_catalog.cjs
+          mkdir -p .test-runtime
+          if ! (
+            set -e
+            npm install --no-save --package-lock=false acorn@8.15.0
+            node tools/extract_i18n_javascript.cjs
+            python tools/export_i18n_sources.py
+            node tools/assemble_i18n_catalog.cjs
+            python tools/write_i18n_catalog.py
+            git diff --exit-code -- pt2vhf_aprs/static/js/i18n_catalog.js
+            node tests/i18n_catalog.cjs
+          ) > .test-runtime/source-validation.log 2>&1; then
+            python tools/report_ci_error.py .test-runtime/source-validation.log
+            exit 1
+          fi
+          cat .test-runtime/source-validation.log
       - name: Install browser test dependencies
         run: |
           npm install --no-save --package-lock=false playwright@1.62.1
@@ -57,3 +65,4 @@ jobs:
             .test-runtime/i18n-strict-report.json
             .test-runtime/i18n-visible-report.json
             .test-runtime/pytest-i18n.xml
+            .test-runtime/source-validation.log
