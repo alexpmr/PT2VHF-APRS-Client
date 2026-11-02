@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
+import os
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 ROOT = Path(SPECPATH).parent
@@ -63,6 +64,7 @@ app = BUNDLE(
     bundle_identifier='br.com.pt2vhf.aprsclient',
     version=VERSION,
     info_plist={
+        **({'LSMinimumSystemVersion': '10.15.0'} if os.environ.get('PT2VHF_MACOS_LEGACY') == '1' else {}),
         'NSHighResolutionCapable': True,
         'NSLocationWhenInUseUsageDescription': 'O PT2VHF APRS Client pode usar sua localização para preencher as coordenadas da estação quando você solicitar.',
     },
