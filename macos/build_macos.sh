@@ -4,14 +4,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"
-VENV=".venv-build-macos"
+VENV="${VENV:-.venv-build-macos}"
+MACOS_REQUIREMENTS="${MACOS_REQUIREMENTS:-requirements-macos.txt}"
 
 if [[ ! -d "$VENV" ]]; then
   "$PYTHON_BIN" -m venv "$VENV"
 fi
 
 "$VENV/bin/python" -m pip install --upgrade pip
-"$VENV/bin/python" -m pip install -r requirements-macos.txt
+"$VENV/bin/python" -m pip install -r "$MACOS_REQUIREMENTS"
 "$VENV/bin/python" -m pytest -q
 "$VENV/bin/python" macos/make_icon.py
 
@@ -26,6 +27,10 @@ case "$arch" in
   x86_64) label="x86_64" ;;
   *) label="$arch" ;;
 esac
+if [[ "${PT2VHF_MACOS_LEGACY:-0}" == "1" ]]; then
+  [[ "$arch" == "x86_64" ]] || { echo "Legacy exige Intel x86_64" >&2; exit 1; }
+  label="Intel_Legacy"
+fi
 
 "$VENV/bin/cyclonedx-py" environment --spec-version 1.6 --output-format JSON --output-file "dist-macos/SBOM-macOS-${label}.cdx.json"
 "$VENV/bin/pip-licenses" --format=plain-vertical --with-license-file --no-license-path --output-file="dist-macos/THIRD_PARTY_LICENSES_macOS_${label}.txt"
@@ -35,7 +40,11 @@ rm -rf "$stage"
 mkdir -p "$stage"
 cp -R "dist/PT2VHF APRS Client.app" "$stage/"
 ln -s /Applications "$stage/Applications"
-cp docs/INSTALL_MACOS.md "$stage/INSTALL_MACOS.md"
+if [[ "${PT2VHF_MACOS_LEGACY:-0}" == "1" ]]; then
+  cp docs/INSTALL_MACOS_LEGACY.md "$stage/INSTALL_MACOS_LEGACY.md"
+else
+  cp docs/INSTALL_MACOS.md "$stage/INSTALL_MACOS.md"
+fi
 cp LICENSE "$stage/LICENSE"
 
 dmg="dist-macos/PT2VHF_APRS_Client_macOS_${label}_v${version}.dmg"
