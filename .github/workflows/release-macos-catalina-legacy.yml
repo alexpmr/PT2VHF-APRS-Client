@@ -22,7 +22,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  lint-legacy:
+    name: Static CI validation for Catalina pipeline
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout APRS source
+        uses: actions/checkout@v4
+      - name: Validate build scripts, spec and Python syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n macos/build_macos.sh macos/build_macos_legacy.sh
+          python3 -m py_compile macos_app.py macos/make_icon.py
+          python3 -c "import ast; ast.parse(open('macos/PT2VHF_APRS_Client_macOS.spec').read())"
+          python3 -c "from pathlib import Path; p=Path('requirements-macos-legacy.txt').read_text(); assert 'pyobjc' in p and '-r requirements-macos.txt' in p"
+      - name: Checkout site publication code
+        uses: actions/checkout@v4
+        with:
+          repository: alexpmr/PT2VHF-Site
+          path: site
+      - name: Validate publication script and download-counter allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile site/scripts/publish_aprs_macos_legacy.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          s=Path('site/download.php').read_text()
+          assert "'mac-dmg-intel-legacy'" in s
+          manifest=json.loads(Path('site/updates.json').read_text())
+          assert manifest['products']['aprs']['version']==Path('VERSION').read_text().strip()
+          PY
+
   build-catalina-legacy:
+    needs: lint-legacy
     name: Build and smoke-test on REAL Catalina Intel
     runs-on: [self-hosted, macOS, X64, pt2vhf-catalina]
     timeout-minutes: 90
