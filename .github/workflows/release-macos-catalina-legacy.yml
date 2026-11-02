@@ -1,7 +1,7 @@
 name: Build & publish APRS Catalina Intel Legacy
 
-# Exige runner real Intel Catalina. Runners hospedados do GitHub não fornecem 10.15.
-# Secret PT2VHF_SITE_DEPLOY_TOKEN: token com Contents:write no repo PT2VHF-Site.
+# CI só prepara candidato. Compilação homologada exige Mac Catalina local.
+# Publicação oficial manual em outro workflow, após prova de execução Catalina.
 on:
   workflow_dispatch:
   push:
@@ -55,88 +55,40 @@ jobs:
           assert manifest['products']['aprs']['version']==Path('VERSION').read_text().strip()
           PY
 
-  build-catalina-legacy:
+  candidate-intel:
+    # O GitHub não executa macOS 10.15 em hosted ou self-hosted suportado.
+    # Este job só gera CANDIDATO, nunca um release homologado Catalina.
+    name: Build unverified compatibility candidate on macOS 15 Intel
     needs: lint-legacy
-    name: Build and smoke-test on REAL Catalina Intel
-    runs-on: [self-hosted, macOS, X64, pt2vhf-catalina]
+    runs-on: macos-15-intel
     timeout-minutes: 90
+    env:
+      PT2VHF_MACOS_LEGACY: '1'
+      MACOSX_DEPLOYMENT_TARGET: '10.15'
+      MACOS_REQUIREMENTS: requirements-macos-legacy.txt
+      VENV: .venv-build-macos-candidate
     steps:
       - name: Checkout APRS source
         uses: actions/checkout@v4
-      - name: Validate source release metadata
-        run: |
-          python3.10 tools/apply_release_1_15_6.py
-      - name: Build with legacy toolchain and launch on Catalina
+      - name: Setup Python 3.10 Intel
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          architecture: x64
+      - name: Validate release
+        run: python3 tools/apply_release_1_15_6.py
+      - name: Build Intel candidate (NOT validated on Catalina)
         shell: bash
         run: |
-          bash macos/build_macos_legacy.sh
-      - name: Upload verified Catalina artifacts
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          PYTHON_BIN=python3 bash macos/build_macos.sh
+          hdiutil verify dist-macos/PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg
+          test "$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' 'dist/PT2VHF APRS Client.app/Contents/Info.plist')" = '10.15.0'
+          echo "::warning::Candidate compiled on macOS 15 Intel. NOT tested or approved for Catalina; do not deploy to PT2VHF.com."
+      - name: Upload candidate for local Catalina testing (not official release)
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-macOS-Intel-Catalina
+          name: CANDIDATE-UNVERIFIED-macOS-Intel-Catalina
           if-no-files-found: error
-          path: |
-            dist-macos/PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg
-            dist-macos/catalina-verification.json
-            dist-macos/SBOM-macOS-Intel_Legacy.cdx.json
-            dist-macos/THIRD_PARTY_LICENSES_macOS_Intel_Legacy.txt
-
-  publish-legacy:
-    name: Publish verified DMG to PT2VHF-Site (Hostinger)
-    needs: build-catalina-legacy
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    steps:
-      - name: Require site deploy credential
-        shell: bash
-        env:
-          DEPLOY_TOKEN: ${{ secrets.PT2VHF_SITE_DEPLOY_TOKEN }}
-        run: |
-          if [[ -z "$DEPLOY_TOKEN" ]]; then
-            echo "::error::Cadastre PT2VHF_SITE_DEPLOY_TOKEN com escrita no repo PT2VHF-Site"
-            exit 1
-          fi
-      - name: Checkout official PT2VHF website
-        uses: actions/checkout@v4
-        with:
-          repository: alexpmr/PT2VHF-Site
-          ref: main
-          path: site
-          token: ${{ secrets.PT2VHF_SITE_DEPLOY_TOKEN }}
-          persist-credentials: true
-      - name: Download verified Catalina artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: PT2VHF-APRS-Client-macOS-Intel-Catalina
-          path: legacy-artifact
-      - name: Validate DMG attestation and stage in site
-        shell: bash
-        run: |
-          set -euo pipefail
-          dmg="$(find legacy-artifact -name 'PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg' -type f -print -quit)"
-          evidence="$(find legacy-artifact -name 'catalina-verification.json' -type f -print -quit)"
-          test -n "$dmg" && test -n "$evidence"
-          python3 site/scripts/publish_aprs_macos_legacy.py --dmg "$dmg" --evidence "$evidence"
-      - name: Commit real DMG and manifest to Hostinger-connected repository
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd site
-          git config user.name 'pt2vhf-release-bot'
-          git config user.email 'pt2vhf-release-bot@users.noreply.github.com'
-          git add updates.json downloads/aprs-client/PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg
-          if ! git diff --cached --quiet; then
-            git commit -m 'release(aprs): Catalina Intel Legacy verified native DMG'
-            git push origin main
-          else
-            echo 'DMG and manifest are already present, nothing to commit.'
-          fi
-      - name: Upload verified DMG to source GitHub Release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          dmg="$(find legacy-artifact -name 'PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg' -type f -print -quit)"
-          gh release upload v1.15.6 "$dmg" --clobber
+          path: dist-macos/PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg
