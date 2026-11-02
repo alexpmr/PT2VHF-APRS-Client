@@ -1,0 +1,7 @@
+# Catalina Intel x86_64 (Python 3.10; build nativo no macOS 10.15).
+-r requirements-macos.txt
+# PyObjC >= 13 usa toolchain que pode exigir macOS recente.
+pyobjc-core>=10.3,<11
+pyobjc-framework-Cocoa>=10.3,<11
+pyobjc-framework-WebKit>=10.3,<11
+Pillow>=11,<12
