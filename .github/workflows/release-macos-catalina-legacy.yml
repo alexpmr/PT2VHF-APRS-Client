@@ -1,0 +1,108 @@
+name: Build & publish APRS Catalina Intel Legacy
+
+# Exige runner real Intel Catalina. Runners hospedados do GitHub não fornecem 10.15.
+# Secret PT2VHF_SITE_DEPLOY_TOKEN: token com Contents:write no repo PT2VHF-Site.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-macos-catalina-legacy.yml'
+      - 'macos/build_macos_legacy.sh'
+      - 'macos/build_macos.sh'
+      - 'macos/PT2VHF_APRS_Client_macOS.spec'
+      - 'requirements-macos-legacy.txt'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: macos-catalina-legacy
+  cancel-in-progress: false
+
+jobs:
+  build-catalina-legacy:
+    name: Build and smoke-test on REAL Catalina Intel
+    runs-on: [self-hosted, macOS, X64, pt2vhf-catalina]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout APRS source
+        uses: actions/checkout@v4
+      - name: Validate source release metadata
+        run: |
+          python3.10 tools/apply_release_1_15_6.py
+      - name: Build with legacy toolchain and launch on Catalina
+        shell: bash
+        run: |
+          bash macos/build_macos_legacy.sh
+      - name: Upload verified Catalina artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-macOS-Intel-Catalina
+          if-no-files-found: error
+          path: |
+            dist-macos/PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg
+            dist-macos/catalina-verification.json
+            dist-macos/SBOM-macOS-Intel_Legacy.cdx.json
+            dist-macos/THIRD_PARTY_LICENSES_macOS_Intel_Legacy.txt
+
+  publish-legacy:
+    name: Publish verified DMG to PT2VHF-Site (Hostinger)
+    needs: build-catalina-legacy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Require site deploy credential
+        shell: bash
+        env:
+          DEPLOY_TOKEN: ${{ secrets.PT2VHF_SITE_DEPLOY_TOKEN }}
+        run: |
+          if [[ -z "$DEPLOY_TOKEN" ]]; then
+            echo "::error::Cadastre PT2VHF_SITE_DEPLOY_TOKEN com escrita no repo PT2VHF-Site"
+            exit 1
+          fi
+      - name: Checkout official PT2VHF website
+        uses: actions/checkout@v4
+        with:
+          repository: alexpmr/PT2VHF-Site
+          ref: main
+          path: site
+          token: ${{ secrets.PT2VHF_SITE_DEPLOY_TOKEN }}
+          persist-credentials: true
+      - name: Download verified Catalina artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: PT2VHF-APRS-Client-macOS-Intel-Catalina
+          path: legacy-artifact
+      - name: Validate DMG attestation and stage in site
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$(find legacy-artifact -name 'PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg' -type f -print -quit)"
+          evidence="$(find legacy-artifact -name 'catalina-verification.json' -type f -print -quit)"
+          test -n "$dmg" && test -n "$evidence"
+          python3 site/scripts/publish_aprs_macos_legacy.py --dmg "$dmg" --evidence "$evidence"
+      - name: Commit real DMG and manifest to Hostinger-connected repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          git config user.name 'pt2vhf-release-bot'
+          git config user.email 'pt2vhf-release-bot@users.noreply.github.com'
+          git add updates.json downloads/aprs-client/PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg
+          if ! git diff --cached --quiet; then
+            git commit -m 'release(aprs): Catalina Intel Legacy verified native DMG'
+            git push origin main
+          else
+            echo 'DMG and manifest are already present, nothing to commit.'
+          fi
+      - name: Upload verified DMG to source GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          dmg="$(find legacy-artifact -name 'PT2VHF_APRS_Client_macOS_Intel_Legacy_v*.dmg' -type f -print -quit)"
+          gh release upload v1.15.6 "$dmg" --clobber
