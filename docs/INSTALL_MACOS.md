@@ -5,7 +5,8 @@
 A partir da v1.1, a Release publica imagens DMG para:
 
 - **Apple Silicon (arm64)** - Macs com processadores Apple Silicon compatíveis.
-- **Intel (x86_64)** - Macs Intel compatíveis com a versão do macOS usada no build.
+- **Intel (x86_64)** - Macs Intel com macOS compatível com o build atual (o DMG v1.15.6 exige macOS 11+).
+- **Intel Legacy (x86_64)** - pacote separado para macOS Catalina 10.15.x, somente após build e teste reais em Catalina; veja `INSTALL_MACOS_LEGACY.md`.
 
 Escolha o DMG correspondente à arquitetura do seu Mac.
 
