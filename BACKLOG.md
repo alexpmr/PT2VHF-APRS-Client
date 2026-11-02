@@ -2,8 +2,8 @@
 
 - Solicitação: versão do APRS Client para Macs Intel com macOS 10.15.x, após relato de Gatekeeper e de incompatibilidade 11.0+/ARM64 no DMG v1.15.6.
 - Implementação preparada: `macos/build_macos_legacy.sh`, `requirements-macos-legacy.txt`, bundle com requisito 10.15.0 e workflow `release-macos-catalina-legacy.yml`.
-- **Bloqueio de publicação:** GitHub Actions não disponibiliza macOS 10.15 hospedado. A compilação e o teste físico são exigidos em runner self-hosted Intel Catalina com Python 3.10 e sessão gráfica. Não anunciar instalador Legacy sem DMG real, checksum/size e teste de abertura.
-- Publicação prevista: `PT2VHF_APRS_Client_macOS_Intel_Legacy_v1.15.6.dmg`; script de importação validada no repositório `PT2VHF-Site` e contador específico `mac-dmg-intel-legacy`.
+- **Bloqueio de publicação:** GitHub Actions não disponibiliza macOS 10.15 hospedado. O runner self-hosted oficial do GitHub também exige macOS 11+, portanto Catalina deve ser compilado localmente num Mac Intel 10.15.x com Python 3.10 e sessão gráfica. O Actions apenas gera candidato não homologado em macOS 15 Intel. Não anunciar instalador Legacy sem DMG real, checksum/size e teste de abertura.
+- Publicação prevista: `PT2VHF_APRS_Client_macOS_Intel_Legacy_v1.15.6.dmg`; script de importação validada e workflow de publicação manual no repositório `PT2VHF-Site` e contador específico `mac-dmg-intel-legacy`.
 - Assinatura Apple Developer ID/notarização é etapa separada; não confundir desbloqueio Gatekeeper com compatibilidade do sistema.
 
 ## P1 — Pente fino obrigatório após v1.15.6 (01/11/2026, #157)
