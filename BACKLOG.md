@@ -1,3 +1,11 @@
+## BACKLOG — Mensagens: ao sair de "Não lidas", voltar na última mensagem recebida (03/11/2026)
+
+- **Relato (contribuição de usuário):** na aba Mensagens, ao usar o filtro **Não lidas** e depois retornar à lista
+  completa, a tela fica posicionada na **primeira** mensagem geral recebida (a mais antiga), e não na **última**.
+- **Esperado:** ao desligar "Não lidas" (`#unreadMessagesButton`), rolar para a mensagem mais recente, como ao abrir
+  a aba; mesmo comportamento ao limpar o filtro de texto.
+- **Teste:** com várias mensagens, ligar e desligar "Não lidas" e conferir que a última recebida fica visível.
+
 ## BACKLOG — Configuração: botão Salvar em cada sub-aba (03/11/2026)
 
 - **Pedido:** na aba Configuração, ter um botão **Salvar** em cada sub-aba (Estação, APRS-IS, TNC / RF, Mapa,
