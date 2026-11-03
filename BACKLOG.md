@@ -1,3 +1,12 @@
+## BACKLOG — Configuração: botão Salvar em cada sub-aba (03/11/2026)
+
+- **Pedido:** na aba Configuração, ter um botão **Salvar** em cada sub-aba (Estação, APRS-IS, TNC / RF, Mapa,
+  Aplicativo, Integrações, Banco de dados, Backup), em vez de depender de um único "Salvar configuração".
+- **Hoje (v1.15.1+):** sub-abas em `config_tabs.js`; o salvamento é um só para todas (se faltar campo obrigatório
+  noutra sub-aba, ela abre sozinha). TNC / RF já tem `#tncSave` próprio.
+- **Esperado:** botão Salvar visível no fim de cada sub-aba (traduzido), salvando a configuração toda pelo mesmo
+  fluxo atual (validação, aviso de alterações não salvas); sub-abas sem campos editáveis não precisam do botão.
+
 ## P1 — macOS Intel Legacy Catalina (01/11/2026)
 
 - Solicitação: versão do APRS Client para Macs Intel com macOS 10.15.x, após relato de Gatekeeper e de incompatibilidade 11.0+/ARM64 no DMG v1.15.6.
