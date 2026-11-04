@@ -362,8 +362,10 @@ def db_health(*, deep: bool = True) -> dict[str, Any]:
         "tables": {},
     }
     wal = Path(str(path) + "-wal")
-    if wal.exists():
+    try:
         result["wal_bytes"] = wal.stat().st_size
+    except OSError:
+        pass  # v1.15.7: o -wal some num checkpoint entre exists() e stat() (erro 500 visto no CI)
     with db.connection() as conn:
         if deep:
             try:
