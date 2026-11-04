@@ -72,6 +72,11 @@ def test_quit_endpoint_only_from_local_machine(tmp_path, monkeypatch):
     monkeypatch.setattr(lan_access, "_last_remote", {"address": "", "path": "", "at": "", "when": 0.0})
     calls = []
     monkeypatch.setattr(updater, "_request_exit_after", lambda delay=1.25: calls.append(delay))
+    # Sem threads de fundo: no Windows elas prendiam bancos temporários de outros testes.
+    monkeypatch.setattr(web.scheduled_message_service, "start", lambda *a, **k: None)
+    monkeypatch.setattr(web.retention, "start_worker", lambda *a, **k: None)
+    monkeypatch.setattr(web.version_announce, "start_worker", lambda *a, **k: None)
+    db.init_db()
     app = web.create_app()
     client = app.test_client()
     assert client.post("/api/app/quit", environ_base={"REMOTE_ADDR": "192.168.0.50"}).status_code == 403
