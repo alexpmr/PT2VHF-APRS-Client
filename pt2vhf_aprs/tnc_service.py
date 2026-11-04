@@ -167,6 +167,9 @@ def _friendly_serial_equipment(record: dict[str, Any]) -> tuple[str, str]:
         return "Radtel RT-950 Pro / TNC UART", chipset
     if "RADTEL" in upper:
         return "Radtel — interface serial", chipset
+    if "DIGIRIG" in upper:
+        # v1.15.7: Digirig é placa de som + serial de PTT, não TNC (relato KD4E).
+        return "Digirig — áudio/PTT (use com Dire Wolf)", chipset
     description = _serial_text(record.get("description") or record.get("name"))
     generic = {
         "", "N/A", "USB SERIAL PORT", "USB-SERIAL", "USB SERIAL DEVICE",
@@ -351,10 +354,35 @@ def _merge_serial_ports(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(result, key=sort_key)
 
 
+SOFT_TNC_PORTS = (("tcp", 8001, "KISS TCP"), ("agwpe", 8000, "AGWPE"))
+
+
+def detect_soft_tnc(host: str = "127.0.0.1", timeout: float = 0.4) -> list[dict[str, Any]]:
+    """v1.15.7: procura TNC por software (Dire Wolf, soundmodem) nas portas padrão.
+
+    Placas de áudio como o Digirig não são TNC: o modem é o Dire Wolf, que expõe
+    KISS TCP 8001 e AGWPE 8000. Só testa se a porta aceita conexão; não envia dados.
+    """
+    found: list[dict[str, Any]] = []
+    for transport, port, label in SOFT_TNC_PORTS:
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                found.append({"transport": transport, "host": host, "port": port, "label": label})
+        except OSError:
+            continue
+    return found
+
+
 def _serial_connection_error(port: str, exc: Exception) -> Exception:
     text = str(exc or "").strip()
     lower = text.lower()
     if any(token in lower for token in ("could not open port", "access is denied", "permissionerror", "permission denied")):
+        if sys.platform.startswith("linux") and ("permission denied" in lower or "errno 13" in lower):
+            # v1.15.7: no Linux/Raspberry Pi o usuário precisa estar no grupo dialout.
+            return PermissionError(
+                f"Sem permissão para abrir {port}. No Linux, adicione o usuário ao grupo dialout "
+                "(sudo usermod -aG dialout $USER), saia e entre de novo na sessão."
+            )
         return PermissionError(
             f"Não foi possível abrir {port}: a porta está ocupada por outro programa ou o Windows negou o acesso."
         )

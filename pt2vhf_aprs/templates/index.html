@@ -30,6 +30,7 @@
     </div>
   </div>
   <div class="connection-box">
+    <button id="headerQuitButton" type="button" class="btn secondary header-quit-button hidden" title="Encerrar o PT2VHF APRS Client">Sair</button>
     <button id="headerSendBeaconButton" type="button" class="btn secondary header-beacon-button" title="Enviar Beacon">Enviar Beacon</button>
     <div id="webAccessStatus" class="web-access-status" aria-live="polite"><strong id="webAccessUrl">detectando…</strong></div>
     <div id="languageQuickSwitch" class="language-quick-switch" aria-label="Idioma / Language">
@@ -291,7 +292,7 @@
     <div class="panel-header">
       <div>
         <h2>Mensagens APRS <span class="panel-count" id="messageTotalCount">0</span></h2>
-        <p>Filtre pelo indicativo de origem. O filtro aceita trechos, como <code>PT2</code> ou <code>PY2A</code>.</p>
+        <p>Filtre por origem, destino ou texto da mensagem. O filtro aceita trechos, como <code>PT2</code> ou <code>PY2A</code>.</p>
       </div>
       <div class="message-header-controls">
         <div class="map-items-control message-content-filter-control">
@@ -819,8 +820,9 @@
             <small id="maidenheadStatus" class="hint" aria-live="polite">O Grid Locator representa uma área. Aplicar utiliza o centro aproximado da célula.</small>
             <button id="maidenheadApply" type="button" class="btn secondary">Usar estas coordenadas</button>
           </div>
-          <label class="field" id="altitudeField"><span>Altitude (m) <em class="required-badge">Obrigatório</em></span>
+          <label class="field" id="altitudeField"><span><span id="altitudeLabelText">Altitude (m)</span> <em class="optional-badge">Opcional</em></span>
             <input name="altitude" id="altitudeInput" type="number" step="0.1" placeholder="Ex.: 1000">
+            <input id="altitudeFeetInput" type="number" step="1" placeholder="Ex.: 3300" class="hidden" aria-label="Altitude (pés)">
             <input name="altitude_source" id="altitudeSourceInput" type="hidden" value="manual">
             <small id="altitudeSourceStatus">Informe a altitude real da estação sempre que possível.</small>
           </label>
@@ -1120,6 +1122,14 @@
             </div>
             <small>O idioma é aplicado imediatamente à interface.</small>
           </label>
+          <label class="field theme-field">
+            <span>Unidades</span>
+            <select name="units" id="appUnits">
+              <option value="metric">Métrico (m, km, km/h)</option>
+              <option value="imperial">Imperial (ft, mi, mph)</option>
+            </select>
+            <small>Altitude, distâncias e velocidades na tela. Os pacotes APRS não mudam.</small>
+          </label>
           <label class="check-field app-browser-check">
             <input name="open_browser_on_start" type="checkbox">
             <span>Abrir também no navegador ao iniciar</span>
@@ -1313,6 +1323,7 @@
         <p>KISS Serial/TCP, monitor AX.25, Digipeater, iGate e análise adaptativa de quem fala com quem.</p>
       </div>
       <div class="tnc-actions">
+        <button id="tncDetectSoftTnc" type="button" class="btn secondary">Detectar Dire Wolf</button>
         <button id="tncRefreshPorts" type="button" class="btn secondary">Atualizar portas</button>
         <button id="tncConnect" type="button" class="btn primary">Conectar TNC</button>
         <button id="tncDisconnect" type="button" class="btn secondary">Desconectar</button>
@@ -1368,6 +1379,7 @@
               <option value="serial">KISS Serial</option>
               <option value="agwpe">AGWPE TCP</option>
             </select>
+            <small id="tncSoftTncHint">Placas de som como o Digirig não são TNC: rode o Dire Wolf e conecte por KISS TCP 127.0.0.1:8001.</small>
           </label>
           <label class="check-field tnc-check"><input id="tncAutoConnect" name="auto_connect" type="checkbox"><span>Conectar TNC ao iniciar</span></label>
           <label class="field tnc-tcp-field"><span>Host</span><input id="tncTcpHost" name="tcp_host" value="127.0.0.1"></label>

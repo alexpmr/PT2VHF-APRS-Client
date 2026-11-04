@@ -4698,18 +4698,21 @@ html.is-processing {
 }
 
 
-/* v1.14.17 - Configuração usa somente a rolagem principal da aba */
+/* v1.14.17 - Configuração usa somente a rolagem principal da aba.
+   v1.15.7: a rolagem é da aba inteira (#tab-config), não só do #configForm: desde as
+   sub-abas (v1.15.1) TNC / RF, Integrações e Banco de dados têm cartões fora do
+   formulário, que ficavam cortados (relato KD4E: KISS e "Salvar TNC / RF" inacessíveis). */
 #tab-config {
-  overflow: hidden;
-}
-#tab-config #configForm.config-grid {
-  height: calc(100% - 78px);
-  min-height: 0;
-  max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
-  align-content: start;
   scrollbar-gutter: stable;
+}
+#tab-config #configForm.config-grid {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  align-content: start;
 }
 /* Cards e subconjuntos da Configuração nunca criam um segundo viewport vertical.
    A rolagem fica exclusivamente no configForm, inclusive para blocos inseridos
@@ -5130,3 +5133,24 @@ html[lang="zh-CN"] body {
 .processing-elapsed.hidden { display: none; }
 /* v1.15.1: no aviso que não bloqueia a tela, o botão × continua clicável. */
 .global-processing-overlay.nonblocking .global-processing-cancel { pointer-events: auto; position: relative; z-index: 1; }
+
+/* v1.15.7: altitude opcional. */
+.optional-badge { font-style: normal; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); margin-left: 4px; }
+/* v1.15.7: "Salvar TNC / RF" sempre à vista na sub-aba TNC / RF, como o rodapé da Configuração. */
+.tnc-config-block.as-subtab .tnc-save-card {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: rgba(16,23,29,.97);
+  box-shadow: 0 -6px 20px rgba(0,0,0,.24);
+}
+.tnc-config-block.as-subtab .tnc-save-card > h3 { margin: 0; font-size: 15px; white-space: nowrap; }
+.tnc-config-block.as-subtab .tnc-save-card > p { margin: 0; flex: 1 1 auto; font-size: 12px; color: var(--muted); }
+@media (max-width: 760px) { .tnc-config-block.as-subtab .tnc-save-card > p { display: none; } }
+html[data-theme="light"] .tnc-config-block.as-subtab .tnc-save-card { background: rgba(255,255,255,.97); }
+.header-quit-button { white-space: nowrap; }

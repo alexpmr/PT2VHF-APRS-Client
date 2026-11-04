@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import os
 import platform
 import tarfile
 from pathlib import Path
@@ -46,7 +47,8 @@ def test_arm64_tar_upgrade_extracts_matching_architecture(tmp_path, monkeypatch)
     result = updater._prepare_linux_tar({"path": str(archive), "version": "1.15.6"})
     assert result.name == target
     assert result.read_bytes() == payload
-    assert result.stat().st_mode & 0o111
+    if os.name != "nt":  # v1.15.7: Windows não tem bit de execução (falhava no CI windows-x64)
+        assert result.stat().st_mode & 0o111
 
 
 def test_arm64_tar_upgrade_does_not_silently_select_x86(tmp_path, monkeypatch):

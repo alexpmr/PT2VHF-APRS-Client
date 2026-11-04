@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v1.15.6
+# PT2VHF APRS Client - v1.15.7
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,17 +6,15 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 1.15.6
+## Downloads — versão 1.15.7 (publicação pendente)
 
-A v1.15.6 está publicada no [site oficial PT2VHF](https://www.pt2vhf.com/aprs).
-Disponíveis nove pacotes: instalador e portátil Windows x64/ARM64, Linux AppImage/.deb/.tar.gz e macOS Intel/Apple Silicon.
+A v1.15.7 será distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 e Raspberry Pi ARM64 (AppImage/.deb/.tar.gz) e macOS Intel/Apple Silicon.
+O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) passa a oferecer a v1.15.7 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
 
-Em 01/11/2026, tamanho e SHA-256 de todos os nove downloads reais foram comparados com o manifesto publicado. O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece v1.15.6.
-
-[Build completo aprovado](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573176) · [Testes de UI em seis idiomas](https://github.com/alexpmr/PT2VHF-APRS-Client/actions/runs/41261573154) · [Release e artefatos](https://github.com/alexpmr/PT2VHF-APRS-Client/releases/tag/v1.15.6)
-
-A revisão integral das traduções (#157) continua aberta; esta versão entrega correções parciais, bandeiras e testes de regressão.
+A revisão integral das traduções (#157) continua aberta.
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v1.15.7** corrige a sub-aba **TNC / RF** que não rolava (KISS e Salvar inacessíveis), facilita o uso com **Dire Wolf/Digirig** no Raspberry Pi, traz **unidades imperiais**, altitude opcional, botão **Sair** no modo navegador e volta à última mensagem ao sair de **Não lidas**.
 
 A **v1.15.3** simplifica o aviso **Aplicativo atualizado**: só o botão **Fechar**; o boletim da versão nova segue como programado (desligável em Automações).
 

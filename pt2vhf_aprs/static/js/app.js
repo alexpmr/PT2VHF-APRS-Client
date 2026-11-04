@@ -278,6 +278,27 @@
     return Number.isFinite(n) ? `${n.toLocaleString(currentLocale(), {maximumFractionDigits: digits})}${suffix}` : '';
   }
 
+  // v1.15.7: unidades imperiais só na exibição (relato KD4E). Banco, API e pacotes
+  // APRS continuam métricos; a altitude do formulário é convertida no próprio campo.
+  const KM_TO_MI = 0.621371, M_TO_FT = 3.28084;
+  function imperialUnits() {
+    const select = document.getElementById('appUnits');
+    const value = select ? select.value : state.currentConfig?.units;
+    return value === 'imperial';
+  }
+  function fmtDistKm(km, digits = 1) {
+    if (km === null || km === undefined || km === '' || !Number.isFinite(Number(km))) return '';
+    return imperialUnits() ? fmtNum(Number(km) * KM_TO_MI, digits, ' mi') : fmtNum(km, digits, ' km');
+  }
+  function fmtSpeedKmh(kmh, digits = 1) {
+    if (kmh === null || kmh === undefined || kmh === '' || !Number.isFinite(Number(kmh))) return '';
+    return imperialUnits() ? fmtNum(Number(kmh) * KM_TO_MI, digits, ' mph') : fmtNum(kmh, digits, ' km/h');
+  }
+  function fmtAltM(m, digits = 1) {
+    if (m === null || m === undefined || m === '' || !Number.isFinite(Number(m))) return '';
+    return imperialUnits() ? fmtNum(Number(m) * M_TO_FT, 0, ' ft') : fmtNum(m, digits, ' m');
+  }
+
   async function api(url, options = {}) {
     const requestOptions = { ...options };
     const timeoutMs = Number(requestOptions.timeoutMs ?? 10000);
@@ -3563,9 +3584,9 @@
         [ui('Início', 'Start'), fmtDate(first.timestamp)],
         [ui('Fim', 'End'), fmtDate(last.timestamp)],
         [ui('Duração', 'Duration'), mapHoverDuration(durationMs)],
-        [ui('Distância', 'Distance'), `${distanceKm.toFixed(distanceKm >= 100 ? 1 : 2)} km`],
-        [ui('Velocidade média', 'Average speed'), Number.isFinite(averageSpeed) ? `${averageSpeed.toFixed(1)} km/h` : '—'],
-        [ui('Velocidade máxima', 'Maximum speed'), Number.isFinite(maxSpeed) ? `${maxSpeed.toFixed(1)} km/h` : '—'],
+        [ui('Distância', 'Distance'), fmtDistKm(distanceKm, distanceKm >= 100 ? 1 : 2)],
+        [ui('Velocidade média', 'Average speed'), Number.isFinite(averageSpeed) ? fmtSpeedKmh(averageSpeed, 1) : '—'],
+        [ui('Velocidade máxima', 'Maximum speed'), Number.isFinite(maxSpeed) ? fmtSpeedKmh(maxSpeed, 1) : '—'],
         [ui('Posições', 'Positions'), String(ordered.length)],
         [ui('Primeira posição', 'First position'), firstCoord],
         [ui('Última posição', 'Last position'), lastCoord],
@@ -3588,6 +3609,7 @@
   function formatRfDistanceKm(value) {
     const km = Number(value);
     if (!Number.isFinite(km)) return '—';
+    if (imperialUnits()) return km * KM_TO_MI < 0.1 ? fmtNum(km * 1000 * M_TO_FT, 0, ' ft') : fmtDistKm(km, km >= 100 ? 1 : 2);
     if (km < 1) return String(Math.max(1, Math.round(km * 1000))) + ' m';
     return km.toFixed(km >= 100 ? 1 : 2) + ' km';
   }
@@ -4786,9 +4808,9 @@
         <strong>Indicativo</strong><span translate="no">${escapeHtml(s.callsign)}</span>
         <strong>${ui('Última recepção', 'Last heard')}</strong><span>${lastHeardMarkup}</span>
         <strong>Posição</strong><span>${fmtNum(s.latitude, 6)}, ${fmtNum(s.longitude, 6)}</span>
-        <strong>Velocidade</strong><span>${fmtNum(s.speed, 1, ' km/h')}</span>
+        <strong>Velocidade</strong><span>${fmtSpeedKmh(s.speed, 1)}</span>
         <strong>Curso</strong><span>${fmtNum(s.course, 0, '°')}</span>
-        <strong>Altitude</strong><span>${fmtNum(s.altitude, 1, ' m')}</span>
+        <strong>Altitude</strong><span>${fmtAltM(s.altitude, 1)}</span>
         <strong>Informação</strong><span translate="no">${escapeHtml(s.info || '')}</span>
         <strong>Via</strong><span translate="no">${escapeHtml(path)}</span>
         ${s.digital_origin ? `<strong>${ui('Origem', 'Source')}</strong><span class="station-digital-origin">${escapeHtml(ui('via ' + s.digital_origin + ' (gateway para o APRS-IS, sem RF APRS)', 'via ' + s.digital_origin + ' (gateway to APRS-IS, no APRS RF)'))}</span>` : ''}
@@ -4980,7 +5002,7 @@
     const bearing = objectBearingDegrees(own, object);
     if (distance > 0 && Number.isFinite(bearing)) {
       add(ui('Distância / direção', 'Distance / bearing'),
-        `${distance.toFixed(distance >= 100 ? 1 : 2)} km · ${bearing.toFixed(0)}° ${objectCardinal(bearing)}`);
+        `${fmtDistKm(distance, distance >= 100 ? 1 : 2)} · ${bearing.toFixed(0)}° ${objectCardinal(bearing)}`);
     }
 
     const altitude = number(object.altitude);
@@ -5001,10 +5023,10 @@
         inactive: ui('Inativo / encerrado', 'Inactive / ended'),
       };
       add(ui('Estado do voo', 'Flight status'), flightLabels[String(details.flight_state || '')] || '', true);
-      if (altitude !== null) add(ui('Altitude atual', 'Current altitude'), `${fmtNum(altitude, 1)} m`, true);
-      if (maxAltitude !== null) add(ui('Altitude máxima observada', 'Maximum observed altitude'), `${fmtNum(maxAltitude, 1)} m`);
+      if (altitude !== null) add(ui('Altitude atual', 'Current altitude'), fmtAltM(altitude, 1), true);
+      if (maxAltitude !== null) add(ui('Altitude máxima observada', 'Maximum observed altitude'), fmtAltM(maxAltitude, 1));
       if (verticalSpeed !== null) add(ui('Velocidade vertical', 'Vertical speed'), `${fmtNum(verticalSpeed, 2)} m/s`, true);
-      if (speed !== null) add(ui('Velocidade horizontal', 'Horizontal speed'), `${fmtNum(speed, 1)} km/h`);
+      if (speed !== null) add(ui('Velocidade horizontal', 'Horizontal speed'), fmtSpeedKmh(speed, 1));
       if (course !== null) add(ui('Curso', 'Course'), `${fmtNum(course, 0)}°`);
       if (frequency !== null) add(ui('Frequência', 'Frequency'), `${fmtNum(frequency, 4)} MHz`);
       if (temp !== null) add(ui('Temperatura', 'Temperature'), `${fmtNum(temp, 1)} °C`);
@@ -5019,11 +5041,11 @@
       const windDir = number(details.wind_direction_deg);
       const rain1h = number(details.rain_1h_mm);
       const rain24h = number(details.rain_24h_mm);
-      if (wind !== null) add(ui('Vento', 'Wind'), `${fmtNum(wind, 1)} km/h${windDir !== null ? ` · ${fmtNum(windDir, 0)}°` : ''}`, true);
-      if (gust !== null) add(ui('Rajada', 'Wind gust'), `${fmtNum(gust, 1)} km/h`);
+      if (wind !== null) add(ui('Vento', 'Wind'), `${fmtSpeedKmh(wind, 1)}${windDir !== null ? ` · ${fmtNum(windDir, 0)}°` : ''}`, true);
+      if (gust !== null) add(ui('Rajada', 'Wind gust'), fmtSpeedKmh(gust, 1));
       if (rain1h !== null) add(ui('Chuva 1 h', 'Rain 1 h'), `${fmtNum(rain1h, 1)} mm`);
       if (rain24h !== null) add(ui('Chuva 24 h', 'Rain 24 h'), `${fmtNum(rain24h, 1)} mm`);
-      if (altitude !== null) add(ui('Altitude', 'Altitude'), `${fmtNum(altitude, 1)} m`);
+      if (altitude !== null) add(ui('Altitude', 'Altitude'), fmtAltM(altitude, 1));
     } else if (subtype === 'ais') {
       add(ui('Nome da embarcação', 'Vessel name'), details.vessel_name || object.name || '', true);
       add('MMSI', details.mmsi || '');
@@ -5057,8 +5079,8 @@
       const tone = number(details.tone_hz);
       if (offset !== null) add('Offset', `${fmtNum(offset, 1)} kHz`);
       if (tone !== null) add('CTCSS', `${fmtNum(tone, 1)} Hz`);
-      if (altitude !== null) add(ui('Altitude', 'Altitude'), `${fmtNum(altitude, 1)} m`);
-      if (speed !== null) add(ui('Velocidade', 'Speed'), `${fmtNum(speed, 1)} km/h`);
+      if (altitude !== null) add(ui('Altitude', 'Altitude'), fmtAltM(altitude, 1));
+      if (speed !== null) add(ui('Velocidade', 'Speed'), fmtSpeedKmh(speed, 1));
       if (course !== null) add(ui('Curso', 'Course'), `${fmtNum(course, 0)}°`);
       if (temp !== null) add(ui('Temperatura', 'Temperature'), `${fmtNum(temp, 1)} °C`);
       if (humidity !== null) add(ui('Umidade', 'Humidity'), `${fmtNum(humidity, 0)} %`);
@@ -5183,7 +5205,7 @@
     const course = latest?.course ?? snapshot.course;
     const lastHeard = latest?.timestamp || snapshot.last_heard || snapshot.timestamp || '';
     state.trackFollowStation = { ...snapshot, callsign: snapshot.callsign || state.trackFollowCallsign, speed, course, last_heard: lastHeard };
-    const speedText = Number.isFinite(Number(speed)) ? fmtNum(speed, 1, ' km/h') : '—';
+    const speedText = Number.isFinite(Number(speed)) ? fmtSpeedKmh(speed, 1) : '—';
     const courseText = Number.isFinite(Number(course)) ? fmtNum(course, 0, '°') : '—';
     const lastText = formatRelativeLastHeard(lastHeard) || '—';
     const callNode = panel.querySelector('[data-follow-callsign]');
@@ -6998,7 +7020,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     updateSortIndicators('messagesTable', spec);
   }
 
-  const loadMessagesDebounced = debounce(loadMessages, 250);
+  const loadMessagesDebounced = debounce(() => loadMessages({ scrollToNewest: true }), 250);
   $('#messageFilter').addEventListener('input', loadMessagesDebounced);
 
   function readMessageContentFilters() {
@@ -7288,10 +7310,23 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     btn.textContent = state.unreadMessagesOnly ? ui('✓ Não lidas', '✓ Unread') : ui('Não lidas', 'Unread');
   }
 
+  // v1.15.7 (contribuição de usuário): ao mudar o filtro, mostrar a mensagem mais recente,
+  // como ao abrir a aba — antes a lista voltava para a mais antiga.
+  function scrollMessagesToNewest() {
+    const viewport = $('.messages-table-wrap');
+    if (!state.groupMessages && viewport) {
+      const newestAtBottom = !(state.sort.messages.key === 'timestamp' && state.sort.messages.dir === 'desc');
+      viewport.scrollTop = newestAtBottom ? viewport.scrollHeight : 0;
+    }
+    const thread = $('#conversationMessages');
+    if (state.groupMessages && thread) thread.scrollTop = thread.scrollHeight;
+  }
+
   $('#unreadMessagesButton')?.addEventListener('click', () => {
     state.unreadMessagesOnly = !state.unreadMessagesOnly;
     updateUnreadMessagesButton();
     renderMessages();
+    requestAnimationFrame(scrollMessagesToNewest);
   });
 
   $('#clearMessagesButton')?.addEventListener('click', async () => {
@@ -8208,10 +8243,10 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         <td>${favoriteStarHtml(s.callsign)} ${escapeHtml(s.callsign)} ${caution}</td>
         <td class="station-symbol-type">${aprsSymbolHtml(s.symbol_table || '/', s.symbol || '>', 24)} <span>${escapeHtml(s.symbol_type)}</span></td>
         <td class="station-last-heard">${escapeHtml(fmtDate(s.last_heard))}</td>
-        <td>${fmtNum(s.distance_km, 1, ' km')}</td>
-        <td>${fmtNum(s.speed, 1, ' km/h')}</td>
+        <td>${fmtDistKm(s.distance_km, 1)}</td>
+        <td>${fmtSpeedKmh(s.speed, 1)}</td>
         <td>${fmtNum(s.course, 0, '°')}</td>
-        <td>${fmtNum(s.altitude, 1, ' m')}</td>
+        <td>${fmtAltM(s.altitude, 1)}</td>
         <td translate="no">${escapeHtml(s.info || '')}</td>
         <td class="station-list-actions"><button type="button" class="btn secondary station-list-message-button" data-callsign="${escapeHtml(s.callsign)}"${disabled}>${escapeHtml(ui('Mensagem', 'Message'))}</button></td>
       </tr>`;
@@ -8874,6 +8909,23 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   $('#sendBeaconButton')?.addEventListener('click', () => { void sendManualBeacon(); });
   $('#headerSendBeaconButton')?.addEventListener('click', () => { void sendManualBeacon(); });
+
+  // v1.15.7: no navegador (Linux sem GTK/Qt, ou "Abrir no navegador") não há janela para
+  // fechar o programa; o botão Sair encerra o servidor local. Só aparece no próprio computador.
+  (() => {
+    const quit = $('#headerQuitButton');
+    const local = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
+    if (!quit || !local) return;
+    setTimeout(() => { if (!window.pywebview) quit.classList.remove('hidden'); }, 1500);
+    quit.addEventListener('click', async () => {
+      if (!window.confirm(ui('Encerrar o PT2VHF APRS Client? A conexão APRS-IS e o TNC serão fechados.',
+                             'Quit PT2VHF APRS Client? The APRS-IS connection and the TNC will be closed.'))) return;
+      try {
+        await api('/api/app/quit', { method: 'POST' });
+        document.body.innerHTML = `<p style="padding:40px;font:16px system-ui">${escapeHtml(ui('PT2VHF APRS Client encerrado. Pode fechar esta aba.', 'PT2VHF APRS Client has quit. You can close this tab.'))}</p>`;
+      } catch (err) { toast(String(err?.message || err), 'error'); }
+    });
+  })();
 
   $('#configImportFile').addEventListener('change', async e => {
     const file = e.target.files[0];
@@ -10191,7 +10243,30 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   $('#latitudeDecimal')?.addEventListener('change', () => { syncDmsFromDecimal(); syncMaidenheadFromDecimal(); });
   $('#longitudeDecimal')?.addEventListener('change', () => { syncDmsFromDecimal(); syncMaidenheadFromDecimal(); });
 
+  // v1.15.7: em unidades imperiais o operador digita pés; o campo "altitude" (metros)
+  // continua sendo o salvo, para não mudar banco, API nem o /A= do beacon.
+  function syncAltitudeUnitsField() {
+    const meters = $('#altitudeInput'), feet = $('#altitudeFeetInput');
+    if (!meters || !feet) return;
+    const imperial = imperialUnits();
+    meters.classList.toggle('hidden', imperial);
+    feet.classList.toggle('hidden', !imperial);
+    const label = $('#altitudeLabelText');
+    if (label) label.textContent = imperial ? ui('Altitude (pés)', 'Altitude (ft)') : ui('Altitude (m)', 'Altitude (m)');
+    if (document.activeElement === feet) return;
+    const value = String(meters.value || '').trim();
+    feet.value = value === '' || !Number.isFinite(Number(value)) ? '' : String(Math.round(Number(value) * M_TO_FT));
+  }
+  $('#altitudeFeetInput')?.addEventListener('input', () => {
+    const meters = $('#altitudeInput'), feet = $('#altitudeFeetInput');
+    const value = String(feet.value || '').trim();
+    meters.value = value === '' || !Number.isFinite(Number(value)) ? '' : (Number(value) / M_TO_FT).toFixed(1);
+    meters.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  $('#appUnits')?.addEventListener('change', () => { syncAltitudeUnitsField(); });
+
   function updateAltitudeSourceStatus(source, altitude) {
+    syncAltitudeUnitsField();
     const status = $('#altitudeSourceStatus');
     const field = $('#altitudeField');
     const value = Number(altitude);

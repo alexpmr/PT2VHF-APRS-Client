@@ -1,9 +1,8 @@
-name: Build Raspberry Pi Linux ARM64 v1.15.6
+name: Build Raspberry Pi Linux ARM64
 
 on:
   push:
     branches:
-      - release/v1.15.6-linux-arm64-pi
       - main
     paths:
       - .github/workflows/build-linux-arm64-raspberry.yml
@@ -15,6 +14,7 @@ on:
       - tests/test_core.py
       - tests/test_download_stats.py
       - docs/INSTALL_LINUX.md
+      - VERSION
   workflow_dispatch:
 
 permissions:
@@ -23,7 +23,7 @@ permissions:
 jobs:
   raspberry-pi-arm64:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,7 +35,8 @@ jobs:
           set -euo pipefail
           uname -m
           test "$(uname -m)" = "aarch64"
-          python tools/apply_release_1_15_6.py
+          python tools/apply_release_1_15_7.py
+          echo "PT2VHF_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
       - name: Run regression tests and build three native ARM64 formats
         shell: bash
         run: |
@@ -62,13 +63,13 @@ jobs:
       - name: Upload Linux ARM64 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-Linux-arm64-v1.15.6
+          name: PT2VHF-APRS-Client-Linux-arm64-v${{ env.PT2VHF_VERSION }}
           if-no-files-found: error
           retention-days: 90
           path: |
-            dist-linux/PT2VHF_APRS_Client_arm64_v1.15.6.AppImage
-            dist-linux/pt2vhf-aprs-client_1.15.6_arm64.deb
-            dist-linux/PT2VHF_APRS_Client_Linux_arm64_v1.15.6.tar.gz
+            dist-linux/PT2VHF_APRS_Client_arm64_v${{ env.PT2VHF_VERSION }}.AppImage
+            dist-linux/pt2vhf-aprs-client_${{ env.PT2VHF_VERSION }}_arm64.deb
+            dist-linux/PT2VHF_APRS_Client_Linux_arm64_v${{ env.PT2VHF_VERSION }}.tar.gz
             dist-linux/SBOM-Linux.cdx.json
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt
       - name: Attach native packages to existing GitHub release
@@ -78,12 +79,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(tr -d '\r\n ' < VERSION)" = "1.15.6"
-          gh release view v1.15.6 --repo "$GITHUB_REPOSITORY"
-          gh release upload v1.15.6 \
-            dist-linux/PT2VHF_APRS_Client_arm64_v1.15.6.AppImage \
-            dist-linux/pt2vhf-aprs-client_1.15.6_arm64.deb \
-            dist-linux/PT2VHF_APRS_Client_Linux_arm64_v1.15.6.tar.gz \
+          v="$PT2VHF_VERSION"
+          # v1.15.7: a release é criada pelo build de produção, que roda em paralelo;
+          # espera até 50 min por ela em vez de falhar.
+          for i in $(seq 1 100); do
+            gh release view "v$v" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && break
+            sleep 30
+          done
+          gh release view "v$v" --repo "$GITHUB_REPOSITORY"
+          gh release upload "v$v" \
+            "dist-linux/PT2VHF_APRS_Client_arm64_v$v.AppImage" \
+            "dist-linux/pt2vhf-aprs-client_${v}_arm64.deb" \
+            "dist-linux/PT2VHF_APRS_Client_Linux_arm64_v$v.tar.gz" \
             --repo "$GITHUB_REPOSITORY" --clobber
-          gh release view v1.15.6 --repo "$GITHUB_REPOSITORY" --json assets \
-            --jq '.assets[].name' | grep -F 'PT2VHF_APRS_Client_arm64_v1.15.6.AppImage'
+          gh release view "v$v" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' | grep -F "PT2VHF_APRS_Client_arm64_v$v.AppImage"
