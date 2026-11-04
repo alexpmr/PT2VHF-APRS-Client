@@ -21,6 +21,32 @@ HEADERS = {"Accept": "application/json", "User-Agent": "PT2VHF-APRS-Client-Updat
 HASH_RE = re.compile(r"[0-9a-f]{64}")
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """v1.15.7: certificados do sistema + pacote certifi embutido.
+
+    No binário ARM64 (Raspberry Pi) a consulta falhava ("check unavailable"); o
+    OpenSSL embutido nem sempre acha a pasta de certificados da distribuição.
+    """
+    try:
+        context = ssl.create_default_context()
+    except Exception:
+        # Repositório de certificados do sistema indisponível: segue só com certifi,
+        # sempre com verificação de certificado e de nome do servidor.
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = True
+        context.verify_mode = ssl.CERT_REQUIRED
+    try:
+        import certifi
+        context.load_verify_locations(cafile=certifi.where())
+    except Exception:
+        pass
+    return context
+
+
+def https_handler() -> urllib.request.HTTPSHandler:
+    return urllib.request.HTTPSHandler(context=_ssl_context())
+
+
 class ReleaseLookupError(RuntimeError):
     def __init__(self, code: str, detail: str):
         self.code = code
@@ -95,7 +121,7 @@ def validate_release(data: Any) -> dict[str, Any]:
 
 def _python_api(timeout: float = 7.0) -> dict[str, Any]:
     req = urllib.request.Request(API_URL, headers=HEADERS)
-    with urllib.request.build_opener(NoRedirect()).open(req, timeout=timeout) as res:
+    with urllib.request.build_opener(NoRedirect(), https_handler()).open(req, timeout=timeout) as res:
         if res.geturl() != API_URL:
             raise ReleaseLookupError("redirect", "Endereço inesperado de atualização.")
         raw = res.read(2_000_001)

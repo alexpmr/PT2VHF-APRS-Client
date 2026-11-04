@@ -9,7 +9,8 @@
       // An external update replaces the source; never resurrect a stale status.
       const source = previous && current === previous.output ? previous.source : current;
       const key = source.trim();
-      const value = lookup(key);
+      let value = lookup(key);
+      if (value == null && /\s\s|\n/.test(key)) value = lookup(key.replace(/\s+/g, ' '));  // v1.15.7: texto quebrado em linhas no HTML
       const output = value == null ? source : source.slice(0, source.length - source.trimStart().length) + value + source.slice(source.trimEnd().length);
       return { source, output };
     }

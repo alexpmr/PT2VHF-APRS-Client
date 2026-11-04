@@ -1239,6 +1239,21 @@ def create_app() -> Flask:
             "ports": tnc_service.available_ports(force=force, full_scan=not quick),
         })
 
+    @app.post("/api/app/quit")
+    def api_app_quit():
+        # v1.15.7: botão Sair no modo navegador (Linux sem GTK/Qt, relato KD4E).
+        # Só a própria máquina pode encerrar; acesso pela rede local não.
+        if str(request.remote_addr or "") not in {"127.0.0.1", "::1", "localhost"}:
+            return jsonify({"ok": False, "error": "Encerrar só é permitido no próprio computador."}), 403
+        diag.log_event("app_quit_requested", source="web_ui")
+        updater._request_exit_after(0.6)
+        return jsonify({"ok": True})
+
+    @app.get("/api/tnc/detect-software")
+    def api_tnc_detect_software():
+        from .tnc_service import detect_soft_tnc
+        return jsonify({"ok": True, "found": detect_soft_tnc()})
+
     @app.post("/api/tnc/connect")
     def api_tnc_connect():
         try:

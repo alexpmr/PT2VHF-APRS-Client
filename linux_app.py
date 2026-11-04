@@ -208,6 +208,10 @@ def _run_integrated_window() -> int:
         import webview
     except Exception:
         return _browser_loop()
+    # v1.15.7: sem GTK/Qt o pywebview imprimia tracebacks que pareciam erro (relato KD4E);
+    # o aviso abaixo, em uma linha, já explica o uso do navegador.
+    import logging
+    logging.getLogger("pywebview").setLevel(logging.CRITICAL)
 
     try:
         _window = webview.create_window(
@@ -231,10 +235,17 @@ def _run_integrated_window() -> int:
         return 0
     except Exception as exc:
         print(
-            "A janela integrada não pôde ser iniciada; usando o navegador local. "
-            f"Detalhes: {exc}",
+            f"Janela integrada indisponível (GTK/Qt ausente); interface aberta no navegador: {URL} — "
+            "para encerrar, use o botão Sair ou Ctrl+C. / Integrated window unavailable (no GTK/Qt); "
+            f"opened in the web browser: {URL} — to quit, use the Exit button or Ctrl+C.",
             file=sys.stderr,
         )
+        diag_detail = str(exc)
+        try:
+            from pt2vhf_aprs import diagnostics as diag
+            diag.log_event("integrated_window_unavailable", error=diag_detail)
+        except Exception:
+            pass
         return _browser_loop()
 
 

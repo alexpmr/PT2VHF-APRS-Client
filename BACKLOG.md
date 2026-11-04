@@ -1,4 +1,12 @@
-## BACKLOG P1 — Raspberry Pi / Linux ARM64 (v1.15.6): relato de usuário KD4E (04/11/2026)
+## RESOLVIDO (v1.15.7; teste no Pi do usuário pendente) — Raspberry Pi / Linux ARM64 (v1.15.6): relato de usuário KD4E (04/11/2026)
+
+- **Entregue na v1.15.7:** (1) rolagem da aba Configuração inteira, Salvar TNC / RF fixo no rodapé — conferido com
+  navegador nas 8 sub-abas; (2) botão **Detectar Dire Wolf** (`/api/tnc/detect-software`), aviso de Digirig/CP210x
+  e mensagem do grupo `dialout`; (3) pywebview sem traceback + botão **Sair** (`/api/app/quit`, só local);
+  (4) `certifi` + certificados do sistema no atualizador (causa no Pi não confirmada sem o texto do erro);
+  (5) Configuração, cabeçalho e abas principais traduzidos em EN/ES/FR/DE/IT (≈120 textos) — Ajuda segue no #157;
+  (6) unidades imperiais e altitude opcional; (7) guia Linux (apt, Dire Wolf, dialout).
+
 
 Relato com foto (Pi + Digirig Lite + Yaesu FT-5100M, testado com Dire Wolf e YAAC; .deb e AppImage arm64).
 Análise feita no código da `main` (v1.15.6):
@@ -27,7 +35,9 @@ Análise feita no código da `main` (v1.15.6):
    `sudo apt install ./arquivo.deb` a partir de uma pasta que o usuário `_apt` não lê; não é falha. Documentar no
    INSTALL_LINUX (sugerir `/tmp` ou `dpkg -i`).
 
-## BACKLOG — Mensagens: ao sair de "Não lidas", voltar na última mensagem recebida (03/11/2026)
+## RESOLVIDO (v1.15.7) — Mensagens: ao sair de "Não lidas", voltar na última mensagem recebida (03/11/2026)
+
+- **Entregue:** `scrollMessagesToNewest()` ao alternar Não lidas e ao mudar o filtro de texto (respeita a ordenação).
 
 - **Relato (contribuição de usuário):** na aba Mensagens, ao usar o filtro **Não lidas** e depois retornar à lista
   completa, a tela fica posicionada na **primeira** mensagem geral recebida (a mais antiga), e não na **última**.
@@ -35,7 +45,9 @@ Análise feita no código da `main` (v1.15.6):
   a aba; mesmo comportamento ao limpar o filtro de texto.
 - **Teste:** com várias mensagens, ligar e desligar "Não lidas" e conferir que a última recebida fica visível.
 
-## BACKLOG — Configuração: botão Salvar em cada sub-aba (03/11/2026)
+## RESOLVIDO (v1.15.7) — Configuração: botão Salvar em cada sub-aba (03/11/2026)
+
+- **Entregue:** todas as 8 sub-abas têm Salvar visível: Estação/APRS-IS/Mapa/Aplicativo/Banco/Backup com o rodapé fixo "Salvar configuração"; TNC / RF com "Salvar TNC / RF" fixo no rodapé; Integrações, Banco (política) e Backup (alertas) com os botões próprios, agora alcançáveis pela rolagem.
 
 - **Pedido:** na aba Configuração, ter um botão **Salvar** em cada sub-aba (Estação, APRS-IS, TNC / RF, Mapa,
   Aplicativo, Integrações, Banco de dados, Backup), em vez de depender de um único "Salvar configuração".

@@ -366,8 +366,8 @@ def test_new_install_defaults_and_required_station_fields():
                 "longitude": -47.9,
                 "altitude": "",
             })
-            with pytest.raises(ValueError, match="Altitude"):
-                db.validate_required_station_config(partial)
+            # v1.15.7: altitude é opcional (beacon sai sem /A=).
+            db.validate_required_station_config(partial)
 
             saved = db.save_config({
                 "callsign": "PY2ABC",

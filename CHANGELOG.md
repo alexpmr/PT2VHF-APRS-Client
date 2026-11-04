@@ -1,3 +1,15 @@
+## 1.15.7 - 2026-11-04
+
+- **Corrigido: sub-aba TNC / RF não rolava** (relato de usuário no Raspberry Pi). Desde as sub-abas da Configuração (v1.15.1), TNC / RF, Integrações e parte de Banco de dados ficavam cortadas: a conexão KISS, a segurança de TX e o botão **Salvar TNC / RF** eram inacessíveis. A rolagem passa a ser da aba inteira; o **Salvar TNC / RF** fica fixo no rodapé, como o **Salvar configuração**.
+- **Dire Wolf / Digirig:** botão **Detectar Dire Wolf** (procura KISS TCP 127.0.0.1:8001 e AGWPE 8000 e preenche o transporte). Interfaces de áudio como o Digirig não são TNC — a serial delas só aciona o PTT; o aviso explica isso ao escolher a porta. No Linux, falta de permissão na porta serial agora explica o grupo `dialout`.
+- **Unidades imperiais:** Configuração → Aplicativo → Unidades (métrico ou imperial: pés, milhas, mph) para altitude, distâncias e velocidades na tela; banco, API e pacotes APRS continuam métricos.
+- **Altitude opcional:** não é mais exigida para conectar; sem ela o beacon sai sem `/A=`.
+- **Linux/Raspberry Pi:** sem GTK/Qt, o terminal mostra uma linha explicando o modo navegador, em vez de tracebacks do pywebview; novo botão **Sair** no topo no modo navegador (só no próprio computador).
+- **Atualização:** a consulta ao site usa também o pacote de certificados embutido (certifi), para o "check unavailable" visto no Raspberry Pi.
+- **Mensagens:** ao desligar **Não lidas** ou mudar o filtro, a lista volta à mensagem mais recente (contribuição de usuário).
+- Guia Linux: aviso do apt "unsandboxed as root" é esperado; passos para Dire Wolf e grupo `dialout`.
+- **Traduções (#157, parcial):** Configuração (todas as sub-abas), cabeçalho e abas Mapa, Mensagens, Estações, Estatísticas e Automações sem textos em português em EN/ES/FR/DE/IT (≈120 textos); textos quebrados em várias linhas no HTML passam a ser reconhecidos. A aba Ajuda continua pendente.
+
 ## 1.15.6 - 2026-10-31
 
 - Corrigida a tradução de textos e atributos atualizados depois da abertura da interface, sem restaurar estados antigos.

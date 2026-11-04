@@ -518,6 +518,32 @@
     updateSerialProfileHint();
   }
 
+  // v1.15.7: Dire Wolf/soundmodem nas portas padrão (KISS TCP 8001, AGWPE 8000).
+  async function detectSoftTnc() {
+    const out = $('#tncSoftTncHint');
+    try {
+      const data = await requestJson('/api/tnc/detect-software');
+      const found = Array.isArray(data.found) ? data.found : [];
+      const kiss = found.find(item => item.transport === 'tcp');
+      const agw = found.find(item => item.transport === 'agwpe');
+      if (kiss) {
+        field('tncTransport').value = 'tcp';
+        field('tncTcpHost').value = kiss.host; field('tncTcpPort').value = String(kiss.port);
+      } else if (agw) {
+        field('tncTransport').value = 'agwpe';
+        field('tncAgwpeHost').value = agw.host; field('tncAgwpePort').value = String(agw.port);
+      }
+      syncTransportFields();
+      const pick = kiss || agw;
+      if (out) out.textContent = pick
+        ? tr('Dire Wolf encontrado em') + ` ${pick.host}:${pick.port} (${pick.label}). ` + tr('Clique em Salvar TNC / RF e depois em Conectar TNC.')
+        : tr('Nenhum Dire Wolf respondeu em 127.0.0.1:8001 (KISS) nem 8000 (AGWPE). Inicie o Dire Wolf e tente de novo.');
+      showError('');
+    } catch (error) {
+      showError(tr('Não foi possível procurar o Dire Wolf:') + ' ' + error.message);
+    }
+  }
+
   function syncTransportFields() {
     const mode = val('tncTransport', 'tcp');
     const serialMode = mode === 'serial';
@@ -592,6 +618,11 @@
       hint.classList.remove('hidden');
       // Apenas sugere; NUNCA sobrescreve baud persistido ao enumerar a COM.
       return;
+    }
+    if (/DIGIRIG/i.test(equipment) || chipset==='CP210x' || /CP210/i.test(chipset)) {
+      // v1.15.7 (relato KD4E): Digirig/CP210x costuma ser só a serial de PTT de uma placa de som.
+      hint.textContent=tr('Se esta porta for de um Digirig ou outra placa de som, ela só aciona o PTT: o modem é o Dire Wolf. Use KISS TCP 127.0.0.1:8001 (botão Detectar Dire Wolf).');
+      hint.classList.remove('hidden');return;
     }
     if (chipset==='CH9102') {
       hint.textContent=tr('Interface CH9102 detectada. Se esta porta pertencer a um Radtel RT-950 Pro em TNC UART, configure 115200 bps e habilite TNC/KISS no rádio.');
@@ -908,6 +939,7 @@
     });
     field('tncSerialProtocol')?.addEventListener('change',()=>updateSerialProfileHint());
     $('#tncRefreshPorts')?.addEventListener('click', () => loadPorts({force:true}));
+    $('#tncDetectSoftTnc')?.addEventListener('click', () => { void detectSoftTnc(); });
     $('#tncRescanDevices')?.addEventListener('click', () => loadPorts({force:true}));
     $('#tncSerialDevicesBody')?.addEventListener('click', event => {
       const button = event.target.closest?.('[data-tnc-use-port]');

@@ -367,7 +367,7 @@ def _record_site_download_count() -> None:
         },
     )
     try:
-        with urllib.request.build_opener(release_check.NoRedirect()).open(request, timeout=3) as response:
+        with urllib.request.build_opener(release_check.NoRedirect(), release_check.https_handler()).open(request, timeout=3) as response:
             if response.geturl() != url or response.status != 204:
                 raise RuntimeError("Contador do site não confirmou o registro.")
     except Exception as exc:
@@ -459,7 +459,7 @@ def download_asset(version: str, asset: dict[str, Any]) -> dict[str, Any]:
             headers={"User-Agent": f"PT2VHF-APRS-Client/{__version__}"},
         )
         try:
-            with urllib.request.build_opener(release_check.NoRedirect()).open(req, timeout=45) as response, temp.open("wb") as out:
+            with urllib.request.build_opener(release_check.NoRedirect(), release_check.https_handler()).open(req, timeout=45) as response, temp.open("wb") as out:
                 if response.geturl() != url:
                     raise ValueError("Redirecionamento do download não permitido.")
                 while True:

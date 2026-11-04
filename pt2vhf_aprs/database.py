@@ -184,6 +184,7 @@ DEFAULT_CONFIG = {
     "resource_alert_sustain_seconds": 30,
     "resource_alert_cooldown_minutes": 10,
     "app_theme": "dark",
+    "units": "metric",  # v1.15.7: metric (m, km, km/h) ou imperial (ft, mi, mph); só exibição
     "messages_font_family": "system",
     "messages_font_size": 12,
     "messages_font_weight": "normal",
@@ -329,6 +330,7 @@ def _init_db_base() -> None:
                 resource_alert_sustain_seconds INTEGER NOT NULL DEFAULT 30,
                 resource_alert_cooldown_minutes INTEGER NOT NULL DEFAULT 10,
                 app_theme TEXT NOT NULL DEFAULT 'dark',
+                units TEXT NOT NULL DEFAULT 'metric',
                 messages_font_family TEXT NOT NULL DEFAULT 'system',
                 messages_font_size INTEGER NOT NULL DEFAULT 12,
                 messages_font_weight TEXT NOT NULL DEFAULT 'normal',
@@ -689,6 +691,8 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN resource_alert_cooldown_minutes INTEGER NOT NULL DEFAULT 10")
         if "app_theme" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN app_theme TEXT NOT NULL DEFAULT 'dark'")
+        if "units" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN units TEXT NOT NULL DEFAULT 'metric'")
         if "messages_font_family" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN messages_font_family TEXT NOT NULL DEFAULT 'system'")
         if "messages_font_size" not in config_columns:
@@ -822,8 +826,7 @@ def validate_required_station_config(config: dict[str, Any]) -> None:
         missing.append("Latitude")
     if config.get("longitude") in ("", None):
         missing.append("Longitude")
-    if config.get("altitude") in ("", None):
-        missing.append("Altitude")
+    # v1.15.7: altitude é opcional; sem ela o beacon sai sem /A= (relato KD4E).
 
     if missing:
         raise ValueError(
@@ -897,6 +900,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["resource_alert_sustain_seconds"] = int(merged["resource_alert_sustain_seconds"] or 30)
     merged["resource_alert_cooldown_minutes"] = int(merged["resource_alert_cooldown_minutes"] or 10)
     merged["app_theme"] = str(merged["app_theme"] or "dark").lower().strip()
+    merged["units"] = "imperial" if str(merged.get("units") or "").lower().strip() == "imperial" else "metric"
     merged["messages_font_family"] = str(merged["messages_font_family"] or "system").lower().strip()
     merged["messages_font_size"] = int(merged["messages_font_size"] or 12)
     merged["messages_font_weight"] = str(merged["messages_font_weight"] or "normal").lower().strip()

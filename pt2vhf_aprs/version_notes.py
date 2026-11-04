@@ -3,6 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.7": {
+        "title": "TNC / RF acessível e unidades imperiais",
+        "items": [
+            "A sub-aba TNC / RF volta a rolar; o botão Salvar TNC / RF fica sempre à vista.",
+            "Botão Detectar Dire Wolf; Digirig e outras placas de som usam o Dire Wolf como modem.",
+            "Unidades imperiais (pés, milhas, mph) em Configuração → Aplicativo; altitude passa a ser opcional.",
+            "Botão Sair no modo navegador e retorno à última mensagem ao sair de Não lidas.",
+        ],
+    },
     "1.15.6": {
         "title": "Tradução dinâmica e bandeiras",
         "items": [
