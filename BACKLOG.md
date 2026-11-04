@@ -1,3 +1,32 @@
+## BACKLOG P1 — Raspberry Pi / Linux ARM64 (v1.15.6): relato de usuário KD4E (04/11/2026)
+
+Relato com foto (Pi + Digirig Lite + Yaesu FT-5100M, testado com Dire Wolf e YAAC; .deb e AppImage arm64).
+Análise feita no código da `main` (v1.15.6):
+
+1. **CONFIRMADO — Sub-aba TNC / RF não rola (P1).** `#tab-config` tem `overflow: hidden` (v1.14.17) e só o
+   `#configForm` rola. Desde a v1.15.1 o `#tncConfigBlock` (`.as-subtab`) fica fora do `#configForm`, então fica
+   cortado: KISS connection, segurança de TX e o botão **Salvar TNC / RF** ficam inacessíveis. Reproduzido com
+   Playwright em 1280×720 (nenhum elemento rolável). Correção testada: `#tab-config > .as-subtab { height:
+   calc(100% - 78px); overflow-y: auto; }` (vale também para `#tncMonitorsBlock`). Teste de regressão: em cada
+   sub-aba, o último botão de salvar precisa ficar visível após rolar.
+2. **Hardware não identificado — Digirig não é TNC.** O Digirig Lite é interface de áudio + serial de PTT
+   (CP2102, USB 10C4:EA60); o modem é o **Dire Wolf**. O cliente deve se conectar ao Dire Wolf por **KISS TCP
+   127.0.0.1:8001** (padrão já existente) ou AGWPE 8000, não à porta serial do Digirig. Melhorias: detectar Dire
+   Wolf ouvindo em 8001/8000 e oferecer "Usar Dire Wolf"; ao listar um CP2102/Digirig, explicar que ele precisa do
+   Dire Wolf; no Linux, avisar quando a porta serial não abre por permissão (grupo `dialout`).
+3. **Janela integrada no Linux:** o terminal mostra traceback do pywebview ("GTK/QT cannot be loaded"); o app já
+   cai para o navegador e funciona, mas o traceback parece erro. Trocar por uma linha informativa (ou empacotar o
+   backend GTK). Sem janela própria, não há como **Sair** pela interface: incluir botão Sair/encerrar servidor.
+4. **"check unavailable" no cabeçalho do Pi:** a consulta a `update.php?product=aprs` falhou no aparelho (daqui
+   responde 1.15.6 com os 3 pacotes arm64). Pedir o texto do tooltip/diagnóstico; suspeita: TLS/CA no binário
+   ARM64 (sem `certifi`) ou rede. Incluir o código do erro no diagnóstico exportado.
+5. **Tradução incompleta em inglês:** já coberto pelo item P1 de revisão de traduções (#157).
+6. **Unidades imperiais:** opção de pés/milhas/mph (altitude, distâncias, velocidade) em Configuração → Aplicativo;
+   conferir se a altitude é tratada como obrigatória (o campo HTML não tem `required`; o relato diz que é).
+7. **Aviso do apt "Download is performed unsandboxed as root…":** esperado ao instalar `.deb` local com
+   `sudo apt install ./arquivo.deb` a partir de uma pasta que o usuário `_apt` não lê; não é falha. Documentar no
+   INSTALL_LINUX (sugerir `/tmp` ou `dpkg -i`).
+
 ## BACKLOG — Mensagens: ao sair de "Não lidas", voltar na última mensagem recebida (03/11/2026)
 
 - **Relato (contribuição de usuário):** na aba Mensagens, ao usar o filtro **Não lidas** e depois retornar à lista
