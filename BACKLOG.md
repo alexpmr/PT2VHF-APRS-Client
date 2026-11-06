@@ -1,3 +1,21 @@
+## BACKLOG — Mapa de calor: áreas pouco densas somem conforme o mapa fica mais denso (06/11/2026)
+
+- **Relato do mantenedor:** quanto mais denso o mapa de calor, mais as áreas pouco densas esmaecem, dando a
+  impressão de que a **cobertura RF está diminuindo** (quando na verdade só cresce).
+- **Causa provável no código (v1.15.7):**
+  1. `rf_coverage.list_points(hours, limit=4000)` ordena as células por contagem e devolve só as **4.000 mais
+     densas**; `web.py` chama sem `limit`. Quando o banco passa de 4.000 células, as de 1–2 observações (as bordas da
+     cobertura) são cortadas do mapa — a área coberta parece encolher a cada dia.
+  2. Visual: o peso é `0,25 + log1p(count)/6` e a cor vem da soma de alfas no canvas (`v142.js`); células isoladas
+     ficam azul-claro quase transparente ao lado das densas, ainda mais em zoom afastado.
+- **Esperado:** toda célula observada no período aparece (a cobertura nunca diminui por causa do volume de dados);
+  borda com intensidade mínima visível; densidade só muda a cor, não apaga as áreas fracas.
+- **Correção proposta:** não descartar células por limite fixo — agregar células por zoom/área visível (ou
+  devolver todas com payload compacto) em vez de cortar as menos densas; piso de intensidade/alfa para células com
+  1 observação; legenda/contagem de células exibidas vs. existentes no diagnóstico.
+- **Teste:** banco com mais de 4.000 células, sendo poucas muito densas e muitas com 1 observação: todas devem
+  estar no payload do mapa e visíveis; a área total desenhada não pode diminuir ao acrescentar observações.
+
 ## RESOLVIDO (v1.15.7; teste no Pi do usuário pendente) — Raspberry Pi / Linux ARM64 (v1.15.6): relato de usuário KD4E (04/11/2026)
 
 - **Entregue na v1.15.7:** (1) rolagem da aba Configuração inteira, Salvar TNC / RF fixo no rodapé — conferido com
