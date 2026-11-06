@@ -1001,12 +1001,19 @@
     } catch (_) { /* aviso opcional */ }
   }
 
-  // v1.14.62: mesmo aviso do PT2VHF Mesh Analyzer, uma vez por abertura do aplicativo.
+  // v1.14.62: aviso uma vez por abertura do aplicativo. v1.15.8: mesmo anúncio do PT2VHF Sat Tool,
+  // convidando a conhecer as demais ferramentas PT2VHF (título, texto, botão Fechar).
   const OFFICIAL_SITE_NOTICE = {
-    pt: ['Downloads no site oficial', 'A partir de agora, as novas versões e os instaladores do PT2VHF APRS Client serão distribuídos pelo site oficial.', 'Entendi'],
-    en: ['Downloads on the official website', 'From now on, new versions and installers of PT2VHF APRS Client will be distributed through the official website.', 'Got it'],
-    es: ['Descargas en el sitio web oficial', 'A partir de ahora, las nuevas versiones y los instaladores de PT2VHF APRS Client se distribuirán a través del sitio web oficial.', 'Entendido'],
-    fr: ['Téléchargements sur le site officiel', 'Désormais, les nouvelles versions et les installateurs de PT2VHF APRS Client seront distribués via le site officiel.', 'Compris'],
+    pt: ['Feito por radioamadores, para radioamadores', 'Obrigado por usar o PT2VHF APRS Client! Conheça também as outras aplicações gratuitas desenvolvidas para a comunidade: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android e mais.', 'Fechar'],
+    en: ['Made by radio amateurs, for radio amateurs', 'Thank you for using PT2VHF APRS Client! Check out our other free applications made for the community: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android and more.', 'Close'],
+    es: ['Hecho por radioaficionados, para radioaficionados', '¡Gracias por usar PT2VHF APRS Client! Conozca también las otras aplicaciones gratuitas desarrolladas para la comunidad: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android y más.', 'Cerrar'],
+    fr: ['Fait par des radioamateurs, pour les radioamateurs', 'Merci d’utiliser PT2VHF APRS Client ! Découvrez aussi les autres applications gratuites développées pour la communauté : Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android et plus encore.', 'Fermer'],
+    de: ['Von Funkamateuren für Funkamateure', 'Danke, dass Sie PT2VHF APRS Client verwenden! Entdecken Sie auch die anderen kostenlosen Anwendungen für die Community: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android und mehr.', 'Schließen'],
+    it: ['Fatto da radioamatori, per radioamatori', 'Grazie per usare PT2VHF APRS Client! Scopri anche le altre applicazioni gratuite sviluppate per la comunità: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android e altro.', 'Chiudi'],
+    ja: ['アマチュア無線家による、アマチュア無線家のために', 'PT2VHF APRS Client をご利用いただきありがとうございます。コミュニティ向けのほかの無料アプリもご覧ください：Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android など。', '閉じる'],
+    pl: ['Stworzone przez krótkofalowców dla krótkofalowców', 'Dziękujemy za korzystanie z PT2VHF APRS Client! Poznaj też inne darmowe aplikacje dla społeczności: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android i inne.', 'Zamknij'],
+    nl: ['Gemaakt door zendamateurs, voor zendamateurs', 'Bedankt voor het gebruik van PT2VHF APRS Client! Bekijk ook onze andere gratis toepassingen voor de gemeenschap: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android en meer.', 'Sluiten'],
+    zh: ['由业余无线电爱好者打造，为业余无线电爱好者服务', '感谢使用 PT2VHF APRS Client！也欢迎了解我们为社区开发的其他免费应用：Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android 等。', '关闭'],
   };
   let officialSiteNoticeShown = false;
   function showOfficialSiteNotice() {

@@ -1,4 +1,6 @@
-## BACKLOG — Aviso ao abrir igual ao do Sat Tool, divulgando as demais ferramentas (06/11/2026)
+## RESOLVIDO (v1.15.8) — Aviso ao abrir igual ao do Sat Tool, divulgando as demais ferramentas (06/11/2026)
+
+- **Entregue:** `#officialSiteNotice` com título, texto, link www.PT2VHF.com e Fechar do Sat Tool, nos 10 idiomas.
 
 - **Pedido:** usar ao abrir o mesmo anúncio do **PT2VHF Sat Tool** (v1.5.0, `sat_tool/app.py`,
   `show_official_site_notice`), que convida a conhecer as outras aplicações PT2VHF.
@@ -12,7 +14,9 @@
 - **Traduções:** título, texto, link e Fechar nos 10 idiomas (catálogo `i18n_live.js` para EN/ES/FR/DE/IT).
 - **Ajustar junto:** `tools/capture_manual_screenshots.py` e testes que fecham `#officialSiteNotice`.
 
-## BACKLOG — Mapa de calor: áreas pouco densas somem conforme o mapa fica mais denso (06/11/2026)
+## RESOLVIDO (v1.15.8) — Mapa de calor: áreas pouco densas somem conforme o mapa fica mais denso (06/11/2026)
+
+- **Entregue:** `rf_coverage.list_points` soma células vizinhas em grade mais grossa (`_coarsen`) até caber no limite, sem descartar nenhuma área; peso mínimo maior para 1 observação (`_weight`). Teste em `tests/test_v1158_heatmap_welcome.py`.
 
 - **Relato do mantenedor:** quanto mais denso o mapa de calor, mais as áreas pouco densas esmaecem, dando a
   impressão de que a **cobertura RF está diminuindo** (quando na verdade só cresce).

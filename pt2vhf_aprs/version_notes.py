@@ -3,6 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.8": {
+        "title": "Mapa de calor completo",
+        "items": [
+            "O mapa de calor mostra todas as áreas com recepção RF; as menos densas não somem mais com o crescimento do histórico.",
+            "Ao abrir, convite às demais ferramentas gratuitas PT2VHF, como no Sat Tool.",
+        ],
+    },
     "1.15.7": {
         "title": "TNC / RF acessível e unidades imperiais",
         "items": [
