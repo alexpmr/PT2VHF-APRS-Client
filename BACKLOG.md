@@ -1,3 +1,17 @@
+## BACKLOG — Aviso ao abrir igual ao do Sat Tool, divulgando as demais ferramentas (06/11/2026)
+
+- **Pedido:** usar ao abrir o mesmo anúncio do **PT2VHF Sat Tool** (v1.5.0, `sat_tool/app.py`,
+  `show_official_site_notice`), que convida a conhecer as outras aplicações PT2VHF.
+- **Referência (Sat Tool):** título **"Feito por radioamadores, para radioamadores"**; texto "Obrigado por usar o
+  PT2VHF Sat Tool! Conheça também as outras aplicações gratuitas desenvolvidas para a comunidade: APRS Client,
+  Prop Tool, Mesh Analyzer, Prog Tool e mais."; link **www.PT2VHF.com** (https://www.pt2vhf.com); só o botão **Fechar**.
+- **No APRS Client:** substituir o aviso atual "Downloads no site oficial" (`#officialSiteNotice`,
+  `showOfficialSiteNotice()` em `app.js`, uma vez por abertura) por esse anúncio, citando as outras ferramentas
+  (Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL e APRS Client for Android). Manter a ordem atual com o aviso
+  de novidades (um de cada vez) e o link abrindo no navegador externo.
+- **Traduções:** título, texto, link e Fechar nos 10 idiomas (catálogo `i18n_live.js` para EN/ES/FR/DE/IT).
+- **Ajustar junto:** `tools/capture_manual_screenshots.py` e testes que fecham `#officialSiteNotice`.
+
 ## BACKLOG — Mapa de calor: áreas pouco densas somem conforme o mapa fica mais denso (06/11/2026)
 
 - **Relato do mantenedor:** quanto mais denso o mapa de calor, mais as áreas pouco densas esmaecem, dando a
