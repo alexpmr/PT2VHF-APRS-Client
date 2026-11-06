@@ -1,3 +1,10 @@
+## 1.15.8 - 2026-11-06
+
+- **Corrigido: mapa de calor perdia as áreas pouco densas.** O mapa recebia só as 4.000 áreas com mais recepções; quando o histórico passava disso, as de 1–2 recepções — as bordas da cobertura — deixavam de ser desenhadas e a cobertura parecia diminuir. Agora áreas vizinhas são somadas numa grade maior até caber no limite, sem descartar nenhuma, e áreas com uma única recepção ficam mais visíveis.
+- **Aviso ao abrir igual ao do PT2VHF Sat Tool:** "Feito por radioamadores, para radioamadores", com convite às demais ferramentas gratuitas (Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android), link www.PT2VHF.com e botão Fechar, nos 10 idiomas.
+- Traduções: barra do mapa (Pesquisar, Caminhos possíveis, Ver, Camadas, Exportar JSON, Apresentação) em EN/ES/FR/DE/IT.
+- Build: o workflow separado do Raspberry Pi passa a ser só manual; o build de produção já gera e publica o ARM64 nativo.
+
 ## 1.15.7 - 2026-11-04
 
 - **Corrigido: sub-aba TNC / RF não rolava** (relato de usuário no Raspberry Pi). Desde as sub-abas da Configuração (v1.15.1), TNC / RF, Integrações e parte de Banco de dados ficavam cortadas: a conexão KISS, a segurança de TX e o botão **Salvar TNC / RF** eram inacessíveis. A rolagem passa a ser da aba inteira; o **Salvar TNC / RF** fica fixo no rodapé, como o **Salvar configuração**.

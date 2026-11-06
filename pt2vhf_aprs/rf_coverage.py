@@ -217,14 +217,60 @@ def list_points(hours: float = 0, limit: int = 4000) -> list[dict[str, Any]]:
             "latitude": round(float(row["lat_sum"]) / count, 6),
             "longitude": round(float(row["lon_sum"]) / count, 6),
             "tx": int(row["tx"] or 0), "rx": int(row["rx"] or 0), "count": count,
-            # 1 observação ~0,37; cresce de forma logarítmica até 1.
-            "weight": round(min(1.0, 0.25 + math.log1p(count) / 6.0), 3),
+            "weight": _weight(count),
             "evidence": "direct" if row["direct"] else "inferred",
             "callsigns": sorted(calls)[:MAX_CALLSIGNS_PER_CELL],
             "first_seen": row["first_seen"], "last_seen": row["last_seen"],
         })
+    limit = max(1, min(int(limit), 8000))
+    # v1.15.8: antes as células além do limite eram descartadas — sempre as de 1–2
+    # observações, as bordas da cobertura —, e o mapa parecia encolher conforme o
+    # histórico crescia. Agora células vizinhas são somadas numa grade mais grossa
+    # até caber no limite: toda área observada continua no mapa.
+    factor = 2
+    while len(points) > limit and factor <= 4096:
+        points = _coarsen(points, CELL_DEGREES * factor)
+        factor *= 2
     points.sort(key=lambda item: (item["count"], item["last_seen"]), reverse=True)
-    return points[:max(1, min(int(limit), 8000))]
+    return points[:limit]
+
+
+def _weight(count: int) -> float:
+    # v1.15.8: piso mais alto (1 observação ~0,59) para as bordas não sumirem ao
+    # lado das áreas densas; cresce de forma logarítmica até 1.
+    return round(min(1.0, 0.45 + math.log1p(count) / 5.0), 3)
+
+
+def _coarsen(points: list[dict[str, Any]], step: float) -> list[dict[str, Any]]:
+    """Soma pontos na grade `step` (graus), com centro ponderado pelas observações."""
+    merged: dict[tuple[int, int], dict[str, Any]] = {}
+    for point in points:
+        key = (math.floor(point["latitude"] / step), math.floor(point["longitude"] / step))
+        count = int(point["count"])
+        item = merged.get(key)
+        if item is None:
+            item = merged[key] = {**point, "callsigns": list(point["callsigns"]),
+                                  "_lat": point["latitude"] * count, "_lon": point["longitude"] * count}
+            continue
+        item["_lat"] += point["latitude"] * count
+        item["_lon"] += point["longitude"] * count
+        item["tx"] += point["tx"]; item["rx"] += point["rx"]; item["count"] += count
+        if point["evidence"] == "direct":
+            item["evidence"] = "direct"
+        for call in point["callsigns"]:
+            if call not in item["callsigns"] and len(item["callsigns"]) < MAX_CALLSIGNS_PER_CELL:
+                item["callsigns"].append(call)
+        item["first_seen"] = min(str(item["first_seen"] or ""), str(point["first_seen"] or "")) or None
+        item["last_seen"] = max(str(item["last_seen"] or ""), str(point["last_seen"] or "")) or None
+    result = []
+    for item in merged.values():
+        count = item["count"]
+        item["latitude"] = round(item.pop("_lat") / count, 6)
+        item["longitude"] = round(item.pop("_lon") / count, 6)
+        item["weight"] = _weight(count)
+        item["callsigns"] = sorted(item["callsigns"])
+        result.append(item)
+    return result
 
 
 DIGITAL_VOICE_PURGE_KEY = "v1.15.1-digital-voice-not-rf"

@@ -1,20 +1,9 @@
 name: Build Raspberry Pi Linux ARM64
 
+# v1.15.8: só manual. O build de produção (build-production-current.yml) já compila
+# o ARM64 nativo e publica os pacotes na release; rodar este também no push à main
+# disputava o upload do mesmo .deb e falhava (v1.15.7).
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/build-linux-arm64-raspberry.yml
-      - linux/build_linux.sh
-      - linux/PT2VHF_APRS_Client_Linux.spec
-      - linux_app.py
-      - pt2vhf_aprs/updater.py
-      - tests/test_linux_arm64_distribution.py
-      - tests/test_core.py
-      - tests/test_download_stats.py
-      - docs/INSTALL_LINUX.md
-      - VERSION
   workflow_dispatch:
 
 permissions:
@@ -35,7 +24,7 @@ jobs:
           set -euo pipefail
           uname -m
           test "$(uname -m)" = "aarch64"
-          python tools/apply_release_1_15_7.py
+          python tools/apply_release_1_15_8.py
           echo "PT2VHF_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
       - name: Run regression tests and build three native ARM64 formats
         shell: bash
