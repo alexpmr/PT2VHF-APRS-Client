@@ -1,3 +1,21 @@
+## BACKLOG — Perfil Kenwood TS-2000 (TNC interno) no TNC / RF (10/11/2026)
+
+- **Pedido (dúvida de usuário, Luciano):** como ligar o TS-2000 ao APRS Client para receber e transmitir APRS; o CAT
+  dele já funciona em outros programas, como o Sat Tool.
+- **Situação (v1.15.8):** não há perfil TS-2000 em `tnc_service` (`device_profile`: generic_kiss, radtel_rt950_pro,
+  kenwood_tm_d700, kenwood_tm_d710, kantronics, agwpe, generic). A orientação dada usa o perfil TM-D700 (TNC TASCO da
+  mesma família): TNC ligado na banda de dados, 1200 bps, porta serial a 9600 8N1, `KISS ON` + `RESTART` num terminal
+  e transporte KISS Serial. Não testado com TS-2000 real. Alternativa: áudio DATA/ACC2 + interface de som + Dire Wolf.
+- **Esperado:**
+  - perfil **Kenwood TS-2000 (TNC interno)** com 9600 bps na porta e 1200 no ar como padrão;
+  - botão para colocar o TNC em KISS (envia `KISS ON` e `RESTART` no modo terminal) e para sair do KISS
+    (`C0 FF C0`), com confirmação e registro no diagnóstico;
+  - aviso claro de que, com o TNC ligado, a porta serial é do TNC e o CAT (Sat Tool etc.) não funciona pelo mesmo
+    cabo; indicar a opção Dire Wolf para uso simultâneo;
+  - texto de ajuda com a frequência APRS da região (145.570 MHz no Brasil, 144.390 MHz nos EUA).
+- **Teste:** com TS-2000 real (ou simulador de TNC TASCO): entrada em KISS, recepção pelo "Escutar agora",
+  beacon por RF com TX autorizado e saída do KISS sem travar a porta.
+
 ## RESOLVIDO (v1.15.8) — Aviso ao abrir igual ao do Sat Tool, divulgando as demais ferramentas (06/11/2026)
 
 - **Entregue:** `#officialSiteNotice` com título, texto, link www.PT2VHF.com e Fechar do Sat Tool, nos 10 idiomas.
