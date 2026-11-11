@@ -175,6 +175,8 @@ DEFAULT_CONFIG = {
     "elevation_color": "#e0ac3e",
     "sound_on_personal_message": 1,
     "sound_on_station_activity": 1,
+    "notification_volume": 70,
+    "notification_sound": "beep",
     "highlight_station_activity": 1,
     "traffic_animation_enabled": 1,
     "message_popup_seconds": 5,
@@ -673,6 +675,10 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
         if "sound_on_station_activity" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_station_activity INTEGER NOT NULL DEFAULT 1")
+        if "notification_volume" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN notification_volume INTEGER NOT NULL DEFAULT 70")
+        if "notification_sound" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN notification_sound TEXT NOT NULL DEFAULT 'beep'")
         if "highlight_station_activity" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN highlight_station_activity INTEGER NOT NULL DEFAULT 1")
         if "traffic_animation_enabled" not in config_columns:
@@ -891,6 +897,10 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["elevation_color"] = color if re.fullmatch(r"#[0-9a-f]{6}", color) else "#e0ac3e"
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
     merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
+    merged["notification_volume"] = max(0, min(100, int(merged["notification_volume"] or 0)))
+    merged["notification_sound"] = str(merged["notification_sound"] or "beep").lower().strip()
+    if merged["notification_sound"] not in {"beep", "chime", "radio"}:
+        merged["notification_sound"] = "beep"
     merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0
     merged["traffic_animation_enabled"] = 1 if bool(merged["traffic_animation_enabled"]) else 0
     merged["message_popup_seconds"] = int(merged["message_popup_seconds"] or 5)
@@ -2362,7 +2372,7 @@ def list_topology_edges(hours: float = 0) -> list[dict[str, Any]]:
 def _rf_route_callsign(value: Any) -> str:
     """Normaliza indicativos usados pela análise de rotas RF."""
     call = str(value or "").upper().strip()
-    if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", call):
+    if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", call):
         return ""
     return call
 
@@ -4561,7 +4571,7 @@ def list_favorites() -> list[str]:
 
 def set_favorite(callsign: str, favorite: bool) -> bool:
     call = str(callsign or "").upper().strip()
-    if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", call):
+    if not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", call):
         raise ValueError("Indicativo inválido para Favoritos.")
     with connection() as conn:
         if favorite:
@@ -5339,6 +5349,25 @@ def clear_messages() -> int:
         return max(0, int(cur.rowcount or 0))
 
 
+def clear_operational_data() -> dict[str, int]:
+    """Limpa dados operacionais mantendo configuração, favoritos e map_state."""
+    tables = (
+        "tracks",
+        "stations",
+        "messages",
+        "aprs_log",
+        "packets",
+        "topology_edges",
+        "topology_events",
+    )
+    deleted: dict[str, int] = {}
+    with connection() as conn:
+        for table in tables:
+            cur = conn.execute(f"DELETE FROM {table}")
+            deleted[table] = max(0, int(cur.rowcount or 0))
+    return deleted
+
+
 def callsign_suggestions(prefix: str = "", limit: int = 30) -> list[str]:
     p = prefix.upper().strip() + "%"
     with connection() as conn:
@@ -5449,7 +5478,7 @@ def _json_callsigns(value: Any) -> list[str]:
     result: list[str] = []
     for item in value:
         call = str(item or "").upper().strip()
-        if not call or not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[0-9]{1,2})?", call):
+        if not call or not re.fullmatch(r"[A-Z0-9]{1,6}(?:-[A-Z0-9]{1,2})?", call):
             continue
         if call not in result:
             result.append(call)
@@ -5691,6 +5720,8 @@ def complete_scheduled_message(
 from . import spacetime_topology as _spacetime_topology  # noqa: E402
 
 
+# Ligação explícita; init_db() (abaixo) a envolve com a recuperação de banco corrompido.
+_topology_init_db = _spacetime_topology._init_db
 
 # ---------------------------------------------------------------------------
 # Recuperação de banco corrompido
@@ -5859,13 +5890,13 @@ def _salvage_from_corrupt(corrupt_path: Path) -> dict[str, Any]:
 def _recover_corrupt_database(exc: BaseException) -> dict[str, Any]:
     quarantined = _quarantine_database_files()
     diag.log_event("database_corrupt_quarantined", error=str(exc), quarantined=str(quarantined))
-    _spacetime_topology._init_db()
+    _topology_init_db()
     try:
         salvage = _salvage_from_corrupt(quarantined)
     except Exception as salvage_exc:  # recuperação é best-effort; o banco novo já existe
         salvage = {"tables": {}, "failed_tables": [], "error": f"{type(salvage_exc).__name__}: {salvage_exc}"}
     # Garante colunas/índices/migrações atuais sobre o que foi copiado.
-    _spacetime_topology._init_db()
+    _topology_init_db()
     info = {
         "recovered_at": utc_now_iso(),
         "error": str(exc),
@@ -5883,7 +5914,7 @@ def init_db() -> None:
     """Inicializa o banco; se o arquivo estiver corrompido, recupera em vez de abortar."""
     global LAST_DB_RECOVERY
     try:
-        _spacetime_topology._init_db()
+        _topology_init_db()
     except sqlite3.DatabaseError as exc:
         if not is_corruption_error(exc):
             raise

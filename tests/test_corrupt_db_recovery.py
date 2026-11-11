@@ -50,7 +50,7 @@ def test_readable_data_is_salvaged_after_corruption(tmp_path, monkeypatch):
             raise sqlite3.DatabaseError("database disk image is malformed")
         real_init()
 
-    monkeypatch.setattr(spacetime_topology, "_init_db", flaky_init)
+    monkeypatch.setattr(db, "_topology_init_db", flaky_init)
     db.init_db()
 
     info = db.LAST_DB_RECOVERY

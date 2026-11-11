@@ -53,7 +53,7 @@ def test_v1419_version_and_overlay_are_active():
     # espaço-temporais (sem monkey-patch em tempo de execução).
     from pt2vhf_aprs import database as db, spacetime_topology as st
     # init_db envolve st._init_db para recuperar banco corrompido.
-    assert "_spacetime_topology._init_db()" in inspect.getsource(db.init_db)
+    assert "_topology_init_db()" in inspect.getsource(db.init_db) and db._topology_init_db is st._init_db
     assert db.process_received_packet is st._process_received_packet
     assert db._rf_route_graph is st._route_graph
     assert db.list_rf_routes is st._list_rf_routes
