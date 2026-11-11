@@ -5690,7 +5690,227 @@ def complete_scheduled_message(
 # ---------------------------------------------------------------------------
 from . import spacetime_topology as _spacetime_topology  # noqa: E402
 
-init_db = _spacetime_topology._init_db
+
+
+# ---------------------------------------------------------------------------
+# Recuperação de banco corrompido
+#
+# Queda de energia, desligamento forçado, falha de disco ou antivírus mexendo
+# no arquivo podem deixar o SQLite inválido ("database disk image is
+# malformed"). Antes o app abortava na inicialização. Agora o arquivo ruim
+# (com -wal/-shm) é movido para data/corrupted/, um banco novo é criado e os
+# dados legíveis do arquivo antigo são copiados de volta (configuração,
+# mensagens, estações...). O original fica preservado para análise.
+# ---------------------------------------------------------------------------
+_CORRUPTION_MARKERS = (
+    "malformed",
+    "not a database",
+    "file is encrypted",
+    "database corrupt",
+    "disk image",
+)
+
+# Preenchido quando a última inicialização precisou recuperar o banco; os
+# lançadores usam isso para avisar o usuário.
+LAST_DB_RECOVERY: dict[str, Any] | None = None
+
+
+def is_corruption_error(exc: BaseException) -> bool:
+    if not isinstance(exc, sqlite3.DatabaseError):
+        return False
+    if isinstance(exc, sqlite3.OperationalError) and "locked" in str(exc).lower():
+        return False
+    text = str(exc).lower()
+    return any(marker in text for marker in _CORRUPTION_MARKERS)
+
+
+def _db_sidecars(path: Path) -> list[Path]:
+    return [path, path.with_name(path.name + "-wal"), path.with_name(path.name + "-shm")]
+
+
+def _quarantine_database_files() -> Path:
+    """Move banco + -wal/-shm para data/corrupted/ e devolve o novo caminho do .db."""
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    target_dir = DB_PATH.parent / "corrupted"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / f"{DB_PATH.stem}_corrupt_{stamp}{DB_PATH.suffix}"
+    suffix = 1
+    while target.exists():
+        target = target_dir / f"{DB_PATH.stem}_corrupt_{stamp}_{suffix}{DB_PATH.suffix}"
+        suffix += 1
+    # Move o .db por último: se algo falhar no meio, o banco continua no lugar.
+    for src, dst in reversed(list(zip(_db_sidecars(DB_PATH), _db_sidecars(target)))):
+        if src.exists():
+            os.replace(src, dst)
+    return target
+
+
+def _quote_ident(name: str) -> str:
+    return '"' + str(name).replace('"', '""') + '"'
+
+
+def _salvage_from_corrupt(corrupt_path: Path) -> dict[str, Any]:
+    """Copia para o banco novo tudo o que ainda for legível no arquivo corrompido.
+
+    Trabalha sobre uma cópia temporária para nunca alterar o arquivo em
+    quarentena. Cada tabela é copiada isoladamente; se a cópia em bloco falhar,
+    tenta linha a linha até onde a página danificada permitir.
+    """
+    import shutil
+    import tempfile
+
+    result: dict[str, Any] = {"tables": {}, "failed_tables": [], "error": None}
+    with tempfile.TemporaryDirectory(prefix="pt2vhf_salvage_") as td:
+        work = Path(td) / "salvage.db"
+        for src, dst in zip(_db_sidecars(corrupt_path), _db_sidecars(work)):
+            if src.exists():
+                shutil.copy2(src, dst)
+        conn = sqlite3.connect(DB_PATH, timeout=30, isolation_level=None)
+        try:
+            conn.execute("PRAGMA foreign_keys=OFF")
+            try:
+                conn.execute("ATTACH DATABASE ? AS old", (str(work),))
+                old_tables = conn.execute(
+                    "SELECT name, sql FROM old.sqlite_master "
+                    "WHERE type='table' AND name NOT LIKE 'sqlite_%' AND sql IS NOT NULL"
+                ).fetchall()
+            except sqlite3.DatabaseError as exc:
+                result["error"] = f"{type(exc).__name__}: {exc}"
+                return result
+            new_tables = {
+                row[0] for row in conn.execute(
+                    "SELECT name FROM main.sqlite_master WHERE type='table'"
+                )
+            }
+            for name, create_sql in old_tables:
+                qname = _quote_ident(name)
+                try:
+                    if name not in new_tables:
+                        # Tabela criada sob demanda por outro módulo: recria
+                        # com o schema antigo para não perder os dados.
+                        if str(create_sql).upper().startswith("CREATE VIRTUAL"):
+                            continue
+                        conn.execute(str(create_sql))
+                    new_cols = [r[1] for r in conn.execute(f"PRAGMA main.table_info({qname})")]
+                    old_cols = {r[1] for r in conn.execute(f"PRAGMA old.table_info({qname})")}
+                    cols = [c for c in new_cols if c in old_cols]
+                    if not cols:
+                        continue
+                    col_sql = ", ".join(_quote_ident(c) for c in cols)
+                    insert_sql = f"INSERT OR REPLACE INTO main.{qname} ({col_sql}) VALUES ({', '.join('?' for _ in cols)})"
+                except sqlite3.DatabaseError:
+                    result["failed_tables"].append(name)
+                    continue
+                copied = 0
+                try:
+                    conn.execute("BEGIN")
+                    cur = conn.execute(
+                        f"INSERT OR REPLACE INTO main.{qname} ({col_sql}) SELECT {col_sql} FROM old.{qname}"
+                    )
+                    conn.execute("COMMIT")
+                    copied = max(0, int(cur.rowcount or 0))
+                    result["tables"][name] = copied
+                    continue
+                except sqlite3.DatabaseError:
+                    try:
+                        conn.execute("ROLLBACK")
+                    except sqlite3.DatabaseError:
+                        pass
+                # Linha a linha: aproveita o que vier antes da página danificada.
+                # Lê tudo primeiro e grava depois, numa transação separada: o
+                # SQLite pode desfazer a transação ativa ao achar a corrupção.
+                rows: list[tuple] = []
+                try:
+                    reader = conn.execute(f"SELECT {col_sql} FROM old.{qname}")
+                    while True:
+                        # fetchone: um lote com página ruim seria perdido inteiro.
+                        row = reader.fetchone()
+                        if row is None:
+                            break
+                        rows.append(tuple(row))
+                except sqlite3.DatabaseError:
+                    pass
+                try:
+                    conn.execute("BEGIN")
+                    for row in rows:
+                        try:
+                            conn.execute(insert_sql, row)
+                            copied += 1
+                        except sqlite3.DatabaseError:
+                            pass
+                    conn.execute("COMMIT")
+                except sqlite3.DatabaseError:
+                    try:
+                        conn.execute("ROLLBACK")
+                    except sqlite3.DatabaseError:
+                        pass
+                    copied = 0
+                result["tables"][name] = copied
+                result["failed_tables"].append(name)
+            try:
+                conn.execute("DETACH DATABASE old")
+            except sqlite3.DatabaseError:
+                pass
+        finally:
+            conn.close()
+    return result
+
+
+def _recover_corrupt_database(exc: BaseException) -> dict[str, Any]:
+    quarantined = _quarantine_database_files()
+    diag.log_event("database_corrupt_quarantined", error=str(exc), quarantined=str(quarantined))
+    _spacetime_topology._init_db()
+    try:
+        salvage = _salvage_from_corrupt(quarantined)
+    except Exception as salvage_exc:  # recuperação é best-effort; o banco novo já existe
+        salvage = {"tables": {}, "failed_tables": [], "error": f"{type(salvage_exc).__name__}: {salvage_exc}"}
+    # Garante colunas/índices/migrações atuais sobre o que foi copiado.
+    _spacetime_topology._init_db()
+    info = {
+        "recovered_at": utc_now_iso(),
+        "error": str(exc),
+        "quarantined_path": str(quarantined),
+        "rows_recovered": sum(int(v) for v in salvage.get("tables", {}).values()),
+        "tables_recovered": salvage.get("tables", {}),
+        "tables_partial": salvage.get("failed_tables", []),
+        "salvage_error": salvage.get("error"),
+    }
+    diag.log_event("database_recovered", **info)
+    return info
+
+
+def init_db() -> None:
+    """Inicializa o banco; se o arquivo estiver corrompido, recupera em vez de abortar."""
+    global LAST_DB_RECOVERY
+    try:
+        _spacetime_topology._init_db()
+    except sqlite3.DatabaseError as exc:
+        if not is_corruption_error(exc):
+            raise
+        LAST_DB_RECOVERY = _recover_corrupt_database(exc)
+
+
+def recovery_notice_text(info: dict[str, Any] | None = None) -> str:
+    info = info if info is not None else LAST_DB_RECOVERY
+    if not info:
+        return ""
+    lines = [
+        "O banco de dados do PT2VHF APRS Client estava corrompido e foi recuperado automaticamente.",
+        "",
+        f"Registros recuperados: {info.get('rows_recovered', 0)}.",
+    ]
+    if info.get("tables_partial") or info.get("salvage_error"):
+        lines.append("Parte do histórico não pôde ser lida e foi perdida.")
+    lines += [
+        "",
+        "O arquivo original foi preservado em:",
+        str(info.get("quarantined_path", "")),
+        "",
+        "Causas comuns: queda de energia, desligamento forçado do computador ou falha de disco.",
+        "Confira suas configurações (indicativo, passcode) antes de transmitir.",
+    ]
+    return "\n".join(lines)
+
 process_received_packet = _spacetime_topology._process_received_packet
 _record_topology_from_raw_conn = _spacetime_topology._record_topology_from_raw_conn
 _rf_route_graph = _spacetime_topology._route_graph

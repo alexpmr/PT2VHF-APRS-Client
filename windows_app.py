@@ -675,6 +675,23 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
         return 0
 
 
+def _notify_database_recovery() -> None:
+    """Avisa (sem bloquear a inicialização) que o banco corrompido foi recuperado."""
+    text = db.recovery_notice_text()
+    if not text:
+        return
+    print(text, file=sys.stderr)
+
+    def _show() -> None:
+        try:
+            ctypes.windll.user32.MessageBoxW(None, text, APP_NAME, 0x30)
+        except Exception:
+            pass
+
+    if os.name == "nt":
+        threading.Thread(target=_show, name="db-recovery-notice", daemon=True).start()
+
+
 def main() -> int:
     global _browser_mode, _tray_icon, _server_handle, PORT, URL
     _browser_mode = "--browser" in sys.argv[1:]
@@ -700,6 +717,7 @@ def main() -> int:
     diag.log_event("app_start", version=__version__, portable=True)
     updater.register_exit_handler(_exit_for_update)
     db.init_db()
+    _notify_database_recovery()
     runtime_config = db.get_config()
     server_host = "0.0.0.0" if bool(runtime_config.get("web_lan_enabled")) else HOST
     app = create_app()
