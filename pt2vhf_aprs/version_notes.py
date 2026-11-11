@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "1.15.9": {
+        "title": "Botão direito nas mensagens e Kenwood TS-2000",
+        "items": [
+            "Botão direito numa mensagem: copiar texto ou indicativo, cancelar reenvio e reenviar agora; contador de tentativas.",
+            "Perfil Kenwood TS-2000 (TNC interno) com botões para entrar e sair do modo KISS.",
+            "Aba Ajuda completa em inglês.",
+        ],
+    },
     "1.15.8": {
         "title": "Mapa de calor completo",
         "items": [

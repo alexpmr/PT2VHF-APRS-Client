@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v1.15.8
+# PT2VHF APRS Client - v1.15.9
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,13 +6,15 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 1.15.8 (publicação pendente)
+## Downloads — versão 1.15.9 (publicação pendente)
 
-A v1.15.8 será distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 e Raspberry Pi ARM64 (AppImage/.deb/.tar.gz) e macOS Intel/Apple Silicon.
-O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) passa a oferecer a v1.15.8 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
+A v1.15.9 será distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 e Raspberry Pi ARM64 (AppImage/.deb/.tar.gz) e macOS Intel/Apple Silicon.
+O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) passa a oferecer a v1.15.9 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
 
 A revisão integral das traduções (#157) continua aberta.
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v1.15.9** traz o menu do botão direito nas mensagens (copiar texto/indicativo, cancelar reenvio, reenviar agora) com contador de tentativas, o perfil **Kenwood TS-2000 (TNC interno)** com entrada e saída do modo KISS, e a aba **Ajuda** completa em inglês.
 
 A **v1.15.8** mantém no mapa de calor todas as áreas com recepção RF (antes as menos densas sumiam com o crescimento do histórico) e abre com o convite às demais ferramentas PT2VHF, como no Sat Tool.
 

@@ -508,6 +508,35 @@ def open_serial_port(cfg: dict[str, Any], *, timeout: float, write_timeout: floa
     return handle
 
 
+KENWOOD_KISS_ON = b"\r\r\x03\rKISS ON\rRESTART\r"   # Ctrl+C volta ao cmd: antes de KISS ON
+KENWOOD_KISS_OFF = b"\xc0\xff\xc0"                    # comando KISS de saída (volta ao modo terminal)
+
+
+def kenwood_tnc_kiss(cfg: dict[str, Any], enable: bool, *, wait: float = 1.5) -> dict[str, Any]:
+    """v1.15.9: liga/desliga o modo KISS do TNC interno Kenwood (TS-2000, TM-D700/D710).
+
+    Abre a porta serial só pelo tempo do comando — o TNC do PT2VHF precisa estar
+    desconectado para não disputar a porta — e devolve o que o TNC respondeu.
+    """
+    if not str(cfg.get("serial_port") or "").strip():
+        raise ValueError("Informe a porta serial do rádio.")
+    handle = open_serial_port(cfg, timeout=0.3, write_timeout=2.0)
+    try:
+        handle.reset_input_buffer()
+        handle.write(KENWOOD_KISS_ON if enable else KENWOOD_KISS_OFF)
+        handle.flush()
+        deadline = time.monotonic() + wait
+        reply = bytearray()
+        while time.monotonic() < deadline and len(reply) < 2048:
+            reply += handle.read(256)
+    finally:
+        handle.close()
+    record_decision("kenwood_kiss", "sent", "KISS ON + RESTART" if enable else "Saída do KISS (C0 FF C0)",
+                    source=str(cfg.get("serial_port") or ""))
+    text = bytes(reply).decode("ascii", "replace").replace("\r", "\n").strip()
+    return {"enabled": bool(enable), "reply": text[-400:]}
+
+
 def serial_line_summary(handle: Any) -> str:
     """Resumo das linhas de controle para diagnóstico (ex.: DTR=1 RTS=0 CTS=1)."""
     parts = []
@@ -548,7 +577,8 @@ def normalize_tnc_config(payload: dict[str, Any], *, strict: bool = True) -> dic
         raise ValueError("Baud rate serial inválido.")
 
     merged["device_profile"] = str(merged.get("device_profile") or "generic_kiss").lower().strip()
-    if merged["device_profile"] not in {"generic_kiss", "radtel_rt950_pro", "kenwood_tm_d700", "kenwood_tm_d710", "kantronics", "agwpe", "generic"}:
+    if merged["device_profile"] not in {"generic_kiss", "radtel_rt950_pro", "kenwood_tm_d700", "kenwood_tm_d710",
+                                        "kenwood_ts2000", "kantronics", "agwpe", "generic"}:
         raise ValueError("Perfil de equipamento TNC inválido.")
     merged["serial_protocol"] = str(merged.get("serial_protocol") or "kiss").lower().strip()
     if merged["serial_protocol"] not in {"kiss", "terminal", "agwpe", "auto"}:

@@ -6720,7 +6720,21 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   function messageStatusLabel(status) {
     if (status === 'ACK') return 'Lido';
     if (status === 'REJ') return 'Rejeitada';
+    if (status === 'Cancelada') return ui('Cancelada', 'Cancelled');
     return status || '';
+  }
+
+  // v1.15.9 (sugestão PU2MUS): mostra em qual tentativa está a mensagem enviada sem ACK.
+  function isRetryPendingMessage(message) {
+    return message?.direction === 'out' && message?.message_type === 'message'
+      && ['Enviada', 'Reenviada'].includes(String(message.status || ''));
+  }
+  function messageAttemptsHtml(message) {
+    if (!isRetryPendingMessage(message)) return '';
+    const max = Math.max(0, Number(state.currentConfig?.message_retry_attempts || 0));
+    const used = Math.min(max, Number(message.retry_count || 0));
+    const text = `${ui('tentativa', 'attempt')} ${used + 1}/${max + 1}`;
+    return `<span class="message-attempts" title="${escapeHtml(ui('Botão direito: cancelar o reenvio', 'Right-click: cancel retries'))}">${escapeHtml(text)}</span>`;
   }
 
   function messageTransportLabel(message) {
@@ -6754,7 +6768,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   function retryButtonHtml(message) {
     if (message?.direction !== 'out' || message?.message_type !== 'message') return '';
-    if (['ACK', 'Substituída por retry'].includes(String(message.status || ''))) return '';
+    if (['ACK', 'Substituída por retry', 'Cancelada'].includes(String(message.status || ''))) return '';
     const max = Number(state.currentConfig?.message_retry_attempts || 0);
     const used = Number(message.retry_count || 0);
     if (max <= 0 || used >= max) return '';
@@ -6973,13 +6987,14 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     thread.innerHTML = selected.messages.map(message => {
       const direction = message.direction === 'out' ? 'out' : 'in';
       const status = messageStatusLabel(message.status);
-      return `<div class="chat-bubble-row ${direction}">
+      return `<div class="chat-bubble-row ${direction}" data-message-id="${Number(message.id || 0)}">
         <div class="chat-bubble">
-          <div class="chat-bubble-text">${escapeHtml(message.message || '')}</div>
+          <div class="chat-bubble-text" translate="no">${escapeHtml(message.message || '')}</div>
           <div class="chat-bubble-meta">
             <span>${escapeHtml(fmtDate(message.timestamp))}</span>
             ${messageTransportLabel(message) ? `<span class="message-transport-badge">${escapeHtml(messageTransportLabel(message))}</span>` : ''}
             ${status ? `<span class="${message.status === 'ACK' ? 'status-ack' : message.status === 'REJ' ? 'status-rej' : ''}">${escapeHtml(status)}</span>` : ''}
+            ${messageAttemptsHtml(message)}
             ${messageGroupSummary(message) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(message))}</span>` : ''}
             ${retryButtonHtml(message)}
           </div>
@@ -6988,7 +7003,25 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     }).join('');
   }
 
+  // v1.15.9 (sugestão PU2MUS): a atualização periódica não redesenha a lista enquanto
+  // o operador seleciona texto de uma mensagem ou usa o menu do botão direito.
+  function messageInteractionActive() {
+    if (state.messageMenuOpen) return true;
+    const selection = window.getSelection?.();
+    if (!selection || selection.isCollapsed || !String(selection).trim()) return false;
+    const node = selection.anchorNode;
+    const el = node && (node.nodeType === 1 ? node : node.parentElement);
+    return !!el?.closest?.('#messagesTable, #conversationMessages');
+  }
+  document.addEventListener('selectionchange', () => {
+    if (state.messagesRenderPending && !messageInteractionActive()) {
+      state.messagesRenderPending = false;
+      renderMessages();
+    }
+  });
+
   function renderMessages() {
+    if (messageInteractionActive()) { state.messagesRenderPending = true; return; }
     const tableWrap = $('.messages-table-wrap');
     const groupedView = $('#groupedMessagesView');
     tableWrap?.classList.toggle('hidden', state.groupMessages);
@@ -7019,6 +7052,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         <td>${escapeHtml(fmtDate(m.timestamp))}</td>
         <td class="${m.status === 'ACK' ? 'status-ack' : m.status === 'REJ' ? 'status-rej' : ''}">
           ${escapeHtml(messageStatusLabel(m.status))}
+          ${messageAttemptsHtml(m)}
           ${messageTransportLabel(m) ? `<span class="message-transport-badge">${escapeHtml(messageTransportLabel(m))}</span>` : ''}
           ${messageGroupSummary(m) ? `<span class="message-group-status">${escapeHtml(messageGroupSummary(m))}</span>` : ''}
           ${retryButtonHtml(m)}
@@ -7264,6 +7298,77 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     event.preventDefault();
     retryMessagePart(Number(retry.dataset.retryRowId || 0));
   });
+
+  // v1.15.9 (sugestão PU2MUS): menu do botão direito nas mensagens.
+  async function copyToClipboard(value) {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch (_) {
+      const area = document.createElement('textarea');
+      area.value = value; area.setAttribute('readonly', ''); area.style.position = 'fixed'; area.style.opacity = '0';
+      document.body.appendChild(area); area.select();
+      try { document.execCommand('copy'); } finally { area.remove(); }
+    }
+    toast(ui('Copiado.', 'Copied.'), 'ok');
+  }
+  function closeMessageMenu() {
+    $('#messageContextMenu')?.remove();
+    if (state.messageMenuOpen) {
+      state.messageMenuOpen = false;
+      if (state.messagesRenderPending) { state.messagesRenderPending = false; renderMessages(); }
+    }
+  }
+  function openMessageMenu(event, message) {
+    closeMessageMenu();
+    const own = normalizedCall(state.ownCallsign);
+    const other = message.direction === 'out' ? message.to_call : message.from_call;
+    const items = [['copy-text', ui('Copiar texto', 'Copy text')]];
+    if (other && normalizedCall(other) !== own) items.push(['copy-call', `${ui('Copiar indicativo', 'Copy callsign')} (${other})`]);
+    if (isRetryPendingMessage(message)) items.push(['cancel', ui('Cancelar reenvio', 'Cancel retries')]);
+    if (message.direction === 'out' && message.message_type === 'message' && !['ACK', 'REJ', 'Substituída por retry'].includes(String(message.status || ''))) {
+      items.push(['retry', ui('Reenviar agora', 'Resend now')]);
+    }
+    const menu = document.createElement('div');
+    menu.id = 'messageContextMenu';
+    menu.className = 'message-context-menu';
+    menu.setAttribute('role', 'menu');
+    menu.innerHTML = items.map(([action, label]) =>
+      `<button type="button" role="menuitem" data-action="${action}">${escapeHtml(label)}</button>`).join('');
+    document.body.appendChild(menu);
+    const x = Math.min(event.clientX, window.innerWidth - menu.offsetWidth - 8);
+    const y = Math.min(event.clientY, window.innerHeight - menu.offsetHeight - 8);
+    menu.style.left = `${Math.max(8, x)}px`; menu.style.top = `${Math.max(8, y)}px`;
+    state.messageMenuOpen = true;
+    menu.addEventListener('click', async click => {
+      const action = click.target.closest('button[data-action]')?.dataset.action;
+      if (!action) return;
+      closeMessageMenu();
+      if (action === 'copy-text') await copyToClipboard(String(message.message || ''));
+      else if (action === 'copy-call') await copyToClipboard(String(other || ''));
+      else if (action === 'retry') await retryMessagePart(Number(message.id));
+      else if (action === 'cancel') {
+        try {
+          const result = await api(`/api/messages/${Number(message.id)}/cancel`, { method:'POST' });
+          toast(`${ui('Reenvio cancelado.', 'Retries cancelled.')} (${result.cancelled})`, 'ok');
+          await loadMessages();
+        } catch (err) { toast(err.message, 'error'); }
+      }
+    });
+    menu.querySelector('button')?.focus();
+  }
+  function messageMenuHandler(event) {
+    const row = event.target.closest('[data-message-id]');
+    if (!row) return;
+    const message = state.messages.find(m => Number(m.id || 0) === Number(row.dataset.messageId || 0));
+    if (!message) return;
+    event.preventDefault();
+    openMessageMenu(event, message);
+  }
+  $('#messagesTable tbody')?.addEventListener('contextmenu', messageMenuHandler);
+  $('#conversationMessages')?.addEventListener('contextmenu', messageMenuHandler);
+  document.addEventListener('click', event => { if (!event.target.closest('#messageContextMenu')) closeMessageMenu(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMessageMenu(); });
+  window.addEventListener('blur', closeMessageMenu);
 
   async function retryMessagePart(rowId) {
     if (!rowId) return;

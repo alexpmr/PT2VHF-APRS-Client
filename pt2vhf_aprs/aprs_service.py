@@ -882,11 +882,14 @@ class APRSService:
             "group_id": group_id,
         }
 
-    def retry_message(self, row_id: int, route: str = "auto", path: str = "") -> dict[str, Any]:
+    def retry_message(self, row_id: int, route: str = "auto", path: str = "", *, automatic: bool = False) -> dict[str, Any]:
         with self._retry_lock:
             original = db.get_message(row_id)
             if not original or original.get("direction") != "out" or original.get("message_type") != "message":
                 raise ValueError("Mensagem de saída não encontrada.")
+            if automatic and str(original.get("status") or "") == "Cancelada":
+                # v1.15.9: cancelada pelo operador depois de entrar na fila do laço; o manual continua permitido.
+                return {"id": int(original["id"]), "skipped": True, "reason": "Reenvio cancelado pelo operador."}
             if str(original.get("status") or "").upper() in {"ACK", "REJ"}:
                 return {
                     "id": int(original["id"]),
@@ -1157,7 +1160,7 @@ class APRSService:
                 if max_retries:
                     for pending in db.list_retry_candidates(retry_seconds, max_retries, limit=3):
                         try:
-                            self.retry_message(int(pending["id"]))
+                            self.retry_message(int(pending["id"]), automatic=True)
                             time.sleep(0.35)
                         except Exception as exc:
                             self._set_status(last_error=f"Retry de mensagem: {exc}")

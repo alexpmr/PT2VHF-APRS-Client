@@ -1249,6 +1249,18 @@ def create_app() -> Flask:
         updater._request_exit_after(0.6)
         return jsonify({"ok": True})
 
+    @app.post("/api/tnc/kenwood-kiss")
+    def api_tnc_kenwood_kiss():
+        from .tnc_service import get_tnc_config, kenwood_tnc_kiss
+        if tnc_service.status().get("connected"):
+            return jsonify({"ok": False, "error": "Desconecte o TNC antes de mudar o modo KISS do rádio."}), 409
+        data = request.get_json(silent=True) or {}
+        try:
+            result = kenwood_tnc_kiss(get_tnc_config(), bool(data.get("enable", True)))
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        return jsonify({"ok": True, **result})
+
     @app.get("/api/tnc/detect-software")
     def api_tnc_detect_software():
         from .tnc_service import detect_soft_tnc
@@ -1763,6 +1775,13 @@ def create_app() -> Flask:
         contact = str(data.get("contact") or "").upper().strip()
         own = full_callsign(db.get_config())
         return jsonify({"ok": True, "updated": db.mark_conversation_read(contact, own)})
+
+    @app.post("/api/messages/<int:row_id>/cancel")
+    def api_cancel_message(row_id: int):
+        cancelled = db.cancel_message_retries(row_id)
+        if not cancelled:
+            return jsonify({"ok": False, "error": "Esta mensagem não está aguardando reenvio."}), 409
+        return jsonify({"ok": True, "cancelled": cancelled})
 
     @app.post("/api/messages/<int:row_id>/retry")
     def api_retry_message(row_id: int):
