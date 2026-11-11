@@ -463,7 +463,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install "reportlab>=4.0,<5.0" "pypdf>=5.0,<7.0" "playwright>=1.55,<2.0" "cairosvg>=2.7,<3.0"
-          python -m playwright install --with-deps chromium
+          # v1.15.9: o espelho apt do runner às vezes não resolve; as libs do Chrome já vêm na imagem.
+          python -m playwright install --with-deps chromium || python -m playwright install chromium
           version="$(tr -d '\r\n ' < VERSION)"
           mkdir -p dist-docs/screenshots
           cp pt2vhf_aprs/static/img/app_logo.png dist-docs/manual_logo.png
