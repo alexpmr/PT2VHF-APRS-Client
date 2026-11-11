@@ -1,3 +1,24 @@
+## BACKLOG — Sugestões do PU2MUS: cancelar reenvio de mensagem e copiar texto recebido (11/11/2026)
+
+1. **Cancelar o reenvio de uma mensagem enviada (menu do botão direito).**
+   - **Pedido:** no cliente Windows, clicar com o botão direito sobre uma mensagem enviada e poder **cancelar o envio**
+     (por exemplo, depois de duas tentativas de reenvio). O usuário **não conseguiu ver quantas vezes** a mensagem é
+     tentada.
+   - **Hoje (v1.15.8):** padrões `message_retry_attempts = 2` e `message_retry_seconds = 60` (Configuração →
+     Retry de mensagem); o número de tentativas feitas não aparece de forma clara na lista.
+   - **Esperado:** menu de contexto na mensagem enviada e pendente com **Cancelar reenvio** (para a fila de retry,
+     marca como "Cancelada" e não transmite mais) e **Reenviar agora**; contador visível "tentativa 2 de 3" (ou
+     equivalente) na linha/balão da mensagem e no detalhe; cancelamento também para mensagens em várias partes.
+     Traduzido nos idiomas do cliente.
+2. **Copiar o texto de uma mensagem recebida.**
+   - **Pedido:** é difícil copiar o texto de uma mensagem recebida; é preciso ir em "Minhas mensagens", tentar marcar
+     o texto e ser rápido no Ctrl+C (a lista se atualiza e a seleção se perde).
+   - **Esperado:** no mesmo menu do botão direito, **Copiar texto** (e **Copiar indicativo**); texto da mensagem
+     selecionável com o mouse nas listas e na conversa; a atualização periódica não pode apagar uma seleção em
+     andamento (adiar o redesenho enquanto houver texto selecionado ou o menu estiver aberto).
+- **Teste:** mensagem enviada sem ACK: cancelar depois da 2ª tentativa e confirmar que não há nova transmissão;
+  mensagem recebida: copiar pelo menu e por seleção com a lista sendo atualizada.
+
 ## BACKLOG — Perfil Kenwood TS-2000 (TNC interno) no TNC / RF (10/11/2026)
 
 - **Pedido (dúvida de usuário, Luciano):** como ligar o TS-2000 ao APRS Client para receber e transmitir APRS; o CAT
