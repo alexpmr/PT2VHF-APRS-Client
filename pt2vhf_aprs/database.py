@@ -5224,6 +5224,29 @@ def list_retry_candidates(timeout_seconds: int, max_retries: int, limit: int = 2
     return [dict(r) for r in rows]
 
 
+def cancel_message_retries(row_id: int) -> int:
+    """v1.15.9 (sugestão PU2MUS): interrompe os reenvios automáticos de uma mensagem enviada.
+
+    Marca como "Cancelada" a parte escolhida e, se ela pertence a uma mensagem em
+    várias partes, as demais partes ainda pendentes. ACK/REJ nunca são alterados.
+    O laço de retry só pega "Enviada"/"Reenviada", então a mensagem sai da fila.
+    """
+    with connection() as conn:
+        row = conn.execute(
+            "SELECT id,message_group_id FROM messages WHERE id=? AND direction='out' AND message_type='message'",
+            (int(row_id),),
+        ).fetchone()
+        if row is None:
+            return 0
+        pending = "direction='out' AND status IN ('Enviada','Reenviada')"
+        if row["message_group_id"]:
+            cur = conn.execute(f"UPDATE messages SET status='Cancelada' WHERE message_group_id=? AND {pending}",
+                               (row["message_group_id"],))
+        else:
+            cur = conn.execute(f"UPDATE messages SET status='Cancelada' WHERE id=? AND {pending}", (int(row_id),))
+        return max(0, int(cur.rowcount or 0))
+
+
 def mark_message_status(msg_id: str, status: str, peer: str | None = None) -> int:
     """ACK/REJ são terminais e nunca podem ser sobrescritos por estado de TX/retry atrasado."""
     terminal = str(status or "").upper() in {"ACK", "REJ"}

@@ -26,7 +26,7 @@ jobs:
       - name: Install browser test dependencies
         run: |
           npm install --no-save --package-lock=false playwright@1.62.1
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium || npx playwright install chromium
       - name: Exercise live DOM translations in browser
         run: node tests/i18n_dom.browser.cjs
       - name: Exercise real application tabs and language persistence

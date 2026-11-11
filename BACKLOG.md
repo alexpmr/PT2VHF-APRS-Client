@@ -13,7 +13,9 @@
   procura o arquivo pelo nome (`updater.desired_asset_name`) e os contadores do site (`counterKey` estável).
 - **Confirmar com o mantenedor** em qual desses pontos viu o nome repetido entre versões.
 
-## BACKLOG — Sugestões do PU2MUS: cancelar reenvio de mensagem e copiar texto recebido (11/11/2026)
+## RESOLVIDO (v1.15.9) — Sugestões do PU2MUS: cancelar reenvio de mensagem e copiar texto recebido (11/11/2026)
+
+- **Entregue:** menu do botão direito (Copiar texto, Copiar indicativo, Cancelar reenvio, Reenviar agora); status "Cancelada" (`db.cancel_message_retries`, `/api/messages/<id>/cancel`, todas as partes pendentes); contador "tentativa N/M"; texto selecionável e redesenho adiado durante seleção/menu.
 
 1. **Cancelar o reenvio de uma mensagem enviada (menu do botão direito).**
    - **Pedido:** no cliente Windows, clicar com o botão direito sobre uma mensagem enviada e poder **cancelar o envio**
@@ -34,7 +36,9 @@
 - **Teste:** mensagem enviada sem ACK: cancelar depois da 2ª tentativa e confirmar que não há nova transmissão;
   mensagem recebida: copiar pelo menu e por seleção com a lista sendo atualizada.
 
-## BACKLOG — Perfil Kenwood TS-2000 (TNC interno) no TNC / RF (10/11/2026)
+## RESOLVIDO (v1.15.9; homologação com rádio real pendente) — Perfil Kenwood TS-2000 (TNC interno) no TNC / RF (10/11/2026)
+
+- **Entregue:** perfil `kenwood_ts2000` (9600/1200/KISS), `kenwood_tnc_kiss()` + `/api/tnc/kenwood-kiss` (KISS ON/RESTART e C0 FF C0, exige TNC desconectado), aviso do CAT e dica de frequência.
 
 - **Pedido (dúvida de usuário, Luciano):** como ligar o TS-2000 ao APRS Client para receber e transmitir APRS; o CAT
   dele já funciona em outros programas, como o Sat Tool.

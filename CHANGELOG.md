@@ -1,3 +1,9 @@
+## 1.15.9 - 2026-11-11
+
+- **Mensagens — sugestões do PU2MUS:** botão direito sobre uma mensagem abre **Copiar texto**, **Copiar indicativo**, **Cancelar reenvio** (para os reenvios automáticos de uma mensagem ainda sem ACK, inclusive todas as partes de uma mensagem longa; fica como "Cancelada") e **Reenviar agora**. As mensagens enviadas pendentes mostram "tentativa 1/3", "2/3"… O texto das mensagens pode ser selecionado com o mouse, e a atualização automática da lista espera o fim da seleção em vez de desfazê-la.
+- **Perfil Kenwood TS-2000 (TNC interno)** em Configuração → TNC / RF: porta a 9600, packet a 1200 e protocolo KISS por padrão; botões **Ligar modo KISS no rádio** (KISS ON + RESTART) e **Sair do modo KISS**, com confirmação e registro no diagnóstico; aviso de que, com o TNC ligado, o CAT (Sat Tool) não funciona pelo mesmo cabo. Vale também para TM-D700/D710. Ainda não homologado com rádio real.
+- **Ajuda em inglês (#157):** a aba Ajuda inteira em inglês, por parágrafo; texto atualizado (altitude opcional, botão direito nas mensagens, limpar estações mantém enlaces, TNC / RF). Espanhol, francês, alemão e italiano da Ajuda continuam na revisão #157.
+
 ## 1.15.8 - 2026-11-06
 
 - **Corrigido: mapa de calor perdia as áreas pouco densas.** O mapa recebia só as 4.000 áreas com mais recepções; quando o histórico passava disso, as de 1–2 recepções — as bordas da cobertura — deixavam de ser desenhadas e a cobertura parecia diminuir. Agora áreas vizinhas são somadas numa grade maior até caber no limite, sem descartar nenhuma, e áreas com uma única recepção ficam mais visíveis.

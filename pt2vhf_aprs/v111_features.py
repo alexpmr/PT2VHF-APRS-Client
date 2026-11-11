@@ -212,7 +212,7 @@ def tnc_health_snapshot(*, record_transition: bool = True) -> dict[str, Any]:
         sample = str(status.get("last_transport_sample_ascii") or "")
         prompt_like = any(token in sample.upper() for token in ("CMD:", "COMMAND", "TNC>", "CMD>"))
         state = "terminal_prompt_detected" if prompt_like else "terminal_bytes_active"
-        if device_profile in {"kenwood_tm_d700", "kenwood_tm_d710"}:
+        if device_profile in {"kenwood_tm_d700", "kenwood_tm_d710", "kenwood_ts2000"}:
             summary = "Serial ativa em modo terminal/PKT; bytes recebidos. KISS não é exigido por este perfil."
         else:
             summary = "Bytes recebidos pelo TNC em protocolo terminal; KISS não é o protocolo esperado."

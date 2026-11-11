@@ -518,6 +518,26 @@
     updateSerialProfileHint();
   }
 
+  // v1.15.9: entra/sai do modo KISS do TNC interno Kenwood (TS-2000, TM-D700/D710).
+  async function kenwoodKiss(enable) {
+    const out = $('#tncKenwoodKissStatus');
+    const question = enable
+      ? tr('Enviar KISS ON e RESTART ao TNC do rádio? O TNC precisa estar ligado e o TNC / RF desconectado aqui. A configuração atual será salva antes.')
+      : tr('Enviar o comando de saída do KISS ao TNC do rádio?');
+    if (!window.confirm(question)) return;
+    try {
+      await saveConfig({quiet:true});
+      const data = await requestJson('/api/tnc/kenwood-kiss', {method:'POST', body:JSON.stringify({enable})});
+      if (enable && field('tncSerialProtocol')) { field('tncSerialProtocol').value = 'kiss'; await saveConfig({quiet:true}); }
+      if (out) out.textContent = (enable
+        ? tr('Comando KISS enviado. Agora clique em Conectar TNC e use Escutar agora para confirmar a recepção.')
+        : tr('Comando de saída do KISS enviado.')) + (data.reply ? ' ' + tr('Resposta do rádio:') + ' ' + data.reply : '');
+      showError('');
+    } catch (error) {
+      showError(tr('Não foi possível enviar o comando ao TNC do rádio:') + ' ' + error.message);
+    }
+  }
+
   // v1.15.7: Dire Wolf/soundmodem nas portas padrão (KISS TCP 8001, AGWPE 8000).
   async function detectSoftTnc() {
     const out = $('#tncSoftTncHint');
@@ -596,6 +616,11 @@
     const hint = $('#tncSerialProfileHint');
     if (!hint) return;
     const profile=String(val('tncDeviceProfile','generic_kiss'));
+    $('#tncKenwoodKiss')?.classList.toggle('hidden', !['kenwood_ts2000','kenwood_tm_d700','kenwood_tm_d710'].includes(profile) || val('tncTransport','tcp')!=='serial');
+    if(profile==='kenwood_ts2000'){
+      hint.textContent=tr('Kenwood TS-2000: ligue o TNC do rádio (tecla TNC) na banda de dados, em 1200 bps e na frequência APRS (145.570 MHz no Brasil). Use Ligar modo KISS no rádio uma vez, depois Salvar TNC / RF e Conectar TNC.');
+      hint.classList.remove('hidden');return;
+    }
     if(profile==='kenwood_tm_d700'||profile==='kenwood_tm_d710'){
       hint.textContent='Kenwood '+(profile==='kenwood_tm_d700'?'TM-D700':'TM-D710')+': o baud rate serial e o packet RF são parâmetros diferentes. Em modo terminal/PKT, KISS não é obrigatório.';
       hint.classList.remove('hidden');return;
@@ -930,6 +955,11 @@
     field('tncDeviceProfile')?.addEventListener('change',()=>{
       const profile=val('tncDeviceProfile','generic_kiss');
       if(['kenwood_tm_d700','kenwood_tm_d710','kantronics'].includes(profile)&&field('tncSerialProtocol'))field('tncSerialProtocol').value='terminal';
+      if(profile==='kenwood_ts2000'){  // v1.15.9: TNC interno do TS-2000 em KISS, porta 9600, ar 1200
+        if(field('tncSerialProtocol'))field('tncSerialProtocol').value='kiss';
+        if(field('tncSerialBaud'))field('tncSerialBaud').value='9600';
+        if(field('tncPacketRfBaud'))field('tncPacketRfBaud').value='1200';
+      }
       if(profile==='kenwood_tm_d700'&&field('tncPacketRfBaud'))field('tncPacketRfBaud').value='1200';
       if(profile==='radtel_rt950_pro'){
         if(field('tncSerialProtocol'))field('tncSerialProtocol').value='kiss';
@@ -940,6 +970,8 @@
     field('tncSerialProtocol')?.addEventListener('change',()=>updateSerialProfileHint());
     $('#tncRefreshPorts')?.addEventListener('click', () => loadPorts({force:true}));
     $('#tncDetectSoftTnc')?.addEventListener('click', () => { void detectSoftTnc(); });
+    $('#tncKenwoodKissOn')?.addEventListener('click', () => { void kenwoodKiss(true); });
+    $('#tncKenwoodKissOff')?.addEventListener('click', () => { void kenwoodKiss(false); });
     $('#tncRescanDevices')?.addEventListener('click', () => loadPorts({force:true}));
     $('#tncSerialDevicesBody')?.addEventListener('click', event => {
       const button = event.target.closest?.('[data-tnc-use-port]');

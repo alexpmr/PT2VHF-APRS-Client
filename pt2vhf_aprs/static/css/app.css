@@ -5154,3 +5154,12 @@ html[lang="zh-CN"] body {
 @media (max-width: 760px) { .tnc-config-block.as-subtab .tnc-save-card > p { display: none; } }
 html[data-theme="light"] .tnc-config-block.as-subtab .tnc-save-card { background: rgba(255,255,255,.97); }
 .header-quit-button { white-space: nowrap; }
+/* v1.15.9 (sugestão PU2MUS): menu do botão direito e texto de mensagem selecionável. */
+#messagesTable td[translate="no"], .chat-bubble-text { user-select: text; -webkit-user-select: text; cursor: text; }
+.message-attempts { display: inline-block; margin-left: 6px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.message-context-menu { position: fixed; z-index: 4000; min-width: 190px; padding: 4px; display: flex; flex-direction: column;
+  background: var(--panel, #161f27); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,.4); }
+.message-context-menu button { text-align: left; padding: 8px 12px; border: 0; border-radius: 6px; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.message-context-menu button:hover, .message-context-menu button:focus-visible { background: rgba(77,163,255,.18); outline: none; }
+html[data-theme="light"] .message-context-menu { background: #fff; }
+.tnc-kenwood-kiss-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 2px; }

@@ -1404,6 +1404,7 @@
               <option value="radtel_rt950_pro">Radtel RT-950 Pro · KISS UART (115200)</option>
               <option value="kenwood_tm_d700">Kenwood TM-D700</option>
               <option value="kenwood_tm_d710">Kenwood TM-D710</option>
+              <option value="kenwood_ts2000">Kenwood TS-2000 (TNC interno)</option>
               <option value="kantronics">Kantronics / TNC terminal</option>
               <option value="generic">Outro / genérico</option>
             </select>
@@ -1415,6 +1416,15 @@
               <option value="auto">Detectar / diagnóstico</option>
             </select>
           </label>
+          <div id="tncKenwoodKiss" class="field tnc-serial-field tnc-kenwood-kiss hidden">
+            <span>TNC interno Kenwood</span>
+            <small>Com o TNC do rádio ligado (tecla TNC), a porta serial passa a ser do TNC: o CAT (Sat Tool e outros) não funciona pelo mesmo cabo. Para usar os dois, use áudio + Dire Wolf.</small>
+            <div class="tnc-kenwood-kiss-actions">
+              <button id="tncKenwoodKissOn" type="button" class="btn secondary">Ligar modo KISS no rádio</button>
+              <button id="tncKenwoodKissOff" type="button" class="btn secondary">Sair do modo KISS</button>
+            </div>
+            <small id="tncKenwoodKissStatus" class="hint" aria-live="polite"></small>
+          </div>
           <label class="field tnc-serial-field"><span>Linha DTR</span>
             <select id="tncSerialDtr" name="serial_dtr">
               <option value="default" selected>Padrão (ativada)</option>
@@ -1626,116 +1636,116 @@
   <section id="tab-help" class="tab-panel help-panel">
     <div class="panel-header">
       <div>
-        <h2>Ajuda</h2>
-        <p>Guia rápido para configurar, usar e diagnosticar o PT2VHF APRS Client.</p>
+        <h2 data-help-i18n="h1">Ajuda</h2>
+        <p data-help-i18n="h2">Guia rápido para configurar, usar e diagnosticar o PT2VHF APRS Client.</p>
       </div>
     </div>
 
     <div class="help-content">
       <div class="help-hero">
         <div>
-          <div class="help-kicker">Primeiros passos</div>
-          <h3>Configure sua estação antes de conectar ao APRS-IS</h3>
-          <p>Na aba <strong>Configuração</strong>, informe seu indicativo, SSID, posição e parâmetros APRS-IS. O passcode é calculado automaticamente a partir do indicativo-base.</p>
+          <div class="help-kicker" data-help-i18n="h3">Primeiros passos</div>
+          <h3 data-help-i18n="h4">Configure sua estação antes de conectar ao APRS-IS</h3>
+          <p data-help-i18n="h5">Na aba <strong>Configuração</strong>, informe seu indicativo, SSID, posição e parâmetros APRS-IS. O passcode é calculado automaticamente a partir do indicativo-base.</p>
         </div>
-        <button type="button" class="btn primary help-goto" data-help-tab="config">Abrir Configuração</button>
+        <button type="button" class="btn primary help-goto" data-help-tab="config" data-help-i18n="h6">Abrir Configuração</button>
       </div>
 
       <div class="help-grid">
         <article class="help-card">
-          <h3>1. Estação</h3>
-          <p><strong>Indicativo:</strong> informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo <code>-9</code> para móvel.</p>
-          <p><strong>Passcode APRS-IS:</strong> é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.</p>
-          <p><strong>Latitude/Longitude:</strong> podem ser informadas em decimal ou graus/minutos/segundos. Na primeira execução, o cliente solicita a localização ao navegador/SO para pré-preencher as coordenadas e centralizar o mapa. O botão <strong>Usar minha localização atual</strong> permite repetir essa operação depois.</p>
-          <p><strong>Altitude:</strong> continua obrigatória para a configuração da estação. Se o sistema não fornecer altitude, o cliente usa <code>0 m</code> para não impedir a conexão e mostra um aviso recomendando informar a altitude real.</p>
-          <p><strong>Ícone APRS:</strong> escolha o símbolo adequado à sua estação ou veículo.</p>
+          <h3 data-help-i18n="h7">1. Estação</h3>
+          <p data-help-i18n="h8"><strong>Indicativo:</strong> informe o seu indicativo radioamador. O SSID identifica a finalidade da estação, por exemplo <code>-9</code> para móvel.</p>
+          <p data-help-i18n="h9"><strong>Passcode APRS-IS:</strong> é calculado automaticamente e aparece ao lado do indicativo. O SSID não muda esse código.</p>
+          <p data-help-i18n="h10"><strong>Latitude/Longitude:</strong> podem ser informadas em decimal ou graus/minutos/segundos. Na primeira execução, o cliente solicita a localização ao navegador/SO para pré-preencher as coordenadas e centralizar o mapa. O botão <strong>Usar minha localização atual</strong> permite repetir essa operação depois.</p>
+          <p data-help-i18n="h11"><strong>Altitude:</strong> é opcional. Quando informada, vai no beacon (<code>/A=</code>); em <strong>Configuração → Aplicativo → Unidades</strong> é possível usar pés, milhas e mph.</p>
+          <p data-help-i18n="h12"><strong>Ícone APRS:</strong> escolha o símbolo adequado à sua estação ou veículo.</p>
         </article>
 
         <article class="help-card">
-          <h3>2. APRS-IS</h3>
-          <p>O servidor padrão é <code>soam.aprs2.net</code>, porta <code>14580</code>, com alternativa automática para <code>rotate.aprs2.net</code> quando necessário. A configuração oferece sugestões regionais e continua aceitando servidor manual.</p>
-          <p><strong>Filtro de recepção:</strong> novas instalações usam por padrão os prefixos brasileiros. O editor gráfico pode combinar filtro Brasil, raio, área geográfica, prefixos, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.</p><p>Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.</p>
-          <p>Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
-          <p><strong>Conectar ao iniciar</strong> vem habilitado em novas instalações e pode ser desligado nesta seção.</p>
-          <p><strong>Abrir também no navegador ao iniciar</strong> mantém a janela integrada e abre uma segunda visualização no navegador padrão. A opção vem desligada por padrão.</p>
+          <h3 data-help-i18n="h13">2. APRS-IS</h3>
+          <p data-help-i18n="h14">O servidor padrão é <code>soam.aprs2.net</code>, porta <code>14580</code>, com alternativa automática para <code>rotate.aprs2.net</code> quando necessário. A configuração oferece sugestões regionais e continua aceitando servidor manual.</p>
+          <p data-help-i18n="h15"><strong>Filtro de recepção:</strong> novas instalações usam por padrão os prefixos brasileiros. O editor gráfico pode combinar filtro Brasil, raio, área geográfica, prefixos, indicativos exatos e tipos de pacote, mantendo o campo manual sempre disponível.</p><p data-help-i18n="h16">Se o filtro ficar vazio, o programa pede confirmação antes de salvar e explica o impacto potencial no volume de tráfego.</p>
+          <p data-help-i18n="h17">Se o Log mostrar <code>Parse errors on filter spec</code>, revise o campo de filtro APRS-IS. Um texto livre como <code>user</code> não é um filtro APRS-IS válido.</p>
+          <p data-help-i18n="h18"><strong>Conectar ao iniciar</strong> vem habilitado em novas instalações e pode ser desligado nesta seção.</p>
+          <p data-help-i18n="h19"><strong>Abrir também no navegador ao iniciar</strong> mantém a janela integrada e abre uma segunda visualização no navegador padrão. A opção vem desligada por padrão.</p>
         </article>
 
         <article class="help-card">
-          <h3>3. Mapa</h3>
-          <p>Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong>, <strong>Claro</strong>, <strong>Escuro</strong>, <strong>CyclOSM</strong>, <strong>Humanitário / HOT</strong>, <strong>OSM.DE</strong>, <strong>ÖPNVKarte</strong> e <strong>Satélite</strong>.</p>
-          <p>É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
-          <p>Clique em uma estação para abrir os detalhes. Use <strong>Enviar mensagem</strong>, <strong>Ver logs</strong> ou a <strong>estrela amarela</strong> para favoritar a estação.</p>
-          <p><strong>Queries APRS:</strong> o popup da estação inclui atalhos para consultar <strong>Posição</strong>, <strong>Status</strong>, <strong>Ouvidos</strong>, executar <strong>Ping/ACK</strong> e solicitar <strong>Trace</strong>. Quando o trace retornar um caminho e houver posições conhecidas, os hops são destacados temporariamente no mapa; hops sem posição continuam indicados na resposta sem localização inventada.</p>
-          <p>A topologia oferece período <strong>Completo</strong> por padrão, além de janelas em horas/dias, legenda dos tipos de linhas e animação de tráfego no mapa.</p>
-          <p>Na primeira execução, quando a permissão é concedida, o mapa é centralizado na localização atual do usuário. Depois disso, a posição e o zoom escolhidos manualmente ficam salvos localmente e não são recentralizados continuamente.</p>
+          <h3 data-help-i18n="h20">3. Mapa</h3>
+          <p data-help-i18n="h21">Escolha entre <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong>, <strong>Claro</strong>, <strong>Escuro</strong>, <strong>CyclOSM</strong>, <strong>Humanitário / HOT</strong>, <strong>OSM.DE</strong>, <strong>ÖPNVKarte</strong> e <strong>Satélite</strong>.</p>
+          <p data-help-i18n="h22">É possível ajustar <strong>brilho do mapa</strong>, <strong>cor</strong> e <strong>espessura dos tracklogs</strong>, além das <strong>cores e espessura da topologia observada</strong>.</p>
+          <p data-help-i18n="h23">Clique em uma estação para abrir os detalhes. Use <strong>Enviar mensagem</strong>, <strong>Ver logs</strong> ou a <strong>estrela amarela</strong> para favoritar a estação.</p>
+          <p data-help-i18n="h24"><strong>Queries APRS:</strong> o popup da estação inclui atalhos para consultar <strong>Posição</strong>, <strong>Status</strong>, <strong>Ouvidos</strong>, executar <strong>Ping/ACK</strong> e solicitar <strong>Trace</strong>. Quando o trace retornar um caminho e houver posições conhecidas, os hops são destacados temporariamente no mapa; hops sem posição continuam indicados na resposta sem localização inventada.</p>
+          <p data-help-i18n="h25">A topologia oferece período <strong>Completo</strong> por padrão, além de janelas em horas/dias, legenda dos tipos de linhas e animação de tráfego no mapa.</p>
+          <p data-help-i18n="h26">Na primeira execução, quando a permissão é concedida, o mapa é centralizado na localização atual do usuário. Depois disso, a posição e o zoom escolhidos manualmente ficam salvos localmente e não são recentralizados continuamente.</p>
         </article>
 
         <article class="help-card">
-          <h3>4. Mensagens e boletins</h3>
-          <p><strong>Mensagem:</strong> comunicação APRS direcionada a um indicativo, com suporte a ACK/REJ.</p>
-          <p><strong>Rota de envio:</strong> em mensagens individuais, escolha <strong>Automático</strong>, <strong>APRS-IS</strong>, <strong>RF direto</strong> ou <strong>RF personalizado</strong>. O path RF personalizado aceita valores como <code>WIDE1-1</code> e <code>WIDE1-1,WIDE2-1</code> e vale somente para aquele envio.</p>
-          <p><strong>Automático:</strong> prioriza APRS-IS para preservar o comportamento tradicional do cliente e usa RF direto somente quando o APRS-IS estiver indisponível e o TNC estiver pronto para TX.</p>
-          <p><strong>Boletim geral:</strong> usa <code>BLN0</code> a <code>BLN9</code> e não solicita ACK.</p>
-          <p><strong>Boletim de grupo:</strong> permite informar um grupo de até cinco caracteres.</p>
-          <p>O botão <strong>Minhas mensagens</strong> mostra apenas mensagens individuais de ou para o seu <code>CALL-SSID</code>.</p>
-          <p>As mensagens seguem fluxo de chat, com as mais novas embaixo. A opção <strong>Agrupar por remetente</strong> organiza o histórico em conversas por contato.</p>
-          <p>Clique em qualquer indicativo nas colunas <strong>De</strong> ou <strong>Para</strong> para selecioná-lo como destinatário e responder. Se clicar no próprio indicativo, o programa tenta selecionar o outro participante.</p>
-          <p>O compositor aceita mensagens longas. Use <strong>Enter</strong> para enviar e <strong>Shift+Enter</strong> para nova linha. Mensagens maiores são divididas automaticamente sem numeração visível, preservando palavras sempre que possível; cada parte mantém confirmação própria.</p>
-          <p>O botão <strong>Limpar mensagens</strong> apaga todo o histórico local de mensagens e boletins após confirmação.</p>
-          <p>Quando chega uma nova mensagem para sua estação e a aba Mensagens já está aberta, o programa usa um aviso pequeno e não bloqueante, que fecha automaticamente pelo tempo definido em Configuração. Fora da aba Mensagens, permanece o aviso completo com opção de responder.</p>
+          <h3 data-help-i18n="h27">4. Mensagens e boletins</h3>
+          <p data-help-i18n="h28"><strong>Mensagem:</strong> comunicação APRS direcionada a um indicativo, com suporte a ACK/REJ.</p>
+          <p data-help-i18n="h29"><strong>Rota de envio:</strong> em mensagens individuais, escolha <strong>Automático</strong>, <strong>APRS-IS</strong>, <strong>RF direto</strong> ou <strong>RF personalizado</strong>. O path RF personalizado aceita valores como <code>WIDE1-1</code> e <code>WIDE1-1,WIDE2-1</code> e vale somente para aquele envio.</p>
+          <p data-help-i18n="h30"><strong>Automático:</strong> prioriza APRS-IS para preservar o comportamento tradicional do cliente e usa RF direto somente quando o APRS-IS estiver indisponível e o TNC estiver pronto para TX.</p>
+          <p data-help-i18n="h31"><strong>Boletim geral:</strong> usa <code>BLN0</code> a <code>BLN9</code> e não solicita ACK.</p>
+          <p data-help-i18n="h32"><strong>Boletim de grupo:</strong> permite informar um grupo de até cinco caracteres.</p>
+          <p data-help-i18n="h33">O botão <strong>Minhas mensagens</strong> mostra apenas mensagens individuais de ou para o seu <code>CALL-SSID</code>.</p>
+          <p data-help-i18n="h34">As mensagens seguem fluxo de chat, com as mais novas embaixo. A opção <strong>Agrupar por remetente</strong> organiza o histórico em conversas por contato. Clique com o botão direito numa mensagem para copiar o texto ou o indicativo, ou para cancelar os reenvios de uma mensagem ainda sem ACK.</p>
+          <p data-help-i18n="h35">Clique em qualquer indicativo nas colunas <strong>De</strong> ou <strong>Para</strong> para selecioná-lo como destinatário e responder. Se clicar no próprio indicativo, o programa tenta selecionar o outro participante.</p>
+          <p data-help-i18n="h36">O compositor aceita mensagens longas. Use <strong>Enter</strong> para enviar e <strong>Shift+Enter</strong> para nova linha. Mensagens maiores são divididas automaticamente sem numeração visível, preservando palavras sempre que possível; cada parte mantém confirmação própria.</p>
+          <p data-help-i18n="h37">O botão <strong>Limpar mensagens</strong> apaga todo o histórico local de mensagens e boletins após confirmação.</p>
+          <p data-help-i18n="h38">Quando chega uma nova mensagem para sua estação e a aba Mensagens já está aberta, o programa usa um aviso pequeno e não bloqueante, que fecha automaticamente pelo tempo definido em Configuração. Fora da aba Mensagens, permanece o aviso completo com opção de responder.</p>
         </article>
 
         <article class="help-card">
-          <h3>5. Estações</h3>
-          <p>A lista mostra indicativo, última recepção, distância, velocidade, curso, altitude e informações conhecidas.</p>
-          <p>Clique em uma linha para abrir o <strong>Mapa</strong>, centralizar a estação e mostrar o popup correspondente.</p>
-          <p>Os títulos das colunas podem ser clicados para alterar a ordenação. Estações favoritas ficam fixadas no topo e são identificadas por uma estrela amarela.</p>
-          <p>O botão <strong>Limpar estações</strong> apaga todas as estações e tracklogs locais; novas estações voltarão a aparecer quando forem recebidas.</p>
-          <p>Fonte e tamanho da tabela podem ser ajustados em <strong>Configuração → Aparência</strong>.</p>
+          <h3 data-help-i18n="h39">5. Estações</h3>
+          <p data-help-i18n="h40">A lista mostra indicativo, última recepção, distância, velocidade, curso, altitude e informações conhecidas.</p>
+          <p data-help-i18n="h41">Clique em uma linha para abrir o <strong>Mapa</strong>, centralizar a estação e mostrar o popup correspondente.</p>
+          <p data-help-i18n="h42">Os títulos das colunas podem ser clicados para alterar a ordenação. Estações favoritas ficam fixadas no topo e são identificadas por uma estrela amarela.</p>
+          <p data-help-i18n="h43">O botão <strong>Limpar estações</strong> apaga todas as estações e tracklogs locais; enlaces, mapa de calor e objetos são mantidos, e novas estações voltam a aparecer quando forem recebidas.</p>
+          <p data-help-i18n="h44">Fonte e tamanho da tabela podem ser ajustados em <strong>Configuração → Aparência</strong>.</p>
         </article>
 
         <article class="help-card">
-          <h3>6. Log APRS-IS</h3>
-          <p>Use o Log para diagnosticar conexão, autenticação, filtro e tráfego recebido/transmitido.</p>
-          <p><strong>RX</strong> indica dados recebidos e <strong>TX</strong> indica dados enviados.</p>
-          <p><code># logresp ... verified</code> confirma autenticação APRS-IS. Linhas iniciadas por <code>#</code> são mensagens de controle do servidor, não estações APRS.</p>
-          <p>O passcode é mascarado no Log.</p>
+          <h3 data-help-i18n="h45">6. Log APRS-IS</h3>
+          <p data-help-i18n="h46">Use o Log para diagnosticar conexão, autenticação, filtro e tráfego recebido/transmitido.</p>
+          <p data-help-i18n="h47"><strong>RX</strong> indica dados recebidos e <strong>TX</strong> indica dados enviados.</p>
+          <p data-help-i18n="h48"><code># logresp ... verified</code> confirma autenticação APRS-IS. Linhas iniciadas por <code>#</code> são mensagens de controle do servidor, não estações APRS.</p>
+          <p data-help-i18n="h49">O passcode é mascarado no Log.</p>
         </article>
 
         <article class="help-card">
-          <h3>7. Atualizações</h3>
-          <p>O cabeçalho informa se você está usando a <strong>última versão</strong> ou se existe uma <strong>nova versão</strong> publicada.</p>
-          <p>Quando houver atualização, clicar no aviso inicia o download do pacote compatível com a plataforma. O arquivo é validado antes da instalação.</p>
-          <p>Um updater auxiliar encerra a versão em execução, força o encerramento após timeout se necessário, instala/substitui a aplicação e abre automaticamente a nova versão. O Windows Portable mantém backup para rollback.</p>
+          <h3 data-help-i18n="h50">7. Atualizações</h3>
+          <p data-help-i18n="h51">O cabeçalho informa se você está usando a <strong>última versão</strong> ou se existe uma <strong>nova versão</strong> publicada.</p>
+          <p data-help-i18n="h52">Quando houver atualização, clicar no aviso inicia o download do pacote compatível com a plataforma. O arquivo é validado antes da instalação.</p>
+          <p data-help-i18n="h53">Um updater auxiliar encerra a versão em execução, força o encerramento após timeout se necessário, instala/substitui a aplicação e abre automaticamente a nova versão. O Windows Portable mantém backup para rollback.</p>
         </article>
 
         <article class="help-card">
-          <h3>8. Banco e backup</h3>
-          <p>O banco SQLite fica em:</p>
+          <h3 data-help-i18n="h54">8. Banco e backup</h3>
+          <p data-help-i18n="h55">O banco SQLite fica em:</p>
           <code class="help-path">%LOCALAPPDATA%\PT2VHF APRS Client\data\pt2vhf_aprs.db</code>
-          <p>O instalador e o Portable EXE usam esse mesmo banco local.</p>
-          <p>Em <strong>Configuração → Backup da configuração</strong> você pode salvar ou recuperar as preferências em JSON.</p>
-          <p class="help-warning">O JSON exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.</p>
+          <p data-help-i18n="h56">O instalador e o Portable EXE usam esse mesmo banco local.</p>
+          <p data-help-i18n="h57">Em <strong>Configuração → Backup da configuração</strong> você pode salvar ou recuperar as preferências em JSON.</p>
+          <p class="help-warning" data-help-i18n="h58">O JSON exportado contém o passcode APRS-IS em texto legível. Guarde-o em local seguro.</p>
         </article>
 
         <article class="help-card help-wide">
-          <h3>Diagnóstico rápido</h3>
+          <h3 data-help-i18n="h59">Diagnóstico rápido</h3>
           <div class="help-troubleshoot">
-            <div><strong>Conecta, mas não aparecem estações</strong><span>Confira o filtro APRS-IS e procure erros de filtro no Log.</span></div>
-            <div><strong>Não conecta</strong><span>Observe o erro mostrado após as tentativas. Ele identifica falhas de DNS, TCP/porta ou servidor; confira também firewall e porta 14580.</span></div>
-            <div><strong>Não transmite</strong><span>Confira se a conexão está como verificada e se indicativo/passcode estão corretos.</span></div>
-            <div><strong>Mapa não carrega</strong><span>Confira a conexão com a Internet ou bloqueios ao CDN/tiles. A v1.4 mantém as demais abas funcionando mesmo quando o mapa não carrega.</span></div>
-            <div><strong>Distâncias incorretas</strong><span>Confira latitude e longitude da sua estação em Configuração.</span></div>
-            <div><strong>Sem aviso sonoro</strong><span>Confira a opção de som em Configuração → Aparência e o volume do Windows.</span></div>
+            <div data-help-i18n="h60"><strong>Conecta, mas não aparecem estações</strong><span>Confira o filtro APRS-IS e procure erros de filtro no Log.</span></div>
+            <div data-help-i18n="h61"><strong>Não conecta</strong><span>Observe o erro mostrado após as tentativas. Ele identifica falhas de DNS, TCP/porta ou servidor; confira também firewall e porta 14580.</span></div>
+            <div data-help-i18n="h62"><strong>Não transmite</strong><span>Confira se a conexão está como verificada e se indicativo/passcode estão corretos. Para RF, veja Configuração → TNC / RF (Dire Wolf, Digirig, Kenwood TS-2000).</span></div>
+            <div data-help-i18n="h63"><strong>Mapa não carrega</strong><span>Confira a conexão com a Internet ou bloqueios ao CDN/tiles. As demais abas continuam funcionando mesmo quando o mapa não carrega.</span></div>
+            <div data-help-i18n="h64"><strong>Distâncias incorretas</strong><span>Confira latitude e longitude da sua estação em Configuração.</span></div>
+            <div data-help-i18n="h65"><strong>Sem aviso sonoro</strong><span>Confira a opção de som em Configuração → Aparência e o volume do sistema.</span></div>
           </div>
         </article>
       </div>
 
       <div class="help-contact">
         <div>
-          <div class="help-kicker">Dúvidas, dificuldades ou sugestões?</div>
-          <h3>Fale comigo</h3>
-          <p>Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.</p>
+          <div class="help-kicker" data-help-i18n="h66">Dúvidas, dificuldades ou sugestões?</div>
+          <h3 data-help-i18n="h67">Fale comigo</h3>
+          <p data-help-i18n="h68">Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.</p>
           <div class="help-contact-name">Alex</div>
         </div>
         <div class="help-contact-actions">
@@ -1973,6 +1983,7 @@
 <script src="{{ url_for('static', filename='js/i18n_v1430.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_live.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_dom.js') }}"></script>
+<script src="{{ url_for('static', filename='js/help_i18n.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
