@@ -1,3 +1,18 @@
+## BACKLOG — Versão no nome de todos os binários e instaladores (11/11/2026)
+
+- **Pedido do mantenedor:** incluir a versão no nome dos binários, para que instaladores de versões diferentes tenham
+  nomes diferentes.
+- **Situação levantada (11/11/2026):** os arquivos publicados em www.pt2vhf.com já têm a versão no nome em todos os
+  produtos (ex.: `PT2VHF_APRS_Client_Setup_x64_v1.15.8.exe`, `PT2VHF-Sat-Tool-v1.5.0-Win11-x64-Setup.exe`,
+  `PT2VHF-Prop-Tool-0.2.23-x64-setup.exe`, `PT2VHF_APRS_Client_Android_v0.1.9.apk`), e o `download.php` envia o
+  nome real do arquivo. Os instaladores Inno Setup do APRS Client usam `OutputBaseFilename=..._v{#MyAppVersion}`.
+- **Conferir e corrigir onde ainda sai sem versão:** executável instalado e atalho (ex.: `PT2VHF_APRS_Client.exe`),
+  nome do pacote baixado pelo atualizador OTA na pasta de atualizações, artefatos do GitHub Actions, binário de dentro
+  do `.tar.gz`/AppImage, `.deb`/DMG montado, e os demais projetos PT2VHF (Sat, Prop, Mesh, Prog, QSL, Android).
+  Padronizar um formato único (`<Produto>_<Tipo>_<Arquitetura>_v<versão>.<ext>`) sem quebrar o atualizador, que
+  procura o arquivo pelo nome (`updater.desired_asset_name`) e os contadores do site (`counterKey` estável).
+- **Confirmar com o mantenedor** em qual desses pontos viu o nome repetido entre versões.
+
 ## BACKLOG — Sugestões do PU2MUS: cancelar reenvio de mensagem e copiar texto recebido (11/11/2026)
 
 1. **Cancelar o reenvio de uma mensagem enviada (menu do botão direito).**
