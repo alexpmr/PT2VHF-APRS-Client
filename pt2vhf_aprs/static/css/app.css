@@ -5119,13 +5119,22 @@ html[lang="zh-CN"] body {
 .whats-new-announce p{margin:0 0 4px}
 
 /* v1.14.62 — aviso "Downloads no site oficial" (mesmo visual do Mesh Analyzer) */
+/* v1.15.10: splash "Powered by www.PT2VHF.com" como no Sat Tool v1.7.2 (banner inteiro, link, contagem e Fechar). */
 .official-site-notice{position:fixed;inset:0;z-index:9915;display:flex;align-items:center;justify-content:center;padding:16px;background:#040a11d6}
 .official-site-notice.hidden{display:none}
-.official-site-notice-box{width:min(540px,96vw);background:#2a2c33;color:#eff6f9;border:1px solid #708a99;border-radius:13px;box-shadow:0 20px 60px #000b;padding:24px}
+.official-site-notice-box{width:min(800px,96vw);max-height:96vh;display:flex;flex-direction:column;background:#0d1724;color:#eff6f9;border:1px solid #2f4a63;border-radius:13px;box-shadow:0 20px 60px #000b;padding:14px;box-sizing:border-box}
+.official-site-banner{display:block;min-height:0;line-height:0;cursor:pointer;border-radius:8px;overflow:hidden}
+.official-site-banner img{display:block;width:100%;height:auto;max-height:calc(96vh - 90px);object-fit:contain}
+.official-site-banner.hidden,.official-site-fallback.hidden{display:none}
+.official-site-fallback{padding:10px 10px 0}
 .official-site-notice h2{font-size:20px;margin:0 0 12px}
 .official-site-notice p{line-height:1.65;margin:0 0 15px}
-.official-site-notice a{color:#72d2ff;font-weight:bold;text-decoration:underline;overflow-wrap:anywhere}
-.official-site-notice-actions{display:flex;justify-content:flex-end}
+.official-site-notice a{color:#6cc7ff;font-weight:bold;text-decoration:underline;overflow-wrap:anywhere}
+.official-site-notice-actions{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.official-site-notice-actions #officialSiteNoticeLink{margin-right:auto}
+.official-site-countdown{display:inline-flex;align-items:center;gap:7px;color:#8fa9c4;font-size:11px;white-space:nowrap}
+.official-site-countdown-bar{display:inline-block;width:90px;height:4px;background:#1c3049;border-radius:2px;overflow:hidden}
+.official-site-countdown-bar span{display:block;height:100%;width:100%;background:#f08a24;border-radius:2px;transition:width 1s linear}
 .official-site-notice-actions .btn{border:2px solid #f5c400}
 /* v1.15.1: tempo decorrido e aviso de demora no processamento. */
 .processing-elapsed { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }

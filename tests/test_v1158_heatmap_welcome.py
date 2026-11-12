@@ -45,7 +45,7 @@ def test_welcome_notice_matches_sat_tool():
     notice = html[html.index('id="officialSiteNotice"'):html.index('id="whatsNewModal"')]
     assert "Feito por radioamadores, para radioamadores" in notice
     assert "Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager" in notice
-    assert ">Fechar</button>" in notice and 'href="https://www.pt2vhf.com"' in notice
+    assert ">Fechar</button>" in notice and 'href="https://www.pt2vhf.com"' in notice  # texto: reserva do splash
     table = js[js.index("const OFFICIAL_SITE_NOTICE"):js.index("let officialSiteNoticeShown")]
     for lang in ("pt", "en", "es", "fr", "de", "it", "ja", "pl", "nl", "zh"):
         assert f"    {lang}: [" in table

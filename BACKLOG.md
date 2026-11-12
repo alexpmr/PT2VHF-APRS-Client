@@ -1,3 +1,18 @@
+## RESOLVIDO (próxima versão) — Splash de abertura "Powered by www.PT2VHF.com" igual ao do Sat Tool v1.7.2 (12/11/2026)
+
+- **Pedido do mantenedor:** substituir a janela de abertura atual ("Feito por radioamadores, para radioamadores") por
+  um splash igual ao do **PT2VHF Sat Tool v1.7.2** (`show_official_site_notice` em `sat_tool/app.py`), com o banner
+  "Powered by www.PT2VHF.com" (sete ferramentas) redimensionado para cerca de 1200 px e incluído no pacote/instalador
+  de todas as plataformas.
+- **Esperado:** banner inteiro e proporcional, clicável (abre www.PT2VHF.com no navegador externo); embaixo o link
+  www.PT2VHF.com e o botão **Fechar**, com contagem regressiva discreta ao lado (⏱ 10 s) e barrinha laranja que
+  encolhe; fecha sozinho em 10 s e o Fechar (ou Esc) fecha na hora. Mantida a regra de quando aparece: uma vez por
+  abertura, 1,5 s após carregar, esperando outros avisos, e as Novidades da versão só depois dele.
+- **Entregue:** `pt2vhf_aprs/static/img/welcome-banner.jpg` (1200×675, ~180 KB; a pasta `static` já entra em todos os
+  specs PyInstaller: Windows, Win7, ARM64, Linux e macOS), `#officialSiteNotice` com banner, link, contagem e Fechar
+  (`index.html`, `app.css`, `showOfficialSiteNotice()` em `app.js`). Se o banner não carregar, volta ao título e
+  texto anteriores, nos 10 idiomas. Teste `tests/test_v11510_welcome_splash.py`.
+
 ## BACKLOG — Versão no nome de todos os binários e instaladores (11/11/2026)
 
 - **Pedido do mantenedor:** incluir a versão no nome dos binários, para que instaladores de versões diferentes tenham

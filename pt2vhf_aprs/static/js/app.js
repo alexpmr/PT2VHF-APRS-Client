@@ -1015,7 +1015,21 @@
     nl: ['Gemaakt door zendamateurs, voor zendamateurs', 'Bedankt voor het gebruik van PT2VHF APRS Client! Bekijk ook onze andere gratis toepassingen voor de gemeenschap: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android en meer.', 'Sluiten'],
     zh: ['由业余无线电爱好者打造，为业余无线电爱好者服务', '感谢使用 PT2VHF APRS Client！也欢迎了解我们为社区开发的其他免费应用：Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android 等。', '关闭'],
   };
+  // v1.15.10: splash como o do PT2VHF Sat Tool v1.7.2: banner "Powered by www.PT2VHF.com" clicável,
+  // link e Fechar embaixo, contagem regressiva (⏱ 10 s) com barra laranja e fechamento automático.
+  // Sem o arquivo do banner, volta ao título e texto acima.
+  const OFFICIAL_SITE_NOTICE_SECONDS = 10;
   let officialSiteNoticeShown = false;
+  let officialSiteNoticeTimer = null;
+  function hideOfficialSiteNotice() {
+    clearInterval(officialSiteNoticeTimer);
+    officialSiteNoticeTimer = null;
+    $('#officialSiteNotice')?.classList.add('hidden');
+  }
+  function showOfficialSiteNoticeFallback() {
+    $('#officialSiteNoticeBanner')?.classList.add('hidden');
+    $('#officialSiteNoticeFallback')?.classList.remove('hidden');
+  }
   function showOfficialSiteNotice() {
     const box = $('#officialSiteNotice');
     if (!box || officialSiteNoticeShown) return;
@@ -1026,12 +1040,26 @@
     $('#officialSiteNoticeTitle').textContent = title;
     $('#officialSiteNoticeText').textContent = body;
     $('#officialSiteNoticeClose').textContent = close;
+    const img = $('#officialSiteNoticeBanner img');
+    if (img && img.complete && !img.naturalWidth) showOfficialSiteNoticeFallback();
+    let left = OFFICIAL_SITE_NOTICE_SECONDS;
+    const tick = () => {
+      const label = $('#officialSiteNoticeCountdown');
+      const bar = $('#officialSiteNoticeBar');
+      if (label) label.textContent = `\u23f1 ${left} s`;
+      if (bar) bar.style.width = `${(left / OFFICIAL_SITE_NOTICE_SECONDS) * 100}%`;
+      if (left <= 0) { hideOfficialSiteNotice(); return; }
+      left -= 1;
+    };
+    tick();
     box.classList.remove('hidden');
+    officialSiteNoticeTimer = setInterval(tick, 1000);
     $('#officialSiteNoticeClose').focus();
   }
-  $('#officialSiteNoticeClose')?.addEventListener('click', () => $('#officialSiteNotice')?.classList.add('hidden'));
+  $('#officialSiteNoticeBanner img')?.addEventListener('error', showOfficialSiteNoticeFallback);
+  $('#officialSiteNoticeClose')?.addEventListener('click', hideOfficialSiteNotice);
   $('#officialSiteNotice')?.addEventListener('keydown', event => {
-    if (event.key === 'Escape') $('#officialSiteNotice')?.classList.add('hidden');
+    if (event.key === 'Escape') hideOfficialSiteNotice();
   });
   setTimeout(showOfficialSiteNotice, 1500);
 
