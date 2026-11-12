@@ -1,0 +1,15 @@
+/* Sugestões de SSID (Configuração → Estação). */
+.ssid-help-card { width: min(720px, 96vw); display: flex; flex-direction: column; }
+.ssid-help-body { overflow: auto; padding: 12px 16px; }
+.ssid-help-list { display: grid; gap: 4px; }
+.ssid-help-row { display: grid; grid-template-columns: 48px 1fr; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; background: #0f151b; color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.ssid-help-row:hover, .ssid-help-row:focus-visible { border-color: var(--accent); outline: none; }
+.ssid-help-row.current { border-color: var(--accent); background: rgba(59,166,255,.12); }
+.ssid-help-num { font-family: Consolas, "Courier New", monospace; font-weight: 700; color: var(--accent); }
+.ssid-help-notes { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.ssid-help-notes p { margin: 0 0 8px; }
+.ssid-help-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 16px; border-top: 1px solid var(--line); }
+.ssid-help-dontshow { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; cursor: pointer; }
+.ssid-help-button { align-self: flex-start; margin-top: 4px; padding: 0; border: 0; background: transparent; color: var(--accent); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
+html[data-theme="light"] .ssid-help-row { background: #f6f9fb; }
+html[data-theme="light"] .ssid-help-row.current { background: #e6f2fc; }
