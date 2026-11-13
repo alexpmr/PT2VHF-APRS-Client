@@ -1,3 +1,13 @@
+## 2.0.0 - 2026-11-13
+
+- **Nova série 2.x.** A numeração passa de 1.15.9 para 2.0.0, a pedido do mantenedor; o OTA oferece a atualização normalmente.
+- **Abertura "Powered by www.PT2VHF.com":** splash igual ao do PT2VHF Sat Tool, com o banner das ferramentas PT2VHF (clique abre o site), link www.PT2VHF.com e botão **Fechar** com contagem regressiva de 10 s.
+- **Sugestões de SSID:** ao abrir a configuração do indicativo, um popup mostra os SSIDs recomendados por tipo de operação (WB4APR), nos idiomas do app.
+- **Banco corrompido não impede mais a abertura:** o banco ilegível é movido para `data/corrupted/`, um banco novo é criado e tudo o que ainda puder ser lido é copiado de volta, com aviso ao usuário. Os instaladores Windows também conferem o banco existente e consertam se preciso.
+- **Registro de usuários por indicativo:** a consulta de versão nova informa só o indicativo da estação, para a lista de estações por país no site. Pode ser desligado em Configuração → Atualizações; nada é enviado com a estação não configurada.
+- **Mensagens sem acentos:** opção, ligada por padrão, que tira acentos e aspas/travessões tipográficos antes de enviar, para não chegarem caracteres estranhos no outro lado.
+- **Sugestões do PU2PYC:** e-mails e endereços web do comentário da estação ficam clicáveis; o popup da estação mostra equipamento (fabricante/modelo/TOCALL), formato do pacote, se aceita mensagens e o pacote bruto; sinal sonoro ao receber ACK de mensagem enviada e ao ouvir pelo RF o próprio pacote repetido por digipeater (opções em Aparência → Mensagens).
+
 ## 1.15.9 - 2026-11-11
 
 - **Mensagens — sugestões do PU2MUS:** botão direito sobre uma mensagem abre **Copiar texto**, **Copiar indicativo**, **Cancelar reenvio** (para os reenvios automáticos de uma mensagem ainda sem ACK, inclusive todas as partes de uma mensagem longa; fica como "Cancelada") e **Reenviar agora**. As mensagens enviadas pendentes mostram "tentativa 1/3", "2/3"… O texto das mensagens pode ser selecionado com o mouse, e a atualização automática da lista espera o fim da seleção em vez de desfazê-la.

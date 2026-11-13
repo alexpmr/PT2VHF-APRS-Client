@@ -692,8 +692,27 @@ def _notify_database_recovery() -> None:
         threading.Thread(target=_show, name="db-recovery-notice", daemon=True).start()
 
 
+def _installer_database_check() -> int:
+    """Modo --check-db, chamado pelo instalador: confere o banco existente e conserta se preciso."""
+    if _already_running():
+        return 0  # nunca mexe num banco em uso
+    try:
+        diag.configure(db.DB_PATH.parent)
+        from pt2vhf_aprs import db_check
+        result = db_check.installer_check()
+        diag.log_event("installer_db_check", version=__version__, **{k: v for k, v in result.items() if k != "recovery"})
+    except Exception as exc:  # o instalador nunca deve falhar por causa desta verificação
+        try:
+            diag.log_event("installer_db_check_error", error=f"{type(exc).__name__}: {exc}")
+        except Exception:
+            pass
+    return 0
+
+
 def main() -> int:
     global _browser_mode, _tray_icon, _server_handle, PORT, URL
+    if "--check-db" in sys.argv[1:]:
+        return _installer_database_check()
     _browser_mode = "--browser" in sys.argv[1:]
 
     if os.name == "nt":

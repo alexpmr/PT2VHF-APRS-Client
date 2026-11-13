@@ -146,10 +146,12 @@ DEFAULT_CONFIG = {
     "web_lan_enabled": 1,
     "check_updates_on_start": 1,
     "update_check_minutes": 15,
+    "share_callsign_on_update": 1,  # informa só o indicativo na consulta de versão (lista de estações no site)
     "auto_download_updates": 0,
     "install_updates_on_exit": 0,
     "message_retry_seconds": 60,
     "message_retry_attempts": 2,
+    "strip_message_accents": 1,  # tira acentos das mensagens antes de enviar (padrão: ligado)
     "respond_to_queries": 1,
     "auto_reply_enabled": 0,
     "auto_reply_text": "Mensagem recebida. Retornarei assim que possível.",
@@ -174,6 +176,8 @@ DEFAULT_CONFIG = {
     "elevation_opacity": 55,
     "elevation_color": "#e0ac3e",
     "sound_on_personal_message": 1,
+    "sound_on_message_ack": 1,  # sinal sonoro ao receber ACK de mensagem enviada
+    "sound_on_own_digipeat": 1,  # sinal sonoro ao ouvir por RF um pacote meu repetido por digipeater
     "sound_on_station_activity": 1,
     "notification_volume": 70,
     "notification_sound": "beep",
@@ -294,10 +298,12 @@ def _init_db_base() -> None:
                 web_lan_enabled INTEGER NOT NULL DEFAULT 1,
                 check_updates_on_start INTEGER NOT NULL DEFAULT 1,
                 update_check_minutes INTEGER NOT NULL DEFAULT 15,
+                share_callsign_on_update INTEGER NOT NULL DEFAULT 1,
                 auto_download_updates INTEGER NOT NULL DEFAULT 0,
                 install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
                 message_retry_attempts INTEGER NOT NULL DEFAULT 2,
+                strip_message_accents INTEGER NOT NULL DEFAULT 1,
                 respond_to_queries INTEGER NOT NULL DEFAULT 1,
                 auto_reply_enabled INTEGER NOT NULL DEFAULT 0,
                 auto_reply_text TEXT NOT NULL DEFAULT 'Mensagem recebida. Retornarei assim que possível.',
@@ -322,6 +328,8 @@ def _init_db_base() -> None:
                 elevation_opacity INTEGER NOT NULL DEFAULT 55,
                 elevation_color TEXT NOT NULL DEFAULT '#e0ac3e',
                 sound_on_personal_message INTEGER NOT NULL DEFAULT 1,
+                sound_on_message_ack INTEGER NOT NULL DEFAULT 1,
+                sound_on_own_digipeat INTEGER NOT NULL DEFAULT 1,
                 sound_on_station_activity INTEGER NOT NULL DEFAULT 1,
                 highlight_station_activity INTEGER NOT NULL DEFAULT 1,
                 traffic_animation_enabled INTEGER NOT NULL DEFAULT 1,
@@ -673,6 +681,10 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN elevation_color TEXT NOT NULL DEFAULT '#e0ac3e'")
         if "sound_on_personal_message" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_personal_message INTEGER NOT NULL DEFAULT 1")
+        if "sound_on_message_ack" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN sound_on_message_ack INTEGER NOT NULL DEFAULT 1")
+        if "sound_on_own_digipeat" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN sound_on_own_digipeat INTEGER NOT NULL DEFAULT 1")
         if "sound_on_station_activity" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN sound_on_station_activity INTEGER NOT NULL DEFAULT 1")
         if "notification_volume" not in config_columns:
@@ -731,6 +743,8 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN check_updates_on_start INTEGER NOT NULL DEFAULT 1")
         if "update_check_minutes" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN update_check_minutes INTEGER NOT NULL DEFAULT 15")
+        if "share_callsign_on_update" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN share_callsign_on_update INTEGER NOT NULL DEFAULT 1")
         if "auto_download_updates" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN auto_download_updates INTEGER NOT NULL DEFAULT 1")
         if "install_updates_on_exit" not in config_columns:
@@ -739,6 +753,8 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN message_retry_seconds INTEGER NOT NULL DEFAULT 60")
         if "message_retry_attempts" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN message_retry_attempts INTEGER NOT NULL DEFAULT 2")
+        if "strip_message_accents" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN strip_message_accents INTEGER NOT NULL DEFAULT 1")
         if "respond_to_queries" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN respond_to_queries INTEGER NOT NULL DEFAULT 1")
         if "auto_reply_enabled" not in config_columns:
@@ -864,11 +880,13 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
     merged["web_lan_enabled"] = 1 if bool(merged["web_lan_enabled"]) else 0
     merged["check_updates_on_start"] = 1 if bool(merged["check_updates_on_start"]) else 0
+    merged["share_callsign_on_update"] = 1 if bool(merged["share_callsign_on_update"]) else 0
     merged["update_check_minutes"] = max(5, min(1440, int(merged["update_check_minutes"] or 15)))
     merged["auto_download_updates"] = 0
     merged["install_updates_on_exit"] = 0
     merged["message_retry_seconds"] = max(15, min(3600, int(merged["message_retry_seconds"] or 60)))
     merged["message_retry_attempts"] = max(0, min(10, int(merged["message_retry_attempts"] or 0)))
+    merged["strip_message_accents"] = 1 if bool(merged["strip_message_accents"]) else 0
     merged["respond_to_queries"] = 1 if bool(merged["respond_to_queries"]) else 0
     merged["auto_reply_enabled"] = 1 if bool(merged["auto_reply_enabled"]) else 0
     merged["auto_reply_text"] = " ".join(str(merged["auto_reply_text"] or "").replace("\r", " ").replace("\n", " ").split())[:240]
@@ -896,6 +914,8 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     color = str(merged.get("elevation_color") or "#e0ac3e").lower().strip()
     merged["elevation_color"] = color if re.fullmatch(r"#[0-9a-f]{6}", color) else "#e0ac3e"
     merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
+    merged["sound_on_message_ack"] = 1 if bool(merged["sound_on_message_ack"]) else 0
+    merged["sound_on_own_digipeat"] = 1 if bool(merged["sound_on_own_digipeat"]) else 0
     merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
     merged["notification_volume"] = max(0, min(100, int(merged["notification_volume"] or 0)))
     merged["notification_sound"] = str(merged["notification_sound"] or "beep").lower().strip()

@@ -1,4 +1,33 @@
-## RESOLVIDO (próxima versão) — Splash de abertura "Powered by www.PT2VHF.com" igual ao do Sat Tool v1.7.2 (12/11/2026)
+## RESOLVIDO (v2.0.0) — Tirar acentos das mensagens antes de enviar (11/11/2026)
+
+- **Pedido do mantenedor:** opção que tira todos os acentos das mensagens antes de enviar, para evitar caracteres
+  estranhos no outro lado. Padrão: ligada.
+- **Entregue:** Configuração → APRS-IS → **"Tirar acentos das mensagens antes de enviar"** (coluna
+  `strip_message_accents`, padrão 1). `aprs_service.strip_message_accents()` remove acentos (NFKD) e troca aspas,
+  travessões e reticências tipográficas por ASCII antes de dividir a mensagem; vale para mensagens manuais,
+  auto-resposta e agendadas, por APRS-IS e RF. Testes em `tests/test_backlog_nov2026.py`.
+
+## RESOLVIDO (v2.0.0) — Instalador confere o banco existente e conserta se não estiver íntegro (11/11/2026)
+
+- **Pedido do mantenedor:** ao instalar, verificar se já existe o banco e confirmar que tudo está íntegro,
+  consertando se não estiver. Complementa a recuperação na inicialização (PR #172).
+- **Entregue:** os três instaladores Windows (x64, ARM64, Win7 Legacy) rodam `PT2VHF_APRS_Client.exe --check-db`
+  como o usuário que instalou, oculto, antes do primeiro uso. Sem banco, não cria nada. Com banco: inicializa
+  (arquivo ilegível é recuperado), roda `quick_check`; páginas corrompidas fazem o banco ser reconstruído com o que
+  ainda for legível (original em `data/corrupted/`); estrutura incompleta é reparada (`db_check.repair`). Nunca
+  mexe num banco em uso e nunca faz a instalação falhar. Resultado no `diagnostics.log` (`installer_db_check`).
+  Linux/macOS continuam cobertos pela recuperação na inicialização.
+
+## RESOLVIDO (v2.0.0) — Sugestões do PU2PYC (13/11/2026)
+
+- **E-mail no comentário vira link:** no popup da estação, e-mails do campo Informação abrem `mailto:` e endereços
+  `http(s)://`/`www.` abrem no navegador.
+- **Detalhes trafegados que não apareciam:** o popup mostra Equipamento (fabricante, modelo e TOCALL; sistema quando
+  houver), Formato do pacote, Aceita mensagens e o pacote bruto (recolhido).
+- **Sinal sonoro:** ao receber ACK de mensagem enviada por mim, e ao ouvir pelo RF um pacote meu repetido por um
+  digipeater (no máximo um aviso a cada 5 s). Duas opções novas em Aparência → Mensagens, ligadas por padrão.
+
+## RESOLVIDO (v2.0.0) — Splash de abertura "Powered by www.PT2VHF.com" igual ao do Sat Tool v1.7.2 (12/11/2026)
 
 - **Pedido do mantenedor:** substituir a janela de abertura atual ("Feito por radioamadores, para radioamadores") por
   um splash igual ao do **PT2VHF Sat Tool v1.7.2** (`show_official_site_notice` em `sat_tool/app.py`), com o banner
@@ -12,6 +41,18 @@
   specs PyInstaller: Windows, Win7, ARM64, Linux e macOS), `#officialSiteNotice` com banner, link, contagem e Fechar
   (`index.html`, `app.css`, `showOfficialSiteNotice()` em `app.js`). Se o banner não carregar, volta ao título e
   texto anteriores, nos 10 idiomas. Teste `tests/test_v11510_welcome_splash.py`.
+
+## RESOLVIDO (v2.0.0) — Registro de usuários por indicativo (13/11/2026)
+
+- **Pedido do mantenedor:** igual ao do PT2VHF Sat Tool v1.8.0. Na consulta de versão nova o app envia só o
+  indicativo da estação: `https://www.pt2vhf.com/update.php?product=aprs&call=PY2XYZ` (produto `aprs`, o mesmo do OTA).
+- **No app:** ligado por padrão, com a caixa **Configuração → Atualizações → "Informar meu indicativo ao consultar versão
+  nova"** (coluna `share_callsign_on_update`). Não envia nada com a estação não configurada (indicativo vazio ou o de
+  exemplo PT2VHF, ou latitude/longitude vazias). Nunca envia SSID, posição nem locator. Código em
+  `release_check.station_callsign()`/`update_url()`; testes em `tests/test_callsign_registry.py`; `PRIVACY.md` atualizado.
+- **No site (alexpmr/PT2VHF-Site):** produto `aprs` no registro de estações já existente (validação, país pelo prefixo
+  DXCC, primeira/última consulta, sem IP, 10 indicativos novos por IP/dia, registros permanentes) e, no fim da página
+  `/aprs`, ranking de países com bandeira e todos os indicativos de cada país. Publicar o site só com aprovação do Alex.
 
 ## BACKLOG — Versão no nome de todos os binários e instaladores (11/11/2026)
 

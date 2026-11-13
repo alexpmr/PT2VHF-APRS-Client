@@ -927,6 +927,7 @@
           <label class="check-field"><input name="respond_to_queries" type="checkbox"><span>Responder automaticamente a queries APRS de posição, status e trace</span></label>
           <label class="field"><span>Retry de mensagem após (segundos)</span><input name="message_retry_seconds" type="number" min="15" max="3600" value="60"></label>
           <label class="field"><span>Máximo de retries por parte</span><input name="message_retry_attempts" type="number" min="0" max="10" value="2"></label>
+          <label class="check-field"><input name="strip_message_accents" type="checkbox" checked><span>Tirar acentos das mensagens antes de enviar</span></label>
         </div>
         <div class="config-actions">
           <button id="sendBeaconButton" type="button" class="btn secondary">Enviar beacon agora</button>
@@ -1175,6 +1176,14 @@
               <input name="sound_on_personal_message" type="checkbox" checked>
               <span>Tocar sinal sonoro ao receber mensagem para minha estação</span>
             </label>
+            <label class="check-field message-sound-check">
+              <input name="sound_on_message_ack" type="checkbox" checked>
+              <span>Tocar sinal sonoro ao receber confirmação (ACK) de mensagem enviada</span>
+            </label>
+            <label class="check-field message-sound-check">
+              <input name="sound_on_own_digipeat" type="checkbox" checked>
+              <span>Tocar sinal sonoro ao ouvir pelo RF meu pacote repetido por um digipeater</span>
+            </label>
             <label class="field"><span>Duração do aviso na aba Mensagens</span>
               <input name="message_popup_seconds" type="number" min="1" max="60" step="1" value="5">
               <small>Tempo, em segundos, antes do pequeno aviso fechar automaticamente. Ele também pode ser fechado manualmente.</small>
@@ -1276,6 +1285,7 @@
         <h3>Atualizações</h3>
         <div class="form-grid two-cols">
           <label class="check-field"><input name="check_updates_on_start" type="checkbox" checked><span>Verificar atualizações automaticamente</span></label>
+          <label class="check-field"><input name="share_callsign_on_update" type="checkbox" checked><span>Informar meu indicativo ao consultar versão nova</span></label>
           <label class="field">
             <span>Intervalo de verificação (minutos)</span>
             <input name="update_check_minutes" type="number" min="5" max="1440" step="5" value="15">

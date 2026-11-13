@@ -2138,6 +2138,7 @@ class TNCService:
             path=packet["path_text"], packet_type=kind,
             reason="Duplicado observado" if duplicate else "",
         )
+        self._notify_own_digipeat(packet)
         new_rf_station = update_heard(packet, packet["tnc2"])
         if new_rf_station:
             diag.log_event(
@@ -2184,6 +2185,25 @@ class TNCService:
 
         if cfg.get("igate_rx_enabled"):
             self._handle_rf_to_is(packet, cfg)
+
+    def _notify_own_digipeat(self, packet: dict[str, Any]) -> None:
+        """Sinal sonoro quando um pacote desta estação volta pelo RF repetido por um digipeater."""
+        try:
+            own = self._own_call()
+            if not own or str(packet.get("source") or "").upper() != own:
+                return
+            if not any(bool(item.get("repeated")) for item in (packet.get("path") or [])):
+                return
+            now = time.monotonic()
+            if now - float(getattr(self, "_last_own_digipeat_sound", 0.0)) < 5.0:
+                return
+            self._last_own_digipeat_sound = now
+            diag.log_event("tnc_own_packet_digipeated", path=packet.get("path_text") or [])
+            if bool(db.get_config().get("sound_on_own_digipeat", 1)):
+                from .aprs_service import _play_windows_message_sound
+                _play_windows_message_sound("digipeat")
+        except Exception as exc:
+            diag.log_event("tnc_own_digipeat_notice_error", error=str(exc))
 
     def _handle_digipeat(self, frame: bytes, packet: dict[str, Any], cfg: dict[str, Any]) -> None:
         own = self._own_call()

@@ -1,5 +1,7 @@
 # Política de Versionamento
 
+A série **v2.x** começou em 13/11/2026 com a **v2.0.0**, por escolha do mantenedor (o pedido inicial de "1.2" não foi usado porque o OTA compara versões número a número e 1.2 < 1.15.9). Seguir **v2.0.1, v2.0.2, ...** até nova orientação.
+
 A série **v1.8** foi iniciada por orientação explícita do mantenedor em 01/10/2026, com foco na integração RF/TNC.
 
 - a versão inicial da nova série é **v1.8.0**;

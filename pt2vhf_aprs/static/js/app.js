@@ -4826,6 +4826,41 @@
     return ` disabled aria-disabled="true" title="${reason}"`;
   }
 
+  // Comentário da estação com e-mails (mailto:) e endereços web clicáveis (sugestão PU2PYC).
+  function linkifyStationInfo(text) {
+    const source = String(text || '');
+    const pattern = /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|((?:https?:\/\/|www\.)[^\s<>"']+[^\s<>"'.,;:!?)\]])/g;
+    let out = '';
+    let last = 0;
+    let match;
+    while ((match = pattern.exec(source)) !== null) {
+      out += escapeHtml(source.slice(last, match.index));
+      const value = match[0];
+      const href = match[1] ? `mailto:${value}` : (/^https?:/i.test(value) ? value : `https://${value}`);
+      out += `<a href="${escapeHtml(href)}" class="station-info-link" target="_blank" rel="noopener">${escapeHtml(value)}</a>`;
+      last = match.index + value.length;
+    }
+    return out + escapeHtml(source.slice(last));
+  }
+
+  // Detalhes que vêm no pacote mas normalmente não aparecem: equipamento (TOCALL), formato, mensagens, pacote bruto.
+  function stationExtraDetailsHtml(s) {
+    const vendor = String(s.device_vendor || '').trim();
+    const model = String(s.device_model || '').trim();
+    const tocall = String(s.device_tocall || '').trim();
+    let device = [vendor, model].filter(Boolean).join(' ');
+    if (!device) device = ui('Não identificado', 'Not identified');
+    if (tocall) device += ` (${tocall})`;
+    const os = String(s.device_os || '').trim();
+    const rows = [
+      `<strong>${ui('Equipamento', 'Equipment')}</strong><span translate="no">${escapeHtml(device)}${os ? ' · ' + escapeHtml(os) : ''}</span>`,
+    ];
+    if (s.packet_format) rows.push(`<strong>${ui('Formato', 'Format')}</strong><span translate="no">${escapeHtml(String(s.packet_format))}</span>`);
+    rows.push(`<strong>${ui('Aceita mensagens', 'Accepts messages')}</strong><span>${s.message_capable ? ui('Sim', 'Yes') : ui('Não informado', 'Not stated')}</span>`);
+    if (s.raw) rows.push(`<strong>${ui('Pacote', 'Packet')}</strong><details class="station-raw-details"><summary>${ui('Ver pacote bruto', 'Show raw packet')}</summary><code translate="no">${escapeHtml(String(s.raw))}</code></details>`);
+    return rows.join('\n        ');
+  }
+
   function popupHtml(s) {
     let path = '';
     try { path = JSON.parse(s.path || '[]').join(','); } catch (_) { path = s.path || ''; }
@@ -4846,8 +4881,9 @@
         <strong>Velocidade</strong><span>${fmtSpeedKmh(s.speed, 1)}</span>
         <strong>Curso</strong><span>${fmtNum(s.course, 0, '°')}</span>
         <strong>Altitude</strong><span>${fmtAltM(s.altitude, 1)}</span>
-        <strong>Informação</strong><span translate="no">${escapeHtml(s.info || '')}</span>
+        <strong>Informação</strong><span translate="no">${linkifyStationInfo(s.info || '')}</span>
         <strong>Via</strong><span translate="no">${escapeHtml(path)}</span>
+        ${stationExtraDetailsHtml(s)}
         ${s.digital_origin ? `<strong>${ui('Origem', 'Source')}</strong><span class="station-digital-origin">${escapeHtml(ui('via ' + s.digital_origin + ' (gateway para o APRS-IS, sem RF APRS)', 'via ' + s.digital_origin + ' (gateway to APRS-IS, no APRS RF)'))}</span>` : ''}
       </div>
       <div class="station-rf-heard-section">
@@ -9797,6 +9833,8 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     'Intervalo de verificação (minutos)':'Check interval (minutes)',
     'De 5 a 1.440 minutos. Padrão: 15 minutos.':'From 5 to 1,440 minutes. Default: 15 minutes.',
     'Verificar atualizações automaticamente':'Check for updates automatically',
+    'Informar meu indicativo ao consultar versão nova':'Report my callsign when checking for a new version',
+    'Tirar acentos das mensagens antes de enviar':'Remove accents from messages before sending',
     'Baixar atualização automaticamente':'Download updates automatically',
     'Instalar atualização automaticamente ao fechar':'Install updates automatically on exit',
     'Nenhuma atualização pendente.':'No pending update.',

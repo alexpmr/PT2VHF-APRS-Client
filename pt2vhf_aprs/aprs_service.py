@@ -8,6 +8,7 @@ import subprocess
 import sys
 import threading
 import time
+import unicodedata
 from dataclasses import dataclass, asdict
 from typing import Any
 
@@ -45,17 +46,25 @@ def _connect_ipv4(host: str, port: int, timeout: float = 8.0) -> socket.socket:
     raise OSError(f"Falha ao conectar em {host}:{port}: {last_error}")
 
 
-def _play_windows_message_sound() -> None:
+NOTICE_TONES = {
+    "message": ((880, 120), (1175, 180)),
+    "ack": ((1175, 90), (1568, 140)),       # ACK de leitura recebido
+    "digipeat": ((660, 90),),                # pacote meu ouvido repetido por digipeater
+}
+
+
+def _play_windows_message_sound(kind: str = "message") -> None:
     """Toca um aviso curto no Windows sem bloquear a thread de recepção APRS."""
     try:
         import winsound
     except ImportError:
         return
+    tones = NOTICE_TONES.get(kind) or NOTICE_TONES["message"]
 
     def _sound() -> None:
         try:
-            winsound.Beep(880, 120)
-            winsound.Beep(1175, 180)
+            for frequency, duration in tones:
+                winsound.Beep(frequency, duration)
         except Exception:
             try:
                 winsound.MessageBeep(winsound.MB_ICONASTERISK)
@@ -568,7 +577,9 @@ class APRSService:
         rej = re.fullmatch(r"rej([A-Za-z0-9]{1,5})", text, re.IGNORECASE)
         if ack:
             with self._retry_lock:
-                db.mark_message_status(ack.group(1), "ACK", from_call)
+                acked = db.mark_message_status(ack.group(1), "ACK", from_call)
+            if acked and bool(db.get_config().get("sound_on_message_ack", 1)):
+                _play_windows_message_sound("ack")
             db.resolve_ping_ack(ack.group(1), from_call)
             diag.log_event("message_ack_received", peer=from_call, message_id=ack.group(1), medium="RF" if via_rf else "APRS-IS")
             return
@@ -762,6 +773,8 @@ class APRSService:
         medium = "APRS-IS" if selected_route == "aprs_is" else "RF"
         effective_path = "TCPIP*" if medium == "APRS-IS" else ",".join(rf_path_items)
 
+        if bool(cfg.get("strip_message_accents", 1)):
+            text = strip_message_accents(text)
         parts = split_aprs_message_parts(text)
         dedupe_key = destination + "\0" + selected_route + "\0" + effective_path + "\0" + " ".join(parts)
         now = time.monotonic()
@@ -1210,6 +1223,25 @@ def build_bulletin_packet(source: str, text: str, bulletin_id: str = "0", group:
     addressee = f"BLN{bulletin_id}{group:<5}" if group else f"BLN{bulletin_id}{'':<5}"
     packet = f"{source}>{APP_TOCALL},TCPIP*::{addressee}:{clean}"
     return packet, addressee.rstrip(), message_type, clean
+
+
+_ACCENT_EXTRA = str.maketrans({
+    "ß": "ss", "æ": "ae", "Æ": "AE", "ø": "o", "Ø": "O", "œ": "oe", "Œ": "OE", "đ": "d", "Đ": "D",
+    "ł": "l", "Ł": "L", "ı": "i", "º": "o", "ª": "a", "°": "o",
+    "“": '"', "”": '"', "„": '"', "‘": "'", "’": "'", "´": "'", "`": "'",
+    "–": "-", "—": "-", "…": "...", "\u00a0": " ",
+})
+
+
+def strip_message_accents(text: str) -> str:
+    """Tira acentos e troca pontuação tipográfica por ASCII (ex.: "Ação às 9h" -> "Acao as 9h").
+
+    Muitos rádios e clientes APRS só mostram ASCII; letras acentuadas chegam como caracteres estranhos.
+    Caracteres sem equivalente (ex.: japonês, emoji) ficam como estão.
+    """
+    value = str(text or "").translate(_ACCENT_EXTRA)
+    decomposed = unicodedata.normalize("NFKD", value)
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
 
 
 def split_aprs_message_parts(text: str, single_limit: int = 63) -> list[str]:
