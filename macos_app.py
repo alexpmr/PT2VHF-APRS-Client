@@ -238,6 +238,8 @@ def main() -> int:
     global _server_handle, PORT, URL
     updater.register_exit_handler(_exit_for_update)
     db.init_db()
+    if db.LAST_DB_RECOVERY:
+        print(db.recovery_notice_text(), file=sys.stderr)
     runtime_config = db.get_config()
     server_host = "0.0.0.0" if bool(runtime_config.get("web_lan_enabled")) else HOST
     app = create_app()
