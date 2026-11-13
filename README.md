@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v2.0.0
+# PT2VHF APRS Client - v2.0.1
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,13 +6,15 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 2.0.0 (publicação pendente)
+## Downloads — versão 2.0.1 (publicação pendente)
 
-A v2.0.0 será distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 e Raspberry Pi ARM64 (AppImage/.deb/.tar.gz) e macOS Intel/Apple Silicon.
-O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) passa a oferecer a v2.0.0 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
+A v2.0.1 será distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 e Raspberry Pi ARM64 (AppImage/.deb/.tar.gz) e macOS Intel/Apple Silicon.
+O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) passa a oferecer a v2.0.1 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
 
 A revisão integral das traduções (#157) continua aberta.
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v2.0.1** corrige a lista de estações no site: o indicativo volta a ser informado na consulta de versão, sem o SSID.
 
 A **v2.0.0** inicia a série 2.x: abertura "Powered by www.PT2VHF.com" como no Sat Tool, sugestões de SSID, recuperação automática de banco corrompido (também na instalação), mensagens sem acentos, popup da estação com e-mail clicável e detalhes do equipamento, sinal sonoro no ACK e no próprio pacote repetido por digipeater, e registro opcional do indicativo para a lista de estações no site.
 
