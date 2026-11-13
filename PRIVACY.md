@@ -80,22 +80,21 @@ O WebView2 processa a interface HTML/CSS/JavaScript local e também acessa os re
 
 O uso do WebView2 não adiciona telemetria própria do PT2VHF APRS Client. Políticas de privacidade e telemetria do próprio Windows/Microsoft Edge WebView2 são regidas pela Microsoft.
 
-## Verificação de atualizações no GitHub
+## Verificação de atualizações em www.pt2vhf.com
 
-O aplicativo consulta periodicamente a API pública de Releases do GitHub para verificar se existe uma versão mais recente do PT2VHF APRS Client.
+O aplicativo consulta periodicamente `https://www.pt2vhf.com/update.php?product=aprs` para verificar se existe uma versão mais recente do PT2VHF APRS Client. A consulta envia os metadados normais de uma requisição HTTPS (endereço IP, cabeçalhos HTTP e o identificador do aplicativo no User-Agent).
 
-Essa consulta envia apenas os metadados normais de uma requisição HTTPS, incluindo informações como endereço IP, cabeçalhos HTTP e o identificador do aplicativo/versão no User-Agent.
+**Indicativo da estação (opcional, ligado por padrão):** a consulta inclui só o indicativo configurado, no parâmetro `call` (ex.: `update.php?product=aprs&call=PY2XYZ`), para a lista pública de estações que usam o aplicativo, exibida por país no fim da página www.pt2vhf.com/aprs. O site grava o indicativo, o país deduzido do prefixo e as datas da primeira e da última consulta, sem guardar o endereço IP. Para desligar, desmarque **Configuração → Atualizações → Informar meu indicativo ao consultar versão nova**. Nada é enviado enquanto a estação não estiver configurada (indicativo vazio ou o de exemplo PT2VHF, ou latitude/longitude vazias).
 
-A verificação de atualização **não envia** ao GitHub:
+A verificação de atualização **nunca envia**:
 
-- indicativo ou SSID configurado;
-- posição da estação;
+- SSID, posição da estação ou locator;
 - mensagens APRS;
 - passcode APRS-IS;
 - filtro APRS-IS;
 - conteúdo do banco SQLite ou do Log.
 
-A consulta é feita diretamente ao GitHub e não passa por um servidor operado pelo desenvolvedor. O resultado é armazenado temporariamente em cache local para reduzir requisições.
+O resultado é armazenado temporariamente em cache local para reduzir requisições.
 
 ## Configuration export
 
@@ -105,7 +104,7 @@ Users should treat exported configuration files as sensitive and must not publis
 
 ## No developer-operated collection
 
-The PT2VHF APRS Client project does not operate a server that collects user application data.
+Apart from the optional callsign sent with the update check (see above), the PT2VHF APRS Client project does not operate a server that collects user application data.
 
 Network traffic goes to services selected or required for the features described above.
 

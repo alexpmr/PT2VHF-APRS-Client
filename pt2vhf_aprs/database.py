@@ -146,6 +146,7 @@ DEFAULT_CONFIG = {
     "web_lan_enabled": 1,
     "check_updates_on_start": 1,
     "update_check_minutes": 15,
+    "share_callsign_on_update": 1,  # informa só o indicativo na consulta de versão (lista de estações no site)
     "auto_download_updates": 0,
     "install_updates_on_exit": 0,
     "message_retry_seconds": 60,
@@ -292,6 +293,7 @@ def _init_db_base() -> None:
                 web_lan_enabled INTEGER NOT NULL DEFAULT 1,
                 check_updates_on_start INTEGER NOT NULL DEFAULT 1,
                 update_check_minutes INTEGER NOT NULL DEFAULT 15,
+                share_callsign_on_update INTEGER NOT NULL DEFAULT 1,
                 auto_download_updates INTEGER NOT NULL DEFAULT 0,
                 install_updates_on_exit INTEGER NOT NULL DEFAULT 0,
                 message_retry_seconds INTEGER NOT NULL DEFAULT 60,
@@ -725,6 +727,8 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN check_updates_on_start INTEGER NOT NULL DEFAULT 1")
         if "update_check_minutes" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN update_check_minutes INTEGER NOT NULL DEFAULT 15")
+        if "share_callsign_on_update" not in config_columns:
+            conn.execute("ALTER TABLE config ADD COLUMN share_callsign_on_update INTEGER NOT NULL DEFAULT 1")
         if "auto_download_updates" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN auto_download_updates INTEGER NOT NULL DEFAULT 1")
         if "install_updates_on_exit" not in config_columns:
@@ -858,6 +862,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
     merged["web_lan_enabled"] = 1 if bool(merged["web_lan_enabled"]) else 0
     merged["check_updates_on_start"] = 1 if bool(merged["check_updates_on_start"]) else 0
+    merged["share_callsign_on_update"] = 1 if bool(merged["share_callsign_on_update"]) else 0
     merged["update_check_minutes"] = max(5, min(1440, int(merged["update_check_minutes"] or 15)))
     merged["auto_download_updates"] = 0
     merged["install_updates_on_exit"] = 0

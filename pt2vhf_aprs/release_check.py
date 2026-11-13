@@ -19,6 +19,38 @@ WEB_URL = "https://www.pt2vhf.com/aprs"
 ORIGIN = "https://www.pt2vhf.com"
 HEADERS = {"Accept": "application/json", "User-Agent": "PT2VHF-APRS-Client-Updater"}
 HASH_RE = re.compile(r"[0-9a-f]{64}")
+# Indicativo enviado na consulta de versão (lista de estações no site): letras e
+# números, com prefixo/sufixo opcional (CT/PY2XYZ/P), ao menos um dígito e uma letra.
+CALLSIGN_RE = re.compile(r"(?=.*[0-9])(?=.*[A-Z])[A-Z0-9]{1,8}(?:/[A-Z0-9]{1,8}){0,2}")
+EXAMPLE_CALLSIGNS = {"PT2VHF"}
+
+
+def callsign_param(callsign: Any) -> str:
+    """Indicativo normalizado para o parâmetro call, ou "" se inválido."""
+    call = str(callsign or "").strip().upper()
+    return call if len(call) <= 16 and CALLSIGN_RE.fullmatch(call) else ""
+
+
+def update_url(callsign: Any = None) -> str:
+    """update.php?product=aprs[&call=PY2XYZ]: só o indicativo, nada de posição ou locator."""
+    call = callsign_param(callsign)
+    return API_URL + ("&call=" + urllib.parse.quote(call, safe="") if call else "")
+
+
+def station_callsign(config: Any) -> str | None:
+    """Indicativo a informar na consulta de versão, ou None para não enviar nada.
+
+    Não envia se a opção estiver desligada ou se a estação não estiver configurada
+    (indicativo vazio, o de exemplo PT2VHF, ou latitude/longitude vazias).
+    """
+    if not isinstance(config, dict) or not bool(config.get("share_callsign_on_update", 1)):
+        return None
+    call = callsign_param(config.get("callsign"))
+    if not call or call.split("-", 1)[0] in EXAMPLE_CALLSIGNS:
+        return None
+    if config.get("latitude") in ("", None) or config.get("longitude") in ("", None):
+        return None
+    return call
 
 
 def _ssl_context() -> ssl.SSLContext:
@@ -119,10 +151,11 @@ def validate_release(data: Any) -> dict[str, Any]:
     return {"tag_name": "v" + version, "html_url": WEB_URL, "body": str(data.get("notes") or ""), "assets": assets}
 
 
-def _python_api(timeout: float = 7.0) -> dict[str, Any]:
-    req = urllib.request.Request(API_URL, headers=HEADERS)
+def _python_api(timeout: float = 7.0, callsign: Any = None) -> dict[str, Any]:
+    url = update_url(callsign)
+    req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.build_opener(NoRedirect(), https_handler()).open(req, timeout=timeout) as res:
-        if res.geturl() != API_URL:
+        if res.geturl() != url:
             raise ReleaseLookupError("redirect", "Endereço inesperado de atualização.")
         raw = res.read(2_000_001)
     if len(raw) > 2_000_000:
@@ -130,14 +163,14 @@ def _python_api(timeout: float = 7.0) -> dict[str, Any]:
     return validate_release(json.loads(raw.decode("utf-8")))
 
 
-def _windows_native_api(timeout: int = 12) -> dict[str, Any]:
+def _windows_native_api(timeout: int = 12, callsign: Any = None) -> dict[str, Any]:
     if sys.platform != "win32":
         raise ReleaseLookupError("fallback_unavailable", "Fallback de TLS disponível só no Windows.")
     script = (
         "$ErrorActionPreference='Stop';"
         "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
         "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;"
-        "$r=Invoke-RestMethod -Uri '" + API_URL + "' -Method Get -MaximumRedirection 0 "
+        "$r=Invoke-RestMethod -Uri '" + update_url(callsign) + "' -Method Get -MaximumRedirection 0 "
         "-TimeoutSec " + str(int(timeout)) + " -Headers @{'User-Agent'='PT2VHF-APRS-Client-Updater'};"
         "$r | ConvertTo-Json -Depth 12 -Compress"
     )
@@ -158,11 +191,12 @@ def _windows_native_api(timeout: int = 12) -> dict[str, Any]:
         raise ReleaseLookupError("windows_tls_fallback", "Resposta HTTPS nativa inválida.") from exc
 
 
-def fetch_latest_release() -> tuple[dict[str, Any], str]:
+def fetch_latest_release(callsign: Any = None) -> tuple[dict[str, Any], str]:
+    """Consulta o site; callsign (opcional) vai só no parâmetro call do update.php."""
     failures: list[ReleaseLookupError] = []
     for attempt in range(2):
         try:
-            return _python_api(), "pt2vhf_site"
+            return _python_api(callsign=callsign), "pt2vhf_site"
         except Exception as exc:
             issue = classify_error(exc)
             failures.append(issue)
@@ -172,7 +206,7 @@ def fetch_latest_release() -> tuple[dict[str, Any], str]:
                 time.sleep(0.5)
     if sys.platform == "win32" and failures and failures[0].code == "tls":
         try:
-            return _windows_native_api(), "windows_system_tls"
+            return _windows_native_api(callsign=callsign), "windows_system_tls"
         except Exception as exc:
             failures.append(classify_error(exc))
     raise failures[0] if failures else ReleaseLookupError("unknown", "Falha desconhecida.")
