@@ -3,6 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.0": {
+        "title": "Versão 2.0",
+        "items": [
+            "Nova abertura \"Powered by www.PT2VHF.com\", como no PT2VHF Sat Tool.",
+            "Sugestões de SSID por tipo de operação na configuração do indicativo.",
+            "Banco de dados corrompido é recuperado automaticamente, também na instalação.",
+            "Mensagens saem sem acentos (opção ligada por padrão).",
+            "Popup da estação com e-mail clicável, equipamento, formato e pacote bruto.",
+            "Sinal sonoro ao receber ACK e ao ouvir seu pacote repetido por um digipeater.",
+            "A consulta de versão informa só o seu indicativo, para a lista de estações no site (pode desligar).",
+        ],
+    },
     "1.15.9": {
         "title": "Botão direito nas mensagens e Kenwood TS-2000",
         "items": [

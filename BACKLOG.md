@@ -1,4 +1,4 @@
-## RESOLVIDO (próxima versão) — Tirar acentos das mensagens antes de enviar (11/11/2026)
+## RESOLVIDO (v2.0.0) — Tirar acentos das mensagens antes de enviar (11/11/2026)
 
 - **Pedido do mantenedor:** opção que tira todos os acentos das mensagens antes de enviar, para evitar caracteres
   estranhos no outro lado. Padrão: ligada.
@@ -7,7 +7,7 @@
   travessões e reticências tipográficas por ASCII antes de dividir a mensagem; vale para mensagens manuais,
   auto-resposta e agendadas, por APRS-IS e RF. Testes em `tests/test_backlog_nov2026.py`.
 
-## RESOLVIDO (próxima versão) — Instalador confere o banco existente e conserta se não estiver íntegro (11/11/2026)
+## RESOLVIDO (v2.0.0) — Instalador confere o banco existente e conserta se não estiver íntegro (11/11/2026)
 
 - **Pedido do mantenedor:** ao instalar, verificar se já existe o banco e confirmar que tudo está íntegro,
   consertando se não estiver. Complementa a recuperação na inicialização (PR #172).
@@ -18,7 +18,7 @@
   mexe num banco em uso e nunca faz a instalação falhar. Resultado no `diagnostics.log` (`installer_db_check`).
   Linux/macOS continuam cobertos pela recuperação na inicialização.
 
-## RESOLVIDO (próxima versão) — Sugestões do PU2PYC (13/11/2026)
+## RESOLVIDO (v2.0.0) — Sugestões do PU2PYC (13/11/2026)
 
 - **E-mail no comentário vira link:** no popup da estação, e-mails do campo Informação abrem `mailto:` e endereços
   `http(s)://`/`www.` abrem no navegador.
@@ -27,7 +27,7 @@
 - **Sinal sonoro:** ao receber ACK de mensagem enviada por mim, e ao ouvir pelo RF um pacote meu repetido por um
   digipeater (no máximo um aviso a cada 5 s). Duas opções novas em Aparência → Mensagens, ligadas por padrão.
 
-## RESOLVIDO (próxima versão) — Splash de abertura "Powered by www.PT2VHF.com" igual ao do Sat Tool v1.7.2 (12/11/2026)
+## RESOLVIDO (v2.0.0) — Splash de abertura "Powered by www.PT2VHF.com" igual ao do Sat Tool v1.7.2 (12/11/2026)
 
 - **Pedido do mantenedor:** substituir a janela de abertura atual ("Feito por radioamadores, para radioamadores") por
   um splash igual ao do **PT2VHF Sat Tool v1.7.2** (`show_official_site_notice` em `sat_tool/app.py`), com o banner
@@ -42,7 +42,7 @@
   (`index.html`, `app.css`, `showOfficialSiteNotice()` em `app.js`). Se o banner não carregar, volta ao título e
   texto anteriores, nos 10 idiomas. Teste `tests/test_v11510_welcome_splash.py`.
 
-## IMPLEMENTADO NO PR (aguardando aprovação; entra na próxima versão) — Registro de usuários por indicativo (13/11/2026)
+## RESOLVIDO (v2.0.0) — Registro de usuários por indicativo (13/11/2026)
 
 - **Pedido do mantenedor:** igual ao do PT2VHF Sat Tool v1.8.0. Na consulta de versão nova o app envia só o
   indicativo da estação: `https://www.pt2vhf.com/update.php?product=aprs&call=PY2XYZ` (produto `aprs`, o mesmo do OTA).
