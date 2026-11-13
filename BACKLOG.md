@@ -13,6 +13,18 @@
   (`index.html`, `app.css`, `showOfficialSiteNotice()` em `app.js`). Se o banner não carregar, volta ao título e
   texto anteriores, nos 10 idiomas. Teste `tests/test_v11510_welcome_splash.py`.
 
+## IMPLEMENTADO NO PR (aguardando aprovação; entra na próxima versão) — Registro de usuários por indicativo (13/11/2026)
+
+- **Pedido do mantenedor:** igual ao do PT2VHF Sat Tool v1.8.0. Na consulta de versão nova o app envia só o
+  indicativo da estação: `https://www.pt2vhf.com/update.php?product=aprs&call=PY2XYZ` (produto `aprs`, o mesmo do OTA).
+- **No app:** ligado por padrão, com a caixa **Configuração → Atualizações → "Informar meu indicativo ao consultar versão
+  nova"** (coluna `share_callsign_on_update`). Não envia nada com a estação não configurada (indicativo vazio ou o de
+  exemplo PT2VHF, ou latitude/longitude vazias). Nunca envia SSID, posição nem locator. Código em
+  `release_check.station_callsign()`/`update_url()`; testes em `tests/test_callsign_registry.py`; `PRIVACY.md` atualizado.
+- **No site (alexpmr/PT2VHF-Site):** produto `aprs` no registro de estações já existente (validação, país pelo prefixo
+  DXCC, primeira/última consulta, sem IP, 10 indicativos novos por IP/dia, registros permanentes) e, no fim da página
+  `/aprs`, ranking de países com bandeira e todos os indicativos de cada país. Publicar o site só com aprovação do Alex.
+
 ## BACKLOG — Versão no nome de todos os binários e instaladores (11/11/2026)
 
 - **Pedido do mantenedor:** incluir a versão no nome dos binários, para que instaladores de versões diferentes tenham

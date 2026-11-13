@@ -9797,6 +9797,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     'Intervalo de verificação (minutos)':'Check interval (minutes)',
     'De 5 a 1.440 minutos. Padrão: 15 minutos.':'From 5 to 1,440 minutes. Default: 15 minutes.',
     'Verificar atualizações automaticamente':'Check for updates automatically',
+    'Informar meu indicativo ao consultar versão nova':'Report my callsign when checking for a new version',
     'Baixar atualização automaticamente':'Download updates automatically',
     'Instalar atualização automaticamente ao fechar':'Install updates automatically on exit',
     'Nenhuma atualização pendente.':'No pending update.',

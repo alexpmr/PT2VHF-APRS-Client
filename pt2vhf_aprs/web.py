@@ -567,7 +567,11 @@ def get_update_status(force: bool = False) -> dict:
     }
 
     try:
-        release, check_source = release_check.fetch_latest_release()
+        try:
+            callsign = release_check.station_callsign(db.get_config())
+        except Exception:
+            callsign = None
+        release, check_source = release_check.fetch_latest_release(callsign=callsign)
         payload["check_source"] = check_source
         payload["limited_metadata"] = bool(release.get("limited_metadata"))
         payload["error_code"] = None

@@ -16,6 +16,7 @@
     'Conexão perdida': ['Connection lost', 'Conexión perdida', 'Connexion perdue', 'Verbindung verloren', 'Connessione persa'],
     'Configuração incompleta': ['Incomplete configuration', 'Configuración incompleta', 'Configuration incomplète', 'Unvollständige Konfiguration', 'Configurazione incompleta'],
     'Reconectando com a nova configuração...': ['Reconnecting with new settings...', 'Reconectando con la nueva configuración...', 'Reconnexion avec les nouveaux paramètres...', 'Verbindung mit neuen Einstellungen wird hergestellt...', 'Riconnessione con le nuove impostazioni...'],
+    'Informar meu indicativo ao consultar versão nova': ['Report my callsign when checking for a new version', 'Informar mi indicativo al buscar una versión nueva', 'Indiquer mon indicatif lors de la recherche d’une nouvelle version', 'Mein Rufzeichen bei der Suche nach einer neuen Version übermitteln', 'Comunicare il mio nominativo durante la ricerca di una nuova versione'],
     'Aguardando': ['Waiting', 'Esperando', 'En attente', 'Warten', 'In attesa'],
     'Aguardando próxima verificação.': ['Waiting for the next check.', 'Esperando la próxima comprobación.', 'En attente de la prochaine vérification.', 'Warten auf die nächste Prüfung.', 'In attesa della prossima verifica.'],
     'Aguarde enquanto a operação é concluída.': ['Please wait for the operation to finish.', 'Espere a que finalice la operación.', 'Veuillez patienter jusqu’à la fin de l’opération.', 'Bitte warten Sie, bis der Vorgang abgeschlossen ist.', 'Attendere il completamento dell’operazione.'],

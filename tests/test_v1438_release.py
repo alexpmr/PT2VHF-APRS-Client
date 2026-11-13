@@ -77,10 +77,10 @@ def test_invalid_hash_and_unpublished_rejected():
 
 
 def test_windows_tls_fallback_keeps_official_site(monkeypatch):
-    def fail_tls():
+    def fail_tls(**_):
         raise urllib.error.URLError(ssl.SSLCertVerificationError("untrusted"))
     monkeypatch.setattr(release_check, "_python_api", fail_tls)
-    monkeypatch.setattr(release_check, "_windows_native_api", lambda: release_check.validate_release(manifest()))
+    monkeypatch.setattr(release_check, "_windows_native_api", lambda **_: release_check.validate_release(manifest()))
     monkeypatch.setattr(release_check.sys, "platform", "win32")
     monkeypatch.setattr(release_check.time, "sleep", lambda *_: None)
     release, source = release_check.fetch_latest_release()
@@ -94,7 +94,7 @@ def test_redirects_blocked():
 
 
 def test_unpublished_status_is_not_false_latest(monkeypatch):
-    def unpublished():
+    def unpublished(**_):
         raise release_check.ReleaseLookupError("unpublished", "Sem pacote público")
     monkeypatch.setattr(web.release_check, "fetch_latest_release", unpublished)
     result = web.get_update_status(force=True)
@@ -103,7 +103,7 @@ def test_unpublished_status_is_not_false_latest(monkeypatch):
 
 def test_site_release_with_package_enables_update(monkeypatch):
     monkeypatch.setattr(web.release_check, "fetch_latest_release",
-                        lambda: (release_check.validate_release(manifest("99.0.0")), "pt2vhf_site"))
+                        lambda **_: (release_check.validate_release(manifest("99.0.0")), "pt2vhf_site"))
     monkeypatch.setattr(web.updater, "current_update_mode", lambda: "windows-installer")
     monkeypatch.setattr(web.updater, "_machine", lambda: "x86_64")
     monkeypatch.setattr(web.updater, "pending_update", lambda: None)
@@ -123,7 +123,7 @@ def test_no_false_upgrade_when_package_for_other_platform(monkeypatch):
     data["files"][0]["name"] = "PT2VHF_APRS_Client_Portable_x64_v99.0.0.exe"
     data["files"][0]["url"] = "https://www.pt2vhf.com/downloads/aprs-client/PT2VHF_APRS_Client_Portable_x64_v99.0.0.exe"
     monkeypatch.setattr(web.release_check, "fetch_latest_release",
-                        lambda: (release_check.validate_release(data), "pt2vhf_site"))
+                        lambda **_: (release_check.validate_release(data), "pt2vhf_site"))
     monkeypatch.setattr(web.updater, "current_update_mode", lambda: "windows-installer")
     monkeypatch.setattr(web.updater, "_machine", lambda: "x86_64")
     monkeypatch.setattr(web.updater, "pending_update", lambda: None)
