@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.1": {
+        "title": "Correção da lista de estações",
+        "items": [
+            "A consulta de versão volta a informar o seu indicativo (sem o SSID) para a lista de estações no site.",
+        ],
+    },
     "2.0.0": {
         "title": "Versão 2.0",
         "items": [

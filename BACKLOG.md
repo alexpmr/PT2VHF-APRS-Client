@@ -1,3 +1,11 @@
+## RESOLVIDO (v2.0.1) — Lista de usuários no site não atualiza (13/11/2026)
+
+- **Relato do mantenedor:** a lista de estações do APRS Client no site não crescia.
+- **Causa:** na 2.0.0 a consulta de versão descartava indicativo com SSID (PY2XYZ-9, o normal no APRS) e tratava
+  PT2VHF como indicativo de exemplo; nos dois casos nada era enviado. O site também recusava indicativo com SSID.
+- **Entregue:** `release_check.callsign_param` tira o SSID antes de validar e a exclusão do PT2VHF saiu (v2.0.1);
+  `stations_lib.php` do site aceita SSID e conta PY2XYZ-9 como PY2XYZ (site #32), o que vale também para o Android.
+
 ## RESOLVIDO (v2.0.0) — Tirar acentos das mensagens antes de enviar (11/11/2026)
 
 - **Pedido do mantenedor:** opção que tira todos os acentos das mensagens antes de enviar, para evitar caracteres

@@ -1,3 +1,7 @@
+## 2.0.1 - 2026-11-13
+
+- **Lista de estações no site:** na 2.0.0 a consulta de versão não informava o indicativo quando ele tinha SSID (PY2XYZ-9, o normal no APRS) nem quando era PT2VHF, então a estação não aparecia na lista. Agora o SSID é retirado antes de enviar (PY2XYZ-9 conta como PY2XYZ).
+
 ## 2.0.0 - 2026-11-13
 
 - **Nova série 2.x.** A numeração passa de 1.15.9 para 2.0.0, a pedido do mantenedor; o OTA oferece a atualização normalmente.

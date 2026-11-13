@@ -1,6 +1,6 @@
 # PT2VHF APRS Client — Linux x86_64 e Raspberry Pi ARM64
 
-A versão atual **2.0.0** tem distribuição nativa para duas arquiteturas. Para **Raspberry Pi 4 ou 5**, instale **Raspberry Pi OS 64-bit** (ou Debian/Ubuntu ARM64) e use um arquivo **arm64**. Raspberry Pi OS 32-bit (`armv7l`) e Raspberry Pi 3 com SO de 32 bits não são suportados pelos pacotes ARM64.
+A versão atual **2.0.1** tem distribuição nativa para duas arquiteturas. Para **Raspberry Pi 4 ou 5**, instale **Raspberry Pi OS 64-bit** (ou Debian/Ubuntu ARM64) e use um arquivo **arm64**. Raspberry Pi OS 32-bit (`armv7l`) e Raspberry Pi 3 com SO de 32 bits não são suportados pelos pacotes ARM64.
 
 Confirme no terminal:
 
@@ -15,15 +15,15 @@ O resultado esperado no Raspberry Pi de 64 bits é `aarch64` e `arm64`. O AppIma
 
 Obtenha os arquivos oficiais em https://www.pt2vhf.com/aprs:
 
-- `PT2VHF_APRS_Client_arm64_v2.0.0.AppImage` — portátil, sem instalação.
-- `pt2vhf-aprs-client_2.0.0_arm64.deb` — recomendado para Raspberry Pi OS 64-bit (Debian).
-- `PT2VHF_APRS_Client_Linux_arm64_v2.0.0.tar.gz` — pacote portátil.
+- `PT2VHF_APRS_Client_arm64_v2.0.1.AppImage` — portátil, sem instalação.
+- `pt2vhf-aprs-client_2.0.1_arm64.deb` — recomendado para Raspberry Pi OS 64-bit (Debian).
+- `PT2VHF_APRS_Client_Linux_arm64_v2.0.1.tar.gz` — pacote portátil.
 
 ### Opção 1: DEB
 
 ```bash
 cd ~/Downloads
-sudo apt install ./pt2vhf-aprs-client_2.0.0_arm64.deb
+sudo apt install ./pt2vhf-aprs-client_2.0.1_arm64.deb
 pt2vhf-aprs-client --browser
 ```
 
@@ -35,8 +35,8 @@ Para não ver o aviso, copie antes para `/tmp` (`cp pt2vhf-aprs-client_*_arm64.d
 
 ```bash
 cd ~/Downloads
-chmod +x PT2VHF_APRS_Client_arm64_v2.0.0.AppImage
-APPIMAGE_EXTRACT_AND_RUN=1 ./PT2VHF_APRS_Client_arm64_v2.0.0.AppImage --browser
+chmod +x PT2VHF_APRS_Client_arm64_v2.0.1.AppImage
+APPIMAGE_EXTRACT_AND_RUN=1 ./PT2VHF_APRS_Client_arm64_v2.0.1.AppImage --browser
 ```
 
 O parâmetro `APPIMAGE_EXTRACT_AND_RUN=1` evita a dependência de FUSE e costuma ser útil no Raspberry Pi OS.
@@ -46,14 +46,14 @@ O parâmetro `APPIMAGE_EXTRACT_AND_RUN=1` evita a dependência de FUSE e costuma
 ```bash
 cd ~/Downloads
 mkdir -p ~/Aplicativos/PT2VHF-APRS-Client
-tar -xzf PT2VHF_APRS_Client_Linux_arm64_v2.0.0.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
-chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_arm64_v2.0.0
-~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_arm64_v2.0.0 --browser
+tar -xzf PT2VHF_APRS_Client_Linux_arm64_v2.0.1.tar.gz -C ~/Aplicativos/PT2VHF-APRS-Client
+chmod +x ~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_arm64_v2.0.1
+~/Aplicativos/PT2VHF-APRS-Client/PT2VHF_APRS_Client_Linux_arm64_v2.0.1 --browser
 ```
 
 ## Linux x86_64 (Intel/AMD)
 
-Continue usando `PT2VHF_APRS_Client_x86_64_v2.0.0.AppImage`, `pt2vhf-aprs-client_2.0.0_amd64.deb` ou `PT2VHF_APRS_Client_Linux_x86_64_v2.0.0.tar.gz`. São arquiteturas diferentes; nunca renomeie um pacote de uma arquitetura para outra.
+Continue usando `PT2VHF_APRS_Client_x86_64_v2.0.1.AppImage`, `pt2vhf-aprs-client_2.0.1_amd64.deb` ou `PT2VHF_APRS_Client_Linux_x86_64_v2.0.1.tar.gz`. São arquiteturas diferentes; nunca renomeie um pacote de uma arquitetura para outra.
 
 ## Janela integrada e navegador
 
