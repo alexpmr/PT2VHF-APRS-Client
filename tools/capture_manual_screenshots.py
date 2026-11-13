@@ -131,6 +131,10 @@ def capture(output_dir: Path) -> None:
                 page.screenshot(path=str(output_dir / "analysis.png"))
                 page.evaluate("""() => document.querySelector('.tab[data-tab="config"]').click()""")
                 page.wait_for_timeout(700)
+                # Sugestões de SSID abrem ao entrar na Configuração → Estação; fechar como o usuário faria.
+                if page.locator("#ssidHelpModal").is_visible():
+                    page.locator("#ssidHelpModal .ssid-help-footer [data-ssid-help-close]").click()
+                    page.wait_for_timeout(200)
                 # A v1.6 usa uma única página de Configuração, compartimentalizada por seções.
                 page.evaluate("() => window.pt2vhfConfigTabs?.show('station')")  # v1.15.1: Configuração em sub-abas
                 page.screenshot(path=str(output_dir / "config-aprs.png"))
