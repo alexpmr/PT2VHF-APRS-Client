@@ -1833,12 +1833,18 @@
   </div>
 </div>
 
-<div id="officialSiteNotice" class="official-site-notice hidden" role="dialog" aria-modal="true" aria-labelledby="officialSiteNoticeTitle" aria-describedby="officialSiteNoticeText">
+<div id="officialSiteNotice" class="official-site-notice hidden" role="dialog" aria-modal="true" aria-labelledby="officialSiteNoticeImage">
   <div class="official-site-notice-box">
-    <h2 id="officialSiteNoticeTitle">Feito por radioamadores, para radioamadores</h2>
-    <p id="officialSiteNoticeText">Obrigado por usar o PT2VHF APRS Client! Conheça também as outras aplicações gratuitas desenvolvidas para a comunidade: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android e mais.</p>
-    <p><a id="officialSiteNoticeLink" href="https://www.pt2vhf.com" target="_blank" rel="noopener noreferrer">www.PT2VHF.com</a></p>
-    <div class="official-site-notice-actions"><button id="officialSiteNoticeClose" type="button" class="btn primary">Fechar</button></div>
+    <a id="officialSiteNoticeBanner" class="official-site-banner" href="https://www.pt2vhf.com" target="_blank" rel="noopener noreferrer" title="www.PT2VHF.com"><img id="officialSiteNoticeImage" src="{{ url_for('static', filename='img/welcome-banner.jpg') }}" width="1200" height="675" alt="Powered by www.PT2VHF.com"></a>
+    <div id="officialSiteNoticeFallback" class="official-site-fallback hidden">
+      <h2 id="officialSiteNoticeTitle">Feito por radioamadores, para radioamadores</h2>
+      <p id="officialSiteNoticeText">Obrigado por usar o PT2VHF APRS Client! Conheça também as outras aplicações gratuitas desenvolvidas para a comunidade: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android e mais.</p>
+    </div>
+    <div class="official-site-notice-actions">
+      <a id="officialSiteNoticeLink" href="https://www.pt2vhf.com" target="_blank" rel="noopener noreferrer">www.PT2VHF.com</a>
+      <span class="official-site-countdown"><span class="official-site-countdown-bar"><span id="officialSiteNoticeBar"></span></span><span id="officialSiteNoticeCountdown">⏱ 10 s</span></span>
+      <button id="officialSiteNoticeClose" type="button" class="btn primary">Fechar</button>
+    </div>
   </div>
 </div>
 
