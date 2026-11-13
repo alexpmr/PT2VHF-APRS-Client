@@ -22,12 +22,16 @@ HASH_RE = re.compile(r"[0-9a-f]{64}")
 # Indicativo enviado na consulta de versão (lista de estações no site): letras e
 # números, com prefixo/sufixo opcional (CT/PY2XYZ/P), ao menos um dígito e uma letra.
 CALLSIGN_RE = re.compile(r"(?=.*[0-9])(?=.*[A-Z])[A-Z0-9]{1,8}(?:/[A-Z0-9]{1,8}){0,2}")
-EXAMPLE_CALLSIGNS = {"PT2VHF"}
+SSID_RE = re.compile(r"-[A-Z0-9]{1,2}$")
 
 
 def callsign_param(callsign: Any) -> str:
-    """Indicativo normalizado para o parâmetro call, ou "" se inválido."""
-    call = str(callsign or "").strip().upper()
+    """Indicativo normalizado para o parâmetro call, ou "" se inválido.
+
+    v2.0.1: o SSID (-9, -10...) sai antes de validar. Na 2.0.0 um indicativo com
+    SSID, que é o normal no APRS, era descartado e a estação nunca entrava na lista.
+    """
+    call = SSID_RE.sub("", str(callsign or "").strip().upper())
     return call if len(call) <= 16 and CALLSIGN_RE.fullmatch(call) else ""
 
 
@@ -41,12 +45,12 @@ def station_callsign(config: Any) -> str | None:
     """Indicativo a informar na consulta de versão, ou None para não enviar nada.
 
     Não envia se a opção estiver desligada ou se a estação não estiver configurada
-    (indicativo vazio, o de exemplo PT2VHF, ou latitude/longitude vazias).
+    (indicativo vazio ou latitude/longitude vazias).
     """
     if not isinstance(config, dict) or not bool(config.get("share_callsign_on_update", 1)):
         return None
     call = callsign_param(config.get("callsign"))
-    if not call or call.split("-", 1)[0] in EXAMPLE_CALLSIGNS:
+    if not call:
         return None
     if config.get("latitude") in ("", None) or config.get("longitude") in ("", None):
         return None

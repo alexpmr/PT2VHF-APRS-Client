@@ -20,8 +20,11 @@ STATION = {"callsign": "PY2XYZ", "latitude": -23.5, "longitude": -46.6, "share_c
 def test_callsign_param_and_url():
     assert release_check.callsign_param(" py2xyz ") == "PY2XYZ"
     assert release_check.callsign_param("CT/PY2XYZ/P") == "CT/PY2XYZ/P"
-    for bad in ("", None, "PY", "123", "PY2XYZ<script>", "A1" * 9, "PY2 XYZ", "PY2XYZ&x=1", "PY2XYZ-9"):
+    for bad in ("", None, "PY", "123", "PY2XYZ<script>", "A1" * 9, "PY2 XYZ", "PY2XYZ&x=1", "-9"):
         assert release_check.callsign_param(bad) == "", bad
+    # v2.0.1: o SSID sai (antes a estação com SSID nunca entrava na lista).
+    assert release_check.callsign_param("py2xyz-9") == "PY2XYZ"
+    assert release_check.callsign_param("PT2VHF-10") == "PT2VHF"
     assert release_check.update_url("py2xyz") == release_check.API_URL + "&call=PY2XYZ"
     assert release_check.update_url("CT/PY2XYZ") == release_check.API_URL + "&call=CT%2FPY2XYZ"
     assert release_check.update_url(None) == release_check.API_URL
@@ -35,7 +38,11 @@ def test_station_callsign_rules():
     assert release_check.station_callsign(dict(STATION, share_callsign_on_update=0)) is None
     # Estação não configurada: indicativo vazio, o de exemplo, ou sem latitude/longitude.
     assert release_check.station_callsign(dict(STATION, callsign="")) is None
-    assert release_check.station_callsign(dict(STATION, callsign="PT2VHF")) is None
+    # v2.0.1: o PT2VHF é um indicativo real (o do autor) e o SSID sai antes de enviar.
+    assert release_check.station_callsign(dict(STATION, callsign="PT2VHF")) == "PT2VHF"
+    assert release_check.station_callsign(dict(STATION, callsign="py2xyz-9")) == "PY2XYZ"
+    assert release_check.station_callsign(dict(STATION, callsign="PT2VHF-10")) == "PT2VHF"
+    assert release_check.station_callsign(dict(STATION, callsign="CT/PY2XYZ-7")) == "CT/PY2XYZ"
     assert release_check.station_callsign(dict(STATION, latitude=None)) is None
     assert release_check.station_callsign(dict(STATION, longitude="")) is None
     assert release_check.station_callsign(None) is None
@@ -97,7 +104,7 @@ def test_fetch_passes_callsign_to_windows_fallback(monkeypatch):
     (STATION, "PY2XYZ"),
     (dict(STATION, share_callsign_on_update=0), None),
     (dict(STATION, latitude=None, longitude=None), None),
-    (dict(STATION, callsign="PT2VHF"), None),
+    (dict(STATION, callsign="PT2VHF-10"), "PT2VHF"),
 ])
 def test_update_status_uses_station_callsign(monkeypatch, config, expected):
     seen = {}
