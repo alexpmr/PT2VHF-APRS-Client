@@ -46,6 +46,8 @@ Name: "{autodesktop}\PT2VHF APRS Client Win7 Legacy"; Filename: "{app}\{#MyAppEx
 Name: "{userstartup}\PT2VHF APRS Client Win7 Legacy"; Filename: "{app}\{#MyAppExeName}"; Tasks: startup
 
 [Run]
+; Banco já existente: confere a integridade e conserta antes do primeiro uso (roda como o usuário que instalou).
+Filename: "{app}\{#MyAppExeName}"; Parameters: "--check-db"; StatusMsg: "Verificando o banco de dados..."; Flags: runhidden waituntilterminated runasoriginaluser
 Filename: "{app}\{#MyAppExeName}"; Description: "Executar PT2VHF APRS Client Win7 Legacy"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]

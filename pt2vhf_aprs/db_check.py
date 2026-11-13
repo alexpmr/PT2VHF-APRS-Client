@@ -216,3 +216,34 @@ def repair() -> dict[str, Any]:
     report["repaired"] = True
     report["backfilled_events"] = int(filled or 0)
     return report
+
+
+def installer_check() -> dict[str, Any]:
+    """Verificação feita pelo instalador quando já existe um banco (backlog 11/11/2026).
+
+    Não cria banco novo. Se o arquivo existir: inicializa (o que já recupera arquivo ilegível),
+    roda ``quick_check``; páginas corrompidas fazem o banco ser reconstruído com tudo o que
+    ainda for legível (o original fica em ``data/corrupted/``); estrutura incompleta é reparada.
+    """
+    result: dict[str, Any] = {"path": str(db.DB_PATH), "exists": db.DB_PATH.exists(), "action": "none"}
+    if not result["exists"]:
+        return result
+    db.init_db()
+    if db.LAST_DB_RECOVERY:
+        result["action"] = "recovered"
+        result["recovery"] = db.LAST_DB_RECOVERY
+        return result
+    with db.connection() as conn:
+        rows = [r[0] for r in conn.execute("PRAGMA quick_check(20)").fetchall()]
+    if rows != ["ok"]:
+        db.LAST_DB_RECOVERY = db._recover_corrupt_database(RuntimeError("quick_check: " + "; ".join(rows[:5])))
+        result["action"] = "recovered"
+        result["recovery"] = db.LAST_DB_RECOVERY
+        return result
+    report = run_check()
+    if any(item.get("key") == "schema" and item.get("status") == "error" for item in report.get("checks", [])):
+        repair()
+        result["action"] = "repaired"
+    else:
+        result["action"] = "ok"
+    return result

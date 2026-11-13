@@ -45,6 +45,8 @@ Name: "{autodesktop}\PT2VHF APRS Client"; Filename: "{app}\{#MyAppExeName}"; Tas
 Name: "{userstartup}\PT2VHF APRS Client"; Filename: "{app}\{#MyAppExeName}"; Tasks: startup
 
 [Run]
+; Banco já existente: confere a integridade e conserta antes do primeiro uso (roda como o usuário que instalou).
+Filename: "{app}\{#MyAppExeName}"; Parameters: "--check-db"; StatusMsg: "Verificando o banco de dados..."; Flags: runhidden waituntilterminated runasoriginaluser
 Filename: "{app}\{#MyAppExeName}"; Description: "Executar PT2VHF APRS Client"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]

@@ -561,6 +561,9 @@ html[data-theme="light"] .map-context-bar .topology-control select {
 .station-popup h3 { margin: 0 0 7px; font-size: 16px; }
 .station-popup .popup-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 9px; font-size: 12px; }
 .station-popup .popup-grid strong { color: var(--muted); }
+.station-popup .station-raw-details summary { cursor: pointer; color: var(--muted); }
+.station-popup .station-raw-details code { display: block; margin-top: 4px; white-space: pre-wrap; word-break: break-all; font-size: 11px; }
+.station-popup .station-info-link { color: var(--accent, #2b7bd6); text-decoration: underline; word-break: break-all; }
 .station-last-heard-relative { color: var(--muted); white-space: nowrap; }
 .leaflet-pane.pt2vhf-visual-pane { pointer-events: none !important; }
 .leaflet-pane.pt2vhf-interaction-pane { pointer-events: auto !important; }
