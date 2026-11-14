@@ -1,3 +1,11 @@
+## 2.0.2 - 2026-11-14
+
+- **Configuração com campos do tamanho certo:** cada campo fica com a largura do conteúdo que aceita (indicativo com 6 caracteres, SSID, porta, passcode, coordenadas, cores, minutos...), calculada pelo próprio limite do campo; vale para todas as sub-abas, inclusive os cartões criados depois (TNC, integrações, retenção).
+- **Grid Locator → latitude/longitude:** o campo Grid Locator (Maidenhead) fica sempre visível na Estação, ao lado das coordenadas; digite o grid (4, 6, 8 ou 10 caracteres) e tecle Enter ou "Usar estas coordenadas" para preencher latitude e longitude com o centro da célula. O grid acompanha as coordenadas quando elas mudam.
+- Latitude e longitude lado a lado; o texto da opção de acesso pela rede local (LAN) não fica mais espremido.
+- **Só Windows nesta versão:** instalador e portátil x64/ARM64 (e Win7 Legacy na release do GitHub). Linux e macOS continuam na 2.0.1.
+- Artefatos do GitHub Actions passam a ter a versão no nome, como os instaladores.
+
 ## 2.0.1 - 2026-11-13
 
 - **Lista de estações no site:** na 2.0.0 a consulta de versão não informava o indicativo quando ele tinha SSID (PY2XYZ-9, o normal no APRS) nem quando era PT2VHF, então a estação não aparecia na lista. Agora o SSID é retirado antes de enviar (PY2XYZ-9 conta como PY2XYZ).

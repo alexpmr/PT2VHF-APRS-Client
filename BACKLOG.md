@@ -1,3 +1,29 @@
+## RESOLVIDO (v2.0.2) — Configuração: largura dos campos coerente com o conteúdo (13/11/2026)
+
+- **Pedido do mantenedor:** ajustar o tamanho dos campos da Configuração ao conteúdo (ex.: o indicativo ocupava a
+  coluna inteira) e revisar todos.
+- **Entregue:** `static/js/field_widths.js` dá a cada campo de texto/número/seleção da aba Configuração a largura do
+  que ele aceita, pelo próprio limite (`maxlength`, `min`/`max`/`step` ou placeholder), de 8 a 60 caracteres; vale
+  para todas as sub-abas, inclusive os cartões criados depois (TNC, integrações, retenção), via MutationObserver.
+  Latitude e longitude ficaram lado a lado, o código hexadecimal das cores com a largura de `#rrggbb` e o texto da
+  opção LAN deixou de ficar espremido. Conferido com capturas de todas as sub-abas.
+
+## RESOLVIDO (v2.0.2) — Digitar o Grid Locator e converter em latitude/longitude (13/11/2026)
+
+- **Pedido do mantenedor:** inserir o grid (Maidenhead) e traduzir em coordenadas.
+- **Entregue:** o conversor já existia, mas só aparecia escolhendo "Grid Locator" em Formato das coordenadas. Agora o
+  campo Grid Locator fica sempre visível na Estação, logo abaixo da latitude/longitude; Enter (ou "Usar estas
+  coordenadas") preenche latitude e longitude com o centro da célula (4, 6, 8 ou 10 caracteres), e o grid acompanha
+  as coordenadas quando elas mudam. Testes em `tests/test_maidenhead_grid.py`.
+
+## RESOLVIDO (v2.0.2) — Versão no nome de todos os binários e instaladores (11/11/2026)
+
+- **Situação:** instaladores, portáteis, pacotes Linux, DMG e manual já saíam com a versão no nome, e o atualizador OTA
+  baixa o arquivo com o nome publicado (com versão). Faltavam os artefatos do GitHub Actions
+  (`PT2VHF-APRS-Client-Windows-x64` etc.), que agora levam `-v<versão>` no nome nos dois workflows de release.
+- **Mantido sem versão, de propósito:** o executável instalado (`PT2VHF_APRS_Client.exe`), porque atalhos, firewall,
+  desinstalação e o atualizador dependem do nome fixo.
+
 ## RESOLVIDO (v2.0.1) — Lista de usuários no site não atualiza (13/11/2026)
 
 - **Relato do mantenedor:** a lista de estações do APRS Client no site não crescia.
@@ -61,21 +87,6 @@
 - **No site (alexpmr/PT2VHF-Site):** produto `aprs` no registro de estações já existente (validação, país pelo prefixo
   DXCC, primeira/última consulta, sem IP, 10 indicativos novos por IP/dia, registros permanentes) e, no fim da página
   `/aprs`, ranking de países com bandeira e todos os indicativos de cada país. Publicar o site só com aprovação do Alex.
-
-## BACKLOG — Versão no nome de todos os binários e instaladores (11/11/2026)
-
-- **Pedido do mantenedor:** incluir a versão no nome dos binários, para que instaladores de versões diferentes tenham
-  nomes diferentes.
-- **Situação levantada (11/11/2026):** os arquivos publicados em www.pt2vhf.com já têm a versão no nome em todos os
-  produtos (ex.: `PT2VHF_APRS_Client_Setup_x64_v1.15.8.exe`, `PT2VHF-Sat-Tool-v1.5.0-Win11-x64-Setup.exe`,
-  `PT2VHF-Prop-Tool-0.2.23-x64-setup.exe`, `PT2VHF_APRS_Client_Android_v0.1.9.apk`), e o `download.php` envia o
-  nome real do arquivo. Os instaladores Inno Setup do APRS Client usam `OutputBaseFilename=..._v{#MyAppVersion}`.
-- **Conferir e corrigir onde ainda sai sem versão:** executável instalado e atalho (ex.: `PT2VHF_APRS_Client.exe`),
-  nome do pacote baixado pelo atualizador OTA na pasta de atualizações, artefatos do GitHub Actions, binário de dentro
-  do `.tar.gz`/AppImage, `.deb`/DMG montado, e os demais projetos PT2VHF (Sat, Prop, Mesh, Prog, QSL, Android).
-  Padronizar um formato único (`<Produto>_<Tipo>_<Arquitetura>_v<versão>.<ext>`) sem quebrar o atualizador, que
-  procura o arquivo pelo nome (`updater.desired_asset_name`) e os contadores do site (`counterKey` estável).
-- **Confirmar com o mantenedor** em qual desses pontos viu o nome repetido entre versões.
 
 ## RESOLVIDO (v1.15.9) — Sugestões do PU2MUS: cancelar reenvio de mensagem e copiar texto recebido (11/11/2026)
 

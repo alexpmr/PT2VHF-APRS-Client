@@ -27,9 +27,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v2.0.1 production release
+      - name: Validate v2.0.2 production release
         shell: pwsh
-        run: python tools\apply_release_2_0_1.py
+        run: python tools\apply_release_2_0_2.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -96,10 +96,14 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer.iss
           Copy-Item dist\PT2VHF_APRS_Client_Portable_x64.exe "dist-installer\PT2VHF_APRS_Client_Portable_x64_v$version.exe" -Force
 
+      - name: Read version for artifact name
+        shell: bash
+        run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
+
       - name: Upload Windows x64 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-Windows-x64
+          name: PT2VHF-APRS-Client-Windows-x64-v${{ env.APP_VERSION }}
           path: |
             dist-installer\PT2VHF_APRS_Client_Setup_x64_v*.exe
             dist-installer\PT2VHF_APRS_Client_Portable_x64_v*.exe
@@ -120,9 +124,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v2.0.1 production release
+      - name: Validate v2.0.2 production release
         shell: pwsh
-        run: python tools\apply_release_2_0_1.py
+        run: python tools\apply_release_2_0_2.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -186,10 +190,14 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows\installer_arm64.iss
           Copy-Item dist\PT2VHF_APRS_Client_Portable_ARM64.exe "dist-installer-arm64\PT2VHF_APRS_Client_Portable_ARM64_v$version.exe" -Force
 
+      - name: Read version for artifact name
+        shell: bash
+        run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
+
       - name: Upload Windows ARM64 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-Windows-ARM64
+          name: PT2VHF-APRS-Client-Windows-ARM64-v${{ env.APP_VERSION }}
           path: |
             dist-installer-arm64\PT2VHF_APRS_Client_Setup_ARM64_v*.exe
             dist-installer-arm64\PT2VHF_APRS_Client_Portable_ARM64_v*.exe
@@ -214,7 +222,7 @@ jobs:
 
       - name: Validate v1.14.38 release metadata
         shell: pwsh
-        run: python tools\apply_release_2_0_1.py
+        run: python tools\apply_release_2_0_2.py
 
       - name: Install Win7 Legacy dependencies
         shell: pwsh
@@ -281,17 +289,21 @@ jobs:
           if ($installedVersion -ne $version) { throw "Setup instalou versão $installedVersion; esperado $version." }
           Get-FileHash $installer -Algorithm SHA256 | Format-List
 
+      - name: Read version for artifact name
+        shell: bash
+        run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
+
       - name: Upload Win7 Legacy artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-Windows-Win7-Legacy-x64
+          name: PT2VHF-APRS-Client-Windows-Win7-Legacy-x64-v${{ env.APP_VERSION }}
           path: |
             dist-win7\PT2VHF_APRS_Client_Setup_Win7_Legacy_x64_v*.exe
             dist-win7\PT2VHF_APRS_Client_Win7_Legacy_Portable_x64_v*.exe
 
 
   linux-x64:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:')) && !contains(github.event.head_commit.message, '[windows-only]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -303,9 +315,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v2.0.1 production release
+      - name: Validate v2.0.2 production release
         shell: bash
-        run: python tools/apply_release_2_0_1.py
+        run: python tools/apply_release_2_0_2.py
 
       - name: Build Linux packages
         shell: bash
@@ -313,10 +325,14 @@ jobs:
           chmod +x linux/build_linux.sh
           PYTHON_BIN=python3 bash linux/build_linux.sh
 
+      - name: Read version for artifact name
+        shell: bash
+        run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-Linux-x86_64
+          name: PT2VHF-APRS-Client-Linux-x86_64-v${{ env.APP_VERSION }}
           path: |
             dist-linux/PT2VHF_APRS_Client_Linux_x86_64_v*.tar.gz
             dist-linux/PT2VHF_APRS_Client_x86_64_v*.AppImage
@@ -325,7 +341,7 @@ jobs:
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt
 
   linux-smoke:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:')) && !contains(github.event.head_commit.message, '[windows-only]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -344,7 +360,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_2_0_1.py
+          python tools/apply_release_2_0_2.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -354,7 +370,7 @@ jobs:
           python tools/migration_matrix.py
 
   macos:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:')) && !contains(github.event.head_commit.message, '[windows-only]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -374,9 +390,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v2.0.1 production release
+      - name: Validate v2.0.2 production release
         shell: bash
-        run: python tools/apply_release_2_0_1.py
+        run: python tools/apply_release_2_0_2.py
 
       - name: Build macOS DMG
         shell: bash
@@ -391,10 +407,14 @@ jobs:
           echo "Expected: ${{ matrix.arch }} / Actual: $actual"
           test "$actual" = "${{ matrix.arch }}"
 
+      - name: Read version for artifact name
+        shell: bash
+        run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-macOS-${{ matrix.arch }}
+          name: PT2VHF-APRS-Client-macOS-${{ matrix.arch }}-v${{ env.APP_VERSION }}
           path: |
             dist-macos/PT2VHF_APRS_Client_macOS_${{ matrix.arch }}_v*.dmg
             dist-macos/SBOM-macOS-${{ matrix.arch }}.cdx.json
@@ -412,9 +432,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v2.0.1 production release
+      - name: Validate v2.0.2 production release
         shell: bash
-        run: python tools/apply_release_2_0_1.py
+        run: python tools/apply_release_2_0_2.py
 
       - name: Generate versioned PDF manual
         shell: bash
@@ -432,15 +452,19 @@ jobs:
           python tools/generate_manual.py --logo dist-docs/manual_logo.png --screenshots-dir dist-docs/screenshots --output "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
           python tools/validate_manual.py "dist-docs/PT2VHF_APRS_Client_Manual_v$version.pdf"
 
+      - name: Read version for artifact name
+        shell: bash
+        run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
+
       - name: Upload manual artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-APRS-Client-Manual
+          name: PT2VHF-APRS-Client-Manual-v${{ env.APP_VERSION }}
           path: dist-docs/PT2VHF_APRS_Client_Manual_v*.pdf
 
 
   publish-release:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && (github.event_name == 'workflow_dispatch') }}
     needs:
       - windows-x64
       - windows-arm64

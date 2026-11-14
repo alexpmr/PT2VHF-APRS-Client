@@ -10374,6 +10374,12 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       'Grid center applied. Save configuration to persist.'), 'ok');
   });
   $('#maidenheadInput')?.addEventListener('input', updateMaidenheadPreview);
+  // v2.0.2: Enter no campo do grid converte direto para latitude/longitude (sem enviar o formulário).
+  $('#maidenheadInput')?.addEventListener('keydown', event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    $('#maidenheadApply')?.click();
+  });
   $('#maidenheadPrecision')?.addEventListener('change', syncMaidenheadFromDecimal);
 
   function syncDmsFromDecimal() {
@@ -10399,12 +10405,15 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   function applyCoordinateMode(mode) {
     const selected = ['decimal', 'dms', 'grid'].includes(mode) ? mode : 'decimal';
     if ($('#coordinateInputMode')) $('#coordinateInputMode').value = selected;
-    $('#coordinateDecimalFields')?.classList.toggle('hidden', selected !== 'decimal');
+    // v2.0.2: o Grid Locator fica sempre visível junto da latitude/longitude; o modo "grid"
+    // mostra as coordenadas em decimal (para ver o resultado da conversão) e foca o grid.
+    $('#coordinateDecimalFields')?.classList.toggle('hidden', selected === 'dms');
     $('#coordinateDmsFields')?.classList.toggle('hidden', selected !== 'dms');
-    $('#coordinateGridFields')?.classList.toggle('hidden', selected !== 'grid');
+    $('#coordinateGridFields')?.classList.remove('hidden');
     localStorage.setItem('pt2vhf_coordinate_mode', selected);
     if (selected === 'dms') syncDmsFromDecimal();
-    if (selected === 'grid') syncMaidenheadFromDecimal();
+    syncMaidenheadFromDecimal();
+    if (selected === 'grid' && document.activeElement?.id === 'coordinateInputMode') $('#maidenheadInput')?.focus();
   }
 
   $('#coordinateInputMode')?.addEventListener('change', e => applyCoordinateMode(e.target.value));
