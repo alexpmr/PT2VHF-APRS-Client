@@ -1,4 +1,4 @@
-"""Valida invariantes mínimas antes de empacotar a release v2.0.1."""
+"""Valida invariantes mínimas antes de empacotar a release v2.0.2."""
 import base64
 import hashlib
 from pathlib import Path
@@ -10,15 +10,16 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-assert read("VERSION").strip() == "2.0.1"
-assert '__version__ = "2.0.1"' in read("pt2vhf_aprs/__init__.py")
-assert "filevers=(2, 0, 1, 0)" in read("windows/version_info.txt")
-assert "prodvers=(2, 0, 1, 0)" in read("windows/version_info.txt")
-assert "## 2.0.1 - 2026-11-13" in read("CHANGELOG.md")
-assert '"2.0.1": {' in read("pt2vhf_aprs/version_notes.py")
+assert read("VERSION").strip() == "2.0.2"
+assert '__version__ = "2.0.2"' in read("pt2vhf_aprs/__init__.py")
+assert "filevers=(2, 0, 2, 0)" in read("windows/version_info.txt")
+assert "prodvers=(2, 0, 2, 0)" in read("windows/version_info.txt")
+assert "## 2.0.2 - 2026-11-14" in read("CHANGELOG.md")
+assert '"2.0.2": {' in read("pt2vhf_aprs/version_notes.py")
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_2_0_1.py" in read(workflow)
+    assert "apply_release_2_0_2.py" in read(workflow)
+    assert "apply_release_2_0_1.py" not in read(workflow)
     assert "apply_release_2_0_0.py" not in read(workflow)
     assert "apply_release_1_15_9.py" not in read(workflow)
     assert "apply_release_1_15_2.py" not in read(workflow)
@@ -195,7 +196,7 @@ assert '"units": "metric"' in database and 'id="appUnits"' in html and "function
 assert 'missing.append("Altitude")' not in database
 assert "function scrollMessagesToNewest()" in js
 arm = read(".github/workflows/build-linux-arm64-raspberry.yml")
-assert "apply_release_2_0_1.py" in arm and "1.15.6" not in arm
+assert "apply_release_2_0_2.py" in arm and "1.15.6" not in arm
 print("invariantes herdados da v1.15.7 OK")
 # v1.15.8: mapa de calor sem corte e aviso de boas-vindas como no Sat Tool.
 cov = read("pt2vhf_aprs/rf_coverage.py")
@@ -226,4 +227,16 @@ print("invariantes herdados da v2.0.0 OK")
 # v2.0.1: indicativo sem SSID na consulta de versão e PT2VHF não é mais tratado como exemplo.
 rc = read("pt2vhf_aprs/release_check.py")
 assert "SSID_RE" in rc and "EXAMPLE_CALLSIGNS" not in rc
-print("v2.0.1 release validation OK")
+print("invariantes herdados da v2.0.1 OK")
+# v2.0.2: largura dos campos da Configuração, Grid Locator sempre visível, artefatos com versão e build só Windows.
+assert "js/field_widths.js" in html and (ROOT / "pt2vhf_aprs/static/js/field_widths.js").is_file()
+assert 'id="coordinateGridFields" class="field full"' in html
+assert "event.key !== 'Enter'" in js and "$('#coordinateGridFields')?.classList.remove('hidden')" in js
+for workflow in (".github/workflows/build-production-current.yml",
+                 ".github/workflows/build-full-current.yml"):
+    text = read(workflow)
+    assert "name: PT2VHF-APRS-Client-Windows-x64-v${{ env.APP_VERSION }}" in text
+    assert text.count("[windows-only]") >= 3
+    publish = text[text.index("  publish-release:"):]
+    assert "!cancelled()" in publish[:400]
+print("v2.0.2 release validation OK")

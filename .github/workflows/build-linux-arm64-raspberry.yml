@@ -24,7 +24,7 @@ jobs:
           set -euo pipefail
           uname -m
           test "$(uname -m)" = "aarch64"
-          python tools/apply_release_2_0_1.py
+          python tools/apply_release_2_0_2.py
           echo "PT2VHF_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
       - name: Run regression tests and build three native ARM64 formats
         shell: bash

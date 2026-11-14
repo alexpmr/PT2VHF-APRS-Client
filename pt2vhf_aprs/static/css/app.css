@@ -5175,3 +5175,23 @@ html[data-theme="light"] .tnc-config-block.as-subtab .tnc-save-card { background
 .message-context-menu button:hover, .message-context-menu button:focus-visible { background: rgba(77,163,255,.18); outline: none; }
 html[data-theme="light"] .message-context-menu { background: #fff; }
 .tnc-kenwood-kiss-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 2px; }
+
+/* v2.0.2 - Grid Locator sempre visível ao lado das coordenadas, em uma linha compacta. */
+#coordinateGridFields {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+#coordinateGridFields > .field { flex: 0 0 auto; }
+#coordinateGridFields > #maidenheadApply { min-height: 38px; }
+#coordinateGridFields > #maidenheadStatus { flex: 1 0 100%; order: 10; }
+#maidenheadInput { text-transform: uppercase; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .04em; }
+/* v2.0.2 - latitude e longitude lado a lado, já que os campos não ocupam mais a linha inteira. */
+.coordinate-decimal-grid { display: flex; flex-flow: row wrap; gap: 12px 16px; }
+/* v2.0.2 - código hexadecimal da cor com a largura de "#rrggbb". */
+.color-field-row input[type="text"] { flex: 0 0 auto; }
+/* v2.0.2 - texto da opção LAN não fica mais espremido em uma coluna estreita ao lado da explicação. */
+.app-lan-check { flex-wrap: wrap; }
+.app-lan-check > span { flex: 1 1 0; min-width: 12em; }
+.app-lan-check > small { flex: 1 0 100%; padding-left: 22px; }

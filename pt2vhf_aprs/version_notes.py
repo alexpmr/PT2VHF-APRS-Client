@@ -3,6 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.2": {
+        "title": "Configuração mais compacta e Grid Locator",
+        "items": [
+            "Os campos da Configuração ficam com a largura do que cabem (indicativo, SSID, porta, coordenadas...).",
+            "Grid Locator (Maidenhead) sempre visível na Estação: digite o grid e tecle Enter para preencher latitude e longitude.",
+            "Latitude e longitude lado a lado; a opção de acesso pela rede local (LAN) não fica mais espremida.",
+        ],
+    },
     "2.0.1": {
         "title": "Correção da lista de estações",
         "items": [

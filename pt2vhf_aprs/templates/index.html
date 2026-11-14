@@ -808,7 +808,7 @@
             </div>
             <small class="hint">Os valores em graus/minutos/segundos são convertidos automaticamente para decimal antes de salvar.</small>
           </div>
-          <div id="coordinateGridFields" class="field full hidden">
+          <div id="coordinateGridFields" class="field full">
             <label class="field"><span>Grid Locator (Maidenhead)</span>
               <input id="maidenheadInput" type="text" maxlength="10" inputmode="text" spellcheck="false" autocomplete="off" placeholder="GH64" aria-describedby="maidenheadStatus">
             </label>
@@ -2011,5 +2011,6 @@
 <script src="{{ url_for('static', filename='js/planning.js') }}"></script>
 <script src="{{ url_for('static', filename='js/config_tabs.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ssid_help.js') }}"></script>
+<script src="{{ url_for('static', filename='js/field_widths.js') }}"></script>
 </body>
 </html>

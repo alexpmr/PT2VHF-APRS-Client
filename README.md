@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v2.0.1
+# PT2VHF APRS Client - v2.0.2
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,13 +6,15 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 2.0.1 (publicação pendente)
+## Downloads — versão 2.0.2 (Windows; publicação pendente) e 2.0.1 (Linux e macOS)
 
-A v2.0.1 será distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 e Raspberry Pi ARM64 (AppImage/.deb/.tar.gz) e macOS Intel/Apple Silicon.
-O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) passa a oferecer a v2.0.1 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
+A v2.0.2 é distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64. Linux x86_64, Raspberry Pi ARM64 (AppImage/.deb/.tar.gz) e macOS Intel/Apple Silicon continuam na v2.0.1.
+O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece a v2.0.2 no Windows quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
 
 A revisão integral das traduções (#157) continua aberta.
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v2.0.2** (só Windows) deixa os campos da Configuração com a largura do conteúdo e traz o Grid Locator sempre visível: digite o grid e tecle Enter para preencher latitude e longitude.
 
 A **v2.0.1** corrige a lista de estações no site: o indicativo volta a ser informado na consulta de versão, sem o SSID.
 
