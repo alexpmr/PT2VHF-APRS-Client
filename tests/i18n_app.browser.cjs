@@ -14,6 +14,9 @@ const assert = require('node:assert/strict');
         const button = page.locator('#' + id);
         if (await button.isVisible()) await button.click();
       }
+      // A aba Configuração abre sozinha as sugestões de SSID ~150 ms depois do clique.
+      const ssidClose = page.locator('#ssidHelpModal .ssid-help-footer [data-ssid-help-close]');
+      if (await ssidClose.isVisible()) await ssidClose.click();
     }
     await page.goto(origin);
     await page.waitForTimeout(1800);
@@ -34,6 +37,7 @@ const assert = require('node:assert/strict');
         await dismissNotices();
         await page.locator(`.tab[data-tab="${tab}"]`).click();
         assert.ok(await page.locator(`#tab-${tab}`).isVisible(), `${language}: ${tab}`);
+        if (tab === 'config') await page.waitForTimeout(600);
       }
       // Reload creates fresh DOM/state and exercises the saved server setting.
       await page.reload();
