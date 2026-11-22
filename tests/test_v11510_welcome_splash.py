@@ -38,3 +38,15 @@ def test_splash_closes_itself_after_ten_seconds_and_keeps_the_rule():
     assert "addEventListener('click', hideOfficialSiteNotice)" in block
     # Mesma regra de antes: uma vez por abertura, depois de 1,5 s, esperando outros avisos.
     assert "officialSiteNoticeShown" in block and ".message-alert-overlay:not(.hidden)" in block
+
+
+def test_splash_is_an_in_window_layer_closed_by_esc_or_click_outside():
+    """15/11/2026: splash integrado à janela principal (camada), fecha com Esc ou clique fora do banner."""
+    css = (ROOT / "pt2vhf_aprs/static/css/app.css").read_text(encoding="utf-8")
+    assert ".official-site-notice{position:fixed;inset:0;" in css and "background:#040a11d6" in css
+    js = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
+    assert "if (event.target === event.currentTarget) hideOfficialSiteNotice();" in js
+    assert "event.key === 'Escape' && !$('#officialSiteNotice')?.classList.contains('hidden')" in js
+    # Nenhuma janela nativa separada para o splash.
+    for launcher in ("windows_app.py", "linux_app.py", "macos_app.py"):
+        assert (ROOT / launcher).read_text(encoding="utf-8").count("create_window(") == 1

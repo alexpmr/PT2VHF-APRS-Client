@@ -1058,8 +1058,13 @@
   }
   $('#officialSiteNoticeBanner img')?.addEventListener('error', showOfficialSiteNoticeFallback);
   $('#officialSiteNoticeClose')?.addEventListener('click', hideOfficialSiteNotice);
-  $('#officialSiteNotice')?.addEventListener('keydown', event => {
-    if (event.key === 'Escape') hideOfficialSiteNotice();
+  // Splash integrado: camada dentro da janela principal (sem janela própria). Fecha com Esc em
+  // qualquer lugar ou com um clique no fundo escurecido, fora do banner.
+  $('#officialSiteNotice')?.addEventListener('click', event => {
+    if (event.target === event.currentTarget) hideOfficialSiteNotice();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !$('#officialSiteNotice')?.classList.contains('hidden')) hideOfficialSiteNotice();
   });
   setTimeout(showOfficialSiteNotice, 1500);
 
