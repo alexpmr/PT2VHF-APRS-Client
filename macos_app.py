@@ -12,6 +12,7 @@ from urllib.request import urlopen
 
 from pt2vhf_aprs import database as db
 from pt2vhf_aprs import updater
+from pt2vhf_aprs import window_size
 from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.tnc_service import service as tnc_service
 from pt2vhf_aprs.local_server import configured_start_port, runtime_file_for, start_local_server
@@ -21,10 +22,6 @@ APP_NAME = "PT2VHF APRS Client"
 HOST = "127.0.0.1"
 PORT = configured_start_port()
 URL = f"http://{HOST}:{PORT}"
-WINDOW_WIDTH = 1400
-WINDOW_HEIGHT = 850
-WINDOW_MIN_WIDTH = 1100
-WINDOW_MIN_HEIGHT = 700
 
 _window = None
 _server_handle = None
@@ -210,9 +207,7 @@ def _run_integrated_window() -> int:
             APP_NAME,
             URL,
             js_api=NativeApi(),
-            width=WINDOW_WIDTH,
-            height=WINDOW_HEIGHT,
-            min_size=(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT),
+            **window_size.create_window_kwargs(webview),
             resizable=True,
             text_select=True,
         )

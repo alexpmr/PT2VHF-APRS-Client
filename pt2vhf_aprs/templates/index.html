@@ -97,6 +97,10 @@
         <span class="resource-track"><span id="headerMemoryBar" class="resource-fill"></span></span>
       </div>
     </div>
+    <button id="autoReplyHeaderStatus" type="button" class="auto-reply-header-status hidden" title="A Auto-resposta está ligada. Clique para abrir Automações.">
+      <span class="auto-reply-header-dot" aria-hidden="true"></span>
+      <span>Auto-Resposta ligada</span>
+    </button>
     <a id="versionStatus" class="version-status checking" href="#" target="_blank" rel="noopener" title="Verificando a versão mais recente">
       <span class="version-status-dot"></span>
       <span id="versionStatusText">Verificando versão…</span>
@@ -2012,5 +2016,6 @@
 <script src="{{ url_for('static', filename='js/config_tabs.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ssid_help.js') }}"></script>
 <script src="{{ url_for('static', filename='js/field_widths.js') }}"></script>
+<script src="{{ url_for('static', filename='js/header_status.js') }}"></script>
 </body>
 </html>

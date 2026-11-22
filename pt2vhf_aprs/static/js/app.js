@@ -8962,6 +8962,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       });
       const savedConfig = result.config || { ...(state.currentConfig || {}), ...payload };
       state.currentConfig = savedConfig;
+      window.dispatchEvent(new Event('pt2vhf:config-saved'));
       if (result.restart_required) toast(ui(
         'Acesso Web LAN alterado. Reinicie o aplicativo para aplicar a nova interface de rede.',
         'Web LAN changed. Restart the app to apply the network binding.'

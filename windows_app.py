@@ -21,6 +21,7 @@ from pt2vhf_aprs import __version__
 from pt2vhf_aprs import database as db
 from pt2vhf_aprs import diagnostics as diag
 from pt2vhf_aprs import updater
+from pt2vhf_aprs import window_size
 from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.tnc_service import service as tnc_service
 from pt2vhf_aprs.local_server import (
@@ -37,10 +38,6 @@ HOST = "127.0.0.1"
 PORT = configured_start_port()
 URL = f"http://{HOST}:{PORT}"
 MUTEX_NAME = "Global\\PT2VHF_APRS_Client_SingleInstance"
-WINDOW_WIDTH = 1400
-WINDOW_HEIGHT = 850
-WINDOW_MIN_WIDTH = 1100
-WINDOW_MIN_HEIGHT = 700
 
 _window = None
 _tray_icon: pystray.Icon | None = None
@@ -619,9 +616,7 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
             APP_NAME,
             _current_url(),
             js_api=NativeApi(),
-            width=WINDOW_WIDTH,
-            height=WINDOW_HEIGHT,
-            min_size=(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT),
+            **window_size.create_window_kwargs(webview),
             resizable=True,
             text_select=True,
         )
