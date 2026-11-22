@@ -382,14 +382,13 @@ def test_new_install_defaults_and_required_station_fields():
             assert saved["altitude_source"] == "fallback_zero"
             assert saved["aprs_filter"] == db.DEFAULT_APRS_FILTER
 
-            invalid = db.save_config({
-                "callsign": "PY2-ABC",
-                "latitude": -15.8,
-                "longitude": -47.9,
-                "altitude": 0,
-            })
+            # v2.0.3: indicativo sem estrutura de radioamador não é salvo.
+            for bad in ("PY2-ABC", "PQP2TF"):
+                with pytest.raises(ValueError, match="Indicativo inválido"):
+                    db.save_config({"callsign": bad, "latitude": -15.8, "longitude": -47.9, "altitude": 0})
+            assert db.get_config()["callsign"] == "PY2ABC"
             with pytest.raises(ValueError, match="Indicativo inválido"):
-                db.validate_required_station_config(invalid)
+                db.validate_required_station_config(dict(saved, callsign="PQP2TF"))
     finally:
         db.DB_PATH = original
 

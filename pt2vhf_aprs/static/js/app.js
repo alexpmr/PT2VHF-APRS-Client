@@ -1674,7 +1674,7 @@
     const callsign = String(cfg?.callsign || '').trim().toUpperCase();
     const hasValue = value => value !== null && value !== undefined && String(value).trim() !== '';
     const finiteValue = value => hasValue(value) && Number.isFinite(Number(value));
-    return /^[A-Z0-9]{1,6}$/.test(callsign)
+    return isValidAmateurCallsign(callsign)
       && finiteValue(cfg?.latitude)
       && finiteValue(cfg?.longitude)
       && finiteValue(cfg?.altitude);
@@ -8684,22 +8684,33 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     }
   }
 
+  // v2.0.3: mesma regra de pt2vhf_aprs/callsign_rules.py. Estrutura ITU (prefixo,
+  // dígito, sufixo terminado em letra) e, para PP–PY/ZV–ZZ, o formato brasileiro
+  // (duas letras, um dígito, uma a três letras). PQP2TF não passa.
+  function isValidAmateurCallsign(value) {
+    const call = String(value || '').trim().toUpperCase();
+    if (call.length < 3 || call.length > 6) return false;
+    if (!/^(?:[A-Z]{1,2}|[0-9][A-Z]|[A-Z][0-9])[0-9][A-Z0-9]{0,3}[A-Z]$/.test(call)) return false;
+    if (/^(?:P[P-Y]|Z[V-Z])/.test(call)) return /^(?:P[P-Y]|Z[V-Z])[0-9][A-Z]{1,3}$/.test(call);
+    return true;
+  }
+
   function validateCallsignField() {
     const input = $('#callsignInput');
     const status = $('#callsignValidationStatus');
     if (!input) return false;
     const value = String(input.value || '').trim().toUpperCase();
-    const valid = /^[A-Z0-9]{1,6}$/.test(value);
+    const valid = isValidAmateurCallsign(value);
     input.setCustomValidity(!value ? '' : (valid ? '' : ui(
-      'Use de 1 a 6 letras ou números, sem SSID.',
-      'Use 1 to 6 letters or numbers, without SSID.'
+      'Use um indicativo de radioamador real, sem SSID (ex.: PY2ABC).',
+      'Use a real amateur radio callsign, without SSID (e.g. PY2ABC).'
     )));
     if (status) {
       status.textContent = !value
         ? ui('Obrigatório. O passcode APRS-IS será calculado automaticamente.', 'Required. The APRS-IS passcode will be calculated automatically.')
         : valid
           ? ui('Indicativo válido. Passcode atualizado automaticamente.', 'Valid callsign. Passcode updated automatically.')
-          : ui('Indicativo inválido. Use de 1 a 6 letras ou números, sem SSID.', 'Invalid callsign. Use 1 to 6 letters or numbers, without SSID.');
+          : ui('Indicativo inválido. Use um indicativo de radioamador real, sem SSID (ex.: PY2ABC).', 'Invalid callsign. Use a real amateur radio callsign, without SSID (e.g. PY2ABC).');
       status.classList.toggle('field-status-error', !!value && !valid);
     }
     return valid;

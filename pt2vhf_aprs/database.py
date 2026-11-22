@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from . import APP_TOCALL
+from . import callsign_rules
 from . import diagnostics as diag
 
 def _default_data_dir() -> Path:
@@ -854,8 +855,11 @@ def validate_required_station_config(config: dict[str, Any]) -> None:
         raise ValueError(
             "Preencha os campos obrigatórios antes de continuar: " + ", ".join(missing) + "."
         )
-    if not re.fullmatch(r"[A-Z0-9]{1,6}", callsign):
-        raise ValueError("Indicativo inválido. Use de 1 a 6 letras ou números, sem SSID.")
+    if not callsign_rules.is_valid_amateur_callsign(callsign):
+        raise ValueError(CALLSIGN_INVALID_MESSAGE)
+
+
+CALLSIGN_INVALID_MESSAGE = "Indicativo inválido. Use um indicativo de radioamador real, sem SSID (ex.: PY2ABC)."
 
 
 def get_config() -> dict[str, Any]:
@@ -871,6 +875,12 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged = {key: data.get(key, current.get(key, DEFAULT_CONFIG[key])) for key in allowed}
 
     merged["callsign"] = str(merged["callsign"] or "").upper().strip()
+    # v2.0.3: só aceita indicativo de radioamador com estrutura real (PQP2TF não passa).
+    # Valida apenas quando o indicativo muda, para não travar outras gravações de
+    # quem já tinha um indicativo antigo salvo.
+    if (merged["callsign"] and merged["callsign"] != str(current.get("callsign") or "").upper().strip()
+            and not callsign_rules.is_valid_amateur_callsign(merged["callsign"])):
+        raise ValueError(CALLSIGN_INVALID_MESSAGE)
     merged["ssid"] = int(merged["ssid"] or 0)
     merged["server"] = str(merged["server"] or "soam.aprs2.net").strip()
     merged["port"] = int(merged["port"] or 14580)
