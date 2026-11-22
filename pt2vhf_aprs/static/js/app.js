@@ -2072,6 +2072,7 @@
     }).setView([saved.latitude, saved.longitude], Number(saved.zoom));
     window.map = state.map;
     window.pt2vhfMainMap = state.map;
+    installPopupViewRestore(state.map);
     window.dispatchEvent(new CustomEvent('pt2vhf:main-map-ready', {detail:{map:state.map}}));
 
     const elevationPane = state.map.createPane('pt2vhfElevationPane');
@@ -4866,6 +4867,44 @@
     return rows.join('\n        ');
   }
 
+  // v2.0.3 (relato PU2MUS, 1366x768): o popup inteiro precisa caber no mapa, senão o
+  // autoPan o empurra para baixo e "Enviar mensagem" fica fora da tela. Desconta o
+  // padding do autoPan (76 em cima, 24 embaixo), a ponta e as bordas do balão.
+  function stationPopupMaxHeight() {
+    const mapHeight = state.map?.getSize?.().y || 700;
+    return Math.max(160, Math.min(620, mapHeight - 170));
+  }
+
+  // v2.0.3: o autoPan de um popup move o mapa; ao fechar o popup, o mapa volta para
+  // onde estava, a menos que o operador tenha arrastado ou dado zoom nesse meio tempo.
+  function installPopupViewRestore(map) {
+    if (!map || map._pt2vhfPopupRestore) return;
+    map._pt2vhfPopupRestore = true;
+    let savedView = null;
+    let restoring = false;
+    map.on('autopanstart', () => {
+      if (!savedView && !restoring) savedView = { center: map.getCenter(), zoom: map.getZoom() };
+    });
+    const forget = () => { if (!restoring) savedView = null; };
+    map.on('dragstart', forget);
+    map.on('zoomstart', forget);
+    map.on('popupclose', () => {
+      setTimeout(() => {
+        if (!savedView) return;
+        // Trocou de estação: outro popup abriu; mantém a posição original guardada.
+        let popupOpen = false;
+        map.eachLayer(layer => { if (layer instanceof L.Popup) popupOpen = true; });
+        if (popupOpen) return;
+        const view = savedView;
+        savedView = null;
+        restoring = true;
+        map.once('moveend', () => { restoring = false; });
+        map.setView(view.center, view.zoom, { animate: true });
+        setTimeout(() => { restoring = false; }, 1500);
+      }, 0);
+    });
+  }
+
   function popupHtml(s) {
     let path = '';
     try { path = JSON.parse(s.path || '[]').join(','); } catch (_) { path = s.path || ''; }
@@ -5469,7 +5508,7 @@
           updateTrackFollowPanel(station);
           centerFollowedTrack(station.callsign, [], { station });
         }
-        const popupMaxHeight = Math.max(220, Math.min(620, (state.map?.getSize?.().y || 700) - 70));
+        const popupMaxHeight = stationPopupMaxHeight();
         marker.bindPopup(popupHtml(station), {
           maxWidth: 520,
           maxHeight: popupMaxHeight,
@@ -5534,6 +5573,7 @@
         marker.setZIndexOffset(1400);
         marker.bindPopup(friendlyObjectPopupHtml(object, objectSymbol), {
           maxWidth: 430,
+          maxHeight: stationPopupMaxHeight(),
           keepInView: true,
           autoPan: true,
         });

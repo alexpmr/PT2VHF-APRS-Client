@@ -39,3 +39,15 @@ def test_header_compact_and_auto_reply_badge():
     assert ".version-status:not(.update) { display: none; }" in css
     assert "@media (max-width: 1500px) and (min-width: 761px)" in css
     assert "auto_reply_enabled" in js and "pt2vhf:config-saved" in js
+
+
+def test_station_popup_fits_map_and_restores_view():
+    js = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
+    css = (ROOT / "pt2vhf_aprs/static/css/app.css").read_text(encoding="utf-8")
+    assert "function stationPopupMaxHeight()" in js and "mapHeight - 170" in js
+    assert "maxHeight: popupMaxHeight" in js
+    assert "function installPopupViewRestore(map)" in js
+    assert "installPopupViewRestore(state.map);" in js
+    assert "map.on('autopanstart'" in js and "map.on('popupclose'" in js
+    assert ".leaflet-popup-content .station-popup { max-height: none; overflow: visible; }" in css
+    assert ".leaflet-popup-scrolled .station-popup-actions" in css

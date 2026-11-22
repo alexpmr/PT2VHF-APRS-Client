@@ -5244,3 +5244,16 @@ html[data-theme="light"] .message-context-menu { background: #fff; }
   .tabs { padding: 0 10px; gap: 2px; }
   .tab { padding: 0 11px; }
 }
+/* v2.0.3: uma só rolagem no popup da estação (a do Leaflet, limitada à altura do mapa)
+   e a barra de ações com "Enviar mensagem" sempre visível no rodapé do popup. */
+.leaflet-popup-content .station-popup { max-height: none; overflow: visible; }
+.leaflet-popup-scrolled .station-popup-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-left: -4px;
+  margin-right: -4px;
+  padding: 8px 4px 2px;
+  background: #17212a;
+}
+html[data-theme="light"] .leaflet-popup-scrolled .station-popup-actions { background: #fff; }
