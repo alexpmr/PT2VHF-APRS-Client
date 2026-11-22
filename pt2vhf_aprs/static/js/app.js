@@ -1674,7 +1674,7 @@
     const callsign = String(cfg?.callsign || '').trim().toUpperCase();
     const hasValue = value => value !== null && value !== undefined && String(value).trim() !== '';
     const finiteValue = value => hasValue(value) && Number.isFinite(Number(value));
-    return /^[A-Z0-9]{1,6}$/.test(callsign)
+    return isValidAmateurCallsign(callsign)
       && finiteValue(cfg?.latitude)
       && finiteValue(cfg?.longitude)
       && finiteValue(cfg?.altitude);
@@ -2072,6 +2072,7 @@
     }).setView([saved.latitude, saved.longitude], Number(saved.zoom));
     window.map = state.map;
     window.pt2vhfMainMap = state.map;
+    installPopupViewRestore(state.map);
     window.dispatchEvent(new CustomEvent('pt2vhf:main-map-ready', {detail:{map:state.map}}));
 
     const elevationPane = state.map.createPane('pt2vhfElevationPane');
@@ -4866,6 +4867,44 @@
     return rows.join('\n        ');
   }
 
+  // v2.0.3 (relato PU2MUS, 1366x768): o popup inteiro precisa caber no mapa, senão o
+  // autoPan o empurra para baixo e "Enviar mensagem" fica fora da tela. Desconta o
+  // padding do autoPan (76 em cima, 24 embaixo), a ponta e as bordas do balão.
+  function stationPopupMaxHeight() {
+    const mapHeight = state.map?.getSize?.().y || 700;
+    return Math.max(160, Math.min(620, mapHeight - 170));
+  }
+
+  // v2.0.3: o autoPan de um popup move o mapa; ao fechar o popup, o mapa volta para
+  // onde estava, a menos que o operador tenha arrastado ou dado zoom nesse meio tempo.
+  function installPopupViewRestore(map) {
+    if (!map || map._pt2vhfPopupRestore) return;
+    map._pt2vhfPopupRestore = true;
+    let savedView = null;
+    let restoring = false;
+    map.on('autopanstart', () => {
+      if (!savedView && !restoring) savedView = { center: map.getCenter(), zoom: map.getZoom() };
+    });
+    const forget = () => { if (!restoring) savedView = null; };
+    map.on('dragstart', forget);
+    map.on('zoomstart', forget);
+    map.on('popupclose', () => {
+      setTimeout(() => {
+        if (!savedView) return;
+        // Trocou de estação: outro popup abriu; mantém a posição original guardada.
+        let popupOpen = false;
+        map.eachLayer(layer => { if (layer instanceof L.Popup) popupOpen = true; });
+        if (popupOpen) return;
+        const view = savedView;
+        savedView = null;
+        restoring = true;
+        map.once('moveend', () => { restoring = false; });
+        map.setView(view.center, view.zoom, { animate: true });
+        setTimeout(() => { restoring = false; }, 1500);
+      }, 0);
+    });
+  }
+
   function popupHtml(s) {
     let path = '';
     try { path = JSON.parse(s.path || '[]').join(','); } catch (_) { path = s.path || ''; }
@@ -5469,7 +5508,7 @@
           updateTrackFollowPanel(station);
           centerFollowedTrack(station.callsign, [], { station });
         }
-        const popupMaxHeight = Math.max(220, Math.min(620, (state.map?.getSize?.().y || 700) - 70));
+        const popupMaxHeight = stationPopupMaxHeight();
         marker.bindPopup(popupHtml(station), {
           maxWidth: 520,
           maxHeight: popupMaxHeight,
@@ -5534,6 +5573,7 @@
         marker.setZIndexOffset(1400);
         marker.bindPopup(friendlyObjectPopupHtml(object, objectSymbol), {
           maxWidth: 430,
+          maxHeight: stationPopupMaxHeight(),
           keepInView: true,
           autoPan: true,
         });
@@ -8684,22 +8724,33 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     }
   }
 
+  // v2.0.3: mesma regra de pt2vhf_aprs/callsign_rules.py. Estrutura ITU (prefixo,
+  // dígito, sufixo terminado em letra) e, para PP–PY/ZV–ZZ, o formato brasileiro
+  // (duas letras, um dígito, uma a três letras). PQP2TF não passa.
+  function isValidAmateurCallsign(value) {
+    const call = String(value || '').trim().toUpperCase();
+    if (call.length < 3 || call.length > 6) return false;
+    if (!/^(?:[A-Z]{1,2}|[0-9][A-Z]|[A-Z][0-9])[0-9][A-Z0-9]{0,3}[A-Z]$/.test(call)) return false;
+    if (/^(?:P[P-Y]|Z[V-Z])/.test(call)) return /^(?:P[P-Y]|Z[V-Z])[0-9][A-Z]{1,3}$/.test(call);
+    return true;
+  }
+
   function validateCallsignField() {
     const input = $('#callsignInput');
     const status = $('#callsignValidationStatus');
     if (!input) return false;
     const value = String(input.value || '').trim().toUpperCase();
-    const valid = /^[A-Z0-9]{1,6}$/.test(value);
+    const valid = isValidAmateurCallsign(value);
     input.setCustomValidity(!value ? '' : (valid ? '' : ui(
-      'Use de 1 a 6 letras ou números, sem SSID.',
-      'Use 1 to 6 letters or numbers, without SSID.'
+      'Use um indicativo de radioamador real, sem SSID (ex.: PY2ABC).',
+      'Use a real amateur radio callsign, without SSID (e.g. PY2ABC).'
     )));
     if (status) {
       status.textContent = !value
         ? ui('Obrigatório. O passcode APRS-IS será calculado automaticamente.', 'Required. The APRS-IS passcode will be calculated automatically.')
         : valid
           ? ui('Indicativo válido. Passcode atualizado automaticamente.', 'Valid callsign. Passcode updated automatically.')
-          : ui('Indicativo inválido. Use de 1 a 6 letras ou números, sem SSID.', 'Invalid callsign. Use 1 to 6 letters or numbers, without SSID.');
+          : ui('Indicativo inválido. Use um indicativo de radioamador real, sem SSID (ex.: PY2ABC).', 'Invalid callsign. Use a real amateur radio callsign, without SSID (e.g. PY2ABC).');
       status.classList.toggle('field-status-error', !!value && !valid);
     }
     return valid;
@@ -8951,6 +9002,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       });
       const savedConfig = result.config || { ...(state.currentConfig || {}), ...payload };
       state.currentConfig = savedConfig;
+      window.dispatchEvent(new Event('pt2vhf:config-saved'));
       if (result.restart_required) toast(ui(
         'Acesso Web LAN alterado. Reinicie o aplicativo para aplicar a nova interface de rede.',
         'Web LAN changed. Restart the app to apply the network binding.'

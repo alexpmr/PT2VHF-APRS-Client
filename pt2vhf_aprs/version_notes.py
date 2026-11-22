@@ -3,6 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.3": {
+        "title": "Telas menores, mapa e indicativo",
+        "items": [
+            "A janela e o cabeçalho cabem em telas 1366x768; o botão APRS-IS fica sempre visível.",
+            "O popup da estação cabe no mapa, com \"Enviar mensagem\" sempre à vista, e o mapa volta ao lugar ao fechar.",
+            "Aviso \"Auto-Resposta ligada\" no cabeçalho.",
+            "A Configuração só aceita indicativo de radioamador real (ex.: PY2ABC).",
+            "A tela de abertura fecha com Esc ou com um clique fora do banner.",
+        ],
+    },
     "2.0.2": {
         "title": "Configuração mais compacta e Grid Locator",
         "items": [

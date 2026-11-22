@@ -154,6 +154,7 @@
       const saved=await req('/api/config',{method:'POST',body:JSON.stringify(payload)});
       if(saved && saved.ok===false)throw new Error(saved.error||'Erro');
       toast(tr('Resposta automática salva.','Automatic reply saved.','Respuesta automática guardada.','Réponse automatique enregistrée.'));
+      window.dispatchEvent(new Event('pt2vhf:config-saved'));
       load();
     };
     load();

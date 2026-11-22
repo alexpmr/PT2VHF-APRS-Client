@@ -97,6 +97,10 @@
         <span class="resource-track"><span id="headerMemoryBar" class="resource-fill"></span></span>
       </div>
     </div>
+    <button id="autoReplyHeaderStatus" type="button" class="auto-reply-header-status hidden" title="A Auto-resposta está ligada. Clique para abrir Automações.">
+      <span class="auto-reply-header-dot" aria-hidden="true"></span>
+      <span>Auto-Resposta ligada</span>
+    </button>
     <a id="versionStatus" class="version-status checking" href="#" target="_blank" rel="noopener" title="Verificando a versão mais recente">
       <span class="version-status-dot"></span>
       <span id="versionStatusText">Verificando versão…</span>
@@ -765,7 +769,7 @@
         <div class="form-grid two-cols">
           <label class="field">
             <span>Indicativo <em class="required-badge">Obrigatório</em></span>
-            <input name="callsign" id="callsignInput" required maxlength="6" pattern="[A-Za-z0-9]{1,6}" title="Use de 1 a 6 letras ou números, sem SSID." placeholder="Ex.: PY2ABC" autocomplete="off">
+            <input name="callsign" id="callsignInput" required maxlength="6" minlength="3" pattern="[A-Za-z0-9]{3,6}" title="Indicativo de radioamador, sem SSID (ex.: PY2ABC)." placeholder="Ex.: PY2ABC" autocomplete="off">
             <small id="callsignValidationStatus">Obrigatório. O passcode APRS-IS será calculado automaticamente.</small>
           </label>
           <label class="field">
@@ -2012,5 +2016,6 @@
 <script src="{{ url_for('static', filename='js/config_tabs.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ssid_help.js') }}"></script>
 <script src="{{ url_for('static', filename='js/field_widths.js') }}"></script>
+<script src="{{ url_for('static', filename='js/header_status.js') }}"></script>
 </body>
 </html>

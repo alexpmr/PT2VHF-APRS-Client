@@ -1,3 +1,29 @@
+## RESOLVIDO (v2.0.3) — Validar o indicativo de radioamador na Configuração (19/11/2026)
+
+- **Caso real:** alguém que não é radioamador configurou "PQP2TF", que não existe; a regra antiga aceitava 1 a 6 letras
+  ou números.
+- **Entregue:** `pt2vhf_aprs/callsign_rules.py` (e a mesma regra em `isValidAmateurCallsign`, no `app.js`) exige a
+  estrutura ITU de indicativo de radioamador: prefixo (uma ou duas letras, dígito+letra ou letra+dígito), dígito e
+  sufixo terminado em letra, de 3 a 6 caracteres, sem SSID. Prefixos brasileiros (PP–PY, ZV–ZZ) seguem o formato da
+  Anatel: duas letras, um dígito e uma a três letras. A Configuração não salva indicativo inválido e a conexão
+  APRS-IS recusa um indicativo antigo inválido. Testes em `tests/test_callsign_rules.py`.
+
+## RESOLVIDO (v2.0.3) — Relato PU2MUS em tela 1366x768 (17/11/2026)
+
+- **Janela não cabia e "APRS-IS" só aparecia rolando para o lado:** a janela abria com 1400x850 (mínimo 1100x700) e o
+  cabeçalho tinha 1490 px. Agora `pt2vhf_aprs/window_size.py` limita a janela à tela e a abre maximizada em telas
+  pequenas (Windows, Linux e macOS), e o cabeçalho fica compacto até 1500 px (logo menor, idioma só com a bandeira;
+  até 1250 px some também CPU/RAM e o IP:porta). Conferido sem rolagem horizontal em 1084, 1250, 1366 e 1500 px.
+- **Popup da estação empurrava o mapa e "mensagem" ficava fora da tela:** o popup era mais alto que o mapa. Agora a
+  altura máxima desconta o espaço do autoPan, há uma rolagem só (a do Leaflet) e a barra com "Enviar mensagem" fica
+  fixa no rodapé do popup. Ao fechar o popup o mapa volta à posição de antes (a não ser que o operador tenha arrastado
+  ou dado zoom).
+- **"Auto-Resposta ligada" no lugar de "Verificando versão":** o cabeçalho mostra o aviso quando a Auto-resposta está
+  ligada (clique abre Automações); o estado da verificação de versão saiu do cabeçalho e só aparece "Versão X
+  disponível" quando houver atualização (o resto continua em Configuração → Atualizações).
+
+## RESOLVIDO (v2.0.3) — Splash fecha com Esc ou clique fora do banner (PR #179)
+
 ## RESOLVIDO (v2.0.2) — Configuração: largura dos campos coerente com o conteúdo (13/11/2026)
 
 - **Pedido do mantenedor:** ajustar o tamanho dos campos da Configuração ao conteúdo (ex.: o indicativo ocupava a

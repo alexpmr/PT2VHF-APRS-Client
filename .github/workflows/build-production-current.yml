@@ -23,9 +23,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v2.0.2 production release
+      - name: Validate v2.0.3 production release
         shell: pwsh
-        run: python tools\apply_release_2_0_2.py
+        run: python tools\apply_release_2_0_3.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -124,9 +124,9 @@ jobs:
           architecture: 'arm64'
           cache: 'pip'
 
-      - name: Validate v2.0.2 production release
+      - name: Validate v2.0.3 production release
         shell: pwsh
-        run: python tools\apply_release_2_0_2.py
+        run: python tools\apply_release_2_0_3.py
 
       - name: Install Python dependencies
         shell: pwsh
@@ -227,7 +227,7 @@ jobs:
 
       - name: Validate v1.14.38 release metadata
         shell: pwsh
-        run: python tools\apply_release_2_0_2.py
+        run: python tools\apply_release_2_0_3.py
 
       - name: Install Win7 Legacy dependencies
         shell: pwsh
@@ -320,9 +320,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v2.0.2 production release
+      - name: Validate v2.0.3 production release
         shell: bash
-        run: python tools/apply_release_2_0_2.py
+        run: python tools/apply_release_2_0_3.py
 
       - name: Build Linux packages
         shell: bash
@@ -346,44 +346,6 @@ jobs:
             dist-linux/THIRD_PARTY_LICENSES_Linux.txt
 
 
-  linux-arm64:
-    if: ${{ (github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:')) && !contains(github.event.head_commit.message, '[windows-only]') }}
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Validate v2.0.2 production release
-        shell: bash
-        run: python tools/apply_release_2_0_2.py
-
-      - name: Build Linux ARM64 packages
-        shell: bash
-        run: |
-          chmod +x linux/build_linux.sh
-          PT2VHF_LINUX_ARCH=arm64 PYTHON_BIN=python3 bash linux/build_linux.sh
-
-      - name: Read version for artifact name
-        shell: bash
-        run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
-
-      - name: Upload Linux ARM64 artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: PT2VHF-APRS-Client-Linux-arm64-v${{ env.APP_VERSION }}
-          path: |
-            dist-linux/PT2VHF_APRS_Client_Linux_arm64_v*.tar.gz
-            dist-linux/PT2VHF_APRS_Client_arm64_v*.AppImage
-            dist-linux/pt2vhf-aprs-client_*_arm64.deb
-            dist-linux/SBOM-Linux.cdx.json
-            dist-linux/THIRD_PARTY_LICENSES_Linux.txt
-
   linux-smoke:
     if: ${{ (github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:')) && !contains(github.event.head_commit.message, '[windows-only]') }}
     strategy:
@@ -404,7 +366,7 @@ jobs:
       - name: Core smoke tests
         shell: bash
         run: |
-          python tools/apply_release_2_0_2.py
+          python tools/apply_release_2_0_3.py
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
@@ -421,8 +383,6 @@ jobs:
         include:
           - os: macos-15
             arch: arm64
-          - os: macos-15-intel
-            arch: x86_64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -434,9 +394,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Validate v2.0.2 production release
+      - name: Validate v2.0.3 production release
         shell: bash
-        run: python tools/apply_release_2_0_2.py
+        run: python tools/apply_release_2_0_3.py
 
       - name: Build macOS DMG
         shell: bash
@@ -476,9 +436,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate v2.0.2 production release
+      - name: Validate v2.0.3 production release
         shell: bash
-        run: python tools/apply_release_2_0_2.py
+        run: python tools/apply_release_2_0_3.py
 
       - name: Generate versioned PDF manual
         shell: bash
@@ -514,7 +474,6 @@ jobs:
       - windows-arm64
       - windows-win7-legacy
       - linux-x64
-      - linux-arm64
       - linux-smoke
       - macos
       - manual-pdf

@@ -5195,3 +5195,65 @@ html[data-theme="light"] .message-context-menu { background: #fff; }
 .app-lan-check { flex-wrap: wrap; }
 .app-lan-check > span { flex: 1 1 0; min-width: 12em; }
 .app-lan-check > small { flex: 1 0 100%; padding-left: 22px; }
+
+/* v2.0.3 (relato PU2MUS, tela 1366x768) ------------------------------------------------ */
+/* O cabeçalho só mostra a versão quando há uma nova; o resto fica em Configuração → Atualizações. */
+.version-status:not(.update) { display: none; }
+.auto-reply-header-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid rgba(56,199,118,.45);
+  border-radius: 999px;
+  background: rgba(56,199,118,.09);
+  color: #bfead0;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.auto-reply-header-status:hover { background: rgba(56,199,118,.16); border-color: var(--ok); }
+.auto-reply-header-status.hidden { display: none; }
+.auto-reply-header-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ok); box-shadow: 0 0 0 3px rgba(56,199,118,.14);
+}
+.brand h1 { white-space: nowrap; }
+.app-header { gap: 14px; }
+.connection-box { min-width: 0; }
+/* Telas de até 1500 px (1366x768, 1440x900): cabeçalho compacto, tudo visível sem rolar para o lado. */
+@media (max-width: 1500px) and (min-width: 761px) {
+  .app-header { padding: 0 12px; }
+  .brand { gap: 8px; }
+  .brand-logo { width: 96px; height: 66px; }
+  .brand h1 { font-size: 17px; }
+  .header-counters { font-size: 11px; }
+  .connection-box { gap: 7px; }
+  #languageQuickCurrentLabel { display: none; }
+  .header-beacon-button, .header-quit-button { padding-left: 9px; padding-right: 9px; }
+}
+@media (min-width: 761px) {
+  .connection-box > * { flex-shrink: 0; white-space: nowrap; }
+}
+@media (max-width: 1250px) and (min-width: 761px) {
+  .system-resource-meter, .web-access-status { display: none; }
+}
+@media (max-width: 1250px) and (min-width: 901px) {
+  .tabs { padding: 0 10px; gap: 2px; }
+  .tab { padding: 0 11px; }
+}
+/* v2.0.3: uma só rolagem no popup da estação (a do Leaflet, limitada à altura do mapa)
+   e a barra de ações com "Enviar mensagem" sempre visível no rodapé do popup. */
+.leaflet-popup-content .station-popup { max-height: none; overflow: visible; }
+.leaflet-popup-scrolled .station-popup-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-left: -4px;
+  margin-right: -4px;
+  padding: 8px 4px 2px;
+  background: #17212a;
+}
+html[data-theme="light"] .leaflet-popup-scrolled .station-popup-actions { background: #fff; }
