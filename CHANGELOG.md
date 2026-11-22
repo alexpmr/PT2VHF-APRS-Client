@@ -1,3 +1,11 @@
+## 2.0.3 - 2026-11-22
+
+- **Só indicativo de radioamador real:** a Configuração deixou de aceitar qualquer combinação de 1 a 6 letras e números. O indicativo precisa ter a estrutura de um indicativo de radioamador (prefixo, dígito e sufixo terminado em letra); os brasileiros (PP–PY, ZV–ZZ) seguem o formato da Anatel, como PY2ABC ou PU2MUS. Coisas como PQP2TF não passam.
+- **Tela 1366x768 (relato PU2MUS):** a janela abre do tamanho da tela (e maximizada em telas pequenas) e o cabeçalho fica compacto até 1500 px de largura, com o botão APRS-IS sempre visível, sem rolar para o lado.
+- **Popup da estação no mapa:** o popup cabe na altura do mapa e o botão "Enviar mensagem" fica sempre visível no rodapé dele; ao fechar o popup, o mapa volta para onde estava.
+- **Aviso "Auto-Resposta ligada" no cabeçalho** (clique para abrir Automações). O estado "Verificando versão…" saiu do cabeçalho; ali só aparece "Versão X disponível" quando houver atualização.
+- **Splash de abertura fecha com Esc ou com clique fora do banner** (#179).
+
 ## 2.0.2 - 2026-11-14
 
 - **Configuração com campos do tamanho certo:** cada campo fica com a largura do conteúdo que aceita (indicativo com 6 caracteres, SSID, porta, passcode, coordenadas, cores, minutos...), calculada pelo próprio limite do campo; vale para todas as sub-abas, inclusive os cartões criados depois (TNC, integrações, retenção).

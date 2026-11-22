@@ -1,4 +1,4 @@
-"""Valida invariantes mínimas antes de empacotar a release v2.0.2."""
+"""Valida invariantes mínimas antes de empacotar a release v2.0.3."""
 import base64
 import hashlib
 from pathlib import Path
@@ -10,15 +10,16 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-assert read("VERSION").strip() == "2.0.2"
-assert '__version__ = "2.0.2"' in read("pt2vhf_aprs/__init__.py")
-assert "filevers=(2, 0, 2, 0)" in read("windows/version_info.txt")
-assert "prodvers=(2, 0, 2, 0)" in read("windows/version_info.txt")
-assert "## 2.0.2 - 2026-11-14" in read("CHANGELOG.md")
-assert '"2.0.2": {' in read("pt2vhf_aprs/version_notes.py")
+assert read("VERSION").strip() == "2.0.3"
+assert '__version__ = "2.0.3"' in read("pt2vhf_aprs/__init__.py")
+assert "filevers=(2, 0, 3, 0)" in read("windows/version_info.txt")
+assert "prodvers=(2, 0, 3, 0)" in read("windows/version_info.txt")
+assert "## 2.0.3 - 2026-11-22" in read("CHANGELOG.md")
+assert '"2.0.3": {' in read("pt2vhf_aprs/version_notes.py")
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_2_0_2.py" in read(workflow)
+    assert "apply_release_2_0_3.py" in read(workflow)
+    assert "apply_release_2_0_2.py" not in read(workflow)
     assert "apply_release_2_0_1.py" not in read(workflow)
     assert "apply_release_2_0_0.py" not in read(workflow)
     assert "apply_release_1_15_9.py" not in read(workflow)
@@ -196,7 +197,7 @@ assert '"units": "metric"' in database and 'id="appUnits"' in html and "function
 assert 'missing.append("Altitude")' not in database
 assert "function scrollMessagesToNewest()" in js
 arm = read(".github/workflows/build-linux-arm64-raspberry.yml")
-assert "apply_release_2_0_2.py" in arm and "1.15.6" not in arm
+assert "apply_release_2_0_3.py" in arm and "1.15.6" not in arm
 print("invariantes herdados da v1.15.7 OK")
 # v1.15.8: mapa de calor sem corte e aviso de boas-vindas como no Sat Tool.
 cov = read("pt2vhf_aprs/rf_coverage.py")
@@ -240,3 +241,12 @@ for workflow in (".github/workflows/build-production-current.yml",
     publish = text[text.index("  publish-release:"):]
     assert "!cancelled()" in publish[:400]
 print("v2.0.2 release validation OK")
+
+# v2.0.3: indicativo real, tela 1366x768, popup do mapa, Auto-Resposta no cabeçalho, splash (#179).
+assert "callsign_rules.is_valid_amateur_callsign" in database
+assert "function isValidAmateurCallsign" in js
+assert "function installPopupViewRestore(map)" in js and "function stationPopupMaxHeight()" in js
+assert 'id="autoReplyHeaderStatus"' in html and "js/header_status.js" in html
+for shell in ("windows_app.py", "linux_app.py", "macos_app.py"):
+    assert "window_size.create_window_kwargs(webview)" in read(shell)
+print("v2.0.3 release validation OK")
