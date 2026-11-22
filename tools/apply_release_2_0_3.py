@@ -95,6 +95,10 @@ assert "def survey_pdf(" in read("pt2vhf_aprs/planning_pdf.py")
 assert "register_planning_routes(app)" in web
 assert "js/planning.js" in html and "css/planning.css" in html
 assert "reportlab" in read("requirements.txt") and "reportlab" in read("requirements-windows7.txt")
+# v2.0.3: sem builds Raspberry Pi (Linux ARM64) e Mac Intel na release de produção.
+production = read(".github/workflows/build-production-current.yml")
+assert "  linux-arm64:" not in production and "ubuntu-24.04-arm" not in production
+assert "macos-15-intel" not in production and "macos-15-intel" not in read(".github/workflows/build-full-current.yml")
 for shell in ("windows_app.py", "linux_app.py", "macos_app.py"):
     assert "def save_binary_file(" in read(shell)
 assert "def _map_link_checks(" in read("pt2vhf_aprs/db_check.py")

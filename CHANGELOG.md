@@ -5,6 +5,7 @@
 - **Popup da estação no mapa:** o popup cabe na altura do mapa e o botão "Enviar mensagem" fica sempre visível no rodapé dele; ao fechar o popup, o mapa volta para onde estava.
 - **Aviso "Auto-Resposta ligada" no cabeçalho** (clique para abrir Automações). O estado "Verificando versão…" saiu do cabeçalho; ali só aparece "Versão X disponível" quando houver atualização.
 - **Splash de abertura fecha com Esc ou com clique fora do banner** (#179).
+- **Plataformas:** a partir desta versão saem só Windows x64/ARM64, Linux x86_64 e macOS Apple Silicon. Raspberry Pi (Linux ARM64) e Mac Intel deixam de ser gerados; quem usa essas plataformas continua na 2.0.1.
 
 ## 2.0.2 - 2026-11-14
 
