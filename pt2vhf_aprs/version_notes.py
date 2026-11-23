@@ -3,6 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.4": {
+        "title": "Linux em processadores mais antigos",
+        "items": [
+            "O programa Linux volta a abrir em processadores sem AVX2 (antes fechava com \"Illegal instruction\").",
+            "A sua estação aparece na lista do site logo depois de salvar o indicativo na Configuração.",
+        ],
+    },
     "2.0.3": {
         "title": "Telas menores, mapa e indicativo",
         "items": [
