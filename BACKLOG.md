@@ -1,3 +1,14 @@
+## PENDENTE (próxima versão) — Estação nova só entrava nas estatísticas do site 15 min depois (23/11/2026)
+
+- **Relato do mantenedor:** muitos downloads da v2.0.3 e a lista de estações em /aprs quase não muda.
+- **Conferido:** a v2.0.3 envia o indicativo certo (`update.php?product=aprs&call=PY2ABC`, testado com o app rodando) e
+  o site registra (30 estações, 10 ativas em 23/11/2026). Mas numa instalação nova a consulta da abertura sai antes da
+  Configuração (sem indicativo) e a seguinte só 15 min depois; quem configurava e fechava o app antes disso só aparecia
+  na próxima abertura.
+- **Corrigido:** `web.register_station_now` faz a consulta logo depois de gravar a Configuração quando o indicativo
+  passa a poder ser informado (estação nova ou indicativo trocado), respeitando "informar indicativo" e "verificar
+  atualizações automaticamente". Teste em `tests/test_callsign_registry.py`.
+
 ## RESOLVIDO (v2.0.3) — Validar o indicativo de radioamador na Configuração (19/11/2026)
 
 - **Caso real:** alguém que não é radioamador configurou "PQP2TF", que não existe; a regra antiga aceitava 1 a 6 letras

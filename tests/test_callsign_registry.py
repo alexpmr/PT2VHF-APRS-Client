@@ -134,3 +134,30 @@ def test_settings_checkbox_in_updates_section():
     block = block[:block.index("</div>\n      </div>")]
     assert 'name="share_callsign_on_update" type="checkbox" checked' in block
     assert "Informar meu indicativo ao consultar versão nova" in block
+
+
+def test_station_registered_right_after_configuration(monkeypatch):
+    """v2.0.4: configurar o indicativo consulta o site na hora (antes, só 15 min depois)."""
+    started = []
+
+    class FakeThread:
+        def __init__(self, target=None, kwargs=None, **_):
+            self.target, self.kwargs = target, kwargs
+
+        def start(self):
+            started.append((self.target, self.kwargs))
+
+    monkeypatch.setattr(web.threading, "Thread", FakeThread)
+    empty = dict(STATION, callsign="", latitude=None, longitude=None)
+    # Instalação nova: primeira configuração da estação dispara a consulta forçada.
+    assert web.register_station_now(empty, dict(STATION)) is True
+    assert started == [(web.get_update_status, {"force": True})]
+    # Troca de indicativo também; SSID não conta como troca.
+    assert web.register_station_now(dict(STATION), dict(STATION, callsign="PU2ABC")) is True
+    assert web.register_station_now(dict(STATION), dict(STATION, callsign="PY2XYZ-9")) is False
+    # Nada muda, opção de compartilhar desligada ou verificação automática desligada: não consulta.
+    assert web.register_station_now(dict(STATION), dict(STATION, comment="x")) is False
+    assert web.register_station_now(empty, dict(STATION, share_callsign_on_update=0)) is False
+    assert web.register_station_now(empty, dict(STATION, check_updates_on_start=0)) is False
+    assert web.register_station_now(empty, dict(STATION, latitude=None)) is False
+    assert len(started) == 2
