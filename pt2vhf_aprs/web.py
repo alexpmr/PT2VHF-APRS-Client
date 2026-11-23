@@ -634,6 +634,27 @@ def get_update_status(force: bool = False) -> dict:
         return payload
 
 
+def register_station_now(before: dict, saved: dict) -> bool:
+    """v2.0.4: consulta o site logo que o indicativo passa a poder ser informado.
+
+    Antes, quem instalava e configurava a estação só entrava na lista de estações
+    do site na próxima verificação automática (15 min depois, ou na próxima
+    abertura). Quem fechava o app antes disso não aparecia nas estatísticas.
+    Roda em segundo plano para não atrasar a gravação da Configuração.
+    """
+    try:
+        new_call = release_check.station_callsign(saved)
+        if not new_call or new_call == release_check.station_callsign(before):
+            return False
+        if not bool((saved or {}).get("check_updates_on_start", 1)):
+            return False
+    except Exception:
+        return False
+    threading.Thread(target=get_update_status, kwargs={"force": True},
+                     name="station-register", daemon=True).start()
+    return True
+
+
 KML_NS = "http://www.opengis.net/kml/2.2"
 TRACKLOG_MAX_GAP_SECONDS = 30 * 60
 
@@ -1381,6 +1402,7 @@ def create_app() -> Flask:
                 "aprs_filter", "latitude", "longitude",
             }
             changed = any(before.get(key) != saved.get(key) for key in connection_keys)
+            register_station_now(before, saved)
             status = service.status()
             reconnected = False
             if changed and status.get("wanted"):

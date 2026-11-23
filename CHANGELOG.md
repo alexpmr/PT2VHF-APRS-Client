@@ -1,3 +1,10 @@
+## 2.0.4 - 2026-11-23
+
+- **Linux em processadores mais antigos (relato HA7VDI, Debian 13):** na 2.0.3 o programa Linux x86_64 (tar.gz, .deb e AppImage) fechava na hora com "Illegal instruction" em CPUs sem AVX2. O pacote voltou a ser gerado para qualquer processador x86-64 de 64 bits, e o build agora recusa uma base que exija instruções mais novas.
+- **Download do .deb:** no site o pacote .deb baixava com extensão .txt; agora sai como pacote Debian (vale também para o AppImage).
+- **Estação aparece logo na lista do site:** ao salvar a Configuração com um indicativo novo, o app já informa o indicativo ao site (antes só na consulta seguinte, até 15 minutos depois), respeitando as opções "informar indicativo" e "verificar atualizações automaticamente".
+- **Agradecimentos:** HA7VDI entra na lista de colaboradores do Sobre, pelo relato do Linux no Debian 13.
+
 ## 2.0.3 - 2026-11-22
 
 - **Só indicativo de radioamador real:** a Configuração deixou de aceitar qualquer combinação de 1 a 6 letras e números. O indicativo precisa ter a estrutura de um indicativo de radioamador (prefixo, dígito e sufixo terminado em letra); os brasileiros (PP–PY, ZV–ZZ) seguem o formato da Anatel, como PY2ABC ou PU2MUS. Coisas como PQP2TF não passam.

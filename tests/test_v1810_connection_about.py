@@ -70,6 +70,7 @@ def test_v1810_about_lists_all_contributors():
         "PP5PK": "Daniel Kondlatsch",
         "PT2YW": "Ywstter",
         "PT2PAG": "Paulo Galvão",
+        "HA7VDI": "Linux (Debian 13)",
     }
     assert 'id="aboutContributorsTitle"' in html
     assert 'id="aboutContributorsText"' in html
