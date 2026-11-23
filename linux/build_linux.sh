@@ -10,6 +10,23 @@ if [[ ! -d "$VENV" ]]; then
   "$PYTHON_BIN" -m venv "$VENV"
 fi
 
+# O binário embute a libpython do Python de build. Se ela foi compilada para
+# x86-64-v2/v3/v4 ou -march=native (ex.: Python do runner ubuntu-26.04), o app
+# morre com "Illegal instruction" em CPUs sem AVX2 (v2.0.3, Debian 13).
+"$VENV/bin/python" - <<'PY'
+import glob, os, platform, re, sys, sysconfig
+if platform.machine() in ("x86_64", "AMD64"):
+    # O -march não aparece no sysconfig quando vem do padrão do GCC da distro
+    # (Ubuntu 26.04 compila para x86-64-v3); procura na própria libpython.
+    libdir = sysconfig.get_config_var("LIBDIR") or ""
+    libs = glob.glob(os.path.join(libdir, "libpython3*.so*")) or [sys.executable]
+    for lib in libs:
+        data = open(lib, "rb").read()
+        bad = re.search(rb"-march=(x86-64-v[2-4]|native)", data)
+        if bad:
+            sys.exit(f"{lib} foi compilada com {bad.group().decode()}: o binário não rodaria em CPUs x86-64 sem AVX2. Use um Python com -march=x86-64 (ex.: runner ubuntu-22.04).")
+PY
+
 "$VENV/bin/python" -m pip install --upgrade pip
 "$VENV/bin/python" -m pip install -r requirements-linux.txt
 "$VENV/bin/python" -m pytest -q
