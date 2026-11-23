@@ -1,4 +1,14 @@
-## PENDENTE (próxima versão) — Estação nova só entrava nas estatísticas do site 15 min depois (23/11/2026)
+## RESOLVIDO (v2.0.4) — Linux x86_64 "Illegal instruction" em CPUs sem AVX2 (relato HA7VDI, Debian 13, 23/11/2026)
+
+- **Causa:** o job `linux-x64` rodava em `ubuntu-latest`, que virou Ubuntu 26.04. O Python 3.12.16 do `setup-python`
+  para 26.04 é compilado com `-march=x86-64-v3` (padrão do GCC 15 do 26.04), e a `libpython3.12.so` embutida pelo
+  PyInstaller usa AVX2/BMI/FMA. Reproduzido com `qemu-x86_64 -cpu SandyBridge` (e Nehalem, qemu64): SIGILL logo após
+  carregar a libpython. Os Pythons do 22.04 e 24.04 são `-march=x86-64`.
+- **Correção (PR #182):** `linux-x64` fixo em `ubuntu-22.04` (também baixa o glibc mínimo para 2.35) e
+  `linux/build_linux.sh` aborta o build se a libpython tiver `-march=x86-64-v2/v3/v4` ou `native`.
+- **Publicado:** v2.0.4 com Linux; no site, .deb e .AppImage passam a sair com o tipo MIME certo (site PR #55), antes o .deb baixava como .txt.
+
+## RESOLVIDO (v2.0.4) — Estação nova só entrava nas estatísticas do site 15 min depois (23/11/2026)
 
 - **Relato do mantenedor:** muitos downloads da v2.0.3 e a lista de estações em /aprs quase não muda.
 - **Conferido:** a v2.0.3 envia o indicativo certo (`update.php?product=aprs&call=PY2ABC`, testado com o app rodando) e

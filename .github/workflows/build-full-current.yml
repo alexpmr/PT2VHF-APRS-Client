@@ -304,7 +304,7 @@ jobs:
 
   linux-x64:
     if: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || startsWith(github.event.head_commit.message, 'release:')) && !contains(github.event.head_commit.message, '[windows-only]') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # nao usar ubuntu-latest: o Python 3.12 do 26.04 vem com -march=x86-64-v3 (AVX2) e quebra CPUs antigas (Illegal instruction, v2.0.3)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
