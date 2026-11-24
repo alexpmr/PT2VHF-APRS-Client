@@ -248,13 +248,27 @@
       // Extended locales must never silently fall back to English. A missing
       // translation remains detectable by the audit and falls back to the
       // Portuguese source only as a production safety net.
-      return EXTRA_I18N[state.language]?.[pt] || pt;
+      // v2.0.5: sem tradução no idioma, mostra o inglês; português só como último recurso.
+      return EXTRA_I18N[state.language]?.[pt] || en || englishFallback(pt) || pt;
     }
     return pt;
   }
 
+  function englishFallback(pt) {
+    const key = String(pt ?? '').trim();
+    if (!key) return '';
+    if (EXTRA_I18N.en?.[key]) return EXTRA_I18N.en[key];
+    try { return EN_TEXT.get(key) || ''; } catch (_) { return ''; }
+  }
+
   function ui(pt, en) {
     return translatedText(pt, en);
+  }
+
+  // v2.0.5: texto com valores. O catálogo usa o modelo com {nome} como chave, então a
+  // tradução vale para qualquer valor (antes o texto montado caía no português/inglês).
+  function uiFmt(pt, en, vars = {}) {
+    return translatedText(pt, en).replace(/\{(\w+)\}/g, (match, name) => (name in vars ? String(vars[name]) : match));
   }
 
   function currentLocale() {
@@ -399,7 +413,7 @@
       el.classList.add('error');
       const current = state.updateInfo?.current_version ? `v${state.updateInfo.current_version}` : '';
       textEl.textContent = current
-        ? ui(`${current} · verificação indisponível`, `${current} · check unavailable`)
+        ? `${current} · ${ui('verificação indisponível', 'check unavailable')}`
         : ui('Falha temporária na verificação', 'Temporary check failure');
       const detail = state.updateInfo?.error || err?.message || ui('Erro não identificado', 'Unknown error');
       const code = state.updateInfo?.error_code;
@@ -961,13 +975,10 @@
       const summary = $('#whatsNewSummary');
       if (!list || !title || !summary) return;
 
-      title.textContent = ui(
-        `PT2VHF APRS Client atualizado para v${version}`,
-        `PT2VHF APRS Client updated to v${version}`
-      );
+      title.textContent = uiFmt('PT2VHF APRS Client atualizado para v{version}', 'PT2VHF APRS Client updated to v{version}', { version });
       summary.textContent = previous
-        ? ui(`Atualização concluída: v${previous} → v${version}. Principais novidades:`, `Update complete: v${previous} → v${version}. What's new:`)
-        : ui(`Atualização concluída para v${version}. Principais novidades:`, `Updated to v${version}. What's new:`);
+        ? uiFmt('Atualização concluída: v{previous} → v{version}. Principais novidades:', "Update complete: v{previous} → v{version}. What's new:", { previous, version })
+        : uiFmt('Atualização concluída para v{version}. Principais novidades:', "Updated to v{version}. What's new:", { version });
       list.innerHTML = (info.items || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
       void showVersionAnnounceNotice();
       const closeLabels = { pt:'Fechar', en:'Close', es:'Cerrar', fr:'Fermer', de:'Schließen',
@@ -994,9 +1005,10 @@
     try {
       const info = await api('/api/automations/version-announce');
       if (!info.pending) return;
-      $('#whatsNewAnnounceText').textContent = ui(
-        `Em cerca de ${Math.round((info.delay_seconds || 120) / 60)} minutos, com o APRS-IS verificado, será enviado uma vez o anúncio: “${(info.lines || []).join(' ')}”.`,
-        `In about ${Math.round((info.delay_seconds || 120) / 60)} minutes, with APRS-IS verified, this announcement will be sent once: “${(info.lines || []).join(' ')}”.`);
+      $('#whatsNewAnnounceText').textContent = uiFmt(
+        'Em cerca de {minutes} minutos, com o APRS-IS verificado, será enviado uma vez o anúncio: “{text}”.',
+        'In about {minutes} minutes, with APRS-IS verified, this announcement will be sent once: “{text}”.',
+        { minutes: Math.round((info.delay_seconds || 120) / 60), text: (info.lines || []).join(' ') });
       box.classList.remove('hidden');
     } catch (_) { /* aviso opcional */ }
   }
@@ -6481,7 +6493,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       if ($('#retentionEnabled')) $('#retentionEnabled').checked = !!info.enabled;
       if ($('#retentionDatabaseStatus')) {
         $('#retentionDatabaseStatus').textContent =
-          ui('Banco de dados: ', 'Database: ') + Number(info.db_megabytes || 0).toLocaleString('pt-BR') +
+          ui('Banco de dados: ', 'Database: ') + Number(info.db_megabytes || 0).toLocaleString(currentLocale()) +
           ' MB · ' + (info.enabled ? ui('retenção automática ativa', 'automatic retention active') :
             ui('retenção automática desativada', 'automatic retention disabled')) +
           (info.last_run ? ' · ' + ui('Última manutenção: ', 'Last maintenance: ') + info.last_run : '');
@@ -10136,7 +10148,8 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   const domTranslator = window.pt2vhfCreateDomTranslator(trimmed => {
     if (state.language === 'pt-BR') return trimmed;
-    return state.language === 'en' ? (EXTRA_I18N.en?.[trimmed] || EN_TEXT.get(trimmed)) : EXTRA_I18N[state.language]?.[trimmed];
+    if (state.language === 'en') return EXTRA_I18N.en?.[trimmed] || EN_TEXT.get(trimmed);
+    return EXTRA_I18N[state.language]?.[trimmed] || EXTRA_I18N.en?.[trimmed] || EN_TEXT.get(trimmed);
   });
   function translateDom(root = document.body) {
     domTranslator.translate(root);
@@ -10613,7 +10626,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
   function geolocationErrorText(error) {
     const pt = {1:'Permissão de localização negada.',2:'Não foi possível determinar a localização.',3:'A localização demorou demais para responder.'};
     const en = {1:'Location permission was denied.',2:'Unable to determine location.',3:'Location request timed out.'};
-    return (state.language === 'en' ? en : pt)[error?.code] || ui('Falha ao obter a localização.', 'Unable to obtain location.');
+    return pt[error?.code] ? ui(pt[error.code], en[error.code]) : ui('Falha ao obter a localização.', 'Unable to obtain location.');
   }
 
   function requestUserLocation(options = {}) {
@@ -11356,10 +11369,8 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       '<div class="topology-stat-group"><h4>' + ui(data.complete ? 'Histórico completo' : 'Comparação com período anterior', data.complete ? 'Complete history' : 'Comparison with previous period') + '</h4>' +
       '<div class="hint">' +
       (data.complete
-        ? ui(
-            `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos armazenados no histórico disponível.`,
-            `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events stored in the available history.`
-          )
+        ? uiFmt('{count} eventos armazenados no histórico disponível.', '{count} events stored in the available history.',
+            { count: Number(data.comparison?.current_events || 0).toLocaleString(currentLocale()) })
         : ui(
             `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} eventos agora · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} no período anterior · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`,
             `${Number(data.comparison?.current_events || 0).toLocaleString(currentLocale())} events now · ${Number(data.comparison?.previous_events || 0).toLocaleString(currentLocale())} previous · Δ ${Number(data.comparison?.delta || 0).toLocaleString(currentLocale())}`
@@ -11890,10 +11901,10 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   function scheduledRecurrenceLabel(schedule) {
     if (String(schedule?.schedule_type) === 'weekly') {
-      const weekdaysPt = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-      const weekdaysEn = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-      const labels = state.language === 'pt-BR' ? weekdaysPt : weekdaysEn;
-      return `${labels[Number(schedule.weekday) || 0]} ${schedule.time_local || ''}`;
+      // v2.0.5: dia da semana no idioma do app (0 = segunda; 1/1/2024 foi segunda-feira).
+      const day = new Date(2024, 0, 1 + (Number(schedule.weekday) || 0))
+        .toLocaleDateString(currentLocale(), { weekday: 'short' });
+      return `${day} ${schedule.time_local || ''}`;
     }
     return ui('Único', 'Once');
   }

@@ -10,10 +10,10 @@
       : lang.startsWith('zh') ? 'zh-CN' : '';
     const extended = locale ? window.PT2VHF_I18N?.[locale]?.[pt] : '';
     if (extended) return extended;
-    if (lang.startsWith('en')) return en;
-    if (lang.startsWith('es')) return es;
-    if (lang.startsWith('fr')) return fr;
-    return pt;
+    if (lang.startsWith('pt')) return pt;
+    if (lang.startsWith('es')) return es || en || pt;
+    if (lang.startsWith('fr')) return fr || en || pt;
+    return en || pt;  // v2.0.5: sem tradução, inglês (nunca português)
   };
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fetchJson = async (url) => {

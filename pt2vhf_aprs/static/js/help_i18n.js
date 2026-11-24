@@ -73,11 +73,13 @@
     h67: 'Contact me',
     h68: 'If you need help setting up the program, found a problem or have a suggestion, get in touch.',
   };
-  const CATALOG = { en: EN };
+  // v2.0.5: Ajuda completa nos 10 idiomas (help_i18n_v205.js); idioma sem tabela usa o inglês.
+  const CATALOG = { ...(window.PT2VHF_HELP_I18N || {}), en: EN };
   const originals = new Map();
   function apply(language) {
     const lang = String(language || document.documentElement.lang || 'pt-BR');
-    const table = CATALOG[lang.split('-')[0]] || null;
+    const prefix = lang.split('-')[0].toLowerCase();
+    const table = prefix === 'pt' ? null : (CATALOG[prefix] || EN);
     for (const el of document.querySelectorAll('#tab-help [data-help-i18n]')) {
       const key = el.dataset.helpI18n;
       if (!originals.has(key)) originals.set(key, el.innerHTML);

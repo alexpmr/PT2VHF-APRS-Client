@@ -14,7 +14,8 @@
       : l.startsWith('zh') ? 'zh-CN' : '';
     const extended = locale ? window.PT2VHF_I18N?.[locale]?.[pt] : '';
     if (extended) return extended;
-    return l.startsWith('en') ? en : l.startsWith('es') ? es : l.startsWith('fr') ? fr : pt;
+    // v2.0.5: idioma sem tradução cai no inglês, nunca no português.
+    return l.startsWith('pt') ? pt : l.startsWith('es') ? (es || en || pt) : l.startsWith('fr') ? (fr || en || pt) : (en || window.PT2VHF_I18N?.en?.[pt] || pt);
   };
   const json = async (url, opts={}) => {
     const r = await fetch(url, {cache:'no-store', headers:{'Content-Type':'application/json', ...(opts.headers||{})}, ...opts});

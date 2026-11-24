@@ -53,13 +53,12 @@ def test_v1425_header_shows_actual_web_address():
     assert "localInfo.share_url" in js
 
 
-def test_v1425_non_english_languages_do_not_silently_fall_back_to_english():
+def test_v1425_missing_translations_fall_back_to_english_not_portuguese():
+    # v2.0.5: a regra mudou a pedido do Alex; texto sem tradução sai em inglês, nunca em português.
     js = read("pt2vhf_aprs/static/js/app.js")
-    assert "return EXTRA_I18N[state.language]?.[pt] || pt;" in js
-    assert ": EXTRA_I18N[state.language]?.[trimmed];" in js
+    assert "englishFallback(pt)" in js
+    assert "return EXTRA_I18N[state.language]?.[pt] || pt;" not in js
     assert "domTranslator.translate(root);" in js
-    assert "EXTRA_I18N[state.language]?.[pt] || en" not in js
-    assert "EXTRA_I18N[state.language]?.[trimmed] || EN_TEXT" not in js
     assert "i18n_v1425.js" in read("pt2vhf_aprs/templates/index.html")
 
 
