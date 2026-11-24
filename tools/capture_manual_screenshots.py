@@ -99,6 +99,8 @@ def capture(output_dir: Path) -> None:
         env = os.environ.copy()
         env["PT2VHF_DATA_DIR"] = str(data_dir)
         env["PT2VHF_PORT"] = "8765"
+        # v2.0.5: o app abre no idioma do sistema; o manual e as checagens abaixo são em português.
+        env["PT2VHF_LANGUAGE"] = "pt-BR"
         proc = subprocess.Popen(
             [sys.executable, str(ROOT / "app.py")],
             cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
