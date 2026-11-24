@@ -5,6 +5,8 @@
     const texts = new WeakMap();
     const attributes = new WeakMap();
     const ignored = el => !el || !!el.closest('script,style,code,textarea,[translate="no"],.notranslate,[data-i18n-skip]');
+    // v2.0.5: o placeholder/título de um textarea é texto da interface; só o conteúdo dele é do usuário.
+    const ignoredAttrs = el => !el || !!el.closest('script,style,code,[translate="no"],.notranslate,[data-i18n-skip]');
     function translateValue(current, previous) {
       // An external update replaces the source; never resurrect a stale status.
       const source = previous && current === previous.output ? previous.source : current;
@@ -30,7 +32,7 @@
       }
       const elements = root.nodeType === Node.ELEMENT_NODE ? [root, ...root.querySelectorAll('*')] : [];
       for (const el of elements) {
-        if (ignored(el)) continue;
+        if (ignoredAttrs(el)) continue;
         let entries = attributes.get(el);
         if (!entries) attributes.set(el, entries = new Map());
         for (const attr of ['placeholder', 'title', 'aria-label']) {

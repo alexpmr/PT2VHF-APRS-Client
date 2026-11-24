@@ -1155,7 +1155,7 @@ def create_app() -> Flask:
     def api_current_version_info():
         cfg = db.get_config()
         counts = db.summary_counts()
-        info = notes_for(__version__)
+        info = notes_for(__version__, cfg.get("language"))
         info["existing_install"] = bool(
             str(cfg.get("callsign") or "").strip()
             or int(counts.get("stations") or 0)

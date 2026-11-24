@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v2.0.4
+# PT2VHF APRS Client - v2.0.5
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,13 +6,13 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 2.0.4 (publicação pendente)
+## Downloads — versão 2.0.5 (publicação pendente)
 
-A v2.0.4 é distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 (AppImage/.deb/.tar.gz) e macOS Apple Silicon.
-O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece a v2.0.4 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
-
-A revisão integral das traduções (#157) continua aberta.
+A v2.0.5 é distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 (AppImage/.deb/.tar.gz) e macOS Apple Silicon.
+O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece a v2.0.5 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v2.0.5** revisa as traduções dos 10 idiomas (textos que ficavam em português, Ajuda completa em todos), usa o inglês quando falta tradução e abre no idioma do sistema operacional (inglês se não for suportado).
 
 A **v2.0.4** faz o programa Linux x86_64 voltar a abrir em processadores sem AVX2 (relato HA7VDI: "Illegal instruction" no Debian 13) e coloca a estação na lista do site logo ao salvar o indicativo.
 

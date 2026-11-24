@@ -1,3 +1,11 @@
+## 2.0.5 - 2026-11-24
+
+- **Traduções revisadas (pedido de usuários estrangeiros, #157):** revisão completa dos 10 idiomas do app (inglês, espanhol, francês, alemão, italiano, japonês, polonês, holandês e chinês, além do português). Cerca de 560 textos que ainda apareciam em português nas telas, avisos, Configuração, Sobre, novidades da versão e TNC ganharam tradução nos 8 idiomas que faltavam.
+- **Ajuda completa em todos os idiomas:** antes a Ajuda só existia em português e inglês; agora os 68 blocos estão traduzidos também para espanhol, francês, alemão, italiano, japonês, polonês, holandês e chinês.
+- **Sem português de reserva:** quando um texto ainda não tem tradução no idioma escolhido, o app mostra o inglês, não mais o português. Mensagens de erro e de status do servidor (validação da Configuração, atualização, LAN, TNC) também passaram a sair em inglês fora do português.
+- **Idioma do sistema por padrão:** o app abre no idioma do sistema operacional (Windows, Linux ou macOS) quando ele é um dos 10 suportados, e em inglês quando não é. Quem já escolheu um idioma na Configuração continua com a escolha.
+- O "O que há de novo" desta versão aparece no idioma do app.
+
 ## 2.0.4 - 2026-11-23
 
 - **Linux em processadores mais antigos (relato HA7VDI, Debian 13):** na 2.0.3 o programa Linux x86_64 (tar.gz, .deb e AppImage) fechava na hora com "Illegal instruction" em CPUs sem AVX2. O pacote voltou a ser gerado para qualquer processador x86-64 de 64 bits, e o build agora recusa uma base que exija instruções mais novas.

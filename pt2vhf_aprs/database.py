@@ -19,6 +19,7 @@ from typing import Any, Iterable
 
 from . import APP_TOCALL
 from . import callsign_rules
+from . import os_language
 from . import diagnostics as diag
 
 def _default_data_dir() -> Path:
@@ -158,6 +159,7 @@ DEFAULT_CONFIG = {
     "auto_reply_text": "Mensagem recebida. Retornarei assim que possível.",
     "auto_reply_cooldown_seconds": 300,
     "language": "pt-BR",
+    "language_user_set": 0,  # v2.0.5: 0 = segue o idioma do sistema operacional
     "map_type": "osm",
     "track_color": "#3ba6ff",
     "track_width": 2,
@@ -644,6 +646,9 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN web_lan_enabled INTEGER NOT NULL DEFAULT 1")
         if "language" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN language TEXT NOT NULL DEFAULT 'pt-BR'")
+        if "language_user_set" not in config_columns:
+            # v2.0.5: instalações antigas passam a seguir o idioma do SO até o usuário escolher um.
+            conn.execute("ALTER TABLE config ADD COLUMN language_user_set INTEGER NOT NULL DEFAULT 0")
         if "map_type" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN map_type TEXT NOT NULL DEFAULT 'osm'")
         if "track_color" not in config_columns:
@@ -862,10 +867,21 @@ def validate_required_station_config(config: dict[str, Any]) -> None:
 CALLSIGN_INVALID_MESSAGE = "Indicativo inválido. Use um indicativo de radioamador real, sem SSID (ex.: PY2ABC)."
 
 
+AUTO_REPLY_DEFAULT_PT = "Mensagem recebida. Retornarei assim que possível."
+AUTO_REPLY_DEFAULT_EN = "Message received. I will reply as soon as possible."
+
+
 def get_config() -> dict[str, Any]:
     with connection() as conn:
         row = conn.execute("SELECT * FROM config WHERE id=1").fetchone()
-        return dict(row) if row else dict(DEFAULT_CONFIG)
+        cfg = dict(row) if row else dict(DEFAULT_CONFIG)
+    # v2.0.5: sem escolha explícita, o idioma é o do sistema operacional (inglês se não suportado).
+    if not int(cfg.get("language_user_set") or 0):
+        cfg["language"] = os_language.system_language()
+    # A resposta automática padrão (português) vai em inglês para quem não usa o app em português.
+    if cfg.get("language") != "pt-BR" and cfg.get("auto_reply_text") == AUTO_REPLY_DEFAULT_PT:
+        cfg["auto_reply_text"] = AUTO_REPLY_DEFAULT_EN
+    return cfg
 
 
 def save_config(data: dict[str, Any]) -> dict[str, Any]:
@@ -902,6 +918,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["auto_reply_text"] = " ".join(str(merged["auto_reply_text"] or "").replace("\r", " ").replace("\n", " ").split())[:240]
     merged["auto_reply_cooldown_seconds"] = max(30, min(86400, int(merged["auto_reply_cooldown_seconds"] or 300)))
     merged["language"] = str(merged["language"] or "pt-BR").strip()
+    merged["language_user_set"] = 1 if "language" in provided else int(current.get("language_user_set") or 0)
     merged["aprs_filter"] = str(merged["aprs_filter"] or "").strip()
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()
     merged["track_color"] = str(merged["track_color"] or "#3ba6ff").lower().strip()

@@ -189,7 +189,8 @@
   function tr(pt) {
     const lang = tncLanguage();
     if (lang === 'pt-BR') return pt;
-    return TNC_I18N[lang]?.[pt] || window.PT2VHF_I18N?.[lang]?.[pt] || pt;
+    return TNC_I18N[lang]?.[pt] || window.PT2VHF_I18N?.[lang]?.[pt]
+      || TNC_I18N.en?.[pt] || window.PT2VHF_I18N?.en?.[pt] || pt;  // v2.0.5: fallback inglês
   }
 
   function translateTncStatic() {
@@ -251,7 +252,7 @@
       }
     };
     const lang = tncLanguage();
-    return lang === 'pt-BR' ? text : (maps[lang]?.[text] || text);
+    return lang === 'pt-BR' ? text : (maps[lang]?.[text] || tr(text));
   }
 
   let lastConfig = null;
@@ -375,7 +376,7 @@
       header.className = `status ${connected ? 'connected' : 'disconnected'} tnc-header-status`;
       const text = header.querySelector('span:last-child');
       if (text) text.textContent = 'TNC';
-      header.title = [connected ? 'TNC conectado' : 'TNC desconectado', status.state, status.endpoint, rxDetail, status.last_error].filter(Boolean).join(' · ');
+      header.title = [connected ? tr('TNC conectado') : tr('TNC desconectado'), status.state ? tr(String(status.state)) : '', status.endpoint, rxDetail, status.last_error].filter(Boolean).join(' · ');
     }
 
     const pairs = [

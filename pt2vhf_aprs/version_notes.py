@@ -3,6 +3,63 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.5": {
+        "title": "Traduções revisadas e idioma do sistema",
+        "items": [
+            "Revisão completa das traduções: textos que apareciam em português nos outros idiomas agora seguem o idioma escolhido.",
+            "Quando falta a tradução de algum texto, o app mostra inglês em vez de português.",
+            "O app abre no idioma do sistema operacional (inglês se o idioma não for suportado) até você escolher outro.",
+            "A aba Ajuda está completa nos 10 idiomas.",
+        ],
+        # v2.0.5: as novidades também aparecem no idioma do app.
+        "i18n": {
+            "en": {"title": "Translations reviewed and system language", "items": [
+                "Full translation review: text that showed up in Portuguese in other languages now follows the chosen language.",
+                "When a text has no translation, the app shows English instead of Portuguese.",
+                "The app opens in the operating system language (English if that language is not supported) until you choose another one.",
+                "The Help tab is complete in all 10 languages."]},
+            "es": {"title": "Traducciones revisadas e idioma del sistema", "items": [
+                "Revisión completa de las traducciones: los textos que aparecían en portugués en otros idiomas ahora siguen el idioma elegido.",
+                "Cuando falta la traducción de un texto, la aplicación muestra inglés en lugar de portugués.",
+                "La aplicación se abre en el idioma del sistema operativo (inglés si ese idioma no está disponible) hasta que elija otro.",
+                "La pestaña Ayuda está completa en los 10 idiomas."]},
+            "fr": {"title": "Traductions revues et langue du système", "items": [
+                "Révision complète des traductions : les textes qui apparaissaient en portugais dans les autres langues suivent désormais la langue choisie.",
+                "Quand un texte n’a pas de traduction, l’application affiche l’anglais au lieu du portugais.",
+                "L’application s’ouvre dans la langue du système d’exploitation (anglais si elle n’est pas prise en charge) jusqu’à ce que vous en choisissiez une autre.",
+                "L’onglet Aide est complet dans les 10 langues."]},
+            "de-DE": {"title": "Übersetzungen überarbeitet und Systemsprache", "items": [
+                "Vollständige Überarbeitung der Übersetzungen: Texte, die in anderen Sprachen auf Portugiesisch erschienen, folgen jetzt der gewählten Sprache.",
+                "Fehlt für einen Text die Übersetzung, zeigt die App Englisch statt Portugiesisch.",
+                "Die App startet in der Sprache des Betriebssystems (Englisch, falls diese nicht unterstützt wird), bis Sie eine andere wählen.",
+                "Der Tab Hilfe ist in allen 10 Sprachen vollständig."]},
+            "it-IT": {"title": "Traduzioni riviste e lingua del sistema", "items": [
+                "Revisione completa delle traduzioni: i testi che comparivano in portoghese nelle altre lingue ora seguono la lingua scelta.",
+                "Quando manca la traduzione di un testo, l’app mostra l’inglese invece del portoghese.",
+                "L’app si apre nella lingua del sistema operativo (inglese se non è supportata) finché non ne scegli un’altra.",
+                "La scheda Aiuto è completa in tutte le 10 lingue."]},
+            "ja-JP": {"title": "翻訳の見直しとシステム言語", "items": [
+                "翻訳を全面的に見直しました。他の言語でポルトガル語のまま表示されていた文字列が、選択した言語で表示されます。",
+                "翻訳がない文字列は、ポルトガル語ではなく英語で表示します。",
+                "別の言語を選ぶまで、アプリはOSの言語で起動します（未対応の言語の場合は英語）。",
+                "ヘルプタブが10言語すべてに対応しました。"]},
+            "pl-PL": {"title": "Poprawione tłumaczenia i język systemu", "items": [
+                "Pełny przegląd tłumaczeń: teksty, które w innych językach pojawiały się po portugalsku, są teraz w wybranym języku.",
+                "Gdy brakuje tłumaczenia tekstu, aplikacja pokazuje angielski zamiast portugalskiego.",
+                "Aplikacja uruchamia się w języku systemu operacyjnego (po angielsku, jeśli ten język nie jest obsługiwany), dopóki nie wybierzesz innego.",
+                "Karta Pomoc jest kompletna we wszystkich 10 językach."]},
+            "nl-NL": {"title": "Vertalingen herzien en systeemtaal", "items": [
+                "Volledige herziening van de vertalingen: teksten die in andere talen in het Portugees verschenen, volgen nu de gekozen taal.",
+                "Als een tekst geen vertaling heeft, toont de app Engels in plaats van Portugees.",
+                "De app opent in de taal van het besturingssysteem (Engels als die taal niet wordt ondersteund) totdat je een andere kiest.",
+                "Het tabblad Help is compleet in alle 10 talen."]},
+            "zh-CN": {"title": "翻译全面修订，默认使用系统语言", "items": [
+                "全面修订翻译：在其他语言中仍显示为葡萄牙语的文字，现在都会按所选语言显示。",
+                "如果某段文字没有翻译，应用会显示英文而不是葡萄牙语。",
+                "在您选择其他语言之前，应用以操作系统的语言打开（不支持该语言时使用英文）。",
+                "“帮助”标签页已完整支持全部10种语言。"]},
+        },
+    },
     "2.0.4": {
         "title": "Linux em processadores mais antigos",
         "items": [
@@ -1668,10 +1725,15 @@ VERSION_NOTES: dict[str, dict[str, Any]] = {
 }
 
 
-def notes_for(version: str) -> dict[str, Any]:
+def notes_for(version: str, language: str | None = None) -> dict[str, Any]:
     data = VERSION_NOTES.get(str(version or "").strip(), {})
+    # v2.0.5: novidades no idioma do app; sem tradução, inglês (nunca português para estrangeiros).
+    localized = data
+    if language and language != "pt-BR":
+        table = data.get("i18n") or {}
+        localized = table.get(language) or table.get("en") or data
     return {
         "version": str(version or "").strip(),
-        "title": str(data.get("title") or ""),
-        "items": list(data.get("items") or []),
+        "title": str(localized.get("title") or ""),
+        "items": list(localized.get("items") or []),
     }
