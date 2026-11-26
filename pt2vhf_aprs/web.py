@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import io
 import json
 import platform
@@ -25,6 +26,7 @@ from . import release_check
 from . import retention
 from . import category_statistics, category_clear
 from . import tnc_listen, db_check
+from . import device_ids
 from . import version_announce
 from . import saved_results
 from .aprs_service import full_callsign, service
@@ -655,6 +657,26 @@ def register_station_now(before: dict, saved: dict) -> bool:
     return True
 
 
+_device_ids_refresh_started = False
+
+
+def start_device_ids_refresh() -> bool:
+    """Atualização semanal da base aprs-deviceid (segue "verificar atualizações automaticamente")."""
+    global _device_ids_refresh_started
+    if _device_ids_refresh_started or os.environ.get("PYTEST_CURRENT_TEST"):
+        return False
+    _device_ids_refresh_started = True
+
+    def enabled() -> bool:
+        try:
+            return bool(db.get_config().get("check_updates_on_start", 1))
+        except Exception:
+            return False
+
+    device_ids.start_weekly_refresh(db.DB_PATH.parent, enabled, db.reload_aprs_device_ids, diag.log_event)
+    return True
+
+
 KML_NS = "http://www.opengis.net/kml/2.2"
 TRACKLOG_MAX_GAP_SECONDS = 30 * 60
 
@@ -848,6 +870,7 @@ def create_app() -> Flask:
     scheduled_message_service.start()
     retention.start_worker()
     version_announce.start_worker(service)
+    start_device_ids_refresh()
     diag.log_event("flask_app_created", version=__version__)
     try:
         # Chegar até aqui confirma que a versão atual iniciou e abriu o banco.

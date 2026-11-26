@@ -87,6 +87,8 @@ MAP_DATA_INITIAL_WAIT_SECONDS = 0.75
 APRS_DEVICE_ID_PATH = Path(__file__).resolve().parent / "data" / "aprs_device_ids.json"
 _aprs_device_id_lock = threading.Lock()
 _aprs_device_id_entries: list[dict[str, Any]] | None = None
+_aprs_mice_entries: list[dict[str, Any]] = []
+_aprs_mice_legacy_entries: list[dict[str, Any]] = []
 
 TRACK_OUTLIER_MIN_KM = 75.0
 TRACK_OUTLIER_MAX_SPEED_KMH = 1200.0
@@ -3012,21 +3014,73 @@ def _aprs_tocall_from_raw(raw: str) -> str:
     return str(match.group(1) if match else "").upper().strip()
 
 
+def _read_device_id_payload() -> dict[str, Any]:
+    """Cópia baixada na pasta de dados (atualização semanal) se for válida; senão a embutida."""
+    from . import device_ids
+    candidates = [device_ids.user_snapshot_path(DB_PATH.parent), APRS_DEVICE_ID_PATH]
+    for path in candidates:
+        try:
+            payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            continue
+        except Exception as exc:
+            diag.log_event("aprs_device_id_load_failed", path=str(path), error=str(exc))
+            continue
+        if path == APRS_DEVICE_ID_PATH or device_ids.snapshot_is_valid(payload):
+            return payload
+    return {}
+
+
 def _load_aprs_device_ids() -> list[dict[str, Any]]:
-    global _aprs_device_id_entries
+    global _aprs_device_id_entries, _aprs_mice_entries, _aprs_mice_legacy_entries
     if _aprs_device_id_entries is not None:
         return _aprs_device_id_entries
     with _aprs_device_id_lock:
         if _aprs_device_id_entries is not None:
             return _aprs_device_id_entries
-        try:
-            payload = json.loads(APRS_DEVICE_ID_PATH.read_text(encoding="utf-8"))
-            entries = payload.get("entries", []) if isinstance(payload, dict) else []
-            _aprs_device_id_entries = [dict(item) for item in entries if isinstance(item, dict) and item.get("tocall")]
-        except Exception as exc:
-            diag.log_event("aprs_device_id_load_failed", error=str(exc))
-            _aprs_device_id_entries = []
+        payload = _read_device_id_payload()
+        entries = payload.get("entries", []) if isinstance(payload, dict) else []
+        entries = [dict(item) for item in entries if isinstance(item, dict) and item.get("tocall")]
+        if not any(str(item.get("tocall")).upper() == APP_TOCALL for item in entries):
+            from . import device_ids
+            entries = [dict(item) for item in device_ids.LOCAL_OVERRIDES] + entries
+        _aprs_mice_entries = [dict(item) for item in payload.get("mice", []) if isinstance(item, dict)]
+        _aprs_mice_legacy_entries = [dict(item) for item in payload.get("micelegacy", []) if isinstance(item, dict)]
+        _aprs_device_id_entries = entries
     return _aprs_device_id_entries
+
+
+def reload_aprs_device_ids() -> None:
+    """Chamado depois da atualização semanal da base: o próximo uso relê o arquivo."""
+    global _aprs_device_id_entries
+    with _aprs_device_id_lock:
+        _aprs_device_id_entries = None
+        _aprs_device_id_cache.clear()
+
+
+def resolve_aprs_device_from_raw(raw: str) -> tuple[str, dict[str, Any]]:
+    """(identificador, metadados) do equipamento: TOCALL ou, nos pacotes Mic-E, o sufixo do comentário."""
+    from . import device_ids
+    tocall = _aprs_tocall_from_raw(raw)
+    if device_ids.mice_info_field(raw):
+        _load_aprs_device_ids()
+        found = device_ids.resolve_mice(raw, _aprs_mice_entries, _aprs_mice_legacy_entries)
+        if found:
+            model = str(found.get("model") or "").strip()
+            vendor = str(found.get("vendor") or "").strip()
+            return "Mic-E", {
+                "identifier": "Mic-E",
+                "friendly_name": model or vendor,
+                "identified": bool(model or vendor),
+                "vendor": vendor,
+                "model": model,
+                "class": str(found.get("class") or ""),
+                "os": str(found.get("os") or ""),
+                "pattern": "",
+                "local_override": False,
+                "features": [str(item) for item in (found.get("features") or []) if str(item).strip()],
+            }
+    return tocall, resolve_aprs_device_id(tocall)
 
 
 def _tocall_pattern_regex(pattern: str) -> str:
@@ -3188,8 +3242,7 @@ def _aprs_map_family(resolved: dict[str, Any], descriptor: str, role: str) -> tu
 
 def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict[str, Any]:
     """Classificação leve para filtros hierárquicos do mapa."""
-    tocall = _aprs_tocall_from_raw(raw)
-    resolved = resolve_aprs_device_id(tocall)
+    tocall, resolved = resolve_aprs_device_from_raw(raw)
     device_class = str(resolved.get("class") or "").strip().lower()
     vendor = str(resolved.get("vendor") or "").strip()
     model = str(resolved.get("model") or resolved.get("friendly_name") or "").strip()
@@ -3601,12 +3654,11 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
     unidentified = 0
 
     for row in rows:
-        tocall = _aprs_tocall_from_raw(row["raw"])
+        tocall, resolved = resolve_aprs_device_from_raw(row["raw"])
         if not tocall or tocall == "APRS":
             unidentified += 1
             continue
 
-        resolved = resolve_aprs_device_id(tocall)
         if not resolved.get("identified"):
             unidentified += 1
             continue
