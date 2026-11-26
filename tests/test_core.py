@@ -6,6 +6,7 @@ from pt2vhf_aprs import database as db
 from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import APRSService, build_beacon_packet, build_bulletin_packet, build_query_payload, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, parse_query_text, parse_trace_nodes, split_message_id, split_aprs_message_parts
 from pt2vhf_aprs.web import _kml_document, version_tuple
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 
 def test_beacon_packet():
@@ -968,19 +969,19 @@ def test_v17_language_options_and_runtime():
     root = Path(__file__).resolve().parent.parent
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
-    i18n = (root / "pt2vhf_aprs" / "static" / "js" / "i18n_extra.js").read_text(encoding="utf-8")
+    i18n = i18n_all_text()
     database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
 
     assert 'data-language="es"' in html
     assert 'data-language="fr"' in html
     assert '<option value="es">Español</option>' in html
     assert '<option value="fr">Français</option>' in html
-    assert "js/i18n_extra.js" in html
+    assert "js/i18n/es.js" in html and "js/i18n/fr.js" in html
     assert "normalizeLanguage" in js
     assert "es:'es-ES'" in js
     assert "fr:'fr-FR'" in js
     assert "window.PT2VHF_I18N" in i18n
-    assert "es:" in i18n and "fr:" in i18n
+    assert "['es']" in i18n and "['fr']" in i18n
     supported = '{"pt-BR", "en", "es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN", "th-TH"}'
     version = tuple(map(int, (root / "VERSION").read_text(encoding="utf-8").strip().split(".")))
     if version >= (1, 14, 23):
@@ -1153,7 +1154,7 @@ def test_v171_history_is_contextual_to_map():
 def test_v171_i18n_expands_recent_ui_in_all_languages():
     root = Path(__file__).resolve().parent.parent
     app = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
-    extra = (root / "pt2vhf_aprs" / "static" / "js" / "i18n_extra.js").read_text(encoding="utf-8")
+    extra = i18n_all_text()
 
     for text in ("Sobre", "Anúncio geral", "Período das estações", "Período do tracklog", "Replay da Rede"):
         assert text in app or text in extra

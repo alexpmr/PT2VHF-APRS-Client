@@ -186,7 +186,7 @@ assert "accepted_position" in spacetime
 assert "test_pathless_rf_beacon_produces_coverage_without_topology_edge" in read("tests/test_v1155_direct_rf_coverage.py")
 print("v1.15.6 RF coverage release invariants OK")
 
-assert "js/i18n_dom.js" in html and "js/i18n_live.js" in html
+assert "js/i18n_dom.js" in html and "js/i18n/es.js" in html
 assert "domTranslator.observe(document.body)" in js
 assert "flag_uk.svg" in js and "flag_england.svg" not in js
 
@@ -267,7 +267,7 @@ assert "<strong>HA7VDI</strong>" in html
 print("v2.0.4 release validation OK")
 
 # v2.0.5: traduções revisadas e idioma do sistema operacional como padrão.
-assert "js/i18n_v205.js" in html and "js/help_i18n_v205.js" in html
+assert "js/i18n/de-DE.js" in html and "js/help_i18n_v205.js" in html
 assert "englishFallback(pt)" in js and "function uiFmt(" in js
 assert "def system_language(" in read("pt2vhf_aprs/os_language.py")
 assert '"language_user_set": 0' in database
@@ -275,7 +275,7 @@ assert '"i18n": {' in read("pt2vhf_aprs/version_notes.py")
 print("v2.0.5 i18n invariants OK")
 
 # v2.0.6: tailandês (th-TH) em todas as telas, Ajuda, detecção pelo SO e fonte embutida.
-assert "js/i18n_th.js" in html and "js/help_i18n_th.js" in html and 'data-language="th-TH"' in html
+assert "js/i18n/th-TH.js" in html and "js/help_i18n_th.js" in html and 'data-language="th-TH"' in html
 assert "'th-TH'" in js and "flag_thailand.svg" in js
 assert '"th": "th-TH"' in read("pt2vhf_aprs/os_language.py") and '"th-TH"}' in database
 assert (ROOT / "pt2vhf_aprs/static/fonts/NotoSansThai-Regular.ttf").is_file()

@@ -41,14 +41,17 @@ jobs:
         run: |
           python -m compileall -q pt2vhf_aprs windows_app.py linux_app.py macos_app.py tools
           node --check pt2vhf_aprs\static\js\app.js
-          node --check pt2vhf_aprs\static\js\i18n_v1430.js
+          node --check pt2vhf_aprs\static\js\i18n\es.js
+          node --check pt2vhf_aprs\static\js\i18n\fr.js
+          node --check pt2vhf_aprs\static\js\i18n\de-DE.js
+          node --check pt2vhf_aprs\static\js\i18n\it-IT.js
+          node --check pt2vhf_aprs\static\js\i18n\ja-JP.js
+          node --check pt2vhf_aprs\static\js\i18n\pl-PL.js
+          node --check pt2vhf_aprs\static\js\i18n\nl-NL.js
+          node --check pt2vhf_aprs\static\js\i18n\zh-CN.js
+          node --check pt2vhf_aprs\static\js\i18n\en.js
+          node --check pt2vhf_aprs\static\js\i18n\th-TH.js
           node --check pt2vhf_aprs\static\js\tnc.js
-          node --check pt2vhf_aprs\static\js\i18n_de.js
-          node --check pt2vhf_aprs\static\js\i18n_it.js
-          node --check pt2vhf_aprs\static\js\i18n_ja.js
-          node --check pt2vhf_aprs\static\js\i18n_pl.js
-          node --check pt2vhf_aprs\static\js\i18n_nl.js
-          node --check pt2vhf_aprs\static\js\i18n_zh.js
           node --check pt2vhf_aprs\static\js\v142.js
 
       - name: Run tests
@@ -138,14 +141,17 @@ jobs:
         run: |
           python -m compileall -q pt2vhf_aprs windows_app.py tools
           node --check pt2vhf_aprs\static\js\app.js
-          node --check pt2vhf_aprs\static\js\i18n_v1430.js
+          node --check pt2vhf_aprs\static\js\i18n\es.js
+          node --check pt2vhf_aprs\static\js\i18n\fr.js
+          node --check pt2vhf_aprs\static\js\i18n\de-DE.js
+          node --check pt2vhf_aprs\static\js\i18n\it-IT.js
+          node --check pt2vhf_aprs\static\js\i18n\ja-JP.js
+          node --check pt2vhf_aprs\static\js\i18n\pl-PL.js
+          node --check pt2vhf_aprs\static\js\i18n\nl-NL.js
+          node --check pt2vhf_aprs\static\js\i18n\zh-CN.js
+          node --check pt2vhf_aprs\static\js\i18n\en.js
+          node --check pt2vhf_aprs\static\js\i18n\th-TH.js
           node --check pt2vhf_aprs\static\js\tnc.js
-          node --check pt2vhf_aprs\static\js\i18n_de.js
-          node --check pt2vhf_aprs\static\js\i18n_it.js
-          node --check pt2vhf_aprs\static\js\i18n_ja.js
-          node --check pt2vhf_aprs\static\js\i18n_pl.js
-          node --check pt2vhf_aprs\static\js\i18n_nl.js
-          node --check pt2vhf_aprs\static\js\i18n_zh.js
 
       - name: Run tests
         shell: pwsh

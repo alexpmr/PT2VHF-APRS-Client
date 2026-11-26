@@ -1,4 +1,5 @@
 from pathlib import Path
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -57,7 +58,7 @@ def test_v181_keyless_map_bases_and_hillshade_removal():
 def test_v181_tnc_rf_translations_follow_app_language():
     tnc = read("pt2vhf_aprs/static/js/tnc.js")
     app = read("pt2vhf_aprs/static/js/app.js")
-    extra = read("pt2vhf_aprs/static/js/i18n_extra.js")
+    extra = i18n_all_text()
 
     assert "const TNC_I18N" in tnc
     assert "en:" in tnc

@@ -5,6 +5,7 @@ from pathlib import Path
 from pt2vhf_aprs import database as db
 from pt2vhf_aprs import local_server
 from pt2vhf_aprs import updater
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,13 +60,10 @@ def test_v1425_missing_translations_fall_back_to_english_not_portuguese():
     assert "englishFallback(pt)" in js
     assert "return EXTRA_I18N[state.language]?.[pt] || pt;" not in js
     assert "domTranslator.translate(root);" in js
-    assert "i18n_v1425.js" in read("pt2vhf_aprs/templates/index.html")
+    assert "js/i18n/ja-JP.js" in read("pt2vhf_aprs/templates/index.html")
 
 
 def test_v1425_all_new_lan_strings_have_locale_patch_entries():
-    patch = read("pt2vhf_aprs/static/js/i18n_v1425.js")
-    for locale in ("es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN"):
-        assert f"'{locale}':" in patch or f"{locale}:" in patch
     for source in (
         "Web local:",
         "Web LAN:",
@@ -73,7 +71,8 @@ def test_v1425_all_new_lan_strings_have_locale_patch_entries():
         "Permitir acesso Web pela rede local (LAN)",
         "Mensagens agendadas e melhorias de usabilidade",
     ):
-        assert source in patch
+        for locale in ("es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN"):
+            assert source in i18n_catalog(locale), (locale, source)
 
 
 def test_v1425_py2fdg_is_credited():

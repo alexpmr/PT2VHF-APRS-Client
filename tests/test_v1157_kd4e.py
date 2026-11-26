@@ -7,6 +7,7 @@ import pytest
 
 from pt2vhf_aprs import database as db, tnc_service
 from pt2vhf_aprs.aprs_service import build_beacon_packet
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -92,7 +93,7 @@ def test_unread_toggle_and_filter_scroll_to_newest():
 
 
 def test_new_strings_have_live_translations():
-    live = read("pt2vhf_aprs/static/js/i18n_live.js")
     for key in ("Unidades", "Opcional", "Detectar Dire Wolf", "Sair", "Altitude (pés)",
                 "Dire Wolf encontrado em", "Clique em Salvar TNC / RF e depois em Conectar TNC."):
-        assert f'"{key}": [' in live
+        for locale in ("en", "es", "fr", "de-DE", "it-IT"):
+            assert key in i18n_catalog(locale), (locale, key)
