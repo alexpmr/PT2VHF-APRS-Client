@@ -5205,6 +5205,9 @@ html[data-theme="light"] .message-context-menu { background: #fff; }
 /* v2.0.3 (relato PU2MUS, tela 1366x768) ------------------------------------------------ */
 /* O cabeçalho só mostra a versão quando há uma nova; o resto fica em Configuração → Atualizações. */
 .version-status:not(.update) { display: none; }
+/* v2.0.6: "Verificar versão" volta ao cabeçalho, ao lado de "Enviar Beacon". Abaixo de 1100 px (menor que a
+   janela mínima do app) o cabeçalho já não cabe; ali o botão some e a verificação fica em Configuração. */
+@media (max-width: 1099px) { .header-update-button { display: none; } }
 .auto-reply-header-status {
   display: inline-flex;
   align-items: center;

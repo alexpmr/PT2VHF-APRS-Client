@@ -284,4 +284,6 @@ assert '"th": "th-TH"' in read("pt2vhf_aprs/os_language.py") and '"th-TH"}' in d
 assert (ROOT / "pt2vhf_aprs/static/fonts/NotoSansThai-Regular.ttf").is_file()
 assert '"PT2VHF Thai"' in read("pt2vhf_aprs/static/css/app.css")
 assert '"th-TH": {"title"' in read("pt2vhf_aprs/version_notes.py")
-print("v2.0.6 Thai invariants OK")
+assert 'id="headerCheckUpdateButton"' in html and "function checkUpdatesNow(" in js
+assert "aprs_parse.parse(line)" in read("pt2vhf_aprs/aprs_service.py") and "def _parse_item(" in read("pt2vhf_aprs/aprs_parse.py")
+print("v2.0.6 Thai/LoRa/update-button invariants OK")

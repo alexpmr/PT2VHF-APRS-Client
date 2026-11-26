@@ -12,7 +12,7 @@ A v2.0.6 é distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.c
 O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece a v2.0.6 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
 <!-- DOWNLOAD_TABLE_END -->
 
-A **v2.0.6** adiciona o tailandês (ไทย) como 11º idioma, com Ajuda completa, abertura em tailandês num sistema em tailandês e fonte tailandesa embutida.
+A **v2.0.6** adiciona o tailandês (ไทย) como 11º idioma, com Ajuda completa, abertura em tailandês num sistema em tailandês e fonte tailandesa embutida; traz de volta o botão "Verificar versão" no cabeçalho e melhora a compatibilidade com LoRa APRS (posição comprimida com overlay numérico e itens APRS).
 
 A **v2.0.5** revisa as traduções dos 10 idiomas (textos que ficavam em português, Ajuda completa em todos), usa o inglês quando falta tradução e abre no idioma do sistema operacional (inglês se não for suportado).
 

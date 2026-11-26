@@ -945,11 +945,21 @@
     }
     $('#updateModal')?.classList.add('hidden');
   });
-  $('#checkUpdatesNowButton')?.addEventListener('click', async () => {
-    await refreshVersionStatus(true);
+  async function checkUpdatesNow(button = null) {
+    const label = button ? button.textContent : '';
+    if (button) { button.disabled = true; button.textContent = ui('Verificando…', 'Checking…'); }
+    try {
+      await refreshVersionStatus(true);
+    } finally {
+      if (button) { button.disabled = false; button.textContent = label; }
+    }
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
     else if (state.updateInfo?.status === 'latest') toast(ui('Verificação concluída: última versão.', 'Check complete: latest version.'), 'ok');
-  });
+    else if (!state.updateInfo || state.updateInfo.error) toast(ui('Falha temporária na verificação', 'Temporary check failure'), 'error');
+  }
+  $('#checkUpdatesNowButton')?.addEventListener('click', () => void checkUpdatesNow());
+  // v2.0.6: botão "Verificar versão" no cabeçalho, à esquerda de "Enviar Beacon".
+  $('#headerCheckUpdateButton')?.addEventListener('click', event => void checkUpdatesNow(event.currentTarget));
   $('#updateInstallNow')?.addEventListener('click', () => void installLatestUpdate());
   $('#updateOpenRelease')?.addEventListener('click', openLatestRelease);
   $('#openLatestReleaseButton')?.addEventListener('click', () => void installLatestUpdate());

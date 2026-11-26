@@ -1127,6 +1127,9 @@
     'RAM do sistema': { en: 'System RAM', es: 'RAM del sistema', fr: 'RAM du système', 'de-DE': 'System-RAM', 'it-IT': 'RAM di sistema', 'ja-JP': 'システムの RAM', 'pl-PL': 'RAM systemu', 'nl-NL': 'Systeem-RAM', 'zh-CN': '系统内存' },
     'disponível': { en: 'available', es: 'disponible', fr: 'disponible', 'de-DE': 'verfügbar', 'it-IT': 'disponibile', 'ja-JP': '空き', 'pl-PL': 'dostępne', 'nl-NL': 'beschikbaar', 'zh-CN': '可用' },
     'Processos': { en: 'Processes', es: 'Procesos', fr: 'Processus', 'de-DE': 'Prozesse', 'it-IT': 'Processi', 'ja-JP': 'プロセス', 'pl-PL': 'Procesy', 'nl-NL': 'Processen', 'zh-CN': '进程' },
+    'Verificar versão': { en: 'Check version', es: 'Buscar versión', fr: 'Vérifier la version', 'de-DE': 'Version prüfen', 'it-IT': 'Verifica versione', 'ja-JP': 'バージョン確認', 'pl-PL': 'Sprawdź wersję', 'nl-NL': 'Versie controleren', 'zh-CN': '检查版本', 'th-TH': 'ตรวจเวอร์ชัน' },
+    'Verificar se há versão nova': { en: 'Check for a new version', es: 'Comprobar si hay una versión nueva', fr: 'Vérifier s’il existe une nouvelle version', 'de-DE': 'Nach neuer Version suchen', 'it-IT': 'Controlla se c’è una nuova versione', 'ja-JP': '新しいバージョンを確認', 'pl-PL': 'Sprawdź, czy jest nowa wersja', 'nl-NL': 'Controleren op een nieuwe versie', 'zh-CN': '检查是否有新版本', 'th-TH': 'ตรวจว่ามีเวอร์ชันใหม่หรือไม่' },
+    'Verificando…': { en: 'Checking…', es: 'Comprobando…', fr: 'Vérification…', 'de-DE': 'Wird geprüft…', 'it-IT': 'Verifica in corso…', 'ja-JP': '確認中…', 'pl-PL': 'Sprawdzanie…', 'nl-NL': 'Controleren…', 'zh-CN': '正在检查…', 'th-TH': 'กำลังตรวจสอบ…' },
     'Requests HTTP ativos': { en: 'Active HTTP requests', es: 'Solicitudes HTTP activas', fr: 'Requêtes HTTP actives', 'de-DE': 'Aktive HTTP-Anfragen', 'it-IT': 'Richieste HTTP attive', 'ja-JP': '処理中の HTTP リクエスト', 'pl-PL': 'Aktywne żądania HTTP', 'nl-NL': 'Actieve HTTP-verzoeken', 'zh-CN': '活动 HTTP 请求' },
   };
   for (const [key, byLocale] of Object.entries(metrics)) {

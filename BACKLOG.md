@@ -1,3 +1,16 @@
+## RESOLVIDO (v2.0.6) — Compatibilidade com LoRa APRS (pedido do Alex, 24/11/2026)
+
+- **Pedido:** pacotes de trackers/iGates LoRa (destino APLRG1/APLRT1, posição comprimida, ex.: `=LXc#7C\1ha !GLoRa APRS`).
+- **Conferido:** o aprslib já decodificava posição, rumo/velocidade, altitude e alcance comprimidos, e as mensagens LoRa
+  chegavam normalmente (testes em `tests/test_v206_lora_aprs.py`).
+- **Corrigido em `pt2vhf_aprs/aprs_parse.py`:** overlay numérico comprimido (a–j → 0–9) e itens APRS `)NOME!pos`/`)NOME_pos`
+  (o aprslib recusa o formato e o pacote era descartado), agora gravados como objetos.
+
+## RESOLVIDO (v2.0.6) — Botão "Verificar versão" de volta no cabeçalho (pedido do Alex, 26/11/2026)
+
+- Desde a 2.0.3 o estado da versão ficava oculto no cabeçalho até haver versão nova. Agora há o botão
+  `#headerCheckUpdateButton` à esquerda de "Enviar Beacon" (some abaixo de 1100 px, onde o cabeçalho já não cabe).
+
 ## RESOLVIDO (v2.0.6) — Idioma tailandês em todas as versões para PC (pedido do Alex, 26/11/2026)
 
 - **Pedido:** adicionar o tailandês ao cliente PC (não ao Android) e abrir no idioma do SO por padrão.
