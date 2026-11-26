@@ -1153,5 +1153,8 @@
  "SmartBeaconing: a velocidade baixa precisa ser menor que a alta.": "智能信标：低速必须小于高速。",
  "SmartBeaconing: o intervalo rápido precisa ser menor que o lento.": "智能信标：快速间隔必须短于慢速间隔。",
  "gpsd encerrou a conexão.": "gpsd 关闭了连接。",
- "Grid Locator": "网格定位"
+ "Grid Locator": "网格定位",
+ "Versão {version} disponível": "版本 {version} 可用",
+ "Você está na versão mais recente.": "您使用的是最新版本。",
+ "Clique para ver e instalar a versão nova.": "点击查看并安装新版本。"
 };

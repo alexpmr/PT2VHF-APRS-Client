@@ -984,7 +984,7 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["auto_reply_enabled"] = 1 if bool(merged["auto_reply_enabled"]) else 0
     merged["auto_reply_text"] = " ".join(str(merged["auto_reply_text"] or "").replace("\r", " ").replace("\n", " ").split())[:240]
     merged["auto_reply_cooldown_seconds"] = max(30, min(86400, int(merged["auto_reply_cooldown_seconds"] or 300)))
-    merged["language"] = str(merged["language"] or "pt-BR").strip()
+    merged["language"] = str(merged["language"] or os_language.system_language()).strip()
     merged["language_user_set"] = 1 if "language" in provided else int(current.get("language_user_set") or 0)
     merged["aprs_filter"] = str(merged["aprs_filter"] or "").strip()
     merged["map_type"] = str(merged["map_type"] or "osm").lower().strip()

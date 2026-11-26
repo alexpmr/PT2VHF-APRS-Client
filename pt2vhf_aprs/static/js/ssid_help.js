@@ -5,7 +5,7 @@
 'use strict';
 
 const $ = (s, r = document) => r.querySelector(s);
-const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
+const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'en').toLowerCase();
 // v2.0.6: tailandês, pela chave em inglês.
 const TH = {
   'SSID suggestions': 'คำแนะนำ SSID',

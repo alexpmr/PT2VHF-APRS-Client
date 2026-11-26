@@ -955,7 +955,13 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index():
-        return render_template("index.html", app_version=__version__)
+        # v2.0.7: o HTML já sai com o idioma em uso, para a tela não abrir em português no exterior.
+        try:
+            app_language = str(db.get_config().get("language") or "en")
+        except Exception:
+            app_language = "en"
+        html_lang = {"de-DE": "de", "it-IT": "it", "ja-JP": "ja", "pl-PL": "pl", "nl-NL": "nl", "th-TH": "th"}.get(app_language, app_language)
+        return render_template("index.html", app_version=__version__, app_language=app_language, html_lang=html_lang)
 
     @app.get("/api/layers/elevation/tile/<int:z>/<int:x>/<int:y>")
     def api_elevation_tile(z: int, x: int, y: int):

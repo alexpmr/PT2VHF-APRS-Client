@@ -1,4 +1,4 @@
-"""Valida invariantes mínimas antes de empacotar a release v2.0.6."""
+"""Valida invariantes mínimas antes de empacotar a release v2.0.7."""
 import base64
 import hashlib
 from pathlib import Path
@@ -10,15 +10,16 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-assert read("VERSION").strip() == "2.0.6"
-assert '__version__ = "2.0.6"' in read("pt2vhf_aprs/__init__.py")
-assert "filevers=(2, 0, 6, 0)" in read("windows/version_info.txt")
-assert "prodvers=(2, 0, 6, 0)" in read("windows/version_info.txt")
-assert "## 2.0.6 - 2026-11-26" in read("CHANGELOG.md")
-assert '"2.0.6": {' in read("pt2vhf_aprs/version_notes.py")
+assert read("VERSION").strip() == "2.0.7"
+assert '__version__ = "2.0.7"' in read("pt2vhf_aprs/__init__.py")
+assert "filevers=(2, 0, 7, 0)" in read("windows/version_info.txt")
+assert "prodvers=(2, 0, 7, 0)" in read("windows/version_info.txt")
+assert "## 2.0.7 - 2026-11-26" in read("CHANGELOG.md")
+assert '"2.0.7": {' in read("pt2vhf_aprs/version_notes.py")
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_2_0_6.py" in read(workflow)
+    assert "apply_release_2_0_7.py" in read(workflow)
+    assert "apply_release_2_0_6.py" not in read(workflow)
     assert "apply_release_2_0_5.py" not in read(workflow)
     assert "apply_release_2_0_4.py" not in read(workflow)
     assert "apply_release_2_0_3.py" not in read(workflow)
@@ -284,3 +285,16 @@ assert '"th-TH": {"title"' in read("pt2vhf_aprs/version_notes.py")
 assert 'id="headerCheckUpdateButton"' in html and "function checkUpdatesNow(" in js
 assert "aprs_parse.parse(line)" in read("pt2vhf_aprs/aprs_service.py") and "def _parse_item(" in read("pt2vhf_aprs/aprs_parse.py")
 print("v2.0.6 Thai/LoRa/update-button invariants OK")
+
+# v2.0.7: assistente inicial, avisos, backup, GPS, perfis de TNC (#186) e idioma padrão no exterior.
+assert (ROOT / "pt2vhf_aprs/static/js/onboarding.js").is_file()
+assert "LCIDToLocaleName" in read("pt2vhf_aprs/os_language.py")
+assert 'data-app-language="{{ app_language' in html
+assert "SUPPORTED_LANGUAGES.includes(normalized) ? normalized : 'en'" in js
+assert 'native_text.text("confirm_exit")' in read("windows_app.py")
+for iss in ("windows/installer.iss", "windows/installer_arm64.iss", "windows/installer_win7_legacy.iss"):
+    text = (ROOT / iss).read_text(encoding="utf-8-sig")
+    langs = text[text.index("[Languages]"):text.index("[CustomMessages]")]
+    first = [line for line in langs.splitlines() if line.startswith("Name:")][0]
+    assert first.startswith('Name: "english"'), iss
+print("v2.0.7 onboarding/language-default invariants OK")

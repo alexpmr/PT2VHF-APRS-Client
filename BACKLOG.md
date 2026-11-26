@@ -1,4 +1,19 @@
-## RESOLVIDO (próxima versão, ainda não lançada) — Melhorias sugeridas, pedido do Alex "implemente as 7" (26/11/2026)
+## RESOLVIDO (v2.0.7) — Botão "Verificar versão" volta ao estilo antigo (pedido do Alex, 26/11/2026)
+
+- Verde "Última versão" quando está na mais nova; âmbar com "Versão X disponível" quando há atualização.
+  `syncHeaderUpdateButton()` em `app.js`; a pílula `#versionStatus` some no cabeçalho largo para não repetir.
+
+## RESOLVIDO (v2.0.7) — App abrindo em português no exterior (relato de usuários, 26/11/2026)
+
+- **Regra (Alex):** idioma do SO quando suportado; inglês quando não é. Nunca português por padrão.
+- **Causas:** instalador Windows com português como 1º idioma (Inno Setup usa o 1º quando o idioma do Windows não está
+  na lista); bandeja e confirmação de saída fixas em português; `locale.windows_locale` sem vários LCIDs (ex.: es-419),
+  e a busca seguia para o formato regional; HTML inicial `lang="pt-BR"` com reservas `'pt-BR'` no front.
+- **Correção:** inglês primeiro + 7 idiomas no instalador (`[CustomMessages]`), `pt2vhf_aprs/native_text.py`,
+  `LCIDToLocaleName` e "1º idioma real decide" em `os_language.py`, HTML renderizado com `data-app-language`.
+  Testes em `tests/test_v207_language_default.py`.
+
+## RESOLVIDO (v2.0.7) — Melhorias sugeridas, pedido do Alex "implemente as 7" (26/11/2026)
 
 - **Assistente de primeira execução:** indicativo, passcode, posição (ou grid locator) e servidor sugerido pela região;
   abre só em instalação nova (`onboarding_done`; quem já tem indicativo não vê). `static/js/onboarding.js`.

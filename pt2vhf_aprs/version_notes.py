@@ -3,6 +3,89 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.7": {
+        "title": "Idioma certo no exterior e assistente de primeiro uso",
+        "items": [
+            "No exterior o app não abre mais em português: segue o idioma do sistema e usa inglês quando o idioma do sistema não é suportado. Vale também para o instalador do Windows e o menu da bandeja.",
+            "Assistente de primeiro uso numa instalação nova: indicativo, passcode, posição (ou grid locator) e servidor APRS-IS sugerido.",
+            "Aviso do sistema quando chega mensagem com a janela em segundo plano, e contador de não lidas no título.",
+            "Backup automático diário do banco de dados, com cópia manual e restauração.",
+            "GPS (NMEA serial ou gpsd) com SmartBeaconing, e perfis para salvar várias configurações de TNC.",
+            "Equipamento das estações: base de identificação atualizada e rádios Mic-E reconhecidos.",
+        ],
+        "i18n": {
+            "en": {"title": "Right language abroad and first-run assistant", "items": [
+                "Outside Brazil the app no longer opens in Portuguese: it follows the system language and uses English when that language is not supported. This also applies to the Windows installer and the tray menu.",
+                "First-run assistant on a new installation: callsign, passcode, position (or grid locator) and a suggested APRS-IS server.",
+                "System notification when a message arrives while the window is in the background, plus an unread counter in the title.",
+                "Automatic daily database backup, with manual copy and restore.",
+                "GPS (serial NMEA or gpsd) with SmartBeaconing, and profiles to save several TNC configurations.",
+                "Station equipment: updated device database and Mic-E radios recognized."]},
+            "es": {"title": "Idioma correcto fuera de Brasil y asistente inicial", "items": [
+                "Fuera de Brasil la aplicación ya no se abre en portugués: sigue el idioma del sistema y usa inglés cuando ese idioma no es compatible. También vale para el instalador de Windows y el menú de la bandeja.",
+                "Asistente inicial en una instalación nueva: indicativo, passcode, posición (o grid locator) y servidor APRS-IS sugerido.",
+                "Aviso del sistema cuando llega un mensaje con la ventana en segundo plano, y contador de no leídos en el título.",
+                "Copia de seguridad diaria automática de la base de datos, con copia manual y restauración.",
+                "GPS (NMEA serie o gpsd) con SmartBeaconing, y perfiles para guardar varias configuraciones de TNC.",
+                "Equipo de las estaciones: base de identificación actualizada y radios Mic-E reconocidas."]},
+            "fr": {"title": "Bonne langue hors du Brésil et assistant de démarrage", "items": [
+                "Hors du Brésil, l’application ne s’ouvre plus en portugais : elle suit la langue du système et utilise l’anglais si cette langue n’est pas prise en charge. Cela vaut aussi pour l’installateur Windows et le menu de la zone de notification.",
+                "Assistant de démarrage sur une nouvelle installation : indicatif, passcode, position (ou grid locator) et serveur APRS-IS suggéré.",
+                "Notification système à l’arrivée d’un message quand la fenêtre est en arrière-plan, et compteur de non-lus dans le titre.",
+                "Sauvegarde quotidienne automatique de la base de données, avec copie manuelle et restauration.",
+                "GPS (NMEA série ou gpsd) avec SmartBeaconing, et profils pour enregistrer plusieurs configurations TNC.",
+                "Équipement des stations : base d’identification mise à jour et radios Mic-E reconnues."]},
+            "de-DE": {"title": "Richtige Sprache im Ausland und Einrichtungsassistent", "items": [
+                "Außerhalb Brasiliens startet die App nicht mehr auf Portugiesisch: Sie folgt der Systemsprache und nutzt Englisch, wenn diese Sprache nicht unterstützt wird. Das gilt auch für das Windows-Installationsprogramm und das Infobereich-Menü.",
+                "Einrichtungsassistent bei einer neuen Installation: Rufzeichen, Passcode, Position (oder Grid Locator) und vorgeschlagener APRS-IS-Server.",
+                "Systembenachrichtigung bei neuer Nachricht, wenn das Fenster im Hintergrund ist, und Zähler ungelesener Nachrichten im Titel.",
+                "Automatische tägliche Datenbanksicherung mit manueller Kopie und Wiederherstellung.",
+                "GPS (serielles NMEA oder gpsd) mit SmartBeaconing und Profile zum Speichern mehrerer TNC-Konfigurationen.",
+                "Stationsausrüstung: aktualisierte Gerätedatenbank, Mic-E-Funkgeräte werden erkannt."]},
+            "it-IT": {"title": "Lingua giusta all’estero e procedura guidata iniziale", "items": [
+                "Fuori dal Brasile l’app non si apre più in portoghese: segue la lingua del sistema e usa l’inglese quando quella lingua non è supportata. Vale anche per il programma di installazione di Windows e il menu dell’area di notifica.",
+                "Procedura guidata iniziale in una nuova installazione: nominativo, passcode, posizione (o grid locator) e server APRS-IS suggerito.",
+                "Notifica di sistema all’arrivo di un messaggio con la finestra in secondo piano, e contatore dei non letti nel titolo.",
+                "Backup giornaliero automatico del database, con copia manuale e ripristino.",
+                "GPS (NMEA seriale o gpsd) con SmartBeaconing, e profili per salvare più configurazioni TNC.",
+                "Apparati delle stazioni: database di identificazione aggiornato e radio Mic-E riconosciute."]},
+            "ja-JP": {"title": "海外での正しい言語表示と初回セットアップ", "items": [
+                "ブラジル以外でポルトガル語で起動しなくなりました。OSの言語に従い、対応していない言語の場合は英語になります。Windows インストーラーとトレイメニューも同様です。",
+                "新規インストール時の初回セットアップ：コールサイン、パスコード、位置（またはグリッドロケーター）、推奨 APRS-IS サーバー。",
+                "ウィンドウがバックグラウンドのときにメッセージを受信するとシステム通知を表示し、タイトルに未読数を表示します。",
+                "データベースの毎日の自動バックアップ（手動コピーと復元にも対応）。",
+                "GPS（シリアル NMEA または gpsd）と SmartBeaconing、複数の TNC 設定を保存できるプロファイル。",
+                "局の機器：識別データベースを更新し、Mic-E 無線機を識別します。"]},
+            "pl-PL": {"title": "Właściwy język za granicą i kreator pierwszego uruchomienia", "items": [
+                "Poza Brazylią aplikacja nie uruchamia się już po portugalsku: używa języka systemu, a gdy nie jest on obsługiwany, angielskiego. Dotyczy to też instalatora Windows i menu w zasobniku.",
+                "Kreator pierwszego uruchomienia w nowej instalacji: znak, passcode, pozycja (lub grid locator) i proponowany serwer APRS-IS.",
+                "Powiadomienie systemowe o nowej wiadomości, gdy okno jest w tle, oraz licznik nieprzeczytanych w tytule.",
+                "Automatyczna codzienna kopia bazy danych, z kopią ręczną i przywracaniem.",
+                "GPS (szeregowy NMEA lub gpsd) ze SmartBeaconing oraz profile do zapisu wielu konfiguracji TNC.",
+                "Sprzęt stacji: zaktualizowana baza identyfikacji i rozpoznawanie radiotelefonów Mic-E."]},
+            "nl-NL": {"title": "Juiste taal in het buitenland en startassistent", "items": [
+                "Buiten Brazilië opent de app niet meer in het Portugees: hij volgt de systeemtaal en gebruikt Engels als die taal niet wordt ondersteund. Dat geldt ook voor het Windows-installatieprogramma en het menu in het systeemvak.",
+                "Startassistent bij een nieuwe installatie: roepnaam, passcode, positie (of grid locator) en voorgestelde APRS-IS-server.",
+                "Systeemmelding bij een nieuw bericht als het venster op de achtergrond staat, en een teller van ongelezen berichten in de titel.",
+                "Automatische dagelijkse back-up van de database, met handmatige kopie en herstel.",
+                "GPS (seriële NMEA of gpsd) met SmartBeaconing, en profielen om meerdere TNC-configuraties op te slaan.",
+                "Stationsapparatuur: bijgewerkte identificatiedatabase en Mic-E-radio’s worden herkend."]},
+            "zh-CN": {"title": "海外语言显示正确，新增首次使用向导", "items": [
+                "在巴西以外不再以葡萄牙语启动：跟随系统语言，系统语言不受支持时使用英语。Windows 安装程序和托盘菜单也是如此。",
+                "新安装时的首次使用向导：呼号、passcode、位置（或网格定位）以及推荐的 APRS-IS 服务器。",
+                "窗口在后台时收到消息会显示系统通知，标题中显示未读数量。",
+                "每日自动备份数据库，支持手动备份和恢复。",
+                "GPS（串口 NMEA 或 gpsd）支持 SmartBeaconing，可用配置文件保存多套 TNC 设置。",
+                "台站设备：识别数据库已更新，可识别 Mic-E 电台。"]},
+            "th-TH": {"title": "ภาษาถูกต้องในต่างประเทศ และตัวช่วยตั้งค่าครั้งแรก", "items": [
+                "นอกบราซิล แอปจะไม่เปิดเป็นภาษาโปรตุเกสอีกต่อไป แต่จะใช้ภาษาของระบบ และใช้ภาษาอังกฤษเมื่อไม่รองรับภาษานั้น รวมถึงตัวติดตั้ง Windows และเมนูในถาดระบบ",
+                "ตัวช่วยตั้งค่าครั้งแรกเมื่อติดตั้งใหม่: สัญญาณเรียกขาน, passcode, ตำแหน่ง (หรือ grid locator) และเซิร์ฟเวอร์ APRS-IS ที่แนะนำ",
+                "แจ้งเตือนของระบบเมื่อมีข้อความเข้าขณะหน้าต่างอยู่เบื้องหลัง และแสดงจำนวนที่ยังไม่อ่านในชื่อหน้าต่าง",
+                "สำรองฐานข้อมูลอัตโนมัติทุกวัน พร้อมการคัดลอกด้วยตนเองและการกู้คืน",
+                "GPS (NMEA ผ่านพอร์ตอนุกรม หรือ gpsd) พร้อม SmartBeaconing และโปรไฟล์สำหรับบันทึกการตั้งค่า TNC หลายชุด",
+                "อุปกรณ์ของสถานี: อัปเดตฐานข้อมูลการระบุอุปกรณ์ และรู้จักวิทยุ Mic-E"]},
+        },
+    },
     "2.0.6": {
         "title": "Novo idioma: tailandês",
         "items": [

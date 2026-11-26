@@ -1214,5 +1214,8 @@
  "SmartBeaconing: a velocidade baixa precisa ser menor que a alta.": "SmartBeaconing: ความเร็วต่ำต้องน้อยกว่าความเร็วสูง",
  "SmartBeaconing: o intervalo rápido precisa ser menor que o lento.": "SmartBeaconing: ช่วงเวลาเร็วต้องสั้นกว่าช่วงเวลาช้า",
  "gpsd encerrou a conexão.": "gpsd ปิดการเชื่อมต่อแล้ว",
- "Grid Locator": "กริดโลเคเตอร์"
+ "Grid Locator": "กริดโลเคเตอร์",
+ "Versão {version} disponível": "มีเวอร์ชัน {version} แล้ว",
+ "Você está na versão mais recente.": "คุณใช้เวอร์ชันล่าสุดแล้ว",
+ "Clique para ver e instalar a versão nova.": "คลิกเพื่อดูและติดตั้งเวอร์ชันใหม่"
 };

@@ -20,6 +20,7 @@ from pystray import MenuItem as Item
 from pt2vhf_aprs import __version__
 from pt2vhf_aprs import database as db
 from pt2vhf_aprs import diagnostics as diag
+from pt2vhf_aprs import native_text
 from pt2vhf_aprs import updater
 from pt2vhf_aprs import window_size
 from pt2vhf_aprs.aprs_service import service
@@ -313,7 +314,7 @@ def _confirm_exit() -> bool:
         flags = 0x00000004 | 0x00000020 | 0x00000100
         result = ctypes.windll.user32.MessageBoxW(
             None,
-            "Deseja realmente sair do PT2VHF APRS Client?",
+            native_text.text("confirm_exit"),
             APP_NAME,
             flags,
         )
@@ -342,13 +343,14 @@ def _create_tray_icon() -> pystray.Icon:
         _make_tray_image(),
         APP_NAME,
         menu=pystray.Menu(
-            Item("Abrir PT2VHF APRS Client", _show_native_window, default=True),
-            Item("Conectar ao APRS-IS", _connect),
-            Item("Desconectar do APRS-IS", _disconnect),
+            # v2.0.7: textos no idioma do app (antes sempre em português).
+            Item(lambda _item: native_text.text("tray_open"), _show_native_window, default=True),
+            Item(lambda _item: native_text.text("tray_connect"), _connect),
+            Item(lambda _item: native_text.text("tray_disconnect"), _disconnect),
             pystray.Menu.SEPARATOR,
-            Item("Abrir pasta de dados", _open_data_folder),
+            Item(lambda _item: native_text.text("tray_data_folder"), _open_data_folder),
             pystray.Menu.SEPARATOR,
-            Item("Sair", _exit_app),
+            Item(lambda _item: native_text.text("tray_exit"), _exit_app),
         ),
     )
 
@@ -532,8 +534,7 @@ def _launch_legacy_app_window() -> bool:
         try:
             ctypes.windll.user32.MessageBoxW(
                 None,
-                "O Windows 7 Legacy não encontrou Google Chrome/Chromium/Brave compatível para a janela dedicada.\n\n"
-                "A interface será aberta no navegador padrão, mantendo o PT2VHF APRS Client ativo na bandeja.",
+                native_text.text("legacy_no_browser"),
                 APP_NAME,
                 0x30,
             )
@@ -583,9 +584,7 @@ def _launch_legacy_app_window() -> bool:
         try:
             ctypes.windll.user32.MessageBoxW(
                 None,
-                "Não foi possível iniciar a janela dedicada do Windows 7 Legacy.\n\n"
-                "A interface será aberta no navegador padrão e o backend continuará ativo.\n\n"
-                f"Detalhes: {exc}",
+                native_text.text("legacy_shell_failed") + f"\n\n{native_text.text('details')}: {exc}",
                 APP_NAME,
                 0x30,
             )
@@ -653,11 +652,9 @@ def _run_embedded_window(icon: pystray.Icon) -> int:
             # MessageBox dialogs prevent a seamless usable Web fallback.
             if os.name == "nt" and not netfx_failure:
                 message = (
-                    "Não foi possível iniciar a janela integrada do PT2VHF APRS Client.\n\n"
-                    + ("Windows 7 Legacy permanece em modo desktop; o navegador não será aberto automaticamente.\n\n"
-                       if legacy else
-                       "A interface será aberta no navegador padrão.\n\n")
-                    + f"Detalhes: {exc}"
+                    native_text.text("window_failed") + "\n\n"
+                    + native_text.text("window_failed_legacy" if legacy else "window_failed_browser") + "\n\n"
+                    + f"{native_text.text('details')}: {exc}"
                 )
                 ctypes.windll.user32.MessageBoxW(None, message, APP_NAME, 0x30)
         except Exception:
@@ -762,8 +759,7 @@ def main() -> int:
         try:
             ctypes.windll.user32.MessageBoxW(
                 None,
-                "Não foi possível reservar uma porta local para o PT2VHF APRS Client.\n\n"
-                f"Detalhes: {exc}",
+                native_text.text("port_failed") + f"\n\n{native_text.text('details')}: {exc}",
                 APP_NAME,
                 0x10,
             )

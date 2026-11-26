@@ -77,7 +77,7 @@
   const CATALOG = { ...(window.PT2VHF_HELP_I18N || {}), en: EN };
   const originals = new Map();
   function apply(language) {
-    const lang = String(language || document.documentElement.lang || 'pt-BR');
+    const lang = String(language || document.documentElement.lang || 'en');
     const prefix = lang.split('-')[0].toLowerCase();
     const table = prefix === 'pt' ? null : (CATALOG[prefix] || EN);
     for (const el of document.querySelectorAll('#tab-help [data-help-i18n]')) {

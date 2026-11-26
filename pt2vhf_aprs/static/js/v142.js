@@ -3,7 +3,7 @@
 
 const $ = (s, r=document) => r.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
+const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'en').toLowerCase();
 const tr = (pt,en,es,fr) => {
     const l = lang();
     const locale = l.startsWith('de') ? 'de-DE'

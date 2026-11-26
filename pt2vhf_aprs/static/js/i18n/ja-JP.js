@@ -1153,5 +1153,8 @@
  "SmartBeaconing: a velocidade baixa precisa ser menor que a alta.": "スマートビーコン: 低速は高速より小さくしてください。",
  "SmartBeaconing: o intervalo rápido precisa ser menor que o lento.": "スマートビーコン: 高速時の間隔は低速時より短くしてください。",
  "gpsd encerrou a conexão.": "gpsd が接続を閉じました。",
- "Grid Locator": "グリッドロケーター"
+ "Grid Locator": "グリッドロケーター",
+ "Versão {version} disponível": "バージョン {version} が利用可能",
+ "Você está na versão mais recente.": "最新バージョンです。",
+ "Clique para ver e instalar a versão nova.": "クリックして新しいバージョンを確認・インストールします。"
 };

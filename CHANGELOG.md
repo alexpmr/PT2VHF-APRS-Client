@@ -1,3 +1,18 @@
+## 2.0.7 - 2026-11-26
+
+- **Idioma certo no exterior (relato de usuários estrangeiros):** o app abre no idioma do sistema operacional quando é um dos 11 suportados e em **inglês** quando não é; nunca mais em português por engano. Causas corrigidas:
+  - **Instalador do Windows** tinha o português como primeiro idioma, e o Inno Setup usa o primeiro quando o idioma do Windows não está na lista (alemão, russo, tcheco...). Agora o inglês é o padrão e o instalador também fala espanhol, francês, alemão, italiano, japonês, polonês e holandês; os textos próprios (atalho, iniciar com o Windows, executar) foram traduzidos.
+  - **Menu da bandeja e "Deseja realmente sair?"** saíam sempre em português; agora seguem o idioma do app (inglês de reserva).
+  - **Detecção no Windows:** códigos de idioma que o Python não conhece (ex.: espanhol da América Latina) faziam a detecção cair no formato regional. Agora o nome do idioma vem do próprio Windows, e um idioma de sistema não suportado vira inglês.
+  - **Tela inicial:** a página abria em português por um instante até carregar a configuração; agora já sai do servidor no idioma em uso, e todas as reservas da interface são inglês.
+- **Botão "Verificar versão" no estilo antigo (pedido do Alex):** verde com "Última versão" quando o app está na versão mais nova e âmbar com "Versão X disponível" quando há atualização (clique abre o aviso para instalar).
+- **Assistente de primeira execução:** indicativo, passcode, posição ou grid locator e servidor APRS-IS sugerido pela região; aparece só em instalação nova.
+- **Aviso no sistema para mensagem recebida** (bandeja no Windows, notify-send no Linux, macOS) quando a janela está em segundo plano, e contador "(N)" no título.
+- **Backup automático do banco:** cópia diária conferida e compactada em `data/backups/` (guarda 7), cópia manual e restauração na próxima abertura.
+- **GPS com SmartBeaconing:** NMEA serial ou gpsd, beacon com rumo e velocidade; sem fix não há beacon automático.
+- **Perfis de TNC:** salvar, carregar e apagar várias configurações de TNC.
+- **Equipamento das estações:** base aprs-deviceid atualizada (481 TOCALLs), atualização semanal e identificação de rádios Mic-E.
+
 ## 2.0.6 - 2026-11-26
 
 - **Tailandês (ไทย):** novo idioma em todas as versões para PC (Windows x64/ARM64, Win7 Legacy, Linux x86_64 e macOS Apple Silicon), com bandeira da Tailândia no seletor e na Configuração. Telas, avisos, Configuração, TNC, Sobre, sugestões de SSID, novidades da versão e a Ajuda completa (68 blocos) estão traduzidos, com a mesma cobertura dos outros idiomas.

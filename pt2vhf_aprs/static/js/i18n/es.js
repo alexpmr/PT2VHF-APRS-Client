@@ -1211,5 +1211,8 @@
  "SmartBeaconing: a velocidade baixa precisa ser menor que a alta.": "SmartBeaconing: la velocidad baja debe ser menor que la alta.",
  "SmartBeaconing: o intervalo rápido precisa ser menor que o lento.": "SmartBeaconing: el intervalo rápido debe ser menor que el lento.",
  "gpsd encerrou a conexão.": "gpsd cerró la conexión.",
- "Grid Locator": "Grid Locator"
+ "Grid Locator": "Grid Locator",
+ "Versão {version} disponível": "Versión {version} disponible",
+ "Você está na versão mais recente.": "Tiene la versión más reciente.",
+ "Clique para ver e instalar a versão nova.": "Haga clic para ver e instalar la versión nueva."
 };

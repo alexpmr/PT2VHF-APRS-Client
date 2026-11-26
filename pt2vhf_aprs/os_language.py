@@ -36,12 +36,26 @@ def map_language(tag: str | None) -> str | None:
 
 
 def _windows_ui_language() -> str | None:
+    """Idioma da interface do Windows como tag BCP 47 ("es-419", "de-CH", "en-US").
+
+    v2.0.7: antes só se consultava locale.windows_locale, que não conhece vários
+    códigos (ex.: espanhol da América Latina 0x580A); o Windows então caía nas
+    variáveis de ambiente e podia acabar em outro idioma. LCIDToLocaleName
+    (Vista+, inclusive Win7) devolve o nome de qualquer LCID.
+    """
     try:
         import ctypes
-        lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
-        return locale.windows_locale.get(lcid)
+        kernel32 = ctypes.windll.kernel32
+        lcid = int(kernel32.GetUserDefaultUILanguage())
     except Exception:
         return None
+    try:
+        buf = ctypes.create_unicode_buffer(85)
+        if kernel32.LCIDToLocaleName(lcid, buf, len(buf), 0) and buf.value:
+            return buf.value
+    except Exception:
+        pass
+    return locale.windows_locale.get(lcid)
 
 
 def _macos_language() -> str | None:
@@ -76,10 +90,21 @@ def _candidates() -> list[str]:
     return [item for item in found if item]
 
 
+def _is_real_tag(tag: str) -> bool:
+    raw = str(tag or "").strip().upper()
+    return bool(raw) and raw not in {"C", "POSIX"} and not raw.startswith("C.")
+
+
 @lru_cache(maxsize=1)
 def system_language() -> str:
+    """Idioma do app para o SO atual: o idioma do SO se suportado, senão inglês.
+
+    v2.0.7: vale o PRIMEIRO idioma real encontrado (o da interface do SO). Se ele não
+    é um dos suportados (russo, tcheco, sueco...), o app abre em inglês; antes a busca
+    seguia para os candidatos seguintes (formato regional, variáveis de ambiente) e
+    podia cair em outro idioma, como o português.
+    """
     for tag in _candidates():
-        mapped = map_language(tag)
-        if mapped:
-            return mapped
+        if _is_real_tag(tag):
+            return map_language(tag) or FALLBACK
     return FALLBACK

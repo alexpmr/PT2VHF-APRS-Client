@@ -5,7 +5,7 @@
 'use strict';
 
 const $ = (s, r = document) => r.querySelector(s);
-const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
+const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'en').toLowerCase();
 const tr = (pt, en, es, fr) => {
   const l = lang();
   const locale = l.startsWith('de') ? 'de-DE' : l.startsWith('it') ? 'it-IT' : l.startsWith('ja') ? 'ja-JP'

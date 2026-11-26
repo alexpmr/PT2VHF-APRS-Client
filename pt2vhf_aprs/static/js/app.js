@@ -183,7 +183,7 @@
     soundOnStationActivity: true,
     highlightStationActivity: true,
     messagePopupSeconds: 5,
-    language: 'pt-BR',
+    language: 'en',  // v2.0.7: substituído no boot pelo idioma que o servidor já mandou no HTML
     configSection: 'aprs',
     currentConfig: null,
     autoLocationInProgress: false,
@@ -240,7 +240,7 @@
       th: 'th-TH', th_TH: 'th-TH'
     };
     const normalized = aliases[raw] || raw;
-    return SUPPORTED_LANGUAGES.includes(normalized) ? normalized : 'pt-BR';
+    return SUPPORTED_LANGUAGES.includes(normalized) ? normalized : 'en';
   }
 
   function translatedText(pt, en) {
@@ -277,7 +277,7 @@
       'pt-BR':'pt-BR', en:'en-US', es:'es-ES', fr:'fr-FR',
       'de-DE':'de-DE', 'it-IT':'it-IT', 'ja-JP':'ja-JP',
       'pl-PL':'pl-PL', 'nl-NL':'nl-NL', 'zh-CN':'zh-CN', 'th-TH':'th-TH-u-ca-gregory'
-    })[state.language] || 'pt-BR';
+    })[state.language] || 'en-US';
   }
 
   function fmtDate(value) {
@@ -408,6 +408,7 @@
         throw new Error(data.error || ui('Falha temporária na verificação.', 'Temporary update check failure.'));
       }
       updateUpdateSettingsUi();
+      syncHeaderUpdateButton();
     } catch (err) {
       console.warn('Falha ao verificar nova versão:', err);
       el.classList.remove('checking');
@@ -945,13 +946,34 @@
     }
     $('#updateModal')?.classList.add('hidden');
   });
+  // v2.0.7 (pedido do Alex): o botão do cabeçalho volta ao estilo antigo — verde "Última versão" quando
+  // está na mais nova, âmbar com a versão nova disponível; nos outros casos, "Verificar versão".
+  function syncHeaderUpdateButton() {
+    const button = $('#headerCheckUpdateButton');
+    if (!button || button.disabled) return;
+    const info = state.updateInfo || {};
+    button.classList.remove('is-latest', 'is-update');
+    if (info.status === 'update_available' && info.latest_version) {
+      button.classList.add('is-update');
+      button.textContent = uiFmt('Versão {version} disponível', 'Version {version} available', { version: info.latest_version });
+      button.title = ui('Clique para ver e instalar a versão nova.', 'Click to see and install the new version.');
+    } else if (info.status === 'latest') {
+      button.classList.add('is-latest');
+      button.textContent = ui('Última versão', 'Latest version');
+      button.title = ui('Você está na versão mais recente.', 'You are on the latest version.');
+    } else {
+      button.textContent = ui('Verificar versão', 'Check version');
+      button.title = ui('Verificar se há versão nova', 'Check for a new version');
+    }
+  }
+  document.addEventListener('pt2vhf-language-changed', () => syncHeaderUpdateButton());
+
   async function checkUpdatesNow(button = null) {
-    const label = button ? button.textContent : '';
-    if (button) { button.disabled = true; button.textContent = ui('Verificando…', 'Checking…'); }
+    if (button) { button.disabled = true; button.classList.remove('is-latest', 'is-update'); button.textContent = ui('Verificando…', 'Checking…'); }
     try {
       await refreshVersionStatus(true);
     } finally {
-      if (button) { button.disabled = false; button.textContent = label; }
+      if (button) { button.disabled = false; syncHeaderUpdateButton(); }
     }
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
     else if (state.updateInfo?.status === 'latest') toast(ui('Verificação concluída: última versão.', 'Check complete: latest version.'), 'ok');
@@ -10242,7 +10264,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   function applyLanguage(language) {
     state.language = normalizeLanguage(language);
-    document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR']).htmlLang;
+    document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META.en).htmlLang;
     translateDom(document.body);
     document.dispatchEvent(new CustomEvent('pt2vhf-language-changed', { detail: { language: state.language } }));
     syncQuickLanguageButtons();
@@ -10295,7 +10317,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     if (option) {
       e.preventDefault();
       e.stopPropagation();
-      void setQuickLanguage(option.dataset.language || 'pt-BR');
+      void setQuickLanguage(option.dataset.language || 'en');
       return;
     }
     if (!e.target.closest('#languageQuickSwitch')) setLanguageMenuOpen(false);
@@ -12402,6 +12424,15 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         state.activityAudioContext?.resume?.().catch(() => {});
       } catch (_) {}
     }, { once:true });
+    // v2.0.7: o servidor já manda no HTML o idioma em uso (o do SO, ou o escolhido).
+    // Traduz a tela antes de carregar a configuração, para não abrir em português no exterior.
+    try {
+      state.language = normalizeLanguage(document.documentElement.dataset.appLanguage || 'en');
+      document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META.en).htmlLang;
+      if (state.language !== 'pt-BR') translateDom(document.body);
+      document.dispatchEvent(new CustomEvent('pt2vhf-language-changed', { detail: { language: state.language } }));
+      syncQuickLanguageButtons();
+    } catch (err) { console.warn('Idioma inicial:', err); }
     const startup = await Promise.allSettled([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);
