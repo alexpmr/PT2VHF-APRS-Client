@@ -27,6 +27,7 @@ from . import retention
 from . import category_statistics, category_clear
 from . import tnc_listen, db_check
 from . import device_ids
+from . import db_backup
 from . import version_announce
 from . import saved_results
 from .aprs_service import full_callsign, service
@@ -871,6 +872,8 @@ def create_app() -> Flask:
     retention.start_worker()
     version_announce.start_worker(service)
     start_device_ids_refresh()
+    if not os.environ.get("PYTEST_CURRENT_TEST"):
+        db_backup.start_worker()
     diag.log_event("flask_app_created", version=__version__)
     try:
         # Chegar até aqui confirma que a versão atual iniciou e abriu o banco.
@@ -1356,6 +1359,31 @@ def create_app() -> Flask:
             return jsonify({"ok": True, "config": saved, "status": tnc_service.status()})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.get("/api/db/backups")
+    def api_db_backups():
+        return jsonify({"ok": True, "backups": db_backup.list_backups(), "pending_restore": db_backup.pending_restore(),
+                        "last_restore": db_backup.LAST_RESTORE, "folder": str(db_backup.backup_dir())})
+
+    @app.post("/api/db/backups")
+    def api_db_backup_now():
+        result = db_backup.make_backup(manual=True)
+        return jsonify({**result, "backups": db_backup.list_backups()}), (200 if result.get("ok") else 500)
+
+    @app.post("/api/db/backups/restore")
+    def api_db_backup_restore():
+        if str(request.remote_addr or "") not in {"127.0.0.1", "::1", "localhost"}:
+            return jsonify({"ok": False, "error": "Restaurar o banco só é permitido no próprio computador."}), 403
+        body = request.get_json(force=True) or {}
+        try:
+            pending = db_backup.schedule_restore(str(body.get("name") or ""))
+            return jsonify({"ok": True, "pending_restore": pending})
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 404
+
+    @app.post("/api/db/backups/cancel-restore")
+    def api_db_backup_cancel_restore():
+        return jsonify({"ok": db_backup.cancel_restore(), "pending_restore": db_backup.pending_restore()})
 
     @app.get("/api/tnc/profiles")
     def api_tnc_profiles():

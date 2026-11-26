@@ -1261,6 +1261,14 @@
     }
   }
 
+  // v2.0.7: tradução para os módulos novos (db_backup.js, notifications.js, onboarding.js, gps.js):
+  // texto em português como chave, catálogo do idioma, inglês como reserva.
+  window.pt2vhfT = (pt, vars = null) => {
+    let out = translatedText(pt, englishFallback(pt));
+    if (vars) for (const [key, value] of Object.entries(vars)) out = out.split(`{${key}}`).join(String(value));
+    return out;
+  };
+  window.pt2vhfLanguage = () => state.language;
   window.pt2vhfShowProcessing = showProcessing;
   window.pt2vhfUpdateProcessing = updateProcessing;
   window.pt2vhfHideProcessing = hideProcessing;

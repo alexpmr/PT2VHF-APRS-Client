@@ -5271,3 +5271,11 @@ html[data-theme="light"] .leaflet-popup-scrolled .station-popup-actions { backgr
 .tnc-profiles-card .tnc-profiles-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin: 8px 0; }
 .tnc-profiles-card .tnc-profiles-row label { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
 .tnc-profiles-card #tncProfileStatus.error { color: var(--danger, #d33); }
+
+/* v2.0.7: cópia automática do banco */
+#dbBackupCard .db-backup-table-wrap { max-height: 260px; margin: 8px 0; }
+#dbBackupCard .db-backup-table { width: 100%; border-collapse: collapse; }
+#dbBackupCard .db-backup-table th, #dbBackupCard .db-backup-table td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--border, rgba(127,127,127,.25)); }
+#dbBackupCard .db-backup-table td:last-child { text-align: right; }
+#dbBackupCard .db-restore-pending { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(255, 170, 0, .14); margin: 8px 0; }
+#dbBackupCard .db-restore-pending.hidden { display: none; }

@@ -1326,6 +1326,30 @@
           <span class="hint">Restaura preferências e dados da estação; mensagens, estações, logs e tracklogs não são apagados.</span>
         </div>
       </div>
+      <div class="config-card full-card config-section config-section-app" data-config-tab="backup" id="dbBackupCard">
+        <h3>Cópia automática do banco</h3>
+        <p class="hint">Uma vez por dia o programa copia o banco (estações, mensagens, tracklogs, cobertura RF) e guarda as cópias mais recentes. Se o banco se perder ou corromper, escolha uma cópia e restaure.</p>
+        <div class="config-grid compact-grid">
+          <label class="check-field"><input name="db_backup_enabled" type="checkbox" checked><span>Fazer cópia automática diária do banco</span></label>
+          <label class="field"><span>Quantas cópias guardar</span><input name="db_backup_keep" type="number" min="1" max="30" value="7"></label>
+        </div>
+        <div class="config-actions">
+          <button id="dbBackupNowButton" type="button" class="btn secondary">Fazer cópia agora</button>
+          <span id="dbBackupStatus" class="hint" role="status"></span>
+        </div>
+        <div class="table-wrap db-backup-table-wrap">
+          <table class="db-backup-table">
+            <thead><tr><th>Cópia</th><th>Tamanho</th><th></th></tr></thead>
+            <tbody id="dbBackupList"><tr><td colspan="3" class="hint">Nenhuma cópia ainda.</td></tr></tbody>
+          </table>
+        </div>
+        <div id="dbRestorePending" class="db-restore-pending hidden" role="alert">
+          <span id="dbRestorePendingText"></span>
+          <button id="dbRestoreQuitButton" type="button" class="btn primary">Fechar o programa agora</button>
+          <button id="dbRestoreCancelButton" type="button" class="btn secondary">Cancelar restauração</button>
+        </div>
+        <p class="hint">Pasta das cópias: <code id="dbBackupFolder" translate="no"></code></p>
+      </div>
       <div class="config-save-footer full-card">
         <div>
           <strong>Salvar configuração</strong>
@@ -2036,6 +2060,7 @@
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc_profiles.js') }}"></script>
+<script src="{{ url_for('static', filename='js/db_backup.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v190.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v110.js') }}"></script>
