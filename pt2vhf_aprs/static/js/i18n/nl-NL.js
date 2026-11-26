@@ -1053,5 +1053,20 @@
  "Verificar versão": "Versie controleren",
  "Verificar se há versão nova": "Controleren op een nieuwe versie",
  "Verificando…": "Controleren…",
- "Requests HTTP ativos": "Actieve HTTP-verzoeken"
+ "Requests HTTP ativos": "Actieve HTTP-verzoeken",
+ "Perfis de TNC": "TNC-profielen",
+ "Guarde a configuração de cada TNC com um nome e alterne entre eles sem digitar tudo de novo. O programa usa um TNC por vez.": "Sla de instellingen van elke TNC onder een naam op en wissel ertussen zonder alles opnieuw in te typen. Het programma gebruikt één TNC tegelijk.",
+ "Nenhum perfil salvo": "Geen opgeslagen profielen",
+ "Carregar perfil": "Profiel laden",
+ "Excluir perfil": "Profiel verwijderen",
+ "Nome do perfil": "Profielnaam",
+ "Ex.: TM-D710 da estação": "Bijv.: TM-D710 van het station",
+ "Salvar como perfil": "Opslaan als profiel",
+ "Informe um nome para o perfil.": "Geef een naam voor het profiel op.",
+ "O nome do perfil pode ter no máximo 40 caracteres.": "De profielnaam mag maximaal 40 tekens hebben.",
+ "Perfil de TNC não encontrado.": "TNC-profiel niet gevonden.",
+ "Limite de 30 perfis de TNC atingido.": "Limiet van 30 TNC-profielen bereikt.",
+ "Perfil salvo:": "Profiel opgeslagen:",
+ "Perfil carregado:": "Profiel geladen:",
+ "Perfil excluído:": "Profiel verwijderd:"
 };

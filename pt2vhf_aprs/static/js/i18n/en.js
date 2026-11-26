@@ -781,5 +781,20 @@
  "Verificar versão": "Check version",
  "Verificar se há versão nova": "Check for a new version",
  "Verificando…": "Checking…",
- "Requests HTTP ativos": "Active HTTP requests"
+ "Requests HTTP ativos": "Active HTTP requests",
+ "Perfis de TNC": "TNC profiles",
+ "Guarde a configuração de cada TNC com um nome e alterne entre eles sem digitar tudo de novo. O programa usa um TNC por vez.": "Save each TNC's settings under a name and switch between them without typing everything again. The program uses one TNC at a time.",
+ "Nenhum perfil salvo": "No saved profiles",
+ "Carregar perfil": "Load profile",
+ "Excluir perfil": "Delete profile",
+ "Nome do perfil": "Profile name",
+ "Ex.: TM-D710 da estação": "E.g.: station TM-D710",
+ "Salvar como perfil": "Save as profile",
+ "Informe um nome para o perfil.": "Enter a name for the profile.",
+ "O nome do perfil pode ter no máximo 40 caracteres.": "The profile name can have at most 40 characters.",
+ "Perfil de TNC não encontrado.": "TNC profile not found.",
+ "Limite de 30 perfis de TNC atingido.": "Limit of 30 TNC profiles reached.",
+ "Perfil salvo:": "Profile saved:",
+ "Perfil carregado:": "Profile loaded:",
+ "Perfil excluído:": "Profile deleted:"
 };

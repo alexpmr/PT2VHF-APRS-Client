@@ -1357,6 +1357,49 @@ def create_app() -> Flask:
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
+    @app.get("/api/tnc/profiles")
+    def api_tnc_profiles():
+        from .tnc_service import list_tnc_profiles
+        return jsonify({"ok": True, "profiles": list_tnc_profiles()})
+
+    @app.post("/api/tnc/profiles")
+    def api_tnc_profile_save():
+        from .tnc_service import list_tnc_profiles, save_tnc_profile
+        body = request.get_json(force=True) or {}
+        try:
+            saved = save_tnc_profile(body.get("name"), body.get("config") or None)
+            return jsonify({"ok": True, "profile": saved, "profiles": list_tnc_profiles()})
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/tnc/profiles/load")
+    def api_tnc_profile_load():
+        """Carrega o perfil como configuração atual; reconecta se o TNC estava em uso e o transporte mudou."""
+        from .tnc_service import load_tnc_profile
+        body = request.get_json(force=True) or {}
+        try:
+            profile = load_tnc_profile(body.get("name"))
+            before = get_tnc_config()
+            saved = save_tnc_config(profile["config"])
+            reconnect_keys = {"transport", "serial_port", "serial_baud", "tcp_host", "tcp_port", "agwpe_host", "agwpe_port", "agwpe_radio_port"}
+            if any(before.get(key) != saved.get(key) for key in reconnect_keys) and tnc_service.status().get("wanted"):
+                tnc_service.reconnect()
+            return jsonify({"ok": True, "name": profile["name"], "config": saved, "status": tnc_service.status()})
+        except KeyError as exc:
+            return jsonify({"ok": False, "error": str(exc.args[0])}), 404
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/tnc/profiles/delete")
+    def api_tnc_profile_delete():
+        from .tnc_service import delete_tnc_profile, list_tnc_profiles
+        body = request.get_json(force=True) or {}
+        try:
+            removed = delete_tnc_profile(body.get("name"))
+            return jsonify({"ok": removed, "profiles": list_tnc_profiles()}), (200 if removed else 404)
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
     @app.get("/api/tnc/frames")
     def api_tnc_frames():
         try:

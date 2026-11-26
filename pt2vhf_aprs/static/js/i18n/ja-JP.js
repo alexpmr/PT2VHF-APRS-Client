@@ -1053,5 +1053,20 @@
  "Verificar versão": "バージョン確認",
  "Verificar se há versão nova": "新しいバージョンを確認",
  "Verificando…": "確認中…",
- "Requests HTTP ativos": "処理中の HTTP リクエスト"
+ "Requests HTTP ativos": "処理中の HTTP リクエスト",
+ "Perfis de TNC": "TNCプロファイル",
+ "Guarde a configuração de cada TNC com um nome e alterne entre eles sem digitar tudo de novo. O programa usa um TNC por vez.": "TNCごとの設定に名前を付けて保存し、入力し直さずに切り替えられます。同時に使用できるTNCは1台です。",
+ "Nenhum perfil salvo": "保存されたプロファイルはありません",
+ "Carregar perfil": "プロファイルを読み込む",
+ "Excluir perfil": "プロファイルを削除",
+ "Nome do perfil": "プロファイル名",
+ "Ex.: TM-D710 da estação": "例: 固定局の TM-D710",
+ "Salvar como perfil": "プロファイルとして保存",
+ "Informe um nome para o perfil.": "プロファイル名を入力してください。",
+ "O nome do perfil pode ter no máximo 40 caracteres.": "プロファイル名は40文字以内です。",
+ "Perfil de TNC não encontrado.": "TNCプロファイルが見つかりません。",
+ "Limite de 30 perfis de TNC atingido.": "TNCプロファイルの上限(30)に達しました。",
+ "Perfil salvo:": "プロファイルを保存しました:",
+ "Perfil carregado:": "プロファイルを読み込みました:",
+ "Perfil excluído:": "プロファイルを削除しました:"
 };

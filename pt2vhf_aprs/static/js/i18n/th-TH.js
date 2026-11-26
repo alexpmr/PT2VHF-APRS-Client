@@ -1114,5 +1114,20 @@
  "Requests HTTP ativos": "คำขอ HTTP ที่ทำงานอยู่",
  "Calculado em ": "คำนวณเมื่อ ",
  " (último cálculo guardado)": " (ผลการคำนวณล่าสุดที่บันทึกไว้)",
- "Backup": "สำรองข้อมูล"
+ "Backup": "สำรองข้อมูล",
+ "Perfis de TNC": "โปรไฟล์ TNC",
+ "Guarde a configuração de cada TNC com um nome e alterne entre eles sem digitar tudo de novo. O programa usa um TNC por vez.": "บันทึกการตั้งค่าของแต่ละ TNC ด้วยชื่อ แล้วสลับไปมาได้โดยไม่ต้องพิมพ์ใหม่ทั้งหมด โปรแกรมใช้ TNC ได้ครั้งละหนึ่งตัว",
+ "Nenhum perfil salvo": "ยังไม่มีโปรไฟล์ที่บันทึกไว้",
+ "Carregar perfil": "โหลดโปรไฟล์",
+ "Excluir perfil": "ลบโปรไฟล์",
+ "Nome do perfil": "ชื่อโปรไฟล์",
+ "Ex.: TM-D710 da estação": "เช่น TM-D710 ของสถานี",
+ "Salvar como perfil": "บันทึกเป็นโปรไฟล์",
+ "Informe um nome para o perfil.": "กรุณาตั้งชื่อโปรไฟล์",
+ "O nome do perfil pode ter no máximo 40 caracteres.": "ชื่อโปรไฟล์ยาวได้ไม่เกิน 40 ตัวอักษร",
+ "Perfil de TNC não encontrado.": "ไม่พบโปรไฟล์ TNC",
+ "Limite de 30 perfis de TNC atingido.": "ครบจำนวนสูงสุด 30 โปรไฟล์ TNC แล้ว",
+ "Perfil salvo:": "บันทึกโปรไฟล์แล้ว:",
+ "Perfil carregado:": "โหลดโปรไฟล์แล้ว:",
+ "Perfil excluído:": "ลบโปรไฟล์แล้ว:"
 };

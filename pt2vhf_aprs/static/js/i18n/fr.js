@@ -1111,5 +1111,20 @@
  "Verificar versão": "Vérifier la version",
  "Verificar se há versão nova": "Vérifier s’il existe une nouvelle version",
  "Verificando…": "Vérification…",
- "Requests HTTP ativos": "Requêtes HTTP actives"
+ "Requests HTTP ativos": "Requêtes HTTP actives",
+ "Perfis de TNC": "Profils TNC",
+ "Guarde a configuração de cada TNC com um nome e alterne entre eles sem digitar tudo de novo. O programa usa um TNC por vez.": "Enregistrez les réglages de chaque TNC sous un nom et passez de l’un à l’autre sans tout ressaisir. Le programme utilise un TNC à la fois.",
+ "Nenhum perfil salvo": "Aucun profil enregistré",
+ "Carregar perfil": "Charger le profil",
+ "Excluir perfil": "Supprimer le profil",
+ "Nome do perfil": "Nom du profil",
+ "Ex.: TM-D710 da estação": "Ex. : TM-D710 de la station",
+ "Salvar como perfil": "Enregistrer comme profil",
+ "Informe um nome para o perfil.": "Indiquez un nom pour le profil.",
+ "O nome do perfil pode ter no máximo 40 caracteres.": "Le nom du profil peut comporter au maximum 40 caractères.",
+ "Perfil de TNC não encontrado.": "Profil TNC introuvable.",
+ "Limite de 30 perfis de TNC atingido.": "Limite de 30 profils TNC atteinte.",
+ "Perfil salvo:": "Profil enregistré :",
+ "Perfil carregado:": "Profil chargé :",
+ "Perfil excluído:": "Profil supprimé :"
 };

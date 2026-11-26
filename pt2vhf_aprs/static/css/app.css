@@ -5266,3 +5266,8 @@ html[data-theme="light"] .message-context-menu { background: #fff; }
   background: #17212a;
 }
 html[data-theme="light"] .leaflet-popup-scrolled .station-popup-actions { background: #fff; }
+
+/* v2.0.7: perfis de TNC */
+.tnc-profiles-card .tnc-profiles-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin: 8px 0; }
+.tnc-profiles-card .tnc-profiles-row label { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
+.tnc-profiles-card #tncProfileStatus.error { color: var(--danger, #d33); }

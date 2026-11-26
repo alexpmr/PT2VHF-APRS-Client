@@ -1574,6 +1574,25 @@
         <button id="tncSave" type="button" class="btn primary">Salvar TNC / RF</button>
         <span id="tncSaveStatus" class="hint"></span>
       </article>
+
+      <article class="config-card tnc-profiles-card" id="tncProfilesCard">
+        <h3>Perfis de TNC</h3>
+        <p class="hint">Guarde a configuração de cada TNC com um nome e alterne entre eles sem digitar tudo de novo. O programa usa um TNC por vez.</p>
+        <div class="tnc-profiles-row">
+          <label><span>Perfil</span>
+            <select id="tncProfileSelect"><option value="">Nenhum perfil salvo</option></select>
+          </label>
+          <button id="tncProfileLoad" type="button" class="btn">Carregar perfil</button>
+          <button id="tncProfileDelete" type="button" class="btn">Excluir perfil</button>
+        </div>
+        <div class="tnc-profiles-row">
+          <label><span>Nome do perfil</span>
+            <input id="tncProfileName" type="text" maxlength="40" placeholder="Ex.: TM-D710 da estação">
+          </label>
+          <button id="tncProfileSave" type="button" class="btn primary">Salvar como perfil</button>
+        </div>
+        <span id="tncProfileStatus" class="hint" role="status"></span>
+      </article>
     </form>
 
     <details id="tncMonitorsBlock" class="tnc-monitors-block">
@@ -2016,6 +2035,7 @@
 <script src="{{ url_for('static', filename='js/help_i18n.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tnc_profiles.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v190.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v110.js') }}"></script>

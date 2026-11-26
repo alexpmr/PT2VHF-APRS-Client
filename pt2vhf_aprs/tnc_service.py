@@ -467,6 +467,12 @@ def _ensure_schema() -> None:
                     PRIMARY KEY(source,destination,medium)
                 );
                 CREATE INDEX IF NOT EXISTS idx_tnc_edges_activity ON tnc_edges(interactions DESC,last_seen DESC);
+
+                CREATE TABLE IF NOT EXISTS tnc_profiles(
+                    name TEXT PRIMARY KEY COLLATE NOCASE,
+                    payload TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
                 """
             )
             frame_columns = {row["name"] for row in conn.execute("PRAGMA table_info(tnc_frames)").fetchall()}
@@ -790,6 +796,87 @@ def save_tnc_config(payload: dict[str, Any]) -> dict[str, Any]:
             (json.dumps(cfg, ensure_ascii=False, sort_keys=True), utc_now_iso()),
         )
     return cfg
+
+
+# v2.0.7: perfis de TNC (pedido de usuário, 26/11/2026). Cada perfil guarda a configuração TNC / RF
+# completa com um nome ("TM-D710 casa", "Dire Wolf notebook"…); carregar um perfil grava a configuração
+# dele como a atual, pelo mesmo caminho do "Salvar TNC / RF". Um TNC ativo por vez, como antes.
+TNC_PROFILE_MAX = 30
+
+
+def _profile_name(name: Any) -> str:
+    clean = " ".join(str(name or "").split())
+    if not clean:
+        raise ValueError("Informe um nome para o perfil.")
+    if len(clean) > 40:
+        raise ValueError("O nome do perfil pode ter no máximo 40 caracteres.")
+    return clean
+
+
+def list_tnc_profiles() -> list[dict[str, Any]]:
+    _ensure_schema()
+    with db.connection() as conn:
+        rows = conn.execute("SELECT name,payload,updated_at FROM tnc_profiles ORDER BY name COLLATE NOCASE").fetchall()
+    out = []
+    for row in rows:
+        try:
+            payload = json.loads(row["payload"] or "{}")
+        except Exception:
+            payload = {}
+        out.append({
+            "name": row["name"],
+            "updated_at": row["updated_at"],
+            "transport": payload.get("transport", ""),
+            "summary": _profile_summary(payload),
+        })
+    return out
+
+
+def _profile_summary(cfg: dict[str, Any]) -> str:
+    transport = str(cfg.get("transport") or "")
+    if transport == "serial":
+        return f"KISS serial {cfg.get('serial_port') or '?'} @ {cfg.get('serial_baud') or '?'}"
+    if transport == "agwpe":
+        return f"AGWPE {cfg.get('agwpe_host') or '?'}:{cfg.get('agwpe_port') or '?'}"
+    return f"KISS TCP {cfg.get('tcp_host') or '?'}:{cfg.get('tcp_port') or '?'}"
+
+
+def save_tnc_profile(name: Any, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Grava (ou substitui) o perfil com a configuração dada ou, sem ela, com a atual."""
+    clean = _profile_name(name)
+    cfg = normalize_tnc_config(payload, strict=True) if payload else get_tnc_config()
+    _ensure_schema()
+    with db.connection() as conn:
+        exists = conn.execute("SELECT 1 FROM tnc_profiles WHERE name=?", (clean,)).fetchone()
+        count = conn.execute("SELECT COUNT(*) FROM tnc_profiles").fetchone()[0]
+        if not exists and count >= TNC_PROFILE_MAX:
+            raise ValueError(f"Limite de {TNC_PROFILE_MAX} perfis de TNC atingido.")
+        conn.execute(
+            """INSERT INTO tnc_profiles(name,payload,updated_at) VALUES(?,?,?)
+               ON CONFLICT(name) DO UPDATE SET name=excluded.name,payload=excluded.payload,updated_at=excluded.updated_at""",
+            (clean, json.dumps(cfg, ensure_ascii=False, sort_keys=True), utc_now_iso()),
+        )
+    return {"name": clean, "config": cfg}
+
+
+def load_tnc_profile(name: Any) -> dict[str, Any]:
+    clean = _profile_name(name)
+    _ensure_schema()
+    with db.connection() as conn:
+        row = conn.execute("SELECT name,payload FROM tnc_profiles WHERE name=?", (clean,)).fetchone()
+    if not row:
+        raise KeyError("Perfil de TNC não encontrado.")
+    merged = dict(TNC_DEFAULTS)
+    merged.update(json.loads(row["payload"] or "{}"))
+    return {"name": row["name"], "config": normalize_tnc_config(merged, strict=False)}
+
+
+def delete_tnc_profile(name: Any) -> bool:
+    clean = _profile_name(name)
+    _ensure_schema()
+    with db.connection() as conn:
+        cur = conn.execute("DELETE FROM tnc_profiles WHERE name=?", (clean,))
+    return cur.rowcount > 0
 
 
 def _trim_history(cfg: dict[str, Any] | None = None) -> None:
