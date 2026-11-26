@@ -981,7 +981,7 @@ def test_v17_language_options_and_runtime():
     assert "fr:'fr-FR'" in js
     assert "window.PT2VHF_I18N" in i18n
     assert "es:" in i18n and "fr:" in i18n
-    supported = '{"pt-BR", "en", "es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN"}'
+    supported = '{"pt-BR", "en", "es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN", "th-TH"}'
     version = tuple(map(int, (root / "VERSION").read_text(encoding="utf-8").strip().split(".")))
     if version >= (1, 14, 23):
         assert supported in database

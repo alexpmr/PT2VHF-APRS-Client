@@ -11,7 +11,8 @@
       : l.startsWith('ja') ? 'ja-JP'
       : l.startsWith('pl') ? 'pl-PL'
       : l.startsWith('nl') ? 'nl-NL'
-      : l.startsWith('zh') ? 'zh-CN' : '';
+      : l.startsWith('zh') ? 'zh-CN'
+      : l.startsWith('th') ? 'th-TH' : '';
     const extended = locale ? window.PT2VHF_I18N?.[locale]?.[pt] : '';
     if (extended) return extended;
     // v2.0.5: idioma sem tradução cai no inglês, nunca no português.

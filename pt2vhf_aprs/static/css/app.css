@@ -1,3 +1,9 @@
+/* v2.0.6: tailandês. Noto Sans Thai (SIL OFL 1.1) embutida só para a escrita tailandesa
+   (unicode-range), para o texto aparecer mesmo em Linux sem fonte tailandesa instalada. */
+@font-face { font-family: "PT2VHF Thai"; font-weight: 400; font-display: swap;
+  src: url("../fonts/NotoSansThai-Regular.ttf") format("truetype"); unicode-range: U+0E01-0E5B, U+200C-200D, U+25CC; }
+@font-face { font-family: "PT2VHF Thai"; font-weight: 700; font-display: swap;
+  src: url("../fonts/NotoSansThai-Bold.ttf") format("truetype"); unicode-range: U+0E01-0E5B, U+200C-200D, U+25CC; }
 :root {
   --bg: #0e1318;
   --panel: #151c23;
@@ -11,22 +17,22 @@
   --warn: #f4bd50;
   --danger: #f05c63;
   --radius: 10px;
-  --messages-font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --messages-font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "PT2VHF Thai", sans-serif;
   --messages-font-size: 12px;
   --messages-font-weight: 400;
   --messages-line-height: 1.35;
-  --stations-font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --stations-font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "PT2VHF Thai", sans-serif;
   --stations-font-size: 12px;
   --stations-font-weight: 400;
   --stations-line-height: 1.25;
-  --logs-font-family: Consolas, "Courier New", monospace;
+  --logs-font-family: Consolas, "Courier New", "PT2VHF Thai", monospace;
   --logs-font-size: 12px;
   --logs-font-weight: 400;
   --logs-line-height: 1.30;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
-body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "PT2VHF Thai", sans-serif; background: var(--bg); color: var(--text); }
 button, input { font: inherit; }
 code { color: #a9d6ff; }
 .app-header { height: 94px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; border-bottom: 1px solid var(--line); background: #10171d; }
@@ -4889,7 +4895,7 @@ body.map-context-visible.analysis-page-active main {
 /* Idiomas CJK e rótulos mais longos: evite truncamento na troca de idioma. */
 html[lang="ja"] body,
 html[lang="zh-CN"] body {
-  font-family: "Segoe UI", "Yu Gothic UI", "Meiryo UI", "Microsoft YaHei UI", system-ui, sans-serif;
+  font-family: "Segoe UI", "Yu Gothic UI", "Meiryo UI", "Microsoft YaHei UI", system-ui, "PT2VHF Thai", sans-serif;
 }
 .language-quick-menu {
   max-height: min(70vh, 420px);

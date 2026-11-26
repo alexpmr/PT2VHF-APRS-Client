@@ -40,5 +40,5 @@ def test_translation_audit_reports_real_literal_coverage():
 
 
 def test_additional_existing_languages_not_removed():
-    for language in ("ja-JP", "pl-PL", "nl-NL", "zh-CN"):
+    for language in ("ja-JP", "pl-PL", "nl-NL", "zh-CN", "th-TH"):
         assert f'data-language="{language}"' in HTML

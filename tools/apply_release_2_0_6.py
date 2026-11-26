@@ -1,4 +1,4 @@
-"""Valida invariantes mínimas antes de empacotar a release v2.0.5."""
+"""Valida invariantes mínimas antes de empacotar a release v2.0.6."""
 import base64
 import hashlib
 from pathlib import Path
@@ -10,15 +10,16 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-assert read("VERSION").strip() == "2.0.5"
-assert '__version__ = "2.0.5"' in read("pt2vhf_aprs/__init__.py")
-assert "filevers=(2, 0, 5, 0)" in read("windows/version_info.txt")
-assert "prodvers=(2, 0, 5, 0)" in read("windows/version_info.txt")
-assert "## 2.0.5 - 2026-11-24" in read("CHANGELOG.md")
-assert '"2.0.5": {' in read("pt2vhf_aprs/version_notes.py")
+assert read("VERSION").strip() == "2.0.6"
+assert '__version__ = "2.0.6"' in read("pt2vhf_aprs/__init__.py")
+assert "filevers=(2, 0, 6, 0)" in read("windows/version_info.txt")
+assert "prodvers=(2, 0, 6, 0)" in read("windows/version_info.txt")
+assert "## 2.0.6 - 2026-11-26" in read("CHANGELOG.md")
+assert '"2.0.6": {' in read("pt2vhf_aprs/version_notes.py")
 for workflow in (".github/workflows/build-production-current.yml",
                  ".github/workflows/build-full-current.yml"):
-    assert "apply_release_2_0_5.py" in read(workflow)
+    assert "apply_release_2_0_6.py" in read(workflow)
+    assert "apply_release_2_0_5.py" not in read(workflow)
     assert "apply_release_2_0_4.py" not in read(workflow)
     assert "apply_release_2_0_3.py" not in read(workflow)
     assert "apply_release_2_0_2.py" not in read(workflow)
@@ -203,7 +204,7 @@ assert '"units": "metric"' in database and 'id="appUnits"' in html and "function
 assert 'missing.append("Altitude")' not in database
 assert "function scrollMessagesToNewest()" in js
 arm = read(".github/workflows/build-linux-arm64-raspberry.yml")
-assert "apply_release_2_0_5.py" in arm and "1.15.6" not in arm
+assert "apply_release_2_0_6.py" in arm and "1.15.6" not in arm
 print("invariantes herdados da v1.15.7 OK")
 # v1.15.8: mapa de calor sem corte e aviso de boas-vindas como no Sat Tool.
 cov = read("pt2vhf_aprs/rf_coverage.py")
@@ -275,3 +276,12 @@ assert "def system_language(" in read("pt2vhf_aprs/os_language.py")
 assert '"language_user_set": 0' in database
 assert '"i18n": {' in read("pt2vhf_aprs/version_notes.py")
 print("v2.0.5 i18n invariants OK")
+
+# v2.0.6: tailandês (th-TH) em todas as telas, Ajuda, detecção pelo SO e fonte embutida.
+assert "js/i18n_th.js" in html and "js/help_i18n_th.js" in html and 'data-language="th-TH"' in html
+assert "'th-TH'" in js and "flag_thailand.svg" in js
+assert '"th": "th-TH"' in read("pt2vhf_aprs/os_language.py") and '"th-TH"}' in database
+assert (ROOT / "pt2vhf_aprs/static/fonts/NotoSansThai-Regular.ttf").is_file()
+assert '"PT2VHF Thai"' in read("pt2vhf_aprs/static/css/app.css")
+assert '"th-TH": {"title"' in read("pt2vhf_aprs/version_notes.py")
+print("v2.0.6 Thai invariants OK")

@@ -1,3 +1,10 @@
+## 2.0.6 - 2026-11-26
+
+- **Tailandês (ไทย):** novo idioma em todas as versões para PC (Windows x64/ARM64, Win7 Legacy, Linux x86_64 e macOS Apple Silicon), com bandeira da Tailândia no seletor e na Configuração. Telas, avisos, Configuração, TNC, Sobre, sugestões de SSID, novidades da versão e a Ajuda completa (68 blocos) estão traduzidos, com a mesma cobertura dos outros idiomas.
+- **Abre em tailandês num sistema em tailandês:** Windows, Linux ou macOS em tailandês (th / th_TH) abrem o app em tailandês enquanto o usuário não escolhe outro idioma. Datas em tailandês usam o calendário gregoriano, como os horários do APRS.
+- **Fonte tailandesa embutida:** o app traz a Noto Sans Thai (licença SIL OFL 1.1), usada só para a escrita tailandesa, então o texto aparece certo mesmo em Linux sem fonte tailandesa instalada. Mensagens APRS recebidas em tailandês também passam a aparecer legíveis.
+- A dica de CPU/RAM do cabeçalho deixou de sair só em português e acompanha o idioma do app.
+
 ## 2.0.5 - 2026-11-24
 
 - **Traduções revisadas (pedido de usuários estrangeiros, #157):** revisão completa dos 10 idiomas do app (inglês, espanhol, francês, alemão, italiano, japonês, polonês, holandês e chinês, além do português). Cerca de 560 textos que ainda apareciam em português nas telas, avisos, Configuração, Sobre, novidades da versão e TNC ganharam tradução nos 8 idiomas que faltavam.

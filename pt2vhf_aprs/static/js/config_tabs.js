@@ -9,7 +9,7 @@ const lang = () => String(document.documentElement.lang || localStorage.getItem(
 const tr = (pt, en, es, fr) => {
   const l = lang();
   const locale = l.startsWith('de') ? 'de-DE' : l.startsWith('it') ? 'it-IT' : l.startsWith('ja') ? 'ja-JP'
-    : l.startsWith('pl') ? 'pl-PL' : l.startsWith('nl') ? 'nl-NL' : l.startsWith('zh') ? 'zh-CN' : '';
+    : l.startsWith('pl') ? 'pl-PL' : l.startsWith('nl') ? 'nl-NL' : l.startsWith('zh') ? 'zh-CN' : l.startsWith('th') ? 'th-TH' : '';
   const extended = locale ? window.PT2VHF_I18N?.[locale]?.[pt] : '';
   if (extended) return extended;
   return l.startsWith('pt') ? pt : l.startsWith('es') ? (es || en) : l.startsWith('fr') ? (fr || en) : en;

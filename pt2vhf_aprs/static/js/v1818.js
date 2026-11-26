@@ -7,7 +7,8 @@
       : lang.startsWith('ja') ? 'ja-JP'
       : lang.startsWith('pl') ? 'pl-PL'
       : lang.startsWith('nl') ? 'nl-NL'
-      : lang.startsWith('zh') ? 'zh-CN' : '';
+      : lang.startsWith('zh') ? 'zh-CN'
+      : lang.startsWith('th') ? 'th-TH' : '';
     const extended = locale ? window.PT2VHF_I18N?.[locale]?.[pt] : '';
     if (extended) return extended;
     if (lang.startsWith('pt')) return pt;

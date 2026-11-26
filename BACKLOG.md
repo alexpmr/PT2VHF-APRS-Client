@@ -1,3 +1,11 @@
+## RESOLVIDO (v2.0.6) — Idioma tailandês em todas as versões para PC (pedido do Alex, 26/11/2026)
+
+- **Pedido:** adicionar o tailandês ao cliente PC (não ao Android) e abrir no idioma do SO por padrão.
+- **Entregue:** `th-TH` em todos os seletores, catálogo `static/js/i18n_th.js` (mesma cobertura dos outros 8 idiomas),
+  Ajuda completa em `static/js/help_i18n_th.js`, Sobre, splash, sugestões de SSID e novidades da versão em tailandês;
+  `os_language` mapeia `th`/`th_TH`/`Thai_Thailand`; datas em tailandês no calendário gregoriano; Noto Sans Thai
+  (SIL OFL) embutida em `static/fonts/` com `unicode-range` só da escrita tailandesa (Linux sem fonte tailandesa).
+
 ## RESOLVIDO (v2.0.4) — Linux x86_64 "Illegal instruction" em CPUs sem AVX2 (relato HA7VDI, Debian 13, 23/11/2026)
 
 - **Causa:** o job `linux-x64` rodava em `ubuntu-latest`, que virou Ubuntu 26.04. O Python 3.12.16 do `setup-python`

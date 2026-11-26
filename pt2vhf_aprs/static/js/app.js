@@ -230,13 +230,14 @@
 
   const EXTRA_I18N = window.PT2VHF_I18N || {};
 
-  const SUPPORTED_LANGUAGES = ['pt-BR', 'en', 'es', 'fr', 'de-DE', 'it-IT', 'ja-JP', 'pl-PL', 'nl-NL', 'zh-CN'];
+  const SUPPORTED_LANGUAGES = ['pt-BR', 'en', 'es', 'fr', 'de-DE', 'it-IT', 'ja-JP', 'pl-PL', 'nl-NL', 'zh-CN', 'th-TH'];
 
   function normalizeLanguage(value) {
     const raw = String(value || '').trim();
     const aliases = {
       de: 'de-DE', it: 'it-IT', ja: 'ja-JP', pl: 'pl-PL', nl: 'nl-NL',
-      zh: 'zh-CN', 'zh-Hans': 'zh-CN', 'zh-SG': 'zh-CN'
+      zh: 'zh-CN', 'zh-Hans': 'zh-CN', 'zh-SG': 'zh-CN',
+      th: 'th-TH', th_TH: 'th-TH'
     };
     const normalized = aliases[raw] || raw;
     return SUPPORTED_LANGUAGES.includes(normalized) ? normalized : 'pt-BR';
@@ -275,7 +276,7 @@
     return ({
       'pt-BR':'pt-BR', en:'en-US', es:'es-ES', fr:'fr-FR',
       'de-DE':'de-DE', 'it-IT':'it-IT', 'ja-JP':'ja-JP',
-      'pl-PL':'pl-PL', 'nl-NL':'nl-NL', 'zh-CN':'zh-CN'
+      'pl-PL':'pl-PL', 'nl-NL':'nl-NL', 'zh-CN':'zh-CN', 'th-TH':'th-TH-u-ca-gregory'
     })[state.language] || 'pt-BR';
   }
 
@@ -982,7 +983,7 @@
       list.innerHTML = (info.items || []).map(item => `<li>${escapeHtml(item)}</li>`).join('');
       void showVersionAnnounceNotice();
       const closeLabels = { pt:'Fechar', en:'Close', es:'Cerrar', fr:'Fermer', de:'Schließen',
-                            it:'Chiudi', ja:'閉じる', pl:'Zamknij', nl:'Sluiten', zh:'关闭' };
+                            it:'Chiudi', ja:'閉じる', pl:'Zamknij', nl:'Sluiten', zh:'关闭', th:'ปิด' };
       const close = $('#whatsNewClose');
       if (close) close.textContent = closeLabels[String(document.documentElement.lang || 'pt').slice(0, 2).toLowerCase()] || closeLabels.en;
       // Um aviso por vez: espera o "Downloads no site oficial" ser fechado.
@@ -1026,6 +1027,7 @@
     pl: ['Stworzone przez krótkofalowców dla krótkofalowców', 'Dziękujemy za korzystanie z PT2VHF APRS Client! Poznaj też inne darmowe aplikacje dla społeczności: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android i inne.', 'Zamknij'],
     nl: ['Gemaakt door zendamateurs, voor zendamateurs', 'Bedankt voor het gebruik van PT2VHF APRS Client! Bekijk ook onze andere gratis toepassingen voor de gemeenschap: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android en meer.', 'Sluiten'],
     zh: ['由业余无线电爱好者打造，为业余无线电爱好者服务', '感谢使用 PT2VHF APRS Client！也欢迎了解我们为社区开发的其他免费应用：Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android 等。', '关闭'],
+    th: ['สร้างโดยนักวิทยุสมัครเล่น เพื่อนักวิทยุสมัครเล่น', 'ขอบคุณที่ใช้ PT2VHF APRS Client! ลองดูแอปฟรีอื่น ๆ ที่เราสร้างเพื่อชุมชนด้วย: Sat Tool, Prop Tool, Mesh Analyzer, Prog Tool, QSL Manager, APRS Client for Android และอื่น ๆ', 'ปิด'],
   };
   // v1.15.10: splash como o do PT2VHF Sat Tool v1.7.2: banner "Powered by www.PT2VHF.com" clicável,
   // link e Fechar embaixo, contagem regressiva (⏱ 10 s) com barra laranja e fechamento automático.
@@ -1574,6 +1576,30 @@
         sent: 'PT2VHF APRS Client Announcement 已发送。',
         download: `PT2VHF APRS Client v${version} - 下载: www.PT2VHF.com`,
       },
+      'th-TH': {
+        title: 'เกี่ยวกับ',
+        subtitle: 'เกี่ยวกับโครงการ ผู้พัฒนา และวิธีส่งข้อเสนอแนะ',
+        author: 'PT2VHF APRS Client สร้างและริเริ่มโดย Alex (PT2VHF) นักวิทยุสมัครเล่น',
+        project: 'PT2VHF APRS Client เป็นไคลเอนต์ APRS สมัยใหม่ที่ใช้ได้หลายแพลตฟอร์ม มีแผนที่ ข้อความ สถิติ และการวิเคราะห์เครือข่าย',
+        aprsTitle: 'APRS คืออะไร?',
+        aprs: 'APRS (Automatic Packet Reporting System) เป็นระบบดิจิทัลของวิทยุสมัครเล่นสำหรับแบ่งปันตำแหน่ง ข้อความ เทเลเมทรี ข้อมูลสภาพอากาศ และข้อมูลอื่น ๆ แบบเรียลไทม์ ผ่านวิทยุ (RF) และเครือข่าย APRS-IS',
+        contactTitle: 'ติดต่อ / ข้อเสนอแนะ / ปัญหา / การปรับปรุง',
+        contact: 'ยินดีรับข้อเสนอแนะ คำถาม การรายงานปัญหา และไอเดียการปรับปรุง',
+        contributorsTitle: 'ขอบคุณ / ผู้ร่วมพัฒนา',
+        contributors: 'ขอขอบคุณเป็นพิเศษนักวิทยุสมัครเล่นที่ช่วยให้ PT2VHF APRS Client พัฒนาอย่างต่อเนื่อง ด้วยข้อเสนอแนะ การทดสอบ การตรวจสอบ และการปรับแต่ง',
+        promoteTitle: 'ประชาสัมพันธ์โครงการบนเครือข่าย APRS',
+        promote: 'คุณสามารถส่ง APRS Announcement ด้วยตนเองเพื่อประชาสัมพันธ์ไคลเอนต์ ตรวจสอบข้อความได้ก่อนส่ง',
+        promoteButton: 'ประชาสัมพันธ์ PT2VHF APRS Client บน APRS',
+        eyebrow: 'ประชาสัมพันธ์ APRS',
+        modalTitle: 'ส่งประกาศ PT2VHF APRS Client',
+        modalDescription: 'ตรวจสอบข้อความด้านล่าง ประกาศจะถูกส่งหนึ่งครั้ง โดยใช้สัญญาณเรียกขานปัจจุบันของคุณเป็นผู้ส่ง',
+        messageLabel: 'ข้อความประกาศ',
+        send: 'ยืนยันและส่ง',
+        cancel: 'ยกเลิก',
+        confirm: 'ส่ง APRS Announcement นี้ตอนนี้หรือไม่? จะใช้สัญญาณเรียกขานปัจจุบันของคุณเป็นผู้ส่ง',
+        sent: 'ส่ง PT2VHF APRS Client Announcement แล้ว',
+        download: `PT2VHF APRS Client v${version} - Download: www.PT2VHF.com`,
+      },
     };
     return copies[state.language] || copies['pt-BR'];
   }
@@ -1935,12 +1961,12 @@
   }
 
   const FONT_FAMILIES = {
-    system: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-    segoe: '"Segoe UI", Arial, sans-serif',
-    arial: 'Arial, sans-serif',
-    verdana: 'Verdana, sans-serif',
-    tahoma: 'Tahoma, sans-serif',
-    consolas: 'Consolas, "Courier New", monospace'
+    system: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, "PT2VHF Thai", sans-serif',
+    segoe: '"Segoe UI", Arial, "PT2VHF Thai", sans-serif',
+    arial: 'Arial, "PT2VHF Thai", sans-serif',
+    verdana: 'Verdana, "PT2VHF Thai", sans-serif',
+    tahoma: 'Tahoma, "PT2VHF Thai", sans-serif',
+    consolas: 'Consolas, "Courier New", "PT2VHF Thai", monospace'
   };
 
   function applyAppearancePreferences(cfg = {}) {
@@ -6252,14 +6278,14 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         const min = Math.floor((uptime % 3600) / 60);
         const sec = Math.floor(uptime % 60);
         root.title = [
-          `CPU do APRS Client: ${cpu.toFixed(1)}%`,
-          `CPU do sistema: ${systemCpu.toFixed(1)}%`,
-          `RAM do APRS Client: ${memMb.toFixed(1)} MB (${memPct.toFixed(1)}%)`,
-          `RAM do sistema: ${systemMemPct.toFixed(1)}% · disponível ${systemMemAvailableMb.toFixed(0)} MB`,
-          `Processos: ${Number(m.process_count || 0)}`,
+          `${ui('CPU do APRS Client', 'APRS Client CPU')}: ${cpu.toFixed(1)}%`,
+          `${ui('CPU do sistema', 'System CPU')}: ${systemCpu.toFixed(1)}%`,
+          `${ui('RAM do APRS Client', 'APRS Client RAM')}: ${memMb.toFixed(1)} MB (${memPct.toFixed(1)}%)`,
+          `${ui('RAM do sistema', 'System RAM')}: ${systemMemPct.toFixed(1)}% · ${ui('disponível', 'available')} ${systemMemAvailableMb.toFixed(0)} MB`,
+          `${ui('Processos', 'Processes')}: ${Number(m.process_count || 0)}`,
           `Threads: ${Number(m.thread_count || 0)}`,
-          `Requests HTTP ativos: ${Number(m.active_requests || 0)}`,
-          `Fila TX: ${Number(m.tx_queue || 0)}`,
+          `${ui('Requests HTTP ativos', 'Active HTTP requests')}: ${Number(m.active_requests || 0)}`,
+          `${ui('Fila TX', 'TX queue')}: ${Number(m.tx_queue || 0)}`,
           `Uptime: ${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
         ].join('\n');
       }
@@ -10128,6 +10154,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     'pl-PL': { label: 'Polski', flag: '/static/img/flag_poland.svg', alt: 'Polska', htmlLang: 'pl' },
     'nl-NL': { label: 'Nederlands', flag: '/static/img/flag_netherlands.svg', alt: 'Nederland', htmlLang: 'nl' },
     'zh-CN': { label: '简体中文', flag: '/static/img/flag_china.svg', alt: '中国', htmlLang: 'zh-CN' },
+    'th-TH': { label: 'ไทย', flag: '/static/img/flag_thailand.svg', alt: 'ประเทศไทย', htmlLang: 'th' },
   };
 
   function translateConnectionState(value) {

@@ -3,6 +3,56 @@ from __future__ import annotations
 from typing import Any
 
 VERSION_NOTES: dict[str, dict[str, Any]] = {
+    "2.0.6": {
+        "title": "Novo idioma: tailandês",
+        "items": [
+            "O app agora tem tailandês (ไทย), com todas as telas e a Ajuda completa traduzidas.",
+            "Num sistema operacional em tailandês, o app abre em tailandês até você escolher outro idioma.",
+            "O app traz uma fonte tailandesa própria, então o texto aparece certo mesmo sem fonte instalada no sistema.",
+        ],
+        "i18n": {
+            "en": {"title": "New language: Thai", "items": [
+                "The app now has Thai (ไทย), with every screen and the full Help translated.",
+                "On an operating system set to Thai, the app opens in Thai until you choose another language.",
+                "The app ships its own Thai font, so the text displays correctly even when the system has none installed."]},
+            "es": {"title": "Nuevo idioma: tailandés", "items": [
+                "La aplicación ya tiene tailandés (ไทย), con todas las pantallas y la Ayuda completa traducidas.",
+                "En un sistema operativo en tailandés, la aplicación se abre en tailandés hasta que elija otro idioma.",
+                "La aplicación incluye su propia fuente tailandesa, así que el texto se ve bien aunque el sistema no tenga ninguna instalada."]},
+            "fr": {"title": "Nouvelle langue : thaï", "items": [
+                "L’application est désormais disponible en thaï (ไทย), avec tous les écrans et l’Aide complète traduits.",
+                "Sur un système d’exploitation en thaï, l’application s’ouvre en thaï jusqu’à ce que vous choisissiez une autre langue.",
+                "L’application embarque sa propre police thaïe : le texte s’affiche correctement même si le système n’en a aucune."]},
+            "de-DE": {"title": "Neue Sprache: Thailändisch", "items": [
+                "Die App gibt es jetzt auf Thailändisch (ไทย), mit allen Ansichten und der vollständigen Hilfe.",
+                "Auf einem thailändischen Betriebssystem startet die App auf Thailändisch, bis Sie eine andere Sprache wählen.",
+                "Die App bringt eine eigene thailändische Schrift mit, damit der Text auch ohne installierte Schrift richtig angezeigt wird."]},
+            "it-IT": {"title": "Nuova lingua: thailandese", "items": [
+                "L’app ora è disponibile in thailandese (ไทย), con tutte le schermate e l’Aiuto completo tradotti.",
+                "Su un sistema operativo in thailandese, l’app si apre in thailandese finché non scegli un’altra lingua.",
+                "L’app include un proprio font thailandese, così il testo si vede correttamente anche se il sistema non ne ha uno installato."]},
+            "ja-JP": {"title": "新しい言語：タイ語", "items": [
+                "タイ語（ไทย）に対応しました。すべての画面とヘルプ全体を翻訳しています。",
+                "OSがタイ語の場合、別の言語を選ぶまでアプリはタイ語で起動します。",
+                "タイ語フォントを同梱したため、システムにフォントがなくても正しく表示されます。"]},
+            "pl-PL": {"title": "Nowy język: tajski", "items": [
+                "Aplikacja jest teraz dostępna po tajsku (ไทย), ze wszystkimi ekranami i pełną Pomocą.",
+                "W systemie operacyjnym w języku tajskim aplikacja uruchamia się po tajsku, dopóki nie wybierzesz innego języka.",
+                "Aplikacja ma własną czcionkę tajską, więc tekst wyświetla się poprawnie nawet bez czcionki w systemie."]},
+            "nl-NL": {"title": "Nieuwe taal: Thai", "items": [
+                "De app is nu beschikbaar in het Thai (ไทย), met alle schermen en de volledige Help vertaald.",
+                "Op een besturingssysteem in het Thai opent de app in het Thai totdat je een andere taal kiest.",
+                "De app heeft een eigen Thais lettertype, zodat de tekst goed wordt weergegeven ook als het systeem er geen heeft."]},
+            "zh-CN": {"title": "新增语言：泰语", "items": [
+                "应用现已支持泰语（ไทย），所有界面和完整的帮助都已翻译。",
+                "在泰语操作系统上，应用会以泰语打开，直到您选择其他语言。",
+                "应用自带泰文字体，即使系统未安装泰文字体也能正确显示。"]},
+            "th-TH": {"title": "ภาษาใหม่: ภาษาไทย", "items": [
+                "แอปรองรับภาษาไทยแล้ว ทุกหน้าจอและส่วนช่วยเหลือทั้งหมดได้รับการแปล",
+                "บนระบบปฏิบัติการภาษาไทย แอปจะเปิดเป็นภาษาไทยจนกว่าคุณจะเลือกภาษาอื่น",
+                "แอปมีแบบอักษรภาษาไทยในตัว จึงแสดงข้อความได้ถูกต้องแม้ระบบไม่มีแบบอักษรภาษาไทย"]},
+        },
+    },
     "2.0.5": {
         "title": "Traduções revisadas e idioma do sistema",
         "items": [
