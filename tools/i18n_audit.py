@@ -12,14 +12,32 @@ HTML_FILES = list((ROOT / "pt2vhf_aprs" / "templates").glob("*.html"))
 VISIBLE_HTML = re.compile(r">\s*([^<>{}\n][^<>{}\n]{2,120})\s*<")
 IGNORE_HTML = re.compile(r"^(?:[\s\d.,:+\-×/%°–—→←↑↓|]+|KISS|AX\.25|APRS(?:-IS)?|RF|AIS|CSV|GeoJSON|KML|TNC/?RF|AGWPE)$", re.I)
 
+CATALOG_DIR = ROOT / "pt2vhf_aprs" / "static" / "js" / "i18n"
+# v2.0.7: um catálogo por idioma (static/js/i18n/<idioma>.js), no lugar dos 13 arquivos por versão.
 EXTENDED_LANGUAGE_PACKS = {
-    "de-DE": "i18n_de.js",
-    "it-IT": "i18n_it.js",
-    "ja-JP": "i18n_ja.js",
-    "pl-PL": "i18n_pl.js",
-    "nl-NL": "i18n_nl.js",
-    "zh-CN": "i18n_zh.js",
+    "de-DE": "de-DE.js",
+    "it-IT": "it-IT.js",
+    "ja-JP": "ja-JP.js",
+    "pl-PL": "pl-PL.js",
+    "nl-NL": "nl-NL.js",
+    "zh-CN": "zh-CN.js",
+    "th-TH": "th-TH.js",
 }
+# Lacuna herdada (26/11/2026): textos do catálogo espanhol ainda sem tradução nestes idiomas. O app usa o
+# inglês nesses casos. O número só pode cair; subir quer dizer texto novo sem tradução.
+KNOWN_MISSING_KEYS = {"ja-JP": 58, "pl-PL": 58, "nl-NL": 58, "zh-CN": 58}
+
+
+def load_catalog(locale: str) -> dict[str, str]:
+    """Lê static/js/i18n/<locale>.js (o corpo depois de "] = " é JSON puro)."""
+    path = CATALOG_DIR / f"{locale}.js"
+    text = path.read_text(encoding="utf-8")
+    body = text[text.index("] = ") + 4:].strip().rstrip(";")
+    data = json.loads(body)
+    marker = f"window.PT2VHF_I18N = window.PT2VHF_I18N || {{}})['{locale}']"
+    if marker not in text:
+        raise ValueError(f"{path.name}: marcador do idioma ausente")
+    return data
 
 
 def _iter_tr_calls(text: str):
@@ -92,53 +110,39 @@ def _split_js_args(raw: str) -> list[str]:
 
 
 def _dictionary_keys() -> tuple[set[str], set[str]]:
-    path = ROOT / "pt2vhf_aprs" / "static" / "js" / "i18n_extra.js"
-    text = path.read_text(encoding="utf-8", errors="replace")
-    es_start = text.find("  es: {")
-    fr_start = text.find("  fr: {", es_start + 1)
-    if es_start < 0 or fr_start < 0:
+    try:
+        return set(load_catalog("es")), set(load_catalog("fr"))
+    except (OSError, ValueError):
         return set(), set()
-    es_block = text[es_start:fr_start]
-    fr_block = text[fr_start:]
-    key_re = re.compile(r'^\s*"((?:[^"\\]|\\.)+)"\s*:', re.M)
-    return set(key_re.findall(es_block)), set(key_re.findall(fr_block))
 
 
 def _extended_pack_counts(expected_keys: int) -> tuple[dict[str, int], list[dict]]:
     counts: dict[str, int] = {}
     errors: list[dict] = []
-    value_re = re.compile(r'^"((?:[^"\\]|\\.)*)",?\s*$', re.M)
+    try:
+        base = set(load_catalog("es"))
+    except (OSError, ValueError):
+        base = set()
     for locale, filename in EXTENDED_LANGUAGE_PACKS.items():
-        path = ROOT / "pt2vhf_aprs" / "static" / "js" / filename
-        if not path.exists():
+        try:
+            catalog = load_catalog(locale)
+        except FileNotFoundError:
             counts[locale] = 0
             errors.append({"locale": locale, "file": filename, "error": "missing_file"})
             continue
-        text = path.read_text(encoding="utf-8", errors="replace")
-        start = text.find("const values = [")
-        end = text.find("];", start + 1)
-        values = value_re.findall(text[start:end] if start >= 0 and end > start else "")
-        counts[locale] = len(values)
-        empty = [index for index, value in enumerate(values) if not value.strip()]
+        except ValueError as exc:
+            counts[locale] = 0
+            errors.append({"locale": locale, "file": filename, "error": "invalid_catalog", "detail": str(exc)})
+            continue
+        counts[locale] = len(catalog)
+        empty = [key for key, value in catalog.items() if not str(value).strip()]
         if empty:
-            errors.append({
-                "locale": locale,
-                "file": filename,
-                "error": "empty_translation",
-                "indexes": empty[:20],
-                "count": len(empty),
-            })
-        if len(values) != expected_keys:
-            errors.append({
-                "locale": locale,
-                "file": filename,
-                "error": "catalog_size_mismatch",
-                "expected": expected_keys,
-                "actual": len(values),
-            })
-        marker = f"window.PT2VHF_I18N['{locale}']"
-        if marker not in text:
-            errors.append({"locale": locale, "file": filename, "error": "locale_marker_missing"})
+            errors.append({"locale": locale, "file": filename, "error": "empty_translation",
+                           "keys": empty[:20], "count": len(empty)})
+        missing = sorted(base - set(catalog))
+        if len(missing) > KNOWN_MISSING_KEYS.get(locale, 0):
+            errors.append({"locale": locale, "file": filename, "error": "catalog_size_mismatch",
+                           "expected": expected_keys, "actual": len(catalog), "missing": missing[:30]})
     return counts, errors
 
 
@@ -162,20 +166,12 @@ def _silent_english_fallbacks() -> list[dict]:
 
 
 def _release_patch_locales() -> dict[str, bool]:
-    path = ROOT / "pt2vhf_aprs" / "static" / "js" / "i18n_v1425.js"
-    locales = ["es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN"]
-    if not path.exists():
-        return {locale: False for locale in locales}
-    text = path.read_text(encoding="utf-8", errors="replace")
-    return {locale: (f"'{locale}':" in text or f"{locale}:" in text) for locale in locales}
+    locales = ["es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN", "th-TH"]
+    return {locale: (CATALOG_DIR / f"{locale}.js").exists() for locale in locales}
 
 
 def _main_ui_literal_keys() -> set[str]:
-    """Collect static source phrases from ui('pt', 'en') for coverage reporting.
-
-    A literal missing from the base dictionary may still be supplied by
-    versioned patch catalogs, so this is diagnostic (not a strict CI failure).
-    """
+    """Collect static source phrases from ui('pt', 'en') for coverage reporting (diagnostic only)."""
     source = (ROOT / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(
         encoding="utf-8", errors="replace"
     )
@@ -237,7 +233,7 @@ def audit() -> dict:
             "fr": core_ui_missing_fr[:50],
         },
         "note_on_core_ui_coverage": (
-            "Diagnostic only: extra i18n patch catalogs may supply some missing literals; "
+            "Diagnostic only: app.js has its own English table and some texts are technical; "
             "a browser audit is required to determine visible untranslated UI."
         ),
         "missing_es_keys": missing_es,

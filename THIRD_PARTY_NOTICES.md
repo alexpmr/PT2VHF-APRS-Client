@@ -56,4 +56,4 @@ The application includes an offline snapshot derived from the **APRS Device Iden
 
 https://github.com/aprsorg/aprs-deviceid
 
-The database is licensed under **Creative Commons Attribution-ShareAlike 2.0 (CC BY-SA 2.0)**. The bundled snapshot is used only to resolve APRS TOCALL identifiers to friendly software/device names. The local experimental identifier `APZVHF` for PT2VHF APRS Client is a project-specific override and is not represented as an official upstream allocation.
+The database is licensed under **Creative Commons Attribution-ShareAlike 2.0 (CC BY-SA 2.0)**. The bundled snapshot (refreshed weekly from aprs-deviceid.aprsfoundation.org when automatic update checks are enabled) is used only to resolve APRS TOCALL and Mic-E identifiers to friendly software/device names. The local experimental identifier `APZVHF` for PT2VHF APRS Client is a project-specific override and is not represented as an official upstream allocation.

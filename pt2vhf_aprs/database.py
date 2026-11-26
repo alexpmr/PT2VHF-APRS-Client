@@ -87,6 +87,8 @@ MAP_DATA_INITIAL_WAIT_SECONDS = 0.75
 APRS_DEVICE_ID_PATH = Path(__file__).resolve().parent / "data" / "aprs_device_ids.json"
 _aprs_device_id_lock = threading.Lock()
 _aprs_device_id_entries: list[dict[str, Any]] | None = None
+_aprs_mice_entries: list[dict[str, Any]] = []
+_aprs_mice_legacy_entries: list[dict[str, Any]] = []
 
 TRACK_OUTLIER_MIN_KM = 75.0
 TRACK_OUTLIER_MAX_SPEED_KMH = 1200.0
@@ -207,7 +209,48 @@ DEFAULT_CONFIG = {
     "logs_font_weight": "normal",
     "logs_line_height": 1.30,
     "statistics_font_size": 13,
+    # v2.0.7: cópia automática do banco, notificações, assistente de primeiro uso, GPS/SmartBeaconing
+    "db_backup_enabled": 1,
+    "db_backup_keep": 7,
+    "desktop_notifications": 1,
+    "onboarding_done": 0,
+    "gps_enabled": 0,
+    "gps_source": "serial",
+    "gps_serial_port": "",
+    "gps_serial_baud": 4800,
+    "gps_gpsd_host": "127.0.0.1",
+    "gps_gpsd_port": 2947,
+    "smartbeacon_enabled": 1,
+    "sb_fast_speed": 90,
+    "sb_fast_rate": 60,
+    "sb_slow_speed": 5,
+    "sb_slow_rate": 1800,
+    "sb_min_turn_angle": 28,
+    "sb_turn_slope": 255,
+    "sb_min_turn_time": 15,
 }
+
+
+V207_CONFIG_COLUMNS = (
+    ("db_backup_enabled", "INTEGER NOT NULL DEFAULT 1"),
+    ("db_backup_keep", "INTEGER NOT NULL DEFAULT 7"),
+    ("desktop_notifications", "INTEGER NOT NULL DEFAULT 1"),
+    ("onboarding_done", "INTEGER NOT NULL DEFAULT 0"),
+    ("gps_enabled", "INTEGER NOT NULL DEFAULT 0"),
+    ("gps_source", "TEXT NOT NULL DEFAULT 'serial'"),
+    ("gps_serial_port", "TEXT NOT NULL DEFAULT ''"),
+    ("gps_serial_baud", "INTEGER NOT NULL DEFAULT 4800"),
+    ("gps_gpsd_host", "TEXT NOT NULL DEFAULT '127.0.0.1'"),
+    ("gps_gpsd_port", "INTEGER NOT NULL DEFAULT 2947"),
+    ("smartbeacon_enabled", "INTEGER NOT NULL DEFAULT 1"),
+    ("sb_fast_speed", "INTEGER NOT NULL DEFAULT 90"),
+    ("sb_fast_rate", "INTEGER NOT NULL DEFAULT 60"),
+    ("sb_slow_speed", "INTEGER NOT NULL DEFAULT 5"),
+    ("sb_slow_rate", "INTEGER NOT NULL DEFAULT 1800"),
+    ("sb_min_turn_angle", "INTEGER NOT NULL DEFAULT 28"),
+    ("sb_turn_slope", "INTEGER NOT NULL DEFAULT 255"),
+    ("sb_min_turn_time", "INTEGER NOT NULL DEFAULT 15"),
+)
 
 
 def utc_now_iso() -> str:
@@ -357,6 +400,24 @@ def _init_db_base() -> None:
                 logs_font_weight TEXT NOT NULL DEFAULT 'normal',
                 logs_line_height REAL NOT NULL DEFAULT 1.30,
                 statistics_font_size INTEGER NOT NULL DEFAULT 13,
+                db_backup_enabled INTEGER NOT NULL DEFAULT 1,
+                db_backup_keep INTEGER NOT NULL DEFAULT 7,
+                desktop_notifications INTEGER NOT NULL DEFAULT 1,
+                onboarding_done INTEGER NOT NULL DEFAULT 0,
+                gps_enabled INTEGER NOT NULL DEFAULT 0,
+                gps_source TEXT NOT NULL DEFAULT 'serial',
+                gps_serial_port TEXT NOT NULL DEFAULT '',
+                gps_serial_baud INTEGER NOT NULL DEFAULT 4800,
+                gps_gpsd_host TEXT NOT NULL DEFAULT '127.0.0.1',
+                gps_gpsd_port INTEGER NOT NULL DEFAULT 2947,
+                smartbeacon_enabled INTEGER NOT NULL DEFAULT 1,
+                sb_fast_speed INTEGER NOT NULL DEFAULT 90,
+                sb_fast_rate INTEGER NOT NULL DEFAULT 60,
+                sb_slow_speed INTEGER NOT NULL DEFAULT 5,
+                sb_slow_rate INTEGER NOT NULL DEFAULT 1800,
+                sb_min_turn_angle INTEGER NOT NULL DEFAULT 28,
+                sb_turn_slope INTEGER NOT NULL DEFAULT 255,
+                sb_min_turn_time INTEGER NOT NULL DEFAULT 15,
                 updated_at TEXT NOT NULL
             );
 
@@ -743,6 +804,12 @@ def _init_db_base() -> None:
             conn.execute("ALTER TABLE config ADD COLUMN logs_line_height REAL NOT NULL DEFAULT 1.30")
         if "statistics_font_size" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN statistics_font_size INTEGER NOT NULL DEFAULT 13")
+        for column, ddl in V207_CONFIG_COLUMNS:
+            if column not in config_columns:
+                conn.execute(f"ALTER TABLE config ADD COLUMN {column} {ddl}")
+                if column == "onboarding_done":
+                    # Quem atualiza e já tem indicativo não vê o assistente de primeiro uso.
+                    conn.execute("UPDATE config SET onboarding_done=1 WHERE TRIM(COALESCE(callsign,''))<>''")
         if "altitude_source" not in config_columns:
             conn.execute("ALTER TABLE config ADD COLUMN altitude_source TEXT NOT NULL DEFAULT 'manual'")
         if "check_updates_on_start" not in config_columns:
@@ -1071,6 +1138,35 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     ):
         if key in provided and not (1.0 <= float(merged[key]) <= 2.0):
             raise ValueError(f"Espaçamento de linha de {label} deve estar entre 1,0 e 2,0.")
+
+    # v2.0.7
+    for key in ("db_backup_enabled", "desktop_notifications", "onboarding_done", "gps_enabled", "smartbeacon_enabled"):
+        merged[key] = 1 if bool(merged[key]) and str(merged[key]).lower() not in {"0", "false", "off"} else 0
+    merged["db_backup_keep"] = max(1, min(30, int(merged["db_backup_keep"] or 7)))
+    merged["gps_source"] = "gpsd" if str(merged["gps_source"] or "").lower().strip() == "gpsd" else "serial"
+    merged["gps_serial_port"] = str(merged["gps_serial_port"] or "").strip()[:120]
+    merged["gps_serial_baud"] = int(merged["gps_serial_baud"] or 4800)
+    if merged["gps_serial_baud"] not in {1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200}:
+        raise ValueError("Velocidade da porta do GPS inválida.")
+    merged["gps_gpsd_host"] = str(merged["gps_gpsd_host"] or "127.0.0.1").strip()[:120]
+    merged["gps_gpsd_port"] = int(merged["gps_gpsd_port"] or 2947)
+    if not (1 <= merged["gps_gpsd_port"] <= 65535):
+        raise ValueError("Porta do gpsd inválida.")
+    if merged["gps_enabled"] and merged["gps_source"] == "serial" and not merged["gps_serial_port"]:
+        raise ValueError("Informe a porta serial do GPS.")
+    limits = {
+        "sb_fast_speed": (10, 300), "sb_fast_rate": (10, 600), "sb_slow_speed": (1, 60),
+        "sb_slow_rate": (60, 7200), "sb_min_turn_angle": (5, 90), "sb_turn_slope": (0, 1000),
+        "sb_min_turn_time": (5, 300),
+    }
+    for key, (low, high) in limits.items():
+        merged[key] = int(float(merged[key] if merged[key] not in (None, "") else DEFAULT_CONFIG[key]))
+        if not (low <= merged[key] <= high):
+            raise ValueError(f"SmartBeaconing: {key} deve estar entre {low} e {high}.")
+    if merged["sb_slow_speed"] >= merged["sb_fast_speed"]:
+        raise ValueError("SmartBeaconing: a velocidade baixa precisa ser menor que a alta.")
+    if merged["sb_fast_rate"] >= merged["sb_slow_rate"]:
+        raise ValueError("SmartBeaconing: o intervalo rápido precisa ser menor que o lento.")
 
     sets = ", ".join(f"{key}=?" for key in sorted(allowed))
     values = [merged[key] for key in sorted(allowed)]
@@ -3012,21 +3108,73 @@ def _aprs_tocall_from_raw(raw: str) -> str:
     return str(match.group(1) if match else "").upper().strip()
 
 
+def _read_device_id_payload() -> dict[str, Any]:
+    """Cópia baixada na pasta de dados (atualização semanal) se for válida; senão a embutida."""
+    from . import device_ids
+    candidates = [device_ids.user_snapshot_path(DB_PATH.parent), APRS_DEVICE_ID_PATH]
+    for path in candidates:
+        try:
+            payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            continue
+        except Exception as exc:
+            diag.log_event("aprs_device_id_load_failed", path=str(path), error=str(exc))
+            continue
+        if path == APRS_DEVICE_ID_PATH or device_ids.snapshot_is_valid(payload):
+            return payload
+    return {}
+
+
 def _load_aprs_device_ids() -> list[dict[str, Any]]:
-    global _aprs_device_id_entries
+    global _aprs_device_id_entries, _aprs_mice_entries, _aprs_mice_legacy_entries
     if _aprs_device_id_entries is not None:
         return _aprs_device_id_entries
     with _aprs_device_id_lock:
         if _aprs_device_id_entries is not None:
             return _aprs_device_id_entries
-        try:
-            payload = json.loads(APRS_DEVICE_ID_PATH.read_text(encoding="utf-8"))
-            entries = payload.get("entries", []) if isinstance(payload, dict) else []
-            _aprs_device_id_entries = [dict(item) for item in entries if isinstance(item, dict) and item.get("tocall")]
-        except Exception as exc:
-            diag.log_event("aprs_device_id_load_failed", error=str(exc))
-            _aprs_device_id_entries = []
+        payload = _read_device_id_payload()
+        entries = payload.get("entries", []) if isinstance(payload, dict) else []
+        entries = [dict(item) for item in entries if isinstance(item, dict) and item.get("tocall")]
+        if not any(str(item.get("tocall")).upper() == APP_TOCALL for item in entries):
+            from . import device_ids
+            entries = [dict(item) for item in device_ids.LOCAL_OVERRIDES] + entries
+        _aprs_mice_entries = [dict(item) for item in payload.get("mice", []) if isinstance(item, dict)]
+        _aprs_mice_legacy_entries = [dict(item) for item in payload.get("micelegacy", []) if isinstance(item, dict)]
+        _aprs_device_id_entries = entries
     return _aprs_device_id_entries
+
+
+def reload_aprs_device_ids() -> None:
+    """Chamado depois da atualização semanal da base: o próximo uso relê o arquivo."""
+    global _aprs_device_id_entries
+    with _aprs_device_id_lock:
+        _aprs_device_id_entries = None
+        _aprs_device_id_cache.clear()
+
+
+def resolve_aprs_device_from_raw(raw: str) -> tuple[str, dict[str, Any]]:
+    """(identificador, metadados) do equipamento: TOCALL ou, nos pacotes Mic-E, o sufixo do comentário."""
+    from . import device_ids
+    tocall = _aprs_tocall_from_raw(raw)
+    if device_ids.mice_info_field(raw):
+        _load_aprs_device_ids()
+        found = device_ids.resolve_mice(raw, _aprs_mice_entries, _aprs_mice_legacy_entries)
+        if found:
+            model = str(found.get("model") or "").strip()
+            vendor = str(found.get("vendor") or "").strip()
+            return "Mic-E", {
+                "identifier": "Mic-E",
+                "friendly_name": model or vendor,
+                "identified": bool(model or vendor),
+                "vendor": vendor,
+                "model": model,
+                "class": str(found.get("class") or ""),
+                "os": str(found.get("os") or ""),
+                "pattern": "",
+                "local_override": False,
+                "features": [str(item) for item in (found.get("features") or []) if str(item).strip()],
+            }
+    return tocall, resolve_aprs_device_id(tocall)
 
 
 def _tocall_pattern_regex(pattern: str) -> str:
@@ -3188,8 +3336,7 @@ def _aprs_map_family(resolved: dict[str, Any], descriptor: str, role: str) -> tu
 
 def aprs_map_device_metadata(raw: str, info: str = "", symbol: str = "") -> dict[str, Any]:
     """Classificação leve para filtros hierárquicos do mapa."""
-    tocall = _aprs_tocall_from_raw(raw)
-    resolved = resolve_aprs_device_id(tocall)
+    tocall, resolved = resolve_aprs_device_from_raw(raw)
     device_class = str(resolved.get("class") or "").strip().lower()
     vendor = str(resolved.get("vendor") or "").strip()
     model = str(resolved.get("model") or resolved.get("friendly_name") or "").strip()
@@ -3601,12 +3748,11 @@ def client_version_stats(hours: int = 0) -> dict[str, Any]:
     unidentified = 0
 
     for row in rows:
-        tocall = _aprs_tocall_from_raw(row["raw"])
+        tocall, resolved = resolve_aprs_device_from_raw(row["raw"])
         if not tocall or tocall == "APRS":
             unidentified += 1
             continue
 
-        resolved = resolve_aprs_device_id(tocall)
         if not resolved.get("identified"):
             unidentified += 1
             continue
@@ -5960,6 +6106,12 @@ def _recover_corrupt_database(exc: BaseException) -> dict[str, Any]:
 def init_db() -> None:
     """Inicializa o banco; se o arquivo estiver corrompido, recupera em vez de abortar."""
     global LAST_DB_RECOVERY
+    # v2.0.7: restauração agendada em Configuração → Backup entra antes de abrir o banco.
+    try:
+        from . import db_backup
+        db_backup.apply_pending_restore()
+    except Exception as exc:
+        diag.log_event("db_restore_startup_error", error=str(exc))
     try:
         _topology_init_db()
     except sqlite3.DatabaseError as exc:

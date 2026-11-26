@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import io
 import json
 import platform
@@ -25,6 +26,10 @@ from . import release_check
 from . import retention
 from . import category_statistics, category_clear
 from . import tnc_listen, db_check
+from . import device_ids
+from . import db_backup
+from . import desktop_notify
+from .gps_service import service as gps_service
 from . import version_announce
 from . import saved_results
 from .aprs_service import full_callsign, service
@@ -655,6 +660,26 @@ def register_station_now(before: dict, saved: dict) -> bool:
     return True
 
 
+_device_ids_refresh_started = False
+
+
+def start_device_ids_refresh() -> bool:
+    """Atualização semanal da base aprs-deviceid (segue "verificar atualizações automaticamente")."""
+    global _device_ids_refresh_started
+    if _device_ids_refresh_started or os.environ.get("PYTEST_CURRENT_TEST"):
+        return False
+    _device_ids_refresh_started = True
+
+    def enabled() -> bool:
+        try:
+            return bool(db.get_config().get("check_updates_on_start", 1))
+        except Exception:
+            return False
+
+    device_ids.start_weekly_refresh(db.DB_PATH.parent, enabled, db.reload_aprs_device_ids, diag.log_event)
+    return True
+
+
 KML_NS = "http://www.opengis.net/kml/2.2"
 TRACKLOG_MAX_GAP_SECONDS = 30 * 60
 
@@ -848,6 +873,13 @@ def create_app() -> Flask:
     scheduled_message_service.start()
     retention.start_worker()
     version_announce.start_worker(service)
+    start_device_ids_refresh()
+    if not os.environ.get("PYTEST_CURRENT_TEST"):
+        db_backup.start_worker()
+        try:
+            gps_service.apply_config(db.get_config())
+        except Exception as exc:
+            diag.log_event("gps_start_failed", error=str(exc))
     diag.log_event("flask_app_created", version=__version__)
     try:
         # Chegar até aqui confirma que a versão atual iniciou e abriu o banco.
@@ -1334,6 +1366,88 @@ def create_app() -> Flask:
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
+    @app.get("/api/gps/status")
+    def api_gps_status():
+        return jsonify({"ok": True, **gps_service.status()})
+
+    @app.post("/api/notify")
+    def api_notify():
+        """v2.0.7: aviso do sistema para mensagem recebida, só para a janela deste computador."""
+        if str(request.remote_addr or "") not in {"127.0.0.1", "::1", "localhost"}:
+            return jsonify({"ok": False, "reason": "remote"}), 403
+        if not int(db.get_config().get("desktop_notifications", 1)):
+            return jsonify({"ok": False, "reason": "disabled"})
+        body = request.get_json(force=True) or {}
+        return jsonify(desktop_notify.notify(body.get("title"), body.get("body")))
+
+    @app.get("/api/db/backups")
+    def api_db_backups():
+        return jsonify({"ok": True, "backups": db_backup.list_backups(), "pending_restore": db_backup.pending_restore(),
+                        "last_restore": db_backup.LAST_RESTORE, "folder": str(db_backup.backup_dir())})
+
+    @app.post("/api/db/backups")
+    def api_db_backup_now():
+        result = db_backup.make_backup(manual=True)
+        return jsonify({**result, "backups": db_backup.list_backups()}), (200 if result.get("ok") else 500)
+
+    @app.post("/api/db/backups/restore")
+    def api_db_backup_restore():
+        if str(request.remote_addr or "") not in {"127.0.0.1", "::1", "localhost"}:
+            return jsonify({"ok": False, "error": "Restaurar o banco só é permitido no próprio computador."}), 403
+        body = request.get_json(force=True) or {}
+        try:
+            pending = db_backup.schedule_restore(str(body.get("name") or ""))
+            return jsonify({"ok": True, "pending_restore": pending})
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 404
+
+    @app.post("/api/db/backups/cancel-restore")
+    def api_db_backup_cancel_restore():
+        return jsonify({"ok": db_backup.cancel_restore(), "pending_restore": db_backup.pending_restore()})
+
+    @app.get("/api/tnc/profiles")
+    def api_tnc_profiles():
+        from .tnc_service import list_tnc_profiles
+        return jsonify({"ok": True, "profiles": list_tnc_profiles()})
+
+    @app.post("/api/tnc/profiles")
+    def api_tnc_profile_save():
+        from .tnc_service import list_tnc_profiles, save_tnc_profile
+        body = request.get_json(force=True) or {}
+        try:
+            saved = save_tnc_profile(body.get("name"), body.get("config") or None)
+            return jsonify({"ok": True, "profile": saved, "profiles": list_tnc_profiles()})
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/tnc/profiles/load")
+    def api_tnc_profile_load():
+        """Carrega o perfil como configuração atual; reconecta se o TNC estava em uso e o transporte mudou."""
+        from .tnc_service import load_tnc_profile
+        body = request.get_json(force=True) or {}
+        try:
+            profile = load_tnc_profile(body.get("name"))
+            before = get_tnc_config()
+            saved = save_tnc_config(profile["config"])
+            reconnect_keys = {"transport", "serial_port", "serial_baud", "tcp_host", "tcp_port", "agwpe_host", "agwpe_port", "agwpe_radio_port"}
+            if any(before.get(key) != saved.get(key) for key in reconnect_keys) and tnc_service.status().get("wanted"):
+                tnc_service.reconnect()
+            return jsonify({"ok": True, "name": profile["name"], "config": saved, "status": tnc_service.status()})
+        except KeyError as exc:
+            return jsonify({"ok": False, "error": str(exc.args[0])}), 404
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/tnc/profiles/delete")
+    def api_tnc_profile_delete():
+        from .tnc_service import delete_tnc_profile, list_tnc_profiles
+        body = request.get_json(force=True) or {}
+        try:
+            removed = delete_tnc_profile(body.get("name"))
+            return jsonify({"ok": removed, "profiles": list_tnc_profiles()}), (200 if removed else 404)
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+
     @app.get("/api/tnc/frames")
     def api_tnc_frames():
         try:
@@ -1403,6 +1517,10 @@ def create_app() -> Flask:
             }
             changed = any(before.get(key) != saved.get(key) for key in connection_keys)
             register_station_now(before, saved)
+            try:
+                gps_service.apply_config(saved)
+            except Exception as exc:
+                diag.log_event("gps_apply_failed", error=str(exc))
             status = service.status()
             reconnected = False
             if changed and status.get("wanted"):

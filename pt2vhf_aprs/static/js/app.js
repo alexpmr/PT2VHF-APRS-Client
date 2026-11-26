@@ -1261,6 +1261,21 @@
     }
   }
 
+  // v2.0.7: tradução para os módulos novos (db_backup.js, notifications.js, onboarding.js, gps.js):
+  // texto em português como chave, catálogo do idioma, inglês como reserva.
+  window.pt2vhfT = (pt, vars = null) => {
+    let out = translatedText(pt, englishFallback(pt));
+    if (vars) for (const [key, value] of Object.entries(vars)) out = out.split(`{${key}}`).join(String(value));
+    return out;
+  };
+  window.pt2vhfLanguage = () => state.language;
+  window.pt2vhfStationHelpers = {
+    calculateAprsPasscode: value => calculateAprsPasscode(value),
+    isValidAmateurCallsign: value => isValidAmateurCallsign(value),
+    maidenheadDecode: value => maidenheadDecode(value),
+    maidenheadEncode: (lat, lon, chars = 6) => maidenheadEncode(lat, lon, chars),
+    reloadConfig: () => loadConfig({ force: true }),
+  };
   window.pt2vhfShowProcessing = showProcessing;
   window.pt2vhfUpdateProcessing = updateProcessing;
   window.pt2vhfHideProcessing = hideProcessing;
@@ -8178,11 +8193,17 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       }
       const messagesTab = $('.tab[data-tab="messages"]');
       messagesTab?.classList.toggle('has-unread', unreadCount > 0 && state.activeTab !== 'messages');
+      // v2.0.7: aviso do sistema e contador no título da janela (notifications.js).
+      document.dispatchEvent(new CustomEvent('pt2vhf-unread-count', { detail: { count: unreadCount } }));
       if (!state.messageAlertBaselineReady) {
         state.lastAlertedMessageId = latest;
+        state.lastNotifiedMessageId = latest;
         state.messageAlertBaselineReady = true;
         return;
       }
+      const fresh = incoming.filter(m => Number(m.id) > Number(state.lastNotifiedMessageId || 0) && !m.read_at);
+      state.lastNotifiedMessageId = Math.max(Number(state.lastNotifiedMessageId || 0), latest);
+      if (fresh.length) document.dispatchEvent(new CustomEvent('pt2vhf-personal-messages', { detail: { messages: fresh } }));
 
       const modalVisible = !$('#incomingMessageModal')?.classList.contains('hidden');
       const compactVisible = !$('#incomingMessageCompact')?.classList.contains('hidden');
@@ -8986,6 +9007,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
       if (!state.configDirty) state.configTouchedFields.clear();
       setConfigDirtyStatus();
+      document.dispatchEvent(new CustomEvent('pt2vhf-config-loaded', { detail: { config: cfg } }));
       return true;
     } catch (err) {
       toast(err.message, 'error');

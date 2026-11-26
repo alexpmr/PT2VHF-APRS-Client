@@ -19,7 +19,7 @@ jobs:
           python-version: '3.12'
       - name: Validate all JavaScript modules and legacy catalogs
         run: |
-          for file in pt2vhf_aprs/static/js/*.js; do node --check "$file"; done
+          for file in pt2vhf_aprs/static/js/*.js pt2vhf_aprs/static/js/i18n/*.js; do node --check "$file"; done
           python tools/i18n_audit.py --strict > legacy-i18n-report.json
       - name: Reject new missing literal candidates across six locales
         run: node tools/i18n_inventory.cjs --output i18n-inventory.json

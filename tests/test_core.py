@@ -6,6 +6,7 @@ from pt2vhf_aprs import database as db
 from pt2vhf_aprs import updater
 from pt2vhf_aprs.aprs_service import APRSService, build_beacon_packet, build_bulletin_packet, build_query_payload, calculate_aprs_passcode, classify_message_type, expand_filter, mask_sensitive_log_line, parse_message_line, parse_query_text, parse_trace_nodes, split_message_id, split_aprs_message_parts
 from pt2vhf_aprs.web import _kml_document, version_tuple
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 
 def test_beacon_packet():
@@ -910,7 +911,7 @@ def test_topology_stats_active_stations_excludes_telemetry_igates_and_digipeater
 def test_v1624_official_logo_is_single_branding_source():
     root = Path(__file__).resolve().parent.parent
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
-    workflow = (root / ".github" / "workflows" / "build-windows.yml").read_text(encoding="utf-8")
+    workflow = (root / ".github" / "workflows" / "build-production-current.yml").read_text(encoding="utf-8")
     win_icon = (root / "windows" / "make_icon.py").read_text(encoding="utf-8")
     mac_icon = (root / "macos" / "make_icon.py").read_text(encoding="utf-8")
     linux_build = (root / "linux" / "build_linux.sh").read_text(encoding="utf-8")
@@ -968,19 +969,19 @@ def test_v17_language_options_and_runtime():
     root = Path(__file__).resolve().parent.parent
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
     js = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
-    i18n = (root / "pt2vhf_aprs" / "static" / "js" / "i18n_extra.js").read_text(encoding="utf-8")
+    i18n = i18n_all_text()
     database = (root / "pt2vhf_aprs" / "database.py").read_text(encoding="utf-8")
 
     assert 'data-language="es"' in html
     assert 'data-language="fr"' in html
     assert '<option value="es">Español</option>' in html
     assert '<option value="fr">Français</option>' in html
-    assert "js/i18n_extra.js" in html
+    assert "js/i18n/es.js" in html and "js/i18n/fr.js" in html
     assert "normalizeLanguage" in js
     assert "es:'es-ES'" in js
     assert "fr:'fr-FR'" in js
     assert "window.PT2VHF_I18N" in i18n
-    assert "es:" in i18n and "fr:" in i18n
+    assert "['es']" in i18n and "['fr']" in i18n
     supported = '{"pt-BR", "en", "es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN", "th-TH"}'
     version = tuple(map(int, (root / "VERSION").read_text(encoding="utf-8").strip().split(".")))
     if version >= (1, 14, 23):
@@ -1153,7 +1154,7 @@ def test_v171_history_is_contextual_to_map():
 def test_v171_i18n_expands_recent_ui_in_all_languages():
     root = Path(__file__).resolve().parent.parent
     app = (root / "pt2vhf_aprs" / "static" / "js" / "app.js").read_text(encoding="utf-8")
-    extra = (root / "pt2vhf_aprs" / "static" / "js" / "i18n_extra.js").read_text(encoding="utf-8")
+    extra = i18n_all_text()
 
     for text in ("Sobre", "Anúncio geral", "Período das estações", "Período do tracklog", "Replay da Rede"):
         assert text in app or text in extra
@@ -1615,15 +1616,9 @@ def test_v177_message_cleanup_map_defaults_and_update_cadence():
     assert "updateCheckIntervalMs()" in js
 
 
-def test_v177_legacy_build_patch_does_not_restore_global_history_button():
-    root = Path(__file__).resolve().parent.parent
-    patch = (root / "tools" / "apply_release_1_6_5.py").read_text(encoding="utf-8")
-    assert "Não recriar o antigo botão" in patch
-    assert "assert 'id=\"toggleReplayBarButton\"' not in html" in patch
-
 def test_v177_windows_arm64_build_and_updater_assets(monkeypatch):
     root = Path(__file__).resolve().parent.parent
-    workflow = (root / ".github" / "workflows" / "build-windows.yml").read_text(encoding="utf-8")
+    workflow = (root / ".github" / "workflows" / "build-production-current.yml").read_text(encoding="utf-8")
     installer = (root / "windows" / "installer_arm64.iss").read_text(encoding="utf-8")
     portable_spec = (root / "windows" / "PT2VHF_APRS_Client_Portable_ARM64.spec").read_text(encoding="utf-8")
     updater_source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")

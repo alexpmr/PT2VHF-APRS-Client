@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pt2vhf_aprs import database as db
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -57,7 +58,7 @@ def test_v183_map_view_select_all_and_clear_all():
 
 def test_v183_translations_cover_new_controls():
     app = read("pt2vhf_aprs/static/js/app.js")
-    extra = read("pt2vhf_aprs/static/js/i18n_extra.js")
+    extra = i18n_all_text()
 
     for text in (
         "Show APRS applications",

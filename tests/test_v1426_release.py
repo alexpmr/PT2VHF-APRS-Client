@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from pt2vhf_aprs import updater
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,11 +71,9 @@ def test_v1426_lan_ip_detection_rejects_loopback_and_link_local():
 
 
 def test_v1426_i18n_patch_covers_all_extra_locales():
-    patch = read("pt2vhf_aprs/static/js/i18n_v1426.js")
     for locale in ("es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN"):
-        assert f"'{locale}':" in patch or f"{locale}:" in patch
-    assert "Autorizar no Firewall do Windows" in patch
-    assert "Abrir endereço LAN no navegador padrão" in patch
+        assert "Autorizar no Firewall do Windows" in i18n_catalog(locale)
+        assert "Abrir endereço LAN no navegador padrão" in i18n_catalog(locale)
 
 
 def test_v1426_release_metadata():

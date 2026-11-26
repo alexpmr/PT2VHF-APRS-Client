@@ -1034,6 +1034,8 @@
     refreshStatus();
     if (tncVisible()) refreshData();
   });
+  // v2.0.7: usado pelos perfis de TNC (tnc_profiles.js).
+  window.PT2VHF_TNC = { collectConfig, applyConfig, setStatus, refreshData, showError, tr };
   translateTncStatic();
   bind();
   bindListenTest();

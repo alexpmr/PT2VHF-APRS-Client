@@ -1,3 +1,22 @@
+## RESOLVIDO (próxima versão, ainda não lançada) — Melhorias sugeridas, pedido do Alex "implemente as 7" (26/11/2026)
+
+- **Assistente de primeira execução:** indicativo, passcode, posição (ou grid locator) e servidor sugerido pela região;
+  abre só em instalação nova (`onboarding_done`; quem já tem indicativo não vê). `static/js/onboarding.js`.
+- **Aviso no sistema para mensagem recebida:** balão da bandeja no Windows, `notify-send` no Linux, `osascript` no macOS,
+  e contador "(N)" no título; só quando a janela não está em foco. Opção em Configurações. `pt2vhf_aprs/desktop_notify.py`.
+- **Backup automático do banco:** cópia diária conferida e compactada em `data/backups/` (guarda 7), botão de cópia
+  manual e restauração aplicada na próxima abertura (o banco atual fica em `data/before_restore/`). `pt2vhf_aprs/db_backup.py`.
+- **GPS com SmartBeaconing:** NMEA serial ou gpsd; beacon com posição, rumo e velocidade; sem fix não há beacon automático.
+  `pt2vhf_aprs/gps_service.py`.
+- **Perfis de TNC:** salvar, carregar e apagar várias configurações de TNC (pergunta de usuário, 26/11/2026).
+- **Equipamento das estações:** base aprs-deviceid atualizada (481 TOCALLs) com atualização semanal e rádios Mic-E.
+  TOCALL próprio APVHFW/APVHFA/APVHFI a pedir ao aprsorg (o Alex abre o pedido); até a alocação segue APZVHF.
+- **Assinatura:** passos de SignPath (Windows) e notarização Apple prontos no workflow, desligados até haver segredos
+  (`docs/SIGNPATH_SETUP.md`, `docs/MACOS_SIGNING.md`).
+- **Manutenção:** 157 scripts `apply_release_*` antigos e 10 workflows obsoletos removidos; traduções num arquivo por
+  idioma em `static/js/i18n/` (`tools/i18n_add.py` adiciona textos nos 10). O `app.js` não foi dividido: estado
+  compartilhado no mesmo escopo e 75 testes leem o texto dele; funções novas entram como módulos separados.
+
 ## RESOLVIDO (v2.0.6) — Compatibilidade com LoRa APRS (pedido do Alex, 24/11/2026)
 
 - **Pedido:** pacotes de trackers/iGates LoRa (destino APLRG1/APLRT1, posição comprimida, ex.: `=LXc#7C\1ha !GLoRa APRS`).
@@ -293,7 +312,14 @@ Análise feita no código da `main` (v1.15.6):
 - **Esperado:** botão Salvar visível no fim de cada sub-aba (traduzido), salvando a configuração toda pelo mesmo
   fluxo atual (validação, aviso de alterações não salvas); sub-abas sem campos editáveis não precisam do botão.
 
-## P1 — macOS Intel Legacy Catalina (01/11/2026)
+# Arquivo histórico (até 01/11/2026)
+
+> Revisado em 26/11/2026. Daqui para baixo é só histórico das versões 1.x. Os status antigos ("EM TESTES",
+> "EM COMPILAÇÃO", "ABERTO", "P0/P1", "em validação") ficaram como estavam na época e **não são pendências**:
+> tudo foi incorporado nas versões seguintes ou perdeu o sentido (Raspberry Pi, Mac Intel e Catalina saíram na 2.0.3).
+> Pendência real entra no topo do arquivo.
+
+## ARQUIVADO (plataforma descontinuada na 2.0.3) — macOS Intel Legacy Catalina (01/11/2026)
 
 - Solicitação: versão do APRS Client para Macs Intel com macOS 10.15.x, após relato de Gatekeeper e de incompatibilidade 11.0+/ARM64 no DMG v1.15.6.
 - Implementação preparada: `macos/build_macos_legacy.sh`, `requirements-macos-legacy.txt`, bundle com requisito 10.15.0 e workflow `release-macos-catalina-legacy.yml`.
@@ -301,7 +327,7 @@ Análise feita no código da `main` (v1.15.6):
 - Publicação prevista: `PT2VHF_APRS_Client_macOS_Intel_Legacy_v1.15.6.dmg`; script de importação validada e workflow de publicação manual no repositório `PT2VHF-Site` e contador específico `mac-dmg-intel-legacy`.
 - Assinatura Apple Developer ID/notarização é etapa separada; não confundir desbloqueio Gatekeeper com compatibilidade do sistema.
 
-## P1 — Pente fino obrigatório após v1.15.6 (01/11/2026, #157)
+## ARQUIVADO (traduções revisadas na v2.0.5) — Pente fino obrigatório após v1.15.6 (01/11/2026, #157)
 
 - Relato do mantenedor: a v1.15.6 ainda exibe palavras em português em outros idiomas. As correções parciais não encerram o requisito.
 - Pedido: auditar e corrigir toda a interface nos seis idiomas PT-BR/EN/ES/FR/DE/IT, incluindo conteúdo dinâmico, modais, mensagens de erro, títulos, placeholders e acessibilidade. Preservar os quatro idiomas adicionais e as bandeiras da referência.
@@ -309,7 +335,7 @@ Análise feita no código da `main` (v1.15.6):
 - Não alterar indicativos, identificadores técnicos, pacotes APRS, comentários ou mensagens recebidas.
 - #157 permanece aberta; a próxima entrega deve registrar lacunas reais e evidências de UI, sem anunciar localização integral antes de verificá-la.
 
-## PARCIAL (v1.15.6) — Internacionalização completa (#157 / PR #158)
+## ARQUIVADO (concluído na v2.0.5) — Internacionalização completa (#157 / PR #158)
 
 - Entregues: bandeiras BR/UK/ES/FR/DE/IT, dez opções preservadas, observação de textos/atributos dinâmicos e prevenção de restauração de estados antigos; exclusões para mensagens, informações de estação e pacotes brutos.
 - Adicionadas 30 traduções por idioma EN/ES/FR/DE/IT; testes reais de navegador em seis idiomas e nove abas, bandeiras, seleção ativa e persistência após recarregar; teste de regressão DOM e inventário consolidado com baseline de dívida herdada.
@@ -317,7 +343,7 @@ Análise feita no código da `main` (v1.15.6):
 - **#157 permanece aberta**: falta revisar e traduzir o inventário completo de textos estáticos/dinâmicos e todos os modais/erros nos seis idiomas. O inventário contém candidatos técnicos e dicionários locais que exigem triagem humana; seus totais não representam porcentagem de UI traduzida.
 - Revisão e limites: `docs/i18n-157-review.md`. Relatório completo gerado por `node tools/i18n_inventory.cjs --output i18n-inventory.json` e anexado pelo CI.
 
-## BACKLOG P1 — Revisão integral de traduções, consistência dinâmica e bandeiras (01/11/2026, #157)
+## ARQUIVADO (concluído na v2.0.5) — Revisão integral de traduções, consistência dinâmica e bandeiras (01/11/2026, #157)
 
 - **Relato:** várias telas do APRS Client permanecem em português ou inglês quando o usuário seleciona outro idioma. Revisar **todas as traduções efetivamente exibidas**, inclusive textos novos ou atualizados dinamicamente, em vez de confiar somente no tamanho dos catálogos.
 - **Referência visual para os seis idiomas principais:** 🇧🇷 Português (Brasil), 🇬🇧 English (**Union Jack; não cruz de São Jorge**), 🇪🇸 Español, 🇫🇷 Français, 🇩🇪 Deutsch, 🇮🇹 Italiano. Manter o dropdown/seleção ativa e os idiomas adicionais já existentes (japonês, polonês, neerlandês, chinês).

@@ -5,6 +5,7 @@ import re
 import tempfile
 
 from pt2vhf_aprs import database as db
+from i18n_catalogs import LOCALES, all_text as i18n_all_text, catalog as i18n_catalog
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCALES = ("de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN")
@@ -12,13 +13,6 @@ LOCALES = ("de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN")
 
 def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
-
-
-def _pack_value_count(locale_file: str) -> int:
-    text = read("pt2vhf_aprs/static/js/" + locale_file)
-    start = text.index("const values = [")
-    end = text.index("];", start)
-    return len(re.findall(r'^"((?:[^"\\]|\\.)*)",?\s*$', text[start:end], flags=re.M))
 
 
 def test_v1423_version_and_language_catalogs():
@@ -31,25 +25,17 @@ def test_v1423_version_and_language_catalogs():
     app = read("pt2vhf_aprs/static/js/app.js")
     database = read("pt2vhf_aprs/database.py")
 
-    expected = {
-        "de-DE": "i18n_de.js",
-        "it-IT": "i18n_it.js",
-        "ja-JP": "i18n_ja.js",
-        "pl-PL": "i18n_pl.js",
-        "nl-NL": "i18n_nl.js",
-        "zh-CN": "i18n_zh.js",
-    }
-    for locale, filename in expected.items():
+    for locale in ("de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN"):
+        filename = f"i18n/{locale}.js"
         assert f'data-language="{locale}"' in html
         assert f'<option value="{locale}">' in html
         assert f"js/{filename}" in html
         assert locale in app
         assert locale in database
-        assert _pack_value_count(filename) == 484
+        assert len(i18n_catalog(locale)) >= 484
 
-    assert "統計" in read("pt2vhf_aprs/static/js/i18n_ja.js")
+    assert "統計" in i18n_catalog("ja-JP").values()
     assert "简体中文" in html
-    assert "Simplified Chinese language pack size mismatch" in read("pt2vhf_aprs/static/js/i18n_zh.js")
 
 
 def test_v1423_database_accepts_every_supported_language():

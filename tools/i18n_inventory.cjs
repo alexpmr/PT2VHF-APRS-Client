@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const js = path.join(root, 'pt2vhf_aprs/static/js');
 const context = vm.createContext({ window: {}, console });
-const files = ['i18n_extra.js', 'i18n_de.js', 'i18n_it.js', 'i18n_ja.js', 'i18n_pl.js', 'i18n_nl.js', 'i18n_zh.js', 'i18n_v1425.js', 'i18n_v1426.js', 'i18n_v1430.js', 'i18n_live.js', 'i18n_v205.js', 'i18n_th.js'];
+const files = ['i18n/es.js', 'i18n/fr.js', 'i18n/de-DE.js', 'i18n/it-IT.js', 'i18n/ja-JP.js', 'i18n/pl-PL.js', 'i18n/nl-NL.js', 'i18n/zh-CN.js', 'i18n/en.js', 'i18n/th-TH.js'];
 for (const file of files) vm.runInContext(fs.readFileSync(path.join(js, file), 'utf8'), context, { filename: file });
 const app = fs.readFileSync(path.join(js, 'app.js'), 'utf8');
 vm.runInContext(app.slice(app.indexOf('  const EN_TEXT ='), app.indexOf('  const LANGUAGE_META =')) + '\nwindow.english = Object.fromEntries(EN_TEXT);', context);

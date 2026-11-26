@@ -789,6 +789,11 @@ def main() -> int:
             pass
 
     _tray_icon = _create_tray_icon()
+    try:
+        from pt2vhf_aprs import desktop_notify
+        desktop_notify.register_tray_notifier(lambda message, title: _tray_icon.notify(message, title))
+    except Exception as exc:
+        diag.log_event("desktop_notify_register_failed", error=str(exc))
 
     if _browser_mode:
         return _run_browser_mode(_tray_icon)

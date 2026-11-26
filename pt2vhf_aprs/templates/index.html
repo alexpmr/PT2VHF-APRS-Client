@@ -850,6 +850,41 @@
         </div>
       </div>
 
+      <div class="config-card config-section config-section-aprs" data-config-tab="station" id="gpsConfigCard">
+        <h3>GPS e SmartBeaconing</h3>
+        <p class="hint">Para operar em movimento (carro, SOTA, expedição): com um GPS no computador, o beacon sai com a posição, o rumo e a velocidade reais. Sem posição válida do GPS, o beacon automático espera.</p>
+        <div class="config-grid compact-grid">
+          <label class="check-field"><input name="gps_enabled" type="checkbox"><span>Usar GPS para a posição do beacon</span></label>
+          <label class="field"><span>Origem do GPS</span>
+            <select name="gps_source" id="gpsSource">
+              <option value="serial">GPS na porta serial / USB (NMEA)</option>
+              <option value="gpsd">gpsd (Linux / macOS)</option>
+            </select></label>
+          <label class="field gps-serial-field"><span>Porta do GPS</span><input name="gps_serial_port" id="gpsSerialPort" list="gpsSerialPorts" placeholder="Ex.: COM5 ou /dev/ttyACM0" autocomplete="off" translate="no"><datalist id="gpsSerialPorts"></datalist></label>
+          <label class="field gps-serial-field"><span>Velocidade (baud)</span>
+            <select name="gps_serial_baud">
+              <option value="4800">4800</option><option value="9600">9600</option><option value="19200">19200</option>
+              <option value="38400">38400</option><option value="57600">57600</option><option value="115200">115200</option>
+            </select></label>
+          <label class="field gps-gpsd-field"><span>Servidor gpsd</span><input name="gps_gpsd_host" value="127.0.0.1" autocomplete="off" translate="no"></label>
+          <label class="field gps-gpsd-field"><span>Porta gpsd</span><input name="gps_gpsd_port" type="number" min="1" max="65535" value="2947"></label>
+        </div>
+        <div id="gpsStatusLine" class="gps-status-line" role="status"><span class="hint">GPS desligado.</span></div>
+        <details class="gps-smartbeacon">
+          <summary><label class="check-field inline"><input name="smartbeacon_enabled" type="checkbox" checked><span>SmartBeaconing (intervalo pela velocidade e beacon nas curvas)</span></label></summary>
+          <div class="config-grid compact-grid">
+            <label class="field"><span>Velocidade alta (km/h)</span><input name="sb_fast_speed" type="number" min="10" max="300" value="90"></label>
+            <label class="field"><span>Intervalo em alta velocidade (s)</span><input name="sb_fast_rate" type="number" min="10" max="600" value="60"></label>
+            <label class="field"><span>Velocidade baixa (km/h)</span><input name="sb_slow_speed" type="number" min="1" max="60" value="5"></label>
+            <label class="field"><span>Intervalo parado ou devagar (s)</span><input name="sb_slow_rate" type="number" min="60" max="7200" value="1800"></label>
+            <label class="field"><span>Ângulo mínimo de curva (graus)</span><input name="sb_min_turn_angle" type="number" min="5" max="90" value="28"></label>
+            <label class="field"><span>Inclinação da curva</span><input name="sb_turn_slope" type="number" min="0" max="1000" value="255"></label>
+            <label class="field"><span>Tempo mínimo entre curvas (s)</span><input name="sb_min_turn_time" type="number" min="5" max="300" value="15"></label>
+          </div>
+          <p class="hint">Os valores padrão são os dos trackers comuns. Sem SmartBeaconing, o GPS usa o intervalo de beacon da estação.</p>
+        </details>
+      </div>
+
       <div class="config-card config-section config-section-aprs" data-config-tab="aprsis">
         <h3>APRS-IS</h3>
         <div class="form-grid two-cols">
@@ -1188,6 +1223,10 @@
               <span>Tocar sinal sonoro ao receber mensagem para minha estação</span>
             </label>
             <label class="check-field message-sound-check">
+              <input name="desktop_notifications" type="checkbox" checked>
+              <span>Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano</span>
+            </label>
+            <label class="check-field message-sound-check">
               <input name="sound_on_message_ack" type="checkbox" checked>
               <span>Tocar sinal sonoro ao receber confirmação (ACK) de mensagem enviada</span>
             </label>
@@ -1325,6 +1364,30 @@
           <button id="resetConfigButton" type="button" class="btn danger">Restaurar configuração padrão</button>
           <span class="hint">Restaura preferências e dados da estação; mensagens, estações, logs e tracklogs não são apagados.</span>
         </div>
+      </div>
+      <div class="config-card full-card config-section config-section-app" data-config-tab="backup" id="dbBackupCard">
+        <h3>Cópia automática do banco</h3>
+        <p class="hint">Uma vez por dia o programa copia o banco (estações, mensagens, tracklogs, cobertura RF) e guarda as cópias mais recentes. Se o banco se perder ou corromper, escolha uma cópia e restaure.</p>
+        <div class="config-grid compact-grid">
+          <label class="check-field"><input name="db_backup_enabled" type="checkbox" checked><span>Fazer cópia automática diária do banco</span></label>
+          <label class="field"><span>Quantas cópias guardar</span><input name="db_backup_keep" type="number" min="1" max="30" value="7"></label>
+        </div>
+        <div class="config-actions">
+          <button id="dbBackupNowButton" type="button" class="btn secondary">Fazer cópia agora</button>
+          <span id="dbBackupStatus" class="hint" role="status"></span>
+        </div>
+        <div class="table-wrap db-backup-table-wrap">
+          <table class="db-backup-table">
+            <thead><tr><th>Cópia</th><th>Tamanho</th><th></th></tr></thead>
+            <tbody id="dbBackupList"><tr><td colspan="3" class="hint">Nenhuma cópia ainda.</td></tr></tbody>
+          </table>
+        </div>
+        <div id="dbRestorePending" class="db-restore-pending hidden" role="alert">
+          <span id="dbRestorePendingText"></span>
+          <button id="dbRestoreQuitButton" type="button" class="btn primary">Fechar o programa agora</button>
+          <button id="dbRestoreCancelButton" type="button" class="btn secondary">Cancelar restauração</button>
+        </div>
+        <p class="hint">Pasta das cópias: <code id="dbBackupFolder" translate="no"></code></p>
       </div>
       <div class="config-save-footer full-card">
         <div>
@@ -1573,6 +1636,25 @@
         <p>Alterações de transporte reconectam o TNC se ele já estiver em uso. Ativar funções de TX exige a confirmação explícita acima.</p>
         <button id="tncSave" type="button" class="btn primary">Salvar TNC / RF</button>
         <span id="tncSaveStatus" class="hint"></span>
+      </article>
+
+      <article class="config-card tnc-profiles-card" id="tncProfilesCard">
+        <h3>Perfis de TNC</h3>
+        <p class="hint">Guarde a configuração de cada TNC com um nome e alterne entre eles sem digitar tudo de novo. O programa usa um TNC por vez.</p>
+        <div class="tnc-profiles-row">
+          <label><span>Perfil</span>
+            <select id="tncProfileSelect"><option value="">Nenhum perfil salvo</option></select>
+          </label>
+          <button id="tncProfileLoad" type="button" class="btn">Carregar perfil</button>
+          <button id="tncProfileDelete" type="button" class="btn">Excluir perfil</button>
+        </div>
+        <div class="tnc-profiles-row">
+          <label><span>Nome do perfil</span>
+            <input id="tncProfileName" type="text" maxlength="40" placeholder="Ex.: TM-D710 da estação">
+          </label>
+          <button id="tncProfileSave" type="button" class="btn primary">Salvar como perfil</button>
+        </div>
+        <span id="tncProfileStatus" class="hint" role="status"></span>
       </article>
     </form>
 
@@ -1870,6 +1952,60 @@
   </div>
 </div>
 
+<div id="onboardingModal" class="message-alert-overlay onboarding-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+  <form id="onboardingForm" class="message-alert-card onboarding-card" novalidate>
+    <div class="onboarding-steps" aria-hidden="true"><span data-step-dot="1"></span><span data-step-dot="2"></span><span data-step-dot="3"></span></div>
+    <section class="onboarding-step" data-step="1">
+      <h3 id="onboardingTitle">Bem-vindo ao PT2VHF APRS Client</h3>
+      <p>Em três passos sua estação fica pronta para aparecer no mapa e trocar mensagens. Dá para mudar tudo depois em Configuração.</p>
+      <label class="field"><span>Seu indicativo (sem SSID)</span>
+        <input id="onboardingCallsign" maxlength="6" autocomplete="off" placeholder="Ex.: PY2ABC" translate="no"></label>
+      <small id="onboardingCallsignStatus" class="hint"></small>
+      <label class="field"><span>SSID</span>
+        <select id="onboardingSsid">
+          <option value="0">Nenhum (estação fixa)</option>
+          <option value="9">-9 (móvel)</option>
+          <option value="7">-7 (portátil / HT)</option>
+          <option value="10">-10 (internet / APRS-IS)</option>
+          <option value="1">-1 (digipeater / estação de apoio)</option>
+        </select></label>
+      <p class="hint">Passcode APRS-IS: <strong id="onboardingPasscode" translate="no">—</strong> (calculado pelo indicativo)</p>
+    </section>
+    <section class="onboarding-step hidden" data-step="2">
+      <h3>Onde fica a estação?</h3>
+      <p>A posição vai no beacon e centraliza o mapa. Use o Grid Locator, a localização do computador ou digite as coordenadas.</p>
+      <label class="field"><span>Grid Locator</span>
+        <input id="onboardingGrid" maxlength="10" autocomplete="off" placeholder="Ex.: GG66rk" translate="no"></label>
+      <button id="onboardingLocate" type="button" class="btn secondary">Usar minha localização</button>
+      <div class="onboarding-coords">
+        <label class="field"><span>Latitude</span><input id="onboardingLat" type="number" step="0.000001" min="-90" max="90"></label>
+        <label class="field"><span>Longitude</span><input id="onboardingLon" type="number" step="0.000001" min="-180" max="180"></label>
+      </div>
+      <small id="onboardingPositionStatus" class="hint"></small>
+    </section>
+    <section class="onboarding-step hidden" data-step="3">
+      <h3>Servidor APRS-IS</h3>
+      <p>Escolhemos o servidor da sua região pela posição. Se não souber, deixe como está.</p>
+      <label class="field"><span>Servidor</span>
+        <select id="onboardingServer">
+          <option value="soam.aprs2.net">América do Sul</option>
+          <option value="noam.aprs2.net">América do Norte</option>
+          <option value="euro.aprs2.net">Europa</option>
+          <option value="asia.aprs2.net">Ásia</option>
+          <option value="aunz.aprs2.net">Austrália / Nova Zelândia</option>
+          <option value="rotate.aprs2.net">Rotação global</option>
+        </select></label>
+      <label class="check-field"><input id="onboardingConnect" type="checkbox" checked><span>Conectar ao APRS-IS agora</span></label>
+      <small id="onboardingSaveStatus" class="hint" role="status"></small>
+    </section>
+    <div class="message-alert-actions onboarding-actions">
+      <button id="onboardingSkip" type="button" class="btn secondary">Configurar depois</button>
+      <span class="onboarding-spacer"></span>
+      <button id="onboardingBack" type="button" class="btn secondary hidden">Voltar</button>
+      <button id="onboardingNext" type="button" class="btn primary">Avançar</button>
+    </div>
+  </form>
+</div>
 <div id="whatsNewModal" class="message-alert-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="whatsNewTitle">
   <div class="message-alert-card whats-new-dialog">
     <div class="message-alert-icon">✓</div>
@@ -2000,25 +2136,27 @@
 
 <script id="leafletScript" async src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="></script>
-<script src="{{ url_for('static', filename='js/i18n_extra.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_de.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_it.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_ja.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_pl.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_nl.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_zh.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_v1425.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_v1426.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_v1430.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_live.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_v205.js') }}"></script>
-<script src="{{ url_for('static', filename='js/i18n_th.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/es.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/fr.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/de-DE.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/it-IT.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/ja-JP.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/pl-PL.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/nl-NL.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/zh-CN.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/en.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n/th-TH.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_dom.js') }}"></script>
 <script src="{{ url_for('static', filename='js/help_i18n_v205.js') }}"></script>
 <script src="{{ url_for('static', filename='js/help_i18n_th.js') }}"></script>
 <script src="{{ url_for('static', filename='js/help_i18n.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tnc_profiles.js') }}"></script>
+<script src="{{ url_for('static', filename='js/db_backup.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gps.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v190.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v110.js') }}"></script>

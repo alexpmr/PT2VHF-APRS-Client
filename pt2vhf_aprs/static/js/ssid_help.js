@@ -177,6 +177,7 @@ function mount() {
   document.addEventListener('click', e => {
     if (e.target.closest('.tab[data-tab="config"], #configSubtabs [data-config-subtab="station"]')) maybeAutoOpen();
   });
+  document.addEventListener('pt2vhf-onboarding-active', () => { shownThisSession = true; clearTimeout(autoTimer); });
   // Primeira abertura sem indicativo: o app já começa na Configuração; espera os avisos iniciais.
   maybeAutoOpen(2500);
 }
