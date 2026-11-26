@@ -144,6 +144,8 @@
     let cfg;
     try { cfg = await requestJson('/api/config'); } catch (_) { return; }
     if (Number(cfg.onboarding_done) || String(cfg.callsign || '').trim()) return;
+    // O assistente já pede o SSID: as sugestões de SSID não abrem sozinhas nesta sessão (nem por cima dele).
+    document.dispatchEvent(new CustomEvent('pt2vhf-onboarding-active'));
     await waitForOtherNotices();
     if (cfg.latitude != null && cfg.longitude != null && !(Number(cfg.latitude) === 0 && Number(cfg.longitude) === 0)) {
       setPosition(Number(cfg.latitude), Number(cfg.longitude), 'config');

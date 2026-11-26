@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
     page.on('pageerror', error => errors.push(error.message));
     await page.route('**/*', route => route.request().url().startsWith(origin + '/') ? route.continue() : route.abort());
     async function dismissNotices() {
-      for (const id of ['officialSiteNoticeClose', 'whatsNewClose']) {
+      for (const id of ['officialSiteNoticeClose', 'whatsNewClose', 'onboardingSkip']) {
         const button = page.locator('#' + id);
         if (await button.isVisible()) await button.click();
       }
@@ -21,6 +21,15 @@ const assert = require('node:assert/strict');
     await page.goto(origin);
     await page.waitForTimeout(1800);
     await dismissNotices();
+    // Banco novo: o assistente de primeira execução (v2.0.7) abre logo depois dos avisos; "Pular" grava onboarding_done.
+    const onboarding = page.locator('#onboardingModal');
+    await onboarding.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    if (await onboarding.isVisible()) {
+      const skipped = page.waitForResponse(response => response.url().endsWith('/api/config') && response.request().method() === 'POST');
+      await page.locator('#onboardingSkip').click();
+      assert.equal((await skipped).status(), 200);
+      await onboarding.waitFor({ state: 'hidden' });
+    }
     for (const [language, htmlLang, flag] of [
       ['en', 'en', 'flag_uk.svg'], ['es', 'es', 'flag_spain.svg'],
       ['fr', 'fr', 'flag_france.svg'], ['de-DE', 'de', 'flag_germany.svg'],
