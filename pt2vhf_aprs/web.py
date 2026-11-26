@@ -29,6 +29,7 @@ from . import tnc_listen, db_check
 from . import device_ids
 from . import db_backup
 from . import desktop_notify
+from .gps_service import service as gps_service
 from . import version_announce
 from . import saved_results
 from .aprs_service import full_callsign, service
@@ -875,6 +876,10 @@ def create_app() -> Flask:
     start_device_ids_refresh()
     if not os.environ.get("PYTEST_CURRENT_TEST"):
         db_backup.start_worker()
+        try:
+            gps_service.apply_config(db.get_config())
+        except Exception as exc:
+            diag.log_event("gps_start_failed", error=str(exc))
     diag.log_event("flask_app_created", version=__version__)
     try:
         # Chegar até aqui confirma que a versão atual iniciou e abriu o banco.
@@ -1361,6 +1366,10 @@ def create_app() -> Flask:
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
 
+    @app.get("/api/gps/status")
+    def api_gps_status():
+        return jsonify({"ok": True, **gps_service.status()})
+
     @app.post("/api/notify")
     def api_notify():
         """v2.0.7: aviso do sistema para mensagem recebida, só para a janela deste computador."""
@@ -1508,6 +1517,10 @@ def create_app() -> Flask:
             }
             changed = any(before.get(key) != saved.get(key) for key in connection_keys)
             register_station_now(before, saved)
+            try:
+                gps_service.apply_config(saved)
+            except Exception as exc:
+                diag.log_event("gps_apply_failed", error=str(exc))
             status = service.status()
             reconnected = False
             if changed and status.get("wanted"):

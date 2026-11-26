@@ -1094,6 +1094,11 @@ class APRSService:
         """
         with self._beacon_send_lock:
             cfg = db.get_config()
+            # v2.0.7: com GPS ativo e posição válida, o beacon sai com a posição/rumo/velocidade do GPS.
+            from .gps_service import service as gps_service
+            gps_overrides = gps_service.beacon_overrides(cfg)
+            if gps_overrides:
+                cfg = {**cfg, **gps_overrides}
             if cfg.get("latitude") is None or cfg.get("longitude") is None:
                 raise ValueError("Configure latitude e longitude antes de transmitir beacon.")
             packet = build_beacon_packet(cfg)
@@ -1133,6 +1138,7 @@ class APRSService:
 
             if sent:
                 self._last_beacon = time.time()
+                gps_service.note_beacon_sent()
             else:
                 errors = "; ".join(
                     key + ": " + str(value.get("error"))
@@ -1160,7 +1166,22 @@ class APRSService:
                 and rf_cfg.get("tx_confirmed") and not tnc_state.get("tx_paused")
             )
             is_ready = bool(status["connected"] and status["verified"])
-            if (is_ready or rf_ready) and time.time() - self._last_beacon >= interval:
+            # v2.0.7: GPS ligado decide o momento do beacon (SmartBeaconing, ou o intervalo fixo com a
+            # posição do GPS). Sem posição válida do GPS não sai beacon automático: a posição fixa da
+            # Configuração colocaria uma estação móvel no lugar errado.
+            from .gps_service import service as gps_service
+            gps_on = bool(int(cfg.get("gps_enabled") or 0))
+            if gps_on:
+                fix_ok = gps_service.current_fix().fresh()
+                if not fix_ok:
+                    beacon_due = False
+                elif int(cfg.get("smartbeacon_enabled") or 0):
+                    beacon_due, _reason = gps_service.smartbeacon_due(cfg)
+                else:
+                    beacon_due = time.time() - self._last_beacon >= interval
+            else:
+                beacon_due = time.time() - self._last_beacon >= interval
+            if (is_ready or rf_ready) and beacon_due:
                 try:
                     self.send_beacon()
                 except Exception as exc:
@@ -1431,10 +1452,14 @@ def build_beacon_packet(cfg: dict[str, Any]) -> str:
     symbol = str(cfg.get("symbol") or ">")[:1]
     if table not in {"/", "\\"}:
         table = "/"
-    comment = beacon_comment_with_site(cfg.get("comment"), max_chars=40)
+    extension = ""
+    if cfg.get("_course") is not None and cfg.get("_speed_knots") is not None:
+        # v2.0.7: rumo/velocidade do GPS (extensão CSE/SPD, APRS 1.0 cap. 7); o comentário cai para 36.
+        extension = f"{int(cfg['_course']) % 361:03d}/{max(0, min(999, int(cfg['_speed_knots']))):03d}"
+    comment = beacon_comment_with_site(cfg.get("comment"), max_chars=36 if extension else 40)
     altitude = ""
     if cfg.get("altitude") is not None:
         feet = max(0, min(999999, int(round(float(cfg["altitude"]) * 3.28084))))
         altitude = f" /A={feet:06d}"
-    payload = f"={_lat_aprs(float(cfg['latitude']))}{table}{_lon_aprs(float(cfg['longitude']))}{symbol}{comment}{altitude}"
+    payload = f"={_lat_aprs(float(cfg['latitude']))}{table}{_lon_aprs(float(cfg['longitude']))}{symbol}{extension}{comment}{altitude}"
     return f"{source}>{APP_TOCALL},TCPIP*:{payload}"

@@ -850,6 +850,41 @@
         </div>
       </div>
 
+      <div class="config-card config-section config-section-aprs" data-config-tab="station" id="gpsConfigCard">
+        <h3>GPS e SmartBeaconing</h3>
+        <p class="hint">Para operar em movimento (carro, SOTA, expedição): com um GPS no computador, o beacon sai com a posição, o rumo e a velocidade reais. Sem posição válida do GPS, o beacon automático espera.</p>
+        <div class="config-grid compact-grid">
+          <label class="check-field"><input name="gps_enabled" type="checkbox"><span>Usar GPS para a posição do beacon</span></label>
+          <label class="field"><span>Origem do GPS</span>
+            <select name="gps_source" id="gpsSource">
+              <option value="serial">GPS na porta serial / USB (NMEA)</option>
+              <option value="gpsd">gpsd (Linux / macOS)</option>
+            </select></label>
+          <label class="field gps-serial-field"><span>Porta do GPS</span><input name="gps_serial_port" id="gpsSerialPort" list="gpsSerialPorts" placeholder="Ex.: COM5 ou /dev/ttyACM0" autocomplete="off" translate="no"><datalist id="gpsSerialPorts"></datalist></label>
+          <label class="field gps-serial-field"><span>Velocidade (baud)</span>
+            <select name="gps_serial_baud">
+              <option value="4800">4800</option><option value="9600">9600</option><option value="19200">19200</option>
+              <option value="38400">38400</option><option value="57600">57600</option><option value="115200">115200</option>
+            </select></label>
+          <label class="field gps-gpsd-field"><span>Servidor gpsd</span><input name="gps_gpsd_host" value="127.0.0.1" autocomplete="off" translate="no"></label>
+          <label class="field gps-gpsd-field"><span>Porta gpsd</span><input name="gps_gpsd_port" type="number" min="1" max="65535" value="2947"></label>
+        </div>
+        <div id="gpsStatusLine" class="gps-status-line" role="status"><span class="hint">GPS desligado.</span></div>
+        <details class="gps-smartbeacon">
+          <summary><label class="check-field inline"><input name="smartbeacon_enabled" type="checkbox" checked><span>SmartBeaconing (intervalo pela velocidade e beacon nas curvas)</span></label></summary>
+          <div class="config-grid compact-grid">
+            <label class="field"><span>Velocidade alta (km/h)</span><input name="sb_fast_speed" type="number" min="10" max="300" value="90"></label>
+            <label class="field"><span>Intervalo em alta velocidade (s)</span><input name="sb_fast_rate" type="number" min="10" max="600" value="60"></label>
+            <label class="field"><span>Velocidade baixa (km/h)</span><input name="sb_slow_speed" type="number" min="1" max="60" value="5"></label>
+            <label class="field"><span>Intervalo parado ou devagar (s)</span><input name="sb_slow_rate" type="number" min="60" max="7200" value="1800"></label>
+            <label class="field"><span>Ângulo mínimo de curva (graus)</span><input name="sb_min_turn_angle" type="number" min="5" max="90" value="28"></label>
+            <label class="field"><span>Inclinação da curva</span><input name="sb_turn_slope" type="number" min="0" max="1000" value="255"></label>
+            <label class="field"><span>Tempo mínimo entre curvas (s)</span><input name="sb_min_turn_time" type="number" min="5" max="300" value="15"></label>
+          </div>
+          <p class="hint">Os valores padrão são os dos trackers comuns. Sem SmartBeaconing, o GPS usa o intervalo de beacon da estação.</p>
+        </details>
+      </div>
+
       <div class="config-card config-section config-section-aprs" data-config-tab="aprsis">
         <h3>APRS-IS</h3>
         <div class="form-grid two-cols">
@@ -1967,7 +2002,7 @@
       <button id="onboardingSkip" type="button" class="btn secondary">Configurar depois</button>
       <span class="onboarding-spacer"></span>
       <button id="onboardingBack" type="button" class="btn secondary hidden">Voltar</button>
-      <button id="onboardingNext" type="submit" class="btn primary">Avançar</button>
+      <button id="onboardingNext" type="button" class="btn primary">Avançar</button>
     </div>
   </form>
 </div>
@@ -2121,6 +2156,7 @@
 <script src="{{ url_for('static', filename='js/db_backup.js') }}"></script>
 <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 <script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gps.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v190.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v110.js') }}"></script>

@@ -98,7 +98,7 @@
   }
 
   async function next(event) {
-    event.preventDefault();
+    event?.preventDefault?.();
     if (step === 1) {
       if (!updateCallsign()) { $('#onboardingCallsign').focus(); if (!callsignValue()) $('#onboardingCallsignStatus').textContent = t('Informe seu indicativo.'); return; }
       showStep(2);
@@ -155,6 +155,10 @@
   function init() {
     if (!$('#onboardingModal')) return;
     $('#onboardingForm').addEventListener('submit', next);
+    $('#onboardingNext').addEventListener('click', next);
+    $('#onboardingForm').addEventListener('keydown', event => {
+      if (event.key === 'Enter' && event.target.id !== 'onboardingGrid' && event.target.tagName !== 'BUTTON') { event.preventDefault(); void next(); }
+    });
     $('#onboardingBack').addEventListener('click', () => showStep(Math.max(1, step - 1)));
     $('#onboardingSkip').addEventListener('click', skip);
     $('#onboardingCallsign').addEventListener('input', () => {

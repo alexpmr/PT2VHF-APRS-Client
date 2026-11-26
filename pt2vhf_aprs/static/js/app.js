@@ -9007,6 +9007,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
       if (!state.configDirty) state.configTouchedFields.clear();
       setConfigDirtyStatus();
+      document.dispatchEvent(new CustomEvent('pt2vhf-config-loaded', { detail: { config: cfg } }));
       return true;
     } catch (err) {
       toast(err.message, 'error');
