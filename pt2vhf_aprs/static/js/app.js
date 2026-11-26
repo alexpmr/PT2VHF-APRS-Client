@@ -183,7 +183,7 @@
     soundOnStationActivity: true,
     highlightStationActivity: true,
     messagePopupSeconds: 5,
-    language: 'pt-BR',
+    language: 'en',  // v2.0.7: substituído no boot pelo idioma que o servidor já mandou no HTML
     configSection: 'aprs',
     currentConfig: null,
     autoLocationInProgress: false,
@@ -240,7 +240,7 @@
       th: 'th-TH', th_TH: 'th-TH'
     };
     const normalized = aliases[raw] || raw;
-    return SUPPORTED_LANGUAGES.includes(normalized) ? normalized : 'pt-BR';
+    return SUPPORTED_LANGUAGES.includes(normalized) ? normalized : 'en';
   }
 
   function translatedText(pt, en) {
@@ -277,7 +277,7 @@
       'pt-BR':'pt-BR', en:'en-US', es:'es-ES', fr:'fr-FR',
       'de-DE':'de-DE', 'it-IT':'it-IT', 'ja-JP':'ja-JP',
       'pl-PL':'pl-PL', 'nl-NL':'nl-NL', 'zh-CN':'zh-CN', 'th-TH':'th-TH-u-ca-gregory'
-    })[state.language] || 'pt-BR';
+    })[state.language] || 'en-US';
   }
 
   function fmtDate(value) {
@@ -10242,7 +10242,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
 
   function applyLanguage(language) {
     state.language = normalizeLanguage(language);
-    document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META['pt-BR']).htmlLang;
+    document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META.en).htmlLang;
     translateDom(document.body);
     document.dispatchEvent(new CustomEvent('pt2vhf-language-changed', { detail: { language: state.language } }));
     syncQuickLanguageButtons();
@@ -10295,7 +10295,7 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
     if (option) {
       e.preventDefault();
       e.stopPropagation();
-      void setQuickLanguage(option.dataset.language || 'pt-BR');
+      void setQuickLanguage(option.dataset.language || 'en');
       return;
     }
     if (!e.target.closest('#languageQuickSwitch')) setLanguageMenuOpen(false);
@@ -12402,6 +12402,15 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
         state.activityAudioContext?.resume?.().catch(() => {});
       } catch (_) {}
     }, { once:true });
+    // v2.0.7: o servidor já manda no HTML o idioma em uso (o do SO, ou o escolhido).
+    // Traduz a tela antes de carregar a configuração, para não abrir em português no exterior.
+    try {
+      state.language = normalizeLanguage(document.documentElement.dataset.appLanguage || 'en');
+      document.documentElement.lang = (LANGUAGE_META[state.language] || LANGUAGE_META.en).htmlLang;
+      if (state.language !== 'pt-BR') translateDom(document.body);
+      document.dispatchEvent(new CustomEvent('pt2vhf-language-changed', { detail: { language: state.language } }));
+      syncQuickLanguageButtons();
+    } catch (err) { console.warn('Idioma inicial:', err); }
     const startup = await Promise.allSettled([initMap(), loadStations(), loadLog(false), loadConfig(), refreshStatus()]);
     const failed = startup.filter(item => item.status === 'rejected');
     if (failed.length) console.warn('Falhas parciais na inicialização:', failed);

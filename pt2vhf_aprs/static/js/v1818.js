@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const t = (pt, en, es, fr) => {
-    const lang = (document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
+    const lang = (document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'en').toLowerCase();
     const locale = lang.startsWith('de') ? 'de-DE'
       : lang.startsWith('it') ? 'it-IT'
       : lang.startsWith('ja') ? 'ja-JP'

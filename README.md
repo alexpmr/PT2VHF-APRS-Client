@@ -1,4 +1,4 @@
-# PT2VHF APRS Client - v2.0.6
+# PT2VHF APRS Client - v2.0.7
 
 Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF e TNC.
 
@@ -6,11 +6,13 @@ Cliente APRS-IS para Windows, Linux e macOS, com mapas, mensagens, topologia RF 
 
 
 <!-- DOWNLOAD_TABLE_START -->
-## Downloads — versão 2.0.6 (publicação pendente)
+## Downloads — versão 2.0.7 (publicação pendente)
 
-A v2.0.6 é distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 (AppImage/.deb/.tar.gz) e macOS Apple Silicon.
-O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece a v2.0.6 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
+A v2.0.7 é distribuída somente pelo [site oficial PT2VHF](https://www.pt2vhf.com/aprs), com instalador e portátil Windows x64/ARM64, Linux x86_64 (AppImage/.deb/.tar.gz) e macOS Apple Silicon.
+O [OTA oficial](https://www.pt2vhf.com/update.php?product=aprs) oferece a v2.0.7 quando os pacotes forem publicados e conferidos por tamanho e SHA-256.
 <!-- DOWNLOAD_TABLE_END -->
+
+A **v2.0.7** corrige o app abrindo em português fora do Brasil (idioma do sistema, ou inglês quando não suportado, inclusive no instalador do Windows e na bandeja) e traz assistente de primeiro uso, aviso de mensagem no sistema, backup automático do banco, GPS com SmartBeaconing, perfis de TNC e identificação atualizada do equipamento das estações.
 
 A **v2.0.6** adiciona o tailandês (ไทย) como 11º idioma, com Ajuda completa, abertura em tailandês num sistema em tailandês e fonte tailandesa embutida; traz de volta o botão "Verificar versão" no cabeçalho e melhora a compatibilidade com LoRa APRS (posição comprimida com overlay numérico e itens APRS).
 

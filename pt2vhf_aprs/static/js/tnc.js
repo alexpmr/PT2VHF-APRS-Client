@@ -173,7 +173,7 @@
   };
 
   function tncLanguage() {
-    const lang = String(document.documentElement.lang || 'pt-BR').toLowerCase();
+    const lang = String(document.documentElement.lang || 'en').toLowerCase();
     if (lang.startsWith('en')) return 'en';
     if (lang.startsWith('es')) return 'es';
     if (lang.startsWith('fr')) return 'fr';

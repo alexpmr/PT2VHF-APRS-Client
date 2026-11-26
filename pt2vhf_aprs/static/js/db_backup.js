@@ -21,7 +21,7 @@
 
   function fmtDate(iso) {
     try {
-      const lang = window.pt2vhfLanguage ? window.pt2vhfLanguage() : 'pt-BR';
+      const lang = window.pt2vhfLanguage ? window.pt2vhfLanguage() : 'en';
       return new Date(iso).toLocaleString(lang === 'th-TH' ? 'th-TH-u-ca-gregory' : lang, { dateStyle: 'short', timeStyle: 'short' });
     } catch (_) { return iso; }
   }
