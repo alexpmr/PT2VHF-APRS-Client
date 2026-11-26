@@ -89,3 +89,13 @@ def test_installers_default_to_english():
         assert "ShowLanguageDialog=auto" in text
         head = text[:text.index("[Code]")]
         assert '"Criar atalho' not in head and '"Executar ' not in head and "{cm:RunApp," in head
+
+
+def test_header_update_button_old_style():
+    # v2.0.7 (pedido do Alex): verde "Última versão" na mais nova, âmbar com a versão nova.
+    js = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
+    css = (ROOT / "pt2vhf_aprs/static/css/app.css").read_text(encoding="utf-8")
+    assert "function syncHeaderUpdateButton()" in js
+    assert "ui('Última versão', 'Latest version')" in js
+    assert "uiFmt('Versão {version} disponível'" in js
+    assert ".header-update-button.is-latest" in css and ".header-update-button.is-update" in css

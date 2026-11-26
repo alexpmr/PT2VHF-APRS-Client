@@ -5,6 +5,7 @@
   - **Menu da bandeja e "Deseja realmente sair?"** saíam sempre em português; agora seguem o idioma do app (inglês de reserva).
   - **Detecção no Windows:** códigos de idioma que o Python não conhece (ex.: espanhol da América Latina) faziam a detecção cair no formato regional. Agora o nome do idioma vem do próprio Windows, e um idioma de sistema não suportado vira inglês.
   - **Tela inicial:** a página abria em português por um instante até carregar a configuração; agora já sai do servidor no idioma em uso, e todas as reservas da interface são inglês.
+- **Botão "Verificar versão" no estilo antigo (pedido do Alex):** verde com "Última versão" quando o app está na versão mais nova e âmbar com "Versão X disponível" quando há atualização (clique abre o aviso para instalar).
 - **Assistente de primeira execução:** indicativo, passcode, posição ou grid locator e servidor APRS-IS sugerido pela região; aparece só em instalação nova.
 - **Aviso no sistema para mensagem recebida** (bandeja no Windows, notify-send no Linux, macOS) quando a janela está em segundo plano, e contador "(N)" no título.
 - **Backup automático do banco:** cópia diária conferida e compactada em `data/backups/` (guarda 7), cópia manual e restauração na próxima abertura.

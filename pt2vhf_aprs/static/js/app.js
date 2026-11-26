@@ -408,6 +408,7 @@
         throw new Error(data.error || ui('Falha temporária na verificação.', 'Temporary update check failure.'));
       }
       updateUpdateSettingsUi();
+      syncHeaderUpdateButton();
     } catch (err) {
       console.warn('Falha ao verificar nova versão:', err);
       el.classList.remove('checking');
@@ -945,13 +946,34 @@
     }
     $('#updateModal')?.classList.add('hidden');
   });
+  // v2.0.7 (pedido do Alex): o botão do cabeçalho volta ao estilo antigo — verde "Última versão" quando
+  // está na mais nova, âmbar com a versão nova disponível; nos outros casos, "Verificar versão".
+  function syncHeaderUpdateButton() {
+    const button = $('#headerCheckUpdateButton');
+    if (!button || button.disabled) return;
+    const info = state.updateInfo || {};
+    button.classList.remove('is-latest', 'is-update');
+    if (info.status === 'update_available' && info.latest_version) {
+      button.classList.add('is-update');
+      button.textContent = uiFmt('Versão {version} disponível', 'Version {version} available', { version: info.latest_version });
+      button.title = ui('Clique para ver e instalar a versão nova.', 'Click to see and install the new version.');
+    } else if (info.status === 'latest') {
+      button.classList.add('is-latest');
+      button.textContent = ui('Última versão', 'Latest version');
+      button.title = ui('Você está na versão mais recente.', 'You are on the latest version.');
+    } else {
+      button.textContent = ui('Verificar versão', 'Check version');
+      button.title = ui('Verificar se há versão nova', 'Check for a new version');
+    }
+  }
+  document.addEventListener('pt2vhf-language-changed', () => syncHeaderUpdateButton());
+
   async function checkUpdatesNow(button = null) {
-    const label = button ? button.textContent : '';
-    if (button) { button.disabled = true; button.textContent = ui('Verificando…', 'Checking…'); }
+    if (button) { button.disabled = true; button.classList.remove('is-latest', 'is-update'); button.textContent = ui('Verificando…', 'Checking…'); }
     try {
       await refreshVersionStatus(true);
     } finally {
-      if (button) { button.disabled = false; button.textContent = label; }
+      if (button) { button.disabled = false; syncHeaderUpdateButton(); }
     }
     if (state.updateInfo?.status === 'update_available') showUpdateModal();
     else if (state.updateInfo?.status === 'latest') toast(ui('Verificação concluída: última versão.', 'Check complete: latest version.'), 'ok');

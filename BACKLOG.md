@@ -1,3 +1,8 @@
+## RESOLVIDO (v2.0.7) — Botão "Verificar versão" volta ao estilo antigo (pedido do Alex, 26/11/2026)
+
+- Verde "Última versão" quando está na mais nova; âmbar com "Versão X disponível" quando há atualização.
+  `syncHeaderUpdateButton()` em `app.js`; a pílula `#versionStatus` some no cabeçalho largo para não repetir.
+
 ## RESOLVIDO (v2.0.7) — App abrindo em português no exterior (relato de usuários, 26/11/2026)
 
 - **Regra (Alex):** idioma do SO quando suportado; inglês quando não é. Nunca português por padrão.
