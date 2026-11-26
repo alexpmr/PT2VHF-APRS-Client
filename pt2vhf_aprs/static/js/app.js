@@ -1269,6 +1269,13 @@
     return out;
   };
   window.pt2vhfLanguage = () => state.language;
+  window.pt2vhfStationHelpers = {
+    calculateAprsPasscode: value => calculateAprsPasscode(value),
+    isValidAmateurCallsign: value => isValidAmateurCallsign(value),
+    maidenheadDecode: value => maidenheadDecode(value),
+    maidenheadEncode: (lat, lon, chars = 6) => maidenheadEncode(lat, lon, chars),
+    reloadConfig: () => loadConfig({ force: true }),
+  };
   window.pt2vhfShowProcessing = showProcessing;
   window.pt2vhfUpdateProcessing = updateProcessing;
   window.pt2vhfHideProcessing = hideProcessing;

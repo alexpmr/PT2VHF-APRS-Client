@@ -5279,3 +5279,17 @@ html[data-theme="light"] .leaflet-popup-scrolled .station-popup-actions { backgr
 #dbBackupCard .db-backup-table td:last-child { text-align: right; }
 #dbBackupCard .db-restore-pending { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(255, 170, 0, .14); margin: 8px 0; }
 #dbBackupCard .db-restore-pending.hidden { display: none; }
+
+/* v2.0.7: assistente de primeiro uso */
+.onboarding-card { max-width: 520px; width: calc(100vw - 32px); display: flex; flex-direction: column; gap: 10px; }
+.onboarding-card h3 { margin: 0 0 4px; }
+.onboarding-card .field { display: flex; flex-direction: column; gap: 4px; }
+.onboarding-card input, .onboarding-card select { width: 100%; box-sizing: border-box; }
+.onboarding-card .onboarding-coords { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.onboarding-steps { display: flex; gap: 6px; }
+.onboarding-steps span { flex: 1; height: 4px; border-radius: 2px; background: rgba(127, 127, 127, .3); }
+.onboarding-steps span.active { background: var(--accent, #ff8c3b); }
+.onboarding-step.hidden { display: none; }
+.onboarding-actions { display: flex; align-items: center; gap: 8px; }
+.onboarding-actions .onboarding-spacer { flex: 1; }
+.onboarding-actions .hidden { display: none; }
