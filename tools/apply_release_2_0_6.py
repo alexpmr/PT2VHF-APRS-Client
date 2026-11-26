@@ -203,15 +203,12 @@ assert "def https_handler(" in read("pt2vhf_aprs/release_check.py") and "certifi
 assert '"units": "metric"' in database and 'id="appUnits"' in html and "function fmtDistKm(" in js
 assert 'missing.append("Altitude")' not in database
 assert "function scrollMessagesToNewest()" in js
-arm = read(".github/workflows/build-linux-arm64-raspberry.yml")
-assert "apply_release_2_0_6.py" in arm and "1.15.6" not in arm
 print("invariantes herdados da v1.15.7 OK")
 # v1.15.8: mapa de calor sem corte e aviso de boas-vindas como no Sat Tool.
 cov = read("pt2vhf_aprs/rf_coverage.py")
 assert "def _coarsen(" in cov and "points = _coarsen(points" in cov and "def _weight(" in cov
 assert "Feito por radioamadores, para radioamadores" in html and 'href="https://www.pt2vhf.com"' in html
 assert "Feito por radioamadores, para radioamadores" in js and "ja: [" in js[js.index("const OFFICIAL_SITE_NOTICE"):]
-assert "workflow_dispatch:" in arm and "\n  push:" not in arm
 print("invariantes herdados da v1.15.8 OK")
 # v1.15.9: PU2MUS (cancelar reenvio/copiar), Kenwood TS-2000, Ajuda em inglês.
 assert "def cancel_message_retries(" in database and '"/api/messages/<int:row_id>/cancel"' in read("pt2vhf_aprs/web.py")

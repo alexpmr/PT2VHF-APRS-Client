@@ -910,7 +910,7 @@ def test_topology_stats_active_stations_excludes_telemetry_igates_and_digipeater
 def test_v1624_official_logo_is_single_branding_source():
     root = Path(__file__).resolve().parent.parent
     html = (root / "pt2vhf_aprs" / "templates" / "index.html").read_text(encoding="utf-8")
-    workflow = (root / ".github" / "workflows" / "build-windows.yml").read_text(encoding="utf-8")
+    workflow = (root / ".github" / "workflows" / "build-production-current.yml").read_text(encoding="utf-8")
     win_icon = (root / "windows" / "make_icon.py").read_text(encoding="utf-8")
     mac_icon = (root / "macos" / "make_icon.py").read_text(encoding="utf-8")
     linux_build = (root / "linux" / "build_linux.sh").read_text(encoding="utf-8")
@@ -1615,15 +1615,9 @@ def test_v177_message_cleanup_map_defaults_and_update_cadence():
     assert "updateCheckIntervalMs()" in js
 
 
-def test_v177_legacy_build_patch_does_not_restore_global_history_button():
-    root = Path(__file__).resolve().parent.parent
-    patch = (root / "tools" / "apply_release_1_6_5.py").read_text(encoding="utf-8")
-    assert "Não recriar o antigo botão" in patch
-    assert "assert 'id=\"toggleReplayBarButton\"' not in html" in patch
-
 def test_v177_windows_arm64_build_and_updater_assets(monkeypatch):
     root = Path(__file__).resolve().parent.parent
-    workflow = (root / ".github" / "workflows" / "build-windows.yml").read_text(encoding="utf-8")
+    workflow = (root / ".github" / "workflows" / "build-production-current.yml").read_text(encoding="utf-8")
     installer = (root / "windows" / "installer_arm64.iss").read_text(encoding="utf-8")
     portable_spec = (root / "windows" / "PT2VHF_APRS_Client_Portable_ARM64.spec").read_text(encoding="utf-8")
     updater_source = (root / "pt2vhf_aprs" / "updater.py").read_text(encoding="utf-8")

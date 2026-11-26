@@ -68,7 +68,7 @@ Release artifacts are produced by GitHub Actions on GitHub-hosted Windows runner
 
 Workflow:
 
-https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/.github/workflows/build-windows.yml
+https://github.com/alexpmr/PT2VHF-APRS-Client/blob/main/.github/workflows/build-production-current.yml
 
 Build process:
 

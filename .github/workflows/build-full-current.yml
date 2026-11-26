@@ -1,10 +1,9 @@
 name: Build Full Current Release
 
+# Só PR e execução manual: o push de release na main já é compilado e publicado pelo
+# build-production-current.yml (antes as duas compilavam tudo no mesmo push).
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
