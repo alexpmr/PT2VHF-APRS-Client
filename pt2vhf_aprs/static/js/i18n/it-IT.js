@@ -1148,5 +1148,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "Ripristinare la copia del {data}? Stazioni, messaggi e tracklog ricevuti dopo saranno sostituiti. Il database attuale resta nella cartella before_restore.",
  "Restauração cancelada.": "Ripristino annullato.",
  "Cópia do banco não encontrada.": "Copia del database non trovata.",
- "Restaurar o banco só é permitido no próprio computador.": "Il ripristino del database è consentito solo su questo computer."
+ "Restaurar o banco só é permitido no próprio computador.": "Il ripristino del database è consentito solo su questo computer.",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "Mostra una notifica di sistema quando arriva un messaggio con il programma ridotto a icona o in background",
+ "{n} mensagens novas": "{n} nuovi messaggi",
+ "Mensagem de {indicativo}": "Messaggio da {indicativo}"
 };

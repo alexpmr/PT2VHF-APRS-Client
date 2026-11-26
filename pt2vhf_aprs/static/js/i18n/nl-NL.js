@@ -1090,5 +1090,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "Kopie van {data} terugzetten? Stations, berichten en tracklogs die daarna zijn ontvangen, worden vervangen. De huidige database blijft in de map before_restore.",
  "Restauração cancelada.": "Terugzetten geannuleerd.",
  "Cópia do banco não encontrada.": "Databasekopie niet gevonden.",
- "Restaurar o banco só é permitido no próprio computador.": "De database terugzetten mag alleen op deze computer."
+ "Restaurar o banco só é permitido no próprio computador.": "De database terugzetten mag alleen op deze computer.",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "Systeemmelding tonen als er een bericht binnenkomt terwijl het programma geminimaliseerd of op de achtergrond is",
+ "{n} mensagens novas": "{n} nieuwe berichten",
+ "Mensagem de {indicativo}": "Bericht van {indicativo}"
 };

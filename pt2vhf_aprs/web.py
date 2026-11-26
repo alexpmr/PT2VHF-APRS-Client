@@ -28,6 +28,7 @@ from . import category_statistics, category_clear
 from . import tnc_listen, db_check
 from . import device_ids
 from . import db_backup
+from . import desktop_notify
 from . import version_announce
 from . import saved_results
 from .aprs_service import full_callsign, service
@@ -1359,6 +1360,16 @@ def create_app() -> Flask:
             return jsonify({"ok": True, "config": saved, "status": tnc_service.status()})
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
+
+    @app.post("/api/notify")
+    def api_notify():
+        """v2.0.7: aviso do sistema para mensagem recebida, só para a janela deste computador."""
+        if str(request.remote_addr or "") not in {"127.0.0.1", "::1", "localhost"}:
+            return jsonify({"ok": False, "reason": "remote"}), 403
+        if not int(db.get_config().get("desktop_notifications", 1)):
+            return jsonify({"ok": False, "reason": "disabled"})
+        body = request.get_json(force=True) or {}
+        return jsonify(desktop_notify.notify(body.get("title"), body.get("body")))
 
     @app.get("/api/db/backups")
     def api_db_backups():

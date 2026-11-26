@@ -1090,5 +1090,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "{data} のコピーを復元しますか？それ以降に受信した局、メッセージ、トラックログは置き換えられます。現在のデータベースは before_restore フォルダーに保管されます。",
  "Restauração cancelada.": "復元を取り消しました。",
  "Cópia do banco não encontrada.": "データベースのコピーが見つかりません。",
- "Restaurar o banco só é permitido no próprio computador.": "データベースの復元はこのコンピューターでのみ可能です。"
+ "Restaurar o banco só é permitido no próprio computador.": "データベースの復元はこのコンピューターでのみ可能です。",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "プログラムが最小化またはバックグラウンドのときにメッセージが届いたらシステム通知を表示する",
+ "{n} mensagens novas": "新着メッセージ {n} 件",
+ "Mensagem de {indicativo}": "{indicativo} からのメッセージ"
 };

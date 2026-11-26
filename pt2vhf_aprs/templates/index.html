@@ -1188,6 +1188,10 @@
               <span>Tocar sinal sonoro ao receber mensagem para minha estação</span>
             </label>
             <label class="check-field message-sound-check">
+              <input name="desktop_notifications" type="checkbox" checked>
+              <span>Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano</span>
+            </label>
+            <label class="check-field message-sound-check">
               <input name="sound_on_message_ack" type="checkbox" checked>
               <span>Tocar sinal sonoro ao receber confirmação (ACK) de mensagem enviada</span>
             </label>
@@ -2061,6 +2065,7 @@
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc_profiles.js') }}"></script>
 <script src="{{ url_for('static', filename='js/db_backup.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v1818.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v190.js') }}"></script>
 <script src="{{ url_for('static', filename='js/v110.js') }}"></script>

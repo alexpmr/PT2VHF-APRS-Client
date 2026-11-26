@@ -1148,5 +1148,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "¿Restaurar la copia del {data}? Las estaciones, mensajes y tracklogs recibidos después serán reemplazados. La base actual se guarda en la carpeta before_restore.",
  "Restauração cancelada.": "Restauración cancelada.",
  "Cópia do banco não encontrada.": "Copia de la base no encontrada.",
- "Restaurar o banco só é permitido no próprio computador.": "Restaurar la base solo está permitido en el propio equipo."
+ "Restaurar o banco só é permitido no próprio computador.": "Restaurar la base solo está permitido en el propio equipo.",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "Avisar mediante el sistema cuando llegue un mensaje con el programa minimizado o en segundo plano",
+ "{n} mensagens novas": "{n} mensajes nuevos",
+ "Mensagem de {indicativo}": "Mensaje de {indicativo}"
 };

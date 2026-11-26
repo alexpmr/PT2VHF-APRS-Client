@@ -1148,5 +1148,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "Kopie vom {data} wiederherstellen? Danach empfangene Stationen, Nachrichten und Tracklogs werden ersetzt. Die aktuelle Datenbank bleibt im Ordner before_restore.",
  "Restauração cancelada.": "Wiederherstellung abgebrochen.",
  "Cópia do banco não encontrada.": "Datenbankkopie nicht gefunden.",
- "Restaurar o banco só é permitido no próprio computador.": "Die Datenbank kann nur auf diesem Computer wiederhergestellt werden."
+ "Restaurar o banco só é permitido no próprio computador.": "Die Datenbank kann nur auf diesem Computer wiederhergestellt werden.",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "Systembenachrichtigung anzeigen, wenn eine Nachricht eintrifft, während das Programm minimiert oder im Hintergrund ist",
+ "{n} mensagens novas": "{n} neue Nachrichten",
+ "Mensagem de {indicativo}": "Nachricht von {indicativo}"
 };

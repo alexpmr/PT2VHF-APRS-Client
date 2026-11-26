@@ -8186,11 +8186,17 @@ TNC TX: ${rfTx.toLocaleString(currentLocale())} bytes · ${Number(tnc.frames_tx 
       }
       const messagesTab = $('.tab[data-tab="messages"]');
       messagesTab?.classList.toggle('has-unread', unreadCount > 0 && state.activeTab !== 'messages');
+      // v2.0.7: aviso do sistema e contador no título da janela (notifications.js).
+      document.dispatchEvent(new CustomEvent('pt2vhf-unread-count', { detail: { count: unreadCount } }));
       if (!state.messageAlertBaselineReady) {
         state.lastAlertedMessageId = latest;
+        state.lastNotifiedMessageId = latest;
         state.messageAlertBaselineReady = true;
         return;
       }
+      const fresh = incoming.filter(m => Number(m.id) > Number(state.lastNotifiedMessageId || 0) && !m.read_at);
+      state.lastNotifiedMessageId = Math.max(Number(state.lastNotifiedMessageId || 0), latest);
+      if (fresh.length) document.dispatchEvent(new CustomEvent('pt2vhf-personal-messages', { detail: { messages: fresh } }));
 
       const modalVisible = !$('#incomingMessageModal')?.classList.contains('hidden');
       const compactVisible = !$('#incomingMessageCompact')?.classList.contains('hidden');

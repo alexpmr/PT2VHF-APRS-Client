@@ -1151,5 +1151,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "กู้คืนสำเนาของ {data} หรือไม่ สถานี ข้อความ และแทร็กล็อกที่ได้รับหลังจากนั้นจะถูกแทนที่ ฐานข้อมูลปัจจุบันจะถูกเก็บไว้ในโฟลเดอร์ before_restore",
  "Restauração cancelada.": "ยกเลิกการกู้คืนแล้ว",
  "Cópia do banco não encontrada.": "ไม่พบสำเนาฐานข้อมูล",
- "Restaurar o banco só é permitido no próprio computador.": "กู้คืนฐานข้อมูลได้เฉพาะบนคอมพิวเตอร์เครื่องนี้"
+ "Restaurar o banco só é permitido no próprio computador.": "กู้คืนฐานข้อมูลได้เฉพาะบนคอมพิวเตอร์เครื่องนี้",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "แสดงการแจ้งเตือนของระบบเมื่อมีข้อความเข้าขณะโปรแกรมย่ออยู่หรือทำงานเบื้องหลัง",
+ "{n} mensagens novas": "ข้อความใหม่ {n} ข้อความ",
+ "Mensagem de {indicativo}": "ข้อความจาก {indicativo}"
 };

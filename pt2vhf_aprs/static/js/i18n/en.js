@@ -819,5 +819,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "Restore the copy from {data}? Stations, messages and tracklogs received after it will be replaced. The current database is kept in the before_restore folder.",
  "Restauração cancelada.": "Restore cancelled.",
  "Cópia do banco não encontrada.": "Database copy not found.",
- "Restaurar o banco só é permitido no próprio computador.": "Restoring the database is only allowed on this computer."
+ "Restaurar o banco só é permitido no próprio computador.": "Restoring the database is only allowed on this computer.",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "Show a system notification when a message arrives while the program is minimized or in the background",
+ "{n} mensagens novas": "{n} new messages",
+ "Mensagem de {indicativo}": "Message from {indicativo}"
 };

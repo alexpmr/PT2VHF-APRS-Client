@@ -1090,5 +1090,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "Przywrócić kopię z {data}? Stacje, wiadomości i tracklogi odebrane później zostaną zastąpione. Obecna baza zostanie zachowana w folderze before_restore.",
  "Restauração cancelada.": "Anulowano przywracanie.",
  "Cópia do banco não encontrada.": "Nie znaleziono kopii bazy.",
- "Restaurar o banco só é permitido no próprio computador.": "Przywracanie bazy jest dozwolone tylko na tym komputerze."
+ "Restaurar o banco só é permitido no próprio computador.": "Przywracanie bazy jest dozwolone tylko na tym komputerze.",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "Pokaż powiadomienie systemowe, gdy przyjdzie wiadomość, a program jest zminimalizowany lub w tle",
+ "{n} mensagens novas": "Nowe wiadomości: {n}",
+ "Mensagem de {indicativo}": "Wiadomość od {indicativo}"
 };

@@ -1090,5 +1090,8 @@
  "Restaurar a cópia de {data}? Estações, mensagens e tracklogs recebidos depois dela serão substituídos. O banco atual fica guardado na pasta before_restore.": "恢复 {data} 的副本？之后收到的电台、消息和轨迹将被替换。当前数据库保存在 before_restore 文件夹中。",
  "Restauração cancelada.": "已取消恢复。",
  "Cópia do banco não encontrada.": "未找到数据库副本。",
- "Restaurar o banco só é permitido no próprio computador.": "只能在本机上恢复数据库。"
+ "Restaurar o banco só é permitido no próprio computador.": "只能在本机上恢复数据库。",
+ "Avisar pelo sistema quando chegar mensagem com o programa minimizado ou em segundo plano": "程序最小化或在后台时收到消息，显示系统通知",
+ "{n} mensagens novas": "{n} 条新消息",
+ "Mensagem de {indicativo}": "来自 {indicativo} 的消息"
 };
