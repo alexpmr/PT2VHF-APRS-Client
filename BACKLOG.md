@@ -1,3 +1,24 @@
+## RESOLVIDO (v2.0.6) — Compatibilidade com LoRa APRS (pedido do Alex, 24/11/2026)
+
+- **Pedido:** pacotes de trackers/iGates LoRa (destino APLRG1/APLRT1, posição comprimida, ex.: `=LXc#7C\1ha !GLoRa APRS`).
+- **Conferido:** o aprslib já decodificava posição, rumo/velocidade, altitude e alcance comprimidos, e as mensagens LoRa
+  chegavam normalmente (testes em `tests/test_v206_lora_aprs.py`).
+- **Corrigido em `pt2vhf_aprs/aprs_parse.py`:** overlay numérico comprimido (a–j → 0–9) e itens APRS `)NOME!pos`/`)NOME_pos`
+  (o aprslib recusa o formato e o pacote era descartado), agora gravados como objetos.
+
+## RESOLVIDO (v2.0.6) — Botão "Verificar versão" de volta no cabeçalho (pedido do Alex, 26/11/2026)
+
+- Desde a 2.0.3 o estado da versão ficava oculto no cabeçalho até haver versão nova. Agora há o botão
+  `#headerCheckUpdateButton` à esquerda de "Enviar Beacon" (some abaixo de 1100 px, onde o cabeçalho já não cabe).
+
+## RESOLVIDO (v2.0.6) — Idioma tailandês em todas as versões para PC (pedido do Alex, 26/11/2026)
+
+- **Pedido:** adicionar o tailandês ao cliente PC (não ao Android) e abrir no idioma do SO por padrão.
+- **Entregue:** `th-TH` em todos os seletores, catálogo `static/js/i18n_th.js` (mesma cobertura dos outros 8 idiomas),
+  Ajuda completa em `static/js/help_i18n_th.js`, Sobre, splash, sugestões de SSID e novidades da versão em tailandês;
+  `os_language` mapeia `th`/`th_TH`/`Thai_Thailand`; datas em tailandês no calendário gregoriano; Noto Sans Thai
+  (SIL OFL) embutida em `static/fonts/` com `unicode-range` só da escrita tailandesa (Linux sem fonte tailandesa).
+
 ## RESOLVIDO (v2.0.4) — Linux x86_64 "Illegal instruction" em CPUs sem AVX2 (relato HA7VDI, Debian 13, 23/11/2026)
 
 - **Causa:** o job `linux-x64` rodava em `ubuntu-latest`, que virou Ubuntu 26.04. O Python 3.12.16 do `setup-python`

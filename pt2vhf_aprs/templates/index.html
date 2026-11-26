@@ -32,6 +32,8 @@
   </div>
   <div class="connection-box">
     <button id="headerQuitButton" type="button" class="btn secondary header-quit-button hidden" title="Encerrar o PT2VHF APRS Client">Sair</button>
+    <!-- v2.0.6: verificar versão nova de volta na tela principal (pedido do Alex). -->
+    <button id="headerCheckUpdateButton" type="button" class="btn secondary header-beacon-button header-update-button" title="Verificar se há versão nova">Verificar versão</button>
     <button id="headerSendBeaconButton" type="button" class="btn secondary header-beacon-button" title="Enviar Beacon">Enviar Beacon</button>
     <div id="webAccessStatus" class="web-access-status" aria-live="polite"><strong id="webAccessUrl">detectando…</strong></div>
     <div id="languageQuickSwitch" class="language-quick-switch" aria-label="Idioma / Language">
@@ -80,6 +82,10 @@
         <button type="button" class="language-quick-option" data-language="zh-CN" role="menuitemradio" aria-checked="false">
           <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_china.svg') }}" alt="中国">
           <span>简体中文</span>
+        </button>
+        <button type="button" class="language-quick-option" data-language="th-TH" role="menuitemradio" aria-checked="false">
+          <img class="language-quick-img" src="{{ url_for('static', filename='img/flag_thailand.svg') }}" alt="ประเทศไทย">
+          <span>ไทย</span>
         </button>
       </div>
     </div>
@@ -1124,6 +1130,7 @@
                 <option value="pl-PL">Polski</option>
                 <option value="nl-NL">Nederlands</option>
                 <option value="zh-CN">简体中文</option>
+                <option value="th-TH">ไทย</option>
               </select>
             </div>
             <small>O idioma é aplicado imediatamente à interface.</small>
@@ -2005,8 +2012,10 @@
 <script src="{{ url_for('static', filename='js/i18n_v1430.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_live.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_v205.js') }}"></script>
+<script src="{{ url_for('static', filename='js/i18n_th.js') }}"></script>
 <script src="{{ url_for('static', filename='js/i18n_dom.js') }}"></script>
 <script src="{{ url_for('static', filename='js/help_i18n_v205.js') }}"></script>
+<script src="{{ url_for('static', filename='js/help_i18n_th.js') }}"></script>
 <script src="{{ url_for('static', filename='js/help_i18n.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tnc.js') }}"></script>

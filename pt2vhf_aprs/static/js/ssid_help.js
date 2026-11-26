@@ -6,8 +6,32 @@
 
 const $ = (s, r = document) => r.querySelector(s);
 const lang = () => String(document.documentElement.lang || localStorage.getItem('pt2vhf_language') || 'pt-BR').toLowerCase();
+// v2.0.6: tailandês, pela chave em inglês.
+const TH = {
+  'SSID suggestions': 'คำแนะนำ SSID',
+  'WB4APR (APRS author) recommendations to hint the station type from the callsign alone. Click a row to use that SSID.': 'คำแนะนำของ WB4APR (ผู้สร้าง APRS) เพื่อบอกประเภทสถานีจากสัญญาณเรียกขานเพียงอย่างเดียว คลิกที่แถวเพื่อใช้ SSID นั้น',
+  'Close': 'ปิด',
+  'SSID 0 is usually not displayed: PY2ABC is the same as PY2ABC-0.': 'โดยปกติจะไม่แสดง SSID 0: PY2ABC เหมือนกับ PY2ABC-0',
+  '* One-way trackers should prefer -12, because -9 usually means a ham in full two-way contact, reachable by APRS message or voice.': '* ตัวติดตามที่ส่งอย่างเดียวควรใช้ -12 เพราะ -9 มักหมายถึงนักวิทยุสมัครเล่นที่ติดต่อได้สองทาง ติดต่อได้ทางข้อความ APRS หรือเสียง',
+  'SSIDs -1 to -4 and -15 are generic, for anyone with several stations of the same kind (up to 6 digis, trackers, weather stations or vehicles). Use -6 for special activities (satellite, ISS, 6 m, outings) so tracks and statistics stay separate from normal operation.': 'SSID -1 ถึง -4 และ -15 เป็นแบบทั่วไป สำหรับผู้ที่มีหลายสถานีประเภทเดียวกัน (digi ตัวติดตาม สถานีตรวจอากาศ หรือยานพาหนะ ได้ถึง 6 รายการ) ใช้ -6 สำหรับกิจกรรมพิเศษ (ดาวเทียม ISS 6 ม. การออกภาคสนาม) เพื่อให้เส้นทางและสถิติแยกจากการใช้งานปกติ',
+  'Objects and internet-generated stations can use other suffixes, such as -63 (PSK63), -tt (APRStt/DTMF), -ID (RFID) and -A to -Z (D-Star). These are guidelines, not a rule.': 'วัตถุและสถานีที่สร้างจากอินเทอร์เน็ตใช้คำต่อท้ายอื่นได้ เช่น -63 (PSK63), -tt (APRStt/DTMF), -ID (RFID) และ -A ถึง -Z (D-Star) นี่เป็นเพียงคำแนะนำ ไม่ใช่กฎ',
+  'Do not show automatically': 'ไม่ต้องแสดงอัตโนมัติ',
+  'Your primary station, usually fixed and message capable': 'สถานีหลักของคุณ มักเป็นสถานีประจำที่และรับส่งข้อความได้',
+  'Generic additional station: digi, mobile, wx, etc.': 'สถานีเพิ่มเติมทั่วไป: digi, เคลื่อนที่, ตรวจอากาศ ฯลฯ',
+  'Other networks (D-Star, iPhones, Androids, BlackBerrys, etc.)': 'เครือข่ายอื่น (D-Star, iPhone, Android, BlackBerry ฯลฯ)',
+  'Special activity: satellite ops, camping, 6 meters, etc.': 'กิจกรรมพิเศษ: ใช้งานผ่านดาวเทียม ตั้งแคมป์ 6 เมตร ฯลฯ',
+  'Walkie-talkies, HTs or other human portable': 'วิทยุมือถือ (HT) หรืออุปกรณ์พกพาอื่น',
+  'Boats, sailboats, RVs or second main mobile': 'เรือ เรือใบ รถบ้าน หรือสถานีเคลื่อนที่หลักลำดับที่สอง',
+  'Primary mobile (usually message capable)': 'สถานีเคลื่อนที่หลัก (มักรับส่งข้อความได้)',
+  'Internet, iGates, EchoLink, Winlink, AVRS, APRN, etc.': 'อินเทอร์เน็ต, iGate, EchoLink, Winlink, AVRS, APRN ฯลฯ',
+  'Balloons, aircraft, spacecraft, etc.': 'บอลลูน อากาศยาน ยานอวกาศ ฯลฯ',
+  'APRStt, DTMF, RFID, devices, one-way trackers*, etc.': 'APRStt, DTMF, RFID, อุปกรณ์, ตัวติดตามแบบส่งอย่างเดียว* ฯลฯ',
+  'Weather stations': 'สถานีตรวจอากาศ',
+  'Truckers or generally full time drivers': 'คนขับรถบรรทุกหรือผู้ที่ขับรถเป็นประจำ',
+};
 const tr = (pt, en, es) => {
   const l = lang();
+  if (l.startsWith('th') && TH[en]) return TH[en];
   return l.startsWith('pt') ? pt : l.startsWith('es') ? (es || en) : en;
 };
 const HIDE_KEY = 'pt2vhf_ssid_help_hidden';

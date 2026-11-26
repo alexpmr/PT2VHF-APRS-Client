@@ -24,7 +24,7 @@ const assert = require('node:assert/strict');
     for (const [language, htmlLang, flag] of [
       ['en', 'en', 'flag_uk.svg'], ['es', 'es', 'flag_spain.svg'],
       ['fr', 'fr', 'flag_france.svg'], ['de-DE', 'de', 'flag_germany.svg'],
-      ['it-IT', 'it', 'flag_italy.svg'], ['pt-BR', 'pt-BR', 'flag_br.svg']
+      ['it-IT', 'it', 'flag_italy.svg'], ['th-TH', 'th', 'flag_thailand.svg'], ['pt-BR', 'pt-BR', 'flag_br.svg']
     ]) {
       await page.locator('#languageQuickCurrent').click();
       const saved = page.waitForResponse(response => response.url().endsWith('/api/config') && response.request().method() === 'POST');
@@ -45,9 +45,9 @@ const assert = require('node:assert/strict');
       await page.waitForTimeout(1800);
       await dismissNotices();
       assert.equal(await page.locator('#configForm [name="language"]').inputValue(), language);
-      assert.equal(await page.locator('.language-quick-option').count(), 10);
+      assert.equal(await page.locator('.language-quick-option').count(), 11);
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: real application, six languages, nine tabs, exact flags, active option and saved language after reload');
+    console.log('PASS: real application, seven languages, nine tabs, exact flags, active option and saved language after reload');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

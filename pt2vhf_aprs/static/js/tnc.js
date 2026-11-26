@@ -183,6 +183,7 @@
     if (lang.startsWith('pl')) return 'pl-PL';
     if (lang.startsWith('nl')) return 'nl-NL';
     if (lang.startsWith('zh')) return 'zh-CN';
+    if (lang.startsWith('th')) return 'th-TH';
     return 'pt-BR';
   }
 

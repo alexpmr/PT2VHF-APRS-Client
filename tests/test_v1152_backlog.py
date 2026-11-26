@@ -80,4 +80,4 @@ def test_header_beacon_button_and_no_tiny_cc():
     js = (ROOT / "pt2vhf_aprs/static/js/app.js").read_text(encoding="utf-8")
     assert '>Enviar Beacon</button>' in html and "beacon-icon-button" not in html
     assert "tiny.cc" not in html and "tiny.cc" not in js
-    assert js.count(": www.PT2VHF.com`") == 10
+    assert js.count(": www.PT2VHF.com`") == 11  # v2.0.6: + tailandês

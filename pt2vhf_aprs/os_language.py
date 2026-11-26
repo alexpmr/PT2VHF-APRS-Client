@@ -11,12 +11,12 @@ import subprocess
 import sys
 from functools import lru_cache
 
-SUPPORTED = ("pt-BR", "en", "es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN")
+SUPPORTED = ("pt-BR", "en", "es", "fr", "de-DE", "it-IT", "ja-JP", "pl-PL", "nl-NL", "zh-CN", "th-TH")
 FALLBACK = "en"
 
 _BY_PREFIX = {
     "pt": "pt-BR", "en": "en", "es": "es", "fr": "fr", "de": "de-DE", "it": "it-IT",
-    "ja": "ja-JP", "pl": "pl-PL", "nl": "nl-NL", "zh": "zh-CN",
+    "ja": "ja-JP", "pl": "pl-PL", "nl": "nl-NL", "zh": "zh-CN", "th": "th-TH",
 }
 
 
@@ -31,7 +31,7 @@ def map_language(tag: str | None) -> str | None:
         return _BY_PREFIX[prefix]
     # Nomes longos do Windows (locale.getlocale() devolve "Portuguese_Brazil").
     names = {"portuguese": "pt-BR", "english": "en", "spanish": "es", "french": "fr", "german": "de-DE",
-             "italian": "it-IT", "japanese": "ja-JP", "polish": "pl-PL", "dutch": "nl-NL", "chinese": "zh-CN"}
+             "italian": "it-IT", "japanese": "ja-JP", "polish": "pl-PL", "dutch": "nl-NL", "chinese": "zh-CN", "thai": "th-TH"}
     return names.get(prefix)
 
 

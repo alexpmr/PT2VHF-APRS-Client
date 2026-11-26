@@ -19,6 +19,7 @@ except ImportError:  # Permite importar o módulo durante validações sem depen
 
 from . import __version__
 from . import APP_TOCALL
+from . import aprs_parse
 from . import database as db
 from . import diagnostics as diag
 
@@ -388,7 +389,7 @@ class APRSService:
 
         parsed: dict[str, Any] = {}
         try:
-            parsed = aprslib.parse(line) if aprslib else {}
+            parsed = aprs_parse.parse(line) if aprslib else {}
         except Exception:
             parsed = {"raw": line}
 
@@ -418,7 +419,7 @@ class APRSService:
             return
         parsed: dict[str, Any] = {}
         try:
-            parsed = aprslib.parse(line) if aprslib else {}
+            parsed = aprs_parse.parse(line) if aprslib else {}
         except Exception:
             parsed = {"raw": line}
         fmt = str(parsed.get("format") or "")
@@ -1111,7 +1112,7 @@ class APRSService:
                     # Apenas o meio APRS-IS é registrado como APRS-IS local.
                     if aprslib:
                         try:
-                            parsed = aprslib.parse(packet)
+                            parsed = aprs_parse.parse(packet)
                             db.record_packet(packet, full_callsign(cfg), str(parsed.get("format") or ""))
                             db.upsert_station(parsed)
                         except Exception as exc:

@@ -24,6 +24,7 @@ The project's own MIT-licensed source remains MIT-licensed; GPL-covered third-pa
 | PyInstaller | Windows packaging tool | GPLv2 with bootloader/bundling exception |
 | Leaflet | Interactive map client | BSD-2-Clause |
 | OpenStreetMap | Map data / tile service | See OpenStreetMap attribution and service terms |
+| Noto Sans Thai (`pt2vhf_aprs/static/fonts`) | Thai script font for the Thai interface | SIL Open Font License 1.1 |
 | APRS Device Identification (`aprsorg/aprs-deviceid`) | TOCALL-to-software/device identification database | CC BY-SA 2.0 |
 
 This list focuses on principal direct dependencies. Transitive Python dependencies retain their own licenses.

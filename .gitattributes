@@ -2,3 +2,4 @@
 # de linha no checkout (o runner Windows usa core.autocrlf=true, o que mudaria
 # o hash de leaflet.js e faria o navegador recusar o arquivo).
 pt2vhf_aprs/static/vendor/** -text
+pt2vhf_aprs/static/fonts/*.ttf binary
