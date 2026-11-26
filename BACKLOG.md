@@ -1,3 +1,22 @@
+## RESOLVIDO (próxima versão, ainda não lançada) — Melhorias sugeridas, pedido do Alex "implemente as 7" (26/11/2026)
+
+- **Assistente de primeira execução:** indicativo, passcode, posição (ou grid locator) e servidor sugerido pela região;
+  abre só em instalação nova (`onboarding_done`; quem já tem indicativo não vê). `static/js/onboarding.js`.
+- **Aviso no sistema para mensagem recebida:** balão da bandeja no Windows, `notify-send` no Linux, `osascript` no macOS,
+  e contador "(N)" no título; só quando a janela não está em foco. Opção em Configurações. `pt2vhf_aprs/desktop_notify.py`.
+- **Backup automático do banco:** cópia diária conferida e compactada em `data/backups/` (guarda 7), botão de cópia
+  manual e restauração aplicada na próxima abertura (o banco atual fica em `data/before_restore/`). `pt2vhf_aprs/db_backup.py`.
+- **GPS com SmartBeaconing:** NMEA serial ou gpsd; beacon com posição, rumo e velocidade; sem fix não há beacon automático.
+  `pt2vhf_aprs/gps_service.py`.
+- **Perfis de TNC:** salvar, carregar e apagar várias configurações de TNC (pergunta de usuário, 26/11/2026).
+- **Equipamento das estações:** base aprs-deviceid atualizada (481 TOCALLs) com atualização semanal e rádios Mic-E.
+  TOCALL próprio APVHFW/APVHFA/APVHFI a pedir ao aprsorg (o Alex abre o pedido); até a alocação segue APZVHF.
+- **Assinatura:** passos de SignPath (Windows) e notarização Apple prontos no workflow, desligados até haver segredos
+  (`docs/SIGNPATH_SETUP.md`, `docs/MACOS_SIGNING.md`).
+- **Manutenção:** 157 scripts `apply_release_*` antigos e 10 workflows obsoletos removidos; traduções num arquivo por
+  idioma em `static/js/i18n/` (`tools/i18n_add.py` adiciona textos nos 10). O `app.js` não foi dividido: estado
+  compartilhado no mesmo escopo e 75 testes leem o texto dele; funções novas entram como módulos separados.
+
 ## RESOLVIDO (v2.0.6) — Compatibilidade com LoRa APRS (pedido do Alex, 24/11/2026)
 
 - **Pedido:** pacotes de trackers/iGates LoRa (destino APLRG1/APLRT1, posição comprimida, ex.: `=LXc#7C\1ha !GLoRa APRS`).

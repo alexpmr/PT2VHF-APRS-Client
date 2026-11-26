@@ -83,3 +83,18 @@ Do not add a live signing step until:
 - third-party licensing obligations for the bundled Windows binary have been reviewed.
 
 This avoids creating a workflow that appears signed but silently publishes unsigned artifacts.
+
+## Status (v2.0.7): workflow pronto, desligado até haver segredo
+
+`build-production-current.yml` já tem os passos de assinatura nos jobs `windows-x64` e `windows-arm64`. Eles só rodam
+quando o segredo `SIGNPATH_API_TOKEN` existe (`SIGNPATH_ENABLED`). Sem o segredo, o build sai sem assinatura, como antes.
+
+Com o segredo, o job envia os `.exe` (instalador e portátil) num artefato `unsigned-windows-*`, espera a assinatura,
+copia os arquivos assinados por cima, confere com `Get-AuthenticodeSignature` (falha se não for `Valid`) e só então
+sobe o artefato que vai para a Release. O SHA-256 do OTA é calculado sobre os arquivos publicados, logo bate com os assinados.
+
+Para ligar: cadastrar as variáveis do repositório `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`,
+`SIGNPATH_SIGNING_POLICY_SLUG`, `SIGNPATH_ARTIFACT_CONFIGURATION_SLUG` e o segredo `SIGNPATH_API_TOKEN`.
+A configuração de artefato do SignPath deve aceitar um ZIP com os `.exe` na raiz. Conferir a versão atual da action
+`signpath/github-action-submit-signing-request` na página dela antes do primeiro uso.
+

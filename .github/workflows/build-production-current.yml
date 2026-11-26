@@ -13,6 +13,8 @@ jobs:
   windows-x64:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: windows-latest
+    env:
+      SIGNPATH_ENABLED: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -103,6 +105,44 @@ jobs:
         shell: bash
         run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
 
+      # Assinatura SignPath (v2.0.7): só roda quando o segredo SIGNPATH_API_TOKEN existe.
+      # Sem ele, o build segue sem assinatura como antes. Ver docs/SIGNPATH_SETUP.md.
+      - name: Upload unsigned Windows x64 files for signing
+        if: ${{ env.SIGNPATH_ENABLED == 'true' }}
+        id: upload-unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-windows-x64
+          path: |
+            dist-installer\*.exe
+          retention-days: 3
+
+      - name: Sign Windows x64 files with SignPath
+        if: ${{ env.SIGNPATH_ENABLED == 'true' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-x64
+
+      - name: Use signed Windows x64 files
+        if: ${{ env.SIGNPATH_ENABLED == 'true' }}
+        shell: pwsh
+        run: |
+          $signed = Get-ChildItem -Recurse signed-x64 -Filter *.exe
+          if (-not $signed) { throw "SignPath não devolveu arquivos assinados" }
+          foreach ($file in $signed) {
+            Copy-Item $file.FullName (Join-Path dist-installer $file.Name) -Force
+            $sig = Get-AuthenticodeSignature (Join-Path dist-installer $file.Name)
+            Write-Host "$($file.Name): $($sig.Status) $($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne 'Valid') { throw "Assinatura inválida em $($file.Name)" }
+          }
+
       - name: Upload Windows x64 artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -116,6 +156,8 @@ jobs:
   windows-arm64:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: windows-11-arm
+    env:
+      SIGNPATH_ENABLED: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -204,6 +246,44 @@ jobs:
       - name: Read version for artifact name
         shell: bash
         run: echo "APP_VERSION=$(tr -d '\r\n ' < VERSION)" >> "$GITHUB_ENV"
+
+      # Assinatura SignPath (v2.0.7): só roda quando o segredo SIGNPATH_API_TOKEN existe.
+      # Sem ele, o build segue sem assinatura como antes. Ver docs/SIGNPATH_SETUP.md.
+      - name: Upload unsigned Windows ARM64 files for signing
+        if: ${{ env.SIGNPATH_ENABLED == 'true' }}
+        id: upload-unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-windows-arm64
+          path: |
+            dist-installer-arm64\*.exe
+          retention-days: 3
+
+      - name: Sign Windows ARM64 files with SignPath
+        if: ${{ env.SIGNPATH_ENABLED == 'true' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-arm64
+
+      - name: Use signed Windows ARM64 files
+        if: ${{ env.SIGNPATH_ENABLED == 'true' }}
+        shell: pwsh
+        run: |
+          $signed = Get-ChildItem -Recurse signed-arm64 -Filter *.exe
+          if (-not $signed) { throw "SignPath não devolveu arquivos assinados" }
+          foreach ($file in $signed) {
+            Copy-Item $file.FullName (Join-Path dist-installer-arm64 $file.Name) -Force
+            $sig = Get-AuthenticodeSignature (Join-Path dist-installer-arm64 $file.Name)
+            Write-Host "$($file.Name): $($sig.Status) $($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne 'Valid') { throw "Assinatura inválida em $($file.Name)" }
+          }
 
       - name: Upload Windows ARM64 artifacts
         uses: actions/upload-artifact@v4
@@ -390,6 +470,8 @@ jobs:
           - os: macos-15
             arch: arm64
     runs-on: ${{ matrix.os }}
+    env:
+      MACOS_SIGNING_ENABLED: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -404,8 +486,35 @@ jobs:
         shell: bash
         run: python tools/apply_release_2_0_6.py
 
+      # Assinatura e notarização Apple (v2.0.7): só rodam quando os segredos MACOS_* existem.
+      # Sem eles, o DMG sai sem assinatura como antes. Ver docs/MACOS_SIGNING.md.
+      - name: Import Developer ID certificate
+        if: ${{ env.MACOS_SIGNING_ENABLED == 'true' }}
+        shell: bash
+        env:
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/pt2vhf-signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          echo "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" >/dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm -f "$RUNNER_TEMP/cert.p12"
+          identity="$(security find-identity -v -p codesigning "$keychain" | grep 'Developer ID Application' | head -n1 | sed -E 's/.*"(.*)"/\1/')"
+          test -n "$identity" || { echo "Certificado Developer ID Application não encontrado" >&2; exit 1; }
+          echo "MACOS_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+
       - name: Build macOS DMG
         shell: bash
+        env:
+          MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+          MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
         run: |
           chmod +x macos/build_macos.sh
           PYTHON_BIN=python3 bash macos/build_macos.sh
