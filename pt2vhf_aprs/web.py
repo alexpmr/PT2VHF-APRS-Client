@@ -12,7 +12,6 @@ import urllib.request
 import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from flask import Flask, Response, g, jsonify, render_template, request, send_file
 
 from . import __version__

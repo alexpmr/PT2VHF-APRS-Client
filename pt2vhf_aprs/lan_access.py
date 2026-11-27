@@ -5,13 +5,11 @@ import os
 import platform
 import socket
 import subprocess
-import sys
 import threading
 import time
 import re
 import ipaddress
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from . import diagnostics as diag

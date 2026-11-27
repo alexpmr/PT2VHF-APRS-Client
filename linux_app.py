@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import socket
 import sys
-import threading
 import time
 import webbrowser
 from pathlib import Path
@@ -78,7 +77,6 @@ class NativeApi:
         """Salva um download gerado pelo backend local usando diálogo nativo."""
         try:
             import webview
-            global _window, URL
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
             route = str(relative_url or "").strip()
@@ -126,7 +124,6 @@ class NativeApi:
         try:
             import base64
             import webview
-            global _window
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
             if not isinstance(data_base64, str) or len(data_base64) > 30_000_000:
@@ -157,7 +154,6 @@ class NativeApi:
     def save_text_file(self, filename: str, content: str) -> dict:
         try:
             import webview
-            global _window
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
 

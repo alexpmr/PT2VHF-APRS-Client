@@ -13,7 +13,6 @@ from reportlab.lib.units import cm
 from reportlab.platypus import (
     Flowable,
     Image,
-    KeepTogether,
     ListFlowable,
     ListItem,
     PageBreak,
