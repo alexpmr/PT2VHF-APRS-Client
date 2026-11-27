@@ -3,7 +3,6 @@ from __future__ import annotations
 import socket
 import struct
 from dataclasses import dataclass
-from typing import Iterable
 
 AGWPE_HEADER = struct.Struct("<II10s10sII")
 AGWPE_HEADER_SIZE = AGWPE_HEADER.size

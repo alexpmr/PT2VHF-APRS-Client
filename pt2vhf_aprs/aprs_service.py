@@ -281,10 +281,8 @@ class APRSService:
 
                 sock = None
                 errors: list[str] = []
-                server = configured_server
                 for index, candidate in enumerate(candidates, start=1):
                     try:
-                        server = candidate
                         self._set_status(
                             state=f"Conectando a {candidate}:{port} ({index}/{len(candidates)})...",
                             connected=False,

@@ -951,6 +951,26 @@ def get_config() -> dict[str, Any]:
     return cfg
 
 
+# Campos 0/1 normalizados por save_config (ordem não importa: nenhum lê outro).
+_SAVE_CONFIG_BOOL_FIELDS = (
+    "connect_on_start",
+    "open_browser_on_start",
+    "web_lan_enabled",
+    "check_updates_on_start",
+    "share_callsign_on_update",
+    "strip_message_accents",
+    "respond_to_queries",
+    "auto_reply_enabled",
+    "sound_on_personal_message",
+    "sound_on_message_ack",
+    "sound_on_own_digipeat",
+    "sound_on_station_activity",
+    "highlight_station_activity",
+    "traffic_animation_enabled",
+    "resource_alert_enabled",
+)
+
+
 def save_config(data: dict[str, Any]) -> dict[str, Any]:
     current = get_config()
     allowed = set(DEFAULT_CONFIG)
@@ -969,19 +989,13 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     merged["port"] = int(merged["port"] or 14580)
     merged["altitude_source"] = str(merged["altitude_source"] or "manual").lower().strip()
     merged["beacon_minutes"] = max(1, int(merged["beacon_minutes"] or 10))
-    merged["connect_on_start"] = 1 if bool(merged["connect_on_start"]) else 0
-    merged["open_browser_on_start"] = 1 if bool(merged["open_browser_on_start"]) else 0
-    merged["web_lan_enabled"] = 1 if bool(merged["web_lan_enabled"]) else 0
-    merged["check_updates_on_start"] = 1 if bool(merged["check_updates_on_start"]) else 0
-    merged["share_callsign_on_update"] = 1 if bool(merged["share_callsign_on_update"]) else 0
+    for flag in _SAVE_CONFIG_BOOL_FIELDS:
+        merged[flag] = 1 if bool(merged[flag]) else 0
     merged["update_check_minutes"] = max(5, min(1440, int(merged["update_check_minutes"] or 15)))
     merged["auto_download_updates"] = 0
     merged["install_updates_on_exit"] = 0
     merged["message_retry_seconds"] = max(15, min(3600, int(merged["message_retry_seconds"] or 60)))
     merged["message_retry_attempts"] = max(0, min(10, int(merged["message_retry_attempts"] or 0)))
-    merged["strip_message_accents"] = 1 if bool(merged["strip_message_accents"]) else 0
-    merged["respond_to_queries"] = 1 if bool(merged["respond_to_queries"]) else 0
-    merged["auto_reply_enabled"] = 1 if bool(merged["auto_reply_enabled"]) else 0
     merged["auto_reply_text"] = " ".join(str(merged["auto_reply_text"] or "").replace("\r", " ").replace("\n", " ").split())[:240]
     merged["auto_reply_cooldown_seconds"] = max(30, min(86400, int(merged["auto_reply_cooldown_seconds"] or 300)))
     merged["language"] = str(merged["language"] or os_language.system_language()).strip()
@@ -1007,18 +1021,11 @@ def save_config(data: dict[str, Any]) -> dict[str, Any]:
     # v1.15.0: cor do sombreamento do Relevo com corte.
     color = str(merged.get("elevation_color") or "#e0ac3e").lower().strip()
     merged["elevation_color"] = color if re.fullmatch(r"#[0-9a-f]{6}", color) else "#e0ac3e"
-    merged["sound_on_personal_message"] = 1 if bool(merged["sound_on_personal_message"]) else 0
-    merged["sound_on_message_ack"] = 1 if bool(merged["sound_on_message_ack"]) else 0
-    merged["sound_on_own_digipeat"] = 1 if bool(merged["sound_on_own_digipeat"]) else 0
-    merged["sound_on_station_activity"] = 1 if bool(merged["sound_on_station_activity"]) else 0
     merged["notification_volume"] = max(0, min(100, int(merged["notification_volume"] or 0)))
     merged["notification_sound"] = str(merged["notification_sound"] or "beep").lower().strip()
     if merged["notification_sound"] not in {"beep", "chime", "radio"}:
         merged["notification_sound"] = "beep"
-    merged["highlight_station_activity"] = 1 if bool(merged["highlight_station_activity"]) else 0
-    merged["traffic_animation_enabled"] = 1 if bool(merged["traffic_animation_enabled"]) else 0
     merged["message_popup_seconds"] = int(merged["message_popup_seconds"] or 5)
-    merged["resource_alert_enabled"] = 1 if bool(merged["resource_alert_enabled"]) else 0
     merged["resource_cpu_critical_percent"] = int(merged["resource_cpu_critical_percent"] or 90)
     merged["resource_memory_critical_percent"] = int(merged["resource_memory_critical_percent"] or 90)
     merged["resource_alert_sustain_seconds"] = int(merged["resource_alert_sustain_seconds"] or 30)

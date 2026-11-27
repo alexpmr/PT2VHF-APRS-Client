@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import sqlite3
-import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -18,7 +17,7 @@ from .tnc_service import (
     kiss_encode,
     service as tnc_service,
 )
-from .tnc_simulator import KISSSimulator, SimulatedPacket
+from .tnc_simulator import KISSSimulator
 
 
 def _utc() -> str:

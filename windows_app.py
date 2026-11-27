@@ -27,7 +27,6 @@ from pt2vhf_aprs.aprs_service import service
 from pt2vhf_aprs.tnc_service import service as tnc_service
 from pt2vhf_aprs.local_server import (
     configured_start_port,
-    read_runtime_url,
     read_runtime_browser_url,
     runtime_file_for,
     start_local_server,
@@ -227,7 +226,6 @@ def _mark_updated_instance_ready() -> None:
 
 
 def _show_native_window(*_args) -> None:
-    global _window
     if os.getenv("PT2VHF_WIN7_LEGACY") == "1" and not _browser_mode:
         _launch_legacy_app_window()
         return
@@ -372,7 +370,6 @@ class NativeApi:
         """Salva um download gerado pelo backend local usando diálogo nativo."""
         try:
             import webview
-            global _window, URL
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
             route = str(relative_url or "").strip()
@@ -420,7 +417,6 @@ class NativeApi:
         try:
             import base64
             import webview
-            global _window
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
             if not isinstance(data_base64, str) or len(data_base64) > 30_000_000:
@@ -451,7 +447,6 @@ class NativeApi:
     def save_text_file(self, filename: str, content: str) -> dict:
         try:
             import webview
-            global _window
             if _window is None:
                 return {"saved": False, "error": "Janela integrada indisponível."}
 
